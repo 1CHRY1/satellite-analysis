@@ -5,7 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-//@MapperScan("nnu.mnr.satellite.repository")
+@MapperScan("nnu.mnr.satellite.repository")
 public class BackEndApplication {
 
     public static void main(String[] args) {

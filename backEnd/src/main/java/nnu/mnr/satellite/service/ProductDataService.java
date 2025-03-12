@@ -1,5 +1,6 @@
 package nnu.mnr.satellite.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.model.po.Product;
 import nnu.mnr.satellite.repository.IProductRepo;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,8 @@ public class ProductDataService {
     }
 
     public List<Product> getProductBySensorId(String sensorId) {
-        return productRepo.getProductBySensorId(sensorId);
+        QueryWrapper<Product> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("sensor_id", sensorId);
+        return productRepo.selectList(queryWrapper);
     }
 }

@@ -1,5 +1,6 @@
 package nnu.mnr.satellite.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.model.po.Tile;
 import nnu.mnr.satellite.repository.ITileRepo;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,10 @@ public class TileDataService {
     }
 
     public List<Tile> getTileByImageAndLevel(String imageId, int tileLevel) {
-        return tileRepo.getTileByImageAndLevel(imageId, tileLevel);
+        QueryWrapper<Tile> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("image_id", imageId);
+        queryWrapper.eq("tile_level", tileLevel);
+        return tileRepo.selectList(queryWrapper);
     }
 
 }

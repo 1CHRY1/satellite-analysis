@@ -1,5 +1,6 @@
 package nnu.mnr.satellite.repository;
 
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import nnu.mnr.satellite.model.po.Image;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
@@ -15,7 +16,7 @@ import java.util.List;
  */
 
 //@Repository("ImageRepo")
-@Mapper
-public interface IImageRepo {
-    List<Image> getImageByProductId(String productId);
+public interface IImageRepo extends BaseMapper<Image> {
+//    List<Image> getImageByProductId(String productId);
+
 }

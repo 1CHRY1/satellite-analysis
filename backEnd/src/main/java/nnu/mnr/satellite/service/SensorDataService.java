@@ -25,7 +25,7 @@ public class SensorDataService {
     }
 
     public List<Sensor> getAllData() {
-        return sensorRepo.getAllSensorData();
+        return sensorRepo.selectList(null);
     }
 
 }

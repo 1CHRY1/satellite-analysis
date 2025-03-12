@@ -10,4 +10,8 @@
         <result property="description" column="description"/>
     </resultMap>
 
+    <select id="getAllSensorData" resultMap="sensorDataMap">
+        select sensor_id, sensor_name, platform_name, description from sensor_table;
+    </select>
+
 </mapper>

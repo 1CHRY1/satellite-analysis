@@ -18,4 +18,10 @@
         <result property="pngPath" column="png_path"/>
     </resultMap>
 
+    <select id="getImageByProductId" resultMap="imageDataMap">
+        select image_id, sensor_id, product_id, image_time, tile_level_num, tile_levels,
+               coordinate_system, band, bounding_box, band, tif_path, png_path
+        from image_table where product_id = #{productId};
+    </select>
+
 </mapper>

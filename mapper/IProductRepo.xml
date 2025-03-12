@@ -10,4 +10,8 @@
         <result property="description" column="description"/>
     </resultMap>
 
+    <select id="getProductBySensorId" resultMap="productDataMap">
+        select product_id, sensor_id, product_name, description from product_table where sensorId = #{sensorId};
+    </select>
+
 </mapper>

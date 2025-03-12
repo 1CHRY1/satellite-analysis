@@ -12,4 +12,9 @@
         <result property="path" column="path"/>
     </resultMap>
 
+    <select id="getTileByImageAndLevel" resultMap="tileDataMap">
+        select tile_id, image_id, tile_level, column_id, row_id, path from image_table
+        where image_id = #{imageId} and tile_level = #{tileLevel};
+    </select>
+
 </mapper>

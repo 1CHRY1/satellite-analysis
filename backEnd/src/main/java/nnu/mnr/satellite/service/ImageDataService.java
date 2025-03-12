@@ -1,5 +1,6 @@
 package nnu.mnr.satellite.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.model.po.Image;
 import nnu.mnr.satellite.repository.IImageRepo;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,9 @@ public class ImageDataService {
     }
 
     public List<Image> getImageByProductId(String productId) {
-        return imageRepo.getImageByProductId(productId);
+        QueryWrapper<Image> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("product_id", productId);
+        return imageRepo.selectList(queryWrapper);
     }
 
 }
