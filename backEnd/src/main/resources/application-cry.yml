@@ -1,0 +1,13 @@
+server:
+  port: 8999
+
+spring:
+  datasource:
+#    url: jdbc:mysql://localhost:3306/satellite
+    url: jdbc:mysql://10.20.249.101:3306/satellite
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
