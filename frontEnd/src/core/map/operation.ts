@@ -1,6 +1,7 @@
 import { mapManager, initMap, type Style } from './mapManager'
 import mapboxgl from 'mapbox-gl'
 import { CN_Bounds } from './constant'
+import { type Image } from '@/types/satellite'
 
 ////////////////////////////////////////////////////////
 /////// Map Operation //////////////////////////////////
@@ -27,7 +28,7 @@ export function map_fitViewToCN(): void {
     })
 }
 
-export function map_zoomAdd(): void {
+export function map_zoomIn(): void {
     mapManager.withMap((m) => {
         m.zoomIn()
     })
@@ -161,4 +162,13 @@ export function map_addImageLayer(props: ImageLayerProp): void {
             source: props.id + '-source',
         })
     })
+}
+
+////////////////////////////////////////////////////////
+/////// Grid Operation //////////////////////////////////
+// export function grid_create() {
+
+// }
+export function grid_create(props: Image): void {
+    
 }
