@@ -28,4 +28,5 @@ public class Tile {
     private Integer columnId;
     private Integer rowId;
     private String path;
+    private String bucket;
 }

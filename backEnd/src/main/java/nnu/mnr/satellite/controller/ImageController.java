@@ -2,7 +2,9 @@ package nnu.mnr.satellite.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.model.po.Image;
-import nnu.mnr.satellite.service.ImageDataService;
+import nnu.mnr.satellite.service.resources.ImageDataService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,9 +32,19 @@ public class ImageController {
         this.imageDataService = imageDataService;
     }
 
-    @GetMapping("/{productId}")
-    public ResponseEntity<List<Image>> GetAllData(@PathVariable String productId) {
-        return ResponseEntity.ok(imageDataService.getImageByProductId(productId));
+    @GetMapping("/{sceneId}")
+    public ResponseEntity<List<Image>> getImageBySceneId(@PathVariable String sceneId) {
+        return ResponseEntity.ok(imageDataService.getImagesBySceneId(sceneId));
+    }
+
+    @GetMapping("/{imageId}/tif")
+    public ResponseEntity<byte[]> getTifByImageId(@PathVariable String imageId) {
+        byte[] tifData = imageDataService.getTifByImageId(imageId);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.valueOf("image/tiff"));
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(tifData);
     }
 
 }

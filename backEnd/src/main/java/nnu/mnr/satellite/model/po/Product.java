@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(buildMethodName = "buildProduct")
-@TableName("product_id")
+@TableName("product_table")
 public class Product {
     @TableId
     private String productId;

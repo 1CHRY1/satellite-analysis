@@ -1,4 +1,4 @@
-package nnu.mnr.satellite.service;
+package nnu.mnr.satellite.service.resources;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.model.po.Product;
@@ -27,5 +27,12 @@ public class ProductDataService {
         QueryWrapper<Product> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("sensor_id", sensorId);
         return productRepo.selectList(queryWrapper);
+    }
+
+    public String getProductDescription(String productId) {
+        QueryWrapper<Product> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("description").eq("product_id", productId);
+        Product product = productRepo.selectOne(queryWrapper);
+        return product != null ? product.getDescription() : null;
     }
 }

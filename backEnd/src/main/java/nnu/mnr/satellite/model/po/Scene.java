@@ -25,13 +25,29 @@ import java.util.HashSet;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder(buildMethodName = "buildImage")
-@TableName("image_table")
-public class Image {
+@Builder(buildMethodName = "buildScene")
+@TableName("scene_table")
+public class Scene {
     @TableId
-    private String imageId;
     private String sceneId;
-    private String band;
-    private String tifPath;
+    private String productId;
+    private String sensorId;
+    private LocalDateTime sceneTime;
+    private Integer tileLevelNum;
+
+    @TableField(value = "tile_levels", typeHandler = SetTypeHandler.class)
+    private HashSet<String> tileLevels;
+    private String crs;
+
+    @TableField(value="bounding_box", typeHandler = GeometryTypeHandler.class)
+    private Geometry bbox;
+    private String pngPath;
+    private String description;
+
+    private Integer bandNum;
+
+    @TableField(value = "bands", typeHandler = SetTypeHandler.class)
+    private HashSet<String> bands;
+
     private String bucket;
 }
