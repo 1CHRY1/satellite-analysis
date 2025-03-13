@@ -1,10 +1,10 @@
 package nnu.mnr.satellite.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import nnu.mnr.satellite.model.po.Product;
 import nnu.mnr.satellite.model.po.Tile;
-import nnu.mnr.satellite.service.ProductDataService;
-import nnu.mnr.satellite.service.TileDataService;
+import nnu.mnr.satellite.service.resources.TileDataService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,8 +30,17 @@ public class TileController {
     }
 
     @GetMapping("/{imageId}/{tileLevel}")
-    public ResponseEntity<List<Tile>> GetAllData(@PathVariable String imageId, @PathVariable int tileLevel) {
-        return ResponseEntity.ok(tileDataService.getTileByImageAndLevel(imageId, tileLevel));
+    public ResponseEntity<List<Tile>> getTilesByImageAndLevel(@PathVariable String imageId, @PathVariable int tileLevel) {
+        return ResponseEntity.ok(tileDataService.getTilesByImageAndLevel(imageId, tileLevel));
     }
 
+    @GetMapping("/{tileId}/tif")
+    public ResponseEntity<byte[]> getTifByImageId(@PathVariable String tileId) {
+        byte[] tifData = tileDataService.getTileTifById(tileId);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.valueOf("image/tiff"));
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(tifData);
+    }
 }

@@ -2,10 +2,7 @@ package nnu.mnr.satellite.repository;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import nnu.mnr.satellite.model.po.Image;
-import org.apache.ibatis.annotations.Mapper;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
+import nnu.mnr.satellite.model.po.Scene;
 
 /**
  * Created with IntelliJ IDEA.
@@ -16,7 +13,7 @@ import java.util.List;
  */
 
 //@Repository("ImageRepo")
-public interface IImageRepo extends BaseMapper<Image> {
+public interface ISceneRepo extends BaseMapper<Scene> {
 //    List<Image> getImageByProductId(String productId);
 
 }

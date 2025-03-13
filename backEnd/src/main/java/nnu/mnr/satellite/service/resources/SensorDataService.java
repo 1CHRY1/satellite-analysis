@@ -1,5 +1,6 @@
-package nnu.mnr.satellite.service;
+package nnu.mnr.satellite.service.resources;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.model.po.Sensor;
 import nnu.mnr.satellite.repository.ISensorRepo;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -25,7 +26,14 @@ public class SensorDataService {
     }
 
     public List<Sensor> getAllData() {
-        return sensorRepo.getAllSensorData();
+        return sensorRepo.selectList(null);
+    }
+
+    public String getSensorDescription(String sensorId) {
+        QueryWrapper<Sensor> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("description").eq("sensor_id", sensorId);
+        Sensor sensor = sensorRepo.selectOne(queryWrapper);
+        return sensor != null ? sensor.getDescription() : null;
     }
 
 }

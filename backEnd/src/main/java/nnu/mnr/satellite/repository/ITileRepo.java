@@ -1,5 +1,7 @@
 package nnu.mnr.satellite.repository;
 
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import nnu.mnr.satellite.model.po.Image;
 import nnu.mnr.satellite.model.po.Sensor;
 import nnu.mnr.satellite.model.po.Tile;
 import org.apache.ibatis.annotations.Mapper;
@@ -16,7 +18,6 @@ import java.util.List;
  */
 
 //@Repository("tileRepo")
-@Mapper
-public interface ITileRepo {
-    List<Tile> getTileByImageAndLevel(String imageId, int tileLevel);
+public interface ITileRepo extends BaseMapper<Tile> {
+//    List<Tile> getTileByImageAndLevel(String imageId, int tileLevel);
 }
