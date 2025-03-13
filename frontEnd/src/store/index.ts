@@ -1,1 +1,2 @@
-export { UserStore, type UserInfo } from './userStore'
+export { useUserStore, type UserInfo } from './userStore'
+export { useGridStore } from './gridStore'

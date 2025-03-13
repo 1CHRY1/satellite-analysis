@@ -2,6 +2,8 @@ import { mapManager, initMap, type Style } from './mapManager'
 import mapboxgl from 'mapbox-gl'
 import { CN_Bounds } from './constant'
 import { type Image } from '@/types/satellite'
+import { useGridStore } from '@/store'
+import { watch } from 'vue'
 
 ////////////////////////////////////////////////////////
 /////// Map Operation //////////////////////////////////
@@ -102,6 +104,8 @@ type GridLayerProp = {
 }
 
 export function map_addGridLayer(props: GridLayerProp): void {
+    const gridStore = useGridStore()
+
     mapManager.withMap((m) => {
         const popup = new mapboxgl.Popup({
             closeButton: false,
@@ -117,8 +121,9 @@ export function map_addGridLayer(props: GridLayerProp): void {
             type: 'line',
             source: props.id + '-source',
             paint: {
-                'line-color': '#000000',
+                'line-color': '#F00000',
                 'line-width': 1,
+                'line-opacity': 0.4,
             },
         })
 
@@ -127,17 +132,42 @@ export function map_addGridLayer(props: GridLayerProp): void {
             type: 'fill',
             source: props.id + '-source',
             paint: {
-                'fill-color': '#ff0000',
-                'fill-opacity': ['case', ['boolean', ['feature-state', 'selected'], false], 0.5, 0.01],
+                'fill-color': '#FF0000',
+                'fill-opacity': 0.01,
             },
+        })
+
+        // Add a highlight layer
+        m.addLayer({
+            id: props.id + '-highlight',
+            type: 'fill',
+            source: props.id + '-source',
+            paint: {
+                'fill-color': '#FFFFFF', // Highlight color
+                'fill-opacity': 0.5,
+            },
+            filter: ['in', 'id', ''],
+        })
+
+        watch(() => gridStore.selectedGrids, () => {
+            console.log('watch gridStore.selectedGrid')
+            m.setFilter(props.id + '-highlight', ['in', 'id', ...gridStore.selectedGrids])
         })
 
         m.on('click', props.id, (e) => {
             const features = m.queryRenderedFeatures(e.point, { layers: [props.id] })
             if (features.length) {
-                const feature = features[0]
-                const text = `${feature.properties?.x}-${feature.properties?.y}`
+                const featureId = features[0].properties?.id
+                // console.log(features[0], featureId)
+                const text = `GridID : ${featureId}`
                 popup.setLngLat(e.lngLat).setText(text).addTo(m)
+
+                // Toggle highlight
+                if (gridStore.selectedGrids.includes(featureId)) {
+                    gridStore.removeGrid(featureId)
+                } else {
+                    gridStore.addGrid(featureId)
+                }
             }
         })
     })
@@ -166,9 +196,28 @@ export function map_addImageLayer(props: ImageLayerProp): void {
 
 ////////////////////////////////////////////////////////
 /////// Grid Operation //////////////////////////////////
-// export function grid_create() {
 
-// }
 export function grid_create(props: Image): void {
-    
+
+    const gridImgUrl = 'http://127.0.0.1:5000/png'
+    map_addImageLayer({
+        'id': 'gridImage',
+        'url': gridImgUrl,
+        'boxCoordinates': [
+            [119.0494136861107535, 32.7542374796797588],
+            [121.6247280289205861, 32.7542374796797588],
+            [121.6247280289205861, 30.7365359708879033],
+            [119.0494136861107535, 30.7365359708879033],
+        ],
+    })
+
+
+    setTimeout(() => {
+        const gridGeoJsonUrl = 'http://127.0.0.1:5000/geojson'
+        map_addGridLayer({
+            'id': 'grid',
+            'url': gridGeoJsonUrl,
+        })
+    }, 500);
+
 }

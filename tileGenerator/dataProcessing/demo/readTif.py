@@ -32,14 +32,27 @@ def save_bbox_to_shp(bbox_list, output_path):
 
 path = "D:\\1study\\Work\\2025_03_05_satellite\\tileGenerator"
 
-tiff_path = f'{path}\\landset5\\LT51190382000261BJC00\\LT51190382000261BJC00_Origin.TIF'
+# tiff_path = f'{path}\\landset5\\LT51190382000261BJC00\\LT51190382000261BJC00_Origin.TIF'
+tiff_path = "D:\edgedownload\LT51190382000261BJC00\LT51190382000261BJC00_B1.TIF"
 geometry, crs = getTifBBoxAndCrs(tiff_path)
 
 grid_list = getGridsByBBox(geometry)
+
+################################ Store grid in geojson format --lhy 20250312 ################################
+gdf = gpd.GeoDataFrame(geometry=grid_list, crs="EPSG:4326")
+gdf['id'] = range(len(gdf))
+output_geojson_path = "D:\\myProject\\2025\\satellite-analysis\\tileGenerator\\dataProcessing\\output\\grid_polygons.geojson"
+gdf.to_file(output_geojson_path, driver="GeoJSON")
+print(f"GeoJSON file saved to: {output_geojson_path}")
+#############################################################################################################
+
+
 # save_bbox_to_shp(grid_list, r"E:/DownLoads/test")
 for i in range(len(grid_list)):
     if (is_polygon_intersect_raster(tiff_path, grid_list[i]) and is_polygon_boundary_valid(tiff_path, grid_list[i])):
-        clip_raster_by_polygon(tiff_path, grid_list[i], f"D:\\1study\\Work\\2025_03_05_satellite\\tileGenerator\\tiles_pro\\{i}.tif")
-# clip_raster_by_shapefile(tiff_path, "E:\\DownLoads\\test\\agrid.shp", "E:\\DownLoads\\test\\test.tif")
-# clipRasterByBBox(grid_list[600], tiff_path, "E:\\DownLoads\\test\\test.tif")
-print(grid_list)
+        # clip_raster_by_polygon(tiff_path, grid_list[i], f"D:\\1study\\Work\\2025_03_05_satellite\\tileGenerator\\tiles_pro\\{i}.tif")
+        clip_raster_by_polygon(tiff_path, grid_list[i], f"D:\\myProject\\2025\\satellite-analysis\\tileGenerator\\dataProcessing\\output\\{i}.tif")
+        
+print('--------------------------------')
+
+
