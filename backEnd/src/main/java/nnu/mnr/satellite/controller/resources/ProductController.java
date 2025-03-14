@@ -1,7 +1,9 @@
-package nnu.mnr.satellite.controller;
+package nnu.mnr.satellite.controller.resources;
 
 import lombok.extern.slf4j.Slf4j;
-import nnu.mnr.satellite.model.po.Product;
+import nnu.mnr.satellite.model.dto.resources.ProductDesDTO;
+import nnu.mnr.satellite.model.dto.resources.ProductInfoDTO;
+import nnu.mnr.satellite.model.po.resources.Product;
 import nnu.mnr.satellite.service.resources.ProductDataService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,12 +33,12 @@ public class ProductController {
     }
 
     @GetMapping("/sensorId/{sensorId}")
-    public ResponseEntity<List<Product>> getProductBySensorId(@PathVariable String sensorId) {
+    public ResponseEntity<List<ProductInfoDTO>> getProductBySensorId(@PathVariable String sensorId) {
         return ResponseEntity.ok(productDataService.getProductBySensorId(sensorId));
     }
 
     @GetMapping("/description/productId/{productId}")
-    public ResponseEntity<List<Product>> GetSensorDescription(@PathVariable String productId) {
+    public ResponseEntity<ProductDesDTO> GetSensorDescription(@PathVariable String productId) {
         return ResponseEntity.ok(productDataService.getProductDescription(productId));
     }
 

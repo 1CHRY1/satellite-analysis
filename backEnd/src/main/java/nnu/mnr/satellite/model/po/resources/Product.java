@@ -1,4 +1,4 @@
-package nnu.mnr.satellite.model.po;
+package nnu.mnr.satellite.model.po.resources;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;

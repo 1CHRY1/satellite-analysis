@@ -1,8 +1,9 @@
-package nnu.mnr.satellite.controller;
+package nnu.mnr.satellite.controller.resources;
 
 import com.alibaba.fastjson2.JSONArray;
 import lombok.extern.slf4j.Slf4j;
-import nnu.mnr.satellite.model.po.Tile;
+import nnu.mnr.satellite.model.dto.resources.TileDesDTO;
+import nnu.mnr.satellite.model.po.resources.Tile;
 import nnu.mnr.satellite.service.resources.TileDataService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -10,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -47,7 +47,7 @@ public class TileController {
     }
 
     @GetMapping("/description/imageId/{imageId}/tileId/{tileId}")
-    public ResponseEntity<Tile> getDescriptionByImageAndTileId(@PathVariable String imageId, @PathVariable String tileId) {
+    public ResponseEntity<TileDesDTO> getDescriptionByImageAndTileId(@PathVariable String imageId, @PathVariable String tileId) {
         return ResponseEntity.ok(tileDataService.getTileDescriptionById(imageId, tileId));
     }
 }

@@ -1,11 +1,7 @@
-package nnu.mnr.satellite.repository;
+package nnu.mnr.satellite.repository.resources;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import nnu.mnr.satellite.model.po.Image;
-import org.apache.ibatis.annotations.Mapper;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
+import nnu.mnr.satellite.model.po.resources.Image;
 
 /**
  * Created with IntelliJ IDEA.

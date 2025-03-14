@@ -1,8 +1,7 @@
-package nnu.mnr.satellite.repository;
+package nnu.mnr.satellite.repository.resources;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import nnu.mnr.satellite.model.po.Image;
-import nnu.mnr.satellite.model.po.Scene;
+import nnu.mnr.satellite.model.po.resources.Scene;
 import nnu.mnr.satellite.utils.typeHandler.GeometryTypeHandler;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
@@ -23,8 +22,8 @@ public interface ISceneRepo extends BaseMapper<Scene> {
     @Select("SELECT scene_id, scene_time,tile_level_num,tile_levels," +
             "coordinate_system," +
             "description,band_num,bands FROM scene_table WHERE scene_id = #{sceneId}")
-//    @Results({
-//            @Result(property = "bbox", column = "bounding_box", typeHandler = GeometryTypeHandler.class)
-//    })
+    @Results({
+            @Result(property = "bbox", column = "bounding_box", typeHandler = GeometryTypeHandler.class)
+    })
     Scene getSceneById(@Param("sceneId") String sceneId);
 }

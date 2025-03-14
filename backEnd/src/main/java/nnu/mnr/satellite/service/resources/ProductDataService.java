@@ -1,10 +1,17 @@
 package nnu.mnr.satellite.service.resources;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import nnu.mnr.satellite.model.po.Product;
-import nnu.mnr.satellite.repository.IProductRepo;
+import nnu.mnr.satellite.model.dto.resources.ProductDesDTO;
+import nnu.mnr.satellite.model.dto.resources.ProductInfoDTO;
+import nnu.mnr.satellite.model.dto.resources.SensorInfoDTO;
+import nnu.mnr.satellite.model.po.resources.Product;
+import nnu.mnr.satellite.repository.resources.IProductRepo;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -17,22 +24,34 @@ import java.util.List;
 
 @Service("ProductDataService")
 public class ProductDataService {
+
+    @Autowired
+    private ModelMapper productModelMapper;
+
     private final IProductRepo productRepo;
 
     public ProductDataService(IProductRepo productRepo) {
         this.productRepo = productRepo;
     }
 
-    public List<Product> getProductBySensorId(String sensorId) {
+    public List<ProductInfoDTO> getProductBySensorId(String sensorId) {
         QueryWrapper<Product> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("product_id", "product_name")
                 .eq("sensor_id", sensorId);
-        return productRepo.selectList(queryWrapper);
+        List<Product> products = productRepo.selectList(queryWrapper);
+        if (products == null) {
+            return Collections.emptyList();
+        }
+        return productModelMapper.map(products, new TypeToken<List<ProductInfoDTO>>() {}.getType());
     }
 
-    public List<Product> getProductDescription(String productId) {
+    public ProductDesDTO getProductDescription(String productId) {
         QueryWrapper<Product> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("resolution", "period", "description").eq("product_id", productId);
-        return productRepo.selectList(queryWrapper);
+        Product product = productRepo.selectOne(queryWrapper);
+        if (product == null) {
+            return null;
+        }
+        return productModelMapper.map(product, new TypeToken<ProductDesDTO>() {}.getType());
     }
 }

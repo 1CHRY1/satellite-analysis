@@ -1,11 +1,17 @@
 package nnu.mnr.satellite.service.resources;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import nnu.mnr.satellite.model.po.Sensor;
-import nnu.mnr.satellite.repository.ISensorRepo;
-import org.springframework.beans.factory.annotation.Qualifier;
+import nnu.mnr.satellite.model.dto.resources.SensorDesDTO;
+import nnu.mnr.satellite.model.dto.resources.SensorInfoDTO;
+import nnu.mnr.satellite.model.po.resources.Scene;
+import nnu.mnr.satellite.model.po.resources.Sensor;
+import nnu.mnr.satellite.repository.resources.ISensorRepo;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -19,23 +25,33 @@ import java.util.List;
 @Service("SensorDataService")
 public class SensorDataService {
 
+    @Autowired
+    private ModelMapper sensorModelMapper;
+
     private final ISensorRepo sensorRepo;
 
     public SensorDataService(ISensorRepo sensorRepo) {
         this.sensorRepo = sensorRepo;
     }
 
-    public List<Sensor> getAllData() {
+    public List<SensorInfoDTO> getAllData() {
         QueryWrapper<Sensor> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("sensor_id", "sensor_name", "platform_name");
-        return sensorRepo.selectList(queryWrapper);
+        List<Sensor> sensors = sensorRepo.selectList(queryWrapper);
+        if (sensors == null) {
+            return Collections.emptyList();
+        }
+        return sensorModelMapper.map(sensors, new TypeToken<List<SensorInfoDTO>>() {}.getType());
     }
 
-    public String getSensorDescription(String sensorId) {
+    public SensorDesDTO getSensorDescription(String sensorId) {
         QueryWrapper<Sensor> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("description").eq("sensor_id", sensorId);
         Sensor sensor = sensorRepo.selectOne(queryWrapper);
-        return sensor != null ? sensor.getDescription() : null;
+        if (sensor == null) {
+            return null;
+        }
+        return sensorModelMapper.map(sensor, new TypeToken<SensorDesDTO>() {}.getType());
     }
 
 }

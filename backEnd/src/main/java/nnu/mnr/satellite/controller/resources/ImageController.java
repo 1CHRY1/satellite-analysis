@@ -1,7 +1,8 @@
-package nnu.mnr.satellite.controller;
+package nnu.mnr.satellite.controller.resources;
 
 import lombok.extern.slf4j.Slf4j;
-import nnu.mnr.satellite.model.po.Image;
+import nnu.mnr.satellite.model.dto.resources.ImageInfoDTO;
+import nnu.mnr.satellite.model.po.resources.Image;
 import nnu.mnr.satellite.service.resources.ImageDataService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -33,7 +34,7 @@ public class ImageController {
     }
 
     @GetMapping("/sceneId/{sceneId}")
-    public ResponseEntity<List<Image>> getImageBySceneId(@PathVariable String sceneId) {
+    public ResponseEntity<List<ImageInfoDTO>> getImageBySceneId(@PathVariable String sceneId) {
         return ResponseEntity.ok(imageDataService.getImagesBySceneId(sceneId));
     }
 

@@ -3,25 +3,23 @@ package nnu.mnr.satellite.service.resources;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import nnu.mnr.satellite.model.po.Image;
-import nnu.mnr.satellite.model.po.Scene;
-import nnu.mnr.satellite.repository.IImageRepo;
-import nnu.mnr.satellite.repository.ISceneRepo;
+import nnu.mnr.satellite.model.dto.resources.ProductDesDTO;
+import nnu.mnr.satellite.model.dto.resources.SceneDesDTO;
+import nnu.mnr.satellite.model.po.resources.Scene;
+import nnu.mnr.satellite.repository.resources.ISceneRepo;
 import nnu.mnr.satellite.utils.EPSGUtil;
 import nnu.mnr.satellite.utils.GeometryUtil;
 import nnu.mnr.satellite.utils.MinioUtil;
-import org.geotools.geojson.geom.GeometryJSON;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.PrecisionModel;
-import org.locationtech.jts.io.WKBWriter;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
 import org.opengis.referencing.FactoryException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -34,6 +32,9 @@ import java.util.List;
 
 @Service("SceneDataService")
 public class SceneDataService {
+
+    @Autowired
+    private ModelMapper sceneModelMapper;
 
     @Autowired
     MinioUtil minioUtil;
@@ -57,19 +58,9 @@ public class SceneDataService {
         return minioUtil.downloadByte(scene.getBucket(), scene.getPngPath());
     }
 
-    public JSONObject getSceneById(String sceneId) throws IOException, FactoryException {
+    public SceneDesDTO getSceneById(String sceneId) throws IOException, FactoryException {
         Scene scene = sceneRepo.getSceneById(sceneId);
-//        String geoJson = GeometryUtil.geometry2geojson(scene.getBbox(), scene.getSceneId());
-        JSONObject sceneJson = new JSONObject();
-//        sceneJson.put("bbox", JSONObject.parseObject(geoJson));
-        sceneJson.put("sceneTime", scene.getSceneTime());
-        sceneJson.put("tileLevelNum", scene.getTileLevelNum());
-        sceneJson.put("tileLevels", scene.getTileLevels());
-        sceneJson.put("crs", EPSGUtil.getEPSGName(scene.getCoordinateSystem()));
-        sceneJson.put("bandNum", scene.getBandNum());
-        sceneJson.put("bands", scene.getBands());
-        sceneJson.put("description", scene.getDescription());
-        return sceneJson;
+        return sceneModelMapper.map(scene, SceneDesDTO.class);
     }
 
     public JSONArray getScenesByIdsTimeAndBBox(JSONObject params) throws IOException {

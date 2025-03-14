@@ -1,9 +1,9 @@
-package nnu.mnr.satellite.controller;
+package nnu.mnr.satellite.controller.resources;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
-import nnu.mnr.satellite.model.po.Scene;
+import nnu.mnr.satellite.model.dto.resources.SceneDesDTO;
 import nnu.mnr.satellite.service.resources.SceneDataService;
 import org.opengis.referencing.FactoryException;
 import org.springframework.http.HttpHeaders;
@@ -12,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -34,7 +33,7 @@ public class SceneController {
     }
 
     @GetMapping("/description/sceneId/{sceneId}")
-    public ResponseEntity<JSONObject> getDescriptionById(@PathVariable String sceneId) throws IOException, FactoryException {
+    public ResponseEntity<SceneDesDTO> getDescriptionById(@PathVariable String sceneId) throws IOException, FactoryException {
         return ResponseEntity.ok(sceneDataService.getSceneById(sceneId));
     }
 

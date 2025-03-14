@@ -3,12 +3,14 @@ package nnu.mnr.satellite.service.resources;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.dynamic.datasource.annotation.DS;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import nnu.mnr.satellite.model.po.Tile;
-import nnu.mnr.satellite.repository.ITileRepo;
+import nnu.mnr.satellite.model.dto.resources.ImageInfoDTO;
+import nnu.mnr.satellite.model.dto.resources.TileDesDTO;
+import nnu.mnr.satellite.model.po.resources.Tile;
+import nnu.mnr.satellite.repository.resources.ITileRepo;
 import nnu.mnr.satellite.utils.GeometryUtil;
 import nnu.mnr.satellite.utils.MinioUtil;
-import org.checkerframework.checker.units.qual.A;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,9 @@ import java.util.List;
 
 @Service("TileDataService")
 public class TileDataService {
+
+    @Autowired
+    ModelMapper tileModelMapper;
 
     @Autowired
     MinioUtil minioUtil;
@@ -53,8 +58,9 @@ public class TileDataService {
     }
 
     @DS("mysql_tile")
-    public Tile getTileDescriptionById(String imageId, String tileId) {
-        return tileRepo.getTileByTileId(imageId, tileId);
+    public TileDesDTO getTileDescriptionById(String imageId, String tileId) {
+        Tile tile = tileRepo.getTileByTileId(imageId, tileId);
+        return tileModelMapper.map(tile, new TypeToken<TileDesDTO>() {}.getType());
     }
 
 }
