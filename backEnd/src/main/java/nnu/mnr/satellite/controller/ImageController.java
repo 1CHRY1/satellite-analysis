@@ -32,12 +32,12 @@ public class ImageController {
         this.imageDataService = imageDataService;
     }
 
-    @GetMapping("/{sceneId}")
+    @GetMapping("/sceneId/{sceneId}")
     public ResponseEntity<List<Image>> getImageBySceneId(@PathVariable String sceneId) {
         return ResponseEntity.ok(imageDataService.getImagesBySceneId(sceneId));
     }
 
-    @GetMapping("/{imageId}/tif")
+    @GetMapping("/tif/imageId/{imageId}")
     public ResponseEntity<byte[]> getTifByImageId(@PathVariable String imageId) {
         byte[] tifData = imageDataService.getTifByImageId(imageId);
         HttpHeaders headers = new HttpHeaders();

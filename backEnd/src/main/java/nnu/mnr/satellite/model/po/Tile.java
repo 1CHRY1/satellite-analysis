@@ -1,11 +1,13 @@
 package nnu.mnr.satellite.model.po;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.locationtech.jts.geom.Geometry;
 
 /**
  * Created with IntelliJ IDEA.
@@ -19,7 +21,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(buildMethodName = "buildTile")
-@TableName("tile_table")
+//@TableName("tile_table")
 public class Tile {
     @TableId
     private String tileId;
@@ -29,4 +31,7 @@ public class Tile {
     private Integer rowId;
     private String path;
     private String bucket;
+
+    @TableField("bounding_box")
+    private Geometry bbox;
 }

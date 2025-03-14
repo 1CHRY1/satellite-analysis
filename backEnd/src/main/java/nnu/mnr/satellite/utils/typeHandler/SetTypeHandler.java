@@ -5,6 +5,7 @@ import org.apache.ibatis.type.MappedJdbcTypes;
 import org.apache.ibatis.type.MappedTypes;
 import org.apache.ibatis.type.TypeHandler;
 import org.locationtech.jts.geom.Geometry;
+import org.springframework.stereotype.Component;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -21,6 +22,7 @@ import java.util.HashSet;
  * @Description:
  */
 
+@Component
 @MappedJdbcTypes(JdbcType.VARCHAR)
 @MappedTypes({HashSet.class})
 public class SetTypeHandler implements TypeHandler<HashSet<String>> {

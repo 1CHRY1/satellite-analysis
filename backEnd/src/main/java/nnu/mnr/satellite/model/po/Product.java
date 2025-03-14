@@ -26,4 +26,6 @@ public class Product {
     private String sensorId;
     private String productName;
     private String description;
+    private String resolution;
+    private String period;
 }

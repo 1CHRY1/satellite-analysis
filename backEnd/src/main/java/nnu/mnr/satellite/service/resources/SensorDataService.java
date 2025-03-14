@@ -26,7 +26,9 @@ public class SensorDataService {
     }
 
     public List<Sensor> getAllData() {
-        return sensorRepo.selectList(null);
+        QueryWrapper<Sensor> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("sensor_id", "sensor_name", "platform_name");
+        return sensorRepo.selectList(queryWrapper);
     }
 
     public String getSensorDescription(String sensorId) {

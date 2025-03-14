@@ -7,14 +7,19 @@ import nnu.mnr.satellite.model.po.Image;
 import nnu.mnr.satellite.model.po.Scene;
 import nnu.mnr.satellite.repository.IImageRepo;
 import nnu.mnr.satellite.repository.ISceneRepo;
+import nnu.mnr.satellite.utils.EPSGUtil;
 import nnu.mnr.satellite.utils.GeometryUtil;
 import nnu.mnr.satellite.utils.MinioUtil;
+import org.geotools.geojson.geom.GeometryJSON;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.PrecisionModel;
 import org.locationtech.jts.io.WKBWriter;
+import org.opengis.referencing.FactoryException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,13 +57,22 @@ public class SceneDataService {
         return minioUtil.downloadByte(scene.getBucket(), scene.getPngPath());
     }
 
-    public Scene getSceneById(String sceneId) {
-        QueryWrapper<Scene> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("scene_id", sceneId);
-        return sceneRepo.selectOne(queryWrapper);
+    public JSONObject getSceneById(String sceneId) throws IOException, FactoryException {
+        Scene scene = sceneRepo.getSceneById(sceneId);
+//        String geoJson = GeometryUtil.geometry2geojson(scene.getBbox(), scene.getSceneId());
+        JSONObject sceneJson = new JSONObject();
+//        sceneJson.put("bbox", JSONObject.parseObject(geoJson));
+        sceneJson.put("sceneTime", scene.getSceneTime());
+        sceneJson.put("tileLevelNum", scene.getTileLevelNum());
+        sceneJson.put("tileLevels", scene.getTileLevels());
+        sceneJson.put("crs", EPSGUtil.getEPSGName(scene.getCoordinateSystem()));
+        sceneJson.put("bandNum", scene.getBandNum());
+        sceneJson.put("bands", scene.getBands());
+        sceneJson.put("description", scene.getDescription());
+        return sceneJson;
     }
 
-    public List<Scene> getScenesByIdsTimeAndBBox(JSONObject params) {
+    public JSONArray getScenesByIdsTimeAndBBox(JSONObject params) throws IOException {
 //        JSONObject params = sceneRequestResolving(paramObj);
         String sensorId = params.getString("sensorId");
         String productId = params.getString("productId");
@@ -67,23 +81,33 @@ public class SceneDataService {
         JSONObject geoJson = params.getJSONObject("geometry");
         String type = geoJson.getString("type");
         JSONArray coordinates = geoJson.getJSONArray("coordinates");
-        GeometryFactory geometryFactory = new GeometryFactory();
+        GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
         if (type.equals("Polygon")) {
-            Geometry bbox = GeometryUtil.parseLinearRing(coordinates, geometryFactory);
+            Geometry bbox = GeometryUtil.parsePolygon(coordinates, geometryFactory);
+            bbox.setSRID(4326);
             QueryWrapper<Scene> queryWrapper = new QueryWrapper<>();
             queryWrapper.eq("sensor_id", sensorId);
             queryWrapper.eq("product_id", productId);
-            queryWrapper.between("image_time", start, end);
+            queryWrapper.between("scene_time", start, end);
 
-            WKBWriter wkbWriter = new WKBWriter();
-            byte[] wkb = wkbWriter.write(bbox);
-            String wkbHex = bytesToHex(wkb);
-            queryWrapper.apply("ST_Intersects(bounding_box, ST_GeomFromWKB(UNHEX({0})))", wkbHex);
+            String wkt = bbox.toText(); // 转换为 WKT 格式
 
-            return sceneRepo.selectList(queryWrapper);
+            queryWrapper.apply(
+                    "( ST_Intersects(ST_GeomFromText( {0}, 4326), bounding_box) OR " +
+                            "ST_Contains(ST_GeomFromText( {0}, 4326), bounding_box) OR " +
+                            "ST_Within(ST_GeomFromText( {0}, 4326), bounding_box) )",
+                    wkt
+            );
+            List<Scene> sceneList = sceneRepo.selectList(queryWrapper);
+            JSONArray sceneJsonList = new JSONArray();
+            for (Scene scene : sceneList) {
+                String sceneGeoJson = GeometryUtil.geometry2geojson(scene.getBbox(), scene.getSceneId());
+                sceneJsonList.add(JSONObject.parseObject(sceneGeoJson));
+            }
+            return sceneJsonList;
         } else {
             // TODO: 其他的类型
-            return new ArrayList<>();
+            return new JSONArray();
         }
     }
 

@@ -5,6 +5,7 @@ import nnu.mnr.satellite.model.po.Sensor;
 import nnu.mnr.satellite.service.resources.SensorDataService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -34,8 +35,8 @@ public class SensorController {
         return ResponseEntity.ok(sensorDataService.getAllData());
     }
 
-    @GetMapping("/{sensorId}/description")
-    public ResponseEntity<String> GetSensorDescription(String sensorId) {
+    @GetMapping("/description/sensorId/{sensorId}")
+    public ResponseEntity<String> GetSensorDescription(@PathVariable String sensorId) {
         return ResponseEntity.ok(sensorDataService.getSensorDescription(sensorId));
     }
 

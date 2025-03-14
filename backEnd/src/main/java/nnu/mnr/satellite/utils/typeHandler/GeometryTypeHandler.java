@@ -7,11 +7,13 @@ import org.apache.ibatis.type.TypeHandler;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.WKBReader;
 import org.locationtech.jts.io.WKBWriter;
+import org.springframework.stereotype.Component;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 
 /**
  * Created with IntelliJ IDEA.
@@ -21,7 +23,8 @@ import java.sql.SQLException;
  * @Description:
  */
 
-@MappedJdbcTypes(JdbcType.OTHER)
+@Component
+@MappedJdbcTypes(value = JdbcType.UNDEFINED, includeNullJdbcType = true)
 @MappedTypes({Geometry.class})
 public class GeometryTypeHandler implements TypeHandler<Geometry> {
 
@@ -42,13 +45,18 @@ public class GeometryTypeHandler implements TypeHandler<Geometry> {
     @Override
     public Geometry getResult(ResultSet rs, String columnName) throws SQLException {
         try {
-            byte[] wkb = rs.getBytes(columnName);
-            if (wkb != null) {
-                return wkbReader.read(wkb);
+            byte[] mysqlWkb = rs.getBytes(columnName);
+            if (mysqlWkb != null && mysqlWkb.length >= 4) {
+                int srid = ((mysqlWkb[3] & 0xFF) << 24) | ((mysqlWkb[2] & 0xFF) << 16) |
+                        ((mysqlWkb[1] & 0xFF) << 8) | (mysqlWkb[0] & 0xFF);
+                byte[] wkb = Arrays.copyOfRange(mysqlWkb, 4, mysqlWkb.length);
+                Geometry geom = wkbReader.read(wkb);
+                geom.setSRID(srid);
+                return geom;
             }
             return null;
         } catch (Exception e) {
-            throw new SQLException("Error converting WKB to Geometry", e);
+            throw new SQLException("Error converting MySQL GEOMETRY to Geometry", e);
         }
     }
 

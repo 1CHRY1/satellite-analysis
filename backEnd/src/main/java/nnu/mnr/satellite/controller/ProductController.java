@@ -30,13 +30,13 @@ public class ProductController {
         this.productDataService = productDataService;
     }
 
-    @GetMapping("/{sensorId}")
-    public ResponseEntity<List<Product>> GetAllData(@PathVariable String sensorId) {
+    @GetMapping("/sensorId/{sensorId}")
+    public ResponseEntity<List<Product>> getProductBySensorId(@PathVariable String sensorId) {
         return ResponseEntity.ok(productDataService.getProductBySensorId(sensorId));
     }
 
-    @GetMapping("/{productI}/description")
-    public ResponseEntity<String> GetSensorDescription(String productId) {
+    @GetMapping("/description/productId/{productId}")
+    public ResponseEntity<List<Product>> GetSensorDescription(@PathVariable String productId) {
         return ResponseEntity.ok(productDataService.getProductDescription(productId));
     }
 

@@ -25,14 +25,14 @@ public class ProductDataService {
 
     public List<Product> getProductBySensorId(String sensorId) {
         QueryWrapper<Product> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("sensor_id", sensorId);
+        queryWrapper.select("product_id", "product_name")
+                .eq("sensor_id", sensorId);
         return productRepo.selectList(queryWrapper);
     }
 
-    public String getProductDescription(String productId) {
+    public List<Product> getProductDescription(String productId) {
         QueryWrapper<Product> queryWrapper = new QueryWrapper<>();
-        queryWrapper.select("description").eq("product_id", productId);
-        Product product = productRepo.selectOne(queryWrapper);
-        return product != null ? product.getDescription() : null;
+        queryWrapper.select("resolution", "period", "description").eq("product_id", productId);
+        return productRepo.selectList(queryWrapper);
     }
 }

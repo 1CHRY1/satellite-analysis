@@ -1,5 +1,6 @@
 package nnu.mnr.satellite.controller;
 
+import com.alibaba.fastjson2.JSONArray;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.model.po.Tile;
 import nnu.mnr.satellite.service.resources.TileDataService;
@@ -8,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -29,18 +31,23 @@ public class TileController {
         this.tileDataService = tileDataService;
     }
 
-    @GetMapping("/{imageId}/{tileLevel}")
-    public ResponseEntity<List<Tile>> getTilesByImageAndLevel(@PathVariable String imageId, @PathVariable int tileLevel) {
+    @GetMapping("/imageId/{imageId}/tileLevel/{tileLevel}")
+    public ResponseEntity<JSONArray> getTilesByImageAndLevel(@PathVariable String imageId, @PathVariable int tileLevel) throws IOException {
         return ResponseEntity.ok(tileDataService.getTilesByImageAndLevel(imageId, tileLevel));
     }
 
-    @GetMapping("/{tileId}/tif")
-    public ResponseEntity<byte[]> getTifByImageId(@PathVariable String tileId) {
-        byte[] tifData = tileDataService.getTileTifById(tileId);
+    @GetMapping("/tif/imageId/{imageId}/tileId/{tileId}")
+    public ResponseEntity<byte[]> getTifByImageAndTileId(@PathVariable String imageId, @PathVariable String tileId) {
+        byte[] tifData = tileDataService.getTileTifById(imageId, tileId);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.valueOf("image/tiff"));
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(tifData);
+    }
+
+    @GetMapping("/description/imageId/{imageId}/tileId/{tileId}")
+    public ResponseEntity<Tile> getDescriptionByImageAndTileId(@PathVariable String imageId, @PathVariable String tileId) {
+        return ResponseEntity.ok(tileDataService.getTileDescriptionById(imageId, tileId));
     }
 }

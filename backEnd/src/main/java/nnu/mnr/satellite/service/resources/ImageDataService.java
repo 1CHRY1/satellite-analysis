@@ -1,12 +1,10 @@
 package nnu.mnr.satellite.service.resources;
 
+import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.model.po.Image;
 import nnu.mnr.satellite.repository.IImageRepo;
 import nnu.mnr.satellite.utils.MinioUtil;
-import org.checkerframework.checker.units.qual.A;
-import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.io.WKBWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,7 +34,7 @@ public class ImageDataService {
 
     public List<Image> getImagesBySceneId(String sceneId) {
         QueryWrapper<Image> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("scene_id", sceneId);
+        queryWrapper.select("image_id", "band").eq("scene_id", sceneId);
         return imageRepo.selectList(queryWrapper);
     }
 

@@ -1,11 +1,15 @@
 package nnu.mnr.satellite.utils;
 
 import com.alibaba.fastjson2.JSONArray;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.LinearRing;
+import com.alibaba.fastjson2.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.geotools.geojson.geom.GeometryJSON;
+import org.locationtech.jts.geom.*;
 import org.locationtech.jts.geom.impl.CoordinateArraySequence;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,12 +30,16 @@ public class GeometryUtil {
      * @return JTS LinearRing 对象
      */
     public static LinearRing parseLinearRing(JSONArray ringCoordinates, GeometryFactory geometryFactory) {
+
+        // 处理嵌套的 JSONArray，获取最内层包含点坐标的 JSONArray
+        ringCoordinates = ringCoordinates.getJSONArray(0);
+
         List<Coordinate> coords = new ArrayList<>();
         for (int i = 0; i < ringCoordinates.size(); i++) {
             JSONArray point = ringCoordinates.getJSONArray(i);
-            double x = point.getDouble(0);
-            double y = point.getDouble(1);
-            coords.add(new Coordinate(x, y));
+            double longtitude = point.getDouble(0);
+            double latitude = point.getDouble(1);
+            coords.add(new CoordinateXY(longtitude, latitude));
         }
 
         // 确保环是闭合的
@@ -39,7 +47,69 @@ public class GeometryUtil {
             coords.add(coords.get(0));
         }
 
-        return geometryFactory.createLinearRing(new CoordinateArraySequence(coords.toArray(new Coordinate[0])));
+        Coordinate[] coordArray = coords.toArray(new Coordinate[0]);
+        CoordinateArraySequence coordSeq = new CoordinateArraySequence(coordArray);
+        return geometryFactory.createLinearRing(coordSeq);
+    }
+
+    private static LinearRing createLinearRing(JSONArray ringCoordinates, GeometryFactory geometryFactory) {
+        List<Coordinate> coords = new ArrayList<>();
+        for (int i = 0; i < ringCoordinates.size(); i++) {
+            JSONArray point = ringCoordinates.getJSONArray(i);
+            double longitude = point.getDouble(0); // longitude 在前
+            double latitude = point.getDouble(1);  // latitude 在后
+            coords.add(new CoordinateXY(latitude, longitude));
+        }
+
+        // 确保环是闭合的
+        if (!coords.get(0).equals(coords.get(coords.size() - 1))) {
+            coords.add(coords.get(0));
+        }
+
+        Coordinate[] coordArray = coords.toArray(new Coordinate[0]);
+        return geometryFactory.createLinearRing(coordArray);
+    }
+
+    public static Polygon parsePolygon(JSONArray coordinates, GeometryFactory geometryFactory) {
+        // 外部环
+        JSONArray outerRingCoords = coordinates.getJSONArray(0);
+        LinearRing outerRing = createLinearRing(outerRingCoords, geometryFactory);
+
+        // 内部环（洞）
+        LinearRing[] innerRings = new LinearRing[coordinates.size() - 1];
+        for (int i = 1; i < coordinates.size(); i++) {
+            JSONArray innerRingCoords = coordinates.getJSONArray(i);
+            innerRings[i - 1] = createLinearRing(innerRingCoords, geometryFactory);
+        }
+
+        return geometryFactory.createPolygon(outerRing, innerRings);
+    }
+
+    public static String geometry2geojson(Geometry jtsGeometry, String id) throws IOException {
+        if (jtsGeometry == null || id == null) {
+            return null;
+        }
+
+        // 创建 GeometryJSON 对象，指定精度（例如 6 位小数）
+        GeometryJSON geometryJson = new GeometryJSON(6);
+
+        // 将 JTS Geometry 转换为 GeoJSON 几何部分的字符串
+        StringWriter writer = new StringWriter();
+        geometryJson.write(jtsGeometry, writer);
+        String geometryJsonStr = writer.toString();
+
+        // 使用 Jackson 创建完整的 GeoJSON Feature 对象
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode featureNode = mapper.createObjectNode();
+
+        // 设置 Feature 的字段
+        featureNode.put("id", id);
+        featureNode.put("type", "Feature");
+        featureNode.set("properties", mapper.createObjectNode()); // 空 properties 对象
+        featureNode.set("geometry", mapper.readTree(geometryJsonStr)); // 解析 geometry JSON
+
+        // 转换为字符串
+        return mapper.writeValueAsString(featureNode);
     }
 
 }

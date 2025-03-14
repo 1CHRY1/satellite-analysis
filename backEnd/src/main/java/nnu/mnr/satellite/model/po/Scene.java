@@ -1,6 +1,5 @@
 package nnu.mnr.satellite.model.po;
 
-import com.alibaba.fastjson2.support.geo.Geometry;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -10,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import nnu.mnr.satellite.utils.typeHandler.GeometryTypeHandler;
 import nnu.mnr.satellite.utils.typeHandler.SetTypeHandler;
+import org.locationtech.jts.geom.Geometry;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -37,7 +37,8 @@ public class Scene {
 
     @TableField(value = "tile_levels", typeHandler = SetTypeHandler.class)
     private HashSet<String> tileLevels;
-    private String crs;
+
+    private String coordinateSystem;
 
     @TableField(value="bounding_box", typeHandler = GeometryTypeHandler.class)
     private Geometry bbox;
