@@ -73,4 +73,4 @@ class HttpClient {
     }
 }
 
-export default new HttpClient('https://api.example.com')
+export default new HttpClient('http://localhost:5000')

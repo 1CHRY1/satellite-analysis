@@ -60,7 +60,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { UserStore } from '@/store/index.ts'
+import { useUserStore } from '@/store/index.ts'
 
 //////// Router //////////////////////////////////
 const route = useRoute()
@@ -78,5 +78,5 @@ const jumpToOGMS = () => {
 }
 
 /////// User //////////////////////////////////
-const userStore = UserStore()
+const userStore = useUserStore()
 </script>

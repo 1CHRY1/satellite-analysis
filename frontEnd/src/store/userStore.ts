@@ -5,7 +5,7 @@ export interface UserInfo {
     email: string
 }
 
-export const UserStore = defineStore('user-store', {
+export const useUserStore = defineStore('user-store', {
     state: () => ({
         counter: 0,
         authenticated: true, // temp 2025.3.11
