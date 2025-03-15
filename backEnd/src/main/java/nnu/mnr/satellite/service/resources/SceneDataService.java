@@ -3,6 +3,7 @@ package nnu.mnr.satellite.service.resources;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import nnu.mnr.satellite.model.dto.common.GeoJsonDTO;
 import nnu.mnr.satellite.model.dto.resources.ProductDesDTO;
 import nnu.mnr.satellite.model.dto.resources.SceneDesDTO;
 import nnu.mnr.satellite.model.po.resources.Scene;
@@ -63,7 +64,7 @@ public class SceneDataService {
         return sceneModelMapper.map(scene, SceneDesDTO.class);
     }
 
-    public JSONArray getScenesByIdsTimeAndBBox(JSONObject params) throws IOException {
+    public GeoJsonDTO getScenesByIdsTimeAndBBox(JSONObject params) throws IOException {
 //        JSONObject params = sceneRequestResolving(paramObj);
         String sensorId = params.getString("sensorId");
         String productId = params.getString("productId");
@@ -90,15 +91,10 @@ public class SceneDataService {
                     wkt
             );
             List<Scene> sceneList = sceneRepo.selectList(queryWrapper);
-            JSONArray sceneJsonList = new JSONArray();
-            for (Scene scene : sceneList) {
-                String sceneGeoJson = GeometryUtil.geometry2geojson(scene.getBbox(), scene.getSceneId());
-                sceneJsonList.add(JSONObject.parseObject(sceneGeoJson));
-            }
-            return sceneJsonList;
+            return GeometryUtil.sceneList2GeojsonDTO(sceneList);
         } else {
             // TODO: 其他的类型
-            return new JSONArray();
+            return new GeoJsonDTO();
         }
     }
 

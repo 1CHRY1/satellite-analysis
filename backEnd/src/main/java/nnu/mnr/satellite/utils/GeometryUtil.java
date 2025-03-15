@@ -4,6 +4,9 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import nnu.mnr.satellite.model.dto.common.GeoJsonDTO;
+import nnu.mnr.satellite.model.po.resources.Scene;
+import nnu.mnr.satellite.model.po.resources.Tile;
 import org.geotools.geojson.geom.GeometryJSON;
 import org.locationtech.jts.geom.*;
 import org.locationtech.jts.geom.impl.CoordinateArraySequence;
@@ -85,7 +88,7 @@ public class GeometryUtil {
         return geometryFactory.createPolygon(outerRing, innerRings);
     }
 
-    public static String geometry2geojson(Geometry jtsGeometry, String id) throws IOException {
+    public static JSONObject geometry2Geojson(Geometry jtsGeometry, String id) throws IOException {
         if (jtsGeometry == null || id == null) {
             return null;
         }
@@ -109,7 +112,37 @@ public class GeometryUtil {
         featureNode.set("geometry", mapper.readTree(geometryJsonStr)); // 解析 geometry JSON
 
         // 转换为字符串
-        return mapper.writeValueAsString(featureNode);
+        return JSONObject.parseObject(mapper.writeValueAsString(featureNode));
+    }
+
+    public static GeoJsonDTO sceneList2GeojsonDTO(List<Scene> items) throws IOException {
+        GeoJsonDTO geoJsonDTO = new GeoJsonDTO();
+        geoJsonDTO.setType("FeatureCollection");
+
+        JSONArray features = new JSONArray();
+        if (items != null) {
+            for (Scene item : items) {
+                JSONObject sceneGeoJson = geometry2Geojson(item.getBbox(), item.getSceneId());
+                features.add(sceneGeoJson);
+            }
+        }
+        geoJsonDTO.setFeatures(features);
+        return geoJsonDTO;
+    }
+
+    public static GeoJsonDTO tileList2GeojsonDTO(List<Tile> items) throws IOException {
+        GeoJsonDTO geoJsonDTO = new GeoJsonDTO();
+        geoJsonDTO.setType("FeatureCollection");
+
+        JSONArray features = new JSONArray();
+        if (items != null) {
+            for (Tile item : items) {
+                JSONObject sceneGeoJson = geometry2Geojson(item.getBbox(), item.getTileId());
+                features.add(sceneGeoJson);
+            }
+        }
+        geoJsonDTO.setFeatures(features);
+        return geoJsonDTO;
     }
 
 }

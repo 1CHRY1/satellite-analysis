@@ -3,6 +3,7 @@ package nnu.mnr.satellite.service.resources;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.dynamic.datasource.annotation.DS;
+import nnu.mnr.satellite.model.dto.common.GeoJsonDTO;
 import nnu.mnr.satellite.model.dto.resources.ImageInfoDTO;
 import nnu.mnr.satellite.model.dto.resources.TileDesDTO;
 import nnu.mnr.satellite.model.po.resources.Tile;
@@ -41,14 +42,9 @@ public class TileDataService {
     }
 
     @DS("mysql_tile")
-    public JSONArray getTilesByImageAndLevel(String imageId, int tileLevel) throws IOException {
+    public GeoJsonDTO getTilesByImageAndLevel(String imageId, int tileLevel) throws IOException {
         List<Tile> tiles = tileRepo.getTileByImageIdAndLevel(imageId, tileLevel);
-        JSONArray tileGeoJsons = new JSONArray();
-        for (Tile tile : tiles) {
-            JSONObject tileGeoJson = JSONObject.parse(GeometryUtil.geometry2geojson(tile.getBbox(), tile.getTileId()));
-            tileGeoJsons.add(JSONObject.of("tile", tileGeoJson));
-        }
-        return tileGeoJsons;
+        return GeometryUtil.tileList2GeojsonDTO(tiles);
     }
 
     @DS("mysql_tile")

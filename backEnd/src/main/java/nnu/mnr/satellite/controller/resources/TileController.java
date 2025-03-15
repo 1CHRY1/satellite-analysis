@@ -2,6 +2,7 @@ package nnu.mnr.satellite.controller.resources;
 
 import com.alibaba.fastjson2.JSONArray;
 import lombok.extern.slf4j.Slf4j;
+import nnu.mnr.satellite.model.dto.common.GeoJsonDTO;
 import nnu.mnr.satellite.model.dto.resources.TileDesDTO;
 import nnu.mnr.satellite.model.po.resources.Tile;
 import nnu.mnr.satellite.service.resources.TileDataService;
@@ -32,7 +33,7 @@ public class TileController {
     }
 
     @GetMapping("/imageId/{imageId}/tileLevel/{tileLevel}")
-    public ResponseEntity<JSONArray> getTilesByImageAndLevel(@PathVariable String imageId, @PathVariable int tileLevel) throws IOException {
+    public ResponseEntity<GeoJsonDTO> getTilesByImageAndLevel(@PathVariable String imageId, @PathVariable int tileLevel) throws IOException {
         return ResponseEntity.ok(tileDataService.getTilesByImageAndLevel(imageId, tileLevel));
     }
 

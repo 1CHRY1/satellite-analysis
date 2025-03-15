@@ -3,6 +3,7 @@ package nnu.mnr.satellite.controller.resources;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import nnu.mnr.satellite.model.dto.common.GeoJsonDTO;
 import nnu.mnr.satellite.model.dto.resources.SceneDesDTO;
 import nnu.mnr.satellite.service.resources.SceneDataService;
 import org.opengis.referencing.FactoryException;
@@ -38,7 +39,7 @@ public class SceneController {
     }
 
     @PostMapping("/sensorId/productId/time/area")
-    public ResponseEntity<JSONArray> getScenesByIdsTimeAndBBox(@RequestBody JSONObject paramObj) throws IOException {
+    public ResponseEntity<GeoJsonDTO> getScenesByIdsTimeAndBBox(@RequestBody JSONObject paramObj) throws IOException {
         return ResponseEntity.ok(sceneDataService.getScenesByIdsTimeAndBBox(paramObj));
     }
 
