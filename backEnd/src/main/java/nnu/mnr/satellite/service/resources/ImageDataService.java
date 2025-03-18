@@ -2,10 +2,9 @@ package nnu.mnr.satellite.service.resources;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.model.dto.resources.ImageInfoDTO;
-import nnu.mnr.satellite.model.dto.resources.ProductDesDTO;
 import nnu.mnr.satellite.model.po.resources.Image;
 import nnu.mnr.satellite.repository.resources.IImageRepo;
-import nnu.mnr.satellite.utils.MinioUtil;
+import nnu.mnr.satellite.utils.data.MinioUtil;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;

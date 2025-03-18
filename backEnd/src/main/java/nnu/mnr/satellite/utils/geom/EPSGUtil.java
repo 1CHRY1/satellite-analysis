@@ -1,4 +1,4 @@
-package nnu.mnr.satellite.utils;
+package nnu.mnr.satellite.utils.geom;
 
 import org.geotools.referencing.CRS;
 import org.opengis.referencing.FactoryException;

@@ -1,20 +1,14 @@
 package nnu.mnr.satellite.config;
 
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
 import lombok.SneakyThrows;
-import nnu.mnr.satellite.model.dto.common.GeoJsonDTO;
 import nnu.mnr.satellite.model.dto.resources.SceneDesDTO;
 import nnu.mnr.satellite.model.po.resources.Scene;
-import nnu.mnr.satellite.utils.EPSGUtil;
-import nnu.mnr.satellite.utils.GeometryUtil;
+import nnu.mnr.satellite.utils.geom.EPSGUtil;
 import org.modelmapper.Converter;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.spi.MappingContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
