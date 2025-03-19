@@ -149,10 +149,13 @@ export function map_addGridLayer(props: GridLayerProp): void {
             filter: ['in', 'id', ''],
         })
 
-        watch(() => gridStore.selectedGrids, () => {
-            console.log('watch gridStore.selectedGrid')
-            m.setFilter(props.id + '-highlight', ['in', 'id', ...gridStore.selectedGrids])
-        })
+        watch(
+            () => gridStore.selectedGrids,
+            () => {
+                console.log('watch gridStore.selectedGrid')
+                m.setFilter(props.id + '-highlight', ['in', 'id', ...gridStore.selectedGrids])
+            },
+        )
 
         m.on('click', props.id, (e) => {
             const features = m.queryRenderedFeatures(e.point, { layers: [props.id] })
@@ -198,12 +201,11 @@ export function map_addImageLayer(props: ImageLayerProp): void {
 /////// Grid Operation //////////////////////////////////
 
 export function grid_create(props: Image): void {
-
     const gridImgUrl = 'http://127.0.0.1:5000/png'
     map_addImageLayer({
-        'id': 'gridImage',
-        'url': gridImgUrl,
-        'boxCoordinates': [
+        id: 'gridImage',
+        url: gridImgUrl,
+        boxCoordinates: [
             [119.0494136861107535, 32.7542374796797588],
             [121.6247280289205861, 32.7542374796797588],
             [121.6247280289205861, 30.7365359708879033],
@@ -211,13 +213,11 @@ export function grid_create(props: Image): void {
         ],
     })
 
-
     setTimeout(() => {
         const gridGeoJsonUrl = 'http://127.0.0.1:5000/geojson'
         map_addGridLayer({
-            'id': 'grid',
-            'url': gridGeoJsonUrl,
+            id: 'grid',
+            url: gridGeoJsonUrl,
         })
-    }, 500);
-
+    }, 500)
 }

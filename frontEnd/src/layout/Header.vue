@@ -21,9 +21,11 @@
                     <router-link
                         :key="item.path"
                         :to="item.path"
-                        class="text-shadow-deepbluewhitespace-nowrap lg:text-2xl md:text-xl sm:text-lg text-sky-800 font-semibold hover:text-sky-600 transition-colors"
+                        class="relative text-shadow-deepbluewhitespace-nowrap lg:text-2xl md:text-xl sm:text-lg text-sky-800 font-semibold hover:text-sky-600 transition-all duration-300 px-2 py-1 rounded-md"
                         :class="{
-                            'text-sky-600 font-bold': currentRoute === item.path,
+                            'text-sky-600 font-bold bg-sky-50': currentRoute === item.path,
+                            'nav-link': true,
+                            'nav-link-active': currentRoute === item.path
                         }"
                         >{{ item.name }}
                     </router-link>
@@ -80,3 +82,25 @@ const jumpToOGMS = () => {
 /////// User //////////////////////////////////
 const userStore = useUserStore()
 </script>
+
+<style scoped>
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: rgb(2 132 199);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.nav-link:hover::after {
+    transform: scaleX(1);
+}
+
+.nav-link-active::after {
+    transform: scaleX(1);
+}
+</style>
