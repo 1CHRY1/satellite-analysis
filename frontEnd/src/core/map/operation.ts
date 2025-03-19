@@ -218,6 +218,9 @@ export function map_addImageLayer(props: ImageLayerProp): void {
             id: props.id,
             type: 'raster',
             source: props.id + '-source',
+            paint: {
+                'raster-opacity': 0.9,
+            },
         })
     })
 }
