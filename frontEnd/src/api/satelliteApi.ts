@@ -34,7 +34,7 @@ const mockSatellites: Array<Satellite> = [
                 description: '陆地卫星5号全地形多光光谱影像',
                 resolution: '30米',
                 period: '16天',
-            }
+            },
         ],
     },
     {
