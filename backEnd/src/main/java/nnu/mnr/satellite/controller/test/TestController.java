@@ -1,5 +1,6 @@
 package nnu.mnr.satellite.controller.test;
 
+import nnu.mnr.satellite.model.po.common.DFileInfo;
 import nnu.mnr.satellite.service.common.DockerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -7,6 +8,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -57,6 +61,19 @@ public class TestController {
     @GetMapping("/docker/container/status/{containerId}")
     public ResponseEntity<Boolean> testContainerStatus(@PathVariable String containerId) throws Exception {
         return ResponseEntity.ok(dockerService.checkContainerState(containerId));
+    }
+
+    @GetMapping("/docker/container/files/{containerId}")
+    public ResponseEntity<List<DFileInfo>> testContainerFiles(@PathVariable String containerId) {
+        List<DFileInfo> fileTree = new ArrayList<>();
+        return ResponseEntity.ok(dockerService.getCurDirFiles(containerId, "tetete", "", fileTree));
+    }
+
+    @GetMapping("/docker/container/run/{containerId}")
+    public ResponseEntity<String> testContainerRun(@PathVariable String containerId) {
+        String common = "python main.py";
+        dockerService.runCMDInContainer("tetete", containerId, common);
+        return ResponseEntity.ok("run");
     }
 
 }

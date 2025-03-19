@@ -2,6 +2,7 @@ package nnu.mnr.satellite.service.common;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerResponse;
+import com.github.dockerjava.api.command.ExecCreateCmdResponse;
 import com.github.dockerjava.api.command.RemoveContainerCmd;
 import com.github.dockerjava.api.exception.DockerException;
 import com.github.dockerjava.api.model.Bind;
@@ -11,22 +12,30 @@ import com.github.dockerjava.api.model.Volume;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
+import com.github.dockerjava.core.command.ExecStartResultCallback;
 import com.github.dockerjava.okhttp.OkDockerHttpClient;
 import com.github.dockerjava.transport.DockerHttpClient;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import nnu.mnr.satellite.enums.common.FileType;
+import nnu.mnr.satellite.model.po.common.DFileInfo;
 import nnu.mnr.satellite.model.po.common.SftpConn;
+import nnu.mnr.satellite.service.websocket.ModelSocketService;
+import nnu.mnr.satellite.utils.docker.DockerFileUtil;
+import nnu.mnr.satellite.websocket.ModelResultCallBack;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created with IntelliJ IDEA.
@@ -54,8 +63,14 @@ public class DockerService {
     @Value("${ca.dir}")
     private String localCADir;
 
+    @Value("${docker.remotePath}")
+    private String containerDir; //容器工作空间
+
     @Autowired
     SftpDataService ftpDataService;
+
+    @Autowired
+    ModelSocketService modelSocketService;
 
     private DockerClient dockerClient;
 
@@ -156,5 +171,88 @@ public class DockerService {
         removeContainerCmd.withForce(true).exec();
     }
 
+    public List<DFileInfo> getCurDirFiles(String containerId, String projectId, String path, List<DFileInfo> fileTree) {
+        // TODO: 通过projectId获取运行路径
+        String workSpaceDir = "/usr/local/coding/";
+        try {
+            String[] cmd = {"/bin/bash", "-c", "ls -la " + workSpaceDir + "/" + path};
+            ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(containerId)
+                    .withAttachStdout(true)
+                    .withAttachStderr(true)
+                    .withTty(true)
+                    .withAttachStdin(true)
+                    .withCmd(cmd)
+                    .exec();
+            String execId = execCreateCmdResponse.getId();
+            OutputStream output = new ByteArrayOutputStream();
+            dockerClient.execStartCmd(execId)
+                    .exec(new ExecStartResultCallback(output, System.err))
+                    .awaitCompletion();
+            String[] files = output.toString().split("\n");
+
+            for (String file : files) {
+                String[] fileDetails = file.split("\\s+");
+                if (fileDetails.length >= 9) {
+                    String fileName = fileDetails[8];
+                    if (fileName.equals(".") || fileName.equals("..")) {
+                        continue;
+                    }
+
+                    // Build FileInfo
+                    String filePath = path + fileName;
+                    Boolean isDirectory = file.startsWith("d");
+                    FileType fileType = FileType.unknown;
+                    if (isDirectory){
+                        fileType = FileType.folder;
+                        filePath = filePath + "/";
+                    } else{
+                        int dotIndex = fileName.lastIndexOf('.');
+                        if (dotIndex > 0 && dotIndex < fileName.length() - 1) {
+                            String type = fileName.substring(dotIndex + 1).toLowerCase();
+                            fileType = DockerFileUtil.setDataType(type);
+                        }
+                    }
+
+                    DFileInfo fileInfo = DFileInfo.builder()
+                            .fileName(fileName).filePath(filePath).fileType(fileType)
+                            .serverPath(containerDir + projectId + "/" + filePath)
+                            .updateTime(DockerFileUtil.parseFileLastModified(fileDetails))
+                            .fileSize(Long.parseLong(fileDetails[4]))
+                            .DFileInfoBuilder();
+
+                    if (isDirectory) {
+                        List<DFileInfo> subFiles = new ArrayList<>();
+                        subFiles = getCurDirFiles(containerId, projectId, filePath, subFiles);
+                        fileInfo.setChildrenFileList(subFiles);
+                    }
+
+                    fileTree.add(fileInfo);
+
+                }
+            }
+            return fileTree;
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void runCMDInContainer(String projectId, String containerId, String command) {
+        try{
+            String[] cmd = {"/bin/bash", "-c", command};
+            ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(containerId)
+                    .withAttachStdout(true)
+                    .withAttachStderr(true)
+                    .withTty(true)
+                    .withAttachStdin(true)
+                    .withCmd(cmd)
+                    .exec();
+
+            ModelResultCallBack callback = new ModelResultCallBack(projectId, modelSocketService);
+            String exeId = execCreateCmdResponse.getId();
+            dockerClient.execStartCmd(exeId).exec(callback).awaitCompletion(300, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 }
