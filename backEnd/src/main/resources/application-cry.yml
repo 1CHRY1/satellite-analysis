@@ -3,11 +3,45 @@ server:
 
 spring:
   datasource:
-#    url: jdbc:mysql://localhost:3306/satellite
-    url: jdbc:mysql://10.20.249.101:3306/satellite
-    username: root
-    password: root
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    dynamic:
+      primary: mysql_satellite
+      strict: false
+      datasource:
+        mysql_satellite:
+          url: jdbc:mysql://223.2.34.7:3306/satellite
+          username: root
+          password: root
+          driver-class-name: com.mysql.cj.jdbc.Driver
+        mysql_tile:
+          url: jdbc:mysql://223.2.34.7:3306/tile
+          username: root
+          password: root
+          driver-class-name: com.mysql.cj.jdbc.Driver
+  servlet:
+    multipart:
+      max-file-size: 1GB
+      max-request-size: 1GB
 
-mybatis:
+mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: nnu.mnr.satellite.model.po
+  type-handlers-package: nnu.mnr.satellite.utils.typeHandler
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+minio:
+  access-key: jTbgNHEqQafOpUxVg7Ol
+  secret-key: 7UxtrqhSOyN1KUeumbqTRMv1zeluLO69OwJnCC0M
+  url: http://223.2.34.7:9000
+
+docker:
+  defaultServer:
+    port: 2376
+#    host: "127.0.0.1"
+    host: "223.2.35.208"
+    username: "vge"
+    password: "3J44.njnu.edu.cn"
+  localPath: D:/1study/Work/2025_03_05_satellite/modelDockerVolume/
+
+ca:
+  dir: D:/1tools/OpenSSL/ca
