@@ -1,4 +1,4 @@
 {
-    "mock": true,
-    "back_app": "http://223.2.47.202:9888"
+    "mock": false,
+    "back_app": "http://223.2.47.202:9888/api/v1"
 }

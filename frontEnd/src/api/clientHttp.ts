@@ -2,14 +2,6 @@ import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios'
 import { message } from 'ant-design-vue'
 import ezStore from '@/util/ezStore'
 
-type ApiResponse<T> = {
-    data: T
-    status: number
-    statusText: string
-    headers: any
-    config: any
-}
-
 class HttpClient {
     private instance: AxiosInstance
 
@@ -64,23 +56,19 @@ class HttpClient {
     }
 
     public async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-        const response: ApiResponse<T> = await this.instance.get<T>(url, config)
-        return response.data
+        return await this.instance.get(url, config)
     }
 
     public async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-        const response: ApiResponse<T> = await this.instance.post<T>(url, data, config)
-        return response.data
+        return await this.instance.post(url, data, config)
     }
 
     public async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-        const response: ApiResponse<T> = await this.instance.put<T>(url, data, config)
-        return response.data
+        return await this.instance.put(url, data, config)
     }
 
     public async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-        const response: ApiResponse<T> = await this.instance.delete<T>(url, config)
-        return response.data
+        return await this.instance.delete(url, config)
     }
 }
 

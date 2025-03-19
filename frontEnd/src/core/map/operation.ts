@@ -3,6 +3,7 @@ import mapboxgl from 'mapbox-gl'
 import { CN_Bounds } from './constant'
 import { type Image } from '@/types/satellite'
 import { useGridStore } from '@/store'
+import { type polygonGeometry } from '@/types/sharing'
 import { watch } from 'vue'
 
 ////////////////////////////////////////////////////////
@@ -73,6 +74,30 @@ export function draw_pointMode(): void {
         d.changeMode('draw_point')
     })
 }
+
+export async function getCurrentGeometry(): Promise<polygonGeometry> {
+    return new Promise((resolve, reject) => {
+        mapManager.withDraw((d) => {
+            const features = d.getAll().features
+            if (features.length) {
+                console.log('current geom', features[0].geometry)
+                resolve(features[0].geometry as polygonGeometry)
+            }
+            // 默认检索范围
+            resolve({
+                type: 'Polygon',
+                coordinates: [[
+                    [0,85],
+                    [0,-85],
+                    [180, -85],
+                    [180, 85],
+                    [0, 85],
+                ]],
+            })
+        })
+    })
+}
+
 
 ////////////////////////////////////////////////////////
 /////// Layer Operation //////////////////////////////////
@@ -221,3 +246,4 @@ export function grid_create(props: Image): void {
         })
     }, 500)
 }
+
