@@ -86,18 +86,19 @@ export async function getCurrentGeometry(): Promise<polygonGeometry> {
             // 默认检索范围
             resolve({
                 type: 'Polygon',
-                coordinates: [[
-                    [0,85],
-                    [0,-85],
-                    [180, -85],
-                    [180, 85],
-                    [0, 85],
-                ]],
+                coordinates: [
+                    [
+                        [0, 85],
+                        [0, -85],
+                        [180, -85],
+                        [180, 85],
+                        [0, 85],
+                    ],
+                ],
             })
         })
     })
 }
-
 
 ////////////////////////////////////////////////////////
 /////// Layer Operation //////////////////////////////////
@@ -249,4 +250,3 @@ export function grid_create(props: Image): void {
         })
     }, 500)
 }
-
