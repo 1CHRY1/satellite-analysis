@@ -1,9 +1,8 @@
 package nnu.mnr.satellite.controller.resources;
 
 import lombok.extern.slf4j.Slf4j;
-import nnu.mnr.satellite.model.dto.resources.SensorDesDTO;
-import nnu.mnr.satellite.model.dto.resources.SensorInfoDTO;
-import nnu.mnr.satellite.model.po.resources.Sensor;
+import nnu.mnr.satellite.model.vo.resources.SensorDesVO;
+import nnu.mnr.satellite.model.vo.resources.SensorInfoVO;
 import nnu.mnr.satellite.service.resources.SensorDataService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,12 +32,12 @@ public class SensorController {
     }
 
     @GetMapping
-    public ResponseEntity<List<SensorInfoDTO>> GetAllData() {
+    public ResponseEntity<List<SensorInfoVO>> GetAllData() {
         return ResponseEntity.ok(sensorDataService.getAllData());
     }
 
     @GetMapping("/description/sensorId/{sensorId}")
-    public ResponseEntity<SensorDesDTO> GetSensorDescription(@PathVariable String sensorId) {
+    public ResponseEntity<SensorDesVO> GetSensorDescription(@PathVariable String sensorId) {
         return ResponseEntity.ok(sensorDataService.getSensorDescription(sensorId));
     }
 

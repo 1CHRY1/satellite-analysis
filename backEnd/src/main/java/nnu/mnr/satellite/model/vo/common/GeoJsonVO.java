@@ -1,4 +1,4 @@
-package nnu.mnr.satellite.model.dto.common;
+package nnu.mnr.satellite.model.vo.common;
 
 import com.alibaba.fastjson2.JSONArray;
 import lombok.Data;
@@ -12,7 +12,7 @@ import lombok.Data;
  */
 
 @Data
-public class GeoJsonDTO {
+public class GeoJsonVO {
 
     String type;
     JSONArray features;

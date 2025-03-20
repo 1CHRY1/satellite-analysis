@@ -1,15 +1,20 @@
 package nnu.mnr.satellite.service.resources;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.dynamic.datasource.annotation.DS;
-import nnu.mnr.satellite.model.dto.common.GeoJsonDTO;
-import nnu.mnr.satellite.model.dto.resources.TileDesDTO;
+import lombok.extern.slf4j.Slf4j;
+import nnu.mnr.satellite.model.dto.resources.TilesMergeDTO;
+import nnu.mnr.satellite.model.vo.common.GeoJsonVO;
+import nnu.mnr.satellite.model.vo.resources.TileDesVO;
 import nnu.mnr.satellite.model.po.resources.Tile;
 import nnu.mnr.satellite.repository.resources.ITileRepo;
+import nnu.mnr.satellite.utils.common.HttpUtil;
 import nnu.mnr.satellite.utils.geom.GeometryUtil;
 import nnu.mnr.satellite.utils.data.MinioUtil;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -23,6 +28,7 @@ import java.util.List;
  * @Description:
  */
 
+@Slf4j
 @Service("TileDataService")
 public class TileDataService {
 
@@ -32,6 +38,9 @@ public class TileDataService {
     @Autowired
     MinioUtil minioUtil;
 
+    @Value("${modelServer.merge}")
+    private String modelServer;
+
     private final ITileRepo tileRepo;
 
     public TileDataService(ITileRepo tileRepo) {
@@ -39,9 +48,9 @@ public class TileDataService {
     }
 
     @DS("mysql_tile")
-    public GeoJsonDTO getTilesByImageAndLevel(String imageId, int tileLevel) throws IOException {
+    public GeoJsonVO getTilesByImageAndLevel(String imageId, int tileLevel) throws IOException {
         List<Tile> tiles = tileRepo.getTileByImageIdAndLevel(imageId, tileLevel);
-        return GeometryUtil.tileList2GeojsonDTO(tiles);
+        return GeometryUtil.tileList2GeojsonVO(tiles);
     }
 
     @DS("mysql_tile")
@@ -50,10 +59,22 @@ public class TileDataService {
         return minioUtil.downloadByte(tile.getBucket(), tile.getPath());
     }
 
+    public byte[] getMergeTileTif(TilesMergeDTO tilesMergeDTO) {
+        JSONObject mergeParam = JSONObject.of("imageId", tilesMergeDTO.getImageId(),"tiles", tilesMergeDTO.getTiles());
+        try {
+            JSONObject fileLocation = JSONObject.parseObject(HttpUtil.doPost(modelServer, mergeParam));
+            String bucket = fileLocation.getString("bucket");
+            String path = fileLocation.getString("path");
+            return minioUtil.downloadByte(bucket, path);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     @DS("mysql_tile")
-    public TileDesDTO getTileDescriptionById(String imageId, String tileId) {
+    public TileDesVO getTileDescriptionById(String imageId, String tileId) {
         Tile tile = tileRepo.getTileByTileId(imageId, tileId);
-        return tileModelMapper.map(tile, new TypeToken<TileDesDTO>() {}.getType());
+        return tileModelMapper.map(tile, new TypeToken<TileDesVO>() {}.getType());
     }
 
 }

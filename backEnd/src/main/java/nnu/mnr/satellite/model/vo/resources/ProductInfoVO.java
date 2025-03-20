@@ -1,4 +1,4 @@
-package nnu.mnr.satellite.model.dto.resources;
+package nnu.mnr.satellite.model.vo.resources;
 
 import lombok.Data;
 
@@ -11,7 +11,7 @@ import lombok.Data;
  */
 
 @Data
-public class ProductInfoDTO {
+public class ProductInfoVO {
 
     private String productId;
     private String productName;

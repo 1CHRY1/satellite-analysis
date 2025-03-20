@@ -1,4 +1,4 @@
-package nnu.mnr.satellite.model.dto.resources;
+package nnu.mnr.satellite.model.vo.resources;
 
 import lombok.Data;
 
@@ -11,7 +11,7 @@ import lombok.Data;
  */
 
 @Data
-public class TileDesDTO {
+public class TileDesVO {
 
     private String tileLevel;
     private String imageId;

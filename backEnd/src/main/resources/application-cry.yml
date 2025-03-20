@@ -25,6 +25,11 @@ spring:
     multipart:
       max-file-size: 1GB
       max-request-size: 1GB
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
 
 mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
@@ -50,3 +55,6 @@ docker:
 
 ca:
   dir: D:/1tools/OpenSSL/ca
+
+modelServer:
+  merge: http://223.2.34.7:5000/merge

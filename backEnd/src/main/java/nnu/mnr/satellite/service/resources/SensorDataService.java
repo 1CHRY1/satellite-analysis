@@ -1,9 +1,8 @@
 package nnu.mnr.satellite.service.resources;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import nnu.mnr.satellite.model.dto.resources.SensorDesDTO;
-import nnu.mnr.satellite.model.dto.resources.SensorInfoDTO;
-import nnu.mnr.satellite.model.po.resources.Scene;
+import nnu.mnr.satellite.model.vo.resources.SensorDesVO;
+import nnu.mnr.satellite.model.vo.resources.SensorInfoVO;
 import nnu.mnr.satellite.model.po.resources.Sensor;
 import nnu.mnr.satellite.repository.resources.ISensorRepo;
 import org.modelmapper.ModelMapper;
@@ -34,24 +33,24 @@ public class SensorDataService {
         this.sensorRepo = sensorRepo;
     }
 
-    public List<SensorInfoDTO> getAllData() {
+    public List<SensorInfoVO> getAllData() {
         QueryWrapper<Sensor> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("sensor_id", "sensor_name", "platform_name");
         List<Sensor> sensors = sensorRepo.selectList(queryWrapper);
         if (sensors == null) {
             return Collections.emptyList();
         }
-        return sensorModelMapper.map(sensors, new TypeToken<List<SensorInfoDTO>>() {}.getType());
+        return sensorModelMapper.map(sensors, new TypeToken<List<SensorInfoVO>>() {}.getType());
     }
 
-    public SensorDesDTO getSensorDescription(String sensorId) {
+    public SensorDesVO getSensorDescription(String sensorId) {
         QueryWrapper<Sensor> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("description").eq("sensor_id", sensorId);
         Sensor sensor = sensorRepo.selectOne(queryWrapper);
         if (sensor == null) {
             return null;
         }
-        return sensorModelMapper.map(sensor, new TypeToken<SensorDesDTO>() {}.getType());
+        return sensorModelMapper.map(sensor, new TypeToken<SensorDesVO>() {}.getType());
     }
 
 }

@@ -1,11 +1,6 @@
-package nnu.mnr.satellite.model.dto.resources;
+package nnu.mnr.satellite.model.vo.resources;
 
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
-import nnu.mnr.satellite.utils.typeHandler.GeometryTypeHandler;
-import nnu.mnr.satellite.utils.typeHandler.SetTypeHandler;
-import org.locationtech.jts.geom.Geometry;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -19,7 +14,7 @@ import java.util.HashSet;
  */
 
 @Data
-public class SceneDesDTO {
+public class SceneDesVO {
 
     private LocalDateTime sceneTime;
     private Integer tileLevelNum;

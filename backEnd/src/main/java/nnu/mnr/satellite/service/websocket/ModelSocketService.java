@@ -1,12 +1,8 @@
 package nnu.mnr.satellite.service.websocket;
 
-import jakarta.websocket.OnClose;
-import jakarta.websocket.OnError;
-import jakarta.websocket.OnMessage;
-import jakarta.websocket.OnOpen;
 import jakarta.websocket.server.PathParam;
 import lombok.extern.slf4j.Slf4j;
-import nnu.mnr.satellite.annotations.websocket.WsEndPoint;
+import nnu.mnr.satellite.annotations.websocket.*;
 import nnu.mnr.satellite.model.pojo.websocket.WsSession;
 import org.springframework.stereotype.Service;
 

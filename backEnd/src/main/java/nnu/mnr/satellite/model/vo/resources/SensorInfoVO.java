@@ -1,4 +1,4 @@
-package nnu.mnr.satellite.model.dto.resources;
+package nnu.mnr.satellite.model.vo.resources;
 
 import lombok.Data;
 
@@ -11,7 +11,7 @@ import lombok.Data;
  */
 
 @Data
-public class SensorInfoDTO {
+public class SensorInfoVO {
 
     private String sensorId;
     private String sensorName;

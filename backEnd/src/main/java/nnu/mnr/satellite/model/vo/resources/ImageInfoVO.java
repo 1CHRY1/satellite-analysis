@@ -1,4 +1,4 @@
-package nnu.mnr.satellite.model.dto.resources;
+package nnu.mnr.satellite.model.vo.resources;
 
 import lombok.Data;
 
@@ -11,11 +11,9 @@ import lombok.Data;
  */
 
 @Data
-public class ImageInfoDTO {
+public class ImageInfoVO {
 
     private String imageId;
     private String band;
-
-//    public ImageInfoDTO convert
 
 }

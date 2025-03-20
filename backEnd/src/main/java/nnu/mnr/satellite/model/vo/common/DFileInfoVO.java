@@ -1,4 +1,4 @@
-package nnu.mnr.satellite.model.dto.common;
+package nnu.mnr.satellite.model.vo.common;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,8 +22,8 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder(buildMethodName = "DFileInfoDTOBuilder")
-public class DFileInfoDTO {
+@Builder(buildMethodName = "DFileInfoVOBuilder")
+public class DFileInfoVO {
 
     private String fileName;
     private String filePath;
