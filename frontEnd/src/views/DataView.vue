@@ -8,5 +8,4 @@
 <script setup lang="ts">
 import MapComp from '@/components/data/MapComp.vue'
 import ImageRetrievalPanel from '@/components/data/ImageRetrievalPanel.vue'
-import TileSelectionPanel from '@/components/data/TileSelectionPanel.vue'
 </script>

@@ -1,11 +1,11 @@
-import { defineStore } from "pinia";
+import { defineStore } from 'pinia'
 
 export const useGridStore = defineStore('gridStore', {
     state: () => ({
-        _selectedGrids: new Set()
+        _selectedGrids: new Set(),
     }),
     getters: {
-        selectedGrids: (state) => Array.from(state._selectedGrids) as Array<string>
+        selectedGrids: (state) => Array.from(state._selectedGrids) as Array<string>,
     },
     actions: {
         removeGrid(id: string) {
@@ -15,6 +15,6 @@ export const useGridStore = defineStore('gridStore', {
         },
         addGrid(id: string) {
             this._selectedGrids.add(id)
-        }
-    }
+        },
+    },
 })

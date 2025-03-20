@@ -7,11 +7,19 @@ import 'ant-design-vue/dist/reset.css'
 import './style.css'
 import App from './App.vue'
 import router from './router'
+import ezStore from '@/util/ezStore'
 
-const app = createApp(App)
-const pinia = createPinia()
-app.use(Antd)
-app.use(router)
-app.use(pinia)
-app.mount('#app')
-mapboxgl.accessToken = 'pk.eyJ1IjoieWNzb2t1IiwiYSI6ImNrenozdWdodDAza3EzY3BtdHh4cm5pangifQ.ZigfygDi2bK4HXY1pWh-wg'
+fetch('/app.conf.json').then((response) => {
+    response.json().then((config) => {
+        console.log(config)
+        mapboxgl.accessToken =
+            'pk.eyJ1IjoieWNzb2t1IiwiYSI6ImNrenozdWdodDAza3EzY3BtdHh4cm5pangifQ.ZigfygDi2bK4HXY1pWh-wg'
+        const app = createApp(App)
+        const pinia = createPinia()
+        app.use(Antd)
+        app.use(router)
+        app.use(pinia)
+        app.mount('#app')
+        ezStore.set('conf', config) // Inject config
+    })
+})
