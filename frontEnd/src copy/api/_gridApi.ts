@@ -1,4 +1,4 @@
-import client from './clientHttp'
+import client from './http/clientHttp'
 const MOCK = true
 
 export const httpDownloadGrids = (gridIDList: Array<string>): Promise<Blob> => {

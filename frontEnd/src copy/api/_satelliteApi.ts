@@ -1,5 +1,5 @@
 import { type Satellite, type Image } from '@/types/satellite'
-import client from './clientHttp'
+import client from './http/clientHttp'
 
 const MOCK = true
 
@@ -218,11 +218,41 @@ const images: Array<Image> = [
         thumbnail: 'https://placehold.co/60',
         color: '#0284c7',
         bands: [
-            { id: 'b1', name: 'B1', description: '沿海/气溶胶', wavelength: '0.43-0.45 µm', resolution: '30m' },
-            { id: 'b2', name: 'B2', description: '蓝', wavelength: '0.45-0.51 µm', resolution: '30m' },
-            { id: 'b3', name: 'B3', description: '绿', wavelength: '0.53-0.59 µm', resolution: '30m' },
-            { id: 'b4', name: 'B4', description: '红', wavelength: '0.64-0.67 µm', resolution: '30m' },
-            { id: 'b5', name: 'B5', description: '近红外', wavelength: '0.85-0.88 µm', resolution: '30m' },
+            {
+                id: 'b1',
+                name: 'B1',
+                description: '沿海/气溶胶',
+                wavelength: '0.43-0.45 µm',
+                resolution: '30m',
+            },
+            {
+                id: 'b2',
+                name: 'B2',
+                description: '蓝',
+                wavelength: '0.45-0.51 µm',
+                resolution: '30m',
+            },
+            {
+                id: 'b3',
+                name: 'B3',
+                description: '绿',
+                wavelength: '0.53-0.59 µm',
+                resolution: '30m',
+            },
+            {
+                id: 'b4',
+                name: 'B4',
+                description: '红',
+                wavelength: '0.64-0.67 µm',
+                resolution: '30m',
+            },
+            {
+                id: 'b5',
+                name: 'B5',
+                description: '近红外',
+                wavelength: '0.85-0.88 µm',
+                resolution: '30m',
+            },
         ],
     },
     {
@@ -234,11 +264,23 @@ const images: Array<Image> = [
         thumbnail: 'https://placehold.co/60',
         color: '#0891b2',
         bands: [
-            { id: 'b1', name: 'B1', description: '沿海气溶胶', wavelength: '0.443 µm', resolution: '60m' },
+            {
+                id: 'b1',
+                name: 'B1',
+                description: '沿海气溶胶',
+                wavelength: '0.443 µm',
+                resolution: '60m',
+            },
             { id: 'b2', name: 'B2', description: '蓝', wavelength: '0.490 µm', resolution: '10m' },
             { id: 'b3', name: 'B3', description: '绿', wavelength: '0.560 µm', resolution: '10m' },
             { id: 'b4', name: 'B4', description: '红', wavelength: '0.665 µm', resolution: '10m' },
-            { id: 'b8', name: 'B8', description: '近红外', wavelength: '0.842 µm', resolution: '10m' },
+            {
+                id: 'b8',
+                name: 'B8',
+                description: '近红外',
+                wavelength: '0.842 µm',
+                resolution: '10m',
+            },
         ],
     },
     {
@@ -250,10 +292,34 @@ const images: Array<Image> = [
         thumbnail: 'https://placehold.co/60',
         color: '#059669',
         bands: [
-            { id: 'b1', name: 'B1', description: '蓝', wavelength: '0.45-0.52 µm', resolution: '2m' },
-            { id: 'b2', name: 'B2', description: '绿', wavelength: '0.52-0.59 µm', resolution: '2m' },
-            { id: 'b3', name: 'B3', description: '红', wavelength: '0.63-0.69 µm', resolution: '2m' },
-            { id: 'b4', name: 'B4', description: '近红外', wavelength: '0.77-0.89 µm', resolution: '2m' },
+            {
+                id: 'b1',
+                name: 'B1',
+                description: '蓝',
+                wavelength: '0.45-0.52 µm',
+                resolution: '2m',
+            },
+            {
+                id: 'b2',
+                name: 'B2',
+                description: '绿',
+                wavelength: '0.52-0.59 µm',
+                resolution: '2m',
+            },
+            {
+                id: 'b3',
+                name: 'B3',
+                description: '红',
+                wavelength: '0.63-0.69 µm',
+                resolution: '2m',
+            },
+            {
+                id: 'b4',
+                name: 'B4',
+                description: '近红外',
+                wavelength: '0.77-0.89 µm',
+                resolution: '2m',
+            },
         ],
     },
     {
@@ -265,10 +331,34 @@ const images: Array<Image> = [
         thumbnail: 'https://placehold.co/60',
         color: '#0d9488',
         bands: [
-            { id: 'b1', name: 'B1', description: '红', wavelength: '0.62-0.67 µm', resolution: '250m' },
-            { id: 'b2', name: 'B2', description: '近红外', wavelength: '0.841-0.876 µm', resolution: '250m' },
-            { id: 'b3', name: 'B3', description: '蓝/绿', wavelength: '0.459-0.479 µm', resolution: '500m' },
-            { id: 'b4', name: 'B4', description: '绿', wavelength: '0.545-0.565 µm', resolution: '500m' },
+            {
+                id: 'b1',
+                name: 'B1',
+                description: '红',
+                wavelength: '0.62-0.67 µm',
+                resolution: '250m',
+            },
+            {
+                id: 'b2',
+                name: 'B2',
+                description: '近红外',
+                wavelength: '0.841-0.876 µm',
+                resolution: '250m',
+            },
+            {
+                id: 'b3',
+                name: 'B3',
+                description: '蓝/绿',
+                wavelength: '0.459-0.479 µm',
+                resolution: '500m',
+            },
+            {
+                id: 'b4',
+                name: 'B4',
+                description: '绿',
+                wavelength: '0.545-0.565 µm',
+                resolution: '500m',
+            },
         ],
     },
     {
@@ -280,11 +370,41 @@ const images: Array<Image> = [
         thumbnail: 'https://placehold.co/60',
         color: '#0284c7',
         bands: [
-            { id: 'b1', name: 'B1', description: '沿海/气溶胶', wavelength: '0.43-0.45 µm', resolution: '30m' },
-            { id: 'b2', name: 'B2', description: '蓝', wavelength: '0.45-0.51 µm', resolution: '30m' },
-            { id: 'b3', name: 'B3', description: '绿', wavelength: '0.53-0.59 µm', resolution: '30m' },
-            { id: 'b4', name: 'B4', description: '红', wavelength: '0.64-0.67 µm', resolution: '30m' },
-            { id: 'b5', name: 'B5', description: '近红外', wavelength: '0.85-0.88 µm', resolution: '30m' },
+            {
+                id: 'b1',
+                name: 'B1',
+                description: '沿海/气溶胶',
+                wavelength: '0.43-0.45 µm',
+                resolution: '30m',
+            },
+            {
+                id: 'b2',
+                name: 'B2',
+                description: '蓝',
+                wavelength: '0.45-0.51 µm',
+                resolution: '30m',
+            },
+            {
+                id: 'b3',
+                name: 'B3',
+                description: '绿',
+                wavelength: '0.53-0.59 µm',
+                resolution: '30m',
+            },
+            {
+                id: 'b4',
+                name: 'B4',
+                description: '红',
+                wavelength: '0.64-0.67 µm',
+                resolution: '30m',
+            },
+            {
+                id: 'b5',
+                name: 'B5',
+                description: '近红外',
+                wavelength: '0.85-0.88 µm',
+                resolution: '30m',
+            },
         ],
     },
 ]
