@@ -52,9 +52,9 @@ export interface SceneView {
     id: string
     name: string
     date: string
-    resolution: string  // 影像分辨率
+    resolution: string // 影像分辨率
     cloudCover: number
-    thumbnail: string  // 影像缩略图
+    thumbnail: string // 影像缩略图
     geometry: polygonGeometry
     bands: Array<BandView>
 }
