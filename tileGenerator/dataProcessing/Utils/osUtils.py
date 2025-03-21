@@ -1,3 +1,5 @@
+import io
+
 from minio import Minio
 from minio.error import S3Error
 from osgeo import gdal
@@ -51,6 +53,13 @@ def getFileFromMinio(bucketName, objectName, filePath):
         else:
             raise
     client.fget_object(bucketName, objectName, filePath)
+
+def uploadLocalFile(filePath: str, bucketName: str, objectName: str):
+    with open(filePath, "rb") as file_data:
+        file_bytes = file_data.read()
+        dataLength = len(file_bytes)
+        buffer_stream = io.BytesIO(file_bytes)
+        uploadFileToMinio(buffer_stream, dataLength, bucketName, objectName)
 
 # 为gdal配置MinIO S3访问
 def configure_minio_access4gdal(use_https=False):
