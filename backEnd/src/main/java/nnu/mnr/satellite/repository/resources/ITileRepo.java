@@ -24,7 +24,7 @@ public interface ITileRepo extends BaseMapper<Tile> {
     })
     List<Tile> getTileByImageIdAndLevel(@Param("tileTable") String tileTable, int tileLevel);
 
-    @Select("select image_id, tile_level, column_id, row_id, bucket, path from ${tileTable} where tile_id = #{tileId}")
+    @Select("select image_id, tile_level, cloud, column_id, row_id, bucket, path from ${tileTable} where tile_id = #{tileId}")
     Tile getTileByTileId(@Param("tileTable") String tileTable, String tileId);
 
 }

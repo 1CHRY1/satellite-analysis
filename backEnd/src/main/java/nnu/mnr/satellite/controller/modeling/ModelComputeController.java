@@ -1,6 +1,7 @@
 package nnu.mnr.satellite.controller.modeling;
 
 import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import nnu.mnr.satellite.model.dto.modeling.NdviDTO;
 import nnu.mnr.satellite.service.modeling.ModelServerService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,11 @@ public class ModelComputeController {
     @GetMapping("/status/caseId/{caseId}")
     public ResponseEntity<String> getModelCaseStatus(@PathVariable String caseId) {
         return ResponseEntity.ok(modelServerService.getModelCaseStatusById(caseId));
+    }
+
+    @GetMapping("/result/caseId/{caseId}")
+    public ResponseEntity<Object> getModelCaseResultById(@PathVariable String caseId) {
+        return ResponseEntity.ok(modelServerService.getModelCaseResultById(caseId));
     }
 
     @GetMapping("/data/dataId/{dataId}")

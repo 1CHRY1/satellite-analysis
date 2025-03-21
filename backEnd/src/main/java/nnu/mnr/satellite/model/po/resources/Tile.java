@@ -28,6 +28,7 @@ public class Tile {
     private String tileId;
     private Integer tileLevel;
     private String imageId;
+    private String cloud;
     private Integer columnId;
     private Integer rowId;
     private String path;

@@ -32,6 +32,7 @@ public class Scene {
     private String sceneId;
     private String productId;
     private String sensorId;
+    private String sceneName;
     private LocalDateTime sceneTime;
     private Integer tileLevelNum;
 
@@ -50,5 +51,6 @@ public class Scene {
     @TableField(value = "bands", typeHandler = SetTypeHandler.class)
     private HashSet<String> bands;
 
+    private String cloud;
     private String bucket;
 }

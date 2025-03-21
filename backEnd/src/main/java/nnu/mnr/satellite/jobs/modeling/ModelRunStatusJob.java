@@ -10,6 +10,8 @@ import nnu.mnr.satellite.utils.data.RedisUtil;
 import org.quartz.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.LocalDateTime;
+
 /**
  * Created with IntelliJ IDEA.
  *
@@ -48,6 +50,7 @@ public class ModelRunStatusJob implements Job {
                 String resultUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("result");
                 JSONObject resObj = ProcessUtil.getModelCaseResult(resultUrl, caseId);
                 redisUtil.updateJsonField(caseId, "result", resObj);
+                redisUtil.updateJsonField(caseId, "end", LocalDateTime.now());
             } catch (SchedulerException e) {
                 log.info(e.toString());
             }
