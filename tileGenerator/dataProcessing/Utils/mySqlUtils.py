@@ -5,19 +5,27 @@ import socket
 import os
 import random
 
-host='localhost'
+host='223.2.34.7'
 database='satellite'
+tile_db = 'tile'
 user='root'
-password='123456'
+password='root'
 
 namespace = uuid.NAMESPACE_DNS
 
-def generate_custom_id():
-    timestamp = str(int(time.time()))[-4:]
-    machine_id = str(hash(socket.gethostname()))[-2:]
-    process_id = str(os.getpid())[-2:]
-    counter = str(random.randint(10, 99))
-    custom_id = timestamp + machine_id + process_id + counter
+def generate_custom_id(prefix, digit):
+    remaining_length = digit - len(prefix)  # 计算除去 prefix 后可用的长度
+    if remaining_length <= 0:
+        return prefix[:digit]  # 如果 prefix 已经超长，则直接截断返回
+    # 生成各部分
+    timestamp = str(int(time.time()))[-4:]  # 取时间戳后4位
+    machine_id = str(abs(hash(socket.gethostname())) % 100).zfill(2)  # 取 hostname 哈希后两位
+    process_id = str(os.getpid() % 100).zfill(2)  # 取进程 ID 后两位
+    counter = str(random.randint(10, 99))  # 取随机两位数
+    # 拼接各部分
+    raw_id = timestamp + machine_id + process_id + counter
+    # 根据剩余长度进行截取或填充
+    custom_id = prefix + raw_id[:remaining_length]
     return custom_id
 
 def connect_mysql(host, database, user, password):
@@ -29,91 +37,83 @@ def connect_mysql(host, database, user, password):
         password=password
     )
     if connection.is_connected():
-        cursor = connection.cursor()
+        cursor = connection.cursor(dictionary=True)
     return connection, cursor
 
 def create_DB():
     create_sensor_table = """
     CREATE TABLE `sensor_table` (
-        `sensor_id` CHAR(36) PRIMARY KEY,
-        `sensor_name` VARCHAR(255),
-        `platform_name` VARCHAR(255),
-        `description` TEXT,
-        UNIQUE (`sensor_id`)
+        `sensor_id` VARCHAR(36) NOT NULL UNIQUE,
+	    `sensor_name` VARCHAR(255),
+	    `platform_name` VARCHAR(255),
+	    `description` TEXT,
+	    PRIMARY KEY(`sensor_id`)
+    );
+    """
+
+    create_scene_table = """
+    CREATE TABLE `scene_table` (
+        `scene_id` VARCHAR(36) NOT NULL UNIQUE,
+        `product_id` VARCHAR(36),
+        `scene_time` DATETIME,
+        `sensor_id` VARCHAR(36),
+        `tile_level_num` INT,
+        `tile_levels` SET('8000', '16000', '40000'),
+        `coordinate_system` VARCHAR(255),
+        `bounding_box` GEOMETRY NOT NULL SRID 4326,
+        `description` TEXT(65535),
+        `png_path` VARCHAR(255),
+        `bands` SET('1', '2', '3', '4', '5', '6', '7'),
+        `band_num` INT,
+        PRIMARY KEY(`scene_id`)
     );
     """
 
     create_product_table = """
     CREATE TABLE `product_table` (
-        `product_id` CHAR(36) PRIMARY KEY,
-        `sensor_id` CHAR(36),
+        `product_id` VARCHAR(36) NOT NULL UNIQUE,
+        `sensor_id` VARCHAR(36),
         `product_name` VARCHAR(255),
-        `description` TEXT,
-        `basicInfo` JSON,
-        UNIQUE (`product_id`)
+        `description` TEXT(65535),
+        `resolution` VARCHAR(255),
+        `period` VARCHAR(255),
+        PRIMARY KEY(`product_id`)
     );
     """
 
     create_image_table = """
     CREATE TABLE `image_table` (
-        `image_id` CHAR(36) PRIMARY KEY,
-        `product_id` CHAR(36),
-        `sensor_id` CHAR(36),
-        `image_time` DATETIME,
-        `tile_level_min` INT,
-        `tile_level_max` INT,
-        `image_path` VARCHAR(255),
-        `crs` VARCHAR(255),
-        `description` TEXT,
-        `bbox` GEOMETRY,
+        `image_id` VARCHAR(36) NOT NULL PRIMARY KEY,
+        `scene_id` VARCHAR(36),
+        `tif_path` VARCHAR(255),
         `band` VARCHAR(255),
         UNIQUE (`image_id`)
     );
     """
 
-    create_tile_table = """
-    CREATE TABLE `tile_table` (
-        `tile_id` CHAR(36) PRIMARY KEY,
-        `image_id` CHAR(36),
-        `tile_level` INT,
-        `bbox` GEOMETRY,
-        `tile_path` VARCHAR(255),
-        UNIQUE (`tile_id`)
-    );
-    """
-
-    add_fk_image_tile = """
-    ALTER TABLE `tile_table`
-    ADD CONSTRAINT `fk_image_tile`
-    FOREIGN KEY (`image_id`)
-    REFERENCES `image_table` (`image_id`)
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION;
-    """
-
-    add_fk_product_image = """
-    ALTER TABLE `image_table`
-    ADD CONSTRAINT `fk_product_image`
-    FOREIGN KEY (`product_id`)
-    REFERENCES `product_table` (`product_id`)
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION;
-    """
-
-    add_fk_sensor_image = """
-        ALTER TABLE `image_table`
-        ADD CONSTRAINT `fk_sensor_image`
-        FOREIGN KEY (`sensor_id`)
-        REFERENCES `sensor_table` (`image_id`)
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION;
-        """
-
-    add_fk_product_sensor = """
+    add_fk_sensor_product = """
     ALTER TABLE `product_table`
-    ADD CONSTRAINT `fk_product_sensor`
-    FOREIGN KEY (`sensor_id`)
-    REFERENCES `sensor_table` (`sensor_id`)
+    ADD CONSTRAINT `fk_sensor_product`
+    FOREIGN KEY(`sensor_id`)
+    REFERENCES `sensor_table`(`sensor_id`)
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+    """
+
+    add_fk_product_scene = """
+    ALTER TABLE `scene_table`
+    ADD CONSTRAINT `fk_product_scene`
+    FOREIGN KEY(`product_id`)
+    REFERENCES `product_table`(`product_id`)
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+    """
+
+    add_fk_scene_image = """
+    ALTER TABLE `image_table`
+    ADD CONSTRAINT `fk_scene_image`
+    FOREIGN KEY (`scene_id`)
+    REFERENCES `scene_table` (`scene_id`)
     ON UPDATE NO ACTION
     ON DELETE NO ACTION;
     """
@@ -121,20 +121,50 @@ def create_DB():
     sql_commands = [
         create_sensor_table,
         create_product_table,
+        create_scene_table,
         create_image_table,
-        create_tile_table,
-        add_fk_image_tile,
-        add_fk_product_image,
-        add_fk_product_sensor
+        add_fk_sensor_product,
+        add_fk_product_scene,
+        add_fk_scene_image,
     ]
     connection, curser = connect_mysql(host, database, user, password)
 
     for command in sql_commands:
         try:
             cursor.execute(command)
-            print(f"Excuted: {command}")
+            print(f"Executed: {command}")
         except Exception as e:
-            print(f"Wrong when excuting {command.splitlines()[0]} : {e}")
+            print(f"Wrong when executing {command.splitlines()[0]} : {e}")
+    connection.commit()
+    cursor.close()
+    connection.close()
+    print("All SQL Executed")
+
+def create_tile_table(table_name):
+    create_tile_table = f"""
+    CREATE TABLE `{table_name}` (
+        `tile_id` VARCHAR(36) NOT NULL PRIMARY KEY,
+        `image_id` VARCHAR(36),
+        `tile_level` INT,
+        `column_id` INT,
+        `row_id` INT,
+        `path` VARCHAR(255),
+        `bucket` VARCHAR(36),
+        `bounding_box` GEOMETRY NOT NULL SRID 4326,
+        UNIQUE (`tile_id`)
+    );
+    """
+    sql_commands = [
+        create_tile_table,
+    ]
+    connection, curser = connect_mysql(host, tile_db, user, password)
+
+    for command in sql_commands:
+        try:
+            cursor.execute(command)
+            print(f"Executed: {command}")
+        except Exception as e:
+            print(f"Wrong when executing {command.splitlines()[0]} : {e}")
     connection.commit()
     cursor.close()
     connection.close()
@@ -144,14 +174,13 @@ def delete_DB():
     table_names = [
         'sensor_table',
         'product_table',
-        'image_table',
-        'tile_table'
+        'scene_table',
+        'image_table'
     ]
     foreign_key_map = {
-        'tile_table':'fk_image_tile',
-        'image_table':'fk_product_image',
-        'product_table':'fk_product_sensor',
-        'sensor_table':'fk_sensor_image'
+        'image_table':'fk_scene_image',
+        'scene_table': 'fk_product_scene',
+        'product_table': 'fk_sensor_product',
     }
     connection, cursor = connect_mysql(host, database, user, password)
     for key, value in foreign_key_map.items():
@@ -177,7 +206,7 @@ def delete_DB():
 def insert_sensor(sensorName, platformName, description):
     connection, curser = connect_mysql(host, database, user, password)
     insert_query = "INSERT INTO sensor_table (sensor_id, sensor_name, platform_name, description) VALUES (%s, %s, %s, %s)"
-    data = (generate_custom_id(), sensorName, platformName, description)
+    data = (generate_custom_id('SE', 7), sensorName, platformName, description)
     cursor.execute(insert_query, data)
 
     connection.commit()
@@ -199,12 +228,11 @@ def get_sensor_byName(sensorName):
     else:
         return None
 
-def insert_product(sensorName, productName, description):
-    uuidName = "productName"
+def insert_product(sensorName, productName, description, resolution, period):
     connection, cursor = connect_mysql(host, database, user, password)
     sensorId = get_sensor_byName(sensorName)
-    insert_query = "INSERT INTO product_table (product_id, sensor_id, product_name, description) VALUES (%s, %s, %s, %s)"
-    data = (str(uuid.uuid5(namespace, uuidName)), sensorId, productName, description)
+    insert_query = "INSERT INTO product_table (product_id, sensor_id, product_name, description, resolution, period) VALUES (%s, %s, %s, %s, %s, %s)"
+    data = (generate_custom_id('P', 9), sensorId, productName, description, resolution, period)
     cursor.execute(insert_query, data)
 
     connection.commit()
@@ -216,42 +244,125 @@ def insert_product(sensorName, productName, description):
 def get_product_byName(sensorName, productName):
     uuidName = "imageName"
     connection, cursor = connect_mysql(host, database, user, password)
-    sensorId = get_sensor_byName(sensorName)
-    select_query = "SELECT sensor_id, product_id FROM sensor_table WHERE sensor_name = %s and product_name = %s"
-    cursor.execute(select_query, (sensorId, productName,))
+    select_query = """
+        SELECT p.sensor_id, p.product_id 
+        FROM product_table p
+        JOIN sensor_table s ON p.sensor_id = s.sensor_id
+        WHERE s.sensor_name = %s AND p.product_name = %s
+    """
+    cursor.execute(select_query, (sensorName, productName,))
     result = cursor.fetchone()
     cursor.close()
     connection.close()
     if result:
-        product_id = result[0]
-        return sensorId, product_id
+        sensor_id, product_id = result
+        return sensor_id, product_id
     else:
         return None
 
-def insert_image(sensorName, productName, imageTime, tileLevelMin, tileLevelMax, imagePath, crs, band, bbox, description):
-    uuidName = "productName"
+def insert_scene(sensorName, productName, sceneTime, tileLevelNum, tileLevels, pngPath, crs, bbox, description, bands, band_num, bucket):
+    bands_str = ",".join(bands) if bands else None
     connection, cursor = connect_mysql(host, database, user, password)
-    sensorId, productId = get_product_byName(sensorName,productName)
-    insert_query = ("INSERT INTO image_table (image_id, sensor_id, product_id, image_time, tile_level_min, tile_level_max, crs, band, bbox, image_path, description) "
-                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, ST_GeomFromText(%s), %s, %s)")
-    imageId = str(uuid.uuid5(namespace, uuidName))
-    data = (imageId, sensorId, productId, imageTime, tileLevelMin, tileLevelMax, crs, band, bbox, imagePath, description)
-    cursor.execute(insert_query, data)
-    connection.commit()
+    sensorId, productId = get_product_byName(sensorName, productName)
+    insert_query = ("INSERT INTO scene_table (scene_id, sensor_id, product_id, scene_time, tile_level_num, tile_levels, coordinate_system, bounding_box, png_path, description, bands, band_num, bucket) "
+                    "VALUES (%s, %s, %s, %s, %s, %s, %s, ST_GeomFromText(%s, 4326, 'axis-order=long-lat'), %s, %s, %s, %s, %s)")
+    # sceneId = str(uuid.uuid5(namespace, uuidName))
+    sceneId = generate_custom_id('SC', 11)
+    data = (sceneId, sensorId, productId, sceneTime, tileLevelNum, tileLevels, crs, bbox, pngPath, description, bands_str, band_num, bucket)
+    try:
+        # 执行插入操作
+        cursor.execute(insert_query, data)
+        connection.commit()
 
-    print(cursor.rowcount, f"Image {imageId} inserted!")
-    cursor.close()
-    connection.close()
+        print(cursor.rowcount, f"Scene {sceneId} inserted!")
+    except Exception as err:
+        print(f"Error: {err}")
+        connection.rollback()
+    finally:
+        # 确保关闭游标和连接
+        cursor.close()
+        connection.close()
+        return sceneId
 
-def insert_tile(imageId, tileLevel, bbox, tilePath):
+def insert_image(sceneId, tifPath, band, bucket):
+    connection, cursor = connect_mysql(host, database, user, password)
+    insert_query = ("INSERT INTO image_table (image_id, scene_id, tif_path, band, bucket) "
+                    "VALUES (%s, %s, %s, %s, %s)")
+    # imageId = str(uuid.uuid5(namespace, uuidName))
+    imageId = generate_custom_id('I', 11)
+    data = (imageId, sceneId, tifPath, band, bucket)
+    try:
+        # 执行插入操作
+        cursor.execute(insert_query, data)
+        connection.commit()
+
+        print(cursor.rowcount, f"Image {imageId} inserted!")
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+        connection.rollback()
+    finally:
+        # 确保关闭游标和连接
+        cursor.close()
+        connection.close()
+        return imageId
+
+def insert_tile(tile_table_name, imageId, tileLevel, columnId, rowId, path, bucket, bbox):
     uuidName = "tileName"
-    connection, cursor = connect_mysql(host, database, user, password)
-    insert_query = "INSERT INTO tile_table (tile_id, image_id, tile_level, bbox, tile_path) VALUES (%s, %s, %s, %s, %s)"
-    tileId = str(uuid.uuid5(namespace, uuidName))
-    data = (tileId, imageId, tileLevel, bbox, tilePath)
-    cursor.execute(insert_query, data)
-    connection.commit()
+    connection, cursor = connect_mysql(host, tile_db, user, password)
+    insert_query = f"INSERT INTO {tile_table_name} (tile_id, image_id, tile_level, column_id, row_id, path, bucket, bounding_box) VALUES (%s, %s, %s, %s, %s, %s, %s, ST_GeomFromText(%s, 4326, 'axis-order=long-lat'))"
+    tileId = str(uuid.uuid4())
+    data = (tileId, imageId, tileLevel, columnId, rowId, path, bucket, bbox)
+    try:
+        # 执行插入操作
+        cursor.execute(insert_query, data)
+        connection.commit()
 
-    print(cursor.rowcount, f"Tile {tileId} inserted!")
+        print(cursor.rowcount, f"Tile {tileId} inserted!")
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+        connection.rollback()
+    finally:
+        # 确保关闭游标和连接
+        cursor.close()
+        connection.close()
+
+def insert_batch_tile(tile_table_name, imageId, tileLevel, tile_info_list):
+    connection, cursor = connect_mysql(host, tile_db, user, password)
+    insert_query = f"INSERT INTO {tile_table_name} (tile_id, image_id, tile_level, column_id, row_id, path, bucket, bounding_box) VALUES (%s, %s, %s, %s, %s, %s, %s, ST_GeomFromText(%s, 4326, 'axis-order=long-lat'))"
+    data_list = [
+        (str(uuid.uuid4()), imageId, tileLevel, tile.column_id, tile.row_id, tile.path, tile.bucket, tile.bbox)
+        for tile in tile_info_list
+    ]
+    try:
+        # 执行插入操作
+        cursor.executemany(insert_query, data_list)
+        connection.commit()
+
+        print(cursor.rowcount, f"tiles inserted!")
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+        connection.rollback()
+    finally:
+        # 确保关闭游标和连接
+        cursor.close()
+        connection.close()
+
+def select_tile_by_ids(tile_table_name, id_list):
+    connection, cursor = connect_mysql(host, tile_db, user, password)
+
+    # 构建查询语句，使用占位符为每个 ID
+    placeholders = ', '.join(['%s'] * len(id_list))  # 用于 SQL 查询中多个 ID 的占位符
+    select_query = f"SELECT * FROM {tile_table_name} WHERE tile_id IN ({placeholders})"
+
+    # 执行查询
+    cursor.execute(select_query, tuple(id_list))
+
+    # 获取所有查询结果
+    result = cursor.fetchall()
+
+    print(f"Found {len(result)} tiles with the provided IDs.")
+
     cursor.close()
     connection.close()
+
+    return result
