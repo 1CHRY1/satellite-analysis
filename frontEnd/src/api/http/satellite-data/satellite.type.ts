@@ -72,6 +72,8 @@ export namespace SensorImage {
     }
 
     export interface SensorImageDetailResponse {
+        name: string
+        cloud: number
         sceneTime: string
         tileLevelNum: number
         tileLevels: string[]
