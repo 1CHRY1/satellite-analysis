@@ -55,6 +55,7 @@ def create_DB():
     CREATE TABLE `scene_table` (
         `scene_id` VARCHAR(36) NOT NULL UNIQUE,
         `product_id` VARCHAR(36),
+        `scene_name` VARCHAR(255),
         `scene_time` DATETIME,
         `sensor_id` VARCHAR(36),
         `tile_level_num` INT,
@@ -65,8 +66,11 @@ def create_DB():
         `png_path` VARCHAR(255),
         `bands` SET('1', '2', '3', '4', '5', '6', '7'),
         `band_num` INT,
-        PRIMARY KEY(`scene_id`)
-    );
+        `bucket` VARCHAR(36),
+        `cloud` FLOAT,
+        PRIMARY KEY(`scene_id`),
+        SPATIAL INDEX (`bounding_box`)
+    ) ENGINE=InnoDB;
     """
 
     create_product_table = """
@@ -87,6 +91,8 @@ def create_DB():
         `scene_id` VARCHAR(36),
         `tif_path` VARCHAR(255),
         `band` VARCHAR(255),
+        `bucket` VARCHAR(36),
+        `cloud` FLOAT,
         UNIQUE (`image_id`)
     );
     """
@@ -151,8 +157,10 @@ def create_tile_table(table_name):
         `path` VARCHAR(255),
         `bucket` VARCHAR(36),
         `bounding_box` GEOMETRY NOT NULL SRID 4326,
-        UNIQUE (`tile_id`)
-    );
+        `cloud` FLOAT,
+        UNIQUE (`tile_id`),
+        SPATIAL INDEX (`bounding_box`)
+    ) ENGINE=InnoDB;
     """
     sql_commands = [
         create_tile_table,
@@ -223,7 +231,7 @@ def get_sensor_byName(sensorName):
     cursor.close()
     connection.close()
     if result:
-        sensor_id = result[0]
+        sensor_id = result['sensor_id']
         return sensor_id
     else:
         return None
@@ -255,20 +263,21 @@ def get_product_byName(sensorName, productName):
     cursor.close()
     connection.close()
     if result:
-        sensor_id, product_id = result
+        sensor_id = result['sensor_id']
+        product_id = result['product_id']
         return sensor_id, product_id
     else:
         return None
 
-def insert_scene(sensorName, productName, sceneTime, tileLevelNum, tileLevels, pngPath, crs, bbox, description, bands, band_num, bucket):
+def insert_scene(sensorName, productName, sceneName, sceneTime, tileLevelNum, tileLevels, pngPath, crs, bbox, description, bands, band_num, bucket, cloud):
     bands_str = ",".join(bands) if bands else None
     connection, cursor = connect_mysql(host, database, user, password)
     sensorId, productId = get_product_byName(sensorName, productName)
-    insert_query = ("INSERT INTO scene_table (scene_id, sensor_id, product_id, scene_time, tile_level_num, tile_levels, coordinate_system, bounding_box, png_path, description, bands, band_num, bucket) "
-                    "VALUES (%s, %s, %s, %s, %s, %s, %s, ST_GeomFromText(%s, 4326, 'axis-order=long-lat'), %s, %s, %s, %s, %s)")
+    insert_query = ("INSERT INTO scene_table (scene_id, sensor_id, product_id, scene_name, scene_time, tile_level_num, tile_levels, coordinate_system, bounding_box, png_path, description, bands, band_num, bucket, cloud) "
+                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, ST_GeomFromText(%s, 4326, 'axis-order=long-lat'), %s, %s, %s, %s, %s, %s)")
     # sceneId = str(uuid.uuid5(namespace, uuidName))
     sceneId = generate_custom_id('SC', 11)
-    data = (sceneId, sensorId, productId, sceneTime, tileLevelNum, tileLevels, crs, bbox, pngPath, description, bands_str, band_num, bucket)
+    data = (sceneId, sensorId, productId, sceneName, sceneTime, tileLevelNum, tileLevels, crs, bbox, pngPath, description, bands_str, band_num, bucket, cloud)
     try:
         # 执行插入操作
         cursor.execute(insert_query, data)
@@ -284,13 +293,13 @@ def insert_scene(sensorName, productName, sceneTime, tileLevelNum, tileLevels, p
         connection.close()
         return sceneId
 
-def insert_image(sceneId, tifPath, band, bucket):
+def insert_image(sceneId, tifPath, band, bucket, cloud):
     connection, cursor = connect_mysql(host, database, user, password)
-    insert_query = ("INSERT INTO image_table (image_id, scene_id, tif_path, band, bucket) "
-                    "VALUES (%s, %s, %s, %s, %s)")
+    insert_query = ("INSERT INTO image_table (image_id, scene_id, tif_path, band, bucket, cloud) "
+                    "VALUES (%s, %s, %s, %s, %s, %s)")
     # imageId = str(uuid.uuid5(namespace, uuidName))
     imageId = generate_custom_id('I', 11)
-    data = (imageId, sceneId, tifPath, band, bucket)
+    data = (imageId, sceneId, tifPath, band, bucket, cloud)
     try:
         # 执行插入操作
         cursor.execute(insert_query, data)
@@ -306,12 +315,12 @@ def insert_image(sceneId, tifPath, band, bucket):
         connection.close()
         return imageId
 
-def insert_tile(tile_table_name, imageId, tileLevel, columnId, rowId, path, bucket, bbox):
+def insert_tile(tile_table_name, imageId, tileLevel, columnId, rowId, path, bucket, bbox, cloud):
     uuidName = "tileName"
     connection, cursor = connect_mysql(host, tile_db, user, password)
-    insert_query = f"INSERT INTO {tile_table_name} (tile_id, image_id, tile_level, column_id, row_id, path, bucket, bounding_box) VALUES (%s, %s, %s, %s, %s, %s, %s, ST_GeomFromText(%s, 4326, 'axis-order=long-lat'))"
+    insert_query = f"INSERT INTO {tile_table_name} (tile_id, image_id, tile_level, column_id, row_id, path, bucket, bounding_box, cloud) VALUES (%s, %s, %s, %s, %s, %s, %s, ST_GeomFromText(%s, 4326, 'axis-order=long-lat'), %s)"
     tileId = str(uuid.uuid4())
-    data = (tileId, imageId, tileLevel, columnId, rowId, path, bucket, bbox)
+    data = (tileId, imageId, tileLevel, columnId, rowId, path, bucket, bbox, cloud)
     try:
         # 执行插入操作
         cursor.execute(insert_query, data)
@@ -328,9 +337,9 @@ def insert_tile(tile_table_name, imageId, tileLevel, columnId, rowId, path, buck
 
 def insert_batch_tile(tile_table_name, imageId, tileLevel, tile_info_list):
     connection, cursor = connect_mysql(host, tile_db, user, password)
-    insert_query = f"INSERT INTO {tile_table_name} (tile_id, image_id, tile_level, column_id, row_id, path, bucket, bounding_box) VALUES (%s, %s, %s, %s, %s, %s, %s, ST_GeomFromText(%s, 4326, 'axis-order=long-lat'))"
+    insert_query = f"INSERT INTO {tile_table_name} (tile_id, image_id, tile_level, column_id, row_id, path, bucket, bounding_box, cloud) VALUES (%s, %s, %s, %s, %s, %s, %s, ST_GeomFromText(%s, 4326, 'axis-order=long-lat'), %s)"
     data_list = [
-        (str(uuid.uuid4()), imageId, tileLevel, tile.column_id, tile.row_id, tile.path, tile.bucket, tile.bbox)
+        (str(uuid.uuid4()), imageId, tileLevel, tile['column_id'], tile['row_id'], tile['path'], tile['bucket'], tile['bbox'], tile['cloud'])
         for tile in tile_info_list
     ]
     try:

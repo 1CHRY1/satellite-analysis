@@ -9,7 +9,7 @@ import numpy as np
 from io import BytesIO
 from datetime import datetime
 from dataProcessing.Utils.mySqlUtils import select_tile_by_ids
-from dataProcessing.Utils.osUtils import configure_minio_access4gdal, uploadFileToMinio
+from dataProcessing.Utils.osUtils import configure_minio_access4gdal, uploadFileToMinio, uploadLocalFile
 
 OUTPUT_DIR = "C:\\Users\\lkshi\\Desktop\\warp\\Output"
 MINIO_ENDPOINT = "223.2.34.7:9000"
@@ -73,44 +73,57 @@ def get_geojson():
     else:
         return "GeoJSON not found", 404
 
-@app.route('/test', methods=['GET'])
-def test():
-    return jsonify({
-        "bucket": "nnnn"
-    })
-
 @app.route('/merge', methods=['POST'])
 def merge_tifs():
-    data = request.get_json()
-    print(data)  # 查看原始数据
     tiles = request.json.get('tiles', [])
     imageId = request.json.get('imageId', "")
     if not tiles:
         return "No IDs provided", 400
 
+    #--------- Get Source Data ------------------------------------
     tile_list = select_tile_by_ids(imageId.lower(), tiles)
     tif_paths = [f"http://{MINIO_ENDPOINT}/{tile['bucket']}/{tile['path']}" for tile in tile_list]
 
     if not tif_paths:
         return "No valid TIFs found", 404
 
+    #--------- Merge and upload tif -------------------------------
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_tif_path = os.path.join(temp_dir, f"{uuid.uuid4()}.tif")
-
-        # 进行合并
         mtif(tif_paths, temp_tif_path)
-
-        # 生成 MinIO 存储路径
         object_name = f"{datetime.now().strftime('%Y-%m/%d')}/{uuid.uuid4()}.tif"
-
-        # 上传合并后的 TIF 文件
-        with open(temp_tif_path, "rb") as f:
-            uploadFileToMinio(f, os.path.getsize(temp_tif_path), TEMP_FILES_BUCKET, object_name)
+        uploadLocalFile(temp_tif_path, TEMP_FILES_BUCKET, object_name)
 
     return jsonify({
         "bucket": TEMP_FILES_BUCKET,
         "path": object_name
     })
+
+@app.route('/ndvi', methods=['POST'])
+def get_ndvi():
+    req = {
+        "sensor_id": "SE33955",
+        "scene_list": [
+            {
+                "time": "2021-02-12 00:00:00",
+                "images": {
+                    "band1": {
+                        "path": "landsat/landset7/tif/LE07_L1TP_122039_20210212_20210212_01_RT/LE07_L1TP_122039_20210212_20210212_01_RT_B1.TIF",
+                        "bucket": "test-images"
+                    },
+                    "band2": {
+                        "path": "landsat/landset7/tif/LE07_L1TP_122039_20210212_20210212_01_RT/LE07_L1TP_122039_20210212_20210212_01_RT_B2.TIF",
+                        "bucket": "test-images"
+                    },
+                    "band3": {
+                        "path": "landsat/landset7/tif/LE07_L1TP_122039_20210212_20210212_01_RT/LE07_L1TP_122039_20210212_20210212_01_RT_B3.TIF",
+                        "bucket": "test-images"
+                    },
+                }
+            }
+        ],
+        "polygon": "POLYGON((113.938600980999 31.2667309978574, 116.52510946083 31.3023454749594, 116.534361143405 29.3665961877802, 113.998134773514 29.3336247013939, 113.938600980999 31.2667309978574)) | 4326"
+    }
 
 
 ######################################################################
