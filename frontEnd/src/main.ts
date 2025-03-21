@@ -14,7 +14,6 @@ import ezStore from '@/store/ezStore'
 ///// Fetching Static Config Json /////////////////////////
 fetch('/app.conf.json').then((response) => {
     response.json().then((config) => {
-
         //// 3rd Party Config
         dayjs.locale('zh-cn')
         mapboxgl.accessToken =
@@ -27,8 +26,8 @@ fetch('/app.conf.json').then((response) => {
         app.use(router)
         app.use(pinia)
         app.mount('#app')
-        
+
         ////  Inject config
-        ezStore.set('conf', config) 
+        ezStore.set('conf', config)
     })
 })
