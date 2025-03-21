@@ -73,8 +73,7 @@ public class SceneDataService {
         JSONArray coordinates = geometry.getJSONArray("coordinates");
         GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
         if (type.equals("Polygon")) {
-            Geometry bbox = GeometryUtil.parsePolygon(coordinates, geometryFactory);
-            bbox.setSRID(4326);
+            Geometry bbox = GeometryUtil.parse4326Polygon(coordinates, geometryFactory);
             QueryWrapper<Scene> queryWrapper = new QueryWrapper<>();
             queryWrapper.eq("sensor_id", sensorId);
             queryWrapper.eq("product_id", productId);

@@ -1,9 +1,13 @@
 package nnu.mnr.satellite.controller.modeling;
 
-import nnu.mnr.satellite.service.modeling.ModelComputeService;
+import com.alibaba.fastjson2.JSONArray;
+import nnu.mnr.satellite.model.dto.modeling.NdviDTO;
+import nnu.mnr.satellite.service.modeling.ModelServerService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -14,10 +18,36 @@ import org.springframework.web.bind.annotation.RestController;
  */
 
 @RestController
-@RequestMapping("/api/v1/model/compute")
+@RequestMapping("/api/v1/model")
 public class ModelComputeController {
 
     @Autowired
-    ModelComputeService modelComputeService;
+    ModelServerService modelServerService;
+
+    // Common Controllers ******************************
+    @GetMapping("/status/caseId/{caseId}")
+    public ResponseEntity<String> getModelCaseStatus(@PathVariable String caseId) {
+        return ResponseEntity.ok(modelServerService.getModelCaseStatusById(caseId));
+    }
+
+    @GetMapping("/data/dataId/{dataId}")
+    public ResponseEntity<byte[]> getModelDataById(@PathVariable String dataId) {
+        byte[] modelData = modelServerService.getModelDataById(dataId);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.valueOf("image/tiff"));
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(modelData);
+    }
+
+    // Business Controllers ******************************
+    @PostMapping("/compute/ndvi/{modelName}")
+    public ResponseEntity<String> getNDVIPoints(@PathVariable String modelName, @RequestBody NdviDTO ndviDTO) {
+        return switch (modelName) {
+            case "point" -> ResponseEntity.ok(modelServerService.getNDVIByPoint(ndviDTO));
+            case "area" -> ResponseEntity.ok(modelServerService.getNDVIByPolygon(ndviDTO));
+            default -> ResponseEntity.ok("NO SUCH MODEL");
+        };
+    }
 
 }

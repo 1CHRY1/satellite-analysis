@@ -73,7 +73,7 @@ public class GeometryUtil {
         return geometryFactory.createLinearRing(coordArray);
     }
 
-    public static Polygon parsePolygon(JSONArray coordinates, GeometryFactory geometryFactory) {
+    public static Polygon parse4326Polygon(JSONArray coordinates, GeometryFactory geometryFactory) {
         // 外部环
         JSONArray outerRingCoords = coordinates.getJSONArray(0);
         LinearRing outerRing = createLinearRing(outerRingCoords, geometryFactory);
@@ -88,7 +88,9 @@ public class GeometryUtil {
         return geometryFactory.createPolygon(outerRing, innerRings);
     }
 
-    public static Point parsePoint(JSONArray coordinates, GeometryFactory geometryFactory) {
+    public static Point parse4326Point(JSONArray coordinates) {
+
+        GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
         // 点的坐标通常是 [x, y] 形式，这里直接获取 x 和 y 坐标
         double x = coordinates.getDoubleValue(0);
         double y = coordinates.getDoubleValue(1);
