@@ -16,24 +16,32 @@
                 >
             </div>
 
-            <nav class="flex items-center space-x-8 lg:ml-28 md:ml-20 sm:ml-10">
+            <nav class="flex items-center space-x-8 ml-[5vw]">
                 <div v-for="(item, index) in navItems" class="flex flex-row space-x-8">
                     <router-link
                         :key="item.path"
                         :to="item.path"
-                        class="text-shadow-deepbluewhitespace-nowrap lg:text-2xl md:text-xl sm:text-lg text-sky-800 font-semibold hover:text-sky-600 transition-colors"
+                        class="relative text-shadow-deepbluewhitespace-nowrap lg:text-2xl md:text-xl sm:text-lg text-sky-800 font-semibold hover:text-sky-600 transition-all duration-300 px-2 py-1 rounded-md"
                         :class="{
-                            'text-sky-600 font-bold': currentRoute === item.path,
+                            'text-sky-600 font-bold bg-sky-50': currentRoute === item.path,
+                            'nav-link': true,
+                            'nav-link-active': currentRoute === item.path,
                         }"
                         >{{ item.name }}
                     </router-link>
-                    <div class="border-r-2 border-gray-500 h-8 w-0" v-if="index < navItems.length - 1"></div>
+                    <div
+                        class="border-r-2 border-gray-500 h-8 w-0"
+                        v-if="index < navItems.length - 1"
+                    ></div>
                 </div>
             </nav>
         </div>
 
         <!-- user authenticated -->
-        <div v-if="userStore.authenticated" class="flex items-center justify-between rounded-4xl bg-gray-200 cursor-pointer">
+        <div
+            v-if="userStore.authenticated"
+            class="flex items-center justify-between rounded-4xl bg-gray-200 cursor-pointer"
+        >
             <span class="px-4 text-gray-500">{{ userStore.user.name }}</span>
             <div class="py-1">
                 <img src="/images/avator.png" alt="user-avator" class="h-8 w-auto" />
@@ -80,3 +88,25 @@ const jumpToOGMS = () => {
 /////// User //////////////////////////////////
 const userStore = useUserStore()
 </script>
+
+<style scoped>
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: rgb(2 132 199);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.nav-link:hover::after {
+    transform: scaleX(1);
+}
+
+.nav-link-active::after {
+    transform: scaleX(1);
+}
+</style>

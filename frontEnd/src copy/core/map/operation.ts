@@ -3,6 +3,7 @@ import mapboxgl from 'mapbox-gl'
 import { CN_Bounds } from './constant'
 import { type Image } from '@/types/satellite'
 import { useGridStore } from '@/store'
+import { type polygonGeometry } from '@/types/sharing'
 import { watch } from 'vue'
 
 ////////////////////////////////////////////////////////
@@ -71,6 +72,31 @@ export function draw_pointMode(): void {
     mapManager.withDraw((d) => {
         d.deleteAll()
         d.changeMode('draw_point')
+    })
+}
+
+export async function getCurrentGeometry(): Promise<polygonGeometry> {
+    return new Promise((resolve, reject) => {
+        mapManager.withDraw((d) => {
+            const features = d.getAll().features
+            if (features.length) {
+                console.log('current geom', features[0].geometry)
+                resolve(features[0].geometry as polygonGeometry)
+            }
+            // 默认检索范围
+            resolve({
+                type: 'Polygon',
+                coordinates: [
+                    [
+                        [0, 85],
+                        [0, -85],
+                        [180, -85],
+                        [180, 85],
+                        [0, 85],
+                    ],
+                ],
+            })
+        })
     })
 }
 
@@ -149,10 +175,13 @@ export function map_addGridLayer(props: GridLayerProp): void {
             filter: ['in', 'id', ''],
         })
 
-        watch(() => gridStore.selectedGrids, () => {
-            console.log('watch gridStore.selectedGrid')
-            m.setFilter(props.id + '-highlight', ['in', 'id', ...gridStore.selectedGrids])
-        })
+        watch(
+            () => gridStore.selectedGrids,
+            () => {
+                console.log('watch gridStore.selectedGrid')
+                m.setFilter(props.id + '-highlight', ['in', 'id', ...gridStore.selectedGrids])
+            },
+        )
 
         m.on('click', props.id, (e) => {
             const features = m.queryRenderedFeatures(e.point, { layers: [props.id] })
@@ -190,6 +219,9 @@ export function map_addImageLayer(props: ImageLayerProp): void {
             id: props.id,
             type: 'raster',
             source: props.id + '-source',
+            paint: {
+                'raster-opacity': 0.9,
+            },
         })
     })
 }
@@ -198,12 +230,11 @@ export function map_addImageLayer(props: ImageLayerProp): void {
 /////// Grid Operation //////////////////////////////////
 
 export function grid_create(props: Image): void {
-
     const gridImgUrl = 'http://127.0.0.1:5000/png'
     map_addImageLayer({
-        'id': 'gridImage',
-        'url': gridImgUrl,
-        'boxCoordinates': [
+        id: 'gridImage',
+        url: gridImgUrl,
+        boxCoordinates: [
             [119.0494136861107535, 32.7542374796797588],
             [121.6247280289205861, 32.7542374796797588],
             [121.6247280289205861, 30.7365359708879033],
@@ -211,13 +242,11 @@ export function grid_create(props: Image): void {
         ],
     })
 
-
     setTimeout(() => {
         const gridGeoJsonUrl = 'http://127.0.0.1:5000/geojson'
         map_addGridLayer({
-            'id': 'grid',
-            'url': gridGeoJsonUrl,
+            id: 'grid',
+            url: gridGeoJsonUrl,
         })
-    }, 500);
-
+    }, 500)
 }
