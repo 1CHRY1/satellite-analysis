@@ -1,7 +1,7 @@
 package nnu.mnr.satellite.config;
 
 import lombok.SneakyThrows;
-import nnu.mnr.satellite.model.dto.resources.SceneDesDTO;
+import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
 import nnu.mnr.satellite.model.po.resources.Scene;
 import nnu.mnr.satellite.utils.geom.EPSGUtil;
 import org.modelmapper.Converter;
@@ -33,9 +33,9 @@ public class ModelMapperConfig {
             }
         };
 
-        modelMapper.typeMap(Scene.class, SceneDesDTO.class)
+        modelMapper.typeMap(Scene.class, SceneDesVO.class)
                 .addMappings(mapper -> {
-                    mapper.using(crsConverter).map(Scene::getCoordinateSystem, SceneDesDTO::setCrs);
+                    mapper.using(crsConverter).map(Scene::getCoordinateSystem, SceneDesVO::setCrs);
                 });
 
         return modelMapper;

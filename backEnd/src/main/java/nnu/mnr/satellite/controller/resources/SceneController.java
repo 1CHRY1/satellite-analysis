@@ -1,10 +1,9 @@
 package nnu.mnr.satellite.controller.resources;
 
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
-import nnu.mnr.satellite.model.dto.common.GeoJsonDTO;
-import nnu.mnr.satellite.model.dto.resources.SceneDesDTO;
+import nnu.mnr.satellite.model.dto.resources.ScenesFetchDTO;
+import nnu.mnr.satellite.model.vo.common.GeoJsonVO;
+import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
 import nnu.mnr.satellite.service.resources.SceneDataService;
 import org.opengis.referencing.FactoryException;
 import org.springframework.http.HttpHeaders;
@@ -34,13 +33,13 @@ public class SceneController {
     }
 
     @GetMapping("/description/sceneId/{sceneId}")
-    public ResponseEntity<SceneDesDTO> getDescriptionById(@PathVariable String sceneId) throws IOException, FactoryException {
+    public ResponseEntity<SceneDesVO> getDescriptionById(@PathVariable String sceneId) throws IOException, FactoryException {
         return ResponseEntity.ok(sceneDataService.getSceneById(sceneId));
     }
 
     @PostMapping("/sensorId/productId/time/area")
-    public ResponseEntity<GeoJsonDTO> getScenesByIdsTimeAndBBox(@RequestBody JSONObject paramObj) throws IOException {
-        return ResponseEntity.ok(sceneDataService.getScenesByIdsTimeAndBBox(paramObj));
+    public ResponseEntity<GeoJsonVO> getScenesByIdsTimeAndBBox(@RequestBody ScenesFetchDTO scenesFetchDTO) throws IOException {
+        return ResponseEntity.ok(sceneDataService.getScenesByIdsTimeAndBBox(scenesFetchDTO));
     }
 
     @GetMapping("/png/sceneId/{sceneId}")

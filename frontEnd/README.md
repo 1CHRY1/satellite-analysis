@@ -1,5 +1,50 @@
-# Vue 3 + TypeScript + Vite
+# 卫星分析平台
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+一个基于Vue 3 + TypeScript + Vite构建的卫星数据分析平台前端项目。
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+## 技术栈
+
+- Vue 3
+- TypeScript
+- Vite
+- Ant Design Vue
+- Mapbox GL
+- TailwindCSS
+- Pinia
+- Vue Router
+
+## 开发环境要求
+
+- Node.js v20.10.0
+- pnpm (推荐) / npm / yarn
+
+## 安装
+
+```bash
+pnpm install
+```
+
+## 开发
+
+```bash
+pnpm dev
+
+```
+
+## 代码格式化
+
+```bash
+pnpm format
+```
+
+## 构建
+
+```bash
+pnpm build
+```
+
+## 预览
+
+```bash
+pnpm preview
+```

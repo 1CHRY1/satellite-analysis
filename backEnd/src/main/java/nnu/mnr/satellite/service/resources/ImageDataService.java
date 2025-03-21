@@ -1,7 +1,7 @@
 package nnu.mnr.satellite.service.resources;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import nnu.mnr.satellite.model.dto.resources.ImageInfoDTO;
+import nnu.mnr.satellite.model.vo.resources.ImageInfoVO;
 import nnu.mnr.satellite.model.po.resources.Image;
 import nnu.mnr.satellite.repository.resources.IImageRepo;
 import nnu.mnr.satellite.utils.data.MinioUtil;
@@ -35,11 +35,11 @@ public class ImageDataService {
         this.imageRepo = imageRepo;
     }
 
-    public List<ImageInfoDTO> getImagesBySceneId(String sceneId) {
+    public List<ImageInfoVO> getImagesBySceneId(String sceneId) {
         QueryWrapper<Image> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("image_id", "band").eq("scene_id", sceneId);
         List<Image> images = imageRepo.selectList(queryWrapper);
-        return imageModelMapper.map(images, new TypeToken<List<ImageInfoDTO>>() {}.getType());
+        return imageModelMapper.map(images, new TypeToken<List<ImageInfoVO>>() {}.getType());
     }
 
     public byte[] getTifByImageId(String imageId) {

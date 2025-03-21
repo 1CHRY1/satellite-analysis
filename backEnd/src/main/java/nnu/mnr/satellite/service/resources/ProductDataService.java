@@ -1,9 +1,8 @@
 package nnu.mnr.satellite.service.resources;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import nnu.mnr.satellite.model.dto.resources.ProductDesDTO;
-import nnu.mnr.satellite.model.dto.resources.ProductInfoDTO;
-import nnu.mnr.satellite.model.dto.resources.SensorInfoDTO;
+import nnu.mnr.satellite.model.vo.resources.ProductDesVO;
+import nnu.mnr.satellite.model.vo.resources.ProductInfoVO;
 import nnu.mnr.satellite.model.po.resources.Product;
 import nnu.mnr.satellite.repository.resources.IProductRepo;
 import org.modelmapper.ModelMapper;
@@ -34,7 +33,7 @@ public class ProductDataService {
         this.productRepo = productRepo;
     }
 
-    public List<ProductInfoDTO> getProductBySensorId(String sensorId) {
+    public List<ProductInfoVO> getProductBySensorId(String sensorId) {
         QueryWrapper<Product> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("product_id", "product_name")
                 .eq("sensor_id", sensorId);
@@ -42,16 +41,16 @@ public class ProductDataService {
         if (products == null) {
             return Collections.emptyList();
         }
-        return productModelMapper.map(products, new TypeToken<List<ProductInfoDTO>>() {}.getType());
+        return productModelMapper.map(products, new TypeToken<List<ProductInfoVO>>() {}.getType());
     }
 
-    public ProductDesDTO getProductDescription(String productId) {
+    public ProductDesVO getProductDescription(String productId) {
         QueryWrapper<Product> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("resolution", "period", "description").eq("product_id", productId);
         Product product = productRepo.selectOne(queryWrapper);
         if (product == null) {
             return null;
         }
-        return productModelMapper.map(product, new TypeToken<ProductDesDTO>() {}.getType());
+        return productModelMapper.map(product, new TypeToken<ProductDesVO>() {}.getType());
     }
 }
