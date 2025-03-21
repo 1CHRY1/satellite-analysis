@@ -52,10 +52,10 @@ public class WsAnnotationPostProcesser implements SmartInitializingSingleton {
             Class<?> beanType = beanFactory.getType(beanName);
             Class<?> targetClass = getTargetClass(beanType);
 
-            WsEndPoint wsServerEndpoint = targetClass.getAnnotation(WsEndPoint.class);
-            WsServerEndPoint websocketServerEndpoint = new WsServerEndPoint(targetClass
-                    ,beanFactory.getBean(targetClass),wsServerEndpoint.value());
-            actionDispatch.addWsServerEndpoint(websocketServerEndpoint);
+            WsEndPoint wsServiceAnnotation = targetClass.getAnnotation(WsEndPoint.class);
+            WsServerEndPoint wsServerEndpoint = new WsServerEndPoint(targetClass
+                    ,beanFactory.getBean(targetClass),wsServiceAnnotation.value());
+            actionDispatch.addWsServerEndpoint(wsServerEndpoint);
         }
         NettyWebsocketServer websocketServer = new NettyWebsocketServer(actionDispatch, wsProperties);
         // 启动websocket
@@ -66,12 +66,8 @@ public class WsAnnotationPostProcesser implements SmartInitializingSingleton {
     // Scanning @WsServerEndPoint
     private void scanWebsocketServiceBeans(String packagesToScan, BeanDefinitionRegistry registry) {
 
-        ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(registry);
+        ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(registry, false);
         scanner.addIncludeFilter(new AnnotationTypeFilter(WsEndPoint.class));
-
-        //TODO: 后面修改这里，加入websocket的时候不知道为何不排除主类就报错
-        scanner.addExcludeFilter((metadata, factory) ->
-                metadata.getClassMetadata().getClassName().equals(BackEndApplication.class.getName()));
 
         scanner.scan(packagesToScan);
     }

@@ -1,10 +1,10 @@
 package nnu.mnr.satellite.controller.resources;
 
-import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
-import nnu.mnr.satellite.model.dto.common.GeoJsonDTO;
-import nnu.mnr.satellite.model.dto.resources.TileDesDTO;
-import nnu.mnr.satellite.model.po.resources.Tile;
+import nnu.mnr.satellite.model.dto.resources.TilesMergeDTO;
+import nnu.mnr.satellite.model.vo.common.GeoJsonVO;
+import nnu.mnr.satellite.model.vo.resources.TileDesVO;
 import nnu.mnr.satellite.service.resources.TileDataService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -33,7 +33,7 @@ public class TileController {
     }
 
     @GetMapping("/imageId/{imageId}/tileLevel/{tileLevel}")
-    public ResponseEntity<GeoJsonDTO> getTilesByImageAndLevel(@PathVariable String imageId, @PathVariable int tileLevel) throws IOException {
+    public ResponseEntity<GeoJsonVO> getTilesByImageAndLevel(@PathVariable String imageId, @PathVariable int tileLevel) throws IOException {
         return ResponseEntity.ok(tileDataService.getTilesByImageAndLevel(imageId, tileLevel));
     }
 
@@ -47,8 +47,18 @@ public class TileController {
                 .body(tifData);
     }
 
+    @PostMapping("/tif/tileIds")
+    public ResponseEntity<byte[]> getMergedTifByImageAndTileId(@RequestBody TilesMergeDTO tilesMergeDTO) {
+        byte[] tifData = tileDataService.getMergeTileTif(tilesMergeDTO);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.valueOf("image/tiff"));
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(tifData);
+    }
+
     @GetMapping("/description/imageId/{imageId}/tileId/{tileId}")
-    public ResponseEntity<TileDesDTO> getDescriptionByImageAndTileId(@PathVariable String imageId, @PathVariable String tileId) {
+    public ResponseEntity<TileDesVO> getDescriptionByImageAndTileId(@PathVariable String imageId, @PathVariable String tileId) {
         return ResponseEntity.ok(tileDataService.getTileDescriptionById(imageId, tileId));
     }
 }

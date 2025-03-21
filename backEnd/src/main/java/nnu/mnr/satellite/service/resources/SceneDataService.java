@@ -3,8 +3,9 @@ package nnu.mnr.satellite.service.resources;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import nnu.mnr.satellite.model.dto.common.GeoJsonDTO;
-import nnu.mnr.satellite.model.dto.resources.SceneDesDTO;
+import nnu.mnr.satellite.model.dto.resources.ScenesFetchDTO;
+import nnu.mnr.satellite.model.vo.common.GeoJsonVO;
+import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
 import nnu.mnr.satellite.model.po.resources.Scene;
 import nnu.mnr.satellite.repository.resources.ISceneRepo;
 import nnu.mnr.satellite.utils.geom.GeometryUtil;
@@ -56,24 +57,23 @@ public class SceneDataService {
         return minioUtil.downloadByte(scene.getBucket(), scene.getPngPath());
     }
 
-    public SceneDesDTO getSceneById(String sceneId) throws IOException, FactoryException {
+    public SceneDesVO getSceneById(String sceneId) throws IOException, FactoryException {
         Scene scene = sceneRepo.getSceneById(sceneId);
-        return sceneModelMapper.map(scene, SceneDesDTO.class);
+        return sceneModelMapper.map(scene, SceneDesVO.class);
     }
 
-    public GeoJsonDTO getScenesByIdsTimeAndBBox(JSONObject params) throws IOException {
-//        JSONObject params = sceneRequestResolving(paramObj);
-        String sensorId = params.getString("sensorId");
-        String productId = params.getString("productId");
-        String start = params.getString("startTime");
-        String end = params.getString("endTime");
-        JSONObject geoJson = params.getJSONObject("geometry");
-        String type = geoJson.getString("type");
-        JSONArray coordinates = geoJson.getJSONArray("coordinates");
+    public GeoJsonVO getScenesByIdsTimeAndBBox(ScenesFetchDTO scenesFetchDTO) throws IOException {
+
+        String sensorId = scenesFetchDTO.getSensorId();
+        String productId = scenesFetchDTO.getProductId();
+        String start = scenesFetchDTO.getStartTime();
+        String end = scenesFetchDTO.getEndTime();
+        JSONObject geometry = scenesFetchDTO.getGeometry();
+        String type = geometry.getString("type");
+        JSONArray coordinates = geometry.getJSONArray("coordinates");
         GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
         if (type.equals("Polygon")) {
-            Geometry bbox = GeometryUtil.parsePolygon(coordinates, geometryFactory);
-            bbox.setSRID(4326);
+            Geometry bbox = GeometryUtil.parse4326Polygon(coordinates, geometryFactory);
             QueryWrapper<Scene> queryWrapper = new QueryWrapper<>();
             queryWrapper.eq("sensor_id", sensorId);
             queryWrapper.eq("product_id", productId);
@@ -88,10 +88,10 @@ public class SceneDataService {
                     wkt
             );
             List<Scene> sceneList = sceneRepo.selectList(queryWrapper);
-            return GeometryUtil.sceneList2GeojsonDTO(sceneList);
+            return GeometryUtil.sceneList2GeojsonVO(sceneList);
         } else {
             // TODO: 其他的类型
-            return new GeoJsonDTO();
+            return new GeoJsonVO();
         }
     }
 

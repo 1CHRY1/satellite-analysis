@@ -4,7 +4,7 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import nnu.mnr.satellite.model.dto.common.GeoJsonDTO;
+import nnu.mnr.satellite.model.vo.common.GeoJsonVO;
 import nnu.mnr.satellite.model.po.resources.Scene;
 import nnu.mnr.satellite.model.po.resources.Tile;
 import org.geotools.geojson.geom.GeometryJSON;
@@ -73,7 +73,7 @@ public class GeometryUtil {
         return geometryFactory.createLinearRing(coordArray);
     }
 
-    public static Polygon parsePolygon(JSONArray coordinates, GeometryFactory geometryFactory) {
+    public static Polygon parse4326Polygon(JSONArray coordinates, GeometryFactory geometryFactory) {
         // 外部环
         JSONArray outerRingCoords = coordinates.getJSONArray(0);
         LinearRing outerRing = createLinearRing(outerRingCoords, geometryFactory);
@@ -86,6 +86,17 @@ public class GeometryUtil {
         }
 
         return geometryFactory.createPolygon(outerRing, innerRings);
+    }
+
+    public static Point parse4326Point(JSONArray coordinates) {
+
+        GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
+        // 点的坐标通常是 [x, y] 形式，这里直接获取 x 和 y 坐标
+        double x = coordinates.getDoubleValue(0);
+        double y = coordinates.getDoubleValue(1);
+
+        // 使用 GeometryFactory 创建 Point 对象
+        return geometryFactory.createPoint(new org.locationtech.jts.geom.Coordinate(x, y));
     }
 
     public static JSONObject geometry2Geojson(Geometry jtsGeometry, String id) throws IOException {
@@ -115,9 +126,9 @@ public class GeometryUtil {
         return JSONObject.parseObject(mapper.writeValueAsString(featureNode));
     }
 
-    public static GeoJsonDTO sceneList2GeojsonDTO(List<Scene> items) throws IOException {
-        GeoJsonDTO geoJsonDTO = new GeoJsonDTO();
-        geoJsonDTO.setType("FeatureCollection");
+    public static GeoJsonVO sceneList2GeojsonVO(List<Scene> items) throws IOException {
+        GeoJsonVO geoJsonVO = new GeoJsonVO();
+        geoJsonVO.setType("FeatureCollection");
 
         JSONArray features = new JSONArray();
         if (items != null) {
@@ -126,13 +137,13 @@ public class GeometryUtil {
                 features.add(sceneGeoJson);
             }
         }
-        geoJsonDTO.setFeatures(features);
-        return geoJsonDTO;
+        geoJsonVO.setFeatures(features);
+        return geoJsonVO;
     }
 
-    public static GeoJsonDTO tileList2GeojsonDTO(List<Tile> items) throws IOException {
-        GeoJsonDTO geoJsonDTO = new GeoJsonDTO();
-        geoJsonDTO.setType("FeatureCollection");
+    public static GeoJsonVO tileList2GeojsonVO(List<Tile> items) throws IOException {
+        GeoJsonVO geoJsonVO = new GeoJsonVO();
+        geoJsonVO.setType("FeatureCollection");
 
         JSONArray features = new JSONArray();
         if (items != null) {
@@ -141,8 +152,8 @@ public class GeometryUtil {
                 features.add(sceneGeoJson);
             }
         }
-        geoJsonDTO.setFeatures(features);
-        return geoJsonDTO;
+        geoJsonVO.setFeatures(features);
+        return geoJsonVO;
     }
 
 }

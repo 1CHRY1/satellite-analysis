@@ -47,42 +47,42 @@ public class WsActionDispatch {
 
     // Dispatch Action to Method
     protected void dispatch(String uri, WsAction action, Channel channel) {
-        WsServerEndPoint websocketServerEndpoint = matchServerEndpoint(uri);
-        if (Objects.nonNull(websocketServerEndpoint)) {
+        WsServerEndPoint wsServerEndpoint = matchServerEndpoint(uri);
+        if (Objects.nonNull(wsServerEndpoint)) {
             Method method = null;
-            Object obj = websocketServerEndpoint.getObject();
+            Object obj = wsServerEndpoint.getObject();
             switch (action) {
                 case HAND_SHAKE:
-                    method = websocketServerEndpoint.getOnHandShake();
+                    method = wsServerEndpoint.getOnHandShake();
                     break;
                 case OPEN:
-                    method = websocketServerEndpoint.getOnOpen();
+                    method = wsServerEndpoint.getOnOpen();
                     break;
                 case CLOSE:
-                    method = websocketServerEndpoint.getOnClose();
+                    method = wsServerEndpoint.getOnClose();
                     break;
                 case MESSAGE:
-                    method = websocketServerEndpoint.getOnMessage();
+                    method = wsServerEndpoint.getOnMessage();
                     break;
                 case EVENT:
-                    method = websocketServerEndpoint.getOnEvent();
+                    method = wsServerEndpoint.getOnEvent();
                     break;
                 case ERROR:
-                    method = websocketServerEndpoint.getOnError();
+                    method = wsServerEndpoint.getOnError();
                     break;
                 default:
                     break;
             }
             if (Objects.nonNull(method)) {
-                Object[] args = new MethodParamsBuild().getMethodArgumentValues(method,channel);
+                Object[] args = new MethodParamsBuild().getMethodArgumentValues(method, channel);
                 ReflectionUtils.invokeMethod(method,obj,args);
             }
         }
     }
 
     public Map<String,String> getUriTemplateVariables(String lookupPath) {
-        WsServerEndPoint websocketServerEndpoint = matchServerEndpoint(lookupPath);
-        return antPathMatcher.extractUriTemplateVariables(websocketServerEndpoint.getPath(), lookupPath);
+        WsServerEndPoint wsServerEndpoint = matchServerEndpoint(lookupPath);
+        return antPathMatcher.extractUriTemplateVariables(wsServerEndpoint.getPath(), lookupPath);
     }
 
 }
