@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.dynamic.datasource.annotation.DS;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.model.dto.resources.TilesMergeDTO;
+import nnu.mnr.satellite.model.pojo.modeling.ModelServerProperties;
 import nnu.mnr.satellite.model.vo.common.GeoJsonVO;
 import nnu.mnr.satellite.model.vo.resources.TileDesVO;
 import nnu.mnr.satellite.model.po.resources.Tile;
@@ -14,7 +15,6 @@ import nnu.mnr.satellite.utils.data.MinioUtil;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -38,8 +38,8 @@ public class TileDataService {
     @Autowired
     MinioUtil minioUtil;
 
-    @Value("${modelServer.merge}")
-    private String modelServer;
+    @Autowired
+    ModelServerProperties modelServerProperties;
 
     private final ITileRepo tileRepo;
 
@@ -62,7 +62,8 @@ public class TileDataService {
     public byte[] getMergeTileTif(TilesMergeDTO tilesMergeDTO) {
         JSONObject mergeParam = JSONObject.of("imageId", tilesMergeDTO.getImageId(),"tiles", tilesMergeDTO.getTiles());
         try {
-            JSONObject fileLocation = JSONObject.parseObject(HttpUtil.doPost(modelServer, mergeParam));
+            String mergeApi = modelServerProperties.getAddress() + modelServerProperties.getApis().get("merge");
+            JSONObject fileLocation = JSONObject.parseObject(HttpUtil.doPost(mergeApi, mergeParam));
             String bucket = fileLocation.getString("bucket");
             String path = fileLocation.getString("path");
             return minioUtil.downloadByte(bucket, path);

@@ -57,4 +57,12 @@ ca:
   dir: D:/1tools/OpenSSL/ca
 
 modelServer:
-  merge: http://223.2.34.7:5000/merge
+  address: http://223.2.34.7
+  api:
+    status: /status
+    result: /result
+    merge: /merge
+    ndviPoint: /ndviPoint
+    ndviArea: /ndviArea
+  interval:
+    status: 2
