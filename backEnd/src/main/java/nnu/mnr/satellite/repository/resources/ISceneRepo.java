@@ -19,9 +19,9 @@ import org.apache.ibatis.annotations.Select;
 //@Repository("ImageRepo")
 public interface ISceneRepo extends BaseMapper<Scene> {
 
-    @Select("SELECT scene_id, scene_time,tile_level_num,tile_levels," +
-            "coordinate_system," +
-            "description,band_num,bands FROM scene_table WHERE scene_id = #{sceneId}")
+    @Select("SELECT scene_time, tile_level_num, tile_levels," +
+            "scene_name, coordinate_system," +
+            "description, band_num, bands, cloud FROM scene_table WHERE scene_id = #{sceneId}")
     @Results({
             @Result(property = "bbox", column = "bounding_box", typeHandler = GeometryTypeHandler.class)
     })

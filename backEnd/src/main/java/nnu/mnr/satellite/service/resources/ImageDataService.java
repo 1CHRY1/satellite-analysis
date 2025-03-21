@@ -37,7 +37,7 @@ public class ImageDataService {
 
     public List<ImageInfoVO> getImagesBySceneId(String sceneId) {
         QueryWrapper<Image> queryWrapper = new QueryWrapper<>();
-        queryWrapper.select("image_id", "band").eq("scene_id", sceneId);
+        queryWrapper.select("image_id", "band", "cloud").eq("scene_id", sceneId);
         List<Image> images = imageRepo.selectList(queryWrapper);
         return imageModelMapper.map(images, new TypeToken<List<ImageInfoVO>>() {}.getType());
     }
