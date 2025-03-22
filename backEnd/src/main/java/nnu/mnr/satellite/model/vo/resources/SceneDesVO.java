@@ -16,6 +16,7 @@ import java.util.HashSet;
 @Data
 public class SceneDesVO {
 
+    private String sceneName;
     private LocalDateTime sceneTime;
     private Integer tileLevelNum;
     private HashSet<String> tileLevels;
@@ -23,5 +24,6 @@ public class SceneDesVO {
     private String description;
     private Integer bandNum;
     private HashSet<String> bands;
+    private String cloud;
 
 }

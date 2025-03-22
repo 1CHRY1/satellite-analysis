@@ -28,6 +28,7 @@ public class ProcessUtil {
             return "STATUS WRONG";
         }
     }
+
     public static JSONObject getModelCaseResult(String url, String caseId) {
         try {
             String resultStr = HttpUtil.doGet(url, JSONObject.of("caseId", caseId));
