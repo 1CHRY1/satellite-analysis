@@ -1,3 +1,4 @@
+import copy
 import json
 import math
 import os
@@ -15,15 +16,10 @@ import pyproj
 from shapely.geometry import box
 
 from dataProcessing.Utils.filenameUtils import extract_landsat7_info
-from dataProcessing.Utils.osUtils import uploadFileToMinio, uploadLocalFile
+from dataProcessing.Utils.osUtils import uploadFileToMinio, uploadLocalFile, uploadLocalDirectory
 from dataProcessing.tifSlicer.tifSlice import tif2GeoCS, rasterInfo, lnglat2grid, grid2lnglat, grid_size_in_degree, \
     geo_to_pixel, grids2Geojson
-
-EarthRadius = 6371008.8
-EarthCircumference = 2 * math.pi * EarthRadius
-GRID_RESOLUTION = 50
-TILE_BUCKET = "test-tiles"
-GRID_BUCKET = "test-tiles"
+import dataProcessing.config as config
 
 
 def read_band(path):
@@ -558,8 +554,8 @@ def process_and_upload(files_dict: dict, bucket_name: str, object_prefix: str):
             scene_info.bands.append(image_info.band)
             # 处理tiles
             with tempfile.TemporaryDirectory() as temp_dir:
-                tile_info_list = process_tiles(path, scene_info.scene_name, temp_dir, GRID_RESOLUTION, TILE_BUCKET,
-                                               GRID_BUCKET, object_prefix)
+                tile_info_list = process_tiles(path, scene_info.scene_name, temp_dir, config.GRID_RESOLUTION, config.MINIO_TILES_BUCKET,
+                                               config.MINIO_GRID_BUCKET, object_prefix)
             image_info.tile_info_list = tile_info_list
             # 将一些景的公共属性复制到scene_info中
             vars(scene_info).update({key: getattr(image_info, key) for key in vars(image_info) if key in {
@@ -598,8 +594,8 @@ def process_tiles(tiff_path, scene_name, output_dir, grid_resolution, tile_bucke
 
     tif_in_geoCS = "/vsimem/temp.tif"  # GDAL 内存文件系统
     grid_resolution_in_meter = grid_resolution * 1000
-    world_grid_num_x = math.ceil(EarthCircumference / grid_resolution_in_meter)
-    world_grid_num_y = math.ceil(EarthCircumference / 2.0 / grid_resolution_in_meter)
+    world_grid_num_x = math.ceil(config.EARTH_CIRCUMFERENCE / grid_resolution_in_meter)
+    world_grid_num_y = math.ceil(config.EARTH_CIRCUMFERENCE / 2.0 / grid_resolution_in_meter)
 
     world_grid_num = [world_grid_num_x, world_grid_num_y]
 
@@ -643,8 +639,6 @@ def process_tiles(tiff_path, scene_name, output_dir, grid_resolution, tile_bucke
     if no_data_value is None:
         no_data_value = 0
 
-    # 准备需要处理的瓦片信息列表
-    tiles_to_process = []
     grid_id_list = []
 
     for i in range(grid_num_x):
@@ -669,31 +663,28 @@ def process_tiles(tiff_path, scene_name, output_dir, grid_resolution, tile_bucke
                     continue
 
             grid_id_list.append([grid_id_x, grid_id_y, i, j])
-            object_name = f"{object_prefix}/{scene_name}/{tiff_name}/tile_{i}_{j}.tif"
-            tiles_to_process.append({
-                'x': x, 'y': y, 'w': w, 'h': h,
-                'column_id': grid_id_x, 'row_id': grid_id_y,
-                'path': object_name,
-                'bucket': tile_bucket,
-                'tif_path': tif_in_geoCS,  # 传递GDAL虚拟文件路径
-                'world_grid_num': world_grid_num
-            })
+            tile_filename = os.path.join(output_dir, f"tile_{i}_{j}.tif")
+            gdal.Translate(tile_filename, ds, srcWin=[x, y, w, h])
 
-    # 创建临时副本供多进程使用（因为虚拟文件可能不支持多进程共享）
-    real_tif_path = os.path.join(output_dir, "temp_processing.tif")
-    gdal.Translate(real_tif_path, ds)
+            # --------- Prep tile_info_list ----------------------------------------------#
+            tile_info = {}
+            left_lng, top_lat = grid2lnglat(grid_id_x, grid_id_y, world_grid_num)
+            right_lng, bottom_lat = grid2lnglat(grid_id_x + 1, grid_id_y + 1, world_grid_num)
+            wgs84_corners = [(left_lng, top_lat), (right_lng, top_lat), (right_lng, bottom_lat), (left_lng, bottom_lat),
+                             (left_lng, top_lat)]
+            coords_str = ", ".join([f"{x} {y}" for x, y in wgs84_corners])
+            tile_info['bbox'] = f"POLYGON(({coords_str}))"
+            tile_info['bucket'] = tile_bucket
+            tile_info['path'] = f"{object_prefix}/{scene_name}/{tiff_name}/tile_{i}_{j}.tif"
+            tile_info['column_id'] = grid_id_x
+            tile_info['row_id'] = grid_id_y
+            tile_info['cloud'] = 0
+            print(f"{i}, {j}")
+            tile_info_list.append(tile_info)
 
-    #--------- Process tiles using multiprocessing -------------------------------
-    num_processes = min(os.cpu_count(), 8)
-    with Pool(processes=num_processes) as pool:
-        for tile in tiles_to_process:
-            tile['tif_path'] = real_tif_path
-        tile_info_list = pool.map(process_single_tile, tiles_to_process)
 
-    # cleat temp files
-    os.unlink(real_tif_path)
-    gdal.Unlink(tif_in_geoCS)
-    ds = None
+    # --------- Upload tiles ------------------------------------------------------
+    uploadLocalDirectory(output_dir, tile_bucket, f"{object_prefix}/{scene_name}/{tiff_name}")
 
     # --------- Create and upload grids geojson ------------------------------------
     geojson = grids2Geojson(grid_id_list, world_grid_num)
@@ -701,6 +692,9 @@ def process_tiles(tiff_path, scene_name, output_dir, grid_resolution, tile_bucke
         json.dump(geojson, f)
     uploadLocalFile(os.path.join(output_dir, "grid.geojson"), grid_bucket,
                     f"{object_prefix}/{scene_name}/{tiff_name}/grid.geojson")
+
+    gdal.Unlink(tif_in_geoCS)
+    ds = None
     return tile_info_list
 
 
@@ -710,11 +704,9 @@ def process_single_tile(tile_info):
     ds = gdal.Open(tile_info['tif_path'], gdal.GA_ReadOnly)
 
     # --------- Create a tile and upload it ------------------------------------
-    with tempfile.NamedTemporaryFile(suffix='.tif', delete=False) as temp_file:
-        temp_filename = temp_file.name
-    gdal.Translate(temp_filename, ds, srcWin=[tile_info['x'], tile_info['y'],
-                                              tile_info['w'], tile_info['h']])
-    uploadLocalFile(temp_filename, tile_info['bucket'], tile_info['path'])
+    gdal.Translate(tile_info['temp_path'], ds, srcWin=[tile_info['x'], tile_info['y'],
+                                                       tile_info['w'], tile_info['h']])
+    uploadLocalFile(tile_info['temp_path'], tile_info['bucket'], tile_info['path'])
 
     # --------- get the bbox of the tile ------------------------------------
     left_lng, top_lat = grid2lnglat(tile_info['column_id'], tile_info['row_id'], tile_info['world_grid_num'])
@@ -726,6 +718,29 @@ def process_single_tile(tile_info):
     tile_info['bbox'] = f"POLYGON(({coords_str}))"
     # TODO
     tile_info['cloud'] = 0
-    # 删除临时文件
-    os.unlink(temp_filename)
     return tile_info
+
+def validate_inputs(tif_paths):
+    crs_list = [gdal.Open(path).GetProjection() for path in tif_paths]
+    res_list = [gdal.Open(path).GetGeoTransform()[1] for path in tif_paths]
+    if len(set(crs_list)) > 1:
+        raise ValueError("坐标系不一致")
+    if len(set(res_list)) > 1:
+        raise ValueError("分辨率不一致")
+
+def mtif(tif_paths, output_path):
+    merge_options = gdal.WarpOptions(
+        format="GTiff",
+        cutlineDSName=None,
+        srcSRS=None,  # 自动识别输入投影
+        dstSRS=None,  # 保持输入投影
+        width=0,      # 自动计算输出尺寸
+        height=0,
+        resampleAlg="near",  # 重采样算法（near/bilinear等）
+        creationOptions=["COMPRESS=LZW"]
+    )
+    gdal.Warp(
+        output_path,
+        tif_paths,
+        options=merge_options
+    )
