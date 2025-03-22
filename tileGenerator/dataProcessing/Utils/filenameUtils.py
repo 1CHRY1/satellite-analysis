@@ -9,6 +9,14 @@ landsat7_pattern = re.compile(
     r"LE07_L1\w{2}_(\d{3})(\d{3})_(\d{8})_\d{8}_\d{2}_RT_B(\d+(?:_VCID_\d)?)\.TIF",
     re.IGNORECASE
 )
+# Landset8 Level2 Data
+landsat8_pattern = re.compile(
+    r"LC08_L2\w{2}_(\d{3})(\d{3})_(\d{8})_\d{8}_\d{2}_T1(?:_SR)?_B(\d+)\.TIF",
+    re.IGNORECASE
+)
+
+CURRENT_PATTERN = landsat8_pattern
+
 # 获取本地文件列表
 def get_landsat7_files(directory: str) -> Dict[str, List[str]]:
     """
@@ -20,7 +28,7 @@ def get_landsat7_files(directory: str) -> Dict[str, List[str]]:
 
     # 遍历目录下的所有文件
     for file in os.listdir(directory):
-        match = landsat7_pattern.match(file)
+        match = CURRENT_PATTERN.match(file)
         if match and file.lower().endswith('.tif'):
             # 提取文件中的影像ID和波段号
             image_id = match.group(0).split('_B')[0]  # 获取影像ID（去除波段号部分）
@@ -45,7 +53,7 @@ def extract_landsat7_info(file_path: str):
     """
     from dataProcessing.Utils.tifUtils import convert_bbox_to_4326
     file_name = os.path.basename(file_path)  # 获取文件名
-    match = landsat7_pattern.match(file_name)
+    match = CURRENT_PATTERN.match(file_name)
     if match:
         column_id, row_id, image_time, band = match.groups()
         # 读取影像文件
@@ -76,8 +84,8 @@ def extract_landsat7_info(file_path: str):
             band=band,
             crs=crs,
             bbox=bbox,
-            tile_level_num=1,
-            tile_levels="40000",
+            tile_level_num=2,
+            tile_levels="40031,20016",
             resolution=resolution,
             period='16d',
         )

@@ -59,7 +59,7 @@ def create_DB():
         `scene_time` DATETIME,
         `sensor_id` VARCHAR(36),
         `tile_level_num` INT,
-        `tile_levels` SET('8000', '16000', '40000'),
+        `tile_levels` SET('8000', '16000', '40000', '40031', '20016'),
         `coordinate_system` VARCHAR(255),
         `bounding_box` GEOMETRY NOT NULL SRID 4326,
         `description` TEXT(65535),
