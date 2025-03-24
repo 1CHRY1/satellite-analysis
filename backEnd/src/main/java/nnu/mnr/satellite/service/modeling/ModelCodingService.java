@@ -1,5 +1,6 @@
 package nnu.mnr.satellite.service.modeling;
 
+import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.config.JSchConnectionManager;
 import nnu.mnr.satellite.model.dto.modeling.CreateProjectDTO;
 import nnu.mnr.satellite.model.dto.modeling.ProjectFileDTO;
@@ -35,6 +36,7 @@ import java.util.Optional;
  */
 
 @Service
+@Slf4j
 public class ModelCodingService {
 
     @Autowired
@@ -148,7 +150,7 @@ public class ModelCodingService {
         // Delete Local Data & Remote Data
         FileUtil.deleteFolder(new File(dockerServerProperties.getLocalPath() + projectId));
         jSchConnectionManager.deleteFolder(project.getServerDir());
-
+        log.info("Successfully deleted folder and its contents: " + project.getServerDir());
         projectRepo.deleteById(projectId);
         responseInfo = "Project " + projectId + " has been Deleted";
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
@@ -241,7 +243,7 @@ public class ModelCodingService {
             Files.writeString(Paths.get(project.getLocalPyPath()), projectFileDTO.getContent());
             project.setPyContent(projectFileDTO.getContent());
             projectRepo.updateById(project);
-            sftpDataService.transferFileToRemoteDockerContainer(
+            sftpDataService.uploadFile(
                     project.getLocalPyPath(), project.getServerPyPath()
             );
             responseInfo = "Python Script " + projectId + " has been Saved";

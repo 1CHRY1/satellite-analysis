@@ -102,8 +102,6 @@ public class JSchConnectionManager {
                 channelSftp.cd("..");
                 channelSftp.rmdir(folderPath);
 
-                log.info("Successfully deleted folder and its contents: " + folderPath);
-
             } catch (SftpException e) {
                 log.error("Error deleting folder: " + folderPath, e);
             } finally {
