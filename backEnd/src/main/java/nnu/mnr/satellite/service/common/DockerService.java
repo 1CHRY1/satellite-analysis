@@ -18,11 +18,12 @@ import com.github.dockerjava.transport.DockerHttpClient;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.enums.common.FileType;
-import nnu.mnr.satellite.model.po.common.DFileInfo;
-import nnu.mnr.satellite.model.po.common.SftpConn;
+import nnu.mnr.satellite.model.pojo.common.DFileInfo;
+import nnu.mnr.satellite.model.pojo.common.SftpConn;
+import nnu.mnr.satellite.model.pojo.modeling.DockerServerProperties;
+import nnu.mnr.satellite.nettywebsocket.ModelResultCallBack;
 import nnu.mnr.satellite.service.websocket.ModelSocketService;
 import nnu.mnr.satellite.utils.docker.DockerFileUtil;
-import nnu.mnr.satellite.websocket.ModelResultCallBack;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -49,22 +51,13 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class DockerService {
 
+    @Autowired
+    DockerServerProperties dockerServerProperties;
+
     private int startPort = 55000;
-
-    @Value("${docker.localPath}")
-    private String localVolumePath;
-
-    @Value("${docker.defaultServer.host}")
-    private String defaultHost;
-
-    @Value("${docker.defaultServer.port}")
-    private int defaultPort;
 
     @Value("${ca.dir}")
     private String localCADir;
-
-    @Value("${docker.remotePath}")
-    private String containerDir; //容器工作空间
 
     @Autowired
     SftpDataService ftpDataService;
@@ -74,8 +67,23 @@ public class DockerService {
 
     private DockerClient dockerClient;
 
+    private String localPath;
+    private String serverDir;
+    private String workDir;
+    private String defaultHost;
+    private int defaultPort;
+    private String defaultUser;
+    private String defaultPassword;
+
     @PostConstruct
     public void init() {
+        this.localPath = dockerServerProperties.getLocalPath();
+        this.serverDir = dockerServerProperties.getServerDir();
+        this.workDir = dockerServerProperties.getWorkDir();
+        this.defaultHost = dockerServerProperties.getDefaultServer().get("host");
+        this.defaultPort = Integer.parseInt(dockerServerProperties.getDefaultServer().get("port"));
+        this.defaultUser = dockerServerProperties.getDefaultServer().get("username");
+        this.defaultPassword = dockerServerProperties.getDefaultServer().get("password");
         dockerClient = createDockerClient();
     }
 
@@ -104,22 +112,21 @@ public class DockerService {
                 .build();
     }
 
-    public void initEnv(String projectId) {
-        // TODO: create env info from dbitem
-        String volumePath = "/home/vge/satellite/" + projectId;
-        SftpConn sftpInfo = SftpConn.builder().host("223.2.35.208").username("vge").password("3J44.njnu.edu.cn").BuildSftpConn();
-
+    public void initEnv(String projectId, String serverDir) {
+        SftpConn sftpInfo = SftpConn.builder()
+                .host(defaultHost).username(defaultUser).password(defaultPassword)
+                .BuildSftpConn();
         try {
-            String localPath = localVolumePath + projectId;
-            File folder = new File(localPath);
+            String localProjectPath = localPath + projectId;
+            File folder = new File(localProjectPath);
             if (!folder.exists()) {
                 folder.mkdirs();
             }
-            Path mainPath = Paths.get(localPath + "/main.py");
+            Path mainPath = Paths.get(localProjectPath + "/main.py");
             Files.newOutputStream(mainPath).close();
 
             // creat folder for project docker
-            ftpDataService.createRemoteDirAndFile(sftpInfo, localPath, volumePath);
+            ftpDataService.createRemoteDirAndFile(sftpInfo, localProjectPath, serverDir);
         } catch (Exception e) {
             log.error("Error Initing Environment " + e);
         }
@@ -158,7 +165,7 @@ public class DockerService {
         return ifrunning;
     }
 
-    public void startContainer(String containerId) throws DockerException, InterruptedException {
+    public void startContainer(String containerId) throws DockerException {
         dockerClient.startContainerCmd(containerId).exec();
     }
 
@@ -173,9 +180,9 @@ public class DockerService {
 
     public List<DFileInfo> getCurDirFiles(String containerId, String projectId, String path, List<DFileInfo> fileTree) {
         // TODO: 通过projectId获取运行路径
-        String workSpaceDir = "/usr/local/coding/";
+        String workSpaceDir = workDir;
         try {
-            String[] cmd = {"/bin/bash", "-c", "ls -la " + workSpaceDir + "/" + path};
+            String[] cmd = {"/bin/bash", "-c", "ls -la " + workSpaceDir + path};
             ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(containerId)
                     .withAttachStdout(true)
                     .withAttachStderr(true)
@@ -215,7 +222,7 @@ public class DockerService {
 
                     DFileInfo fileInfo = DFileInfo.builder()
                             .fileName(fileName).filePath(filePath).fileType(fileType)
-                            .serverPath(containerDir + projectId + "/" + filePath)
+                            .serverPath(serverDir + projectId + "/" + filePath)
                             .updateTime(DockerFileUtil.parseFileLastModified(fileDetails))
                             .fileSize(Long.parseLong(fileDetails[4]))
                             .DFileInfoBuilder();
