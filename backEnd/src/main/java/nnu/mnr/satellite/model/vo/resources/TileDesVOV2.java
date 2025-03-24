@@ -11,12 +11,12 @@ import lombok.Data;
  */
 
 @Data
-public class TileDesVO {
+public class TileDesVOV2 {
 
     private String tileLevel;
+    private String sceneId;
     private String imageId;
     private String cloud;
-    private String band;
     private Integer columnId;
     private Integer rowId;
 
