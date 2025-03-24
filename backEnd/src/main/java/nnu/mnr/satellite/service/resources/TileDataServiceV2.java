@@ -2,16 +2,23 @@ package nnu.mnr.satellite.service.resources;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.dynamic.datasource.annotation.DS;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.model.dto.resources.TilesMergeDTO;
+import nnu.mnr.satellite.model.dto.resources.TilesMergeDTOV2;
+import nnu.mnr.satellite.model.po.resources.Image;
+import nnu.mnr.satellite.model.po.resources.Scene;
+import nnu.mnr.satellite.model.po.resources.Tile;
 import nnu.mnr.satellite.model.pojo.modeling.ModelServerProperties;
 import nnu.mnr.satellite.model.vo.common.GeoJsonVO;
 import nnu.mnr.satellite.model.vo.resources.TileDesVO;
-import nnu.mnr.satellite.model.po.resources.Tile;
+import nnu.mnr.satellite.model.vo.resources.TileDesVOV2;
+import nnu.mnr.satellite.repository.resources.IImageRepo;
 import nnu.mnr.satellite.repository.resources.ITileRepo;
+import nnu.mnr.satellite.repository.resources.ITileRepoV2;
 import nnu.mnr.satellite.utils.common.HttpUtil;
-import nnu.mnr.satellite.utils.geom.GeometryUtil;
 import nnu.mnr.satellite.utils.data.MinioUtil;
+import nnu.mnr.satellite.utils.geom.GeometryUtil;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,8 +36,8 @@ import java.util.List;
  */
 
 @Slf4j
-@Service("TileDataService")
-public class TileDataService {
+@Service("TileDataServiceV2")
+public class TileDataServiceV2 {
 
     @Autowired
     ModelMapper tileModelMapper;
@@ -41,26 +48,32 @@ public class TileDataService {
     @Autowired
     ModelServerProperties modelServerProperties;
 
-    private final ITileRepo tileRepo;
+    private final ITileRepoV2 tileRepo;
 
-    public TileDataService(ITileRepo tileRepo) {
+    private final IImageRepo imageRepo;
+
+    public TileDataServiceV2(ITileRepoV2 tileRepo, IImageRepo imageRepo) {
         this.tileRepo = tileRepo;
+        this.imageRepo = imageRepo;
     }
 
     @DS("mysql_tile")
-    public GeoJsonVO getTilesByImageAndLevel(String imageId, int tileLevel) throws IOException {
+    public GeoJsonVO getTilesBySceneAndLevel(String sceneId, int tileLevel) throws IOException {
+        QueryWrapper<Image> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("image_id").eq("scene_id", sceneId);
+        String imageId = imageRepo.selectOne(queryWrapper).getImageId();
         List<Tile> tiles = tileRepo.getTileByImageIdAndLevel(imageId, tileLevel);
         return GeometryUtil.tileList2GeojsonVO(tiles);
     }
 
     @DS("mysql_tile")
-    public byte[] getTileTifById(String imageId, String tileId) {
-        Tile tile = tileRepo.getTileByTileId(imageId, tileId);
+    public byte[] getTileTifById(String sceneId, String tileId) {
+        Tile tile = tileRepo.getTileByTileId(sceneId, tileId);
         return minioUtil.downloadByte(tile.getBucket(), tile.getPath());
     }
 
-    public byte[] getMergeTileTif(TilesMergeDTO tilesMergeDTO) {
-        JSONObject mergeParam = JSONObject.of("imageId", tilesMergeDTO.getImageId(),"tiles", tilesMergeDTO.getTiles());
+    public byte[] getMergeTileTif(TilesMergeDTOV2 tilesMergeDTO) {
+        JSONObject mergeParam = JSONObject.of("sceneId", tilesMergeDTO.getSceneId(),"tiles", tilesMergeDTO.getTiles());
         try {
             String mergeApi = modelServerProperties.getAddress() + modelServerProperties.getApis().get("merge");
             // TODO: Turn to Model Task
@@ -74,9 +87,9 @@ public class TileDataService {
     }
 
     @DS("mysql_tile")
-    public TileDesVO getTileDescriptionById(String imageId, String tileId) {
-        Tile tile = tileRepo.getTileByTileId(imageId, tileId);
-        return tileModelMapper.map(tile, new TypeToken<TileDesVO>() {}.getType());
+    public TileDesVO getTileDescriptionById(String sceneId, String tileId) {
+        Tile tile = tileRepo.getTileByTileId(sceneId, tileId);
+        return tileModelMapper.map(tile, new TypeToken<TileDesVOV2>() {}.getType());
     }
 
 }
