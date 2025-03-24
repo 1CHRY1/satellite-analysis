@@ -34,6 +34,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -122,9 +123,9 @@ public class DockerService {
             if (!folder.exists()) {
                 folder.mkdirs();
             }
+            Path sourcePath = Paths.get(localPath + "/devCli/main.py");
             Path mainPath = Paths.get(localProjectPath + "/main.py");
-            Files.newOutputStream(mainPath).close();
-
+            Files.copy(sourcePath, mainPath, StandardCopyOption.REPLACE_EXISTING);
             // creat folder for project docker
             ftpDataService.createRemoteDirAndFile(sftpInfo, localProjectPath, serverDir);
         } catch (Exception e) {
