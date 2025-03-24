@@ -86,4 +86,13 @@ public class DockerFileUtil {
         return null;
     }
 
+    public static String getImageByName(String env) {
+        return switch (env) {
+            case "Python3_9" -> "python39:v1";
+            case "Python3_8" -> "python38:latest";
+            case "Python2_7" -> "python27:latest";
+            default -> "";
+        };
+    }
+
 }
