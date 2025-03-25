@@ -3,8 +3,9 @@ package nnu.mnr.satellite.controller.modeling;
 import nnu.mnr.satellite.model.dto.modeling.*;
 import nnu.mnr.satellite.model.pojo.common.DFileInfo;
 import nnu.mnr.satellite.model.vo.modeling.CodingProjectVO;
+import nnu.mnr.satellite.model.vo.modeling.ProjectResultVO;
 import nnu.mnr.satellite.service.modeling.ModelCodingService;
-import org.apache.ibatis.annotations.Delete;
+import nnu.mnr.satellite.service.modeling.ProjectResultDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +26,9 @@ public class ModelCodingController {
 
     @Autowired
     ModelCodingService modelCodingService;
+
+    @Autowired
+    ProjectResultDataService projectResultDataService;
 
     // Project Controller
     @PostMapping("/project/new")
@@ -69,13 +73,13 @@ public class ModelCodingController {
 
     // Operating Controller
     @PostMapping("/project/executing")
-    public ResponseEntity<CodingProjectVO> runPythonScript(@RequestBody RunProjectDTO runProjectDTO) {
-        return ResponseEntity.ok(modelCodingService.runScript(runProjectDTO));
+    public ResponseEntity<CodingProjectVO> runPythonScript(@RequestBody ProjectBasicDTO projectBasicDTO) {
+        return ResponseEntity.ok(modelCodingService.runScript(projectBasicDTO));
     }
 
     @PostMapping("/project/canceling")
-    public ResponseEntity<CodingProjectVO> stopPythonScript(@RequestBody RunProjectDTO runProjectDTO) {
-        return ResponseEntity.ok(modelCodingService.stopScript(runProjectDTO));
+    public ResponseEntity<CodingProjectVO> stopPythonScript(@RequestBody ProjectBasicDTO projectBasicDTO) {
+        return ResponseEntity.ok(modelCodingService.stopScript(projectBasicDTO));
     }
 
     // Environment Controller
@@ -87,5 +91,16 @@ public class ModelCodingController {
     @PostMapping("/project/environment")
     public ResponseEntity<CodingProjectVO> projectEnvironmentOperation(@RequestBody ProjectEnvironmentDTO projectEnvironmentDTO) {
         return ResponseEntity.ok(modelCodingService.environmentOperation(projectEnvironmentDTO));
+    }
+
+    // Result Controller
+    @PostMapping("/project/results")
+    public ResponseEntity<List<ProjectResultVO>> getProjectResults(@RequestBody ProjectBasicDTO projectBasicDTO) {
+        return ResponseEntity.ok(projectResultDataService.getProjectResults(projectBasicDTO));
+    }
+
+    @PostMapping("/project/result")
+    public ResponseEntity<ProjectResultVO> getProjectResult(@RequestBody ProjectResultDTO projectResultDTO) {
+        return ResponseEntity.ok(projectResultDataService.getProjectResult(projectResultDTO));
     }
 }

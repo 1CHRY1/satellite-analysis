@@ -18,14 +18,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -294,8 +291,8 @@ public class ModelCodingService {
     }
 
     // Operating Services
-    public CodingProjectVO runScript(RunProjectDTO runProjectDTO) {
-        String userId = runProjectDTO.getUserId(); String projectId = runProjectDTO.getProjectId();
+    public CodingProjectVO runScript(ProjectBasicDTO projectBasicDTO) {
+        String userId = projectBasicDTO.getUserId(); String projectId = projectBasicDTO.getProjectId();
         String responseInfo = "";
         if ( !Verify(userId, projectId) ) {
             responseInfo = "User " + userId + " Can't Operate Project " + projectId;
@@ -322,8 +319,8 @@ public class ModelCodingService {
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
     }
 
-    public CodingProjectVO stopScript(RunProjectDTO runProjectDTO) {
-        String userId = runProjectDTO.getUserId(); String projectId = runProjectDTO.getProjectId();
+    public CodingProjectVO stopScript(ProjectBasicDTO projectBasicDTO) {
+        String userId = projectBasicDTO.getUserId(); String projectId = projectBasicDTO.getProjectId();
         String responseInfo = "";
         if ( !Verify(userId, projectId) ) {
             responseInfo = "User " + userId + " Can't Operate Project " + projectId;
