@@ -3,9 +3,7 @@ package nnu.mnr.satellite.service.modeling;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.config.JSchConnectionManager;
-import nnu.mnr.satellite.model.dto.modeling.CreateProjectDTO;
-import nnu.mnr.satellite.model.dto.modeling.ProjectFileDTO;
-import nnu.mnr.satellite.model.dto.modeling.RunProjectDTO;
+import nnu.mnr.satellite.model.dto.modeling.*;
 import nnu.mnr.satellite.model.po.modeling.Project;
 import nnu.mnr.satellite.model.pojo.common.DFileInfo;
 import nnu.mnr.satellite.model.pojo.modeling.DockerServerProperties;
@@ -26,6 +24,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -101,7 +100,8 @@ public class ModelCodingService {
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
     }
 
-    public CodingProjectVO openCodingProject(String userId, String projectId) {
+    public CodingProjectVO openCodingProject(ProjectOperateDTO projectOperateDTO) {
+        String userId = projectOperateDTO.getUserId(); String projectId = projectOperateDTO.getProjectId();
         String responseInfo = "";
         if ( !Verify(userId, projectId) ) {
             responseInfo = "User " + userId + " Can't Operate Project " + projectId;
@@ -139,7 +139,8 @@ public class ModelCodingService {
         }
     }
 
-    public CodingProjectVO deleteCodingProject(String userId, String projectId) {
+    public CodingProjectVO deleteCodingProject(ProjectOperateDTO projectOperateDTO) {
+        String userId = projectOperateDTO.getUserId(); String projectId = projectOperateDTO.getProjectId();
         String responseInfo = "";
         if ( !Verify(userId, projectId) ) {
             responseInfo = "User " + userId + " Can't Operate Project " + projectId;
@@ -175,7 +176,8 @@ public class ModelCodingService {
     }
 
     // Container Services
-    public CodingProjectVO closeProjectContainer(String userId, String projectId) {
+    public CodingProjectVO closeProjectContainer(ProjectOperateDTO projectOperateDTO) {
+        String userId = projectOperateDTO.getUserId(); String projectId = projectOperateDTO.getProjectId();
         String responseInfo = "";
         if ( !Verify(userId, projectId) ) {
             responseInfo = "User " + userId + " Can't Operate Project " + projectId;
@@ -200,8 +202,7 @@ public class ModelCodingService {
 
     // File Services
     public List<DFileInfo> getProjectCurDirFiles(ProjectFileDTO projectFileDTO) {
-        String projectId = projectFileDTO.getProjectId();
-        String userId = projectFileDTO.getUserId();
+        String projectId = projectFileDTO.getProjectId(); String userId = projectFileDTO.getUserId();
         if ( !Verify(userId, projectId) ) {
             return null;
         }
@@ -216,8 +217,7 @@ public class ModelCodingService {
     }
 
     public CodingProjectVO newProjectFolder(ProjectFileDTO projectFileDTO) {
-        String userId = projectFileDTO.getUserId();
-        String projectId = projectFileDTO.getProjectId();
+        String userId = projectFileDTO.getUserId(); String projectId = projectFileDTO.getProjectId();
         String responseInfo = "";
         if ( !Verify(userId, projectId) ) {
             responseInfo = "User " + userId + " Can't Operate Project " + projectId;
@@ -245,8 +245,7 @@ public class ModelCodingService {
     }
 
     public CodingProjectVO deleteProjectFile(ProjectFileDTO projectFileDTO) {
-        String userId = projectFileDTO.getUserId();
-        String projectId = projectFileDTO.getProjectId();
+        String userId = projectFileDTO.getUserId(); String projectId = projectFileDTO.getProjectId();
         String responseInfo = "";
         if ( !Verify(userId, projectId) ) {
             responseInfo = "User " + userId + " Can't Operate Project " + projectId;
@@ -268,8 +267,7 @@ public class ModelCodingService {
     }
 
     public CodingProjectVO saveProjectCode(ProjectFileDTO projectFileDTO) {
-        String projectId = projectFileDTO.getProjectId();
-        String userId = projectFileDTO.getUserId();
+        String projectId = projectFileDTO.getProjectId(); String userId = projectFileDTO.getUserId();
         String responseInfo = "";
         if ( !Verify(userId, projectId) ) {
             responseInfo = "User " + userId + " Can't Operate Project " + projectId;
@@ -297,8 +295,7 @@ public class ModelCodingService {
 
     // Operating Services
     public CodingProjectVO runScript(RunProjectDTO runProjectDTO) {
-        String userId = runProjectDTO.getUserId();
-        String projectId = runProjectDTO.getProjectId();
+        String userId = runProjectDTO.getUserId(); String projectId = runProjectDTO.getProjectId();
         String responseInfo = "";
         if ( !Verify(userId, projectId) ) {
             responseInfo = "User " + userId + " Can't Operate Project " + projectId;
@@ -321,13 +318,12 @@ public class ModelCodingService {
         }
         String command = "python " + project.getPyPath();
         CompletableFuture.runAsync( () -> dockerService.runCMDInContainer(userId, projectId, containerId, command));
-        responseInfo = "Script Executed Successfully";
+        responseInfo = "Script Executing Successfully";
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
     }
 
     public CodingProjectVO stopScript(RunProjectDTO runProjectDTO) {
-        String userId = runProjectDTO.getUserId();
-        String projectId = runProjectDTO.getProjectId();
+        String userId = runProjectDTO.getUserId(); String projectId = runProjectDTO.getProjectId();
         String responseInfo = "";
         if ( !Verify(userId, projectId) ) {
             responseInfo = "User " + userId + " Can't Operate Project " + projectId;
@@ -342,6 +338,64 @@ public class ModelCodingService {
         String common = "kill -INT `pidof python`";
         dockerService.runCMDInContainer(userId, projectId, containerId, common);
         responseInfo = "Script Stopped Successfully";
+        return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
+    }
+
+    // Environment Services
+    public CodingProjectVO environmentOperation(ProjectEnvironmentDTO projectEnvironmentDTO) {
+        String projectId = projectEnvironmentDTO.getProjectId(); String userId = projectEnvironmentDTO.getUserId();
+        String responseInfo = "";
+        if ( !Verify(userId, projectId) ) {
+            responseInfo = "User " + userId + " Can't Operate Project " + projectId;
+            return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
+        }
+        Project project = projectDataService.getProjectById(projectId);
+        if ( project == null){
+            responseInfo = "Project " + projectId + " hasn't been Registered";
+            return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
+        }
+        String containerId = project.getContainerId();
+        String command = projectEnvironmentDTO.getCommand();
+        CompletableFuture.runAsync( () -> dockerService.runCMDInContainer(userId, projectId, containerId, command));
+        responseInfo = "Command " + command + " has been Executing";
+        return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
+    }
+
+    public CodingProjectVO packageOperation(ProjectPackageDTO projectPackageDTO) {
+        String userId = projectPackageDTO.getUserId(); String projectId = projectPackageDTO.getProjectId();
+        String responseInfo = "";
+        if ( !Verify(userId, projectId) ) {
+            responseInfo = "User " + userId + " Can't Operate Project " + projectId;
+            return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
+        }
+        Project project = projectDataService.getProjectById(projectId);
+        if ( project == null){
+            responseInfo = "Project " + projectId + " hasn't been Registered";
+            return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
+        }
+        String containerId = project.getContainerId();
+        String action = projectPackageDTO.getAction();
+        String name = projectPackageDTO.getName();
+        String version = projectPackageDTO.getVersion();
+        String command = "";
+        switch (action) {
+            case "add" -> {
+                if (version == null) {
+                    command = "pip install " + name;
+                } else {
+                    command = "pip install " + name + "==" + version;
+                }
+            }
+            case "remove" -> {
+                if (version == null) {
+                    command = "pip uninstall " + name + " -y";
+                } else {
+                    command = "pip uninstall " + name + "==" + version + " -y";
+                }
+            }
+        }
+        dockerService.runCMDInContainer(userId, projectId, containerId, command);
+        responseInfo = "Package " + name + version + " has been Installing";
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
     }
 

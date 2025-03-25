@@ -1,9 +1,6 @@
 package nnu.mnr.satellite.controller.modeling;
 
-import nnu.mnr.satellite.model.dto.modeling.CreateProjectDTO;
-import nnu.mnr.satellite.model.dto.modeling.ProjectFileDTO;
-import nnu.mnr.satellite.model.dto.modeling.ProjectOperateDTO;
-import nnu.mnr.satellite.model.dto.modeling.RunProjectDTO;
+import nnu.mnr.satellite.model.dto.modeling.*;
 import nnu.mnr.satellite.model.pojo.common.DFileInfo;
 import nnu.mnr.satellite.model.vo.modeling.CodingProjectVO;
 import nnu.mnr.satellite.service.modeling.ModelCodingService;
@@ -42,9 +39,9 @@ public class ModelCodingController {
             return ResponseEntity.ok(CodingProjectVO.builder().info("Action is null").status(-1).build());
         }
         return switch (action) {
-            case "open" -> ResponseEntity.ok(modelCodingService.openCodingProject(projectOperateDTO.getUserId(), projectOperateDTO.getProjectId()));
-            case "close" -> ResponseEntity.ok(modelCodingService.closeProjectContainer(projectOperateDTO.getUserId(), projectOperateDTO.getProjectId()));
-            case "delete" -> ResponseEntity.ok(modelCodingService.deleteCodingProject(projectOperateDTO.getUserId(), projectOperateDTO.getProjectId()));
+            case "open" -> ResponseEntity.ok(modelCodingService.openCodingProject(projectOperateDTO));
+            case "close" -> ResponseEntity.ok(modelCodingService.closeProjectContainer(projectOperateDTO));
+            case "delete" -> ResponseEntity.ok(modelCodingService.deleteCodingProject(projectOperateDTO));
             default -> ResponseEntity.ok(CodingProjectVO.builder().info("No such Action").status(-1).build());
         };
     }
@@ -81,4 +78,14 @@ public class ModelCodingController {
         return ResponseEntity.ok(modelCodingService.stopScript(runProjectDTO));
     }
 
+    // Environment Controller
+    @PostMapping("/project/package")
+    public ResponseEntity<CodingProjectVO> projectPackageOperation(@RequestBody ProjectPackageDTO projectPackageDTO) {
+        return ResponseEntity.ok(modelCodingService.packageOperation(projectPackageDTO));
+    }
+
+    @PostMapping("/project/environment")
+    public ResponseEntity<CodingProjectVO> projectEnvironmentOperation(@RequestBody ProjectEnvironmentDTO projectEnvironmentDTO) {
+        return ResponseEntity.ok(modelCodingService.environmentOperation(projectEnvironmentDTO));
+    }
 }
