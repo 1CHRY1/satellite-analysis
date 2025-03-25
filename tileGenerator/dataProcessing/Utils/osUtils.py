@@ -103,6 +103,7 @@ def uploadLocalDirectory(directory_path, bucket_name, minio_directory_prefix="")
     return upload_count
 
 # gdal配置
+# TODO
 def configure_minio_access4gdal(use_https=False):
     # 重置所有配置
     gdal.SetConfigOption('AWS_NO_SIGN_REQUEST', 'NO')
