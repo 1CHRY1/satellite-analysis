@@ -1,15 +1,21 @@
 package nnu.mnr.satellite.controller.modeling;
 
+import nnu.mnr.satellite.model.dto.common.FileData;
 import nnu.mnr.satellite.model.dto.modeling.*;
 import nnu.mnr.satellite.model.pojo.common.DFileInfo;
 import nnu.mnr.satellite.model.vo.modeling.CodingProjectVO;
 import nnu.mnr.satellite.model.vo.modeling.ProjectResultVO;
 import nnu.mnr.satellite.service.modeling.ModelCodingService;
 import nnu.mnr.satellite.service.modeling.ProjectResultDataService;
+import nnu.mnr.satellite.utils.common.FileUtil;
+import nnu.mnr.satellite.utils.docker.DockerFileUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -100,7 +106,12 @@ public class ModelCodingController {
     }
 
     @PostMapping("/project/result")
-    public ResponseEntity<ProjectResultVO> getProjectResult(@RequestBody ProjectResultDTO projectResultDTO) {
-        return ResponseEntity.ok(projectResultDataService.getProjectResult(projectResultDTO));
+    public ResponseEntity<byte[]> getProjectResult(@RequestBody ProjectResultDTO projectResultDTO) {
+        FileData resultData = projectResultDataService.getProjectResult(projectResultDTO);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(FileUtil.setMediaType(resultData.getType())); ////////
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(resultData.getStream());
     }
 }
