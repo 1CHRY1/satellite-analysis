@@ -17,6 +17,7 @@ public class ProjectResultVO {
 
     private String dataId;
     private String dataName;
+    private String dataType;
     private LocalDateTime createTime;
 
 }

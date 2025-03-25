@@ -1,5 +1,6 @@
 package nnu.mnr.satellite.utils.docker;
 
+import com.github.dockerjava.core.MediaType;
 import nnu.mnr.satellite.enums.common.FileType;
 
 import java.text.ParseException;
