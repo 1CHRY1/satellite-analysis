@@ -39,12 +39,12 @@ class ProjectDataService:
         if not project_data.bucket or not project_data.path:
             raise ValueError("Bucket and path must be provided for the project data.")
         
+        # push to minio
+        self.minio_client.push_file(project_data.bucket, project_data.path, input_path)
+        
         # insert to db
         self.db.add(project_data)
         self.db.commit()
-        
-        # push to minio
-        self.minio_client.push_file(project_data.bucket, project_data.path, input_path)
         
         print(f"Data pushed to {project_data.bucket}/{project_data.path}")
     
@@ -57,16 +57,16 @@ class ProjectDataService:
         if existing_data:
             raise ValueError(f"Data with ID {project_data.data_id} already exists.")
         
-        # insert to db
-        self.db.add(project_data)
-        self.db.commit()
-        
         # push to minio
         self.minio_client.push_file_from_bytes(project_data.bucket, project_data.path, data, length)
         
+        # insert to db
+        self.db.add(project_data)
+        self.db.commit()
+
         print(f"Data pushed to {project_data.bucket}/{project_data.path}")
         
-    def create_project_data(self, data_name: str, project_id: str, user_id: str, bucket: str):
+    def create_project_data(self, data_name: str, project_id: str, user_id: str, bucket: str, data_type: str):
     # create meta-data
         data_id = 'D' + generate_id()
         create_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -79,13 +79,29 @@ class ProjectDataService:
             project_id=project_id,
             user_id=user_id,
             bucket=bucket,
-            create_time=create_time
+            create_time=create_time,
+            data_type=data_type
         )
         return project_data
+    
+    def delete_project_data(self, data: Union[str, ProjectData]):
+        if isinstance(data, str):
+            data = self.get_by_id(data)
+
+        if data:
+            # delete from minio
+            self.minio_client.delete_file(data.bucket, data.path)
+            
+            # delete from db
+            self.db.delete(data)
+            self.db.commit()
+            print(f"Data deleted: {data.data_id}")
+
+        else:
+            raise ValueError(f"Data not found")
     
     
 ## local helper function
 def generate_id():
     random_number = ''.join([str(random.randint(0, 9)) for _ in range(10)])
     return f'{random_number}'
-

@@ -95,14 +95,28 @@ def test_services():
         if(True) : 
             # 测试 ProjectDataService
             project_data_service = ProjectDataService(db, minio_client)
+            
+                    
+            # # 删除项目数据
+            # project_data_array =  project_data_service.filter_by_name("test")
+            # for pd in project_data_array:
+            #     project_data_service.delete_project_data(pd)
+            
+            # 创建项目数据
             project_data = project_data_service.create_project_data(
-                data_name="test2.tif",
+                data_name="test5.tif",
                 project_id="P33955928",
                 user_id="U33955928",
-                bucket="project-data-bucket"
+                bucket="project-data-bucket",
+                data_type="tif"
             )
-            project_data_service.push_data(project_data, "D:\\t\\1\\I1611320860.tif")
-            # print("ProjectData:", project_data)
+            project_data_service.push_data(project_data, "D:\\t\\1\\hahahhh.tif")
+            
+            # 下载项目数据
+            # project_data =  project_data_service.filter_by_name("test")[0]
+            # project_data_service.pull_data(project_data, "D:\\t\\1\\pullhh.tif")
+        
+        
             
             print("\n----------------------------------------------\n")
             
@@ -123,7 +137,7 @@ def test_services():
     # 因为瓦片表是动态表，此处数据库session已在内部自动创建，自动关闭
     tile_service = TileService(db_engine, minio_client)
     
-    # tiles = tile_service.get_tiles_by_image("I3395592835") # successed but too slow
+    # tiles = tile_service.get_tiles_by_scene("I3395592835") # successed but too slow
     print("\n--------------------------------------------------------------\n")
     
     # get tile by id
