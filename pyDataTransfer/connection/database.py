@@ -2,6 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from contextlib import contextmanager
+from geoalchemy2 import Geometry  # <= not used but must be imported
 
 class DatabaseClient:
     
