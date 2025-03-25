@@ -1,9 +1,9 @@
 server:
-  port: 8999
+  port: 9888
 
 netty:
   websocket:
-    port: 9000
+    port: 9001
 
 spring:
   datasource:
