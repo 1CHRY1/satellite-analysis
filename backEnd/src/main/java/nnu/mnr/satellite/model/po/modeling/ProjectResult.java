@@ -1,5 +1,6 @@
 package nnu.mnr.satellite.model.po.modeling;
 
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,6 +24,7 @@ import java.time.LocalDateTime;
 @TableName("project_data")
 public class ProjectResult {
 
+    @TableId
     private String dataId;
     private String dataName;
     private String dataType;
