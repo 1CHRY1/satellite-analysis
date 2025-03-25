@@ -25,10 +25,11 @@ public class ProjectResult {
 
     private String dataId;
     private String dataName;
+    private String dataType;
     private String projectId;
     private String userId;
     private String path;
     private String bucket;
-    private LocalDateTime time;
+    private LocalDateTime createTime;
 
 }
