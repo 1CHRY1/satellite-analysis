@@ -1,4 +1,4 @@
-# from geoalchemy2 import Geometry
+from geoalchemy2 import Geometry  # <= not used but must be imported
 from sqlalchemy import Column, Text, String, DateTime, Integer, Float
 from connection.database import DatabaseClient
 
@@ -11,9 +11,9 @@ class Scene(DatabaseClient.Base):
     scene_time = Column(DateTime)
     sensor_id = Column(String(36), index=True)
     tile_level_num = Column(Integer)
-    # tile_levels = Column(Text) # what is this?
+    tile_levels = Column(Text) # what is this?
     coordinate_system = Column(String(255))
-    # bounding_box = Column(Geometry(geometry_type='MULTIPOLYGON')) # not sure
+    bounding_box = Column(Geometry(geometry_type='POLYGON')) # not sure
     description = Column(Text)
     png_path = Column(String(255))
     bands = Column(Text)
@@ -29,8 +29,10 @@ class Scene(DatabaseClient.Base):
             sensor_id={self.sensor_id}, \
             tile_level_num={self.tile_level_num}, \
             coordinate_system={self.coordinate_system}, \
+            bounding_box={self.bounding_box}, \
             description={self.description}, \
             png_path={self.png_path}, \
+            tile_levels={self.tile_levels}, \
             bands={self.bands}, \
             band_num={self.band_num}, \
             bucket={self.bucket}, \
