@@ -1,11 +1,11 @@
-# from geoalchemy2 import Geometry ## error here
 from sqlalchemy import Column, Text, String, Integer, Float
 from connection.database import DatabaseClient
+from sqlalchemy import Table, MetaData
+from geoalchemy2 import Geometry
 
 ####### TileBase ###################################
 class TileBase(DatabaseClient.Base):
     # __tablename__ = 'xxxx'  # 动态表名无法直接映射
-
     __abstract__ = True  # 这个类不会映射到数据库，只是作为基类
     tile_id = Column(String(36), primary_key=True, index=True)
     image_id = Column(String(36), index=True)
@@ -14,7 +14,6 @@ class TileBase(DatabaseClient.Base):
     row_id = Column(Integer)    
     path = Column(String(255))
     bucket = Column(String(36))
-    # bounding_box = Column(Geometry())
     cloud = Column(Float)
 
     def __repr__(self): # call when print object
@@ -24,15 +23,12 @@ class TileBase(DatabaseClient.Base):
             column_id={self.column_id}, \
             row_id={self.row_id}, \
             bucket={self.bucket}, \
+            bounding_box={self.bounding_box}, \
             cloud={self.cloud}) \n"
 
 
-
-
 ####### Tile Factory ###################################
-from sqlalchemy import Table, MetaData
-from dataModel.tile import TileBase
-from connection.database import DatabaseClient
+
 
 class TileFactory:
     """根据 sceneID 生成对应的 ORM 类"""
@@ -46,6 +42,12 @@ class TileFactory:
         """
         class DynamicTile(TileBase):
             __tablename__ = image_id
-            __table__ = Table(image_id, self.metadata, autoload_with=self.db_engine)
+            # Ignore the warning:  
+            # SAWarning: Did not recognize type 'geometry' of column 'bounding_box'
+            __table__ = Table(
+                image_id, 
+                self.metadata,
+                Column('bounding_box', Geometry(geometry_type='POLYGON')),
+                autoload_with=self.db_engine)
 
         return DynamicTile
