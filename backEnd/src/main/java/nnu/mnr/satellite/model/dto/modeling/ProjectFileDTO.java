@@ -16,6 +16,7 @@ import java.util.Map;
 @Data
 public class ProjectFileDTO {
 
+    private String userId;
     private String projectId;
     private String path;
     private String name;
