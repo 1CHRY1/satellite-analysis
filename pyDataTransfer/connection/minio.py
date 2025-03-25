@@ -29,10 +29,18 @@ class MinioClient:
     def push_file(self, bucket_name, object_name, input_file_path):
         """Push file to storage"""
         try:
+            # check if bucket exists
             found = self.client.bucket_exists(bucket_name)
             if not found:
                 print(f"Bucket '{bucket_name}' does not exist. !! Create it !!")
                 self.client.make_bucket(bucket_name)
+                
+            # check if object exists
+            try:
+                self.client.stat_object(bucket_name, object_name)
+                raise ValueError(f"Data with path {object_name} already exists in bucket {bucket_name}.")
+            except S3Error:
+                pass  # if object not exists, continue
 
             self.client.fput_object(
                 bucket_name,
@@ -49,13 +57,29 @@ class MinioClient:
     def push_file_from_bytes(self, bucket_name, object_name, data, length):
         """Push file to storage from bytes"""
         try:
+            # check if bucket exists
             found = self.client.bucket_exists(bucket_name)
             if not found:
                 print(f"Bucket '{bucket_name}' does not exist. !! Create it !!")
                 self.client.make_bucket(bucket_name)
                 
+            # check if object exists
+            try:
+                self.client.stat_object(bucket_name, object_name)
+                raise ValueError(f"Data with path {object_name} already exists in bucket {bucket_name}.")
+            except S3Error:
+                pass  # if object not exists, continue
+                
             self.client.put_object(bucket_name, object_name, data, length)
 
+        except S3Error as e:
+            print(f"Error occurred: {e}")
+            raise e
+        
+    def delete_file(self, bucket_name, object_name):
+        """Delete object from storage"""
+        try:
+            self.client.remove_object(bucket_name, object_name)
         except S3Error as e:
             print(f"Error occurred: {e}")
             raise e

@@ -13,3 +13,7 @@ class SceneService:
 
     def filter_by_name(self, scene_name: str):
         return self.db.query(Scene).filter(Scene.scene_name.like(f"%{scene_name}%")).all()
+    
+    def filter_by_product_id(self, product_id: str):
+        return self.db.query(Scene).filter(Scene.product_id == product_id).all()
+

@@ -17,6 +17,9 @@ class ImageService:
     def filter_by_scene_id(self, scene_id: str):
         return self.db.query(Image).filter(Image.scene_id == scene_id).all()
     
+    def filter_by_scene_id_and_band(self, scene_id: str, band: str):
+        return self.db.query(Image).filter(Image.scene_id == scene_id, Image.band == band).first()
+    
     def pull_image(self, image: Union[str, Image], output_path: str):
         if isinstance(image, str):
             image = self.get_by_id(image)

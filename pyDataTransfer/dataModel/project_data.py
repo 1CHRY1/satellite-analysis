@@ -12,6 +12,7 @@ class ProjectData(DatabaseClient.Base):
     path = Column(String(100))
     bucket = Column(String(20))
     create_time = Column(DateTime)
+    data_type = Column(String(10))
 
     def __repr__(self): # call when print object
         return f"ProjectData(data_id={self.data_id}, \
@@ -20,4 +21,5 @@ class ProjectData(DatabaseClient.Base):
             user_id={self.user_id}, \
             path={self.path}, \
             bucket={self.bucket}, \
-            create_time={self.create_time}) \n"
+            create_time={self.create_time}, \
+            data_type={self.data_type}) \n"
