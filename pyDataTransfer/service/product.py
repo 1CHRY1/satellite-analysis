@@ -1,10 +1,8 @@
 from sqlalchemy.orm import Session
 from dataModel.product import Product
-from connection.minio import MinioClient
 class ProductService:
-    def __init__(self, db: Session, minio_client: MinioClient):
+    def __init__(self, db: Session):
         self.db = db
-        self.minio_client = minio_client
 
     def get_by_id(self, product_id: str):
         return self.db.query(Product).filter(Product.product_id == product_id).first()
