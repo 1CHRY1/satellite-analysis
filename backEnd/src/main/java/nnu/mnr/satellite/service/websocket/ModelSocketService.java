@@ -55,17 +55,18 @@ public class ModelSocketService {
 
     @OnMessage
     public void onMessage(String message) {
-        log.info("Received from Client：{}", message);
+//        log.info("Received from Client：{}", message);
     }
 
-    public void sendMessageByProject(String projectId, String message) {
-        log.info("Project: {}, Sending: {}", projectId, message);
+    public void sendMessageByProject(String userId, String projectId, String message) {
+        log.info("User: {}, Project: {}, Sending: {}", userId, projectId, message);
         Map<String,Session> sessions = sessionPool.get(projectId);
         if (sessions != null) {
             for (Map.Entry<String, Session> map : sessions.entrySet()) {
-                map.getValue().sendText(message);
+                if ( userId.equals(map.getKey()) ) {
+                    map.getValue().sendText(message);
+                }
             }
         }
     }
-
 }

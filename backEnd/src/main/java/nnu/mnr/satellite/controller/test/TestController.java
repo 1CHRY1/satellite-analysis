@@ -72,7 +72,7 @@ public class TestController {
     @GetMapping("/docker/container/run/{containerId}")
     public ResponseEntity<String> testContainerRun(@PathVariable String containerId) {
         String common = "python main.py";
-        dockerService.runCMDInContainer("tetete", containerId, common);
+        dockerService.runCMDInContainer("chry", "tetete", containerId, common);
         return ResponseEntity.ok("run");
     }
 

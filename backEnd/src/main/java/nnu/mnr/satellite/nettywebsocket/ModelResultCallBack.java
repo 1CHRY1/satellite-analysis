@@ -18,9 +18,12 @@ public class ModelResultCallBack extends ExecStartResultCallback {
 
     private String projectId;
 
-    public ModelResultCallBack(String projectId, ModelSocketService modelSocketService) {
+    private String userId;
+
+    public ModelResultCallBack(String userId, String projectId, ModelSocketService modelSocketService) {
         super(System.out, System.err);
         this.projectId = projectId;
+        this.userId = userId;
         this.modelSocketService = modelSocketService;
     }
 
@@ -31,7 +34,7 @@ public class ModelResultCallBack extends ExecStartResultCallback {
                 if (frame.getStreamType() == StreamType.STDOUT || frame.getStreamType() == StreamType.STDERR) {
                     String message = new String(frame.getPayload());
                     if (modelSocketService != null) {
-                        modelSocketService.sendMessageByProject(projectId, message);
+                        modelSocketService.sendMessageByProject(userId, projectId, message);
                     } else {
                         System.err.println("webSocketService is not initialized.");
                     }
