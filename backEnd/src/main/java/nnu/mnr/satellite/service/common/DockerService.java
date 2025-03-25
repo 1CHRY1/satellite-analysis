@@ -244,7 +244,7 @@ public class DockerService {
         }
     }
 
-    public void runCMDInContainer(String projectId, String containerId, String command) {
+    public void runCMDInContainer(String userId, String projectId, String containerId, String command) {
         try{
             String[] cmd = {"/bin/bash", "-c", command};
             ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(containerId)
@@ -255,7 +255,7 @@ public class DockerService {
                     .withCmd(cmd)
                     .exec();
 
-            ModelResultCallBack callback = new ModelResultCallBack(projectId, modelSocketService);
+            ModelResultCallBack callback = new ModelResultCallBack(userId, projectId, modelSocketService);
             String exeId = execCreateCmdResponse.getId();
             dockerClient.execStartCmd(exeId).exec(callback).awaitCompletion(300, TimeUnit.SECONDS);
         } catch (InterruptedException e) {

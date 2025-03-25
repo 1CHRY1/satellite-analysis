@@ -2,6 +2,7 @@ package nnu.mnr.satellite.controller.modeling;
 
 import nnu.mnr.satellite.model.dto.modeling.CreateProjectDTO;
 import nnu.mnr.satellite.model.dto.modeling.ProjectFileDTO;
+import nnu.mnr.satellite.model.dto.modeling.ProjectOperateDTO;
 import nnu.mnr.satellite.model.dto.modeling.RunProjectDTO;
 import nnu.mnr.satellite.model.pojo.common.DFileInfo;
 import nnu.mnr.satellite.model.vo.modeling.CodingProjectVO;
@@ -34,18 +35,18 @@ public class ModelCodingController {
         return ResponseEntity.ok(modelCodingService.createCodingProject(createProjectDTO));
     }
 
-    @PostMapping("/project/{projectId}/{action}")
-    public ResponseEntity<CodingProjectVO> openCodingProject(@PathVariable String projectId, @PathVariable String action) {
+    @PostMapping("/project/operating")
+    public ResponseEntity<CodingProjectVO> openCodingProject(@RequestBody ProjectOperateDTO projectOperateDTO) {
+        String action = projectOperateDTO.getAction();
+        if (action == null) {
+            return ResponseEntity.ok(CodingProjectVO.builder().info("Action is null").status(-1).build());
+        }
         return switch (action) {
-            case "open" -> ResponseEntity.ok(modelCodingService.openCodingProject(projectId));
-            case "close" -> ResponseEntity.ok(modelCodingService.closeProjectContainer(projectId));
+            case "open" -> ResponseEntity.ok(modelCodingService.openCodingProject(projectOperateDTO.getUserId(), projectOperateDTO.getProjectId()));
+            case "close" -> ResponseEntity.ok(modelCodingService.closeProjectContainer(projectOperateDTO.getUserId(), projectOperateDTO.getProjectId()));
+            case "delete" -> ResponseEntity.ok(modelCodingService.deleteCodingProject(projectOperateDTO.getUserId(), projectOperateDTO.getProjectId()));
             default -> ResponseEntity.ok(CodingProjectVO.builder().info("No such Action").status(-1).build());
         };
-    }
-
-    @DeleteMapping("/project/{projectId}")
-    public ResponseEntity<CodingProjectVO> deleteCodingProject(@PathVariable String projectId) {
-        return ResponseEntity.ok(modelCodingService.deleteCodingProject(projectId));
     }
 
     // File Controller
@@ -73,6 +74,11 @@ public class ModelCodingController {
     @PostMapping("/project/executing")
     public ResponseEntity<CodingProjectVO> runPythonScript(@RequestBody RunProjectDTO runProjectDTO) {
         return ResponseEntity.ok(modelCodingService.runScript(runProjectDTO));
+    }
+
+    @PostMapping("/project/canceling")
+    public ResponseEntity<CodingProjectVO> stopPythonScript(@RequestBody RunProjectDTO runProjectDTO) {
+        return ResponseEntity.ok(modelCodingService.stopScript(runProjectDTO));
     }
 
 }
