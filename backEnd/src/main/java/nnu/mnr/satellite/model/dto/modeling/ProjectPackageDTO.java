@@ -3,22 +3,22 @@ package nnu.mnr.satellite.model.dto.modeling;
 import lombok.Data;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created with IntelliJ IDEA.
  *
  * @Author: Chry
- * @Date: 2025/3/24 15:19
+ * @Date: 2025/3/25 9:41
  * @Description:
  */
 
 @Data
-public class ProjectFileDTO {
+public class ProjectPackageDTO {
 
     private String userId;
     private String projectId;
-    private String path;
+    private String action;
     private String name;
-    private String content;
+    private String version;
+
 }
