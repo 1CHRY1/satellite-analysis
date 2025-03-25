@@ -6,6 +6,7 @@ import tempfile
 from multiprocessing import Pool
 from types import SimpleNamespace
 
+import rasterio
 from shapely.ops import transform
 from PIL import Image
 import io
@@ -526,61 +527,67 @@ def process_and_upload(files_dict: dict, bucket_name: str, object_prefix: str):
     :param object_prefix: 上传文件时的对象名称前缀（例如，路径）
     """
     scene_info_list = []
-    for image_id, band_paths in files_dict.items():
+
+    #--------- process band files according to scene_name -----------------------------------
+    for scene_name, band_paths in files_dict.items():
         scene_info = SimpleNamespace(image_info_list=[], bands=[], scene_name="")
-        # 确保band_paths里有B1, B2, B3
+        # Make sure band_paths have B1, B2, B3, QA_PIXEL
         b1_path = None
         b2_path = None
         b3_path = None
+        qa_data = None
 
+        #--------- process a band file one by one -----------------------------------
         for path in band_paths:
-            # 上传TIF影像
+            # Upload TIF
             band_name = os.path.basename(path)
-            scene_info.scene_name = image_id
+            scene_info.scene_name = scene_name
             object_name = f"{object_prefix}/tif/{scene_info.scene_name}/{band_name}"
             uploadLocalFile(path, bucket_name, object_name)
-            # 通过文件名中的B1, B2, B3来确定
+            # Calculate the cloud coverage(for the whole image)
+            if qa_data is None:
+                qa_data, no_data_value = read_qa_pixel(path, scene_info.scene_name)
+                scene_info.cloud = get_cloud_coverage4image(qa_data, no_data_value)
+            # Get b1/b2/b3 path
             if 'B1' in os.path.basename(path):
                 b1_path = path
             elif 'B2' in os.path.basename(path):
                 b2_path = path
             elif 'B3' in os.path.basename(path):
                 b3_path = path
-            image_info = extract_landsat7_info(path)
-            image_info.tif_path = object_name
-            image_info.png_path = None
-            scene_info.png_path = None
-            # 记录出现过的波段
-            scene_info.bands.append(image_info.band)
-            # 处理tiles
+            # Process tiles and get tile info list
             with tempfile.TemporaryDirectory() as temp_dir:
                 tile_info_list = process_tiles(path, scene_info.scene_name, temp_dir, config.GRID_RESOLUTION, config.MINIO_TILES_BUCKET,
                                                config.MINIO_GRID_BUCKET, object_prefix)
+            # Prep image info
+            image_info = extract_landsat7_info(path)
+            image_info.tif_path = object_name
+            image_info.cloud = scene_info.cloud
+            image_info.png_path = None
             image_info.tile_info_list = tile_info_list
+            # Prep scene info
+            scene_info.png_path = None
+            scene_info.bands.append(image_info.band)
             # 将一些景的公共属性复制到scene_info中
             vars(scene_info).update({key: getattr(image_info, key) for key in vars(image_info) if key in {
                 "image_time", "crs", "bbox", "tile_level_num", "tile_levels", "resolution", "period"
             }})
             scene_info.image_info_list.append(image_info)
-        # 计算波段总数
+        # Calculate band num
         scene_info.band_num = len(scene_info.bands)
-        # 如果B1, B2, B3都存在，则生成真彩色TIF，并转换为PNG
+
+        #--------- Image true color synthesis and upload -----------------------------------
         if b1_path and b2_path and b3_path:
-            # 生成真彩色合成的TIF图像
             tif_buffer, tif_dataLen = generateColorfulTile(b3_path, b2_path, b1_path)
-
-            # 将TIF图像转换为PNG
             png_buffer, png_dataLen = tif2Png(tif_buffer, 10)
-
-            # 设定上传到MinIO的路径和文件名
-            object_name = f"{object_prefix}/png/{image_id}.png"  # 可以根据需要调整路径和文件名
+            object_name = f"{object_prefix}/png/{scene_name}.png"  # 可以根据需要调整路径和文件名
             for image_info in scene_info.image_info_list:
                 image_info.png_path = object_name
                 scene_info.png_path = object_name
-            # 上传PNG到MinIO
             uploadFileToMinio(png_buffer, png_dataLen, bucket_name, object_name)
         else:
-            print(f"Skipping {image_id} as one or more required bands (B1, B2, B3) are missing.")
+            print(f"Skipping {scene_name} as one or more required bands (B1, B2, B3) are missing.")
+
         scene_info_list.append(scene_info)
     return scene_info_list
 
@@ -633,11 +640,10 @@ def process_tiles(tiff_path, scene_name, output_dir, grid_resolution, tile_bucke
     pixel_offset_x = round(pixel_offset_x)
     pixel_offset_y = round(pixel_offset_y)
 
-    # --------- Create Slice base on virtual raster pixel bound ---------
+    # --------- Get QA_PIXEL Data to calculate the cloud coverage for grid/tile ---------
+    qa_data, no_data_value = read_qa_pixel(tiff_path, scene_name)
 
-    no_data_value = ds.GetRasterBand(1).GetNoDataValue()
-    if no_data_value is None:
-        no_data_value = 0
+    # --------- Create Slice base on virtual raster pixel bound ---------
 
     grid_id_list = []
 
@@ -663,7 +669,8 @@ def process_tiles(tiff_path, scene_name, output_dir, grid_resolution, tile_bucke
                     continue
 
             grid_id_list.append([grid_id_x, grid_id_y, i, j])
-            tile_filename = os.path.join(output_dir, f"tile_{i}_{j}.tif")
+            cloud = get_cloud_coverage4grid(qa_data, x, y, w, h, no_data_value)
+            tile_filename = os.path.join(output_dir, f"tile_{i}_{j}-{cloud:.2f}.tif")
             gdal.Translate(tile_filename, ds, srcWin=[x, y, w, h])
 
             # --------- Prep tile_info_list ----------------------------------------------#
@@ -675,10 +682,10 @@ def process_tiles(tiff_path, scene_name, output_dir, grid_resolution, tile_bucke
             coords_str = ", ".join([f"{x} {y}" for x, y in wgs84_corners])
             tile_info['bbox'] = f"POLYGON(({coords_str}))"
             tile_info['bucket'] = tile_bucket
-            tile_info['path'] = f"{object_prefix}/{scene_name}/{tiff_name}/tile_{i}_{j}.tif"
+            tile_info['cloud'] = cloud
+            tile_info['path'] = f"{object_prefix}/{scene_name}/{tiff_name}/tile_{i}_{j}-{tile_info['cloud']:.2f}.tif"
             tile_info['column_id'] = grid_id_x
             tile_info['row_id'] = grid_id_y
-            tile_info['cloud'] = 0
             print(f"{i}, {j}")
             tile_info_list.append(tile_info)
 
@@ -744,3 +751,93 @@ def mtif(tif_paths, output_path):
         tif_paths,
         options=merge_options
     )
+
+def read_qa_pixel(tiff_path, scene_name):
+    # 获取 tiff_path 的目录部分
+    directory = os.path.dirname(tiff_path)
+
+    # 构造 QA_PIXEL 影像路径
+    qa_pixel_path = os.path.join(directory, f"{scene_name}_QA_PIXEL.TIF")
+
+    # 读取 QA_PIXEL 影像数据
+    with rasterio.open(qa_pixel_path) as src:
+        qa_pixel_data = src.read(1)  # 读取第一波段数据
+
+    with rasterio.open(tiff_path) as src:
+        no_data_value = src.nodata
+    if no_data_value is None:
+        no_data_value = 0
+
+    return qa_pixel_data, no_data_value
+
+def get_cloud_coverage4grid(qa_pixel_data, x, y, w, h, no_data_value):
+    """
+    计算指定网格区域的云覆盖率，基于 QA_PIXEL 波段的 Bit 3（厚云）和 Bit 2（薄云）。
+
+    参数：
+    - qa_pixel_data: numpy 数组，QA_PIXEL 波段的影像数据。
+    - x, y: int，网格左上角的像素坐标。
+    - w, h: int，网格的宽度和高度（像素单位）。
+    - no_data_value: int，影像中的 NoData 值。
+
+    返回：
+    - 网格内的云覆盖率（百分比）。
+    """
+    # 计算网格的边界，确保不超出影像范围
+    row_min, row_max = max(0, y), min(qa_pixel_data.shape[0], y + h)
+    col_min, col_max = max(0, x), min(qa_pixel_data.shape[1], x + w)
+
+    # 提取网格区域的 QA_PIXEL 数据
+    grid_data = qa_pixel_data[row_min:row_max, col_min:col_max]
+
+    # Bit 3 - 厚云
+    thick_cloud_mask = (grid_data & (1 << 3)) > 0
+
+    # Bit 2 - 薄云
+    thin_cloud_mask = (grid_data & (1 << 2)) > 0
+
+    # 计算云覆盖（厚云 OR 薄云）
+    cloud_mask = thick_cloud_mask | thin_cloud_mask
+
+    # 过滤 NoData 区域
+    no_data_mask = grid_data == no_data_value  # 由外部提供 NoData 值
+    valid_pixels = ~no_data_mask  # 有效像素区域
+
+    # 避免除零错误
+    total_valid_pixels = np.sum(valid_pixels)
+    if total_valid_pixels == 0:
+        return 0.0  # 如果网格内全是 NoData，则云覆盖率设为 0
+
+    # 计算云覆盖率（基于有效像素）
+    cloud_percentage = np.sum(cloud_mask & valid_pixels) / total_valid_pixels * 100
+
+    return cloud_percentage
+
+def get_cloud_coverage4image(qa_pixel_data, no_data_value):
+    """
+    计算 Landsat 8 影像的云覆盖率，基于 QA_PIXEL 波段的 Bit 3（厚云）和 Bit 2（薄云）。
+
+    参数：
+    - qa_pixel_data: numpy 数组，QA_PIXEL 波段的影像数据。
+    - no_data_value: int，影像中的 NoData 值（如 65535、-9999 等）。
+
+    返回：
+    - 云覆盖率（百分比）。
+    """
+    # Bit 3 - 厚云
+    thick_cloud_mask = (qa_pixel_data & (1 << 3)) > 0
+
+    # Bit 2 - 薄云
+    thin_cloud_mask = (qa_pixel_data & (1 << 2)) > 0
+
+    # 计算云覆盖（厚云 OR 薄云）
+    cloud_mask = thick_cloud_mask | thin_cloud_mask
+
+    # 过滤 NoData 区域
+    no_data_mask = qa_pixel_data == no_data_value  # 由外部提供 NoData 值
+    valid_pixels = ~no_data_mask  # 有效像素区域
+
+    # 计算云覆盖率（基于有效像素）
+    cloud_percentage = np.sum(cloud_mask & valid_pixels) / np.sum(valid_pixels) * 100
+
+    return cloud_percentage

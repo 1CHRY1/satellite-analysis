@@ -31,7 +31,9 @@ def get_landsat7_files(directory: str) -> Dict[str, List[str]]:
         match = CURRENT_PATTERN.match(file)
         if match and file.lower().endswith('.tif'):
             # 提取文件中的影像ID和波段号
-            image_id = match.group(0).split('_B')[0]  # 获取影像ID（去除波段号部分）
+            image_id = match.group(0).split('_SR_B')[0]  # 优先去除 '_SR_B'
+            if image_id == match.group(0):  # 如果 '_SR_B' 不存在，则尝试去除 '_B'
+                image_id = match.group(0).split('_B')[0]
             band_number = match.group(4)  # 获取波段号B1、B2、B3等
 
             # 初始化影像的列表，如果尚未添加
@@ -84,8 +86,8 @@ def extract_landsat7_info(file_path: str):
             band=band,
             crs=crs,
             bbox=bbox,
-            tile_level_num=2,
-            tile_levels="40031,20016",
+            tile_level_num=1,
+            tile_levels="40031*20016",
             resolution=resolution,
             period='16d',
         )
