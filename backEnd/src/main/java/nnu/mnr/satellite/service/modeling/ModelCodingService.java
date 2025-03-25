@@ -51,17 +51,9 @@ public class ModelCodingService {
 
     @Autowired
     ProjectDataService projectDataService;
-
+    
     @Autowired
     IProjectRepo projectRepo;
-
-    private boolean Verify(String userId, String projectId) {
-        // TODO: joined user verify
-        QueryWrapper<Project> queryWrapper = new QueryWrapper();
-        queryWrapper.eq("create_user", userId).eq("project_id", projectId);
-        Project project = projectRepo.selectOne(queryWrapper);
-        return project != null;
-    }
 
     // Coding Project Services
     public CodingProjectVO createCodingProject(CreateProjectDTO createProjectDTO) {
@@ -100,7 +92,7 @@ public class ModelCodingService {
     public CodingProjectVO openCodingProject(ProjectOperateDTO projectOperateDTO) {
         String userId = projectOperateDTO.getUserId(); String projectId = projectOperateDTO.getProjectId();
         String responseInfo = "";
-        if ( !Verify(userId, projectId) ) {
+        if ( !projectDataService.VerifyUserProject(userId, projectId) ) {
             responseInfo = "User " + userId + " Can't Operate Project " + projectId;
             return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
         }
@@ -139,7 +131,7 @@ public class ModelCodingService {
     public CodingProjectVO deleteCodingProject(ProjectOperateDTO projectOperateDTO) {
         String userId = projectOperateDTO.getUserId(); String projectId = projectOperateDTO.getProjectId();
         String responseInfo = "";
-        if ( !Verify(userId, projectId) ) {
+        if ( !projectDataService.VerifyUserProject(userId, projectId) ) {
             responseInfo = "User " + userId + " Can't Operate Project " + projectId;
             return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
         }
@@ -176,7 +168,7 @@ public class ModelCodingService {
     public CodingProjectVO closeProjectContainer(ProjectOperateDTO projectOperateDTO) {
         String userId = projectOperateDTO.getUserId(); String projectId = projectOperateDTO.getProjectId();
         String responseInfo = "";
-        if ( !Verify(userId, projectId) ) {
+        if ( !projectDataService.VerifyUserProject(userId, projectId) ) {
             responseInfo = "User " + userId + " Can't Operate Project " + projectId;
             return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
         }
@@ -200,7 +192,7 @@ public class ModelCodingService {
     // File Services
     public List<DFileInfo> getProjectCurDirFiles(ProjectFileDTO projectFileDTO) {
         String projectId = projectFileDTO.getProjectId(); String userId = projectFileDTO.getUserId();
-        if ( !Verify(userId, projectId) ) {
+        if ( !projectDataService.VerifyUserProject(userId, projectId) ) {
             return null;
         }
         String path = projectFileDTO.getPath();
@@ -216,7 +208,7 @@ public class ModelCodingService {
     public CodingProjectVO newProjectFolder(ProjectFileDTO projectFileDTO) {
         String userId = projectFileDTO.getUserId(); String projectId = projectFileDTO.getProjectId();
         String responseInfo = "";
-        if ( !Verify(userId, projectId) ) {
+        if ( !projectDataService.VerifyUserProject(userId, projectId) ) {
             responseInfo = "User " + userId + " Can't Operate Project " + projectId;
             return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
         }
@@ -244,7 +236,7 @@ public class ModelCodingService {
     public CodingProjectVO deleteProjectFile(ProjectFileDTO projectFileDTO) {
         String userId = projectFileDTO.getUserId(); String projectId = projectFileDTO.getProjectId();
         String responseInfo = "";
-        if ( !Verify(userId, projectId) ) {
+        if ( !projectDataService.VerifyUserProject(userId, projectId) ) {
             responseInfo = "User " + userId + " Can't Operate Project " + projectId;
             return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
         }
@@ -266,7 +258,7 @@ public class ModelCodingService {
     public CodingProjectVO saveProjectCode(ProjectFileDTO projectFileDTO) {
         String projectId = projectFileDTO.getProjectId(); String userId = projectFileDTO.getUserId();
         String responseInfo = "";
-        if ( !Verify(userId, projectId) ) {
+        if ( !projectDataService.VerifyUserProject(userId, projectId) ) {
             responseInfo = "User " + userId + " Can't Operate Project " + projectId;
             return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
         }
@@ -294,7 +286,7 @@ public class ModelCodingService {
     public CodingProjectVO runScript(ProjectBasicDTO projectBasicDTO) {
         String userId = projectBasicDTO.getUserId(); String projectId = projectBasicDTO.getProjectId();
         String responseInfo = "";
-        if ( !Verify(userId, projectId) ) {
+        if ( !projectDataService.VerifyUserProject(userId, projectId) ) {
             responseInfo = "User " + userId + " Can't Operate Project " + projectId;
             return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
         }
@@ -322,7 +314,7 @@ public class ModelCodingService {
     public CodingProjectVO stopScript(ProjectBasicDTO projectBasicDTO) {
         String userId = projectBasicDTO.getUserId(); String projectId = projectBasicDTO.getProjectId();
         String responseInfo = "";
-        if ( !Verify(userId, projectId) ) {
+        if ( !projectDataService.VerifyUserProject(userId, projectId) ) {
             responseInfo = "User " + userId + " Can't Operate Project " + projectId;
             return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
         }
@@ -342,7 +334,7 @@ public class ModelCodingService {
     public CodingProjectVO environmentOperation(ProjectEnvironmentDTO projectEnvironmentDTO) {
         String projectId = projectEnvironmentDTO.getProjectId(); String userId = projectEnvironmentDTO.getUserId();
         String responseInfo = "";
-        if ( !Verify(userId, projectId) ) {
+        if ( !projectDataService.VerifyUserProject(userId, projectId) ) {
             responseInfo = "User " + userId + " Can't Operate Project " + projectId;
             return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
         }
@@ -361,7 +353,7 @@ public class ModelCodingService {
     public CodingProjectVO packageOperation(ProjectPackageDTO projectPackageDTO) {
         String userId = projectPackageDTO.getUserId(); String projectId = projectPackageDTO.getProjectId();
         String responseInfo = "";
-        if ( !Verify(userId, projectId) ) {
+        if ( !projectDataService.VerifyUserProject(userId, projectId) ) {
             responseInfo = "User " + userId + " Can't Operate Project " + projectId;
             return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
         }
