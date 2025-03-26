@@ -28,21 +28,21 @@ class Singleton:
         return cls._values[id]
 
 
-def init_satellite_database(host: str, user: str, password: str, database: str):
+def init_satellite_database(endpoint: str, user: str, password: str, database: str):
 
     return Singleton.get_instance(
         id="satellite-database",
         class_type=DatabaseClient,
-        host=host, user=user, 
+        endpoint=endpoint, user=user, 
         password=password, database=database)
 
 
-def init_tile_database(host: str, user: str, password: str, database: str):
+def init_tile_database(endpoint: str, user: str, password: str, database: str):
 
     return Singleton.get_instance(
         id="tile-database",
         class_type=DatabaseClient,
-        host=host, user=user, 
+        endpoint=endpoint, user=user, 
         password=password, database=database)
    
 
