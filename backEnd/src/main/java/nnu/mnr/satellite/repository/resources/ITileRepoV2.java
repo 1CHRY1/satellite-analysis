@@ -21,11 +21,11 @@ import java.util.List;
 //@Repository("tileRepo")
 public interface ITileRepoV2 extends BaseMapper<Tile> {
 
-    @Select("select tile_id, bounding_box from ${tileTable} where tile_level = #{tileLevel}")
+    @Select("select tile_id, bounding_box from ${tileTable} where tile_level = #{tileLevel} and band = #{band}")
     @Results({
             @Result(property = "bbox", column = "bounding_box", typeHandler = GeometryTypeHandler.class)
     })
-    List<Tile> getTileByImageIdAndLevel(@Param("tileTable") String tileTable, int tileLevel);
+    List<Tile> getTileByBandAndLevel(@Param("tileTable") String tileTable, String band, String tileLevel);
 
     @Select("select scene_id, image_id, tile_level, cloud, band, column_id, row_id, bucket, path from ${tileTable} where tile_id = #{tileId}")
     Tile getTileByTileId(@Param("tileTable") String tileTable, String tileId);
