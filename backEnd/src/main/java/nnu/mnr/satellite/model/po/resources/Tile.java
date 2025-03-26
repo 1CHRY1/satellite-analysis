@@ -26,7 +26,7 @@ import org.locationtech.jts.geom.Geometry;
 public class Tile {
     @TableId
     private String tileId;
-    private Integer tileLevel;
+    private String tileLevel;
     private String imageId;
     private String cloud;
     private Integer columnId;
