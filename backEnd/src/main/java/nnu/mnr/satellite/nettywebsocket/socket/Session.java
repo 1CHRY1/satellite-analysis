@@ -25,4 +25,8 @@ public class Session implements Serializable {
     public String getId() {
         return channel.id().asShortText();
     }
+
+    public boolean isOpen() {
+        return channel.isOpen();
+    }
 }
