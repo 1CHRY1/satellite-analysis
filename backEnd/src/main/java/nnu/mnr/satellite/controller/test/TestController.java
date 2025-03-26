@@ -1,6 +1,6 @@
 package nnu.mnr.satellite.controller.test;
 
-import nnu.mnr.satellite.model.po.common.DFileInfo;
+import nnu.mnr.satellite.model.pojo.common.DFileInfo;
 import nnu.mnr.satellite.service.common.DockerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -30,7 +30,7 @@ public class TestController {
     // dockerService测试接口
     @GetMapping("/docker/env")
     public ResponseEntity<String> testStartEnv() {
-        dockerService.initEnv("tetete");
+        dockerService.initEnv("tetete", "/home/vge/satellite/tetete");
         return ResponseEntity.ok("Docker Env started");
     }
 
@@ -72,7 +72,7 @@ public class TestController {
     @GetMapping("/docker/container/run/{containerId}")
     public ResponseEntity<String> testContainerRun(@PathVariable String containerId) {
         String common = "python main.py";
-        dockerService.runCMDInContainer("tetete", containerId, common);
+        dockerService.runCMDInContainer("chry", "tetete", containerId, common);
         return ResponseEntity.ok("run");
     }
 

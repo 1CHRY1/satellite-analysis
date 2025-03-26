@@ -63,6 +63,7 @@ public class TileDataService {
         JSONObject mergeParam = JSONObject.of("imageId", tilesMergeDTO.getImageId(),"tiles", tilesMergeDTO.getTiles());
         try {
             String mergeApi = modelServerProperties.getAddress() + modelServerProperties.getApis().get("merge");
+            // TODO: Turn to Model Task
             JSONObject fileLocation = JSONObject.parseObject(HttpUtil.doPost(mergeApi, mergeParam));
             String bucket = fileLocation.getString("bucket");
             String path = fileLocation.getString("path");
