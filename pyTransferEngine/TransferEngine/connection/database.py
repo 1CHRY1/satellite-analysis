@@ -8,8 +8,8 @@ class DatabaseClient:
     
     Base = declarative_base()
     
-    def __init__(self, host:str, user:str, password:str, database:str):
-        self.DATABASE_URL = f"mysql+pymysql://{user}:{password}@{host}/{database}"
+    def __init__(self, endpoint:str, user:str, password:str, database:str):
+        self.DATABASE_URL = f"mysql+pymysql://{user}:{password}@{endpoint}/{database}"
         self.engine = create_engine(self.DATABASE_URL)
         self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
 
