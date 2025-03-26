@@ -149,6 +149,7 @@ public class DockerService {
                 .withExposedPorts(ExposedPort.tcp(startPort))
                 .withVolumes(volumeList)
                 .withBinds(bindList)
+                .withEnv("TZ=Asia/Shanghai")
                 .exec();
         String containerId = container.getId();
         ++ startPort;
