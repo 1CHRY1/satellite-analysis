@@ -13,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalDateTime;
 
 /**
  * Created with IntelliJ IDEA.
@@ -35,7 +37,12 @@ public class TileControllerV2 {
 
     @GetMapping("/sceneId/{sceneId}/tileLevel/{tileLevel}")
     public ResponseEntity<GeoJsonVO> getTilesByImageAndLevel(@PathVariable String sceneId, @PathVariable String tileLevel) throws IOException {
-        return ResponseEntity.ok(tileDataService.getTilesBySceneAndLevel(sceneId, tileLevel));
+//        return ResponseEntity.ok(tileDataService.getTilesBySceneAndLevel(sceneId, tileLevel));
+        LocalDateTime beforetime = LocalDateTime.now();
+        GeoJsonVO geoJsonVO = tileDataService.getTilesBySceneAndLevel(sceneId, tileLevel);
+        LocalDateTime afterTime = LocalDateTime.now();
+        System.out.println(Duration.between(beforetime, afterTime));
+        return ResponseEntity.ok(geoJsonVO);
     }
 
     @GetMapping("/tif/scene/{sceneId}/tileId/{tileId}")
