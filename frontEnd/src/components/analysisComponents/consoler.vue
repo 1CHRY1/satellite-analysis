@@ -1,53 +1,60 @@
 <template>
-    <div class=" w-full  bg-gray-800 rounded-lg overflow-hidden shadow-lg" style="height: 100%;">
-        <!-- Header -->
-        <!-- <div class="console-header flex justify-between items-center p-4 bg-gray-900 text-white">
-            <span class="font-bold text-lg">控制台</span>
-            <button class="clear-button px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors"
-                @click="clearConsole">
+    <div class="w-full h-full overflow-auto bg-gray-50">
+        <!-- 顶部栏 -->
+        <div class="w-full h-12 flex items-center justify-between px-6 bg-white border-b border-gray-200">
+            <div class="font-sans text-lg font-bold text-gray-800 tracking-wide uppercase">控制台</div>
+            <a-button @click="clearConsole" type="primary" danger class="flex items-center justify-center"
+                style="display: flex; align-items: center; justify-content: center;">
+                <ClearOutlined class="my-1" />
                 Clear
-            </button>
-        </div> -->
+            </a-button>
+        </div>
 
-        <!-- Content Area -->
-        <!-- <div ref="consoleContent"
-            class="console-content flex-1 p-4 overflow-y-auto text-sm text-gray-300 whitespace-pre-wrap">
-            <p v-for="(message, index) in messages" :key="index">{{ message }}</p>
-        </div> -->
+        <!-- 信息显示区域 -->
+        <div class="w-full h-[calc(100%-3rem)] p-4 overflow-y-auto bg-gray-50" ref="consoleContent">
+            <div v-for="(message, index) in messages" :key="index"
+                class="mb-2 text-sm text-gray-700 whitespace-pre-wrap break-words">
+                {{ message }}
+            </div>
+        </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watch, defineEmits, onMounted } from "vue";
+import { ClearOutlined } from '@ant-design/icons-vue'; // 引入图标
 
-// Messages to display in the console
-const messages = ref<string[]>(['Welcome to the console!']);
+const props = defineProps<{
+    messages: string[];
+}>();
 
-// Reference to the content area for auto-scrolling
+const emit = defineEmits<{ (event: 'clearConsole'): void }>();
+
 const consoleContent = ref<HTMLDivElement | null>(null);
 
-// Function to add a new message to the console
-const addMessage = (msg: string) => {
-    messages.value.push(msg);
-    scrollToBottom();
-};
+watch(
+    () => props.messages,
+    () => {
+        // 当消息列表变化时，滚动到底部
+        scrollToBottom();
+    },
+    { deep: true }
+);
 
-// Function to clear all messages
 const clearConsole = () => {
-    messages.value = [];
+    emit('clearConsole')
 };
 
-// Auto-scroll to the bottom of the console
 const scrollToBottom = () => {
     if (consoleContent.value) {
         consoleContent.value.scrollTop = consoleContent.value.scrollHeight;
     }
 };
+onMounted(() => {
+    // 组件挂载完成后滚动到底部
+    scrollToBottom();
+});
 
-// Simulate adding messages (for demonstration purposes)
-// setInterval(() => {
-//     addMessage(`Log: ${new Date().toLocaleTimeString()}`);
-// }, 2000);
 </script>
 
 <style scoped lang="scss"></style>
