@@ -1,7 +1,8 @@
 from sqlalchemy.orm import Session
-from dataModel.image import Image
-from connection.minio import MinioClient
 from typing import Union 
+
+from TransferEngine.dataModel.image import Image
+from TransferEngine.connection.minio import MinioClient
 
 class ImageService:
     def __init__(self, db: Session, minio_client: MinioClient):

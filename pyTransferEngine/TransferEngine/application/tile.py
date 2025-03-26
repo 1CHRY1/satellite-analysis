@@ -1,6 +1,6 @@
-from service.tile import TileService
-from application.provider import Singleton
-from dataModel.tile import TileBase as TileDataModel
+from TransferEngine.service.tile import TileService
+from TransferEngine.application.provider import Singleton
+from TransferEngine.dataModel.tile import TileBase as TileDataModel
 
 class Tile:
 
@@ -10,7 +10,7 @@ class Tile:
         data: TileDataModel = tile_service.get_tile_by_id(scene_id, tile_id)
         if data is None:
             return None 
-        
+        print('Tile new !!!!!')
         instance = super().__new__(cls) 
         instance._data = data
         instance._scene_id = scene_id
@@ -19,6 +19,13 @@ class Tile:
     def __init__(self, scene_id: str, tile_id: str):
         self._tile_service : TileService = Singleton.get_instance(id="tile_service")
         # self._data : TileDataModel = self._tile_service.get_tile_by_id(scene_id, tile_id)
+
+    @classmethod
+    def from_data_model(cls, data: TileDataModel, scene_id: str):
+        instance = super().__new__(cls) 
+        instance._data = data
+        instance._scene_id = scene_id
+        return instance
 
     # 基础映射属性
     @property

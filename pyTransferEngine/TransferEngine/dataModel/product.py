@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Text, String, Float, Integer
-from connection.database import DatabaseClient
+
+from TransferEngine.connection.database import DatabaseClient
 
 class Product(DatabaseClient.Base):
     __tablename__ = 'product_table'  # map to table in database

@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
-from dataModel.product import Product
+from TransferEngine.dataModel.product import Product
+
 class ProductService:
     def __init__(self, db: Session):
         self.db = db

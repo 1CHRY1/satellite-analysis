@@ -1,9 +1,10 @@
-from connection.database import DatabaseClient
-from connection.minio import MinioClient
-from dataModel.tile import TileFactory
 from sqlalchemy.orm import Session
 from geoalchemy2 import Geometry  # <= not used but must be imported
 import os
+
+from TransferEngine.connection.database import DatabaseClient
+from TransferEngine.connection.minio import MinioClient
+from TransferEngine.dataModel.tile import TileFactory
 
 class TileService:
     def __init__(self, db_client: DatabaseClient, minio_client: MinioClient):
