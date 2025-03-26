@@ -61,7 +61,7 @@ public class DockerService {
     private String localCADir;
 
     @Autowired
-    SftpDataService ftpDataService;
+    SftpDataService sftpDataService;
 
     @Autowired
     ModelSocketService modelSocketService;
@@ -127,7 +127,7 @@ public class DockerService {
             Path mainPath = Paths.get(localProjectPath + "/main.py");
             Files.copy(sourcePath, mainPath, StandardCopyOption.REPLACE_EXISTING);
             // creat folder for project docker
-            ftpDataService.createRemoteDirAndFile(sftpInfo, localProjectPath, serverDir);
+            sftpDataService.createRemoteDirAndFile(sftpInfo, localProjectPath, serverDir);
         } catch (Exception e) {
             log.error("Error Initing Environment " + e);
         }
@@ -179,7 +179,7 @@ public class DockerService {
         removeContainerCmd.withForce(true).exec();
     }
 
-    public List<DFileInfo> getCurDirFiles(String containerId, String projectId, String path, List<DFileInfo> fileTree) {
+    public List<DFileInfo> getCurDirFiles(String projectId, String containerId, String path, List<DFileInfo> fileTree) {
         // TODO: 通过projectId获取运行路径
         String workSpaceDir = workDir;
         try {
@@ -207,7 +207,7 @@ public class DockerService {
                     }
 
                     // Build FileInfo
-                    String filePath = path + fileName;
+                    String filePath = path + "/" + fileName;
                     Boolean isDirectory = file.startsWith("d");
                     FileType fileType = FileType.unknown;
                     if (isDirectory){
@@ -221,6 +221,7 @@ public class DockerService {
                         }
                     }
 
+                    // TODO
                     DFileInfo fileInfo = DFileInfo.builder()
                             .fileName(fileName).filePath(filePath).fileType(fileType)
                             .serverPath(serverDir + projectId + "/" + filePath)
