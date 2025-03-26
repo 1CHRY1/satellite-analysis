@@ -2,27 +2,109 @@
   <div class="constructionContainer" id="container" @mousemove="handleMousemove($event)"
     @mousedown="handleMousedown($event)" @mouseup="handleMouseup($event)">
     <div v-show="showCodeContainer" class="codeContainer" id="codeContainerId">
-      <div class="dataPaneArea" id="dataPaneAreaId"></div>
-      <div class="splitHandleVertical" id="splitHandleVertical2Id" style="left: 30%;"></div>
-      <div class="codeEditArea" id="codeEditAreaId"></div>
+      <!-- 上左数据模块 -->
+      <div class="dataPaneArea" id="dataPaneAreaId">
+        <dataDirectory :data="dataDirectoryData" @changeView="changeView" class="h-[100%] w-full  rounded" />
+      </div>
+      <div class="splitHandleVertical" id="splitHandleVertical2Id" style="left: 25%;"></div>
+      <!-- 上中在线编程 -->
+      <div class="codeEditArea pl-2" id="codeEditAreaId">
+        <codeEditor class="h-[100%] w-full" />
+      </div>
 
-      <div class="splitHandleVertical" id="splitHandleVertical3Id" style="left: 70%;"></div>
+      <div class="splitHandleVertical" id="splitHandleVertical3Id" style="left: 75%;"></div>
+      <!-- 上右控制台 -->
       <div class="consolerArea" id="consolerAreaId">
-        <consolerComponent> </consolerComponent>
+        <consolerComponent :messages="messages" @clearConsole="clearConsole"> </consolerComponent>
       </div>
 
     </div>
     <div class="splitHandleHorizontal" id="splitPaneHorizontal1Id"></div>
+    <!-- 下方map控件 -->
     <div v-show="showMapContainer" class="mapContainer" id="mapContainerId">
-      <mapComp style="height: inherit;"> </mapComp>
+      <mapComp class="h-[100%]"> </mapComp>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from "vue";
-// import mapComp from "@/components/feature/map/mapComp.vue";
+import type { dockerData } from '@/type/analysis';
+
+import mapComp from "@/components/analysisComponents/mapComp.vue";
 import consolerComponent from "@/components/analysisComponents/consoler.vue";
+import codeEditor from "@/components/analysisComponents/codeEditor.vue";
+import dataDirectory from "@/components/analysisComponents/dataDirectory.vue";
+
+/**
+ * dataDirectoryData模块
+ */
+
+const dataDirectoryData = ref<dockerData[]>([
+  {
+    id: '1',
+    name: 'File 1',
+    updateTime: '2025-03-25 10:00',
+    size: '2.58 MB',
+    view: false,
+  },
+  {
+    id: '2',
+
+    name: 'File 2',
+    updateTime: '2025-03-24 09:30',
+    size: '4 MB',
+    view: false,
+  },
+  {
+    id: '3',
+    name: 'File 3',
+    updateTime: '2025-03-23 15:20',
+    size: '1 MB',
+    view: false,
+  },
+]);
+
+const changeView = (item: dockerData) => {
+  const targetItem = dataDirectoryData.value.find((data) => data.id === item.id);
+  if (targetItem) {
+    targetItem.view = !targetItem.view;
+  }
+}
+
+
+/**
+ * codeOnline模块
+ * 
+ */
+
+
+
+
+/**
+ * consoler子组件
+ * 添加、清空、自动滚动
+ */
+const messages = ref<string[]>(['Response and execution information will be displayed here .']);
+
+const clearConsole = () => {
+  messages.value = ['Response and execution information will be displayed here .'];
+};
+
+// const addMessage = (msg: string) => {
+//   messages.value.push(msg);
+// };
+
+// setInterval(() => {
+//   addMessage(`Log: ${new Date().toLocaleTimeString()}`);
+// }, 500);
+
+
+/**
+ * 页面模块大小分割模块
+ * 用来移动横杆改变各模块大小
+ * @param e 
+ */
 
 const activeSplitPane = ref<HTMLElement | null>(null);
 const containerHeight = ref(0);
@@ -30,7 +112,6 @@ const containerWidth = ref(0);
 const mouseActTag = ref(false);
 const showCodeContainer = ref(true);
 const showMapContainer = ref(true);
-
 
 // 检测是否保持按下状态，并且分辨按下的是哪个分割条
 const handleMousedown = (e: MouseEvent) => {
@@ -89,8 +170,8 @@ const handleMousemove = (e: MouseEvent) => {
     if (percentageValue <= Number(minWidth.split("%")[0]) + 20) {
       percentageValue = Number(minWidth.split("%")[0]) + 20;
     }
-    if (percentageValue > 90) {
-      percentageValue = 90;
+    if (percentageValue > 86.5) {
+      percentageValue = 86.5;
     }
 
     // 修改容器大小与竖杆位置
@@ -113,12 +194,12 @@ const handleMousemove = (e: MouseEvent) => {
     showMapContainer.value = true;
     // 限制最小和最大拖动范围
     if (percentageValue < 0.1) {
-      document.getElementById("codeContainerId") && (document.getElementById("codeContainerId")!.style.flexGrow = "0");
+      // document.getElementById("codeContainerId") && (document.getElementById("codeContainerId")!.style.flexGrow = "0");
       showCodeContainer.value = false;
       percentageValue = 0;
     } else {
       showCodeContainer.value = true;
-      document.getElementById("codeContainerId") && (document.getElementById("codeContainerId")!.style.flexGrow = "1");
+      // document.getElementById("codeContainerId") && (document.getElementById("codeContainerId")!.style.flexGrow = "1");
     }
     if (percentageValue > 98.9) {
       percentageValue = 99;
@@ -131,10 +212,11 @@ const handleMousemove = (e: MouseEvent) => {
     activeSplitPane.value.style.top = percentageValue + "%";
     document.getElementById("splitHandleVertical2Id")!.style.height = percentageValue + "%";
     document.getElementById("splitHandleVertical3Id")!.style.height = percentageValue + "%";
-    document.getElementById("mapContainerId")!.style.flexGrow = ((100 - percentageValue) / percentageValue).toString();
+    document.getElementById("codeContainerId")!.style.height = percentageValue + "%";
+    document.getElementById("mapContainerId")!.style.height = (100 - percentageValue) + "%";
+    // document.getElementById("mapContainerId")!.style.flexGrow = ((100 - percentageValue) / percentageValue).toString();
   }
 };
-
 
 
 const refreshContainerSize = () => {
@@ -149,22 +231,39 @@ const refreshContainerSize = () => {
   width: 100vw;
   height: calc(100vh - 74px);
   display: flex;
+  flex: none;
   flex-direction: column;
   position: relative;
+  background-color: #f9fafb;
 
   .codeContainer {
     color: black;
-    flex-grow: 1;
-    // height: 50%;
+    // flex-grow: 1;
+    height: 50%;
     display: flex;
 
+    .dataPaneArea {
+      width: 25%;
+
+    }
+
+    .codeEditArea {
+      width: 50%;
+      height: 100%;
+    }
+
+    .consolerArea {
+      // max-height: 100%;
+      width: 25%;
+      overflow: auto;
+    }
   }
 
   .mapContainer {
     color: black;
-    flex-grow: 1;
+    // flex-grow: 1;
     display: block;
-    // height: 50%;
+    height: 50%;
     // background: red;
 
     .modelContent {
@@ -172,17 +271,7 @@ const refreshContainerSize = () => {
     }
   }
 
-  .dataPaneArea {
-    width: 30%;
-  }
 
-  .codeEditArea {
-    width: 40%;
-  }
-
-  .consolerArea {
-    width: 30%;
-  }
 
   .splitHandleHorizontal {
     background-image: url("../assets/image/AnalysisHandle.png");
