@@ -40,4 +40,12 @@ public class ProjectDataService {
         return projectRepo.selectOne(queryWrapper);
     }
 
+    public boolean VerifyUserProject(String userId, String projectId) {
+        // TODO: joined user verify
+        QueryWrapper<Project> queryWrapper = new QueryWrapper();
+        queryWrapper.eq("create_user", userId).eq("project_id", projectId);
+        Project project = projectRepo.selectOne(queryWrapper);
+        return project != null;
+    }
+
 }

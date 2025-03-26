@@ -10,3 +10,4 @@ import MapComp from '@/components/feature/map/mapComp.vue';
 import ImageRetrievalPanel from '@/components/feature/image-retrieve/retrievePannel.vue';
 
 </script>
+
