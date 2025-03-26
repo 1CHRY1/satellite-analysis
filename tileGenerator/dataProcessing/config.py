@@ -38,6 +38,13 @@ MINIO_TILES_BUCKET                              =       "test-tiles"
 MINIO_GRID_BUCKET                               =       "test-tiles"
 MINIO_TEMP_FILES_BUCKET                         =       "temp-files"
 
+# MySQL Config
+MYSQL_HOST                                      =       "223.2.34.7"
+MYSQL_SATELLITE_DB                              =       "satellite"
+MYSQL_TILE_DB                                   =       "tile"
+MYSQL_USER                                      =       "root"
+MYSQL_PWD                                       =       "root"
+
 # Temp Config
 TEMP_INPUT_DIR                                  =       r"E:\Landset8_test\LC08_L2SP_118038_20240320_20240402_02_T1"
 TEMP_OUTPUT_DIR                                 =       r"E:\Landset8_test\test"
@@ -51,4 +58,4 @@ GDAL_PROJ_LIB                                   =       r"C:\Users\lkshi\.conda\
 # Data General Config
 EARTH_RADIUS                                    =       6371008.8
 EARTH_CIRCUMFERENCE                             =       2 * math.pi * EARTH_RADIUS
-GRID_RESOLUTION                                 =       50
+GRID_RESOLUTION                                 =       1

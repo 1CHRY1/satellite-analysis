@@ -1,5 +1,6 @@
 package nnu.mnr.satellite.utils.docker;
 
+import com.github.dockerjava.core.MediaType;
 import nnu.mnr.satellite.enums.common.FileType;
 
 import java.text.ParseException;
@@ -84,6 +85,15 @@ public class DockerFileUtil {
             return null;
         }
         return null;
+    }
+
+    public static String getImageByName(String env) {
+        return switch (env) {
+            case "Python3_9" -> "python39:v1";
+            case "Python3_8" -> "python38:latest";
+            case "Python2_7" -> "python27:latest";
+            default -> "";
+        };
     }
 
 }

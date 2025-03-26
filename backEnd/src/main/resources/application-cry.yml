@@ -51,7 +51,8 @@ docker:
     username: "vge"
     password: "3J44.njnu.edu.cn"
   localPath: D:/1study/Work/2025_03_05_satellite/modelDockerVolume/
-  remotePath: /home/vge/satellite/
+  serverDir: /home/vge/satellite/
+  workDir: /usr/local/coding/
 
 ca:
   dir: D:/1tools/OpenSSL/ca
