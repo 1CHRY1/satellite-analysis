@@ -3,6 +3,8 @@ import json
 import math
 import os
 import tempfile
+import uuid
+from datetime import datetime
 from multiprocessing import Pool
 from types import SimpleNamespace
 
@@ -15,7 +17,8 @@ from osgeo import gdal, ogr, osr
 from functools import partial
 import pyproj
 from shapely.geometry import box
-
+import subprocess
+from collections import defaultdict
 from dataProcessing.Utils.filenameUtils import extract_landsat7_info
 from dataProcessing.Utils.osUtils import uploadFileToMinio, uploadLocalFile, uploadLocalDirectory
 from dataProcessing.tifSlicer.tifSlice import tif2GeoCS, rasterInfo, lnglat2grid, grid2lnglat, grid_size_in_degree, \
@@ -691,7 +694,13 @@ def process_tiles(tiff_path, scene_name, output_dir, grid_resolution, tile_bucke
 
 
     # --------- Upload tiles ------------------------------------------------------
-    uploadLocalDirectory(output_dir, tile_bucket, f"{object_prefix}/{scene_name}/{tiff_name}")
+    cmd = ["mc", "mirror", output_dir, f"myminio/{tile_bucket}/{object_prefix}/{scene_name}/{tiff_name}"]
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1, universal_newlines=True) as process:
+        for line in process.stdout:
+            print(line, end="")  # 逐行输出，不额外换行
+        for err in process.stderr:
+            print("ERROR:", err, end="")  # 逐行输出错误信息
+    process.wait()
 
     # --------- Create and upload grids geojson ------------------------------------
     geojson = grids2Geojson(grid_id_list, world_grid_num)
@@ -751,6 +760,71 @@ def mtif(tif_paths, output_path):
         tif_paths,
         options=merge_options
     )
+
+def mband(merged_tif_list, output_path, output_name="merged.tif"):
+    """
+    将多个 TIFF 影像按波段合并为一个多波段 TIFF 文件。
+
+    :param merged_tif_list: 包含多个 TIFF 影像信息的列表，每个元素是字典，格式：
+                            {"band": 波段索引, "path": "文件路径"}
+    :param output_path: 输出文件夹路径
+    :param output_name: 输出文件名（默认 "merged.tif"）
+    :return: None（生成合并后的 TIFF 文件）
+    """
+    # 按波段分组文件
+    grouped_by_band = defaultdict(list)
+    for entry in merged_tif_list:
+        band = entry["band"]
+        path = entry["path"]
+        grouped_by_band[band].append(path)
+
+    # 确保输出路径存在
+    os.makedirs(output_path, exist_ok=True)
+    output_file = os.path.join(output_path, output_name)
+
+    # 读取第一个文件的元数据（假设所有文件的尺寸一致）
+    sample_ds = gdal.Open(merged_tif_list[0]["path"])
+    geotransform = sample_ds.GetGeoTransform()
+    projection = sample_ds.GetProjection()
+    cols = sample_ds.RasterXSize
+    rows = sample_ds.RasterYSize
+
+    # 计算最终 TIFF 文件的波段数量
+    bands_num = len(grouped_by_band)
+
+    # 创建 GTiff 格式的输出影像
+    driver = gdal.GetDriverByName('GTiff')
+    out_ds = driver.Create(output_file, cols, rows, bands_num, gdal.GDT_Float32,
+                           options=["TILED=YES", "COMPRESS=LZW"])  # 使用 LZW 压缩
+
+    # 设置地理信息
+    out_ds.SetProjection(projection)
+    out_ds.SetGeoTransform(geotransform)
+
+    # 逐波段写入数据
+    for i, (band, paths) in enumerate(sorted(grouped_by_band.items()), start=1):
+        print(f"写入第 {i} 个波段...")
+
+        # 读取当前波段的所有文件数据并合并（假设堆叠后取第一个数据）
+        band_data = []
+        for path in paths:
+            dataset = gdal.Open(path)
+            band_data.append(dataset.GetRasterBand(1).ReadAsArray())
+
+        # 合并数据，这里默认只取第一个影像数据作为最终数据
+        merged_data = np.stack(band_data, axis=0)[0]  # 仅使用第一张影像数据
+
+        # 将数据写入 TIFF 文件
+        out_band = out_ds.GetRasterBand(i)
+        out_band.WriteArray(merged_data)
+
+    # 刷新缓存并构建金字塔概览
+    out_ds.FlushCache()
+    out_ds.BuildOverviews(overviewlist=[1, 2, 4, 8, 16])
+    out_ds = None  # 释放资源
+    print(f"多波段 TIFF 影像已保存至 {output_file}")
+    return output_file
+
 
 def read_qa_pixel(tiff_path, scene_name):
     # 获取 tiff_path 的目录部分
