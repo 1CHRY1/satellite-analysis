@@ -48,21 +48,19 @@ public class TileDataServiceV2 {
     @Autowired
     ModelServerProperties modelServerProperties;
 
-    private final ITileRepoV2 tileRepo;
+    @Autowired
+    ImageDataService imageDataService;
 
-    private final IImageRepo imageRepo;
+    private final ITileRepoV2 tileRepo;
 
     public TileDataServiceV2(ITileRepoV2 tileRepo, IImageRepo imageRepo) {
         this.tileRepo = tileRepo;
-        this.imageRepo = imageRepo;
     }
 
     @DS("mysql_tile")
-    public GeoJsonVO getTilesBySceneAndLevel(String sceneId, int tileLevel) throws IOException {
-        QueryWrapper<Image> queryWrapper = new QueryWrapper<>();
-        queryWrapper.select("image_id").eq("scene_id", sceneId);
-        String imageId = imageRepo.selectOne(queryWrapper).getImageId();
-        List<Tile> tiles = tileRepo.getTileByImageIdAndLevel(imageId, tileLevel);
+    public GeoJsonVO getTilesBySceneAndLevel(String sceneId, String tileLevel) throws IOException {
+        String band = imageDataService.getImagesBySceneId(sceneId).get(0).getBand();
+        List<Tile> tiles = tileRepo.getTileByBandAndLevel(sceneId, band, tileLevel);
         return GeometryUtil.tileList2GeojsonVO(tiles);
     }
 
