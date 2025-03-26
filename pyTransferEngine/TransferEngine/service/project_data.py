@@ -1,9 +1,10 @@
 from typing import Union
-import random
+import os, random
 from datetime import datetime
 from sqlalchemy.orm import Session
-from connection.minio import MinioClient
-from dataModel.project_data import ProjectData
+
+from TransferEngine.connection.minio import MinioClient
+from TransferEngine.dataModel.project_data import ProjectData
 
 class ProjectDataService:
     def __init__(self, db: Session, minio_client: MinioClient):
@@ -12,6 +13,9 @@ class ProjectDataService:
 
     def get_by_id(self, data_id: str):
         return self.db.query(ProjectData).filter(ProjectData.data_id == data_id).first()
+    
+    def get_by_name(self, data_name: str):
+        return self.db.query(ProjectData).filter(ProjectData.data_name == data_name).first()
 
     def get_all(self):
         return self.db.query(ProjectData).all()
@@ -38,6 +42,10 @@ class ProjectDataService:
         # validate
         if not project_data.bucket or not project_data.path:
             raise ValueError("Bucket and path must be provided for the project data.")
+        
+        # check input file exists
+        if not os.path.exists(input_path):
+            raise ValueError(f"File not found: {input_path}")
         
         # push to minio
         self.minio_client.push_file(project_data.bucket, project_data.path, input_path)

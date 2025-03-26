@@ -1,10 +1,10 @@
-from service.scene import SceneService 
-from service.image import ImageService
-from service.tile import TileService
-from application.provider import Singleton
-from application.image import Image
-from application.tile import Tile
-from dataModel.scene import Scene as SceneDataModel
+from TransferEngine.service.scene import SceneService 
+from TransferEngine.service.image import ImageService
+from TransferEngine.service.tile import TileService
+from TransferEngine.application.provider import Singleton
+from TransferEngine.application.image import Image
+from TransferEngine.application.tile import Tile
+from TransferEngine.dataModel.scene import Scene as SceneDataModel
 
 class Scene:
 
@@ -104,11 +104,11 @@ class Scene:
     
     def get_all_tiles(self):
         tiles = self._tile_service.get_tiles_by_scene(self.scene_id)
-        return [Tile(self.scene_id, tile.tile_id) for tile in tiles]
+        return [Tile.from_data_model(tile, self.scene_id) for tile in tiles]
     
     def get_tile(self, tile_id: str):
         tile = self._tile_service.get_tile_by_id(self.scene_id, tile_id)
-        return Tile(self.scene_id, tile.tile_id)
+        return Tile.from_data_model(tile, self.scene_id)
     
     def pull_tile_by_id(self, tile_id: str, output_path: str):
         self._tile_service.pull_tile_by_id(self.scene_id, tile_id, output_path)
@@ -118,4 +118,5 @@ class Scene:
     
     def get_tiles_by_cloud(self, mincloud: float):
         tiles = self._tile_service.get_tiles_by_scene_and_cloud(self.scene_id, mincloud)
-        return [Tile(self.scene_id, tile.tile_id) for tile in tiles]
+        return [Tile.from_data_model(tile, self.scene_id) for tile in tiles]
+            
