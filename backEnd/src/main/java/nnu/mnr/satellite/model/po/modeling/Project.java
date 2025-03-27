@@ -35,10 +35,12 @@ public class Project {
     private LocalDateTime createTime;
 
     private String localPyPath;
+    private String watchPath;
     private String workDir;
     private String pyPath;
     private String serverDir;
     private String serverPyPath;
+
     private String pyContent;
 
     private String createUser;

@@ -104,6 +104,7 @@ public class ModelCodingService {
         String serverDir = dockerServerProperties.getServerDir() + projectId + "/";
         String workDir = dockerServerProperties.getWorkDir();
         String pyPath = workDir + "main.py";
+        String watchPath = workDir + "output/";
         String localPyPath = dockerServerProperties.getLocalPath() + projectId + "/" + "main.py";
         String serverPyPath = serverDir + "main.py";
         Project formerProject = projectDataService.getProjectByUserAndName(userId, projectName);
@@ -116,7 +117,7 @@ public class ModelCodingService {
                 .projectId(projectId).projectName(projectName)
                 .environment(env).createTime(LocalDateTime.now())
                 .workDir(workDir).serverDir(serverDir).createUser(userId)
-                .pyPath(pyPath).localPyPath(localPyPath).serverPyPath(serverPyPath)
+                .pyPath(pyPath).watchPath(watchPath).localPyPath(localPyPath).serverPyPath(serverPyPath)
                 .build();
         dockerService.initEnv(projectId, serverDir);
 
