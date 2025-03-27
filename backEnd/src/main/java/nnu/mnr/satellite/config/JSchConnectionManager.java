@@ -6,12 +6,16 @@ import jakarta.annotation.PreDestroy;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.model.pojo.common.SftpConn;
+import org.apache.commons.pool2.impl.GenericObjectPool;
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+import org.apache.commons.pool2.BasePooledObjectFactory;
+import org.apache.commons.pool2.PooledObject;
+import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.Objects;
-import java.util.Properties;
-import java.util.Vector;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Created with IntelliJ IDEA.
@@ -28,11 +32,19 @@ public class JSchConnectionManager {
 
     private final SftpConn defaultSftpConn;
 
-    private Session session;
+    private final Map<SftpConn, GenericObjectPool<Session>> sessionPools;
 
     @PostConstruct
     public void init() {
-        putSession(defaultSftpConn);
+        GenericObjectPool<Session> defaultPool = addSessionPool(defaultSftpConn);
+        CompletableFuture.runAsync(() -> {
+            try {
+                defaultPool.preparePool();
+                log.info("Preloaded sessions for default host: " + defaultSftpConn.getHost());
+            } catch (Exception e) {
+                log.error("Failed to preload sessions", e);
+            }
+        });
     }
 
     public JSchConnectionManager(
@@ -45,81 +57,106 @@ public class JSchConnectionManager {
                 .username(defaultUsername)
                 .password(defaultPassword)
                 .BuildSftpConn();
+        sessionPools = new HashMap<>();
     }
 
-    public Session putSession(SftpConn sftpConn) {
-        String host = sftpConn.getHost();
-        String username = sftpConn.getUsername();
-        String password = sftpConn.getPassword();
-        if ( session == null || !Objects.equals(session.getHost(), host)) {
-            try {
-                JSch jSch = new JSch();
-                session = jSch.getSession(username, host, 22);
-                session.setPassword(password);
+    private synchronized GenericObjectPool<Session> addSessionPool(SftpConn sftpConn) {
+        return sessionPools.computeIfAbsent(sftpConn, conn -> {
+            GenericObjectPoolConfig<Session> poolConfig = new GenericObjectPoolConfig<>();
+            poolConfig.setMaxTotal(10);
+            poolConfig.setMaxIdle(5);
+            poolConfig.setMinIdle(2);
+            poolConfig.setTestOnBorrow(true);
+            poolConfig.setTestWhileIdle(true);
 
-                Properties config = new Properties();
-                config.put("StrictHostKeyChecking", "no");
-                config.put("PreferredAuthentications", "publickey,keyboard-interactive,password");
-                session.setConfig(config);
+            GenericObjectPool<Session> pool = new GenericObjectPool<>(new SessionFactory(conn), poolConfig);
+            log.info("Created new Session pool for host: " + conn.getHost());
+            return pool;
+        });
+    }
 
-                session.connect();
-                log.info("JSch " + host + " Session connected.");
+    public Session getSession(SftpConn sftpConn) {
+        GenericObjectPool<Session> pool = addSessionPool(sftpConn);
+        try {
+            return pool.borrowObject();
+        } catch (Exception e) {
+            log.error("Failed to borrow Session from pool for host: " + sftpConn.getHost(), e);
+            throw new RuntimeException("Unable to get SFTP session", e);
+        }
+    }
 
-            } catch (Exception e) {
-                log.error("JSch " + host + " Session Error " + e);
+    public Session getSession() {
+        return getSession(defaultSftpConn);
+    }
+
+    public void returnSession(SftpConn sftpConn, Session session) {
+        GenericObjectPool<Session> pool = sessionPools.get(sftpConn);
+        if (pool != null && session != null) {
+            pool.returnObject(session);
+        }
+    }
+
+    public void returnSession(Session session) {
+        returnSession(defaultSftpConn, session);
+    }
+
+    private static class SessionFactory extends BasePooledObjectFactory<Session> {
+        private final SftpConn sftpConn;
+
+        public SessionFactory(SftpConn sftpConn) {
+            this.sftpConn = sftpConn;
+        }
+
+        @Override
+        public Session create() throws Exception {
+            JSch jSch = new JSch();
+            Session session = jSch.getSession(sftpConn.getUsername(), sftpConn.getHost(), 22);
+            session.setPassword(sftpConn.getPassword());
+
+            Properties config = new Properties();
+            config.put("StrictHostKeyChecking", "no");
+            config.put("PreferredAuthentications", "publickey,keyboard-interactive,password");
+            session.setConfig(config);
+            session.setTimeout(30000);
+            session.connect();
+
+            log.info("New JSch Session created for host: " + sftpConn.getHost());
+            return session;
+        }
+
+        @Override
+        public PooledObject<Session> wrap(Session session) {
+            return new DefaultPooledObject<>(session);
+        }
+
+        @Override
+        public void destroyObject(PooledObject<Session> p) throws Exception {
+            Session session = p.getObject();
+            if (session != null && session.isConnected()) {
+                session.disconnect();
+                log.info("JSch Session destroyed for host: " + session.getHost());
             }
         }
-        return session;
-    }
 
-    public void deleteFolder(String folderPath) {
-        try {
-            ChannelSftp channelSftp = (ChannelSftp) session.openChannel("sftp");
-            channelSftp.connect();
-
+        @Override
+        public boolean validateObject(PooledObject<Session> p) {
+            Session session = p.getObject();
             try {
-                try {
-                    channelSftp.cd(folderPath);
-                } catch (SftpException e) {
-                    log.info("Folder does not exist: " + folderPath);
-                    return;
-                }
-
-                Vector<ChannelSftp.LsEntry> fileList = channelSftp.ls("*");
-                for (ChannelSftp.LsEntry entry : fileList) {
-                    String fileName = entry.getFilename();
-                    if (".".equals(fileName) || "..".equals(fileName)) {
-                        continue;
-                    }
-
-                    String fullPath = folderPath + "/" + fileName;
-                    if (entry.getAttrs().isDir()) {
-                        deleteFolder(fullPath);
-                    } else {
-                        channelSftp.rm(fullPath);
-                    }
-                }
-                channelSftp.cd("..");
-                channelSftp.rmdir(folderPath);
-
-            } catch (SftpException e) {
-                log.error("Error deleting folder: " + folderPath, e);
-            } finally {
-                if (channelSftp != null && channelSftp.isConnected()) {
-                    channelSftp.disconnect();
-                }
+                return session.isConnected();
+            } catch (Exception e) {
+                log.warn("Session validation failed: " + e.getMessage());
+                return false;
             }
-        } catch (JSchException e) {
-            log.error("Failed to open SFTP channel for folder deletion: " + folderPath, e);
         }
     }
 
     @PreDestroy
     public void cleanup() {
-        if (session != null && session.isConnected()) {
-            session.disconnect();
-            System.out.println("JSch " + session.getHost() + " Session disconnected.");
+        for (GenericObjectPool<Session> pool : sessionPools.values()) {
+            pool.close();
+            log.info("JSch Session pool closed for host.");
         }
+        sessionPools.clear();
     }
 
 }
