@@ -123,7 +123,13 @@ public class DockerService {
             if (!folder.exists()) {
                 folder.mkdirs();
             }
-            // creat folder for project docker
+
+            // create local py
+            Path sourcePath = Paths.get(localPath + "/devCli/main.py");
+            Path mainPath = Paths.get(localProjectPath + "/main.py");
+            Files.copy(sourcePath, mainPath, StandardCopyOption.REPLACE_EXISTING);
+
+            // create folder for project docker
             sftpDataService.createRemoteDirAndFile(sftpInfo, localProjectPath, serverDir);
         } catch (Exception e) {
             log.error("Error Initing Environment " + e);

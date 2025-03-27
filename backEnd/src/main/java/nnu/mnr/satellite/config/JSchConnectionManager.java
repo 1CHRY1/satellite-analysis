@@ -65,7 +65,7 @@ public class JSchConnectionManager {
             GenericObjectPoolConfig<Session> poolConfig = new GenericObjectPoolConfig<>();
             poolConfig.setMaxTotal(10);
             poolConfig.setMaxIdle(5);
-            poolConfig.setMinIdle(1);
+            poolConfig.setMinIdle(2);
             poolConfig.setTestOnBorrow(true);
             poolConfig.setTestWhileIdle(true);
 
