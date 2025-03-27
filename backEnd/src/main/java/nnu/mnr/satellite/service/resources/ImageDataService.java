@@ -1,5 +1,6 @@
 package nnu.mnr.satellite.service.resources;
 
+import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.model.vo.resources.ImageInfoVO;
 import nnu.mnr.satellite.model.po.resources.Image;
@@ -35,6 +36,7 @@ public class ImageDataService {
         this.imageRepo = imageRepo;
     }
 
+    @DS("mysql_satellite")
     public List<ImageInfoVO> getImagesBySceneId(String sceneId) {
         QueryWrapper<Image> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("image_id", "band", "cloud").eq("scene_id", sceneId);

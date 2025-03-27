@@ -1,21 +1,21 @@
 package nnu.mnr.satellite.model.dto.resources;
 
+import com.alibaba.fastjson2.JSONObject;
 import lombok.Data;
-
-import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
  *
  * @Author: Chry
- * @Date: 2025/3/20 20:43
+ * @Date: 2025/3/26 21:01
  * @Description:
  */
 
 @Data
-public class TilesMergeDTO {
+public class TilesFetchDTO {
 
     private String sceneId;
-    private List<String> tiles;
+    private String tileLevel;
+    private JSONObject geometry;
 
 }

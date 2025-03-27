@@ -1,9 +1,13 @@
 package nnu.mnr.satellite.repository.resources;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import nnu.mnr.satellite.model.dto.resources.TileBasicDTO;
 import nnu.mnr.satellite.model.po.resources.Tile;
 import nnu.mnr.satellite.utils.typeHandler.GeometryTypeHandler;
-import org.apache.ibatis.annotations.*;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Result;
+import org.apache.ibatis.annotations.Results;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
@@ -18,13 +22,19 @@ import java.util.List;
 //@Repository("tileRepo")
 public interface ITileRepo extends BaseMapper<Tile> {
 
-    @Select("select tile_id, bounding_box from ${tileTable} where tile_level = #{tileLevel}")
+    @Select("select tile_id, bounding_box from ${tileTable} where tile_level = #{tileLevel} and band = #{band}")
     @Results({
             @Result(property = "bbox", column = "bounding_box", typeHandler = GeometryTypeHandler.class)
     })
-    List<Tile> getTileByImageIdAndLevel(@Param("tileTable") String tileTable, int tileLevel);
+    List<Tile> getTileByBandAndLevel(@Param("tileTable") String tileTable, String band, String tileLevel);
 
-    @Select("select image_id, tile_level, cloud, column_id, row_id, bucket, path from ${tileTable} where tile_id = #{tileId}")
+    @Select("select distinct row_id, column_id from ${tileTable} where tile_level = #{tileLevel} and " +
+            "( ST_Intersects(ST_GeomFromText(#{wkt}, 4326), bounding_box) OR " +
+            "ST_Contains(ST_GeomFromText(#{wkt}, 4326), bounding_box) OR " +
+            "ST_Within(ST_GeomFromText(#{wkt}, 4326), bounding_box) ) ")
+    List<TileBasicDTO> getBasicTileByBandAndLevel(@Param("tileTable") String tileTable, String tileLevel, String wkt);
+
+    @Select("select scene_id, image_id, tile_level, cloud, band, column_id, row_id, bucket, path from ${tileTable} where tile_id = #{tileId}")
     Tile getTileByTileId(@Param("tileTable") String tileTable, String tileId);
 
 }

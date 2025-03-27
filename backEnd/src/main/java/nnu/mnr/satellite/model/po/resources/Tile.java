@@ -2,7 +2,6 @@ package nnu.mnr.satellite.model.po.resources;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,7 +27,9 @@ public class Tile {
     private String tileId;
     private Integer tileLevel;
     private String imageId;
+    private String sceneId;
     private String cloud;
+    private String band;
     private Integer columnId;
     private Integer rowId;
     private String path;
