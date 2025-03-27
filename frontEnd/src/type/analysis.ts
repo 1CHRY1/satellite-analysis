@@ -5,8 +5,10 @@
 
 export type dockerData = {
     fileName: string
+    filePath: string
     fileSize: number
     fileType: string
+    serverPath: string
     updateTime: string
     view: boolean
 }

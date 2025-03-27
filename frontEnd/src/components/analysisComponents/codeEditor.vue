@@ -2,7 +2,7 @@
     <div>
         <div class="h-[8%] w-full flex justify-between">
             <div class="w-fit ml-2 bg-[#eaeaea] rounded flex items-center my-1 shadow-md">
-                <div class="toolItem" @click="dialogVisible = true">
+                <div class="toolItem" @click="showPackageList">
                     <CloudServerOutlined />
                     依赖管理
                 </div>
@@ -78,7 +78,7 @@
 
 <script setup lang="ts">
 import { CloudServerOutlined, CaretRightOutlined, SaveOutlined, StopOutlined } from "@ant-design/icons-vue";
-import { projectOperating, getScript, updateScript, runScript, stopScript, operatePackage } from "@/api/http/analysis"
+import { projectOperating, getScript, updateScript, runScript, stopScript, operatePackage, getPackages } from "@/api/http/analysis"
 import { ref, defineProps, onMounted, onBeforeUnmount } from "vue";
 import { Codemirror } from "vue-codemirror";
 import { python } from "@codemirror/lang-python";
@@ -101,32 +101,61 @@ const addPackageShow = ref(false)
 const addedPackageInfo = ref({
     name: '', version: ''
 })
-const packageList = ref([{
-    package: 'numpy', version: '1.21.2'
-}])
+const packageList = ref([])
 
-const installPackage = () => {
-    console.log(addedPackageInfo.value);
+const showPackageList = async () => {
+    dialogVisible.value = true
+    await getPackageList()
+}
+
+const installPackage = async () => {
+    let requestJson = {}
+    if (addedPackageInfo.value.name) {
+        dialogVisible.value = false
+        requestJson = addedPackageInfo.value.version ? {
+            projectId: props.projectId,
+            userId: "rgj",
+            action: "add",
+            name: addedPackageInfo.value.name,
+            version: addedPackageInfo.value.version
+        } : {
+            projectId: props.projectId,
+            userId: "rgj",
+            action: "add",
+            name: addedPackageInfo.value.name,
+        }
+    } else {
+        ElMessage.warning("请输入要安装的依赖包名")
+    }
+
+    await operatePackage(requestJson)
+}
+
+const removePackage = async (row: any) => {
+    dialogVisible.value = false
+
+    await operatePackage({
+        projectId: props.projectId,
+        userId: "rgj",
+        action: "remove",
+        name: row.package,
+    })
+    console.log("正在卸载：", row.package);
 
 }
 
-const removePackage = (row: any) => {
-    console.log(row);
+const getPackageList = async () => {
+    let result = await getPackages({
+        projectId: props.projectId,
+        userId: "rgj",
+    })
+    packageList.value = result.map((item: any) => {
+        let temp = item.split(' ')
+        return { package: temp[0], version: temp[1] ?? '' }
+    })
+
 }
 
-// const packageControl = async () => {
-
-//     if (0) {
-//         await operatePackage({
-//             projectId: props.projectId,
-//             userId: "rgj",
-//             action: "add",
-//             name: "minio"
-//         })
-//     }
-
-//     console.log("安装依赖");
-// };
 const runCode = async () => {
     // 1、先更新代码
     let saveResult = await updateScript({
@@ -235,6 +264,7 @@ onMounted(async () => {
     } else {
         ElMessage.error("启动失败，请刷新页面或联系管理员");
     }
+
 })
 onBeforeUnmount(async () => {
     let result = await projectOperating({
