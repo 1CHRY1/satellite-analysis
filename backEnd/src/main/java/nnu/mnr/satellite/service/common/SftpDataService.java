@@ -220,10 +220,6 @@ public class SftpDataService {
         String mainPath = localProjectPath.substring(0, lastSlashIndex) + "/devCli/main.py";
         uploadFile(mainPath, volumePath + "/main.py");
 
-        // localBackUp
-        FileInputStream fis = new FileInputStream(Path.of(mainPath).toFile());
-        channel.put(fis, volumePath + "/main.py");
-
         channel.disconnect();
         jschConnectionManager.returnSession(session);
 
