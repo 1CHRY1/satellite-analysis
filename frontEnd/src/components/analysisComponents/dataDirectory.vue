@@ -117,14 +117,16 @@ const getInputData = async () => {
         "path": "/data"
     })
     if (tempData.length === 0) {
-        tempData = setTimeout(async () => {
-            await getFiles({
+        setTimeout(async () => {
+            tempData = await getFiles({
                 "userId": "rgj",
                 "projectId": props.projectId,
                 "path": "/data"
             })
         }, 1000);
     }
+    console.log(tempData, 156);
+
     inputData.value = tempData.map((item: any) => {
         return { ...item, view: false }
     })
@@ -137,8 +139,8 @@ const getOutputData = async () => {
         "path": "/output"
     })
     if (tempData.length === 0) {
-        tempData = setTimeout(async () => {
-            await getFiles({
+        setTimeout(async () => {
+            tempData = await getFiles({
                 "userId": "rgj",
                 "projectId": props.projectId,
                 "path": "/output"
