@@ -33,6 +33,7 @@ public class Project {
     private String containerId;
     private String environment;
     private LocalDateTime createTime;
+    private String dataBucket;
 
     private String localPyPath;
     private String workDir;
@@ -44,6 +45,7 @@ public class Project {
     private String dataPath;
 
     private String pyContent;
+    private HashSet<String> packages;
 
     private String createUser;
     private HashSet<String> joinedUsers;
