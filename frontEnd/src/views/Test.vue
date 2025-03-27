@@ -15,7 +15,7 @@ onMounted(() => {
         map.addSource("src",{
             type:"raster",
             tiles:[
-                "http://localhost:5000/tiff1/{z}/{x}/{y}.png"
+                "http://127.0.0.1:5000/tiff1/{z}/{x}/{y}.png"
             ]
         })
         map.addLayer({
@@ -25,18 +25,29 @@ onMounted(() => {
             minzoom:0,
         })
 
-        // map.addSource("src2",{
-        //     type:"raster",
-        //     tiles:[
-        //         "http://localhost:5000/tiff2/{z}/{x}/{y}.png"
-        //     ]
-        // })
-        // map.addLayer({
-        //     id:"layer2",
-        //     type:"raster",
-        //     source:"src2",
-        //     minzoom:0,
-        // })
+        map.addSource("src2",{
+            type:"raster",
+            tiles:[
+                "http://localhost:5000/tiff2/{z}/{x}/{y}.png"
+            ]
+        })
+        map.addLayer({
+            id:"layer2",
+            type:"raster",
+            source:"src2",
+            minzoom:0,
+        })
+
+
+        window.addEventListener("keydown",(e)=>{
+            if(e.key === "1"){
+                map.setPaintProperty("layer","raster-opacity",0.1)
+                map.setPaintProperty("layer2","raster-opacity",1)
+            }else if(e.key === "2"){
+                map.setPaintProperty("layer","raster-opacity",1)
+                map.setPaintProperty("layer2","raster-opacity",0.1)
+            }
+        })
     })
 })
 
