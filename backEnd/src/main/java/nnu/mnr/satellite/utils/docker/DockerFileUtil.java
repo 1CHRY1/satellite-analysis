@@ -7,6 +7,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * Created with IntelliJ IDEA.
@@ -56,7 +57,6 @@ public class DockerFileUtil {
 
                 // 定义 SimpleDateFormat 来解析日期字符串
                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
-
                 // 将解析的时间字符串转化为 Date 对象
                 return dateFormat.parse(lastModifiedDateStr);
             }
@@ -69,7 +69,7 @@ public class DockerFileUtil {
 
     public static String getImageByName(String env) {
         return switch (env) {
-            case "Python3_9" -> "python39:v1";
+            case "Python3_9" -> "python39:Satellite";
             case "Python3_8" -> "python38:latest";
             case "Python2_7" -> "python27:latest";
             default -> "";
