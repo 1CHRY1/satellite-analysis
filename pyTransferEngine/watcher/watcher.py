@@ -1,5 +1,4 @@
 import os, json, time, random
-from threading import Timer
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from datetime import datetime
@@ -77,6 +76,27 @@ class ProjectData(Base):
 
 
 ######  File Operations  #########################################################
+def delete_remote_object(delete_file_path):
+    """Delete object from storage"""
+    
+    global minio_client, mysql_engine, USER_ID, PROJECT_ID, BUCKET_NAME
+    object_name = get_object_name(delete_file_path)
+    try:
+        # delete object from minio
+        minio_client.remove_object(BUCKET_NAME, object_name)
+        
+        # delete object from database
+        with Session(mysql_engine) as session:
+            session.query(ProjectData).filter(
+                ProjectData.user_id == USER_ID,
+                ProjectData.project_id == PROJECT_ID,
+                ProjectData.bucket == BUCKET_NAME,
+                ProjectData.path == object_name,
+            ).delete()
+            session.commit()
+            
+    except S3Error as e:
+        raise e
 
 def push_to_remote(input_file_path):
     """Push file to minio and update database"""
@@ -88,26 +108,12 @@ def push_to_remote(input_file_path):
         # check if bucket exists
         found = minio_client.bucket_exists(BUCKET_NAME)
         if not found:
-            print(f"Bucket '{BUCKET_NAME}' does not exist. ! Create bucket !")
             minio_client.make_bucket(BUCKET_NAME)
             
         # check if object exists
         try:
             minio_client.stat_object(BUCKET_NAME, object_name)
-            print(f"Data with path {object_name} already exists in bucket {BUCKET_NAME}. ! Deleting object !")
-            
-            # delete object from minio
-            minio_client.remove_object(BUCKET_NAME, object_name)
-            
-            # delete object from database
-            with Session(mysql_engine) as session:
-                session.query(ProjectData).filter(
-                    ProjectData.user_id == USER_ID,
-                    ProjectData.project_id == PROJECT_ID,
-                    ProjectData.bucket == BUCKET_NAME,
-                    ProjectData.path == object_name,
-                ).delete()
-                session.commit()
+            delete_remote_object(input_file_path)
             
         except S3Error:
             pass  # if object not exists, continue
@@ -132,37 +138,12 @@ def push_to_remote(input_file_path):
             ))
             session.commit()
         
-
-        print(f"File was pushed to bucket '{BUCKET_NAME}' as '{object_name}'.")
-
     except S3Error as e:
-        print(f"Error occurred: {e}")
         raise e
     
-    
-def delete_remote_object(delete_file_path):
-    """Delete object from storage"""
-    
-    global minio_client, mysql_engine, USER_ID, PROJECT_ID, BUCKET_NAME
-    object_name = get_object_name(delete_file_path)
-    try:
-        # delete object from minio
-        minio_client.remove_object(BUCKET_NAME, object_name)
-        
-        # delete object from database
-        with Session(mysql_engine) as session:
-            session.query(ProjectData).filter(
-                ProjectData.user_id == USER_ID,
-                ProjectData.project_id == PROJECT_ID,
-                ProjectData.bucket == BUCKET_NAME,
-                ProjectData.path == object_name,
-            ).delete()
-            session.commit()
-    except S3Error as e:
-        print(f"Error occurred: {e}")
-        raise e
 
-    
+
+
 ###### Local Helper Functions #################################################
 def generate_id(prefix: str):
     random_number = ''.join([str(random.randint(0, 9)) for _ in range(10)])
@@ -177,48 +158,38 @@ def get_object_name(file_path):
 ######  Watcher  ##############################################################
 class FileEventHandler(FileSystemEventHandler):
     
-    def __init__(self, delay = 1.0):
+    def __init__(self):
         FileSystemEventHandler.__init__(self)
-        self.delay = delay
-        self.timer = None
 
     def on_any_event(self, event: FileSystemEvent) -> None:
-        """事件防抖"""
-        if self.timer:
-            self.timer.cancel()
-            
-        # 这里第二个参数需要是一个函数对象，这就出问题了
-        # self.timer = Timer(1, self.process_event(event))
-        
-        # 在js里我们用(e)=>{ haha(e) }包一层就可以, python里用args传参 , 或者 用lambda
-        # self.timer = Timer(1, self.process_event, args=(event,))
-        
-        self.timer = Timer(1, lambda: self.process_event(event))
-        self.timer.start()
-    
-    def process_event(self, event):
-        
+        """直接处理事件"""
         if event.event_type == 'created' or event.event_type == 'modified':
-            print(f" # {event.event_type} #  {event.src_path} -- trigger push/update to remote")
             push_to_remote(event.src_path)
             
         elif event.event_type == 'deleted':
-            print(f" # {event.event_type} #  {event.src_path} -- trigger delete from remote")
             delete_remote_object(event.src_path)
             
+        elif event.event_type == 'moved':
+            delete_remote_object(event.src_path)
+            push_to_remote(event.dest_path)
+            
         else:
-            print(f" # {event.event_type} #  {event.src_path} -- do nothing")
-            push_to_remote(event.src_path)
+            raise ValueError(f"Unknown event type: {event.event_type}")
+
+def clear_test_bucket():
+    """Clear test bucket"""
+    global minio_client, BUCKET_NAME
+    minio_client.remove_bucket(BUCKET_NAME)
 
 
 def start_watching():
     """启动文件监听"""
     observer = Observer()
-    event_handler = FileEventHandler(delay = 0.5) # delay 0.5s
+    event_handler = FileEventHandler()
     observer.schedule(event_handler, WATCH_DIR, recursive=False)
     observer.start()
     
-    print(f"(((o(*ﾟ▽ﾟ*)o))) :: Start watching directory: {WATCH_DIR} \n")
+    # print(f"(((o(*ﾟ▽ﾟ*)o))) :: Start watching directory: {WATCH_DIR} \n")
 
     try:
         while True:
