@@ -91,6 +91,11 @@ public class ModelCodingController {
         return ResponseEntity.ok(modelCodingService.runScript(projectBasicDTO));
     }
 
+    @PostMapping("/project/executing/watcher")
+    public ResponseEntity<CodingProjectVO> runWatcherScript(@RequestBody ProjectBasicDTO projectBasicDTO) {
+        return ResponseEntity.ok(modelCodingService.runWatcher(projectBasicDTO));
+    }
+
     @PostMapping("/project/canceling")
     public ResponseEntity<CodingProjectVO> stopPythonScript(@RequestBody ProjectBasicDTO projectBasicDTO) {
         return ResponseEntity.ok(modelCodingService.stopScript(projectBasicDTO));
