@@ -6,7 +6,7 @@ from dataProcessing.Utils.osUtils import getMinioClient
 
 
 def delete_old_objects():
-    """删除当天之前上传的 objects"""
+    # --------- Delete old objects in temp-files bucket --------------------------
     today = datetime.now().strftime('%Y-%m/%d')
 
     objects_to_delete = []
@@ -31,7 +31,7 @@ def reset_scheduler():
     scheduler = init_scheduler()
     threshold = datetime.now() - timedelta(minutes=30)
 
-    # 使用一个临时队列存储未超时的元素
+    # --------- Reset variables in scheduler -------------------------------
     new_queue = queue.Queue()
 
     while not scheduler.complete_queue.empty():
