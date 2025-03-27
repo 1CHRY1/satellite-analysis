@@ -30,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -71,11 +72,13 @@ public class ModelCodingService {
     @Autowired
     private MinioConfig minioProperties;
 
+    private final String projectDataBucket = "project-data-bucket";
+
     public String getRemoteConfig(Project project) {
         JSONObject projectConfig = JSONObject.of(
                 "project_id", project.getProjectId(),
                 "user_id", project.getCreateUser(),
-                "bucket", project.getProjectId(),
+                "bucket", project.getDataBucket(),
                 "watch_dir", project.getOutputPath());
         JSONObject minioConfig = JSONObject.of(
                 "endpoint", minioProperties.getUrl().split("://")[1],
@@ -106,8 +109,8 @@ public class ModelCodingService {
         String workDir = dockerServerProperties.getWorkDir();
         String pyPath = workDir + "main.py";
         String watchPath = workDir + "watcher.py";
-        String outputPath = workDir + "output/";
-        String dataPath = workDir + "data/";
+        String outputPath = workDir + "output";
+        String dataPath = workDir + "data";
         String localPyPath = dockerServerProperties.getLocalPath() + projectId + "/" + "main.py";
         String serverPyPath = serverDir + "main.py";
         Project formerProject = projectDataService.getProjectByUserAndName(userId, projectName);
@@ -118,7 +121,7 @@ public class ModelCodingService {
         }
         Project project = Project.builder()
                 .projectId(projectId).projectName(projectName)
-                .environment(env).createTime(LocalDateTime.now())
+                .environment(env).createTime(LocalDateTime.now()).dataBucket(projectDataBucket)
                 .workDir(workDir).serverDir(serverDir).createUser(userId)
                 .pyPath(pyPath).localPyPath(localPyPath).serverPyPath(serverPyPath)
                 .watchPath(watchPath).outputPath(outputPath).dataPath(dataPath)
@@ -456,6 +459,18 @@ public class ModelCodingService {
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
     }
 
+    public HashSet<String> getEnvironmentPackages(ProjectBasicDTO projectBasicDTO) {
+        String projectId = projectBasicDTO.getProjectId(); String userId = projectBasicDTO.getUserId();
+        if ( !projectDataService.VerifyUserProject(userId, projectId) ) {
+            return null;
+        }
+        Project project = projectDataService.getProjectById(projectId);
+        if ( project == null){
+            return null;
+        }
+        return project.getPackages();
+    }
+
     public CodingProjectVO packageOperation(ProjectPackageDTO projectPackageDTO) {
         String userId = projectPackageDTO.getUserId(); String projectId = projectPackageDTO.getProjectId();
         String responseInfo = "";
@@ -493,6 +508,10 @@ public class ModelCodingService {
         CompletableFuture.runAsync( () -> {
             dockerService.runCMDInContainer(userId, projectId, containerId, finalCommand);
         });
+
+        String pyPackage = version == null ? name : name + " " + version;
+        project.getPackages().add(pyPackage);
+        projectRepo.updateById(project);
         responseInfo = "Package " + name + version + " has been Installing";
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
     }
