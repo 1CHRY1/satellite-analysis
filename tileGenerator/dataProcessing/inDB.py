@@ -10,13 +10,15 @@ object_prefix = f'{config.TEMP_SENSOR_NAME}/{config.TEMP_PRODUCT_NAME}'  # ä¸Šä¼
 
 def insert_to_db(scene_info_list, sensor_name, product_name):
     # insert sensor/product/scene/image/tile into db in order
-    insert_sensor(sensor_name, sensor_name, None)
+    if get_sensor_byName(sensor_name) is None:
+        insert_sensor(sensor_name, sensor_name, None)
     # if scene exists
     if (len(scene_info_list) > 0):
         resolution = scene_info_list[0].resolution
         period = scene_info_list[0].period
         # insert product
-        insert_product(sensor_name, product_name, None, resolution, period)
+        if get_product_byName(sensor_name, product_name) is None:
+            insert_product(sensor_name, product_name, None, resolution, period)
         for scene_info in scene_info_list:
             # insert scene
             sceneId = insert_scene(sensor_name, product_name, scene_info.scene_name, scene_info.image_time, scene_info.tile_level_num, scene_info.tile_levels, scene_info.png_path,

@@ -1,5 +1,7 @@
 package nnu.mnr.satellite.controller.modeling;
 
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.SftpException;
 import nnu.mnr.satellite.model.dto.common.FileData;
 import nnu.mnr.satellite.model.dto.modeling.*;
 import nnu.mnr.satellite.model.pojo.common.DFileInfo;
@@ -16,6 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -38,7 +42,7 @@ public class ModelCodingController {
 
     // Project Controller
     @PostMapping("/project/new")
-    public ResponseEntity<CodingProjectVO> createCodingProject(@RequestBody CreateProjectDTO createProjectDTO) {
+    public ResponseEntity<CodingProjectVO> createCodingProject(@RequestBody CreateProjectDTO createProjectDTO) throws JSchException, SftpException, IOException {
         return ResponseEntity.ok(modelCodingService.createCodingProject(createProjectDTO));
     }
 
@@ -57,6 +61,11 @@ public class ModelCodingController {
     }
 
     // File Controller
+    @PostMapping("/project/file/script")
+    public ResponseEntity<String> getPyContent(@RequestBody ProjectBasicDTO projectBasicDTO) throws JSchException, SftpException, IOException {
+        return ResponseEntity.ok(modelCodingService.getMainPyOfContainer(projectBasicDTO));
+    }
+
     @PostMapping("/project/file")
     public ResponseEntity<List<DFileInfo>> getCurFile(@RequestBody ProjectFileDTO projectFileDTO) {
         return ResponseEntity.ok(modelCodingService.getProjectCurDirFiles(projectFileDTO));
@@ -83,6 +92,11 @@ public class ModelCodingController {
         return ResponseEntity.ok(modelCodingService.runScript(projectBasicDTO));
     }
 
+    @PostMapping("/project/executing/watcher")
+    public ResponseEntity<CodingProjectVO> runWatcherScript(@RequestBody ProjectBasicDTO projectBasicDTO) {
+        return ResponseEntity.ok(modelCodingService.runWatcher(projectBasicDTO));
+    }
+
     @PostMapping("/project/canceling")
     public ResponseEntity<CodingProjectVO> stopPythonScript(@RequestBody ProjectBasicDTO projectBasicDTO) {
         return ResponseEntity.ok(modelCodingService.stopScript(projectBasicDTO));
@@ -92,6 +106,11 @@ public class ModelCodingController {
     @PostMapping("/project/package")
     public ResponseEntity<CodingProjectVO> projectPackageOperation(@RequestBody ProjectPackageDTO projectPackageDTO) {
         return ResponseEntity.ok(modelCodingService.packageOperation(projectPackageDTO));
+    }
+
+    @PostMapping("/project/package/list")
+    public ResponseEntity<HashSet<String>> getEnvironmentPackages(@RequestBody ProjectBasicDTO projectBasicDTO) {
+        return ResponseEntity.ok(modelCodingService.getEnvironmentPackages(projectBasicDTO));
     }
 
     @PostMapping("/project/environment")

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import nnu.mnr.satellite.model.vo.common.GeoJsonVO;
 import nnu.mnr.satellite.model.po.resources.Scene;
 import nnu.mnr.satellite.model.po.resources.Tile;
+import nnu.mnr.satellite.utils.common.ConcurrentUtil;
 import org.geotools.geojson.geom.GeometryJSON;
 import org.locationtech.jts.geom.*;
 import org.locationtech.jts.geom.impl.CoordinateArraySequence;
@@ -15,6 +16,8 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 /**
  * Created with IntelliJ IDEA.
@@ -132,10 +135,16 @@ public class GeometryUtil {
 
         JSONArray features = new JSONArray();
         if (items != null) {
-            for (Scene item : items) {
-                JSONObject sceneGeoJson = geometry2Geojson(item.getBbox(), item.getSceneId());
-                features.add(sceneGeoJson);
-            }
+            List<JSONObject> result = ConcurrentUtil.processConcurrently(
+                    items, item -> {
+                        try {
+                            return geometry2Geojson(item.getBbox(), item.getSceneId());
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+            );
+            features.addAll(result);
         }
         geoJsonVO.setFeatures(features);
         return geoJsonVO;
@@ -146,14 +155,19 @@ public class GeometryUtil {
         geoJsonVO.setType("FeatureCollection");
 
         JSONArray features = new JSONArray();
-        if (items != null) {
-            for (Tile item : items) {
-                JSONObject sceneGeoJson = geometry2Geojson(item.getBbox(), item.getTileId());
-                features.add(sceneGeoJson);
-            }
+        if (items != null && !items.isEmpty()) {
+            List<JSONObject> result = ConcurrentUtil.processConcurrently(
+                    items, item -> {
+                        try {
+                            return geometry2Geojson(item.getBbox(), item.getTileId());
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+            );
+            features.addAll(result);
         }
         geoJsonVO.setFeatures(features);
         return geoJsonVO;
     }
-
 }

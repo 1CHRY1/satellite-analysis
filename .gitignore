@@ -4,6 +4,8 @@
 .idea/
 data/
 
+# config
+.yml
 
 # dependencies
 node_modules/
@@ -44,3 +46,7 @@ next-env.d.ts
 output/
 __pycache__/
 *.pyc
+
+
+.vscode/
+.idea/

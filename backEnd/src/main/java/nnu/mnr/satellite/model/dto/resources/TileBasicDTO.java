@@ -2,20 +2,18 @@ package nnu.mnr.satellite.model.dto.resources;
 
 import lombok.Data;
 
-import java.util.List;
-
 /**
  * Created with IntelliJ IDEA.
  *
  * @Author: Chry
- * @Date: 2025/3/20 20:43
+ * @Date: 2025/3/26 21:09
  * @Description:
  */
 
 @Data
-public class TilesMergeDTOV2 {
+public class TileBasicDTO {
 
-    private String sceneId;
-    private List<String> tiles;
+    private String rowId;
+    private String columnId;
 
 }

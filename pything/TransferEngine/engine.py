@@ -16,8 +16,8 @@ class TransferEngine:
 
         init_project_info(config["project_info"]["project_id"], config["project_info"]["user_id"], config["project_info"]["bucket"])
         init_minio(minio_config["endpoint"], minio_config["access_key"], minio_config["secret_key"], minio_config["secure"])
-        init_satellite_database(database_config["host"], database_config["user"], database_config["password"], database_config["satellite_database"])
-        init_tile_database(database_config["host"], database_config["user"], database_config["password"], database_config["tile_database"])
+        init_satellite_database(database_config["endpoint"], database_config["user"], database_config["password"], database_config["satellite_database"])
+        init_tile_database(database_config["endpoint"], database_config["user"], database_config["password"], database_config["tile_database"])
         init_services()
 
     @classmethod
