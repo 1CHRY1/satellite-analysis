@@ -163,6 +163,7 @@ class FileEventHandler(FileSystemEventHandler):
 
     def on_any_event(self, event: FileSystemEvent) -> None:
         """直接处理事件"""
+        if(event.is_directory): return
         if event.event_type == 'created' or event.event_type == 'modified':
             push_to_remote(event.src_path)
             
@@ -174,7 +175,8 @@ class FileEventHandler(FileSystemEventHandler):
             push_to_remote(event.dest_path)
             
         else:
-            raise ValueError(f"Unknown event type: {event.event_type}")
+            return
+            # raise ValueError(f"Unknown event type: {event.event_type}")
 
 def clear_test_bucket():
     """Clear test bucket"""
