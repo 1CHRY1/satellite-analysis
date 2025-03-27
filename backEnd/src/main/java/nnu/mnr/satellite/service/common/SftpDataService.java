@@ -178,6 +178,11 @@ public class SftpDataService {
             try (FileInputStream fis = new FileInputStream(mainPath)) {
                 channelSftp.put(fis, volumePath + "/main.py");
             }
+            // 上传 watcher.py 文件
+            String watchPath = localProjectPath.substring(0, lastSlashIndex) + "/devCli/watcher.py";
+            try (FileInputStream fis = new FileInputStream(watchPath)) {
+                channelSftp.put(fis, volumePath + "/watcher.py");
+            }
 
             channelSftp.disconnect();
         } catch (SftpException | IOException | JSchException e) {
