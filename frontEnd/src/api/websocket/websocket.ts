@@ -4,6 +4,7 @@ class WebSocketManager {
     private listeners: { [key: string]: Function[] } = {}
     private heartbeatInterval: ReturnType<typeof setTimeout> | null = null // 心跳定时器
 
+
     constructor(url: string) {
         this.url = url
     }

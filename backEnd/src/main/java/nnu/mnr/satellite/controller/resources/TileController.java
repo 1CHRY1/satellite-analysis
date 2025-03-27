@@ -33,8 +33,8 @@ public class TileController {
     }
 
     @GetMapping("/imageId/{imageId}/tileLevel/{tileLevel}")
-    public ResponseEntity<GeoJsonVO> getTilesByImageAndLevel(@PathVariable String imageId, @PathVariable int tileLevel) throws IOException {
-        return ResponseEntity.ok(tileDataService.getTilesByImageAndLevel(imageId, tileLevel));
+    public ResponseEntity<GeoJsonVO> getTilesByImageAndLevel(@PathVariable String imageId, @PathVariable String tileLevel) throws IOException {
+        return ResponseEntity.ok(tileDataService.getTilesBySceneAndLevel(imageId, tileLevel));
     }
 
     @GetMapping("/tif/imageId/{imageId}/tileId/{tileId}")
