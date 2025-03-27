@@ -75,7 +75,8 @@ public class ModelCodingService {
         JSONObject projectConfig = JSONObject.of(
                 "project_id", project.getProjectId(),
                 "user_id", project.getCreateUser(),
-                "bucket", project.getProjectId());
+                "bucket", project.getProjectId(),
+                "watch_dir", project.getOutputPath());
         JSONObject minioConfig = JSONObject.of(
                 "endpoint", minioProperties.getUrl().split("://")[1],
                 "access_key", minioProperties.getAccessKey(),
@@ -104,7 +105,9 @@ public class ModelCodingService {
         String serverDir = dockerServerProperties.getServerDir() + projectId + "/";
         String workDir = dockerServerProperties.getWorkDir();
         String pyPath = workDir + "main.py";
-        String watchPath = workDir + "output/";
+        String watchPath = workDir + "watcher.py";
+        String outputPath = workDir + "output/";
+        String dataPath = workDir + "data/";
         String localPyPath = dockerServerProperties.getLocalPath() + projectId + "/" + "main.py";
         String serverPyPath = serverDir + "main.py";
         Project formerProject = projectDataService.getProjectByUserAndName(userId, projectName);
@@ -117,7 +120,8 @@ public class ModelCodingService {
                 .projectId(projectId).projectName(projectName)
                 .environment(env).createTime(LocalDateTime.now())
                 .workDir(workDir).serverDir(serverDir).createUser(userId)
-                .pyPath(pyPath).watchPath(watchPath).localPyPath(localPyPath).serverPyPath(serverPyPath)
+                .pyPath(pyPath).localPyPath(localPyPath).serverPyPath(serverPyPath)
+                .watchPath(watchPath).outputPath(outputPath).dataPath(dataPath)
                 .build();
         dockerService.initEnv(projectId, serverDir);
 
@@ -125,14 +129,16 @@ public class ModelCodingService {
         String configPath = serverDir + "config.json";
         sftpDataService.writeRemoteFile(configPath, getRemoteConfig(project));
 
-        String containerid = dockerService.createContainer(imageEnv, projectId, project.getServerDir(), workDir);
+        String containerId = dockerService.createContainer(imageEnv, projectId, project.getServerDir(), workDir);
         String pyContent = sftpDataService.readRemoteFile(project.getServerPyPath());
         project.setPyContent(pyContent);
-        project.setContainerId(containerid);
-        dockerService.startContainer(containerid);
+        project.setContainerId(containerId);
+        dockerService.startContainer(containerId);
 
         // Start Watching Process
-//        dockerService.runCMDInContainer();
+        String watchCommand = "python " + project.getWatchPath();
+        CompletableFuture.runAsync( () -> dockerService.runCMDInContainer(userId, projectId, containerId, watchCommand));
+
         projectRepo.insert(project);
         responseInfo = "Project " + projectId + " has been Created";
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
@@ -152,26 +158,28 @@ public class ModelCodingService {
         }
         // Start Container
         try {
-            String containerid;
+            String containerId;
             if (project.getContainerId() == null){
                 String imageEnv = DockerFileUtil.getImageByName(project.getEnvironment());
-                containerid = dockerService.createContainer(imageEnv, project.getProjectName(), project.getServerDir(), project.getWorkDir());
-                project.setContainerId(containerid);
+                containerId = dockerService.createContainer(imageEnv, project.getProjectName(), project.getServerDir(), project.getWorkDir());
+                project.setContainerId(containerId);
                 projectRepo.insert(project);
                 responseInfo = "Project " + projectId + " has been Created and Opened";
                 return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
             }
             else {
-                containerid=project.getContainerId();
+                containerId=project.getContainerId();
             }
             // Container Running ?
-            boolean checkstate = dockerService.checkContainerState(containerid);
+            boolean checkstate = dockerService.checkContainerState(containerId);
             if (!checkstate){
-                dockerService.startContainer(containerid);
+                dockerService.startContainer(containerId);
                 responseInfo = "Project " + projectId + " is Opened";
             } else { responseInfo = "Project " + projectId + " has been Opened"; }
             // Start Watching Process
-//        dockerService.runCMDInContainer();
+            String watchCommand = "python " + project.getWatchPath();
+            CompletableFuture.runAsync( () -> dockerService.runCMDInContainer(userId, projectId, containerId, watchCommand));
+
             return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
         } catch (Exception e) {
             responseInfo = "Wrong Openning Container " + e.getMessage();
@@ -380,6 +388,35 @@ public class ModelCodingService {
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
     }
 
+    public CodingProjectVO runWatcher(ProjectBasicDTO projectBasicDTO) {
+        String userId = projectBasicDTO.getUserId(); String projectId = projectBasicDTO.getProjectId();
+        String responseInfo = "";
+        if ( !projectDataService.VerifyUserProject(userId, projectId) ) {
+            responseInfo = "User " + userId + " Can't Operate Project " + projectId;
+            return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
+        }
+        Project project = projectDataService.getProjectById(projectId);
+        if ( project == null){
+            responseInfo = "Project " + projectId + " hasn't been Registered";
+            return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
+        }
+        String containerId = project.getContainerId();
+        try {
+            if (!dockerService.checkContainerState(containerId)){
+                responseInfo = "Container Not Activated";
+                return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
+            }
+        } catch (Exception e) {
+            responseInfo = "Container Not Connected";
+            return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
+        }
+        String watchCommand = "python " + project.getWatchPath();
+        CompletableFuture.runAsync( () -> dockerService.runCMDInContainer(userId, projectId, containerId, watchCommand));
+        responseInfo = "Script Executing Successfully";
+        return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
+    }
+
+
     public CodingProjectVO stopScript(ProjectBasicDTO projectBasicDTO) {
         String userId = projectBasicDTO.getUserId(); String projectId = projectBasicDTO.getProjectId();
         String responseInfo = "";
@@ -452,7 +489,10 @@ public class ModelCodingService {
                 }
             }
         }
-        dockerService.runCMDInContainer(userId, projectId, containerId, command);
+        String finalCommand = command;
+        CompletableFuture.runAsync( () -> {
+            dockerService.runCMDInContainer(userId, projectId, containerId, finalCommand);
+        });
         responseInfo = "Package " + name + version + " has been Installing";
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
     }
