@@ -135,10 +135,16 @@ public class GeometryUtil {
 
         JSONArray features = new JSONArray();
         if (items != null) {
-            for (Scene item : items) {
-                JSONObject sceneGeoJson = geometry2Geojson(item.getBbox(), item.getSceneId());
-                features.add(sceneGeoJson);
-            }
+            List<JSONObject> result = ConcurrentUtil.processConcurrently(
+                    items, item -> {
+                        try {
+                            return geometry2Geojson(item.getBbox(), item.getSceneId());
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+            );
+            features.addAll(result);
         }
         geoJsonVO.setFeatures(features);
         return geoJsonVO;
