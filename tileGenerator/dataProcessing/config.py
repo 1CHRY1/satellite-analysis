@@ -1,6 +1,4 @@
 import math
-import os
-import weakref
 
 APP_PORT                                        =       5000
 APP_DEBUG                                       =       True
@@ -59,3 +57,4 @@ GDAL_PROJ_LIB                                   =       r"C:\Users\lkshi\.conda\
 EARTH_RADIUS                                    =       6371008.8
 EARTH_CIRCUMFERENCE                             =       2 * math.pi * EARTH_RADIUS
 GRID_RESOLUTION                                 =       1
+MAX_RUNNING_TASKS                               =       200
