@@ -61,7 +61,7 @@ public class DockerService {
     private String localCADir;
 
     @Autowired
-    SftpDataService ftpDataService;
+    SftpDataService sftpDataService;
 
     @Autowired
     ModelSocketService modelSocketService;
@@ -123,11 +123,14 @@ public class DockerService {
             if (!folder.exists()) {
                 folder.mkdirs();
             }
+
+            // create local py
             Path sourcePath = Paths.get(localPath + "/devCli/main.py");
             Path mainPath = Paths.get(localProjectPath + "/main.py");
             Files.copy(sourcePath, mainPath, StandardCopyOption.REPLACE_EXISTING);
-            // creat folder for project docker
-            ftpDataService.createRemoteDirAndFile(sftpInfo, localProjectPath, serverDir);
+
+            // create folder for project docker
+            sftpDataService.createRemoteDirAndFile(sftpInfo, localProjectPath, serverDir);
         } catch (Exception e) {
             log.error("Error Initing Environment " + e);
         }
@@ -141,6 +144,11 @@ public class DockerService {
         List<Volume> volumeList = new ArrayList<>();
         volumeList.add(workVolume);
 
+        List<String> envList = new ArrayList<>();
+        envList.add("TZ=Asia/Shanghai");
+        envList.add("LANG=C.UTF-8");
+        envList.add("LC_ALL=C.UTF-8");
+
         CreateContainerResponse container = dockerClient.createContainerCmd(imageName)
                 .withName(containerName)
                 .withStdinOpen(true)
@@ -149,6 +157,7 @@ public class DockerService {
                 .withExposedPorts(ExposedPort.tcp(startPort))
                 .withVolumes(volumeList)
                 .withBinds(bindList)
+                .withEnv(envList)
                 .exec();
         String containerId = container.getId();
         ++ startPort;
@@ -179,11 +188,11 @@ public class DockerService {
         removeContainerCmd.withForce(true).exec();
     }
 
-    public List<DFileInfo> getCurDirFiles(String containerId, String projectId, String path, List<DFileInfo> fileTree) {
+    public List<DFileInfo> getCurDirFiles(String projectId, String containerId, String path, List<DFileInfo> fileTree) {
         // TODO: 通过projectId获取运行路径
         String workSpaceDir = workDir;
         try {
-            String[] cmd = {"/bin/bash", "-c", "ls -la " + workSpaceDir + path};
+            String[] cmd = {"/bin/bash", "-c", "ls -la --time-style='+%Y-%m-%d %H:%M:%S.%N' " + workSpaceDir + path};
             ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(containerId)
                     .withAttachStdout(true)
                     .withAttachStderr(true)
@@ -200,14 +209,14 @@ public class DockerService {
 
             for (String file : files) {
                 String[] fileDetails = file.split("\\s+");
-                if (fileDetails.length >= 9) {
-                    String fileName = fileDetails[8];
+                if (fileDetails.length >= 8) {
+                    String fileName = fileDetails[7];
                     if (fileName.equals(".") || fileName.equals("..")) {
                         continue;
                     }
 
                     // Build FileInfo
-                    String filePath = path + fileName;
+                    String filePath = path + "/" + fileName;
                     Boolean isDirectory = file.startsWith("d");
                     FileType fileType = FileType.unknown;
                     if (isDirectory){
@@ -221,6 +230,7 @@ public class DockerService {
                         }
                     }
 
+                    // TODO
                     DFileInfo fileInfo = DFileInfo.builder()
                             .fileName(fileName).filePath(filePath).fileType(fileType)
                             .serverPath(serverDir + projectId + "/" + filePath)

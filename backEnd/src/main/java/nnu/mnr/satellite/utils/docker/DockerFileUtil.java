@@ -48,40 +48,20 @@ public class DockerFileUtil {
         };
     }
 
-    public static Date parseFileLastModified(String [] fileDetails){
+    public static Date parseFileLastModified(String[] fileDetails) {
         try {
-            if (fileDetails.length >= 9) {
+            if (fileDetails.length >= 8) {
                 // 获取最后修改时间字符串
-                String lastModifiedDateStr = fileDetails[5] + " " + fileDetails[6] + " " + fileDetails[7];
+                String lastModifiedDateStr = fileDetails[5] + " " + fileDetails[6].split("\\.")[0];
 
                 // 定义 SimpleDateFormat 来解析日期字符串
-                SimpleDateFormat dateFormat;
-
-                if (fileDetails[7].contains(":")) {
-                    // 时间格式是 `月 日 时间` (e.g., "Aug 15 12:34")
-                    dateFormat = new SimpleDateFormat("MMM dd HH:mm", Locale.ENGLISH);
-                } else {
-                    // 时间格式是 `月 日 年` (e.g., "Aug 15 2023")
-                    dateFormat = new SimpleDateFormat("MMM dd yyyy", Locale.ENGLISH);
-                }
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
 
                 // 将解析的时间字符串转化为 Date 对象
-                Date lastModifiedDate = dateFormat.parse(lastModifiedDateStr);
-
-                // 如果解析的是当年的时间，加上当前年份
-                if (fileDetails[7].contains(":")) {
-                    // 获取当前年份
-                    SimpleDateFormat currentYearFormat = new SimpleDateFormat("yyyy");
-                    String currentYear = currentYearFormat.format(new Date());
-                    lastModifiedDateStr = fileDetails[5] + " " + fileDetails[6] + " " + currentYear + " " + fileDetails[7];
-                    dateFormat = new SimpleDateFormat("MMM dd yyyy HH:mm", Locale.ENGLISH);
-                    lastModifiedDate = dateFormat.parse(lastModifiedDateStr);
-                }
-
-                return lastModifiedDate;
+                return dateFormat.parse(lastModifiedDateStr);
             }
         } catch (ParseException e) {
-//            e.printStackTrace();
+            // e.printStackTrace();
             return null;
         }
         return null;
