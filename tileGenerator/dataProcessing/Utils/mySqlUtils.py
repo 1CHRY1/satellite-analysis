@@ -8,6 +8,7 @@ import dataProcessing.config as config
 
 namespace = uuid.NAMESPACE_DNS
 
+
 def generate_custom_id(prefix, digit):
     remaining_length = digit - len(prefix)  # 计算除去 prefix 后可用的长度
     if remaining_length <= 0:
@@ -23,6 +24,7 @@ def generate_custom_id(prefix, digit):
     custom_id = prefix + raw_id[:remaining_length]
     return custom_id
 
+
 def connect_mysql(host, database, user, password):
     global cursor, connection
     connection = mysql.connector.connect(
@@ -34,6 +36,7 @@ def connect_mysql(host, database, user, password):
     if connection.is_connected():
         cursor = connection.cursor(dictionary=True)
     return connection, cursor
+
 
 def create_DB():
     create_sensor_table = """
@@ -128,7 +131,8 @@ def create_DB():
         add_fk_product_scene,
         add_fk_scene_image,
     ]
-    connection, curser = connect_mysql(config.MYSQL_HOST, config.MYSQL_SATELLITE_DB, config.MYSQL_USER, config.MYSQL_PWD)
+    connection, curser = connect_mysql(config.MYSQL_HOST, config.MYSQL_SATELLITE_DB, config.MYSQL_USER,
+                                       config.MYSQL_PWD)
 
     for command in sql_commands:
         try:
@@ -140,6 +144,7 @@ def create_DB():
     cursor.close()
     connection.close()
     print("All SQL Executed")
+
 
 def create_tile_table(table_name):
     create_tile_table = f"""
@@ -158,8 +163,13 @@ def create_tile_table(table_name):
         SPATIAL INDEX (`bounding_box`)
     ) ENGINE=InnoDB;
     """
+    # 添加联合索引
+    create_idx_band_tile_level = f"""
+    CREATE INDEX idx_band_tile_level ON {table_name} (band, tile_level);
+    """
     sql_commands = [
         create_tile_table,
+        create_idx_band_tile_level
     ]
     connection, curser = connect_mysql(config.MYSQL_HOST, config.MYSQL_TILE_DB, config.MYSQL_USER, config.MYSQL_PWD)
 
@@ -174,6 +184,7 @@ def create_tile_table(table_name):
     connection.close()
     print("All SQL Executed")
 
+
 def delete_DB():
     table_names = [
         'sensor_table',
@@ -182,11 +193,12 @@ def delete_DB():
         'image_table'
     ]
     foreign_key_map = {
-        'image_table':'fk_scene_image',
+        'image_table': 'fk_scene_image',
         'scene_table': 'fk_product_scene',
         'product_table': 'fk_sensor_product',
     }
-    connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_SATELLITE_DB, config.MYSQL_USER, config.MYSQL_PWD)
+    connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_SATELLITE_DB, config.MYSQL_USER,
+                                       config.MYSQL_PWD)
     for key, value in foreign_key_map.items():
         try:
             drop_table_query = f"ALTER TABLE `{key}` DROP FOREIGN KEY `{value}`"
@@ -207,8 +219,10 @@ def delete_DB():
     connection.close()
     print("All table deleted。")
 
+
 def insert_sensor(sensorName, platformName, description):
-    connection, curser = connect_mysql(config.MYSQL_HOST, config.MYSQL_SATELLITE_DB, config.MYSQL_USER, config.MYSQL_PWD)
+    connection, curser = connect_mysql(config.MYSQL_HOST, config.MYSQL_SATELLITE_DB, config.MYSQL_USER,
+                                       config.MYSQL_PWD)
     insert_query = "INSERT INTO sensor_table (sensor_id, sensor_name, platform_name, description) VALUES (%s, %s, %s, %s)"
     data = (generate_custom_id('SE', 7), sensorName, platformName, description)
     cursor.execute(insert_query, data)
@@ -219,8 +233,10 @@ def insert_sensor(sensorName, platformName, description):
     cursor.close()
     connection.close()
 
+
 def get_sensor_byName(sensorName):
-    connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_SATELLITE_DB, config.MYSQL_USER, config.MYSQL_PWD)
+    connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_SATELLITE_DB, config.MYSQL_USER,
+                                       config.MYSQL_PWD)
     select_query = "SELECT sensor_id FROM sensor_table WHERE sensor_name = %s"
     cursor.execute(select_query, (sensorName,))
     result = cursor.fetchone()
@@ -232,8 +248,10 @@ def get_sensor_byName(sensorName):
     else:
         return None
 
+
 def insert_product(sensorName, productName, description, resolution, period):
-    connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_SATELLITE_DB, config.MYSQL_USER, config.MYSQL_PWD)
+    connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_SATELLITE_DB, config.MYSQL_USER,
+                                       config.MYSQL_PWD)
     sensorId = get_sensor_byName(sensorName)
     insert_query = "INSERT INTO product_table (product_id, sensor_id, product_name, description, resolution, period) VALUES (%s, %s, %s, %s, %s, %s)"
     data = (generate_custom_id('P', 9), sensorId, productName, description, resolution, period)
@@ -245,9 +263,11 @@ def insert_product(sensorName, productName, description, resolution, period):
     cursor.close()
     connection.close()
 
+
 def get_product_byName(sensorName, productName):
     uuidName = "imageName"
-    connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_SATELLITE_DB, config.MYSQL_USER, config.MYSQL_PWD)
+    connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_SATELLITE_DB, config.MYSQL_USER,
+                                       config.MYSQL_PWD)
     select_query = """
         SELECT p.sensor_id, p.product_id 
         FROM product_table p
@@ -265,15 +285,21 @@ def get_product_byName(sensorName, productName):
     else:
         return None
 
-def insert_scene(sensorName, productName, sceneName, sceneTime, tileLevelNum, tileLevels, pngPath, crs, bbox, description, bands, band_num, bucket, cloud):
+
+def insert_scene(sensorName, productName, sceneName, sceneTime, tileLevelNum, tileLevels, pngPath, crs, bbox,
+                 description, bands, band_num, bucket, cloud):
     bands_str = ",".join(bands) if bands else None
-    connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_SATELLITE_DB, config.MYSQL_USER, config.MYSQL_PWD)
+    connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_SATELLITE_DB, config.MYSQL_USER,
+                                       config.MYSQL_PWD)
     sensorId, productId = get_product_byName(sensorName, productName)
-    insert_query = ("INSERT INTO scene_table (scene_id, sensor_id, product_id, scene_name, scene_time, tile_level_num, tile_levels, coordinate_system, bounding_box, png_path, description, bands, band_num, bucket, cloud) "
-                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, ST_GeomFromText(%s, 4326, 'axis-order=long-lat'), %s, %s, %s, %s, %s, %s)")
+    insert_query = (
+        "INSERT INTO scene_table (scene_id, sensor_id, product_id, scene_name, scene_time, tile_level_num, tile_levels, coordinate_system, bounding_box, png_path, description, bands, band_num, bucket, cloud) "
+        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, ST_GeomFromText(%s, 4326, 'axis-order=long-lat'), %s, %s, %s, %s, %s, %s)")
     # sceneId = str(uuid.uuid5(namespace, uuidName))
     sceneId = generate_custom_id('SC', 11)
-    data = (sceneId, sensorId, productId, sceneName, sceneTime, tileLevelNum, tileLevels, crs, bbox, pngPath, description, bands_str, band_num, bucket, cloud)
+    data = (
+    sceneId, sensorId, productId, sceneName, sceneTime, tileLevelNum, tileLevels, crs, bbox, pngPath, description,
+    bands_str, band_num, bucket, cloud)
     try:
         # 执行插入操作
         cursor.execute(insert_query, data)
@@ -289,8 +315,10 @@ def insert_scene(sensorName, productName, sceneName, sceneTime, tileLevelNum, ti
         connection.close()
         return sceneId
 
+
 def insert_image(sceneId, tifPath, band, bucket, cloud):
-    connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_SATELLITE_DB, config.MYSQL_USER, config.MYSQL_PWD)
+    connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_SATELLITE_DB, config.MYSQL_USER,
+                                       config.MYSQL_PWD)
     insert_query = ("INSERT INTO image_table (image_id, scene_id, tif_path, band, bucket, cloud) "
                     "VALUES (%s, %s, %s, %s, %s, %s)")
     # imageId = str(uuid.uuid5(namespace, uuidName))
@@ -310,6 +338,7 @@ def insert_image(sceneId, tifPath, band, bucket, cloud):
         cursor.close()
         connection.close()
         return imageId
+
 
 def insert_tile(tile_table_name, image_id, tileLevel, columnId, rowId, path, bucket, bbox, cloud, band):
     uuidName = "tileName"
@@ -331,11 +360,13 @@ def insert_tile(tile_table_name, image_id, tileLevel, columnId, rowId, path, buc
         cursor.close()
         connection.close()
 
+
 def insert_batch_tile(tile_table_name, image_id, tileLevel, tile_info_list, band):
     connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_TILE_DB, config.MYSQL_USER, config.MYSQL_PWD)
     insert_query = f"INSERT INTO {tile_table_name} (tile_id, image_id, tile_level, column_id, row_id, path, bucket, bounding_box, cloud, band) VALUES (%s, %s, %s, %s, %s, %s, %s, ST_GeomFromText(%s, 4326, 'axis-order=long-lat'), %s, %s)"
     data_list = [
-        (str(uuid.uuid4()), image_id, tileLevel, tile['column_id'], tile['row_id'], tile['path'], tile['bucket'], tile['bbox'], tile['cloud'], band)
+        (str(uuid.uuid4()), image_id, tileLevel, tile['column_id'], tile['row_id'], tile['path'], tile['bucket'],
+         tile['bbox'], tile['cloud'], band)
         for tile in tile_info_list
     ]
     try:
@@ -351,6 +382,7 @@ def insert_batch_tile(tile_table_name, image_id, tileLevel, tile_info_list, band
         # 确保关闭游标和连接
         cursor.close()
         connection.close()
+
 
 def select_tile_by_ids(tile_table_name, id_list):
     connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_TILE_DB, config.MYSQL_USER, config.MYSQL_PWD)
@@ -371,3 +403,52 @@ def select_tile_by_ids(tile_table_name, id_list):
     connection.close()
 
     return result
+
+
+def select_tile_by_column_and_row(tile_table_name, tiles, bands):
+    """
+    根据 columnId, rowId 和 bands 查询数据库中的瓦片信息，确保 columnId 和 rowId 成对匹配，按 band 分组返回结果。
+
+    :param tile_table_name: str, 数据表名
+    :param tiles: list, 包含多个 {"columnId": X, "rowId": Y} 的字典
+    :param bands: list, 需要的波段列表
+    :return: dict, 按 band 分组的查询结果
+    """
+    from collections import defaultdict
+
+    connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_TILE_DB, config.MYSQL_USER, config.MYSQL_PWD)
+
+    # 生成 WHERE 条件，确保 columnId 和 rowId 必须是成对匹配的
+    tile_conditions = " OR ".join(["(column_id = %s AND row_id = %s)"] * len(tiles))
+    band_placeholders = ', '.join(['%s'] * len(bands))
+
+    select_query = f"""
+        SELECT * FROM {tile_table_name}
+        WHERE ({tile_conditions}) 
+        AND band IN ({band_placeholders})
+    """
+
+    # 构建参数列表
+    tile_params = []
+    for tile in tiles:
+        tile_params.extend([tile["columnId"], tile["rowId"]])
+
+    query_params = tuple(tile_params + bands)
+
+    # 执行查询
+    cursor.execute(select_query, query_params)
+
+    # 获取所有查询结果
+    result = cursor.fetchall()
+
+    # 将结果按 band 分组
+    grouped_result = defaultdict(list)
+    for tile in result:
+        grouped_result[tile["band"]].append(tile)
+
+    print(f"Found {len(result)} tiles matching the provided columnId, rowId pairs, and bands. Grouped by band.")
+
+    cursor.close()
+    connection.close()
+
+    return dict(grouped_result)
