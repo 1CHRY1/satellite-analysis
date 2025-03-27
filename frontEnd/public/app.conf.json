@@ -1,4 +1,5 @@
 {
     "mock": false,
-    "back_app": "http://223.2.47.202:9888/api/v1"
+    "back_app": "http://223.2.47.202:9888/api/v1",
+    "back_websocket": "ws://223.2.47.202:9001/api/v1"
 }

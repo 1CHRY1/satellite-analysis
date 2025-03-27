@@ -5,7 +5,7 @@ import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css'
 import { StyleMap, type Style } from './tianMapStyle'
 
 class MapManager {
-    private static instance: MapManager
+    private static instance: MapManager | null
     private map: mapboxgl.Map | null = null
     private draw: MapboxDraw | null = null
     private initPromise: Promise<mapboxgl.Map> | null = null
@@ -21,7 +21,6 @@ class MapManager {
 
     async init(container: string | HTMLDivElement): Promise<mapboxgl.Map> {
         if (this.map) return this.map
-
         this.initPromise = new Promise((resolve) => {
             this.map = new mapboxgl.Map({
                 container,
@@ -101,10 +100,10 @@ class MapManager {
 
         if (this.map) {
             this.map.remove()
-            this.map = null
         }
-
+        MapManager.instance = null
         this.initPromise = null
+        this.map = null
     }
 }
 

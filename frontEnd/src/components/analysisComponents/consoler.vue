@@ -6,7 +6,7 @@
             <a-button @click="clearConsole" type="primary" danger class="flex items-center justify-center"
                 style="display: flex; align-items: center; justify-content: center;">
                 <ClearOutlined class="my-1" />
-                Clear
+                清空
             </a-button>
         </div>
 
@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, defineEmits, onMounted } from "vue";
+import { ref, watch, defineEmits, onMounted, nextTick } from "vue";
 import { ClearOutlined } from '@ant-design/icons-vue'; // 引入图标
 
 const props = defineProps<{
@@ -47,7 +47,9 @@ const clearConsole = () => {
 
 const scrollToBottom = () => {
     if (consoleContent.value) {
-        consoleContent.value.scrollTop = consoleContent.value.scrollHeight;
+        nextTick(() => {
+            consoleContent.value!.scrollTop = consoleContent.value!.scrollHeight;
+        });
     }
 };
 onMounted(() => {
