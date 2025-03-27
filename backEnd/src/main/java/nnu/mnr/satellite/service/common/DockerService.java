@@ -123,9 +123,6 @@ public class DockerService {
             if (!folder.exists()) {
                 folder.mkdirs();
             }
-            Path sourcePath = Paths.get(localPath + "/devCli/main.py");
-            Path mainPath = Paths.get(localProjectPath + "/main.py");
-            Files.copy(sourcePath, mainPath, StandardCopyOption.REPLACE_EXISTING);
             // creat folder for project docker
             sftpDataService.createRemoteDirAndFile(sftpInfo, localProjectPath, serverDir);
         } catch (Exception e) {

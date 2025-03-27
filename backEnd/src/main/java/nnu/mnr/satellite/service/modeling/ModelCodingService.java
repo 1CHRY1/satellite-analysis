@@ -193,21 +193,23 @@ public class ModelCodingService {
 //        String projectWorkDir = project.getWorkDir();
         if (project.getContainerId() != null){
             String containerId = project.getContainerId();
-            try {
-                dockerService.stopContainer(containerId);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } finally {
+            CompletableFuture.runAsync( () -> {
                 try {
-                    dockerService.removeContainer(containerId);
+                    dockerService.stopContainer(containerId);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    throw new RuntimeException(e);
+                } finally {
+                    try {
+                        dockerService.removeContainer(containerId);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
-            }
+            });
         }
         // Delete Local Data & Remote Data
         FileUtil.deleteFolder(new File(dockerServerProperties.getLocalPath() + projectId));
-        jSchConnectionManager.deleteFolder(project.getServerDir());
+        sftpDataService.deleteFolder(project.getServerDir());
         log.info("Successfully deleted folder and its contents: " + project.getServerDir());
         projectRepo.deleteById(projectId);
         responseInfo = "Project " + projectId + " has been Deleted";
@@ -228,14 +230,15 @@ public class ModelCodingService {
             return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
         }
         String containerId = project.getContainerId();
-        try {
-            dockerService.stopContainer(containerId);
-            responseInfo = "Project " + projectId + " has been closed";
-            return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
-        } catch (InterruptedException e) {
-            responseInfo = "Wrong Deleting Container " + e.getMessage();
-            return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
-        }
+        CompletableFuture.runAsync( () -> {
+            try {
+                dockerService.stopContainer(containerId);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        responseInfo = "Project " + projectId + " is closing";
+        return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
 
     }
 
