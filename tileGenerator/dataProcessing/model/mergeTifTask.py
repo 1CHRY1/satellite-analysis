@@ -1,5 +1,4 @@
 import os
-import time
 import uuid
 from datetime import datetime
 
@@ -38,7 +37,7 @@ class MergeTifTask(Task):
         output_file_path = mband(merged_tif_list, config.TEMP_OUTPUT_DIR, f"{uuid.uuid4()}.tif")
         object_name = f"{datetime.now().strftime('%Y-%m/%d')}/{uuid.uuid4()}.tif"
         uploadLocalFile(output_file_path, config.MINIO_TEMP_FILES_BUCKET, object_name)
-        time.sleep(20)
+        # time.sleep(20)
         return {
             "bucket": config.MINIO_TEMP_FILES_BUCKET,
             "path": object_name

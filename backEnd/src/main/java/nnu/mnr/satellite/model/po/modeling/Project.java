@@ -39,6 +39,10 @@ public class Project {
     private String pyPath;
     private String serverDir;
     private String serverPyPath;
+    private String watchPath;
+    private String outputPath;
+    private String dataPath;
+
     private String pyContent;
 
     private String createUser;

@@ -1,5 +1,4 @@
 import config
-from dataProcessing.Utils.osUtils import configure_minio_access4gdal, uploadFileToMinio, uploadLocalFile
 from dataProcessing.app import create_app
 
 ######################################################################
