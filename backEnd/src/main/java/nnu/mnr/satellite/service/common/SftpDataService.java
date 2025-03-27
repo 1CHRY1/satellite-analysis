@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Vector;
 
 /**
  * Created with IntelliJ IDEA.
@@ -75,6 +76,7 @@ public class SftpDataService {
                 channel.disconnect();
             }
             // 注意：这里不关闭 session，因为它由 jschConnectionManager 管理
+            jschConnectionManager.returnSession(session);
         }
     }
 
@@ -107,6 +109,7 @@ public class SftpDataService {
                 channel.disconnect();
             }
             // 不关闭 session，交给 jschConnectionManager 管理
+            jschConnectionManager.returnSession(session);
         }
     }
 
@@ -118,6 +121,51 @@ public class SftpDataService {
         FileInputStream fis = new FileInputStream(filePath.toFile());
         channel.put(fis, remoteFilePath);
         channel.disconnect();
+        jschConnectionManager.returnSession(session);
+    }
+
+    public void deleteFolder(String folderPath) {
+        Session session = jschConnectionManager.getSession();
+        try {
+            ChannelSftp channelSftp = (ChannelSftp) session.openChannel("sftp");
+            channelSftp.connect();
+
+            try {
+                try {
+                    channelSftp.cd(folderPath);
+                } catch (SftpException e) {
+                    return;
+                }
+
+                Vector<ChannelSftp.LsEntry> fileList = channelSftp.ls("*");
+                for (ChannelSftp.LsEntry entry : fileList) {
+                    String fileName = entry.getFilename();
+                    if (".".equals(fileName) || "..".equals(fileName)) {
+                        continue;
+                    }
+
+                    String fullPath = folderPath + "/" + fileName;
+                    if (entry.getAttrs().isDir()) {
+                        deleteFolder(fullPath);
+                    } else {
+                        channelSftp.rm(fullPath);
+                    }
+                }
+                channelSftp.cd("..");
+                channelSftp.rmdir(folderPath);
+
+            } catch (SftpException e) {
+
+            } finally {
+                if (channelSftp != null && channelSftp.isConnected()) {
+                    channelSftp.disconnect();
+                }
+            }
+        } catch (JSchException e) {
+
+        } finally {
+            jschConnectionManager.returnSession(session);
+        }
     }
 
     private void uploadDirectory(ChannelSftp channelSftp, String resourcePath, String remotePath) throws SftpException, IOException {
@@ -143,8 +191,8 @@ public class SftpDataService {
         }
     }
 
-    public void createRemoteDirAndFile(SftpConn sftpConn, String localProjectPath, String volumePath) throws JSchException, SftpException, IOException {
-        Session session = jschConnectionManager.putSession(sftpConn);
+    public void createRemoteDirAndFile(SftpConn sftpConn, String localProjectPath, String volumePath) throws Exception {
+        Session session = jschConnectionManager.getSession(sftpConn);
         ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
         channel.connect();
 
@@ -162,18 +210,22 @@ public class SftpDataService {
         channel.mkdir(outputPath);
         channel.chmod(0777, outputPath);
 
+        int lastSlashIndex = localProjectPath.lastIndexOf('/');
         // Copying Package in Container
         String packagePath = volumePath + "TransferEngine/";
-        int lastSlashIndex = localProjectPath.lastIndexOf('/');
         uploadDirectory(channel, localProjectPath.substring(0, lastSlashIndex) + "/devCli/TransferEngine", packagePath);
         channel.chmod(0777, packagePath);
 
         // Copying Local File
-        Path mainPath = Paths.get(localProjectPath + "/main.py");
-        FileInputStream fis = new FileInputStream(mainPath.toFile());
+        String mainPath = localProjectPath.substring(0, lastSlashIndex) + "/devCli/main.py";
+        uploadFile(mainPath, volumePath + "/main.py");
+
+        // localBackUp
+        FileInputStream fis = new FileInputStream(Path.of(mainPath).toFile());
         channel.put(fis, volumePath + "/main.py");
 
         channel.disconnect();
+        jschConnectionManager.returnSession(session);
 
     }
 
