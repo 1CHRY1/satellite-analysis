@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -105,6 +106,11 @@ public class ModelCodingController {
     @PostMapping("/project/package")
     public ResponseEntity<CodingProjectVO> projectPackageOperation(@RequestBody ProjectPackageDTO projectPackageDTO) {
         return ResponseEntity.ok(modelCodingService.packageOperation(projectPackageDTO));
+    }
+
+    @PostMapping("/project/package/list")
+    public ResponseEntity<HashSet<String>> getEnvironmentPackages(@RequestBody ProjectBasicDTO projectBasicDTO) {
+        return ResponseEntity.ok(modelCodingService.getEnvironmentPackages(projectBasicDTO));
     }
 
     @PostMapping("/project/environment")
