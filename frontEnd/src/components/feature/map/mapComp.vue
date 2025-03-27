@@ -23,8 +23,8 @@ const handleZoomOut = () => { }
 
 onMounted(() => {
     MapOperation.map_initiliaze('mapContainer')
-    const logo = document.querySelector('.mapboxgl-ctrl-logo') as HTMLElement
-    logo.style.display = 'none'
+    // const logo = document.querySelector('.mapboxgl-ctrl-logo') as HTMLElement
+    // logo.style.display = 'none'
 })
 
 onUnmounted(() => {

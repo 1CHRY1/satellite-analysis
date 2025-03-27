@@ -9,27 +9,27 @@ import { watch } from 'vue'
 ////////////////////////////////////////////////////////
 /////// Map Operation //////////////////////////////////
 
-let resizeObserver: ResizeObserver | null = null;
-
+let resizeObserver: ResizeObserver | null = null
 
 export async function map_initiliaze(id: string) {
     // return initMap(id)
-    initMap(id).then((m) => {
-        m.resize()
-        const container = document.getElementById(id);
-        if (container) {
-            resizeObserver = new ResizeObserver(() => {
-                m.resize();
-            });
-            resizeObserver.observe(container);
-        }
-    })
+    setTimeout(() => {
+        initMap(id).then((m) => {
+            const container = document.getElementById(id)
+            if (container) {
+                resizeObserver = new ResizeObserver(() => {
+                    m.resize()
+                })
+                resizeObserver.observe(container)
+            }
+        })
+    }, 0)
 }
 
 export async function map_destroy() {
     if (resizeObserver) {
-        resizeObserver.disconnect();
-        resizeObserver = null;
+        resizeObserver.disconnect()
+        resizeObserver = null
     }
     mapManager.destroy()
 }
