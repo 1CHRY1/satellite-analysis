@@ -2,7 +2,7 @@ class WebSocketManager {
     private socket: WebSocket | null = null
     private url: string
     private listeners: { [key: string]: Function[] } = {}
-    private heartbeatInterval: NodeJS.Timeout | null = null // 心跳定时器
+    private heartbeatInterval: ReturnType<typeof setTimeout> | null = null // 心跳定时器
 
     constructor(url: string) {
         this.url = url

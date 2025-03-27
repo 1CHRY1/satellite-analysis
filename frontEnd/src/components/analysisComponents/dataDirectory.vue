@@ -60,6 +60,8 @@ import { ref, onMounted } from 'vue';
 import type { dockerData } from '@/type/analysis';
 import { getFiles } from "@/api/http/analysis"
 import { sizeConversion, formatTime } from "@/util/common"
+import { ElMessage } from 'element-plus';
+import { nextTick } from 'vue';
 
 
 
@@ -94,12 +96,17 @@ const handleClick = async (type: string) => {
 // 单元格点击事件处理
 const handleCellClick = (item: dockerData, column: string) => {
     if (column === 'view') {
-        console.log(item);
+        if (item.fileType === "tif") {
+            console.log(item.filePath);
 
-        const targetItem = (activeDataBase.value === "data" ? inputData.value : outputData.value).find((data) => data.updateTime === item.updateTime && data.fileSize === item.fileSize && data.fileName === item.fileName);
-        if (targetItem) {
-            targetItem.view = !targetItem.view;
+            const targetItem = (activeDataBase.value === "data" ? inputData.value : outputData.value).find((data) => data.updateTime === item.updateTime && data.fileSize === item.fileSize && data.fileName === item.fileName);
+            if (targetItem) {
+                targetItem.view = !targetItem.view;
+            }
+        } else {
+            ElMessage.warning("暂不支持预览")
         }
+
     }
 }
 
@@ -109,9 +116,19 @@ const getInputData = async () => {
         "projectId": props.projectId,
         "path": "/data"
     })
+    if (tempData.length === 0) {
+        tempData = setTimeout(async () => {
+            await getFiles({
+                "userId": "rgj",
+                "projectId": props.projectId,
+                "path": "/data"
+            })
+        }, 1000);
+    }
     inputData.value = tempData.map((item: any) => {
         return { ...item, view: false }
     })
+
 }
 const getOutputData = async () => {
     let tempData = await getFiles({
@@ -119,6 +136,15 @@ const getOutputData = async () => {
         "projectId": props.projectId,
         "path": "/output"
     })
+    if (tempData.length === 0) {
+        tempData = setTimeout(async () => {
+            await getFiles({
+                "userId": "rgj",
+                "projectId": props.projectId,
+                "path": "/output"
+            })
+        }, 1000);
+    }
     outputData.value = tempData.map((item: any) => {
         return { ...item, view: false }
     })
@@ -126,9 +152,16 @@ const getOutputData = async () => {
 }
 
 onMounted(async () => {
-    await getInputData()
-    await getOutputData()
-    tableData.value = activeDataBase.value === 'data' ? inputData.value : outputData.value;
+    // setTimeout(async () => {
+    nextTick(async () => {
+        await getInputData()
+        await getOutputData()
+        tableData.value = activeDataBase.value === 'data' ? inputData.value : outputData.value;
+    })
+
+
+    // }, 300);
+
     console.log(tableData.value, 'tableData.value');
 
 })
