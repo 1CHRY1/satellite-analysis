@@ -144,6 +144,11 @@ public class DockerService {
         List<Volume> volumeList = new ArrayList<>();
         volumeList.add(workVolume);
 
+        List<String> envList = new ArrayList<>();
+        envList.add("TZ=Asia/Shanghai");
+        envList.add("LANG=C.UTF-8");
+        envList.add("LC_ALL=C.UTF-8");
+
         CreateContainerResponse container = dockerClient.createContainerCmd(imageName)
                 .withName(containerName)
                 .withStdinOpen(true)
@@ -152,7 +157,7 @@ public class DockerService {
                 .withExposedPorts(ExposedPort.tcp(startPort))
                 .withVolumes(volumeList)
                 .withBinds(bindList)
-                .withEnv("TZ=Asia/Shanghai")
+                .withEnv(envList)
                 .exec();
         String containerId = container.getId();
         ++ startPort;
@@ -187,7 +192,7 @@ public class DockerService {
         // TODO: 通过projectId获取运行路径
         String workSpaceDir = workDir;
         try {
-            String[] cmd = {"/bin/bash", "-c", "ls -la " + workSpaceDir + path};
+            String[] cmd = {"/bin/bash", "-c", "ls -la --time-style='+%Y-%m-%d %H:%M:%S.%N' " + workSpaceDir + path};
             ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(containerId)
                     .withAttachStdout(true)
                     .withAttachStderr(true)
@@ -204,8 +209,8 @@ public class DockerService {
 
             for (String file : files) {
                 String[] fileDetails = file.split("\\s+");
-                if (fileDetails.length >= 9) {
-                    String fileName = fileDetails[8];
+                if (fileDetails.length >= 8) {
+                    String fileName = fileDetails[7];
                     if (fileName.equals(".") || fileName.equals("..")) {
                         continue;
                     }

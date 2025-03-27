@@ -34,6 +34,8 @@ public class JSchConnectionManager {
 
     private final Map<SftpConn, GenericObjectPool<Session>> sessionPools;
 
+    private final int minSessions = 2;
+
     @PostConstruct
     public void init() {
         GenericObjectPool<Session> defaultPool = addSessionPool(defaultSftpConn);
@@ -65,12 +67,12 @@ public class JSchConnectionManager {
             GenericObjectPoolConfig<Session> poolConfig = new GenericObjectPoolConfig<>();
             poolConfig.setMaxTotal(10);
             poolConfig.setMaxIdle(5);
-            poolConfig.setMinIdle(2);
+            poolConfig.setMinIdle(minSessions);
             poolConfig.setTestOnBorrow(true);
             poolConfig.setTestWhileIdle(true);
 
             GenericObjectPool<Session> pool = new GenericObjectPool<>(new SessionFactory(conn), poolConfig);
-            log.info("Created new Session pool for host: " + conn.getHost());
+            log.info("Created new Session pool for host: " + conn.getHost() + " of " + minSessions + " Sessions");
             return pool;
         });
     }
