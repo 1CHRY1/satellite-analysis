@@ -3,19 +3,17 @@ import traceback
 import uuid
 import threading
 from datetime import datetime
-from queue import Queue
 from typing import Any, Dict
 
-from dataProcessing.config import STATUS_RUNNING, STATUS_COMPLETE, STATUS_ERROR, STATUS_PENDING
-import time
+from dataProcessing.config import STATUS_RUNNING, STATUS_COMPLETE, STATUS_ERROR, STATUS_PENDING, MAX_RUNNING_TASKS
 
 from dataProcessing.model.mergeTifTask import MergeTifTask
-max_running_tasks = 2
+
 
 class TaskScheduler:
     def __init__(self):
         self.pending_queue = queue.Queue()
-        self.running_queue = queue.Queue(maxsize=max_running_tasks)  # 限制并发数
+        self.running_queue = queue.Queue(maxsize=MAX_RUNNING_TASKS)  # 限制并发数
         self.complete_queue = queue.Queue()
         self.error_queue = queue.Queue()
         self.task_status: Dict[str, Any] = {}
@@ -57,7 +55,7 @@ class TaskScheduler:
     def _scheduler_worker(self):
         while True:
             try:
-                # 尝试从pending队列调度任务到running队列
+                # --------- Pending queue to running queue -------------------------------------
                 with self.condition:
                     while not self.pending_queue.empty() and not self.running_queue.full():
                         task_id = self.pending_queue.get()
@@ -74,13 +72,13 @@ class TaskScheduler:
                 traceback.print_exc()
 
     def _execute_task(self, task_id: str):
+        # --------- Execute the task ----------------------------
         try:
-            # 执行任务
             task_instance = self.task_info[task_id]
             self.task_status[task_id] = STATUS_RUNNING
             result = task_instance.run()
 
-            # 更新任务为完成状态
+            # --------- Update the status and queue ---------------------------
             with self.condition:
                 self.task_status[task_id] = STATUS_COMPLETE
                 self.task_results[task_id] = result
@@ -106,7 +104,7 @@ class TaskScheduler:
                 self.condition.notify_all()
 
         except Exception as e:
-            # 类似地处理错误情况
+            # --------- Handle Exceptions --------------------------------
             with self.condition:
                 self.task_status[task_id] = STATUS_ERROR
                 self.task_results[task_id] = str(e)
@@ -128,31 +126,6 @@ class TaskScheduler:
 
                 self.error_queue.put(task_id)
                 self.condition.notify_all()
-
-    def _task_worker(self):
-        # --------- Execute the task queue ---------------------------
-        from flask import current_app
-        from dataProcessing.server import app  # 替换为您的 Flask 应用模块
-        while True:
-            task_id = self.task_queue.get()  # 取出队列中的任务 ID
-            if task_id is None:
-                break  # 退出循环，结束任务执行
-
-            task_instance = self.task_info[task_id]  # 获取任务实例
-            self.task_status[task_id] = STATUS_RUNNING  # 任务开始执行
-
-            try:
-                with app.app_context():
-                    result = task_instance.run()  # 执行任务
-                    self.task_results[task_id] = result  # 存储结果
-                    self.task_status[task_id] = STATUS_COMPLETE  # 任务完成
-            except Exception as e:
-                self.task_status[task_id] = STATUS_ERROR  # 任务出错
-                self.task_results[task_id] = str(e)
-                # 记录错误日志
-                print(f"Task {task_id} failed: {e}")
-                import traceback
-                traceback.print_exc()  # 打印完整的堆栈跟踪
 
     def get_status(self, task_id):
         # --------- Get the status of the task ---------------------------
@@ -179,12 +152,12 @@ scheduler = None
 
 
 def init_scheduler():
-    """初始化任务调度器"""
+    # --------- Init the Task Scheduler ---------------------------
     global scheduler
     if scheduler is None:
         scheduler = TaskScheduler()
-        # scheduler._task_worker()
     return scheduler
+
 
 if __name__ == "__main__":
     # 只在直接运行时启动（防止 import 时报错）

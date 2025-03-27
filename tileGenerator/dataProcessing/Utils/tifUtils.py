@@ -540,7 +540,7 @@ def process_and_upload(files_dict: dict, bucket_name: str, object_prefix: str):
         b3_path = None
         qa_data = None
 
-        #--------- process a band file one by one -----------------------------------
+        #--------- process a band file one by one ------------------------------------------
         for path in band_paths:
             # Upload TIF
             band_name = os.path.basename(path)
@@ -560,7 +560,8 @@ def process_and_upload(files_dict: dict, bucket_name: str, object_prefix: str):
                 b3_path = path
             # Process tiles and get tile info list
             with tempfile.TemporaryDirectory() as temp_dir:
-                tile_info_list = process_tiles(path, scene_info.scene_name, temp_dir, config.GRID_RESOLUTION, config.MINIO_TILES_BUCKET,
+                tile_info_list = process_tiles(path, scene_info.scene_name, temp_dir, config.GRID_RESOLUTION,
+                                               config.MINIO_TILES_BUCKET,
                                                config.MINIO_GRID_BUCKET, object_prefix)
             # Prep image info
             image_info = extract_landsat7_info(path)
@@ -598,6 +599,7 @@ def process_and_upload(files_dict: dict, bucket_name: str, object_prefix: str):
 # based on tifSlice.py(process)
 def process_tiles(tiff_path, scene_name, output_dir, grid_resolution, tile_bucket, grid_bucket,
                   object_prefix, clearNodata=True):
+    # --------- Prep required variables ---------------------------------
     tiff_file_name = os.path.basename(tiff_path)
     tiff_name = os.path.splitext(tiff_file_name)[0]  # 去除扩展名
     tile_info_list = []
@@ -692,10 +694,10 @@ def process_tiles(tiff_path, scene_name, output_dir, grid_resolution, tile_bucke
             print(f"{i}, {j}")
             tile_info_list.append(tile_info)
 
-
     # --------- Upload tiles ------------------------------------------------------
     cmd = ["mc", "mirror", output_dir, f"myminio/{tile_bucket}/{object_prefix}/{scene_name}/{tiff_name}"]
-    with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1, universal_newlines=True) as process:
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1,
+                          universal_newlines=True) as process:
         for line in process.stdout:
             print(line, end="")  # 逐行输出，不额外换行
         for err in process.stderr:
@@ -714,28 +716,6 @@ def process_tiles(tiff_path, scene_name, output_dir, grid_resolution, tile_bucke
     return tile_info_list
 
 
-def process_single_tile(tile_info):
-    gdal.SetConfigOption("GDAL_CACHEMAX", "512")  # 512MB 缓存，提高性能
-    gdal.SetConfigOption("VSI_CACHE", "TRUE")  # 启用缓存
-    ds = gdal.Open(tile_info['tif_path'], gdal.GA_ReadOnly)
-
-    # --------- Create a tile and upload it ------------------------------------
-    gdal.Translate(tile_info['temp_path'], ds, srcWin=[tile_info['x'], tile_info['y'],
-                                                       tile_info['w'], tile_info['h']])
-    uploadLocalFile(tile_info['temp_path'], tile_info['bucket'], tile_info['path'])
-
-    # --------- get the bbox of the tile ------------------------------------
-    left_lng, top_lat = grid2lnglat(tile_info['column_id'], tile_info['row_id'], tile_info['world_grid_num'])
-    right_lng, bottom_lat = grid2lnglat(tile_info['column_id'] + 1, tile_info['row_id'] + 1,
-                                        tile_info['world_grid_num'])
-    wgs84_corners = [(left_lng, top_lat), (right_lng, top_lat), (right_lng, bottom_lat), (left_lng, bottom_lat),
-                     (left_lng, top_lat)]
-    coords_str = ", ".join([f"{x} {y}" for x, y in wgs84_corners])
-    tile_info['bbox'] = f"POLYGON(({coords_str}))"
-    # TODO
-    tile_info['cloud'] = 0
-    return tile_info
-
 def validate_inputs(tif_paths):
     crs_list = [gdal.Open(path).GetProjection() for path in tif_paths]
     res_list = [gdal.Open(path).GetGeoTransform()[1] for path in tif_paths]
@@ -744,13 +724,15 @@ def validate_inputs(tif_paths):
     if len(set(res_list)) > 1:
         raise ValueError("分辨率不一致")
 
+
 def mtif(tif_paths, output_path):
+    # --------- Merge tif --------------------------------------
     merge_options = gdal.WarpOptions(
         format="GTiff",
         cutlineDSName=None,
         srcSRS=None,  # 自动识别输入投影
         dstSRS=None,  # 保持输入投影
-        width=0,      # 自动计算输出尺寸
+        width=0,  # 自动计算输出尺寸
         height=0,
         resampleAlg="near",  # 重采样算法（near/bilinear等）
         creationOptions=["COMPRESS=LZW"]
@@ -761,64 +743,43 @@ def mtif(tif_paths, output_path):
         options=merge_options
     )
 
-def mband(merged_tif_list, output_path, output_name="merged.tif"):
-    """
-    将多个 TIFF 影像按波段合并为一个多波段 TIFF 文件。
 
-    :param merged_tif_list: 包含多个 TIFF 影像信息的列表，每个元素是字典，格式：
-                            {"band": 波段索引, "path": "文件路径"}
-    :param output_path: 输出文件夹路径
-    :param output_name: 输出文件名（默认 "merged.tif"）
-    :return: None（生成合并后的 TIFF 文件）
-    """
-    # 按波段分组文件
+def mband(merged_tif_list, output_path, output_name="merged.tif"):
+    # --------- Merge tif and band ---------------------------------
     grouped_by_band = defaultdict(list)
     for entry in merged_tif_list:
         band = entry["band"]
         path = entry["path"]
         grouped_by_band[band].append(path)
 
-    # 确保输出路径存在
     os.makedirs(output_path, exist_ok=True)
     output_file = os.path.join(output_path, output_name)
 
-    # 读取第一个文件的元数据（假设所有文件的尺寸一致）
+    # --------- Create output ds according to first tif -------------
     sample_ds = gdal.Open(merged_tif_list[0]["path"])
     geotransform = sample_ds.GetGeoTransform()
     projection = sample_ds.GetProjection()
     cols = sample_ds.RasterXSize
     rows = sample_ds.RasterYSize
-
-    # 计算最终 TIFF 文件的波段数量
     bands_num = len(grouped_by_band)
-
-    # 创建 GTiff 格式的输出影像
     driver = gdal.GetDriverByName('GTiff')
     out_ds = driver.Create(output_file, cols, rows, bands_num, gdal.GDT_Float32,
                            options=["TILED=YES", "COMPRESS=LZW"])  # 使用 LZW 压缩
-
-    # 设置地理信息
     out_ds.SetProjection(projection)
     out_ds.SetGeoTransform(geotransform)
 
-    # 逐波段写入数据
+    # --------- Write data into output ds band by band --------------
     for i, (band, paths) in enumerate(sorted(grouped_by_band.items()), start=1):
         print(f"写入第 {i} 个波段...")
-
-        # 读取当前波段的所有文件数据并合并（假设堆叠后取第一个数据）
         band_data = []
         for path in paths:
             dataset = gdal.Open(path)
             band_data.append(dataset.GetRasterBand(1).ReadAsArray())
-
-        # 合并数据，这里默认只取第一个影像数据作为最终数据
-        merged_data = np.stack(band_data, axis=0)[0]  # 仅使用第一张影像数据
-
-        # 将数据写入 TIFF 文件
+        merged_data = np.stack(band_data, axis=0)[0]
         out_band = out_ds.GetRasterBand(i)
         out_band.WriteArray(merged_data)
 
-    # 刷新缓存并构建金字塔概览
+    # --------- Other steps after writing ---------------------------
     out_ds.FlushCache()
     out_ds.BuildOverviews(overviewlist=[1, 2, 4, 8, 16])
     out_ds = None  # 释放资源
@@ -827,16 +788,13 @@ def mband(merged_tif_list, output_path, output_name="merged.tif"):
 
 
 def read_qa_pixel(tiff_path, scene_name):
-    # 获取 tiff_path 的目录部分
+    # --------- Read QA_PIXEL band ---------------------------------
     directory = os.path.dirname(tiff_path)
-
-    # 构造 QA_PIXEL 影像路径
     qa_pixel_path = os.path.join(directory, f"{scene_name}_QA_PIXEL.TIF")
-
-    # 读取 QA_PIXEL 影像数据
     with rasterio.open(qa_pixel_path) as src:
         qa_pixel_data = src.read(1)  # 读取第一波段数据
 
+    # --------- Get no data value ----------------------------------
     with rasterio.open(tiff_path) as src:
         no_data_value = src.nodata
     if no_data_value is None:
@@ -844,74 +802,43 @@ def read_qa_pixel(tiff_path, scene_name):
 
     return qa_pixel_data, no_data_value
 
+
 def get_cloud_coverage4grid(qa_pixel_data, x, y, w, h, no_data_value):
-    """
-    计算指定网格区域的云覆盖率，基于 QA_PIXEL 波段的 Bit 3（厚云）和 Bit 2（薄云）。
+    # --------- Get cloud coverage for every grid ----------------------------
 
-    参数：
-    - qa_pixel_data: numpy 数组，QA_PIXEL 波段的影像数据。
-    - x, y: int，网格左上角的像素坐标。
-    - w, h: int，网格的宽度和高度（像素单位）。
-    - no_data_value: int，影像中的 NoData 值。
-
-    返回：
-    - 网格内的云覆盖率（百分比）。
-    """
-    # 计算网格的边界，确保不超出影像范围
+    # --------- Get QA_PIXEL data in grid ----------------------------
     row_min, row_max = max(0, y), min(qa_pixel_data.shape[0], y + h)
     col_min, col_max = max(0, x), min(qa_pixel_data.shape[1], x + w)
-
-    # 提取网格区域的 QA_PIXEL 数据
     grid_data = qa_pixel_data[row_min:row_max, col_min:col_max]
 
-    # Bit 3 - 厚云
+    # --------- Get Bit3(thick) and Bit2(thin) mask ------------------
     thick_cloud_mask = (grid_data & (1 << 3)) > 0
-
-    # Bit 2 - 薄云
     thin_cloud_mask = (grid_data & (1 << 2)) > 0
-
-    # 计算云覆盖（厚云 OR 薄云）
     cloud_mask = thick_cloud_mask | thin_cloud_mask
-
-    # 过滤 NoData 区域
     no_data_mask = grid_data == no_data_value  # 由外部提供 NoData 值
     valid_pixels = ~no_data_mask  # 有效像素区域
 
-    # 避免除零错误
+    # --------- Calculate cloud coverage -----------------------------
     total_valid_pixels = np.sum(valid_pixels)
     if total_valid_pixels == 0:
         return 0.0  # 如果网格内全是 NoData，则云覆盖率设为 0
 
-    # 计算云覆盖率（基于有效像素）
     cloud_percentage = np.sum(cloud_mask & valid_pixels) / total_valid_pixels * 100
 
     return cloud_percentage
 
+
 def get_cloud_coverage4image(qa_pixel_data, no_data_value):
-    """
-    计算 Landsat 8 影像的云覆盖率，基于 QA_PIXEL 波段的 Bit 3（厚云）和 Bit 2（薄云）。
+    # --------- Get cloud coverage for every image ----------------------------
 
-    参数：
-    - qa_pixel_data: numpy 数组，QA_PIXEL 波段的影像数据。
-    - no_data_value: int，影像中的 NoData 值（如 65535、-9999 等）。
-
-    返回：
-    - 云覆盖率（百分比）。
-    """
-    # Bit 3 - 厚云
+    # --------- Get Bit3(thick) and Bit2(thin) mask ------------------
     thick_cloud_mask = (qa_pixel_data & (1 << 3)) > 0
-
-    # Bit 2 - 薄云
     thin_cloud_mask = (qa_pixel_data & (1 << 2)) > 0
-
-    # 计算云覆盖（厚云 OR 薄云）
     cloud_mask = thick_cloud_mask | thin_cloud_mask
-
-    # 过滤 NoData 区域
     no_data_mask = qa_pixel_data == no_data_value  # 由外部提供 NoData 值
     valid_pixels = ~no_data_mask  # 有效像素区域
 
-    # 计算云覆盖率（基于有效像素）
+    # --------- Calculate cloud coverage -----------------------------
     cloud_percentage = np.sum(cloud_mask & valid_pixels) / np.sum(valid_pixels) * 100
 
     return cloud_percentage
