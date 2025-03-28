@@ -14,6 +14,7 @@
                     <StopOutlined />
                     停止
                 </div>
+
                 <div class="toolItem" @click="saveCode">
                     <SaveOutlined />
                     保存
@@ -114,13 +115,13 @@ const installPackage = async () => {
         dialogVisible.value = false
         requestJson = addedPackageInfo.value.version ? {
             projectId: props.projectId,
-            userId: "rgj",
+            userId: "rgj3",
             action: "add",
             name: addedPackageInfo.value.name,
             version: addedPackageInfo.value.version
         } : {
             projectId: props.projectId,
-            userId: "rgj",
+            userId: "rgj3",
             action: "add",
             name: addedPackageInfo.value.name,
         }
@@ -136,7 +137,7 @@ const removePackage = async (row: any) => {
 
     await operatePackage({
         projectId: props.projectId,
-        userId: "rgj",
+        userId: "rgj3",
         action: "remove",
         name: row.package,
     })
@@ -147,7 +148,7 @@ const removePackage = async (row: any) => {
 const getPackageList = async () => {
     let result = await getPackages({
         projectId: props.projectId,
-        userId: "rgj",
+        userId: "rgj3",
     })
     packageList.value = result.map((item: any) => {
         let temp = item.split(' ')
@@ -160,14 +161,14 @@ const runCode = async () => {
     // 1、先更新代码
     let saveResult = await updateScript({
         projectId: props.projectId,
-        userId: "rgj",
+        userId: "rgj3",
         content: code.value,
     })
     if (saveResult.status === 1) {
         // 2、再执行代码
         let runResult = await runScript({
             projectId: props.projectId,
-            userId: "rgj",
+            userId: "rgj3",
         })
         if (runResult.status === 1) {
             ElMessage.success("运行成功");
@@ -183,7 +184,7 @@ const runCode = async () => {
 const stopCode = async () => {
     stopScript({
         projectId: props.projectId,
-        userId: "rgj",
+        userId: "rgj3",
     })
     ElMessage.info("正在停止运行");
 };
@@ -191,7 +192,7 @@ const saveCode = async () => {
     // 保存代码内容
     let result = await updateScript({
         projectId: props.projectId,
-        userId: "rgj",
+        userId: "rgj3",
         content: code.value,
     })
     if (result.status === 1) {
@@ -250,11 +251,11 @@ onMounted(async () => {
 
     code.value = await getScript({
         projectId: props.projectId,
-        userId: "rgj",
+        userId: "rgj3",
     })
     let result = await projectOperating({
         projectId: props.projectId,
-        userId: "rgj",
+        userId: "rgj3",
         action: "open",
     })
 
@@ -269,7 +270,7 @@ onMounted(async () => {
 onBeforeUnmount(async () => {
     let result = await projectOperating({
         projectId: props.projectId,
-        userId: "rgj",
+        userId: "rgj3",
         action: "close",
     })
     if (result.status === 1) {
@@ -282,6 +283,8 @@ onBeforeUnmount(async () => {
 
 <style scoped>
 @reference 'tailwindcss';
+
+
 
 :deep(.cm-scroller) {
     overflow-x: hidden !important;

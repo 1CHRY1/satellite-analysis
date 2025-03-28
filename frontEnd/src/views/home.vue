@@ -1,7 +1,7 @@
 <template>
     <div class="min-h-screen bg-slate-50">
         <!-- Header Navigation -->
-        <header class="bg-white shadow-sm">
+        <!-- <header class="bg-white shadow-sm">
             <div class="container mx-auto px-4 py-4">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-2">
@@ -29,14 +29,15 @@
                     </div>
                 </div>
             </div>
-        </header>
+        </header> -->
 
         <!-- Hero Section -->
         <section class="py-16 md:py-24 bg-gradient-to-br from-slate-800 to-slate-900 text-white">
             <div class="container mx-auto px-4">
-                <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="grid md:grid-cols-2 gap-0 items-center">
+                    <!-- <div class="flex items-center mx-10 justify-between"> -->
                     <div class="space-y-6">
-                        <h1 class="text-4xl md:text-5xl font-bold leading-tight">
+                        <h1 class="text-4xl md:text-5xl font-bold leading-tight flex items-center">
                             卫星图像分析平台
                         </h1>
                         <p class="text-lg text-slate-300">
@@ -55,7 +56,8 @@
                     </div>
                     <div class="relative">
                         <div class="absolute -top-6 -left-6 w-24 h-24 bg-primary/20 rounded-full blur-xl"></div>
-                        <div class="absolute -bottom-10 -right-10 w-32 h-32 bg-blue-500/20 rounded-full blur-xl"></div>
+                        <div class="absolute -bottom-10 -right-10 w-32 h-32 bg-blue-500/20 rounded-full blur-xl">
+                        </div>
                         <img src="@/assets/image/home/banner.jpeg" alt="Satellite imagery visualization"
                             class="w-full h-auto rounded-lg shadow-2xl relative z-10" />
                     </div>
@@ -349,7 +351,7 @@
 <script setup lang="ts">
 import {
     Satellite,
-    MenuIcon,
+    // MenuIcon,
     BarChart2,
     CheckCircle,
     Layers,

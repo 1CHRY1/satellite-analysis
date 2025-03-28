@@ -36,9 +36,9 @@ import codeEditor from "@/components/analysisComponents/codeEditor.vue";
 import dataDirectory from "@/components/analysisComponents/dataDirectory.vue";
 import { createWebSocket } from "@/api/websocket/websocketApi"
 
-// const userId = ref("rgj")
-const projectId = ref("PRJL1EOibshGObEcPFHc")
-// const projectName = ref("rgj_test0326")
+// const userId = ref("rgj3")
+const projectId = ref("PRJMMFWjTXm1zuYm4m4q")
+// const projectName = ref("rgj3_test0326")
 
 onMounted(() => {
   ws.connect()
@@ -73,7 +73,7 @@ onUnmounted(() => {
 
 const messages = ref<string[]>(['Response and execution information will be displayed here .']);
 // 创建websocket实例
-const ws = createWebSocket("rgj", projectId.value)
+const ws = createWebSocket("rgj3", projectId.value)
 
 ws.on("message", (data: any) => {
   messages.value.push(data);
