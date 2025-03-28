@@ -1,4 +1,4 @@
-package nnu.mnr.satellite.config;
+package nnu.mnr.satellite.config.web;
 
 import com.jcraft.jsch.*;
 import jakarta.annotation.PostConstruct;

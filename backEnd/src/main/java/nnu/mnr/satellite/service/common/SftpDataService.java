@@ -6,16 +6,11 @@ import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.model.pojo.common.SftpConn;
-import nnu.mnr.satellite.config.JSchConnectionManager;
+import nnu.mnr.satellite.config.web.JSchConnectionManager;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
 import java.util.Vector;
 import java.util.function.Consumer;
 

@@ -1,4 +1,4 @@
-package nnu.mnr.satellite.config;
+package nnu.mnr.satellite.config.web;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
