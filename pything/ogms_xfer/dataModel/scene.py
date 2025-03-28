@@ -1,7 +1,7 @@
 from geoalchemy2 import Geometry  # <= not used but must be imported
 from sqlalchemy import Column, Text, String, DateTime, Integer, Float
 
-from TransferEngine.connection.database import DatabaseClient
+from ..connection.database import DatabaseClient
 
 class Scene(DatabaseClient.Base):
     __tablename__ = 'scene_table'  # map to table in database
