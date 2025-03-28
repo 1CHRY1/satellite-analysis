@@ -61,7 +61,6 @@ import type { dockerData } from '@/type/analysis';
 import { getFiles } from "@/api/http/analysis"
 import { sizeConversion, formatTime } from "@/util/common"
 import { ElMessage } from 'element-plus';
-import { nextTick } from 'vue';
 
 
 
@@ -112,20 +111,19 @@ const handleCellClick = (item: dockerData, column: string) => {
 
 const getInputData = async () => {
     let tempData = await getFiles({
-        "userId": "rgj",
+        "userId": "rgj3",
         "projectId": props.projectId,
         "path": "/data"
     })
     if (tempData.length === 0) {
         setTimeout(async () => {
             tempData = await getFiles({
-                "userId": "rgj",
+                "userId": "rgj3",
                 "projectId": props.projectId,
                 "path": "/data"
             })
         }, 1000);
     }
-    console.log(tempData, 156);
 
     inputData.value = tempData.map((item: any) => {
         return { ...item, view: false }
@@ -134,14 +132,14 @@ const getInputData = async () => {
 }
 const getOutputData = async () => {
     let tempData = await getFiles({
-        "userId": "rgj",
+        "userId": "rgj3",
         "projectId": props.projectId,
         "path": "/output"
     })
     if (tempData.length === 0) {
         setTimeout(async () => {
             tempData = await getFiles({
-                "userId": "rgj",
+                "userId": "rgj3",
                 "projectId": props.projectId,
                 "path": "/output"
             })
@@ -154,15 +152,15 @@ const getOutputData = async () => {
 }
 
 onMounted(async () => {
-    // setTimeout(async () => {
-    nextTick(async () => {
+    setTimeout(async () => {
+        // nextTick(async () => {
         await getInputData()
         await getOutputData()
         tableData.value = activeDataBase.value === 'data' ? inputData.value : outputData.value;
-    })
+        // })
 
 
-    // }, 300);
+    }, 1000);
 
     console.log(tableData.value, 'tableData.value');
 
