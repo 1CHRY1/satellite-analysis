@@ -15,6 +15,7 @@ export async function map_initiliaze(id: string) {
     // return initMap(id)
     setTimeout(() => {
         initMap(id).then((m) => {
+            m.resize()
             const container = document.getElementById(id)
             if (container) {
                 resizeObserver = new ResizeObserver(() => {
