@@ -1,8 +1,8 @@
-from TransferEngine.service.product import ProductService 
-from TransferEngine.service.scene import SceneService
-from TransferEngine.application.provider import Singleton
-from TransferEngine.application.scene import Scene
-from TransferEngine.dataModel.product import Product as ProductDataModel
+from ..service.product import ProductService 
+from ..service.scene import SceneService
+from ..application.provider import Singleton
+from ..application.scene import Scene
+from ..dataModel.product import Product as ProductDataModel
 
 class Product:
 

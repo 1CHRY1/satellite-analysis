@@ -1,8 +1,8 @@
-from TransferEngine.service.image import ImageService 
-from TransferEngine.service.tile import TileService
-from TransferEngine.application.provider import Singleton
-from TransferEngine.application.tile import Tile
-from TransferEngine.dataModel.image import Image as ImageDataModel
+from ..service.image import ImageService 
+from ..service.tile import TileService
+from ..application.provider import Singleton
+from ..application.tile import Tile
+from ..dataModel.image import Image as ImageDataModel
 
 class Image:
     
@@ -48,6 +48,10 @@ class Image:
     @property
     def cloud(self) -> float:
         return self._data.cloud
+    
+    @property
+    def url(self) -> str:
+        return f"/{self.bucket}/{self.tif_path}"
     
     def __repr__(self):
         return f"Image(image_id={self.image_id}, scene_id={self.scene_id}, tif_path={self.tif_path}, band={self.band}, bucket={self.bucket}, cloud={self.cloud})"

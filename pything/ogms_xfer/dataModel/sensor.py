@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Text, String
 
-from TransferEngine.connection.database import DatabaseClient
+from ..connection.database import DatabaseClient
 
 class Sensor(DatabaseClient.Base):
     __tablename__ = 'sensor_table'  # map to table in database

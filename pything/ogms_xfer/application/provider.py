@@ -1,14 +1,14 @@
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from TransferEngine.connection.database import DatabaseClient
-from TransferEngine.connection.minio import MinioClient
+from ..connection.database import DatabaseClient
+from ..connection.minio import MinioClient
 
-from TransferEngine.service.project_data import ProjectDataService
-from TransferEngine.service.sensor import SensorService
-from TransferEngine.service.image import ImageService
-from TransferEngine.service.product import ProductService
-from TransferEngine.service.scene import SceneService
-from TransferEngine.service.tile import TileService
+from ..service.project_data import ProjectDataService
+from ..service.sensor import SensorService
+from ..service.image import ImageService
+from ..service.product import ProductService
+from ..service.scene import SceneService
+from ..service.tile import TileService
 
 class Singleton:
     _instances = {}

@@ -17,8 +17,8 @@ onMounted(() => {
             tiles:[
                 // no cog
                 // "http://223.2.32.242:8079/{z}/{x}/{y}.png?object=/test-images/landsat/landset7/tif/LE07_L1TP_122039_20210212_20210212_01_RT/LE07_L1TP_122039_20210212_20210212_01_RT_B1.TIF"
-               
-                "http://223.2.32.242:8079/{z}/{x}/{y}.png?object=/test-images/landset8_test/landset8_L2SP_test/tif/LC08_L2SP_118038_20241217_20241227_02_T1/LC08_L2SP_118038_20241217_20241227_02_T1_SR_B4.TIF"
+                "http://223.2.32.242:8079/{z}/{x}/{y}.png?object=/project-data-bucket/rgj3/PRJMMFWjTXm1zuYm4m4q/test.tif"
+                // "http://223.2.32.242:8079/{z}/{x}/{y}.png?object=/test-images/landset8_test/landset8_L2SP_test/tif/LC08_L2SP_118038_20241217_20241227_02_T1/LC08_L2SP_118038_20241217_20241227_02_T1_SR_B4.TIF"
             ]
         })
         map.addLayer({
@@ -55,4 +55,7 @@ onMounted(() => {
 })
 
 
+// http://223.2.34.7:9000/project-data-bucket/rgj3/PRJMMFWjTXm1zuYm4m4q/test.tif
+// http://223.2.34.7:9000/test-images/landset8_test/landset8_L2SP_test/tif/LC08_L2SP_118038_20240928_20241005_02_T1/LC08_L2SP_118038_20240928_20241005_02_T1_SR_B1.TIF
+// http://223.2.34.7:9000//test-images/landset8_test/landset8_L2SP_test/tif/LC08_L2SP_118038_20241217_20241227_02_T1/LC08_L2SP_118038_20241217_20241227_02_T1_SR_B5.TIF
 </script>
