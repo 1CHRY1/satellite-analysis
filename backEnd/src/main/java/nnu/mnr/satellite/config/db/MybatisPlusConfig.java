@@ -1,4 +1,4 @@
-package nnu.mnr.satellite.config;
+package nnu.mnr.satellite.config.db;
 
 import com.baomidou.mybatisplus.autoconfigure.ConfigurationCustomizer;
 import nnu.mnr.satellite.utils.typeHandler.GeometryTypeHandler;

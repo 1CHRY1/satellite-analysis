@@ -7,6 +7,7 @@ import nnu.mnr.satellite.model.dto.modeling.*;
 import nnu.mnr.satellite.model.pojo.common.DFileInfo;
 import nnu.mnr.satellite.model.vo.modeling.CodingProjectVO;
 import nnu.mnr.satellite.model.vo.modeling.ProjectResultVO;
+import nnu.mnr.satellite.model.vo.modeling.TilerVO;
 import nnu.mnr.satellite.service.modeling.ModelCodingService;
 import nnu.mnr.satellite.service.modeling.ProjectResultDataService;
 import nnu.mnr.satellite.utils.common.FileUtil;
@@ -67,7 +68,7 @@ public class ModelCodingController {
     }
 
     @PostMapping("/project/file")
-    public ResponseEntity<List<DFileInfo>> getCurFile(@RequestBody ProjectFileDTO projectFileDTO) {
+    public ResponseEntity<List<DFileInfo>> getCurFile(@RequestBody ProjectFileDTO projectFileDTO) throws Exception {
         return ResponseEntity.ok(modelCodingService.getProjectCurDirFiles(projectFileDTO));
     }
 
@@ -84,6 +85,11 @@ public class ModelCodingController {
     @PutMapping("/project/file/script")
     public ResponseEntity<CodingProjectVO> savePythonScript(@RequestBody ProjectFileDTO projectFileDTO) {
         return ResponseEntity.ok(modelCodingService.saveProjectCode(projectFileDTO));
+    }
+
+    @PostMapping("/project/file/geojson")
+    public ResponseEntity<CodingProjectVO> uploadGeoJson(@RequestBody ProjectDataDTO projectDataDTO) throws IOException {
+        return ResponseEntity.ok(modelCodingService.uploadGeoJson(projectDataDTO));
     }
 
     // Operating Controller
@@ -124,11 +130,16 @@ public class ModelCodingController {
         return ResponseEntity.ok(projectResultDataService.getProjectResults(projectBasicDTO));
     }
 
+    @GetMapping("/project/result/tif/{dataId}")
+    public ResponseEntity<TilerVO> getProjectTifResult(@PathVariable String dataId) {
+        return ResponseEntity.ok(projectResultDataService.getProjectTifResult(dataId));
+    }
+
     @PostMapping("/project/result")
     public ResponseEntity<byte[]> getProjectResult(@RequestBody ProjectResultDTO projectResultDTO) {
         FileData resultData = projectResultDataService.getProjectResult(projectResultDTO);
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(FileUtil.setMediaType(resultData.getType())); ////////
+        headers.setContentType(FileUtil.setMediaType(resultData.getType()));
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(resultData.getStream());

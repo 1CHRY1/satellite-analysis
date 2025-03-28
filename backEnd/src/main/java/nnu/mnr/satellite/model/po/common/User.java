@@ -1,4 +1,4 @@
-package nnu.mnr.satellite.model.po.modeling;
+package nnu.mnr.satellite.model.po.common;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -11,6 +11,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 
 /**
  * Created with IntelliJ IDEA.
@@ -28,7 +29,7 @@ import java.util.Date;
 public class User {
 
     @TableId
-    String userId;
+    private String userId;
     private String userName;
     private String password;
     private String email;
@@ -36,11 +37,13 @@ public class User {
     private String phone;
     private String province;
     private String city;
+    private String title;
     private String organization;
     private String introduction;
     private LocalDateTime createdTime;
 
-    private ArrayList<String> joinedProjects = new ArrayList<>();
-    private ArrayList<String> createdProjects = new ArrayList<>();
+    private String role;
+    private HashSet<String> joinedProjects;
+    private HashSet<String> createdProjects;
 
 }

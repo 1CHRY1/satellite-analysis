@@ -1,8 +1,10 @@
 package nnu.mnr.satellite.model.vo.modeling;
 
+import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 /**
  * Created with IntelliJ IDEA.
