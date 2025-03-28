@@ -69,7 +69,7 @@ public class DockerFileUtil {
 
     public static String getImageByName(String env) {
         return switch (env) {
-            case "Python3_9" -> "python39:Satellite";
+            case "Python3_9" -> "python39:satellite";
             case "Python3_8" -> "python38:latest";
             case "Python2_7" -> "python27:latest";
             default -> "";

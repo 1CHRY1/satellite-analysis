@@ -57,7 +57,9 @@ public class ProjectResultDataService {
         QueryWrapper<ProjectResult> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("data_id", dataId);
         ProjectResult projectResult = projectResultRepo.selectOne(queryWrapper);
-        if (!Objects.equals(projectResult.getDataType(), "tiff")) {
+        if (!Objects.equals(projectResult.getDataType(), "tiff")
+                && !Objects.equals(projectResult.getDataType(), "tif")
+                && !Objects.equals(projectResult.getDataType(), "TIF") ) {
             return TilerVO.builder().build();
         }
         return TilerVO.builder()
