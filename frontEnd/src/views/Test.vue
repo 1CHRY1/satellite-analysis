@@ -1,36 +1,55 @@
 <template>
-    <div class="h-full bg-white flex items-center justify-center">
-        <!-- <button class="t">click</button> -->
-        <!-- <a-button class="bg-red-500 w-25 h-25"> AHHA </a-button> -->
-
-        <div class="w-[500px] h-[500px] bg-amber-200">
-            <div class="h-[200px] bg-amber-400">Lorem ipsum dolor, sit amet consectetur adipisicing elit. Minima, sit!</div>
-            <div class="h-[100px] bg-amber-950">Lorem ipsum dolor, sit amet consectetur adipisicing elit. Minima, sit!</div>
-        </div>
+    <div class="absolute top-0 left-0 w-screen h-screen">
+        <div class="h-[92vh]" id="map"></div>
     </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, h } from 'vue';
-// import * as MapOperation from '@/util/map/operation'
+import { mapManager } from '@/util/map/mapManager';
 
 onMounted(() => {
+    mapManager.init('map').then((map)=>{
+        console.log(map)
 
+        map.addSource("src",{
+            type:"raster",
+            tiles:[
+                "http://127.0.0.1:5000/tiff1/{z}/{x}/{y}.png"
+            ]
+        })
+        map.addLayer({
+            id:"layer",
+            type:"raster",
+            source:"src",
+            minzoom:0,
+        })
+
+        map.addSource("src2",{
+            type:"raster",
+            tiles:[
+                "http://localhost:5000/tiff2/{z}/{x}/{y}.png"
+            ]
+        })
+        map.addLayer({
+            id:"layer2",
+            type:"raster",
+            source:"src2",
+            minzoom:0,
+        })
+
+
+        window.addEventListener("keydown",(e)=>{
+            if(e.key === "1"){
+                map.setPaintProperty("layer","raster-opacity",0.1)
+                map.setPaintProperty("layer2","raster-opacity",1)
+            }else if(e.key === "2"){
+                map.setPaintProperty("layer","raster-opacity",1)
+                map.setPaintProperty("layer2","raster-opacity",0.1)
+            }
+        })
+    })
 })
 
 
 </script>
-
-<style>
-@reference 'tailwindcss';
-
-.aaaaaaaaaa {
-    @apply bg-red-500 w-25 h-25;
-}
-
-.aaa {
-    background-color: red;
-    width: 50px;
-    height: 50px;
-}
-</style>
