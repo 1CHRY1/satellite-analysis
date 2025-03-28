@@ -145,20 +145,6 @@ public class ModelCodingService {
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
     }
 
-    private CodingProjectVO Verify(String userId, String projectId) {
-        String responseInfo = "";
-        if ( !projectDataService.VerifyUserProject(userId, projectId) ) {
-            responseInfo = "User " + userId + " Can't Operate Project " + projectId;
-            return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
-        }
-        Project project = projectDataService.getProjectById(projectId);
-        if ( project == null){
-            responseInfo = "Project " + projectId + " hasn't been Registered";
-            return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
-        }
-        return CodingProjectVO.builder().status(1).build();
-    }
-
     public CodingProjectVO openCodingProject(ProjectOperateDTO projectOperateDTO) {
         String userId = projectOperateDTO.getUserId(); String projectId = projectOperateDTO.getProjectId();
         String responseInfo = "";
