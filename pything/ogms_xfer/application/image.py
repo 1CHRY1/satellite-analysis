@@ -64,6 +64,12 @@ class Image:
     def get_all_tiles(self):
         tiles = self._tile_service.get_tiles_by_scene_and_image(self.scene_id, self.image_id)
         return [Tile.from_data_model(tile, self.scene_id) for tile in tiles]
+    
+    def get_tiles(self, ids: list[str] = None, max_cloud: float = None, polygon: object= None):
+        
+        pass
+    
+    
 
     def get_tile_by_id(self, tile_id: str):
         tile = self._tile_service.get_tile_by_id(self.scene_id, tile_id)

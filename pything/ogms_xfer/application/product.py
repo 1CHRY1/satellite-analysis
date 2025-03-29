@@ -5,6 +5,11 @@ from ..application.scene import Scene
 from ..dataModel.product import Product as ProductDataModel
 
 class Product:
+    
+    @staticmethod
+    def all():
+        product_service: ProductService = Singleton.get_instance(id="product_service")
+        return [Product(product.product_id) for product in product_service.get_all()]
 
     def __new__(cls, product_id: str):
         """创建 Product 实例，若 product_id 不存在，则返回 None"""

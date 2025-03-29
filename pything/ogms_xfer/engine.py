@@ -50,5 +50,6 @@ class OGMS_Xfer:
         from .application.export import ProjectDataTransfer
         return ProjectDataTransfer
 
-        
+    from .application.urlutil import URLUtil
+    URL = URLUtil
 

@@ -1,4 +1,4 @@
-from geoalchemy2 import Geometry  # <= not used but must be imported
+from geoalchemy2 import Geometry
 from sqlalchemy import Column, Text, String, DateTime, Integer, Float
 
 from ..connection.database import DatabaseClient

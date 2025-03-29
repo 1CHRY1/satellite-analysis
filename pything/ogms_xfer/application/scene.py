@@ -5,8 +5,17 @@ from ..application.provider import Singleton
 from ..application.image import Image
 from ..application.tile import Tile
 from ..dataModel.scene import Scene as SceneDataModel
+from datetime import datetime
 
 class Scene:
+    @staticmethod
+    def all():
+        scene_service: SceneService = Singleton.get_instance(id="scene_service")
+        return [Scene(scene.scene_id) for scene in scene_service.get_all()]
+    @staticmethod
+    def query(scene_name: str = None, product_id: str = None, polygon: object = None, time_range: tuple[datetime, datetime] = None, cloud_range: tuple[float, float] = None):
+        scene_service: SceneService = Singleton.get_instance(id="scene_service")
+        return [Scene(scene.scene_id) for scene in scene_service.get_scenes(scene_name, product_id, polygon, time_range, cloud_range)]
 
     def __new__(cls, scene_id: str):
         """创建 Scene 实例，若 scene_id 不存在，则返回 None"""
@@ -95,28 +104,29 @@ class Scene:
 
     # 类的个性化方法
     def get_all_band_images(self):
-        images = self._image_service.filter_by_scene_id(self.scene_id)
+        images = self._image_service.get_images(scene_id=self.scene_id)
         return [Image(image.image_id) for image in images]
     
     def get_band_image(self, band: str):
-        image = self._image_service.filter_by_scene_id_and_band(self.scene_id, band)
+        image = self._image_service.get_images(scene_id=self.scene_id, band=band)
         return Image(image.image_id)
     
     def get_all_tiles(self):
-        tiles = self._tile_service.get_tiles_by_scene(self.scene_id)
+        tiles = self._tile_service.get_tiles(scene_id=self.scene_id)
         return [Tile.from_data_model(tile, self.scene_id) for tile in tiles]
     
     def get_tile(self, tile_id: str):
-        tile = self._tile_service.get_tile_by_id(self.scene_id, tile_id)
+        tile = self._tile_service.get_tile(scene_id=self.scene_id, tile_id=tile_id)
         return Tile.from_data_model(tile, self.scene_id)
     
-    def pull_tile_by_id(self, tile_id: str, output_path: str):
-        self._tile_service.pull_tile_by_id(self.scene_id, tile_id, output_path)
-    
-    def pull_tiles_by_ids(self, tile_ids: list[str], output_dir: str):
-        self._tile_service.pull_tiles_by_ids(self.scene_id, tile_ids, output_dir)
-    
-    def get_tiles_by_cloud(self, mincloud: float):
-        tiles = self._tile_service.get_tiles_by_scene_and_cloud(self.scene_id, mincloud)
+    def get_tiles_by_cloud(self, maxcloud: float):
+        tiles = self._tile_service.get_tiles(scene_id=self.scene_id, cloud_range=(0, maxcloud))
         return [Tile.from_data_model(tile, self.scene_id) for tile in tiles]
-            
+    
+    
+    
+    def pull_tile(self, tile_id: str, output_path: str):
+        self._tile_service.pull_tile(tile_id=tile_id, output_path=output_path)
+    
+    def pull_tiles(self, tile_ids: list[str], output_dir: str):
+        self._tile_service.pull_tiles(tile_ids=tile_ids, output_dir=output_dir)
