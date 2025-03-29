@@ -1,4 +1,4 @@
-package nnu.mnr.satellite.config;
+package nnu.mnr.satellite.config.db;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
