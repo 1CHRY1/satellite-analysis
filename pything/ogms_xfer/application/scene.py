@@ -1,10 +1,10 @@
-from TransferEngine.service.scene import SceneService 
-from TransferEngine.service.image import ImageService
-from TransferEngine.service.tile import TileService
-from TransferEngine.application.provider import Singleton
-from TransferEngine.application.image import Image
-from TransferEngine.application.tile import Tile
-from TransferEngine.dataModel.scene import Scene as SceneDataModel
+from ..service.scene import SceneService 
+from ..service.image import ImageService
+from ..service.tile import TileService
+from ..application.provider import Singleton
+from ..application.image import Image
+from ..application.tile import Tile
+from ..dataModel.scene import Scene as SceneDataModel
 
 class Scene:
 

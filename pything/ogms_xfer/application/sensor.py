@@ -1,8 +1,8 @@
-from TransferEngine.service.sensor import SensorService 
-from TransferEngine.service.product import ProductService
-from TransferEngine.application.provider import Singleton
-from TransferEngine.application.product import Product
-from TransferEngine.dataModel.sensor import Sensor as SensorDataModel
+from ..service.sensor import SensorService 
+from ..service.product import ProductService
+from ..application.provider import Singleton
+from ..application.product import Product
+from ..dataModel.sensor import Sensor as SensorDataModel
 
 class Sensor:
     

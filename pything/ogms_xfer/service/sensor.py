@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from TransferEngine.dataModel.sensor import Sensor
+from ..dataModel.sensor import Sensor
 
 class SensorService:
     def __init__(self, db: Session):

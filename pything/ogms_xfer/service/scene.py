@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from TransferEngine.dataModel.scene import Scene
+from ..dataModel.scene import Scene
 
 class SceneService:
     def __init__(self, db: Session):

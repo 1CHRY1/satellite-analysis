@@ -1,6 +1,6 @@
-from TransferEngine.service.tile import TileService
-from TransferEngine.application.provider import Singleton
-from TransferEngine.dataModel.tile import TileBase as TileDataModel
+from ..service.tile import TileService
+from ..application.provider import Singleton
+from ..dataModel.tile import TileBase as TileDataModel
 
 class Tile:
 

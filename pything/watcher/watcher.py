@@ -1,4 +1,6 @@
 import os, json, time, random
+from rio_cogeo import cog_validate, cog_translate
+from rio_cogeo.profiles import cog_profiles
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from datetime import datetime
@@ -6,17 +8,12 @@ from minio import Minio
 from minio.error import S3Error
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
+import threading
 
 ######  Global variables  #####################################################
 global minio_client, mysql_engine
 global USER_ID, PROJECT_ID
 global BUCKET_NAME, WATCH_DIR
-# minio_client = None
-# mysql_engine = None
-# USER_ID = None
-# PROJECT_ID = None
-# BUCKET_NAME = None
-# WATCH_DIR = None
 
 
 ######  Initialize  ###########################################################
@@ -46,7 +43,6 @@ def initialize(config_file_path: str):
     
     url = f"mysql+pymysql://{database_config['user']}:{database_config['password']}@{database_config['endpoint']}/{database_config['satellite_database']}"
     mysql_engine = create_engine(url)
-
 
 ###### Data Model of table<project_data> #########################################
 
@@ -102,7 +98,14 @@ def push_to_remote(input_file_path):
     """Push file to minio and update database"""
     
     global minio_client, mysql_engine, USER_ID, PROJECT_ID, BUCKET_NAME
-    object_name = get_object_name(input_file_path)
+    
+    object_name = get_object_name(input_file_path) # 这个没得说，对象名肯定和原来一样
+    final_file_path = input_file_path
+    need_clean = False
+    
+    if is_tif(input_file_path) and not is_cog(input_file_path):
+        final_file_path = translate_tif_to_cog(input_file_path, os.path.join(os.path.dirname(__file__), 'temp_cog.tif'))
+        need_clean = True
     
     try:
         # check if bucket exists
@@ -119,10 +122,13 @@ def push_to_remote(input_file_path):
             pass  # if object not exists, continue
             
         # push file to minio
+        print("--------push file to minio and mysql----------")
+        print( "minio : " +  BUCKET_NAME + " / " + object_name)
+        print( "local : " + final_file_path)
         minio_client.fput_object(
             BUCKET_NAME,
             object_name,
-            input_file_path
+            final_file_path
         )
         # insert data into database
         with Session(mysql_engine) as session:
@@ -141,6 +147,9 @@ def push_to_remote(input_file_path):
     except S3Error as e:
         raise e
     
+    finally:
+        if need_clean and os.path.exists(final_file_path):
+            os.remove(final_file_path)
 
 
 
@@ -154,17 +163,56 @@ def get_object_name(file_path):
     file_path_clone = file_path.replace('\\', '/')
     return '/' + USER_ID + '/' + PROJECT_ID + '/' + file_path_clone.split('/')[-1]
 
+def is_tif(filepath):
+    return filepath.endswith('.tif') or filepath.endswith('.TIF') or filepath.endswith('.tiff') or filepath.endswith('.TIFF')
+
+def is_cog(filepath):
+    return cog_validate(filepath, quiet=True)[0]
+
+dst_profile = cog_profiles.get("deflate")
+def translate_tif_to_cog(input_tif, output_cog):
+    cog_translate(input_tif, output_cog, dst_profile, in_memory=True, quiet=True)
+    return output_cog
+
+
+def make_bucket_public(minio_client, bucket_name):
+    policy = f'''
+    {{
+      "Version": "2012-10-17",
+      "Statement": [
+        {{
+          "Effect": "Allow",
+          "Principal": "*",
+          "Action": ["s3:GetObject"],
+          "Resource": ["arn:aws:s3:::{bucket_name}/*"]
+        }}
+      ]
+    }}
+    '''
+    minio_client.set_bucket_policy(bucket_name, policy)
+
 
 ######  Watcher  ##############################################################
 class FileEventHandler(FileSystemEventHandler):
     
     def __init__(self):
         FileSystemEventHandler.__init__(self)
+        self.timer = None
 
     def on_any_event(self, event: FileSystemEvent) -> None:
-        """直接处理事件"""
         if(event.is_directory): return
+
+        # debounce        
+        if self.timer is not None:
+            self.timer.cancel()
+
+        self.timer = threading.Timer(0.5, self.process_event, args=(event,))
+        self.timer.start()
+        
+    def process_event(self, event: FileSystemEvent):
+        
         if event.event_type == 'created' or event.event_type == 'modified':
+            print(event.src_path, " : ", event.event_type)
             push_to_remote(event.src_path)
             
         elif event.event_type == 'deleted':
@@ -176,7 +224,8 @@ class FileEventHandler(FileSystemEventHandler):
             
         else:
             return
-            # raise ValueError(f"Unknown event type: {event.event_type}")
+            
+    
 
 def clear_test_bucket():
     """Clear test bucket"""
@@ -205,4 +254,8 @@ if __name__ == "__main__":
     
     config_file_path = "D:\\t\\watcher_test_config.json"
     initialize(config_file_path)
-    start_watching()
+    
+    
+    
+    # start_watching()
+    # print(is_cog("D:\\t\\2\\44.TIF"))

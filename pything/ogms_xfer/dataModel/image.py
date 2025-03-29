@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String, Float
 
-from TransferEngine.connection.database import DatabaseClient
+from ..connection.database import DatabaseClient
 
 class Image(DatabaseClient.Base):
     __tablename__ = 'image_table'  # map to table in database

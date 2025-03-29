@@ -3,8 +3,8 @@ import os, random
 from datetime import datetime
 from sqlalchemy.orm import Session
 
-from TransferEngine.connection.minio import MinioClient
-from TransferEngine.dataModel.project_data import ProjectData
+from ..connection.minio import MinioClient
+from ..dataModel.project_data import ProjectData
 
 class ProjectDataService:
     def __init__(self, db: Session, minio_client: MinioClient):
