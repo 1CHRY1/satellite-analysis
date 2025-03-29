@@ -34,6 +34,8 @@ public class DockerFileUtil {
             case "gif" -> FileType.gif;
             case "shp" -> FileType.shp;
             case "tif" -> FileType.tif;
+            case "tiff" -> FileType.tiff;
+            case "TIF" -> FileType.TIF;
             case "mp3" -> FileType.audio;
             case "wav" -> FileType.audio;
             case "wma" -> FileType.audio;
@@ -69,7 +71,7 @@ public class DockerFileUtil {
 
     public static String getImageByName(String env) {
         return switch (env) {
-            case "Python3_9" -> "python39:Satellite";
+            case "Python3_9" -> "python39:satellite";
             case "Python3_8" -> "python38:latest";
             case "Python2_7" -> "python27:latest";
             default -> "";
