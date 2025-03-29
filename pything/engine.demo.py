@@ -1,17 +1,17 @@
-from TransferEngine.engine import TransferEngine
+from ogms_xfer import OGMS_Xfer as xfer
 
 if __name__ == "__main__":
     
     config_file_path = "D:\\t\\3\\config.example.json"
-    
-    TransferEngine.initialize(config_file_path)
+    xfer.initialize(config_file_path)
 
     # Testing
-    sensor = TransferEngine.Sensor("S1234567890")
+    sensor = xfer.Sensor("S1234567890")
     if sensor is not None:
         print(sensor)
     else:
         print("传感器不存在")
+
 
     # sensor = TransferEngine.Sensor("SE15303")
     # products = sensor.get_all_products()
@@ -33,9 +33,8 @@ if __name__ == "__main__":
     
     # 测试项目数据传输
     # TransferEngine.ProjectDataTransfer().upload("test", "test", "D:\\t\\2\\hahaha.tif")
-    transfer = TransferEngine.ProjectDataTransfer()
+    # transfer = TransferEngine.ProjectDataTransfer()
     # transfer.upload("jklove.json", "json", "D:\\t\\2\\testing.json")
     # transfer.download("D6756188294", "D:\\t\\2\\jjk.json")
     # transfer.delete("D6756188294")
     print(' --------------------------------- ')
-    print('great!')

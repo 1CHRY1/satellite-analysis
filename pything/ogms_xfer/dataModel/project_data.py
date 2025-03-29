@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String, DateTime
 
-from TransferEngine.connection.database import DatabaseClient
+from ..connection.database import DatabaseClient
 
 
 class ProjectData(DatabaseClient.Base):

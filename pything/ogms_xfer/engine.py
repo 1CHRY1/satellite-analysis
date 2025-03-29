@@ -1,10 +1,10 @@
 import json
-from TransferEngine.application.provider import (
+from .application.provider import (
     init_minio, init_satellite_database, init_tile_database, init_services, init_project_info
 )
 
 
-class TransferEngine:
+class OGMS_Xfer:
 
     @classmethod
     def initialize(cls, config_file_path: str):
@@ -22,30 +22,33 @@ class TransferEngine:
 
     @classmethod
     def Sensor(cls, sensor_id: str):
-        from TransferEngine.application.sensor import Sensor
+        from .application.sensor import Sensor
         return Sensor(sensor_id)
 
     @classmethod
     def Product(cls, product_id: str):
-        from TransferEngine.application.product import Product
+        from .application.product import Product
         return Product(product_id)
     
     @classmethod
     def Scene(cls, scene_id: str):
-        from TransferEngine.application.scene import Scene
+        from .application.scene import Scene
         return Scene(scene_id)
     
     @classmethod
     def Image(cls, image_id: str):
-        from TransferEngine.application.image import Image
+        from .application.image import Image
         return Image(image_id)
     
     @classmethod
     def Tile(cls, scene_id: str, tile_id: str):
-        from TransferEngine.application.tile import Tile
+        from .application.tile import Tile
         return Tile(scene_id, tile_id)
     
     @classmethod
     def ProjectDataTransfer(cls):
-        from TransferEngine.application.export import ProjectDataTransfer
+        from .application.export import ProjectDataTransfer
         return ProjectDataTransfer
+
+        
+

@@ -2,7 +2,7 @@ from sqlalchemy import Column, Text, String, Integer, Float
 from sqlalchemy import Table, MetaData
 from geoalchemy2 import Geometry
 
-from TransferEngine.connection.database import DatabaseClient
+from ..connection.database import DatabaseClient
 
 
 ####### TileBase ###################################
