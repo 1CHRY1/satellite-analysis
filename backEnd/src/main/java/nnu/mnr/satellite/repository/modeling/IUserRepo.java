@@ -1,7 +1,7 @@
 package nnu.mnr.satellite.repository.modeling;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import nnu.mnr.satellite.model.po.common.User;
+import nnu.mnr.satellite.model.po.user.User;
 
 /**
  * Created with IntelliJ IDEA.
