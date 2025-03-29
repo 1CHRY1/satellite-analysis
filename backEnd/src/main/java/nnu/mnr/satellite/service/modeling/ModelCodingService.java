@@ -120,7 +120,7 @@ public class ModelCodingService {
         Project project = Project.builder()
                 .projectId(projectId).projectName(projectName)
                 .environment(env).createTime(LocalDateTime.now()).dataBucket(projectDataBucket)
-                .workDir(workDir).serverDir(serverDir).createUser(userId)
+                .workDir(workDir).serverDir(serverDir).createUser(userId).description(createProjectDTO.getDescription())
                 .pyPath(pyPath).localPyPath(localPyPath).serverPyPath(serverPyPath)
                 .watchPath(watchPath).outputPath(outputPath).dataPath(dataPath)
                 .build();
@@ -187,7 +187,7 @@ public class ModelCodingService {
         }
     }
 
-    public CodingProjectVO deleteCodingProject(ProjectOperateDTO projectOperateDTO) {
+    public CodingProjectVO deleteCodingProject(ProjectOperateDTO projectOperateDTO) throws InterruptedException {
         String userId = projectOperateDTO.getUserId(); String projectId = projectOperateDTO.getProjectId();
         String responseInfo = "";
         if ( !projectDataService.VerifyUserProject(userId, projectId) ) {
@@ -218,6 +218,9 @@ public class ModelCodingService {
         }
         // Delete Local Data & Remote Data
         FileUtil.deleteFolder(new File(dockerServerProperties.getLocalPath() + projectId));
+        // Wait for Watch Dog Deleting Data
+        sftpDataService.deleteFolderContents(project.getServerDir() + "output/");
+        Thread.sleep(5 * 1000);
         sftpDataService.deleteFolder(project.getServerDir());
         log.info("Successfully deleted folder and its contents: " + project.getServerDir());
         projectRepo.deleteById(projectId);
