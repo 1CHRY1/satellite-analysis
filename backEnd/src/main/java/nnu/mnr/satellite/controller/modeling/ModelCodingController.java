@@ -48,7 +48,7 @@ public class ModelCodingController {
     }
 
     @PostMapping("/project/operating")
-    public ResponseEntity<CodingProjectVO> openCodingProject(@RequestBody ProjectOperateDTO projectOperateDTO) {
+    public ResponseEntity<CodingProjectVO> openCodingProject(@RequestBody ProjectOperateDTO projectOperateDTO) throws InterruptedException {
         String action = projectOperateDTO.getAction();
         if (action == null) {
             return ResponseEntity.ok(CodingProjectVO.builder().info("Action is null").status(-1).build());

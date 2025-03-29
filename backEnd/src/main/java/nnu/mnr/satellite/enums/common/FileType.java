@@ -8,7 +8,7 @@ package nnu.mnr.satellite.enums.common;
  * @Description:
  */
 public enum FileType {
-    pdf, gif, zip, txt, shp, tif,csv,
+    pdf, gif, zip, txt, shp, tif, tiff, TIF, csv,
     excel, ppt, word, audio, video, image,
     folder,
     python,

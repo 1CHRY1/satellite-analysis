@@ -49,4 +49,6 @@ public class Project {
 
     private String createUser;
     private HashSet<String> joinedUsers;
+
+    String description;
 }
