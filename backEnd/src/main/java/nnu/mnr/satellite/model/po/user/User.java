@@ -1,4 +1,4 @@
-package nnu.mnr.satellite.model.po.common;
+package nnu.mnr.satellite.model.po.user;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -6,11 +6,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Date;
+import java.util.Collection;
 import java.util.HashSet;
 
 /**
@@ -40,7 +38,7 @@ public class User {
     private String title;
     private String organization;
     private String introduction;
-    private LocalDateTime createdTime;
+    private LocalDateTime createTime;
 
     private String role;
     private HashSet<String> joinedProjects;

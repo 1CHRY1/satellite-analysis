@@ -34,6 +34,8 @@ public class DockerFileUtil {
             case "gif" -> FileType.gif;
             case "shp" -> FileType.shp;
             case "tif" -> FileType.tif;
+            case "tiff" -> FileType.tiff;
+            case "TIF" -> FileType.TIF;
             case "mp3" -> FileType.audio;
             case "wav" -> FileType.audio;
             case "wma" -> FileType.audio;
