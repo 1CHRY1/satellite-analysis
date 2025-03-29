@@ -1,8 +1,8 @@
 from ogms_xfer import OGMS_Xfer as xfer
 import numpy as np
 from osgeo import gdal
+import datetime
 
-# TODO 加个URL TOOL
 def calculate_ndvi(nir_path, red_path, output_path):
     nir_ds = gdal.Open(nir_path)
     red_ds = gdal.Open(red_path)
@@ -37,26 +37,32 @@ if __name__ == "__main__":
     
     config_file_path = "D:\\t\\3\\config.example.json"
     xfer.initialize(config_file_path)
-    
-    # 两种计算方式 ，pull到个人资产， 或采用gdal根据url读取文件
-    
-    # 影像检索筛选
+
+    # 1. 检索影像
     scene = xfer.Scene("SC906772444")
     print(scene.band_num)
     print(scene.bands)
-    
-    nir_url = scene.get_band_image(5).url
-    red_url = scene.get_band_image(4).url
-    
-    prefix = "http://223.2.34.7:9000"
-    nir_url = f"{prefix}{nir_url}"
-    red_url = f"{prefix}{red_url}"
-    
-
-    # 1. 假定已经有URL  TODO 后面也需要检索后，从Image对象上获取
-    calculate_ndvi(nir_url, red_url, './output/ndvi.tif')
+ 
+    # 2.a. 将云端数据下载到容器后计算
+    start_time = datetime.datetime.now()
+    nir_url = xfer.URL.resolve(scene.get_band_image(5).url)
+    red_url = xfer.URL.resolve(scene.get_band_image(4).url)
+    calculate_ndvi(nir_url, red_url, './output/ndvibyremote.tif')
+    end_time = datetime.datetime.now()
+    print(f"云端资源计算NDVI总时间: {end_time - start_time}")
     print(' --------------------------------- ')
     
- 
-    # 2. 影像检索， pull到本地，然后计算
-
+    # 2.b. 直接使用GDAL读取云端数据计算
+    start_time = datetime.datetime.now()
+    nir_band_image = scene.get_band_image(5)
+    red_band_image = scene.get_band_image(4)
+    local_nir_path = "./data/nir.tif"
+    local_red_path = "./data/red.tif"
+    
+    nir_band_image.pull(local_nir_path)
+    red_band_image.pull(local_red_path)
+    
+    calculate_ndvi(local_nir_path, local_red_path, './output/ndvibylocal.tif')
+    end_time = datetime.datetime.now()
+    print(f"本地资源计算NDVI总时间: {end_time - start_time}")
+    print(' --------------------------------- ')

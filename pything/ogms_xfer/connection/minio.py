@@ -5,6 +5,7 @@ class MinioClient:
     """A class for Minio client <read-only> operations"""
     def __init__(self, endpoint: str, access_key: str, secret_key: str, secure: bool):
         """Initialize the Minio client"""
+        self.endpoint = endpoint
         self.client = Minio(
             endpoint, 
             access_key=access_key, 

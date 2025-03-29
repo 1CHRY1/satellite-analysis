@@ -89,3 +89,14 @@ def init_services():
     Singleton.get_instance("tile_service",         TileService,      tile_db_client, minio_client) # 特殊一点，因为要动态反射
 
     Singleton.get_instance("project_data_service", ProjectDataService, satellite_session, minio_client)
+    
+
+def get_satellite_database():
+    return Singleton.get_instance(id="satellite-database")
+
+def get_tile_database():
+    return Singleton.get_instance(id="tile-database")
+
+def get_minio_client():
+    return Singleton.get_instance(id="minio")
+

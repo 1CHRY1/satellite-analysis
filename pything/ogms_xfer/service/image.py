@@ -9,21 +9,22 @@ class ImageService:
         self.db = db
         self.minio_client = minio_client
 
-    def get_by_id(self, image_id: str):
+    def get_image(self, image_id: str):
         return self.db.query(Image).filter(Image.image_id == image_id).first()
 
-    def get_all(self):
-        return self.db.query(Image).all()
-    
-    def filter_by_scene_id(self, scene_id: str):
-        return self.db.query(Image).filter(Image.scene_id == scene_id).all()
-    
-    def filter_by_scene_id_and_band(self, scene_id: str, band: str):
-        return self.db.query(Image).filter(Image.scene_id == scene_id, Image.band == band).first()
+    def get_images(self, scene_id: str = None, band: str = None, cloud_range: tuple[float, float] = None):
+        query = self.db.query(Image)
+        if scene_id is not None:
+            query = query.filter(Image.scene_id == scene_id)
+        if band is not None:
+            query = query.filter(Image.band.like(f"%{band}%"))
+        if cloud_range is not None:
+            query = query.filter(Image.cloud.between(cloud_range[0], cloud_range[1]))
+        return query.all() if band is None else query.first()
     
     def pull_image(self, image: Union[str, Image], output_path: str):
         if isinstance(image, str):
-            image = self.get_by_id(image)
+            image = self.get_image(image)
         if image is not None:
             self.minio_client.pull_file(image.bucket, image.tif_path, output_path)
         else:

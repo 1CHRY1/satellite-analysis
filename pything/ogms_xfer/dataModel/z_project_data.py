@@ -1,7 +1,6 @@
+from geoalchemy2 import Geometry
 from sqlalchemy import Column, String, DateTime
-
 from ..connection.database import DatabaseClient
-
 
 class ProjectData(DatabaseClient.Base):
     __tablename__ = 'project_data'  # map to table in database
@@ -14,6 +13,7 @@ class ProjectData(DatabaseClient.Base):
     bucket = Column(String(20))
     create_time = Column(DateTime)
     data_type = Column(String(10))
+    bounding_box = Column(Geometry(geometry_type='POLYGON'))
 
     def __repr__(self): # call when print object
         return f"ProjectData(data_id={self.data_id}, \

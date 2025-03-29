@@ -12,38 +12,31 @@ class TileService:
         self.tile_factory = TileFactory(db_client)
         self.db_engine = db_client.engine
         self.minio_client = minio_client
-
-    def get_tiles_by_scene(self, scene_id: str):
-        TileModel = self.tile_factory.get_tile_model(scene_id)  # 动态获取 ORM 模型
-        with Session(self.db_engine) as session:
-            return session.query(TileModel).all()
-    
-    def get_tiles_by_scene_and_image(self, scene_id: str, image_id: str):
-        TileModel = self.tile_factory.get_tile_model(scene_id)
-        with Session(self.db_engine) as session:
-            return session.query(TileModel).filter(TileModel.image_id == image_id).all()
-
-    def get_tiles_by_scene_and_cloud(self, scene_id: str, mincloud: float):
-        TileModel = self.tile_factory.get_tile_model(scene_id)
-        with Session(self.db_engine) as session:
-            return session.query(TileModel).filter(TileModel.cloud >= mincloud).all()
         
-    def get_tiles_by_scene_and_image_and_cloud(self, scene_id: str, image_id: str, mincloud: str):
-        TileModel = self.tile_factory.get_tile_model(scene_id)
-        with Session(self.db_engine) as session:
-            return session.query(TileModel).filter(TileModel.image_id == image_id, TileModel.cloud >= mincloud).all()
-
-    def get_tile_by_id(self, scene_id: str, tile_id: str):
+    def get_tile(self, scene_id: str, tile_id: str):
         TileModel = self.tile_factory.get_tile_model(scene_id)
         with Session(self.db_engine) as session:
             return session.query(TileModel).filter(TileModel.tile_id == tile_id).first() if TileModel else None
-        
-    def get_tiles_by_ids(self, scene_id: str, tile_ids: list[str]):
-        TileModel = self.tile_factory.get_tile_model(scene_id)
+
+    def get_tiles(self, scene_id: str, image_id: str = None, cloud_range: tuple[float, float] = None, polygon: object = None, tile_ids: list[str] = None, band: int = None, tile_level: str = None):
+        TileModel = self.tile_factory.get_tile_model(scene_id)  # 动态获取 ORM 模型
         with Session(self.db_engine) as session:
-            return session.query(TileModel).filter(TileModel.tile_id.in_(tile_ids)).all()
-    
-    def pull_tile_by_id(self, scene_id: str, tile_id: str, output_path: str):
+            query = session.query(TileModel)
+            if image_id is not None:
+                query = query.filter(TileModel.image_id == image_id)
+            if cloud_range is not None:
+                query = query.filter(TileModel.cloud.between(cloud_range[0], cloud_range[1]))
+            if polygon is not None:
+                query = query.filter(TileModel.bounding_box.ST_Intersects(polygon))
+            if tile_ids is not None:
+                query = query.filter(TileModel.tile_id.in_(tile_ids))
+            if band is not None:
+                query = query.filter(TileModel.band == band)
+            if tile_level is not None:
+                query = query.filter(TileModel.tile_level == tile_level)
+            return query.all()
+        
+    def pull_tile(self, scene_id: str, tile_id: str, output_path: str):
         TileModel = self.tile_factory.get_tile_model(scene_id)
         with Session(self.db_engine) as session:
             tile = session.query(TileModel).filter(TileModel.tile_id == tile_id).first() if TileModel else None
@@ -52,7 +45,7 @@ class TileService:
             self.minio_client.pull_file(tile.bucket, tile.path, output_path)
             return tile
         
-    def pull_tiles_by_ids(self, scene_id: str, tile_ids: list[str], output_dir: str):
+    def pull_tiles(self, scene_id: str, tile_ids: list[str], output_dir: str):
         TileModel = self.tile_factory.get_tile_model(scene_id)
         with Session(self.db_engine) as session:
             tiles = session.query(TileModel).filter(TileModel.tile_id.in_(tile_ids)).all()
