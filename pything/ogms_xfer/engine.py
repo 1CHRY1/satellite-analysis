@@ -21,34 +21,29 @@ class OGMS_Xfer:
         init_services()
 
     @classmethod
-    def Sensor(cls, sensor_id: str):
+    def Sensor(cls, sensor_id: str = None):
         from .application.sensor import Sensor
-        return Sensor(sensor_id)
+        return Sensor(sensor_id) if sensor_id is not None else Sensor
 
     @classmethod
-    def Product(cls, product_id: str):
+    def Product(cls, product_id: str = None):
         from .application.product import Product
-        return Product(product_id)
+        return Product(product_id) if product_id is not None else Product
     
     @classmethod
     def Scene(cls, scene_id: str):
         from .application.scene import Scene
-        return Scene(scene_id)
+        return Scene(scene_id) if scene_id is not None else Scene
     
     @classmethod
-    def Image(cls, image_id: str):
+    def Image(cls, image_id: str = None):
         from .application.image import Image
-        return Image(image_id)
+        return Image(image_id) if image_id is not None else Image
     
     @classmethod
     def Tile(cls, scene_id: str, tile_id: str):
         from .application.tile import Tile
         return Tile(scene_id, tile_id)
-    
-    @classmethod
-    def ProjectDataTransfer(cls):
-        from .application.export import ProjectDataTransfer
-        return ProjectDataTransfer
 
     from .application.urlutil import URLUtil
     URL = URLUtil

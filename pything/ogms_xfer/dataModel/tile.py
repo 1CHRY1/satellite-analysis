@@ -52,7 +52,7 @@ class TileFactory:
         if lower_scene_id in self.model_cache:
             return self.model_cache[lower_scene_id]
         
-        print(" create new model for ", lower_scene_id)
+        # print(" create new model for ", lower_scene_id) # debug
         
         class DynamicTile(TileBase):
             __tablename__ = lower_scene_id 
