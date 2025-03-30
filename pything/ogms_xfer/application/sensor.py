@@ -21,7 +21,7 @@ class Sensor:
     def __new__(cls, sensor_id: str):
         """创建 Sensor 实例，若 sensor_id 不存在，则返回 None"""
         sensor_service: SensorService = Singleton.get_instance(id="sensor_service")
-        data: SensorDataModel = sensor_service.get_by_id(sensor_id)
+        data: SensorDataModel = sensor_service.get_sensor(sensor_id)
         
         if data is None:
             return None 
@@ -58,5 +58,5 @@ class Sensor:
 
     # 类的个性化方法
     def get_all_products(self):
-        products = self._product_service.filter_by_sensor_id(self.sensor_id)
+        products = self._product_service.get_products(sensor_id=self.sensor_id)
         return [Product(product.product_id) for product in products]

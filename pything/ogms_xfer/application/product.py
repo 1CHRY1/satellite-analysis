@@ -10,11 +10,16 @@ class Product:
     def all():
         product_service: ProductService = Singleton.get_instance(id="product_service")
         return [Product(product.product_id) for product in product_service.get_all()]
+    
+    @staticmethod
+    def query(product_name: str = None, sensor_id: str = None, resolution: str = None, period: str = None):
+        product_service: ProductService = Singleton.get_instance(id="product_service")
+        return [Product(product.product_id) for product in product_service.get_products(sensor_id=sensor_id, product_name_like=product_name, resolution=resolution, period=period)]
 
     def __new__(cls, product_id: str):
         """创建 Product 实例，若 product_id 不存在，则返回 None"""
         product_service: ProductService = Singleton.get_instance(id="product_service")
-        data: ProductDataModel = product_service.get_by_id(product_id)
+        data: ProductDataModel = product_service.get_product(product_id)
         
         if data is None:
             return None
@@ -28,7 +33,6 @@ class Product:
         """初始化 Product 对象"""
         self._product_service : ProductService = Singleton.get_instance(id="product_service") 
         self._scene_service : SceneService = Singleton.get_instance(id="scene_service")
-        # self._data : ProductDataModel = self._product_service.get_by_id(product_id)
 
     # 基础映射属性
     @property

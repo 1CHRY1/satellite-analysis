@@ -3,7 +3,6 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from ..connection.database import DatabaseClient
 from ..connection.minio import MinioClient
 
-from ..service.project_data import ProjectDataService
 from ..service.sensor import SensorService
 from ..service.image import ImageService
 from ..service.product import ProductService
@@ -88,7 +87,7 @@ def init_services():
     
     Singleton.get_instance("tile_service",         TileService,      tile_db_client, minio_client) # 特殊一点，因为要动态反射
 
-    Singleton.get_instance("project_data_service", ProjectDataService, satellite_session, minio_client)
+    # Singleton.get_instance("project_data_service", ProjectDataService, satellite_session, minio_client) # deprecated
     
 
 def get_satellite_database():

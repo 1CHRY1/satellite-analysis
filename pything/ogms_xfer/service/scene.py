@@ -25,4 +25,3 @@ class SceneService:
     
     def get_all(self):
         return self.db.query(Scene).all()
-
