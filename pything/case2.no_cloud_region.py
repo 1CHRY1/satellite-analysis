@@ -29,7 +29,7 @@ if __name__ == "__main__":
     ###### 1. 检索一系列影像
     
     # 感兴趣区
-    with open(xfer.URL.dataUrl('region.geojson'), "r") as f:
+    with open(xfer.URL.dataUrl('small.geojson'), "r") as f:
         region = json.load(f)
     
     # 目标产品
@@ -45,7 +45,7 @@ if __name__ == "__main__":
     
     start_time = datetime.now()
 
-    # 检索系列影像中云量最小的瓦片，当前只检索了band1
+    ###### 2. 检索系列影像中云量最小的瓦片，当前只检索了band1
     target_tiles_map = {}
     max_cloud = 0
     for scene in scenes:
@@ -61,6 +61,7 @@ if __name__ == "__main__":
     print(f"已检索到{len(target_tiles)}个瓦片, 用时{datetime.now() - start_time}")
     print(f"其中，瓦片最大云量为{max_cloud}")
     
+    ###### 3. 合并瓦片 time-costly
     start_time = datetime.now()
     tif_paths = [xfer.URL.resolve(tile.url) for tile in target_tiles]
     merged_tif_path = xfer.URL.outputUrl('no_cloud_region_merged.tif')
