@@ -11,6 +11,9 @@ import App from './App.vue'
 import router from './router'
 import ezStore from '@/store/ezStore'
 
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
+
 ///// Fetching Static Config Json /////////////////////////
 fetch('/app.conf.json').then((response) => {
     response.json().then((config) => {
@@ -25,6 +28,7 @@ fetch('/app.conf.json').then((response) => {
         app.use(Antd)
         app.use(router)
         app.use(pinia)
+        app.use(ElementPlus)
         app.mount('#app')
 
         ////  Inject config

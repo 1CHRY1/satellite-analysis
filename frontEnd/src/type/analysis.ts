@@ -3,10 +3,18 @@
  * 写ts是真勾麻烦啊
  */
 
- export type dockerData = {
-    id:string;
-    name: string;
-    updateTime: string;
-    size: string;
-    view: boolean;
- } 
+export type dockerData = {
+    fileName: string
+    filePath: string
+    fileSize: number
+    fileType: string
+    serverPath: string
+    updateTime: string
+    view: boolean
+}
+
+export type analysisResponse = {
+    status: number
+    info: string
+    projectId: string
+}
