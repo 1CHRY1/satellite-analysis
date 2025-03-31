@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
 from geoalchemy2 import Geometry  # <= not used but must be imported
-from geoalchemy2.shape import WKTElement
 from sqlalchemy import func
 import os
 
@@ -57,4 +56,3 @@ class TileService:
             tiles = session.query(TileModel).filter(TileModel.tile_id.in_(tile_ids)).all()
             for tile in tiles:
                 self.minio_client.pull_file(tile.bucket, tile.path, os.path.join(output_dir, f"{tile.tile_id}.tif"))
-                

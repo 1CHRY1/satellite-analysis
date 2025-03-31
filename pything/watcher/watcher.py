@@ -6,9 +6,13 @@ from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from datetime import datetime
 from minio import Minio
 from minio.error import S3Error
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, func
 from sqlalchemy.orm import Session
+from geoalchemy2 import Geometry
 import threading
+import rasterio
+from shapely.geometry import Polygon
+from shapely import wkt
 
 ######  Global variables  #####################################################
 global minio_client, mysql_engine
@@ -61,6 +65,7 @@ class ProjectData(Base):
     bucket = Column(String(20))
     create_time = Column(DateTime)
     data_type = Column(String(10))
+    bounding_box = Column(Geometry(geometry_type='POLYGON', srid=4326))
 
     def __repr__(self):
         return f"ProjectData(data_id={self.data_id}, \
@@ -99,13 +104,34 @@ def push_to_remote(input_file_path):
     
     global minio_client, mysql_engine, USER_ID, PROJECT_ID, BUCKET_NAME
     
-    object_name = get_object_name(input_file_path) # 这个没得说，对象名肯定和原来一样
+    object_name = get_object_name(input_file_path)
     final_file_path = input_file_path
+    geo_bounds = None  # 初始化geo_center变量
     need_clean = False
     
     if is_tif(input_file_path) and not is_cog(input_file_path):
         final_file_path = translate_tif_to_cog(input_file_path, os.path.join(os.path.dirname(__file__), 'temp_cog.tif'))
         need_clean = True
+    
+    # 提取TIF文件的边界框
+    if is_tif(input_file_path):
+        try:
+            with rasterio.open(input_file_path) as src:
+                bounds = src.bounds
+                # 确保坐标顺序为[经度, 纬度]
+                polygon = Polygon([
+                    (bounds.left, bounds.bottom),
+                    (bounds.right, bounds.bottom),
+                    (bounds.right, bounds.top),
+                    (bounds.left, bounds.top),
+                    (bounds.left, bounds.bottom)
+                ])
+                geo_bounds = wkt.dumps(polygon)
+                geo_bounds = func.ST_GeomFromText(geo_bounds, 4326, 'axis-order=long-lat')
+                print(f"提取到的边界框坐标：{geo_bounds}")  # 添加调试信息
+
+        except Exception as e:
+            print(f"提取边界框时出错：{str(e)}")  # 添加错误信息
     
     try:
         # check if bucket exists
@@ -123,8 +149,8 @@ def push_to_remote(input_file_path):
             
         # push file to minio
         print("--------push file to minio and mysql----------")
-        print( "minio : " +  BUCKET_NAME + " / " + object_name)
-        print( "local : " + final_file_path)
+        # print( "minio : " +  BUCKET_NAME + " / " + object_name)
+        # print( "local : " + final_file_path)
         minio_client.fput_object(
             BUCKET_NAME,
             object_name,
@@ -140,7 +166,8 @@ def push_to_remote(input_file_path):
                 path=object_name,
                 bucket=BUCKET_NAME,
                 create_time=datetime.now(),
-                data_type=object_name.split('.')[-1] if '.' in object_name else 'file'
+                data_type=object_name.split('.')[-1] if '.' in object_name else 'file',
+                bounding_box=geo_bounds
             ))
             session.commit()
         
@@ -191,6 +218,11 @@ def make_bucket_public(minio_client, bucket_name):
     '''
     minio_client.set_bucket_policy(bucket_name, policy)
 
+from shapely.geometry import shape
+def geojson_to_wkt(geojson_dict):
+    # 仅支持单个多边形
+    geom = shape(geojson_dict.get('features')[0].get('geometry'))
+    return geom.wkt
 
 ######  Watcher  ##############################################################
 class FileEventHandler(FileSystemEventHandler):
@@ -240,7 +272,7 @@ def start_watching():
     observer.schedule(event_handler, WATCH_DIR, recursive=False)
     observer.start()
     
-    # print(f"(((o(*ﾟ▽ﾟ*)o))) :: Start watching directory: {WATCH_DIR} \n")
+    print(f"(((o(*ﾟ▽ﾟ*)o))) :: Start watching directory: {WATCH_DIR} \n")
 
     try:
         while True:
@@ -254,8 +286,4 @@ if __name__ == "__main__":
     
     config_file_path = "D:\\t\\watcher_test_config.json"
     initialize(config_file_path)
-    
-    
-    
-    # start_watching()
-    # print(is_cog("D:\\t\\2\\44.TIF"))
+    start_watching()
