@@ -64,7 +64,7 @@ public class GeometryUtil {
             JSONArray point = ringCoordinates.getJSONArray(i);
             double longitude = point.getDouble(0); // longitude 在前
             double latitude = point.getDouble(1);  // latitude 在后
-            coords.add(new CoordinateXY(latitude, longitude));
+            coords.add(new CoordinateXY(longitude, latitude));
         }
 
         // 确保环是闭合的

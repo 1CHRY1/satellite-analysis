@@ -7,6 +7,7 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.SftpException;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.config.web.JSchConnectionManager;
+import nnu.mnr.satellite.model.po.resources.Tile;
 import nnu.mnr.satellite.model.pojo.modeling.MinioProperties;
 import nnu.mnr.satellite.model.dto.modeling.*;
 import nnu.mnr.satellite.model.po.modeling.Project;
@@ -14,16 +15,19 @@ import nnu.mnr.satellite.model.pojo.common.DFileInfo;
 import nnu.mnr.satellite.model.pojo.modeling.DockerServerProperties;
 import nnu.mnr.satellite.model.vo.modeling.CodingProjectVO;
 import nnu.mnr.satellite.repository.modeling.IProjectRepo;
+import nnu.mnr.satellite.repository.resources.ITileRepo;
 import nnu.mnr.satellite.service.common.DockerService;
 import nnu.mnr.satellite.service.common.SftpDataService;
 import nnu.mnr.satellite.utils.common.FileUtil;
 import nnu.mnr.satellite.utils.common.IdUtil;
+import nnu.mnr.satellite.utils.data.MinioUtil;
 import nnu.mnr.satellite.utils.docker.DockerFileUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -62,6 +66,12 @@ public class ModelCodingService {
     
     @Autowired
     IProjectRepo projectRepo;
+
+    @Autowired
+    ITileRepo tileRepo;
+
+    @Autowired
+    MinioUtil minioUtil;
 
     // config info
     @Autowired
@@ -392,6 +402,45 @@ public class ModelCodingService {
         FileUtil.saveAsJsonFile(geometry, localPath);
         sftpDataService.uploadFile(localPath, remotePath);
         responseInfo = "Project Data has been Uploaded";
+        return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
+    }
+
+    public CodingProjectVO uploadTilesToProject(ProjectTileDataDTO projectTileDataDTO) {
+        String userId = projectTileDataDTO.getUserId(); String projectId = projectTileDataDTO.getProjectId();
+        String responseInfo = "";
+        if ( !projectDataService.VerifyUserProject(userId, projectId) ) {
+            responseInfo = "User " + userId + " Can't Operate Project " + projectId;
+            return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
+        }
+        Project project = projectDataService.getProjectById(projectId);
+        if ( project == null){
+            responseInfo = "Project " + projectId + " hasn't been Registered";
+            return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
+        }
+        String containerId = project.getContainerId();
+        try {
+            if (!dockerService.checkContainerState(containerId)){
+                responseInfo = "Container Not Activated";
+                return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
+            }
+        } catch (Exception e) {
+            responseInfo = "Container Not Connected";
+            return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
+        }
+        String sceneId = projectTileDataDTO.getSceneId();
+        List<String> tileIds = projectTileDataDTO.getTileIds();
+        CompletableFuture.runAsync(() -> {
+            String remoteDataPath = project.getServerDir() + "data/";
+            sftpDataService.createRemoteDir( remoteDataPath + sceneId + "/", 0777);
+            for (String tileId : tileIds) {
+                Tile tile = tileRepo.getTileByTileId(sceneId, tileId);
+                InputStream tileStream = minioUtil.getObjectStream(tile.getBucket(), tile.getPath());
+                int lastIndex = tile.getPath().lastIndexOf('/');
+                String tileName = tile.getPath().substring(lastIndex + 1);
+                sftpDataService.uploadFileFromStream(tileStream, remoteDataPath + sceneId + "/" + tileName);
+            }
+        });
+        responseInfo = "Data Uploading Successfully";
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
     }
 

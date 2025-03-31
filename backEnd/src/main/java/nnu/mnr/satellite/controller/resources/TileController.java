@@ -1,6 +1,5 @@
 package nnu.mnr.satellite.controller.resources;
 
-import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.model.dto.resources.TilesMergeDTO;
 import nnu.mnr.satellite.model.vo.common.GeoJsonVO;
@@ -12,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalDateTime;
 
 /**
  * Created with IntelliJ IDEA.
@@ -32,14 +33,19 @@ public class TileController {
         this.tileDataService = tileDataService;
     }
 
-    @GetMapping("/imageId/{imageId}/tileLevel/{tileLevel}")
-    public ResponseEntity<GeoJsonVO> getTilesByImageAndLevel(@PathVariable String imageId, @PathVariable String tileLevel) throws IOException {
-        return ResponseEntity.ok(tileDataService.getTilesBySceneAndLevel(imageId, tileLevel));
+    @GetMapping("/sceneId/{sceneId}/tileLevel/{tileLevel}")
+    public ResponseEntity<GeoJsonVO> getTilesByImageAndLevel(@PathVariable String sceneId, @PathVariable String tileLevel) throws IOException {
+//        return ResponseEntity.ok(tileDataService.getTilesBySceneAndLevel(sceneId, tileLevel));
+        LocalDateTime beforetime = LocalDateTime.now();
+        GeoJsonVO geoJsonVO = tileDataService.getTilesBySceneAndLevel(sceneId, tileLevel);
+        LocalDateTime afterTime = LocalDateTime.now();
+        System.out.println(Duration.between(beforetime, afterTime));
+        return ResponseEntity.ok(geoJsonVO);
     }
 
-    @GetMapping("/tif/imageId/{imageId}/tileId/{tileId}")
-    public ResponseEntity<byte[]> getTifByImageAndTileId(@PathVariable String imageId, @PathVariable String tileId) {
-        byte[] tifData = tileDataService.getTileTifById(imageId, tileId);
+    @GetMapping("/tif/scene/{sceneId}/tileId/{tileId}")
+    public ResponseEntity<byte[]> getTifBySceneAndTileId(@PathVariable String sceneId, @PathVariable String tileId) {
+        byte[] tifData = tileDataService.getTileTifById(sceneId, tileId);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.valueOf("image/tiff"));
         return ResponseEntity.ok()
@@ -48,7 +54,7 @@ public class TileController {
     }
 
     @PostMapping("/tif/tileIds")
-    public ResponseEntity<byte[]> getMergedTifByImageAndTileId(@RequestBody TilesMergeDTO tilesMergeDTO) {
+    public ResponseEntity<byte[]> getMergedTifBySceneAndTileId(@RequestBody TilesMergeDTO tilesMergeDTO) {
         byte[] tifData = tileDataService.getMergeTileTif(tilesMergeDTO);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.valueOf("image/tiff"));
@@ -57,8 +63,8 @@ public class TileController {
                 .body(tifData);
     }
 
-    @GetMapping("/description/imageId/{imageId}/tileId/{tileId}")
-    public ResponseEntity<TileDesVO> getDescriptionByImageAndTileId(@PathVariable String imageId, @PathVariable String tileId) {
-        return ResponseEntity.ok(tileDataService.getTileDescriptionById(imageId, tileId));
+    @GetMapping("/description/sceneId/{sceneId}/tileId/{tileId}")
+    public ResponseEntity<TileDesVO> getDescriptionByImageAndTileId(@PathVariable String sceneId, @PathVariable String tileId) {
+        return ResponseEntity.ok(tileDataService.getTileDescriptionById(sceneId, tileId));
     }
 }

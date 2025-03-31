@@ -187,6 +187,15 @@
             <artifactId>spring-boot-starter-security</artifactId>
             <version>3.2.4</version>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-mongodb</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-extension</artifactId>
+            <version>3.5.10.1</version>
+        </dependency>
     </dependencies>
 
     <repositories>
