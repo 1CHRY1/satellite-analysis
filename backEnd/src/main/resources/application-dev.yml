@@ -30,6 +30,8 @@ spring:
       host: localhost
       port: 6379
       database: 0
+    mongodb:
+      uri: mongodb://OGMSROOT:ogms1qaz2wsx@172.21.252.208:23266/opengmp
 
 mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
@@ -37,6 +39,9 @@ mybatis-plus:
   type-handlers-package: nnu.mnr.satellite.utils.typeHandler
 #  configuration:
 #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+ca:
+  dir: D:/1tools/OpenSSL/ca
 
 minio:
   access-key: jTbgNHEqQafOpUxVg7Ol
@@ -46,16 +51,13 @@ minio:
 docker:
   defaultServer:
     port: 2376
-#    host: "127.0.0.1"
+    #    host: "127.0.0.1"
     host: "223.2.35.208"
     username: "vge"
     password: "3J44.njnu.edu.cn"
   localPath: D:/1study/Work/2025_03_05_satellite/modelDockerVolume/
   serverDir: /home/vge/satellite/
   workDir: /usr/local/coding/
-
-ca:
-  dir: D:/1tools/OpenSSL/ca
 
 modelServer:
   address: http://223.2.34.7

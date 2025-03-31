@@ -7,6 +7,7 @@ import com.jcraft.jsch.SftpException;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.model.pojo.common.SftpConn;
 import nnu.mnr.satellite.config.web.JSchConnectionManager;
+import org.apache.commons.compress.utils.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -69,6 +70,63 @@ public class SftpDataService {
             } catch (SftpException | IOException e) {
                 log.error("Failed to write remote file: " + remoteFilePath, e);
                 throw new RuntimeException("Write operation failed", e);
+            }
+        });
+    }
+
+    public void createRemoteDir(String remoteDirPath, int permissions) {
+        executeWithChannel(channelSftp -> {
+            try {
+                createDirRecursive(channelSftp, remoteDirPath, permissions);
+                log.info("Directory created successfully: " + remoteDirPath);
+            } catch (SftpException e) {
+                log.error("Failed to create directory: " + remoteDirPath, e);
+                throw new RuntimeException("Failed to create directory: " + remoteDirPath, e);
+            }
+        });
+    }
+
+    private void createDirRecursive(ChannelSftp channelSftp, String remoteDirPath, int permissions) throws SftpException {
+        String normalizedPath = remoteDirPath.replaceAll("/+", "/").replaceAll("/$", "");
+        if (normalizedPath.isEmpty() || "/".equals(normalizedPath)) {
+            return;
+        }
+
+        try {
+            channelSftp.ls(normalizedPath);
+        } catch (SftpException e) {
+            if (e.id == ChannelSftp.SSH_FX_NO_SUCH_FILE) {
+                int lastSlashIndex = normalizedPath.lastIndexOf('/');
+                if (lastSlashIndex > 0) {
+                    String parentPath = normalizedPath.substring(0, lastSlashIndex);
+                    createDirRecursive(channelSftp, parentPath, permissions);
+                }
+                channelSftp.mkdir(normalizedPath);
+                if (permissions != -1) {
+                    channelSftp.chmod(permissions, normalizedPath);
+                }
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    public void uploadFileFromStream(InputStream inputStream, String remoteFilePath) {
+        executeWithChannel(channelSftp -> {
+            try (OutputStream outputStream = channelSftp.put(remoteFilePath)) {
+                IOUtils.copy(inputStream, outputStream); // 使用 Apache Commons IO 工具
+                outputStream.flush();
+            } catch (SftpException | IOException e) {
+                log.error("Failed to upload file to " + remoteFilePath, e);
+                throw new RuntimeException("Upload from stream operation failed", e);
+            } finally {
+                if (inputStream != null) {
+                    try {
+                        inputStream.close();
+                    } catch (IOException e) {
+                        log.error("Failed to close input stream", e);
+                    }
+                }
             }
         });
     }
