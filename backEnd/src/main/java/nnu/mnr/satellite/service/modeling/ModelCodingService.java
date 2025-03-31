@@ -7,6 +7,7 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.SftpException;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.config.web.JSchConnectionManager;
+import nnu.mnr.satellite.constants.UserConstants;
 import nnu.mnr.satellite.model.po.resources.Tile;
 import nnu.mnr.satellite.model.pojo.modeling.MinioProperties;
 import nnu.mnr.satellite.model.dto.modeling.*;
@@ -18,6 +19,7 @@ import nnu.mnr.satellite.repository.modeling.IProjectRepo;
 import nnu.mnr.satellite.repository.resources.ITileRepo;
 import nnu.mnr.satellite.service.common.DockerService;
 import nnu.mnr.satellite.service.common.SftpDataService;
+import nnu.mnr.satellite.service.user.UserService;
 import nnu.mnr.satellite.utils.common.FileUtil;
 import nnu.mnr.satellite.utils.common.IdUtil;
 import nnu.mnr.satellite.utils.data.MinioUtil;
@@ -60,6 +62,9 @@ public class ModelCodingService {
 
     @Autowired
     DockerService dockerService;
+
+    @Autowired
+    UserService userService;
 
     @Autowired
     ProjectDataService projectDataService;
@@ -109,6 +114,11 @@ public class ModelCodingService {
     // Coding Project Services
     public CodingProjectVO createCodingProject(CreateProjectDTO createProjectDTO) throws JSchException, SftpException, IOException {
         String userId = createProjectDTO.getUserId();
+        String responseInfo = "";
+        if ( !userService.ifUserExist(userId)) {
+            responseInfo = String.format(UserConstants.USER_NOT_FOUND, userId);
+            return CodingProjectVO.builder().status(-1).info(responseInfo).build();
+        }
         String projectName = createProjectDTO.getProjectName();
         String env = createProjectDTO.getEnvironment();
         String imageEnv = DockerFileUtil.getImageByName(env);
@@ -122,10 +132,9 @@ public class ModelCodingService {
         String localPyPath = dockerServerProperties.getLocalPath() + projectId + "/" + "main.py";
         String serverPyPath = serverDir + "main.py";
         Project formerProject = projectDataService.getProjectByUserAndName(userId, projectName);
-        String responseInfo = "";
         if ( formerProject != null){
-            responseInfo = "Project " + projectId + " has been Registered";
-            return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
+            responseInfo = "Project " + formerProject.getProjectName() + " has been Registered";
+            return CodingProjectVO.builder().status(-1).info(responseInfo).build();
         }
         Project project = Project.builder()
                 .projectId(projectId).projectName(projectName)

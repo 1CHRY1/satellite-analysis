@@ -261,8 +261,8 @@ public class SftpDataService {
 
             int lastSlashIndex = localProjectPath.lastIndexOf('/');
             // 上传 TransferEngine 目录
-            String packagePath = volumePath + "TransferEngine/";
-            uploadDirectory(channelSftp, localProjectPath.substring(0, lastSlashIndex) + "/devCli/TransferEngine", packagePath);
+            String packagePath = volumePath + "ogms_xfer/";
+            uploadDirectory(channelSftp, localProjectPath.substring(0, lastSlashIndex) + "/devCli/ogms_xfer", packagePath);
             channelSftp.chmod(0777, packagePath);
 
             // 上传 main.py 文件

@@ -60,6 +60,12 @@ public class UserService {
         this.authenticationManager = authenticationManager;
     }
 
+    public Boolean ifUserExist(String userId) {
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_id", userId);
+        return userRepo.exists(queryWrapper);
+    }
+
     public CommonResultVO userRegister(UserRegisterDTO userRegisterDTO) {
         String email = userRegisterDTO.getEmail();
         String name = userRegisterDTO.getUserName();
