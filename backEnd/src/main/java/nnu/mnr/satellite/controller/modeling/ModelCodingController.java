@@ -92,6 +92,11 @@ public class ModelCodingController {
         return ResponseEntity.ok(modelCodingService.uploadGeoJson(projectDataDTO));
     }
 
+    @PostMapping("/project/file/tiles")
+    public ResponseEntity<CodingProjectVO> uploadTilesToProject(@RequestBody ProjectTileDataDTO projectTileDataDTO) {
+        return ResponseEntity.ok(modelCodingService.uploadTilesToProject(projectTileDataDTO));
+    }
+
     // Operating Controller
     @PostMapping("/project/executing")
     public ResponseEntity<CodingProjectVO> runPythonScript(@RequestBody ProjectBasicDTO projectBasicDTO) {

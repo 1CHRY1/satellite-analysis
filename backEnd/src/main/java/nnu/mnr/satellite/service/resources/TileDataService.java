@@ -36,7 +36,7 @@ import java.util.List;
  */
 
 @Slf4j
-@Service("TileDataServiceV2")
+@Service("TileDataService")
 public class TileDataService {
 
     @Autowired

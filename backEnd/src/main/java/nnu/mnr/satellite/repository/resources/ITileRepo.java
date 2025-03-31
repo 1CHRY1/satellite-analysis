@@ -1,5 +1,6 @@
 package nnu.mnr.satellite.repository.resources;
 
+import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import nnu.mnr.satellite.model.dto.resources.TileBasicDTO;
 import nnu.mnr.satellite.model.po.resources.Tile;
@@ -29,12 +30,13 @@ public interface ITileRepo extends BaseMapper<Tile> {
     List<Tile> getTileByBandAndLevel(@Param("tileTable") String tileTable, String band, String tileLevel);
 
     @Select("select distinct row_id, column_id from ${tileTable} where tile_level = #{tileLevel} and " +
-            "( ST_Intersects(ST_GeomFromText(#{wkt}, 4326), bounding_box) OR " +
-            "ST_Contains(ST_GeomFromText(#{wkt}, 4326), bounding_box) OR " +
-            "ST_Within(ST_GeomFromText(#{wkt}, 4326), bounding_box) ) ")
+            "( ST_Intersects(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), bounding_box) OR " +
+            "ST_Contains(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), bounding_box) OR " +
+            "ST_Within(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), bounding_box) ) ")
     List<TileBasicDTO> getBasicTileByBandAndLevel(@Param("tileTable") String tileTable, String tileLevel, String wkt);
 
-    @Select("select scene_id, image_id, tile_level, cloud, band, column_id, row_id, bucket, path from ${tileTable} where tile_id = #{tileId}")
+    @Select("select image_id, tile_level, cloud, band, column_id, row_id, bucket, path from ${tileTable} where tile_id = #{tileId}")
+    @DS("mysql_tile")
     Tile getTileByTileId(@Param("tileTable") String tileTable, String tileId);
 
 }
