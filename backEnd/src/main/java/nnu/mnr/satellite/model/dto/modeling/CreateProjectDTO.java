@@ -16,5 +16,6 @@ public class CreateProjectDTO {
     private String projectName;
     private String environment;
     private String userId;
+    private String description;
 
 }

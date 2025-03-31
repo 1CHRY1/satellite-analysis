@@ -6,16 +6,11 @@ import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.model.pojo.common.SftpConn;
-import nnu.mnr.satellite.config.JSchConnectionManager;
+import nnu.mnr.satellite.config.web.JSchConnectionManager;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
 import java.util.Vector;
 import java.util.function.Consumer;
 
@@ -98,6 +93,45 @@ public class SftpDataService {
                 throw new RuntimeException("Delete folder operation failed", e);
             }
         });
+    }
+
+    public void deleteFolderContents(String folderPath) {
+        executeWithChannel(channelSftp -> {
+            try {
+                deleteFolderContentsRecursive(channelSftp, folderPath);
+            } catch (SftpException e) {
+                log.error("Failed to delete contents of folder: " + folderPath, e);
+                throw new RuntimeException("Delete folder contents operation failed", e);
+            }
+        });
+    }
+
+    private void deleteFolderContentsRecursive(ChannelSftp channelSftp, String folderPath) throws SftpException {
+        try {
+            channelSftp.cd(folderPath);
+        } catch (SftpException e) {
+            log.warn("Folder not found, skipping: " + folderPath);
+            return;
+        }
+
+        Vector<ChannelSftp.LsEntry> fileList = channelSftp.ls("*");
+        for (ChannelSftp.LsEntry entry : fileList) {
+            String fileName = entry.getFilename();
+            if (".".equals(fileName) || "..".equals(fileName)) {
+                continue;
+            }
+
+            String fullPath = folderPath + "/" + fileName;
+            if (entry.getAttrs().isDir()) {
+                // 递归删除子文件夹内容
+                deleteFolderContentsRecursive(channelSftp, fullPath);
+                // 删除空的子文件夹
+                channelSftp.rmdir(fullPath);
+            } else {
+                // 删除文件
+                channelSftp.rm(fullPath);
+            }
+        }
     }
 
     private void deleteFolderRecursive(ChannelSftp channelSftp, String folderPath) throws SftpException {

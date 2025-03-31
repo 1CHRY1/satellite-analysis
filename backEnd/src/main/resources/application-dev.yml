@@ -67,3 +67,6 @@ modelServer:
     ndviArea: /ndviArea
   interval:
     status: 2
+
+tiler:
+  end-point: http://223.2.32.242:8079

@@ -1,8 +1,11 @@
 package nnu.mnr.satellite.utils.common;
 
+import com.alibaba.fastjson2.JSONObject;
 import org.springframework.http.MediaType;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 /**
  * Created with IntelliJ IDEA.
@@ -69,6 +72,19 @@ public class FileUtil {
             }
         }
         folder.delete();
+    }
+
+    public static void saveAsJsonFile(JSONObject geojson, String filePath) throws IOException {
+        File file = new File(filePath);
+        File parentDir = file.getParentFile();
+        if (parentDir != null && !parentDir.exists()) {
+            parentDir.mkdirs();
+        }
+
+        try (FileWriter fileWriter = new FileWriter(file)) {
+            fileWriter.write(geojson.toString());
+            fileWriter.flush();
+        }
     }
 
 }

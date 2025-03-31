@@ -1,0 +1,1 @@
+python ./mintiler.py --minio_endpoint 223.2.34.7:9000 --minio_access_key jTbgNHEqQafOpUxVg7Ol --minio_secret_key 7UxtrqhSOyN1KUeumbqTRMv1zeluLO69OwJnCC0M --port 8079

@@ -38,6 +38,9 @@ mybatis-plus:
 #  configuration:
 #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
+ca:
+  dir: D:/1tools/OpenSSL/ca
+
 minio:
   access-key: jTbgNHEqQafOpUxVg7Ol
   secret-key: 7UxtrqhSOyN1KUeumbqTRMv1zeluLO69OwJnCC0M
@@ -54,9 +57,6 @@ docker:
   serverDir: /home/vge/satellite/
   workDir: /usr/local/coding/
 
-ca:
-  dir: D:/1tools/OpenSSL/ca
-
 modelServer:
   address: http://223.2.34.7
   api:
@@ -67,3 +67,6 @@ modelServer:
     ndviArea: /ndviArea
   interval:
     status: 2
+
+tiler:
+  end-point: http://223.2.32.242:8079

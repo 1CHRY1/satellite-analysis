@@ -4,12 +4,12 @@
     <div v-show="showCodeContainer" class="codeContainer" id="codeContainerId">
       <!-- 上左数据模块 -->
       <div class="dataPaneArea" id="dataPaneAreaId">
-        <dataDirectory :data="dataDirectoryData" @changeView="changeView" class="h-[100%] w-full  rounded" />
+        <dataDirectory :projectId="projectId" class="h-[100%] w-full  rounded" />
       </div>
       <div class="splitHandleVertical" id="splitHandleVertical2Id" style="left: 25%;"></div>
       <!-- 上中在线编程 -->
       <div class="codeEditArea pl-2" id="codeEditAreaId">
-        <codeEditor class="h-[100%] w-full" />
+        <codeEditor :projectId="projectId" class="h-[100%] w-full" />
       </div>
 
       <div class="splitHandleVertical" id="splitHandleVertical3Id" style="left: 75%;"></div>
@@ -28,49 +28,33 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-import type { dockerData } from '@/type/analysis';
+import { ref, onMounted, onUnmounted } from "vue";
 
-import mapComp from "@/components/analysisComponents/mapComp.vue";
+import mapComp from "@/components/feature/map/mapComp.vue";
 import consolerComponent from "@/components/analysisComponents/consoler.vue";
 import codeEditor from "@/components/analysisComponents/codeEditor.vue";
 import dataDirectory from "@/components/analysisComponents/dataDirectory.vue";
+import { createWebSocket } from "@/api/websocket/websocketApi"
+
+// const userId = ref("rgj")
+const projectId = ref("PRJL1EOibshGObEcPFHc")
+// const projectName = ref("rgj_test0326")
+
+onMounted(() => {
+  ws.connect()
+})
+
+onUnmounted(() => {
+  ws.close(); // 关闭连接
+});
 
 /**
  * dataDirectoryData模块
  */
 
-const dataDirectoryData = ref<dockerData[]>([
-  {
-    id: '1',
-    name: 'File 1',
-    updateTime: '2025-03-25 10:00',
-    size: '2.58 MB',
-    view: false,
-  },
-  {
-    id: '2',
 
-    name: 'File 2',
-    updateTime: '2025-03-24 09:30',
-    size: '4 MB',
-    view: false,
-  },
-  {
-    id: '3',
-    name: 'File 3',
-    updateTime: '2025-03-23 15:20',
-    size: '1 MB',
-    view: false,
-  },
-]);
 
-const changeView = (item: dockerData) => {
-  const targetItem = dataDirectoryData.value.find((data) => data.id === item.id);
-  if (targetItem) {
-    targetItem.view = !targetItem.view;
-  }
-}
+
 
 
 /**
@@ -85,7 +69,19 @@ const changeView = (item: dockerData) => {
  * consoler子组件
  * 添加、清空、自动滚动
  */
+
+
 const messages = ref<string[]>(['Response and execution information will be displayed here .']);
+// 创建websocket实例
+const ws = createWebSocket("rgj", projectId.value)
+
+ws.on("message", (data: any) => {
+  messages.value.push(data);
+});
+
+ws.on("close", () => {
+  console.log("WebSocket 连接已关闭");
+});
 
 const clearConsole = () => {
   messages.value = ['Response and execution information will be displayed here .'];
