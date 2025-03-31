@@ -1,11 +1,13 @@
 from sqlalchemy.orm import Session
 from geoalchemy2 import Geometry  # <= not used but must be imported
+from geoalchemy2.shape import WKTElement
+from sqlalchemy import func
 import os
 
 from ..connection.database import DatabaseClient
 from ..connection.minio import MinioClient
 from ..dataModel.tile import TileFactory
-
+from ..service.util import geojson_to_wkt
 class TileService:
     def __init__(self, db_client: DatabaseClient, minio_client: MinioClient):
 
@@ -27,7 +29,11 @@ class TileService:
             if cloud_range is not None:
                 query = query.filter(TileModel.cloud.between(cloud_range[0], cloud_range[1]))
             if polygon is not None:
-                query = query.filter(TileModel.bounding_box.ST_Intersects(polygon))
+                wkt_polygon = geojson_to_wkt(polygon)
+                query = query.filter(func.ST_Intersects(
+                        TileModel.bounding_box,
+                        func.ST_GeomFromText(wkt_polygon, 4326, 'axis-order=long-lat')
+                    ))
             if tile_ids is not None:
                 query = query.filter(TileModel.tile_id.in_(tile_ids))
             if band is not None:
@@ -51,3 +57,4 @@ class TileService:
             tiles = session.query(TileModel).filter(TileModel.tile_id.in_(tile_ids)).all()
             for tile in tiles:
                 self.minio_client.pull_file(tile.bucket, tile.path, os.path.join(output_dir, f"{tile.tile_id}.tif"))
+                

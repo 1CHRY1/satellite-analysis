@@ -29,7 +29,6 @@ def calculate_ndvi(nir_path, red_path, output_path):
     ndvi_ds.GetRasterBand(1).SetNoDataValue(-9999)
 
     nir_ds, red_ds, ndvi_ds = None, None, None
-    print(f"NDVI 计算完成，已保存到: {output_path}")
     return output_path
 
 
@@ -43,26 +42,32 @@ if __name__ == "__main__":
     print(scene.band_num)
     print(scene.bands)
  
-    # 2.a. 将云端数据下载到容器后计算
+    # 2.a.直接使用GDAL读取云端数据计算
     start_time = datetime.datetime.now()
     nir_url = xfer.URL.resolve(scene.get_band_image(5).url)
     red_url = xfer.URL.resolve(scene.get_band_image(4).url)
-    calculate_ndvi(nir_url, red_url, './output/ndvibyremote.tif')
+    output_path = xfer.URL.outputUrl('ndvibyremote.tif')
+    calculate_ndvi(nir_url, red_url, output_path)
     end_time = datetime.datetime.now()
     print(f"云端资源计算NDVI总时间: {end_time - start_time}")
     print(' --------------------------------- ')
     
-    # 2.b. 直接使用GDAL读取云端数据计算
+
+    # 2.b.将云端数据下载到容器后计算 
     start_time = datetime.datetime.now()
     nir_band_image = scene.get_band_image(5)
     red_band_image = scene.get_band_image(4)
-    local_nir_path = "./data/nir.tif"
-    local_red_path = "./data/red.tif"
+    local_nir_path = xfer.URL.dataUrl('/nir.tif')
+    local_red_path = xfer.URL.dataUrl('/red.tif')
     
     nir_band_image.pull(local_nir_path)
     red_band_image.pull(local_red_path)
     
-    calculate_ndvi(local_nir_path, local_red_path, './output/ndvibylocal.tif')
     end_time = datetime.datetime.now()
-    print(f"本地资源计算NDVI总时间: {end_time - start_time}")
+    print(f"下载云端数据时间: {end_time - start_time}")
+    
+    start_time = datetime.datetime.now()
+    calculate_ndvi(local_nir_path, local_red_path, xfer.URL.outputUrl('/ndvibylocal.tif'))
+    end_time = datetime.datetime.now()
+    print(f"本地资源计算NDVI时间: {end_time - start_time}")
     print(' --------------------------------- ')

@@ -111,6 +111,10 @@ class Scene:
         tile = self._tile_service.get_tile(scene_id=self.scene_id, tile_id=tile_id)
         return Tile.from_data_model(tile, self.scene_id)
     
+    def get_tiles(self, tile_ids: list[str] = None, cloud_range: tuple[float, float] = None, polygon: object = None, tile_level: str = None, band: int = None):
+        tiles = self._tile_service.get_tiles(scene_id=self.scene_id, tile_ids=tile_ids, cloud_range=cloud_range, polygon=polygon, tile_level=tile_level, band=band)
+        return [Tile.from_data_model(tile, self.scene_id) for tile in tiles]
+    
     def get_all_tiles(self):
         tiles = self._tile_service.get_tiles(scene_id=self.scene_id)
         return [Tile.from_data_model(tile, self.scene_id) for tile in tiles]
