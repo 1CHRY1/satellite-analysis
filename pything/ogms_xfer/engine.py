@@ -31,7 +31,7 @@ class OGMS_Xfer:
         return Product(product_id) if product_id is not None else Product
     
     @classmethod
-    def Scene(cls, scene_id: str):
+    def Scene(cls, scene_id: str = None):
         from .application.scene import Scene
         return Scene(scene_id) if scene_id is not None else Scene
     

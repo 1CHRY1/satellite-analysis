@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
-from ..dataModel.scene import Scene
 from datetime import datetime
+from sqlalchemy import func
+from ..dataModel.scene import Scene
+from ..service.util import geojson_to_wkt
 
 class SceneService:
     def __init__(self, db: Session):
@@ -16,7 +18,11 @@ class SceneService:
         if product_id is not None:
             query = query.filter(Scene.product_id == product_id)
         if polygon is not None:
-            query = query.filter(Scene.bounding_box.ST_Intersects(polygon))
+            wkt_polygon = geojson_to_wkt(polygon)
+            query = query.filter(func.ST_Intersects(
+                        Scene.bounding_box,
+                        func.ST_GeomFromText(wkt_polygon, 4326, 'axis-order=long-lat')
+                    ))
         if time_range is not None:
             query = query.filter(Scene.scene_time.between(time_range[0], time_range[1]))
         if cloud_range is not None:
