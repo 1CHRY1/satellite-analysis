@@ -6,12 +6,11 @@
     </div>
 </template>
 
-<script setup lang="ts">
-</script>
+<script setup lang="ts"></script>
 
 <style scoped lang="scss">
-@use "sass:math";
-@use "sass:string";
+@use 'sass:math';
+@use 'sass:string';
 
 html {
     height: 100%;

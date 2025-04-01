@@ -1,6 +1,6 @@
 <template>
-    <div class="w-full h-full flex flex-col gap-2">
-        <CommonCard class="flex-1 h-1/3 w-full">
+    <div class="flex h-full w-full flex-col gap-2">
+        <CommonCard class="h-1/3 w-full flex-1">
             <template #icon>
                 <DatabaseIcon />
             </template>
@@ -11,13 +11,11 @@
                         <PointerIcon :size="16" />
                     </template>
                     <template #upload-intro>点击选择数据集</template>
-                    <template #upload-content>
-                        上传了的东西在这
-                    </template>
+                    <template #upload-content> 上传了的东西在这 </template>
                 </CommonArea>
             </template>
         </CommonCard>
-        <CommonCard class="flex-1 h-1/3 w-full">
+        <CommonCard class="h-1/3 w-full flex-1">
             <template #icon>
                 <MapPinIcon />
             </template>
@@ -49,16 +47,19 @@
                     </a-tab-pane>
                     <a-tab-pane key="3" tab="行政区检索">
                         <div class="tab-content">
-                            <a-cascader class="custom-cascader" v-model:value="selectedDistrict"
-                                :options="districtOption" placeholder="请选择行政区域" />
+                            <a-cascader
+                                class="custom-cascader"
+                                v-model:value="selectedDistrict"
+                                :options="districtOption"
+                                placeholder="请选择行政区域"
+                            />
                         </div>
                     </a-tab-pane>
                 </a-tabs>
             </template>
-
         </CommonCard>
 
-        <CommonCard class="flex-1 h-1/3 w-full">
+        <CommonCard class="h-1/3 w-full flex-1">
             <template #icon>
                 <CalendarIcon />
             </template>
@@ -68,7 +69,7 @@
             </template>
         </CommonCard>
 
-        <div class="flex-1/2 flex gap-3 py-3 px-4 w-full">
+        <div class="flex w-full flex-1/2 gap-3 px-4 py-3">
             <CommonButton class="flex-2" type="primary" @click="handleSearch">
                 <SearchIcon :size="14" class="button-icon" />
                 <span class="text-[14px]">开始检索</span>
@@ -79,41 +80,37 @@
             </CommonButton>
         </div>
     </div>
-
 </template>
 
 <script setup lang="ts">
-import { DatabaseIcon, PointerIcon, MapPinIcon, CalendarIcon, RefreshCwIcon, SearchIcon, HexagonIcon, UploadCloudIcon } from 'lucide-vue-next'
+import {
+    DatabaseIcon,
+    PointerIcon,
+    MapPinIcon,
+    CalendarIcon,
+    RefreshCwIcon,
+    SearchIcon,
+    HexagonIcon,
+    UploadCloudIcon,
+} from 'lucide-vue-next'
 import { CommonCard, CommonArea, CommonRangePicker, CommonButton } from '@/components/common'
 import { districtOption } from './districts'
-import dayjs, { type Dayjs } from 'dayjs';
-import { ref } from 'vue';
+import dayjs, { type Dayjs } from 'dayjs'
+import { ref } from 'vue'
 
 const activeKey = ref('1')
 const selectedDistrict = ref<string[]>([])
 const dateRange = ref<[Dayjs, Dayjs]>([dayjs('2010-10'), dayjs()])
 
-const handleDrawPoint = () => {
-
-}
-const handleDrawPolygon = () => {
-
-}
-const handleFileUpload = () => {
-
-}
-const handleDistrictSelect = () => {
-
-}
-const handleSearch = () => {
-}
-const handleReset = () => {
-}
-
+const handleDrawPoint = () => {}
+const handleDrawPolygon = () => {}
+const handleFileUpload = () => {}
+const handleDistrictSelect = () => {}
+const handleSearch = () => {}
+const handleReset = () => {}
 </script>
 
 <style scoped>
-
 /* custom - a - cascader */
 .custom-cascader {
     width: 100%;
@@ -126,7 +123,6 @@ const handleReset = () => {
 .custom-cascader:hover :deep(.ant-select-selector) {
     border-color: #0284c7 !important;
 }
-
 
 /* custom - a - tab */
 .custom-tabs :deep(.ant-tabs-nav) {
@@ -174,5 +170,4 @@ const handleReset = () => {
     justify-content: space-evenly;
     gap: 0.5rem;
 }
-
 </style>
