@@ -82,9 +82,9 @@ public class SceneDataService {
             String wkt = bbox.toText(); // 转换为 WKT 格式
 
             queryWrapper.apply(
-                    "( ST_Intersects(ST_GeomFromText( {0}, 4326), bounding_box) OR " +
-                            "ST_Contains(ST_GeomFromText( {0}, 4326), bounding_box) OR " +
-                            "ST_Within(ST_GeomFromText( {0}, 4326), bounding_box) )",
+                    "( ST_Intersects(ST_GeomFromText( {0}, 4326, 'axis-order=long-lat'), bounding_box) OR " +
+                            "ST_Contains(ST_GeomFromText( {0}, 4326, 'axis-order=long-lat'), bounding_box) OR " +
+                            "ST_Within(ST_GeomFromText( {0}, 4326, 'axis-order=long-lat'), bounding_box) )",
                     wkt
             );
             List<Scene> sceneList = sceneRepo.selectList(queryWrapper);

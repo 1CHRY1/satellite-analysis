@@ -60,6 +60,12 @@ public class UserService {
         this.authenticationManager = authenticationManager;
     }
 
+    public Boolean ifUserExist(String userId) {
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_id", userId);
+        return userRepo.exists(queryWrapper);
+    }
+
     public CommonResultVO userRegister(UserRegisterDTO userRegisterDTO) {
         String email = userRegisterDTO.getEmail();
         String name = userRegisterDTO.getUserName();
@@ -160,6 +166,10 @@ public class UserService {
     public UserVO getUserVOById(String userId) {
         User user = userRepo.selectById(userId);
         return userModelMapper.map(user, new TypeToken<UserVO>() {}.getType());
+    }
+
+    public User getUserById(String userId) {
+        return userRepo.selectById(userId);
     }
 
     public CommonResultVO updateUserInfoById(UserInfoDTO userInfoDTO) {

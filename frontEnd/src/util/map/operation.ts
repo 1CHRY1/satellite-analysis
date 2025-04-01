@@ -69,6 +69,45 @@ export function map_flyTo([lng, lat]: [number, number]): void {
     })
 }
 
+export function addRasterLayerFromUrl(url: string, layerId: string = 'raster-layer'): void {
+    mapManager.withMap((m) => {
+        // 检查是否已经存在同名图层，避免重复添加
+        if (m.getLayer(layerId)) {
+            console.warn(`图层 "${layerId}" 已存在，跳过添加。`)
+            return
+        }
+
+        // 添加栅格数据源
+        m.addSource(layerId, {
+            type: 'raster',
+            tiles: [url], // 瓦片服务的 URL 模板
+            tileSize: 256, // 瓦片尺寸，默认为 256x256
+            crossOrigin: 'anonymous',
+        })
+
+        // 添加栅格图层
+        m.addLayer({
+            id: layerId,
+            type: 'raster',
+            source: layerId,
+            paint: {}, // 可以在这里自定义渲染样式
+        })
+
+        console.log(`图层 "${layerId}" 已成功添加到地图。`)
+    })
+}
+
+export function removeRasterLayer(layerId: string = 'raster-layer'): void {
+    mapManager.withMap((m) => {
+        if (m.getLayer(layerId)) {
+            m.removeLayer(layerId)
+        }
+        if (m.getSource(layerId)) {
+            m.removeSource(layerId)
+        }
+    })
+}
+
 ////////////////////////////////////////////////////////
 /////// Draw Operation //////////////////////////////////
 export function draw_deleteAll(): void {

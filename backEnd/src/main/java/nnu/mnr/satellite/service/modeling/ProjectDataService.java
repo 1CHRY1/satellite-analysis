@@ -63,6 +63,9 @@ public class ProjectDataService {
         QueryWrapper<Project> queryWrapper = new QueryWrapper();
         queryWrapper.eq("create_user", userId).eq("project_id", projectId);
         Project project = projectRepo.selectOne(queryWrapper);
+        if (project == null) {
+            return false;
+        }
         return project.getJoinedUsers().contains(userId) || project.getCreateUser().equals(userId);
     }
 
