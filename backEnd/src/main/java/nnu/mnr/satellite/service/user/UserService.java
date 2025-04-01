@@ -168,6 +168,10 @@ public class UserService {
         return userModelMapper.map(user, new TypeToken<UserVO>() {}.getType());
     }
 
+    public User getUserById(String userId) {
+        return userRepo.selectById(userId);
+    }
+
     public CommonResultVO updateUserInfoById(UserInfoDTO userInfoDTO) {
         String userId = userInfoDTO.getUserId();
         User user = userRepo.selectById(userId);

@@ -20,6 +20,8 @@ public class ProjectVO {
     private String createTime;
     private String packages;
     private String createUser;
+    private String createUserName;
+    private String createUserEmail;
     private HashSet<String> joinedUsers;
     private String description;
 

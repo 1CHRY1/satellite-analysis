@@ -54,13 +54,8 @@ public class TileController {
     }
 
     @PostMapping("/tif/tileIds")
-    public ResponseEntity<byte[]> getMergedTifBySceneAndTileId(@RequestBody TilesMergeDTO tilesMergeDTO) {
-        byte[] tifData = tileDataService.getMergeTileTif(tilesMergeDTO);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.valueOf("image/tiff"));
-        return ResponseEntity.ok()
-                .headers(headers)
-                .body(tifData);
+    public ResponseEntity<String> getMergedTifBySceneAndTileId(@RequestBody TilesMergeDTO tilesMergeDTO) {
+        return ResponseEntity.ok(tileDataService.getMergeTileTif(tilesMergeDTO));
     }
 
     @GetMapping("/description/sceneId/{sceneId}/tileId/{tileId}")
