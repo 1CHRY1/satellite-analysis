@@ -1,35 +1,58 @@
 <template>
     <div
-        class="bg-black bg-opacity-70 p-4 rounded-lg shadow-md hover:bg-opacity-90 transition duration-300 cursor-pointer">
-        <div class="flex items-center justify-between mb-2">
-            <h3 class="text-xl font-bold text-green-400">{{ project.name }}</h3>
-            <button class="bg-green-500 text-white px-2 py-1 rounded">Edit</button>
+        class="card box-border flex h-[380px] w-[300px] cursor-pointer flex-col justify-between rounded-lg border-t border-l border-solid border-t-[rgba(255,255,255,.5)] border-l-[rgba(255,255,255,.5)] px-6 py-1">
+        <!-- 头部 -->
+        <div class="my-2 flex flex-col items-center justify-center">
+            <Satellite class="mt-4 mb-1 h-16 w-16" color="white" />
+            <div class="mb-1 overflow-hidden text-3xl font-bold text-blue-400">
+                {{ project.projectName }}
+            </div>
         </div>
-        <p class="text-sm text-gray-400 mb-2">{{ project.description }}</p>
-        <div class="flex items-center space-x-2 mb-2">
-            <span class="text-xs text-gray-400">About:</span>
-            <span class="text-xs text-green-400">{{ project.about }}</span>
+        <!-- 项目信息 -->
+        <div class="flex flex-grow flex-col">
+            <div class="subtitle my-2 text-[16px]">信息</div>
+            <div class="text-sm text-white">
+                {{ project.description }}
+            </div>
         </div>
-        <div class="flex items-center space-x-2 mb-2">
-            <span class="text-xs text-gray-400">Contact:</span>
-            <a :href="`mailto:${project.contact}`" class="text-xs text-green-400">{{ project.contact }}</a>
-        </div>
-        <div class="flex items-center space-x-2">
-            <span class="text-xs text-gray-400">Created:</span>
-            <span class="text-xs text-green-400">{{ project.created }}</span>
+
+        <!-- 人员信息 -->
+        <div class="flex flex-col space-y-1">
+            <div class="subtitle my-2 text-[16px]">创建者</div>
+            <div class="flex">
+                <User color="white" />{{ project.createUserName }}
+            </div>
+            <div class="flex">
+                <Mail color="white" />{{ project.createUserEmail }}
+            </div>
+            <div class="flex">
+                <Clock3 color="white" />{{ formatTime(project.createTime) }}
+            </div>
         </div>
     </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue';
+<script lang="ts" setup>
+import { Satellite, User, Mail, Clock3 } from 'lucide-vue-next'
+import { formatTime } from "@/util/common.ts"
 
-export default defineComponent({
-    props: {
-        project: {
-            type: Object,
-            required: true,
-        },
+defineProps({
+    project: {
+        type: Object,
+        default: () => ({}),
     },
-});
+})
 </script>
+
+<style lang="scss" scoped>
+.card:hover {
+    scale: 1.05;
+    transition: 0.5s;
+}
+
+.subtitle {
+    border-bottom: solid 2px;
+    border-image: linear-gradient(to right, rgba(81, 162, 255, 0.6), transparent 25%) 1;
+}
+</style>
+1

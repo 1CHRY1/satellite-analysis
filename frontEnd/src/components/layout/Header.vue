@@ -5,7 +5,7 @@
             <div class="flex items-center">
                 <img :src="logo" alt="Logo" class="h-10 w-auto -translate-x-3 cursor-pointer" @click="jumpToOGMS" />
                 <span
-                    class="ml-3 bg-gradient-to-r from-sky-950 to-sky-500 bg-clip-text font-semibold whitespace-nowrap text-transparent sm:text-lg md:text-xl lg:text-3xl">卫星中心分析平台</span>
+                    class="ml-3 bg-gradient-to-r from-sky-950 to-sky-500 bg-clip-text font-semibold whitespace-nowrap text-transparent sm:text-lg md:text-xl lg:text-3xl">遥感ARD平台</span>
             </div>
 
             <nav class="ml-[5vw] flex items-center space-x-8">
@@ -49,7 +49,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { useUserStore } from '@/store'
+import { useUserStore } from '@/store/index.ts'
 import logo from '@/assets/image/logo.png'
 import avator from '@/assets/image/avator.png'
 
