@@ -10,12 +10,12 @@ export const sizeConversion = (size: number) => {
 }
 
 // 时间格式化
-export const formatTime = (time: string) => {
+export const formatTime = (time: string, model: string = 'minutes', offset: number = 8) => {
     // 将时间戳解析为 Date 对象
     const utcDate = new Date(time)
 
     // 转换为北京时间（UTC+8）
-    const beijingTime = new Date(utcDate.getTime() + 8 * 60 * 60 * 1000)
+    const beijingTime = new Date(utcDate.getTime() + offset * 60 * 60 * 1000)
 
     // 格式化日期和时间为 xxxx/xx/xx xx:xx
     const year = beijingTime.getFullYear()
@@ -25,6 +25,11 @@ export const formatTime = (time: string) => {
     const minutes = String(beijingTime.getMinutes()).padStart(2, '0')
 
     // 拼接为目标格式
+    if (model === 'minutes') {
+        return `${year}/${month}/${day} ${hours}:${minutes}`
+    } else if (model === 'day') {
+        return `${year}/${month}/${day}`
+    }
     const formattedTime = `${year}/${month}/${day} ${hours}:${minutes}`
     return formattedTime
 }

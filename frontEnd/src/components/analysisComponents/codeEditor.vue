@@ -1,7 +1,7 @@
 <template>
     <div>
-        <div class="h-[8%] w-full flex justify-between">
-            <div class="w-fit ml-2 bg-[#eaeaea] rounded flex items-center my-1 shadow-md">
+        <div class="h-[44px] w-full flex justify-between">
+            <div class="w-fit ml-2 bg-[#eaeaea] rounded flex items-center my-1.5 shadow-md">
                 <div class="toolItem" @click="showPackageList">
                     <CloudServerOutlined />
                     依赖管理
@@ -14,6 +14,7 @@
                     <StopOutlined />
                     停止
                 </div>
+
                 <div class="toolItem" @click="saveCode">
                     <SaveOutlined />
                     保存
@@ -23,7 +24,11 @@
                 <!-- 表格 -->
                 <el-table :data="packageList" style="width: 100%">
                     <el-table-column prop="package" label="包名" />
-                    <el-table-column prop="version" label="版本" />
+                    <el-table-column prop="version" label="版本">
+                        <template #default="scope">
+                            {{ scope.row.version || '-' }}
+                        </template>
+                    </el-table-column>
                     <el-table-column label="操作">
                         <template #default="scope">
                             <el-button link type="primary" @click="removePackage(scope.row)">移除</el-button>
@@ -54,7 +59,7 @@
                     </span>
                 </template>
             </el-dialog>
-            <div class="w-fit ml-2  rounded flex items-center my-1 relative ">
+            <div class="w-fit ml-2  rounded flex items-center my-1.5 relative ">
                 <div class="px-2 h-full flex items-center text-xs my-1 mr-2 bg-[#eaeaea] rounded shadow-md cursor-pointer relative "
                     @click="toggleDropdown">
                     当前环境：{{ selectedEnv }}
@@ -70,7 +75,7 @@
 
         </div>
         <div class="code-editor !bg-[#f9fafb]">
-            <Codemirror class=" !text-[12px]  " v-model="code" :extensions="extensions" @ready="onCmReady"
+            <Codemirror class=" !text-[12px]  !p-0" v-model="code" :extensions="extensions" @ready="onCmReady"
                 @update:model-value="onCmInput" />
         </div>
     </div>
@@ -79,7 +84,7 @@
 <script setup lang="ts">
 import { CloudServerOutlined, CaretRightOutlined, SaveOutlined, StopOutlined } from "@ant-design/icons-vue";
 import { projectOperating, getScript, updateScript, runScript, stopScript, operatePackage, getPackages } from "@/api/http/analysis"
-import { ref, defineProps, onMounted, onBeforeUnmount } from "vue";
+import { ref, defineProps, onMounted, onBeforeUnmount, defineEmits } from "vue";
 import { Codemirror } from "vue-codemirror";
 import { python } from "@codemirror/lang-python";
 import { ElMessage } from 'element-plus';
@@ -87,7 +92,18 @@ import { ElMessage } from 'element-plus';
 // import { oneDarkTheme } from "@codemirror/theme-one-dark";
 
 
-const props = defineProps<{ projectId: string }>();
+const props = defineProps({
+    projectId: {
+        type: String,
+        required: true,
+    },
+    userId: {
+        type: String,
+        required: true,
+    }
+});
+
+const emit = defineEmits(['startRunCode']);
 
 /**
  * 在线编程工具条
@@ -114,13 +130,13 @@ const installPackage = async () => {
         dialogVisible.value = false
         requestJson = addedPackageInfo.value.version ? {
             projectId: props.projectId,
-            userId: "rgj",
+            userId: props.userId,
             action: "add",
             name: addedPackageInfo.value.name,
             version: addedPackageInfo.value.version
         } : {
             projectId: props.projectId,
-            userId: "rgj",
+            userId: props.userId,
             action: "add",
             name: addedPackageInfo.value.name,
         }
@@ -136,7 +152,7 @@ const removePackage = async (row: any) => {
 
     await operatePackage({
         projectId: props.projectId,
-        userId: "rgj",
+        userId: props.userId,
         action: "remove",
         name: row.package,
     })
@@ -147,7 +163,7 @@ const removePackage = async (row: any) => {
 const getPackageList = async () => {
     let result = await getPackages({
         projectId: props.projectId,
-        userId: "rgj",
+        userId: props.userId,
     })
     packageList.value = result.map((item: any) => {
         let temp = item.split(' ')
@@ -160,14 +176,15 @@ const runCode = async () => {
     // 1、先更新代码
     let saveResult = await updateScript({
         projectId: props.projectId,
-        userId: "rgj",
+        userId: props.userId,
         content: code.value,
     })
     if (saveResult.status === 1) {
         // 2、再执行代码
+        emit('startRunCode');
         let runResult = await runScript({
             projectId: props.projectId,
-            userId: "rgj",
+            userId: props.userId,
         })
         if (runResult.status === 1) {
             ElMessage.success("运行成功");
@@ -183,7 +200,7 @@ const runCode = async () => {
 const stopCode = async () => {
     stopScript({
         projectId: props.projectId,
-        userId: "rgj",
+        userId: props.userId,
     })
     ElMessage.info("正在停止运行");
 };
@@ -191,7 +208,7 @@ const saveCode = async () => {
     // 保存代码内容
     let result = await updateScript({
         projectId: props.projectId,
-        userId: "rgj",
+        userId: props.userId,
         content: code.value,
     })
     if (result.status === 1) {
@@ -250,11 +267,11 @@ onMounted(async () => {
 
     code.value = await getScript({
         projectId: props.projectId,
-        userId: "rgj",
+        userId: props.userId,
     })
     let result = await projectOperating({
         projectId: props.projectId,
-        userId: "rgj",
+        userId: props.userId,
         action: "open",
     })
 
@@ -269,7 +286,7 @@ onMounted(async () => {
 onBeforeUnmount(async () => {
     let result = await projectOperating({
         projectId: props.projectId,
-        userId: "rgj",
+        userId: props.userId,
         action: "close",
     })
     if (result.status === 1) {
@@ -283,12 +300,14 @@ onBeforeUnmount(async () => {
 <style scoped>
 @reference 'tailwindcss';
 
+
+
 :deep(.cm-scroller) {
     overflow-x: hidden !important;
 }
 
 .code-editor {
-    @apply h-[90%] w-full p-2 bg-gray-100 rounded-lg overflow-y-auto overflow-x-hidden text-sm font-sans;
+    @apply h-[90%] w-full bg-gray-100 rounded-lg overflow-y-auto overflow-x-hidden text-sm font-sans;
 }
 
 .toolItem {

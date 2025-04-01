@@ -1,5 +1,5 @@
 <template>
-    <div class="relative bg-sky-200 flex">
+    <div class="relative flex bg-sky-200">
         <MapComp class="flex-1" />
         <ImageRetrievalPanel />
     </div>
