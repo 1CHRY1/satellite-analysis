@@ -7,6 +7,7 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.SftpException;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.config.web.JSchConnectionManager;
+import nnu.mnr.satellite.constants.DockerContants;
 import nnu.mnr.satellite.constants.UserConstants;
 import nnu.mnr.satellite.model.po.resources.Tile;
 import nnu.mnr.satellite.model.po.user.User;
@@ -125,6 +126,10 @@ public class ModelCodingService {
         String projectName = createProjectDTO.getProjectName();
         String env = createProjectDTO.getEnvironment();
         String imageEnv = DockerFileUtil.getImageByName(env);
+        if (imageEnv.equals(DockerContants.NO_IMAGE)) {
+            responseInfo = "No Such Image";
+            return CodingProjectVO.builder().status(-1).info(responseInfo).build();
+        }
         String projectId = IdUtil.generateProjectId();
         String serverDir = dockerServerProperties.getServerDir() + projectId + "/";
         String workDir = dockerServerProperties.getWorkDir();
@@ -160,7 +165,7 @@ public class ModelCodingService {
         dockerService.startContainer(containerId);
 
         // Start Watching Process
-        String watchCommand = "python " + project.getWatchPath();
+        String watchCommand = "nohup python " + project.getWatchPath() + " &";
         CompletableFuture.runAsync( () -> dockerService.runCMDInContainer(userId, projectId, containerId, watchCommand));
 
         projectRepo.insert(project);
@@ -182,18 +187,7 @@ public class ModelCodingService {
         }
         // Start Container
         try {
-            String containerId;
-            if (project.getContainerId() == null){
-                String imageEnv = DockerFileUtil.getImageByName(project.getEnvironment());
-                containerId = dockerService.createContainer(imageEnv, project.getProjectName(), project.getServerDir(), project.getWorkDir());
-                project.setContainerId(containerId);
-                projectRepo.insert(project);
-                responseInfo = "Project " + projectId + " has been Created and Opened";
-                return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
-            }
-            else {
-                containerId=project.getContainerId();
-            }
+            String containerId = project.getContainerId();
             // Container Running ?
             if (!dockerService.checkContainerState(containerId)){
                 dockerService.startContainer(containerId);
