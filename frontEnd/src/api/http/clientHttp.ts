@@ -40,7 +40,7 @@ class HttpClient {
                 return response.data
             },
             async (error) => {
-                if (error.response.status === 403) {
+                if (error.response.status === 401) {
                     // 🚨 Token 过期，尝试刷新
                     const refreshToken = localStorage.getItem('refreshToken')
                     if (!refreshToken) {

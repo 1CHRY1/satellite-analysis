@@ -5,16 +5,22 @@ import { CN_Bounds } from './constant'
 // import { useGridStore } from '@/store'
 // import { type polygonGeometry } from '@/types/sharing'
 import { watch } from 'vue'
+import type { polygonGeometry } from '../share.type'
+import { ezStore } from '@/store'
 
 ////////////////////////////////////////////////////////
 /////// Map Operation //////////////////////////////////
 
 let resizeObserver: ResizeObserver | null = null
 
-export async function map_initiliaze(id: string) {
+export async function map_initiliaze(
+    id: string,
+    style: Style = 'vector',
+    proj: 'mercator' | 'globe' = 'mercator',
+) {
     // return initMap(id)
     setTimeout(() => {
-        initMap(id).then((m) => {
+        initMap(id, style, proj).then((m) => {
             m.resize()
             const container = document.getElementById(id)
             if (container) {
@@ -23,6 +29,11 @@ export async function map_initiliaze(id: string) {
                 })
                 resizeObserver.observe(container)
             }
+            m.fitBounds(CN_Bounds, {
+                linear: true,
+                animate: true,
+                duration: 1000,
+            })
         })
     }, 0)
 }
@@ -43,7 +54,9 @@ export function map_checkoutStyle(s: Style): void {
 
 export function map_fitViewToCN(): void {
     mapManager.withMap((m) => {
-        m.fitBounds(CN_Bounds)
+        m.fitBounds(CN_Bounds, {
+            duration: 700,
+        })
     })
 }
 
@@ -130,30 +143,23 @@ export function draw_pointMode(): void {
     })
 }
 
-// export async function getCurrentGeometry(): Promise<polygonGeometry> {
-//     return new Promise((resolve, reject) => {
-//         mapManager.withDraw((d) => {
-//             const features = d.getAll().features
-//             if (features.length) {
-//                 console.log('current geom', features[0].geometry)
-//                 resolve(features[0].geometry as polygonGeometry)
-//             }
-//             // 默认检索范围
-//             resolve({
-//                 type: 'Polygon',
-//                 coordinates: [
-//                     [
-//                         [0, 85],
-//                         [0, -85],
-//                         [180, -85],
-//                         [180, 85],
-//                         [0, 85],
-//                     ],
-//                 ],
-//             })
-//         })
-//     })
-// }
+export function getCurrentGeometry(): polygonGeometry {
+    if (ezStore.get('polygonFeature')) {
+        return ezStore.get('polygonFeature') as polygonGeometry
+    }
+    return {
+        type: 'Polygon',
+        coordinates: [
+            [
+                [0, 85],
+                [0, -85],
+                [180, -85],
+                [180, 85],
+                [0, 85],
+            ],
+        ],
+    }
+}
 
 ////////////////////////////////////////////////////////
 /////// Layer Operation //////////////////////////////////
