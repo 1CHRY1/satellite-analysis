@@ -1,9 +1,6 @@
 package nnu.mnr.satellite.service.common;
 
-import com.jcraft.jsch.ChannelSftp;
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.Session;
-import com.jcraft.jsch.SftpException;
+import com.jcraft.jsch.*;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.model.pojo.common.SftpConn;
 import nnu.mnr.satellite.config.web.JSchConnectionManager;
@@ -91,7 +88,6 @@ public class SftpDataService {
         if (normalizedPath.isEmpty() || "/".equals(normalizedPath)) {
             return;
         }
-
         try {
             channelSftp.ls(normalizedPath);
         } catch (SftpException e) {
@@ -142,11 +138,33 @@ public class SftpDataService {
         });
     }
 
+    private void deleteFile(ChannelSftp channelSftp, String path) throws SftpException, JSchException, IOException {
+        try {
+            channelSftp.rm(path);
+        } catch (SftpException e) {
+            if (e.getMessage().contains("Permission denied")) {
+                Session session = jschConnectionManager.getSession();
+                ChannelExec channelExec = (ChannelExec) session.openChannel("exec");
+                channelExec.setCommand("sudo /bin/rm -f " + path);
+                channelExec.setErrStream(System.err);
+                InputStream in = channelExec.getInputStream();
+                channelExec.connect();
+                if (channelExec.getExitStatus() != 0) {
+                    log.info("Failed to delete file with sudo, exit status: " + channelExec.getExitStatus());
+                }
+                channelExec.disconnect();
+                jschConnectionManager.returnSession(session);
+            } else {
+                log.info("Failed to delete file: " + path, e);
+            }
+        }
+    }
+
     public void deleteFolder(String folderPath) {
         executeWithChannel(channelSftp -> {
             try {
                 deleteFolderRecursive(channelSftp, folderPath);
-            } catch (SftpException e) {
+            } catch (SftpException | JSchException | IOException e) {
                 log.error("Failed to delete folder: " + folderPath, e);
                 throw new RuntimeException("Delete folder operation failed", e);
             }
@@ -192,7 +210,7 @@ public class SftpDataService {
         }
     }
 
-    private void deleteFolderRecursive(ChannelSftp channelSftp, String folderPath) throws SftpException {
+    private void deleteFolderRecursive(ChannelSftp channelSftp, String folderPath) throws SftpException, JSchException, IOException {
         try {
             channelSftp.cd(folderPath);
         } catch (SftpException e) {
@@ -209,7 +227,8 @@ public class SftpDataService {
             if (entry.getAttrs().isDir()) {
                 deleteFolderRecursive(channelSftp, fullPath);
             } else {
-                channelSftp.rm(fullPath);
+//                channelSftp.rm(fullPath);
+                deleteFile(channelSftp, fullPath);
             }
         }
         channelSftp.cd("..");

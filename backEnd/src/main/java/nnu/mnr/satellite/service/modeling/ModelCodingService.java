@@ -7,6 +7,7 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.SftpException;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.config.web.JSchConnectionManager;
+import nnu.mnr.satellite.constants.DockerContants;
 import nnu.mnr.satellite.constants.UserConstants;
 import nnu.mnr.satellite.model.po.resources.Tile;
 import nnu.mnr.satellite.model.po.user.User;
@@ -125,6 +126,10 @@ public class ModelCodingService {
         String projectName = createProjectDTO.getProjectName();
         String env = createProjectDTO.getEnvironment();
         String imageEnv = DockerFileUtil.getImageByName(env);
+        if (imageEnv.equals(DockerContants.NO_IMAGE)) {
+            responseInfo = "No Such Image";
+            return CodingProjectVO.builder().status(-1).info(responseInfo).build();
+        }
         String projectId = IdUtil.generateProjectId();
         String serverDir = dockerServerProperties.getServerDir() + projectId + "/";
         String workDir = dockerServerProperties.getWorkDir();
@@ -160,9 +165,8 @@ public class ModelCodingService {
         dockerService.startContainer(containerId);
 
         // Start Watching Process
-        String watchCommand = "python " + project.getWatchPath();
-        CompletableFuture.runAsync( () -> dockerService.runCMDInContainer(userId, projectId, containerId, watchCommand));
-
+        String watchCommand = "nohup python -u " + project.getWatchPath() + " > watcher.out 2>&1 &";
+        CompletableFuture.runAsync(() -> dockerService.runCMDInContainerWithoutInteraction(userId, projectId, containerId, watchCommand));        dockerService.runCMDInContainerWithoutInteraction(userId, projectId, containerId, watchCommand);
         projectRepo.insert(project);
         responseInfo = "Project " + projectId + " has been Created";
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
@@ -182,18 +186,7 @@ public class ModelCodingService {
         }
         // Start Container
         try {
-            String containerId;
-            if (project.getContainerId() == null){
-                String imageEnv = DockerFileUtil.getImageByName(project.getEnvironment());
-                containerId = dockerService.createContainer(imageEnv, project.getProjectName(), project.getServerDir(), project.getWorkDir());
-                project.setContainerId(containerId);
-                projectRepo.insert(project);
-                responseInfo = "Project " + projectId + " has been Created and Opened";
-                return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
-            }
-            else {
-                containerId=project.getContainerId();
-            }
+            String containerId = project.getContainerId();
             // Container Running ?
             if (!dockerService.checkContainerState(containerId)){
                 dockerService.startContainer(containerId);
@@ -222,7 +215,9 @@ public class ModelCodingService {
             responseInfo = "Project " + projectId + " hasn't been Registered";
             return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
         }
-//        String projectWorkDir = project.getWorkDir();
+        // Delete Local Data & Remote Data
+        FileUtil.deleteFolder(new File(dockerServerProperties.getLocalPath() + projectId));
+        // Delete Container if Exists
         if (project.getContainerId() != null){
             String containerId = project.getContainerId();
             CompletableFuture.runAsync( () -> {
@@ -239,12 +234,25 @@ public class ModelCodingService {
                 }
             });
         }
-        // Delete Local Data & Remote Data
-        FileUtil.deleteFolder(new File(dockerServerProperties.getLocalPath() + projectId));
         // Wait for Watch Dog Deleting Data
-        sftpDataService.deleteFolderContents(project.getServerDir() + "output/");
-        Thread.sleep(5 * 1000);
-        sftpDataService.deleteFolder(project.getServerDir());
+        CompletableFuture<Void> deleteContentsFuture = CompletableFuture.runAsync(() -> {
+            try {
+                sftpDataService.deleteFolderContents(project.getServerDir() + "output/");
+            } catch (Exception e) {
+                log.error("Failed to delete folder contents", e);
+            }
+        });
+        deleteContentsFuture.thenRunAsync(() -> {
+            try {
+                Thread.sleep(5000);
+                sftpDataService.deleteFolder(project.getServerDir());
+            } catch (Exception e) {
+                log.error("Failed to delete folder", e);
+            }
+        }).exceptionally(throwable -> {
+            log.error("Error in async deletion", throwable);
+            return null;
+        });
         log.info("Successfully deleted folder and its contents: " + project.getServerDir());
         projectRepo.deleteById(projectId);
         responseInfo = "Project " + projectId + " has been Deleted";
@@ -293,7 +301,7 @@ public class ModelCodingService {
         return sftpDataService.readRemoteFile(project.getServerPyPath());
     }
 
-    public List<DFileInfo> getProjectCurDirFiles(ProjectFileDTO projectFileDTO) {
+    public List<DFileInfo> getProjectCurDirFiles(ProjectFileDTO projectFileDTO) throws Exception {
         String projectId = projectFileDTO.getProjectId(); String userId = projectFileDTO.getUserId();
         if ( !projectDataService.VerifyUserProject(userId, projectId) ) {
             return null;
@@ -304,6 +312,9 @@ public class ModelCodingService {
             return null;
         }
         String containerId = project.getContainerId();
+        if (!dockerService.checkContainerState(containerId)) {
+            return null;
+        }
         List<DFileInfo> fileTree = new ArrayList<>();
         return dockerService.getCurDirFiles(projectId, containerId, path, fileTree);
     }
