@@ -27,12 +27,14 @@ public interface ITileRepo extends BaseMapper<Tile> {
     @Results({
             @Result(property = "bbox", column = "bounding_box", typeHandler = GeometryTypeHandler.class)
     })
+    @DS("mysql_tile")
     List<Tile> getTileByBandAndLevel(@Param("tileTable") String tileTable, String band, String tileLevel);
 
     @Select("select distinct row_id, column_id from ${tileTable} where tile_level = #{tileLevel} and " +
             "( ST_Intersects(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), bounding_box) OR " +
             "ST_Contains(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), bounding_box) OR " +
             "ST_Within(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), bounding_box) ) ")
+    @DS("mysql_tile")
     List<TileBasicDTO> getBasicTileByBandAndLevel(@Param("tileTable") String tileTable, String tileLevel, String wkt);
 
     @Select("select image_id, tile_level, cloud, band, column_id, row_id, bucket, path from ${tileTable} where tile_id = #{tileId}")

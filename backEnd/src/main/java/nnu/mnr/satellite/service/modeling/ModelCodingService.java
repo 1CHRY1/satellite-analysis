@@ -9,12 +9,14 @@ import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.config.web.JSchConnectionManager;
 import nnu.mnr.satellite.constants.UserConstants;
 import nnu.mnr.satellite.model.po.resources.Tile;
+import nnu.mnr.satellite.model.po.user.User;
 import nnu.mnr.satellite.model.pojo.modeling.MinioProperties;
 import nnu.mnr.satellite.model.dto.modeling.*;
 import nnu.mnr.satellite.model.po.modeling.Project;
 import nnu.mnr.satellite.model.pojo.common.DFileInfo;
 import nnu.mnr.satellite.model.pojo.modeling.DockerServerProperties;
 import nnu.mnr.satellite.model.vo.modeling.CodingProjectVO;
+import nnu.mnr.satellite.model.vo.user.UserVO;
 import nnu.mnr.satellite.repository.modeling.IProjectRepo;
 import nnu.mnr.satellite.repository.resources.ITileRepo;
 import nnu.mnr.satellite.service.common.DockerService;
@@ -119,6 +121,7 @@ public class ModelCodingService {
             responseInfo = String.format(UserConstants.USER_NOT_FOUND, userId);
             return CodingProjectVO.builder().status(-1).info(responseInfo).build();
         }
+        User user = userService.getUserById(userId);
         String projectName = createProjectDTO.getProjectName();
         String env = createProjectDTO.getEnvironment();
         String imageEnv = DockerFileUtil.getImageByName(env);
@@ -139,7 +142,8 @@ public class ModelCodingService {
         Project project = Project.builder()
                 .projectId(projectId).projectName(projectName)
                 .environment(env).createTime(LocalDateTime.now()).dataBucket(projectDataBucket)
-                .workDir(workDir).serverDir(serverDir).createUser(userId).description(createProjectDTO.getDescription())
+                .workDir(workDir).serverDir(serverDir).description(createProjectDTO.getDescription())
+                .createUser(userId).createUserEmail(user.getEmail()).createUserName(user.getUserName())
                 .pyPath(pyPath).localPyPath(localPyPath).serverPyPath(serverPyPath)
                 .watchPath(watchPath).outputPath(outputPath).dataPath(dataPath)
                 .build();

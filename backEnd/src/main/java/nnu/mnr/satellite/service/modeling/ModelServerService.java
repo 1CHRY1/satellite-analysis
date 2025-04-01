@@ -81,43 +81,4 @@ public class ModelServerService {
         caseJson.put("result", "");
         redisUtil.addJsonDataWithExpiration(caseId, caseJson, 30*60);
     }
-
-    // Business Services ******************************
-
-    public String getNDVIByPoint(NdviDTO ndviDTO) {
-        JSONObject ndviPointParam = JSONObject.of("sensorName", ndviDTO.getSensorName(), "scenes", ndviDTO.getScenes(), "point", ndviDTO.getGeometry());
-        try {
-            String ndviPointApi = modelServerProperties.getAddress() + modelServerProperties.getApis().get("ndviPoint");
-            String caseId = ProcessUtil.runModelCase(ndviPointApi, ndviPointParam);
-            putModelCaseToRedis(caseId, ndviPointParam);
-            quartzSchedulerManager.startModelRunningStatusJob(caseId);
-            return caseId;
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    public String getNDVIByPolygon(NdviDTO ndviDTO) {
-        JSONObject ndviAreaParam = JSONObject.of("sensorName", ndviDTO.getSensorName(), "scenes", ndviDTO.getScenes(), "polygon", ndviDTO.getGeometry());
-//        JSONArray ndviIds = new JSONArray();
-        try {
-            String ndviAreaApi = modelServerProperties.getAddress() + modelServerProperties.getApis().get("ndviArea");
-            String caseId = ProcessUtil.runModelCase(ndviAreaApi, ndviAreaParam);
-            putModelCaseToRedis(caseId, ndviAreaParam);
-            quartzSchedulerManager.startModelRunningStatusJob(caseId);
-            return caseId;
-//            JSONArray ndviAreaList = JSONArray.parseArray(HttpUtil.doPost(ndviAreaApi, ndviAreaParam));
-//            for (Object ndviArea : ndviAreaList) {
-//                JSONObject ndviAreaJson = (JSONObject) ndviArea;
-//                String areaId = ndviAreaJson.getString("id");
-//                JSONObject ndviAreaJsonVO = JSONObject.of("areaId", areaId, "areaTime", ndviAreaJson.getString("time"));
-//                redisUtil.addJsonDataWithExpiration(areaId, ndviAreaJson, 60*10);
-//                ndviIds.add(ndviAreaJsonVO);
-//            }
-//            return  ndviIds;
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
 }
