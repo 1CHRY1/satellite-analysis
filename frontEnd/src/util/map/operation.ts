@@ -1,23 +1,18 @@
 import { mapManager, initMap, type Style } from './mapManager'
-import mapboxgl from 'mapbox-gl'
+import { Popup, GeoJSONSource } from 'mapbox-gl'
 import { CN_Bounds } from './constant'
 // import { type Image } from '@/types/satellite'
-// import { useGridStore } from '@/store'
 // import { type polygonGeometry } from '@/types/sharing'
 import { watch } from 'vue'
 import type { polygonGeometry } from '../share.type'
-import { ezStore } from '@/store'
+import { ezStore, useGridStore } from '@/store'
 
 ////////////////////////////////////////////////////////
 /////// Map Operation //////////////////////////////////
 
 let resizeObserver: ResizeObserver | null = null
 
-export async function map_initiliaze(
-    id: string,
-    style: Style = 'vector',
-    proj: 'mercator' | 'globe' = 'mercator',
-) {
+export async function map_initiliaze(id: string, style: Style = 'vector', proj: 'mercator' | 'globe' = 'mercator') {
     // return initMap(id)
     setTimeout(() => {
         initMap(id, style, proj).then((m) => {
@@ -82,34 +77,6 @@ export function map_flyTo([lng, lat]: [number, number]): void {
     })
 }
 
-export function addRasterLayerFromUrl(url: string, layerId: string = 'raster-layer'): void {
-    mapManager.withMap((m) => {
-        // 检查是否已经存在同名图层，避免重复添加
-        if (m.getLayer(layerId)) {
-            console.warn(`图层 "${layerId}" 已存在，跳过添加。`)
-            return
-        }
-
-        // 添加栅格数据源
-        m.addSource(layerId, {
-            type: 'raster',
-            tiles: [url], // 瓦片服务的 URL 模板
-            tileSize: 256, // 瓦片尺寸，默认为 256x256
-            crossOrigin: 'anonymous',
-        })
-
-        // 添加栅格图层
-        m.addLayer({
-            id: layerId,
-            type: 'raster',
-            source: layerId,
-            paint: {}, // 可以在这里自定义渲染样式
-        })
-
-        console.log(`图层 "${layerId}" 已成功添加到地图。`)
-    })
-}
-
 export function removeRasterLayer(layerId: string = 'raster-layer'): void {
     mapManager.withMap((m) => {
         if (m.getLayer(layerId)) {
@@ -162,152 +129,221 @@ export function getCurrentGeometry(): polygonGeometry {
 }
 
 ////////////////////////////////////////////////////////
-/////// Layer Operation //////////////////////////////////
-type RasterLayerProp = {
-    id: string
-    url: string
-    tileSize: number
-}
+/////// Layer Operation ////////////////////////////////
 
-export function map_addRasterLayer(props: RasterLayerProp): void {
+export function addRasterLayerFromUrl(url: string, layerId: string = 'raster-layer'): void {
     mapManager.withMap((m) => {
-        m.addSource(props.id + '-source', {
+        // 检查是否已经存在同名图层，避免重复添加
+        if (m.getLayer(layerId)) {
+            console.warn(`图层 "${layerId}" 已存在，跳过添加。`)
+            return
+        }
+
+        // 添加栅格数据源
+        m.addSource(layerId, {
             type: 'raster',
-            tiles: [props.url],
-            tileSize: props.tileSize ?? 256,
+            tiles: [url], // 瓦片服务的 URL 模板
+            tileSize: 256, // 瓦片尺寸，默认为 256x256
+            crossOrigin: 'anonymous',
         })
+
+        // 添加栅格图层
         m.addLayer({
-            id: props.id,
+            id: layerId,
             type: 'raster',
-            source: props.id + '-source',
-            paint: {},
+            source: layerId,
+            paint: {}, // 可以在这里自定义渲染样式
         })
+
+        console.log(`图层 "${layerId}" 已成功添加到地图。`)
     })
 }
 
-type GridLayerProp = {
-    id: string
-    url: string
+// Data-View:: image-polygon-layer
+export function map_showImagePolygon(geoFeature: polygonGeometry): void {
+    let id = 'image-polygon'
+    let srcId = id + '-source'
+    let polygonGeojson = {
+        type: 'Feature',
+        geometry: geoFeature,
+        properties: {},
+    }
+
+    mapManager.withMap((m) => {
+        if (m.getLayer(id) && m.getSource(srcId)) {
+            let source = m.getSource(srcId) as GeoJSONSource
+            source.setData(geoFeature)
+        } else {
+            m.addSource(srcId, {
+                type: 'geojson',
+                data: polygonGeojson as any,
+            })
+
+            m.addLayer({
+                id: id,
+                type: 'fill',
+                source: srcId,
+                paint: {
+                    'fill-color': '#FFFF00',
+                    'fill-opacity': 0.3,
+                    'fill-outline-color': '#000000',
+                },
+            })
+            ezStore.set('image-polygon-layer', id)
+            ezStore.set('image-polygon-source', srcId)
+        }
+    })
+}
+export function map_destroyImagePolygon(): void {
+    const id = ezStore.get('image-polygon-layer')
+    const srcId = ezStore.get('image-polygon-source')
+    mapManager.withMap((m) => {
+        m.getLayer(id) && m.removeLayer(id)
+        m.getSource(srcId) && m.removeSource(srcId)
+        ezStore.delete('image-polygon-layer')
+        ezStore.delete('image-polygon-source')
+    })
 }
 
-// export function map_addGridLayer(props: GridLayerProp): void {
-//     const gridStore = useGridStore()
-
-//     mapManager.withMap((m) => {
-//         const popup = new mapboxgl.Popup({
-//             closeButton: false,
-//         })
-
-//         m.addSource(props.id + '-source', {
-//             type: 'geojson',
-//             data: props.url,
-//         })
-
-//         m.addLayer({
-//             id: props.id + '-line',
-//             type: 'line',
-//             source: props.id + '-source',
-//             paint: {
-//                 'line-color': '#F00000',
-//                 'line-width': 1,
-//                 'line-opacity': 0.4,
-//             },
-//         })
-
-//         m.addLayer({
-//             id: props.id,
-//             type: 'fill',
-//             source: props.id + '-source',
-//             paint: {
-//                 'fill-color': '#FF0000',
-//                 'fill-opacity': 0.01,
-//             },
-//         })
-
-//         // Add a highlight layer
-//         m.addLayer({
-//             id: props.id + '-highlight',
-//             type: 'fill',
-//             source: props.id + '-source',
-//             paint: {
-//                 'fill-color': '#FFFFFF', // Highlight color
-//                 'fill-opacity': 0.5,
-//             },
-//             filter: ['in', 'id', ''],
-//         })
-
-//         watch(
-//             () => gridStore.selectedGrids,
-//             () => {
-//                 console.log('watch gridStore.selectedGrid')
-//                 m.setFilter(props.id + '-highlight', ['in', 'id', ...gridStore.selectedGrids])
-//             },
-//         )
-
-//         m.on('click', props.id, (e) => {
-//             const features = m.queryRenderedFeatures(e.point, { layers: [props.id] })
-//             if (features.length) {
-//                 const featureId = features[0].properties?.id
-//                 // console.log(features[0], featureId)
-//                 const text = `GridID : ${featureId}`
-//                 popup.setLngLat(e.lngLat).setText(text).addTo(m)
-
-//                 // Toggle highlight
-//                 if (gridStore.selectedGrids.includes(featureId)) {
-//                     gridStore.removeGrid(featureId)
-//                 } else {
-//                     gridStore.addGrid(featureId)
-//                 }
-//             }
-//         })
-//     })
-// }
-
+// Data-View:: image-preview-layer
 type ImageLayerProp = {
-    id: string
-    url: string
+    imageUrl: string
     boxCoordinates: [[number, number], [number, number], [number, number], [number, number]]
 }
-
-export function map_addImageLayer(props: ImageLayerProp): void {
+export function map_addImagePreviewLayer(props: ImageLayerProp): void {
+    const id = 'image-preview-layer'
+    const srcId = id + '-source'
     mapManager.withMap((m) => {
-        m.addSource(props.id + '-source', {
-            type: 'image',
-            url: props.url,
-            coordinates: props.boxCoordinates,
-        })
-        m.addLayer({
-            id: props.id,
-            type: 'raster',
-            source: props.id + '-source',
-            paint: {
-                'raster-opacity': 0.9,
-            },
-        })
+        if (m.getLayer(id) && m.getSource(srcId)) {
+            m.removeLayer(id)
+            m.removeSource(srcId)
+        } else {
+            m.addSource(srcId, {
+                type: 'image',
+                url: props.imageUrl,
+                coordinates: props.boxCoordinates,
+            })
+            m.addLayer({
+                id: id,
+                type: 'raster',
+                source: srcId,
+                paint: {
+                    'raster-opacity': 0.9,
+                },
+            })
+            ezStore.set('image-preview-layer', id)
+        }
     })
 }
 
-////////////////////////////////////////////////////////
-/////// Grid Operation //////////////////////////////////
+// Data-View:: grid-layer
+export function map_addGridLayer(gridGeoJsonURL: string): void {
+    const gridStore = useGridStore()
 
-// export function grid_create(props: Image): void {
-//     const gridImgUrl = 'http://127.0.0.1:5000/png'
-//     map_addImageLayer({
-//         id: 'gridImage',
-//         url: gridImgUrl,
-//         boxCoordinates: [
-//             [119.0494136861107535, 32.7542374796797588],
-//             [121.6247280289205861, 32.7542374796797588],
-//             [121.6247280289205861, 30.7365359708879033],
-//             [119.0494136861107535, 30.7365359708879033],
-//         ],
-//     })
+    const id = 'grid-layer'
+    const fillId = id + '-fill'
+    const lineId = id + '-line'
+    const highlightId = id + '-highlight'
+    const srcId = id + '-source'
 
-//     setTimeout(() => {
-//         const gridGeoJsonUrl = 'http://127.0.0.1:5000/geojson'
-//         map_addGridLayer({
-//             id: 'grid',
-//             url: gridGeoJsonUrl,
-//         })
-//     }, 500)
-// }
+    mapManager.withMap((m) => {
+        // Add a popup to show grid info
+        // const popup = new mapboxgl.Popup({
+        //     closeButton: false,
+        //     closeOnMove: true,
+        // })
+        // Add a geojson source
+        m.addSource(srcId, {
+            type: 'geojson',
+            data: gridGeoJsonURL,
+        })
+        // Add a line layer for **grid line visualization**
+        m.addLayer({
+            id: lineId,
+            type: 'line',
+            source: srcId,
+            paint: {
+                'line-color': '#F00000',
+                'line-width': 1,
+                'line-opacity': 0.3,
+            },
+        })
+        // Add a invisible fill layer for **grid picking**
+        m.addLayer({
+            id: fillId,
+            type: 'fill',
+            source: srcId,
+            paint: {
+                'fill-color': '#FF0000',
+                'fill-opacity': 0.01,
+            },
+        })
+        // Add a filterable fill layer for **grid highlighting**
+        m.addLayer({
+            id: highlightId,
+            type: 'fill',
+            source: srcId,
+            paint: {
+                'fill-color': '#FFFFFF',
+                'fill-opacity': 0.4,
+            },
+            filter: ['in', 'id', ''],
+        })
+
+        // Add a click event listener to the invisible fill layer
+        m.on('click', fillId, async (e) => {
+            const features = e.features!
+            if (features.length) {
+                const featureId = features[0].properties?.id
+                const text = `GridID : ${featureId}`
+                console.log('click grid:', features[0])
+                // popup.setLngLat(e.lngLat).setText(text).addTo(m)
+
+                // Toggle highlight
+                if (gridStore.selectedGrids.includes(featureId)) {
+                    gridStore.removeGrid(featureId)
+                } else {
+                    gridStore.addGrid(featureId)
+                }
+            }
+        })
+
+        // Keep Watching gridStore.selectedGrids and update the highlight layer
+        const cancelWatch = watch(
+            () => gridStore.selectedGrids,
+            () => {
+                console.log('watch gridStore.selectedGrid')
+                const selectedGrids = Array.from(gridStore.selectedGrids) || ['']
+                m.setFilter(highlightId, ['in', 'id', ...selectedGrids])
+            },
+        )
+
+        ezStore.set('grid-layer-cancel-watch', cancelWatch)
+        ezStore.set('grid-layer-fill-id', fillId)
+        ezStore.set('grid-layer-line-id', lineId)
+        ezStore.set('grid-layer-highlight-id', highlightId)
+        ezStore.set('grid-layer-source-id', srcId)
+    })
+}
+
+// Data-View:: grid-layer
+export function map_destroyGridLayer(): void {
+    const gridLayer = ezStore.get('grid-layer-fill-id')
+    const gridLineLayer = ezStore.get('grid-layer-line-id')
+    const gridHighlightLayer = ezStore.get('grid-layer-highlight-id')
+    const gridSourceId = ezStore.get('grid-layer-source-id')
+    const cancelWatch = ezStore.get('grid-layer-cancel-watch')
+
+    mapManager.withMap((m) => {
+        gridLayer && m.getLayer(gridLayer) && m.removeLayer(gridLayer)
+        gridLineLayer && m.getLayer(gridLineLayer) && m.removeLayer(gridLineLayer)
+        gridHighlightLayer && m.getLayer(gridHighlightLayer) && m.removeLayer(gridHighlightLayer)
+        gridSourceId && m.getSource(gridSourceId) && m.removeSource(gridSourceId)
+        cancelWatch && cancelWatch()
+        ezStore.delete('grid-layer-fill-id')
+        ezStore.delete('grid-layer-line-id')
+        ezStore.delete('grid-layer-highlight-id')
+        ezStore.delete('grid-layer-source-id')
+        ezStore.delete('grid-layer-cancel-watch')
+    })
+}

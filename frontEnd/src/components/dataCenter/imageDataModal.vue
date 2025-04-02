@@ -1,13 +1,6 @@
 <template>
     <!-- Dataset selection modal -->
-    <a-modal
-        v-model:open="modalVisible"
-        title="选择数据集"
-        :width="800"
-        :footer="null"
-        :destroyOnClose="true"
-        class="dataset-modal"
-    >
+    <a-modal v-model:open="modalVisible" title="选择数据集" :width="800" :footer="null" :destroyOnClose="true" class="dataset-modal">
         <div class="modal-content">
             <a-skeleton active :loading="satellites.length === 0">
                 <!-- Step indicator -->
@@ -35,29 +28,18 @@
                                 <h3 class="satellite-name">{{ satellite.name }}</h3>
                                 <p class="satellite-description">{{ satellite.description }}</p>
                                 <div class="satellite-meta">
-                                    <span class="satellite-products-count"
-                                        >{{ satellite.products.length }} 个产品</span
-                                    >
+                                    <span class="satellite-products-count">{{ satellite.products.length }} 个产品</span>
                                 </div>
                             </div>
                             <div class="satellite-select-indicator">
-                                <check-circle-icon
-                                    v-if="selectedSatellite?.id === satellite.id"
-                                    :size="20"
-                                />
+                                <check-circle-icon v-if="selectedSatellite?.id === satellite.id" :size="20" />
                             </div>
                         </div>
                     </div>
 
                     <div class="modal-footer">
                         <a-button @click="closeModal">取消</a-button>
-                        <a-button
-                            type="primary"
-                            @click="goToProductSelection"
-                            :disabled="!selectedSatellite"
-                        >
-                            下一步
-                        </a-button>
+                        <a-button type="primary" @click="goToProductSelection" :disabled="!selectedSatellite"> 下一步 </a-button>
                     </div>
                 </div>
 
@@ -75,26 +57,15 @@
                     </div>
 
                     <div class="products-list">
-                        <a-radio-group
-                            v-model:value="selectedProductId"
-                            class="product-radio-group"
-                        >
-                            <div
-                                v-for="product in selectedSatellite.products"
-                                :key="product.id"
-                                class="product-item"
-                            >
+                        <a-radio-group v-model:value="selectedProductId" class="product-radio-group">
+                            <div v-for="product in selectedSatellite.products" :key="product.id" class="product-item">
                                 <a-radio :value="product.id">
                                     <div class="product-info">
                                         <h4 class="product-name">{{ product.name }}</h4>
                                         <p class="product-description">{{ product.description }}</p>
                                         <div class="product-meta">
-                                            <span class="product-resolution"
-                                                >分辨率: {{ product.resolution }}</span
-                                            >
-                                            <span class="product-period"
-                                                >周期: {{ product.period }}</span
-                                            >
+                                            <span class="product-resolution">分辨率: {{ product.resolution }}</span>
+                                            <span class="product-period">周期: {{ product.period }}</span>
                                         </div>
                                     </div>
                                 </a-radio>
@@ -104,13 +75,7 @@
 
                     <div class="modal-footer">
                         <a-button @click="backToSatellites">上一步</a-button>
-                        <a-button
-                            type="primary"
-                            @click="confirmSelection"
-                            :disabled="!selectedProductId"
-                        >
-                            确认选择
-                        </a-button>
+                        <a-button type="primary" @click="confirmSelection" :disabled="!selectedProductId"> 确认选择 </a-button>
                     </div>
                 </div>
             </a-skeleton>

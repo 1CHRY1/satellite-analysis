@@ -10,12 +10,12 @@
 
 /* Global Scrollbar */
 div::-webkit-scrollbar {
-	width: 3px !important;
+	width: 2px !important;
 }
 
 div::-webkit-scrollbar-thumb {
 	background-color: rgba(37, 190, 255, 0.5) !important;
-	border-radius: 3px !important;
+	border-radius: 2px !important;
 }
 
 div::-webkit-scrollbar-thumb:hover {

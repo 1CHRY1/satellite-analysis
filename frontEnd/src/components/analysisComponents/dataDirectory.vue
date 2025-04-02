@@ -1,24 +1,22 @@
 <template>
     <div>
-        <div class="h-[8%] w-full flex justify-between">
-            <div class="w-fit px-2 my-1 mx-2.5 shadow-md text-xs flex items-center bg-[#eaeaea] rounded">
-                <div @click="handleClick('data')"
-                    class="cursor-pointer pr-2 mr-2 border-r border-dashed border-gray-500 border-r-1 "
-                    :class="activeDataBase === 'data' ? 'text-[#1479d7]' : 'text-[#818999]'">
+        <div class="flex h-[8%] w-full justify-between">
+            <div class="mx-2.5 my-1 flex w-fit items-center rounded bg-[#eaeaea] px-2 text-xs shadow-md">
+                <div
+                    @click="handleClick('data')"
+                    class="mr-2 cursor-pointer border-r border-r-1 border-dashed border-gray-500 pr-2"
+                    :class="activeDataBase === 'data' ? 'text-[#1479d7]' : 'text-[#818999]'"
+                >
                     容器数据列表
                 </div>
-                <div @click="handleClick('output')" class="cursor-pointer"
-                    :class="activeDataBase === 'output' ? 'text-[#1479d7]' : 'text-[#818999]'">
+                <div @click="handleClick('output')" class="cursor-pointer" :class="activeDataBase === 'output' ? 'text-[#1479d7]' : 'text-[#818999]'">
                     输出数据列表
                 </div>
             </div>
 
-            <div class="w-fit px-2 my-1 mx-2.5 shadow-md text-xs flex items-center bg-[#eaeaea] rounded text-[#818999]">
-                工具列表
-            </div>
+            <div class="mx-2.5 my-1 flex w-fit items-center rounded bg-[#eaeaea] px-2 text-xs text-[#818999] shadow-md">工具列表</div>
         </div>
-        <div class="overflow-x-auto max-w-full ">
-
+        <div class="max-w-full overflow-x-auto">
             <table class="min-w-full table-auto border-collapse">
                 <thead>
                     <tr class="sticky top-0 bg-gray-200 text-[#818999]">
@@ -30,13 +28,13 @@
                 </thead>
                 <tbody>
                     <tr class="text-[#818999]" v-for="(item, index) in tableData" :key="index">
-                        <td class="py-2 ml-4 cursor-pointer flex " @click="handleCellClick(item, ' name')">
-                            <div class="w-4 h-4 flex justify-center items-center mr-1">
+                        <td class="ml-4 flex cursor-pointer py-2" @click="handleCellClick(item, ' name')">
+                            <div class="mr-1 flex h-4 w-4 items-center justify-center">
                                 <img :src="'/filesImg/' + item.fileType + '.png'" alt="" />
                             </div>
                             {{ item.fileName }}
                         </td>
-                        <td class=" py-2 px-4 cursor-pointer" @click="handleCellClick(item, 'updateTime')">
+                        <td class="cursor-pointer px-4 py-2" @click="handleCellClick(item, 'updateTime')">
                             {{ formatTime(item.updateTime) }}
                         </td>
                         <td class="cursor-pointer px-4 py-2" @click="handleCellClick(item, 'size')">
@@ -117,17 +115,18 @@ const handleCellClick = async (item: dockerData, column: string) => {
     console.log(item)
 
     if (column === 'view') {
-        if (item.fileType === "tif") {
-            console.log(item.filePath);
+        if (item.fileType === 'tif') {
+            console.log(item.filePath)
 
-            const targetItem = (activeDataBase.value === "data" ? inputData.value : outputData.value).find((data) => data.updateTime === item.updateTime && data.fileSize === item.fileSize && data.fileName === item.fileName);
+            const targetItem = (activeDataBase.value === 'data' ? inputData.value : outputData.value).find(
+                (data) => data.updateTime === item.updateTime && data.fileSize === item.fileSize && data.fileName === item.fileName,
+            )
             if (targetItem) {
-                targetItem.view = !targetItem.view;
+                targetItem.view = !targetItem.view
             }
         } else {
-            ElMessage.warning("暂不支持预览")
+            ElMessage.warning('暂不支持预览')
         }
-
     }
 }
 
@@ -144,17 +143,16 @@ const getInputData = async () => {
     if (tempData.length === 0) {
         setTimeout(async () => {
             tempData = await getFiles({
-                "userId": "rgj",
-                "projectId": props.projectId,
-                "path": "/data"
+                userId: 'rgj',
+                projectId: props.projectId,
+                path: '/data',
             })
-        }, 1000);
+        }, 1000)
     }
 
     inputData.value = tempData.map((item: any) => {
         return { ...item, view: false }
     })
-
 }
 const getOutputData = async () => {
     let tempData = await getFiles({
@@ -168,11 +166,11 @@ const getOutputData = async () => {
     if (tempData.length === 0) {
         setTimeout(async () => {
             tempData = await getFiles({
-                "userId": "rgj",
-                "projectId": props.projectId,
-                "path": "/output"
+                userId: 'rgj',
+                projectId: props.projectId,
+                path: '/output',
             })
-        }, 1000);
+        }, 1000)
     }
     outputData.value = tempData.map((item: any) => {
         return { ...item, view: false }
@@ -194,10 +192,9 @@ onMounted(async () => {
     //     tableData.value = activeDataBase.value === 'data' ? inputData.value : outputData.value;
     // })
 
-
     // }, 300);
 
-    console.log(tableData.value, 'tableData.value');
+    console.log(tableData.value, 'tableData.value')
 
     console.log(tableData.value, 'tableData.value')
 })
