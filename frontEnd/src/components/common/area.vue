@@ -2,30 +2,24 @@
     <div class="upload-area" @click="handleClick">
         <div class="upload-intro" v-if="showIntro">
             <span class="upload-intro-icon">
-                <slot name="upload-icon">
-                </slot>
+                <slot name="upload-icon"> </slot>
             </span>
             <span class="upload-intro-text">
-                <slot name="upload-intro">
-                    上传引导
-                </slot>
+                <slot name="upload-intro"> 上传引导 </slot>
             </span>
         </div>
         <div class="upload-content" v-else>
-            <slot name="upload-content">
-                上传后要显示的内容
-            </slot>
+            <slot name="upload-content"> 上传后要显示的内容 </slot>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-
 const props = defineProps({
     showIntro: {
         type: Boolean,
-        default: true
-    }
+        default: true,
+    },
 })
 const emit = defineEmits(['click'])
 
@@ -46,7 +40,7 @@ const handleClick = () => {
 }
 
 .upload-intro-icon {
-    @apply text-sm mr-2 text-sky-700;
+    @apply mr-2 text-sm text-sky-700;
 }
 
 .upload-intro-text {

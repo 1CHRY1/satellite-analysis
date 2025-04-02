@@ -1,6 +1,7 @@
 <template>
     <div
         class="bg-grey-300 card box-border flex h-[380px] w-[300px] cursor-pointer flex-col justify-between rounded-lg border-t border-l border-solid border-t-[rgba(255,255,255,.5)] border-l-[rgba(255,255,255,.5)] px-6 py-1">
+
         <!-- 头部 -->
         <div class="my-2 flex flex-col items-center justify-center">
             <Satellite class="mt-4 mb-1 h-16 w-16" color="white" />
@@ -34,7 +35,7 @@
 
 <script lang="ts" setup>
 import { Satellite, User, Mail, Clock3 } from 'lucide-vue-next'
-import { formatTime } from "@/util/common.ts"
+import { formatTime } from '@/util/common.ts'
 
 defineProps({
     project: {

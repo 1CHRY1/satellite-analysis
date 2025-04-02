@@ -1,6 +1,7 @@
 package nnu.mnr.satellite.model.dto.resources;
 
 import lombok.Data;
+import org.locationtech.jts.geom.Geometry;
 
 /**
  * Created with IntelliJ IDEA.
