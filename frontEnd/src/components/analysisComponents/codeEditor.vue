@@ -61,13 +61,14 @@
             </el-dialog>
             <div class="w-fit ml-2  rounded flex items-center my-1.5 relative ">
                 <div class="px-2 h-full flex items-center text-xs my-1 mr-2 bg-[#eaeaea] rounded shadow-md cursor-pointer relative "
-                    @click="toggleDropdown">
+                    @click="">
                     当前环境：{{ selectedEnv }}
                 </div>
                 <div v-if="showDropdown"
                     class="absolute left-0 top-8 w-fit mt-1 bg-white border border-gray-300 rounded shadow-md z-10">
+
                     <div v-for="env in envOptions" :key="env" class="px-3 py-2 hover:bg-gray-200 cursor-pointer text-sm"
-                        @click="selectEnv(env)">
+                        @click="">
                         {{ env }}
                     </div>
                 </div>
@@ -103,8 +104,7 @@ const props = defineProps({
     }
 });
 
-const emit = defineEmits(['startRunCode']);
-
+const emit = defineEmits(['addMessage']);
 /**
  * 在线编程工具条
  */
@@ -143,7 +143,7 @@ const installPackage = async () => {
     } else {
         ElMessage.warning("请输入要安装的依赖包名")
     }
-
+    emit('addMessage', '正在安装依赖：' + addedPackageInfo.value.name + "，请等待并关注安装信息")
     await operatePackage(requestJson)
 }
 
@@ -181,7 +181,7 @@ const runCode = async () => {
     })
     if (saveResult.status === 1) {
         // 2、再执行代码
-        emit('startRunCode');
+        emit("addMessage", 'code');
         let runResult = await runScript({
             projectId: props.projectId,
             userId: props.userId,
@@ -219,13 +219,13 @@ const saveCode = async () => {
 };
 
 // 切换环境选择下拉框状态
-const toggleDropdown = () => {
-    showDropdown.value = !showDropdown.value;
-};
-const selectEnv = (env: string) => {
-    selectedEnv.value = env;
-    showDropdown.value = false;
-};
+// const toggleDropdown = () => {
+//     showDropdown.value = !showDropdown.value;
+// };
+// const selectEnv = (env: string) => {
+//     selectedEnv.value = env;
+//     showDropdown.value = false;
+// };
 
 
 /**
@@ -233,17 +233,7 @@ const selectEnv = (env: string) => {
  */
 
 // 定义代码内容
-const code = ref(`import pandas as pd
-  # S3
-  # ExtrapolationResults--RooftopAreaConsolidation
-  # 将城市名相同的行进行合并，更换单位，并将小数点修改为后两位，保存为 rooftop_area_360
-  extrapolation_results = pd.read_csv("./extrapolation_results.csv")
-  rooftop_area_df = extrapolation_results.groupby('City').agg({'inference': 'sum'}) / 1e6
-  
-  rooftop_area_df['Rooftop_area'] = rooftop_area_df['inference'].round(2)
-  rooftop_area_df.to_csv("./rooftop_area_360.csv")
-  
-  print(rooftop_area_df["inference"].sum())`);
+const code = ref(`代码读取失败，请检查容器运行情况或联系管理员`);
 
 // CodeMirror 配置项
 const extensions = [python()]; // 使用正确的 light 主题
