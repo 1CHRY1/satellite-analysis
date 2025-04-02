@@ -12,6 +12,6 @@ import zhCN from 'ant-design-vue/es/locale/zh_CN'
         <a-config-provider :locale="zhCN">
             <RouterView class="relative flex-1"></RouterView>
         </a-config-provider>
-        <Footer></Footer>
+        <!-- <Footer></Footer> -->
     </div>
 </template>

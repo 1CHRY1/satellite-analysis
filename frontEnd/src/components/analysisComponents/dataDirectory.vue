@@ -27,7 +27,8 @@
                 <RefreshCcw :size="16" class="text-primary" />
             </div>
         </div>
-        <div class="h-[calc(100vh-44px)] max-w-full overflow-x-auto">
+        <div class="overflow-x-auto max-w-full ">
+
             <table class="min-w-full table-auto border-collapse">
                 <thead>
                     <tr class="sticky top-0 bg-gray-200 text-[#818999]">
@@ -149,6 +150,8 @@ const handleCellClick = async (item: dockerData, column: string) => {
                         userId: props.userId,
                         projectId: props.projectId,
                     })
+                    console.log(miniIoFile, "miniIoFile");
+
                     // 2、根据view行所代表的数据信息，找到对应的miniIo实体
                     let targetInMiniIo = miniIoFile.find(
                         (data: any) => data.dataName === targetItem.fileName,

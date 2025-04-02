@@ -1,29 +1,16 @@
 <template>
-    <div
-        class="constructionContainer"
-        id="container"
-        @mousemove="handleMousemove($event)"
-        @mousedown="handleMousedown($event)"
-        @mouseup="handleMouseup($event)"
-    >
+    <div class="constructionContainer" id="container" @mousemove="handleMousemove($event)"
+        @mousedown="handleMousedown($event)" @mouseup="handleMouseup($event)">
         <div v-show="showCodeContainer" class="codeContainer" id="codeContainerId">
             <!-- 上左数据模块 -->
             <div class="dataPaneArea" id="dataPaneAreaId">
-                <dataDirectory
-                    :projectId="projectId"
-                    :userId="userId"
-                    class="h-[100%] w-full rounded"
-                />
+                <dataDirectory :projectId="projectId" :userId="userId" class="h-[100%] w-full rounded" />
             </div>
             <div class="splitHandleVertical" id="splitHandleVertical2Id" style="left: 25%"></div>
             <!-- 上中在线编程 -->
             <div class="codeEditArea pl-2" id="codeEditAreaId">
-                <codeEditor
-                    :projectId="projectId"
-                    :userId="userId"
-                    @startRunCode="startRunCode"
-                    class="h-[100%] w-full"
-                />
+                <codeEditor :projectId="projectId" :userId="userId" @addMessage="addMessage
+                " class="h-[100%] w-full" />
             </div>
 
             <div class="splitHandleVertical" id="splitHandleVertical3Id" style="left: 75%"></div>
@@ -50,13 +37,14 @@ import codeEditor from '@/components/analysisComponents/codeEditor.vue'
 import dataDirectory from '@/components/analysisComponents/dataDirectory.vue'
 import { createWebSocket } from '@/api/websocket/websocketApi'
 import { useUserStore } from '@/store'
+import { useRoute } from 'vue-router';
+
 
 const userStore = useUserStore()
+const route = useRoute()
 const userId = userStore.user.id
-const projectId = ref('PRJMMFWjTXm1zuYm4m4q')
-// const userId = ref("chry")
-// const projectId = ref("PRJrTRY20LwddLlNK6YI")
-// const projectName = ref("rgj3_test0326")
+const projectId = route.params.projectId as string
+
 
 onMounted(() => {
     ws.connect()
@@ -75,8 +63,13 @@ onUnmounted(() => {
  *
  */
 
-const startRunCode = () => {
-    messages.value.push('开始执行代码,请稍候...')
+const addMessage = (messageContent: string = "code") => {
+    if (messageContent === 'code') {
+        messages.value.push('开始执行代码,请稍候...')
+
+    } else {
+        messages.value.push(messageContent)
+    }
 }
 
 /**
@@ -90,7 +83,7 @@ const messages = ref<string[]>([
     '正在预览数据，请稍候...',
 ])
 // 创建websocket实例
-const ws = createWebSocket('rgj3', projectId.value)
+const ws = createWebSocket(userId, projectId)
 
 ws.on('message', (data: any) => {
     messages.value.push(data)
@@ -191,7 +184,7 @@ const handleMousemove = (e: MouseEvent) => {
     // 移动横杆
     if (mouseActTag.value && activeSplitPane.value?.id === 'splitPaneHorizontal1Id') {
         // 减去的是容器上方固定内容的高度
-        let percentageValue = ((e.y - 73.53) * 100) / containerHeight.value
+        let percentageValue = ((e.y - 56) * 100) / containerHeight.value
 
         showMapContainer.value = true
         // 限制最小和最大拖动范围
@@ -230,7 +223,7 @@ const refreshContainerSize = () => {
 <style scoped lang="scss">
 .constructionContainer {
     width: 100vw;
-    height: calc(100vh - 74px);
+    height: calc(100vh - 56px);
     display: flex;
     flex: none;
     flex-direction: column;
