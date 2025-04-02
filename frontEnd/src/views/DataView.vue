@@ -1,13 +1,11 @@
 <template>
-    <div class="relative flex bg-sky-200">
-        <MapComp class="flex-1" />
-        <ImageRetrievalPanel />
+    <div class="relative flex flex-1 flex-row bg-black">
+        <ImageSearcher class="w-[28vw]" />
+        <MapComp class="flex-1" :style="'image'" :proj="'globe'" />
     </div>
 </template>
 
 <script setup lang="ts">
-import MapComp from '@/components/feature/map/mapComp.vue';
-import ImageRetrievalPanel from '@/components/feature/image-retrieve/retrievePannel.vue';
-
+import MapComp from '@/components/feature/map/mapComp.vue'
+import ImageSearcher from '@/components/dataCenter/imageSearcher.vue'
 </script>
-

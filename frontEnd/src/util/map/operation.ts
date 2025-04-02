@@ -5,16 +5,22 @@ import { CN_Bounds } from './constant'
 // import { useGridStore } from '@/store'
 // import { type polygonGeometry } from '@/types/sharing'
 import { watch } from 'vue'
+import type { polygonGeometry } from '../share.type'
+import { ezStore } from '@/store'
 
 ////////////////////////////////////////////////////////
 /////// Map Operation //////////////////////////////////
 
 let resizeObserver: ResizeObserver | null = null
 
-export async function map_initiliaze(id: string) {
+export async function map_initiliaze(
+    id: string,
+    style: Style = 'vector',
+    proj: 'mercator' | 'globe' = 'mercator',
+) {
     // return initMap(id)
     setTimeout(() => {
-        initMap(id).then((m) => {
+        initMap(id, style, proj).then((m) => {
             m.resize()
             const container = document.getElementById(id)
             if (container) {
@@ -23,6 +29,11 @@ export async function map_initiliaze(id: string) {
                 })
                 resizeObserver.observe(container)
             }
+            m.fitBounds(CN_Bounds, {
+                linear: true,
+                animate: true,
+                duration: 1000,
+            })
         })
     }, 0)
 }
@@ -43,7 +54,9 @@ export function map_checkoutStyle(s: Style): void {
 
 export function map_fitViewToCN(): void {
     mapManager.withMap((m) => {
-        m.fitBounds(CN_Bounds)
+        m.fitBounds(CN_Bounds, {
+            duration: 700,
+        })
     })
 }
 
@@ -69,6 +82,45 @@ export function map_flyTo([lng, lat]: [number, number]): void {
     })
 }
 
+export function addRasterLayerFromUrl(url: string, layerId: string = 'raster-layer'): void {
+    mapManager.withMap((m) => {
+        // 检查是否已经存在同名图层，避免重复添加
+        if (m.getLayer(layerId)) {
+            console.warn(`图层 "${layerId}" 已存在，跳过添加。`)
+            return
+        }
+
+        // 添加栅格数据源
+        m.addSource(layerId, {
+            type: 'raster',
+            tiles: [url], // 瓦片服务的 URL 模板
+            tileSize: 256, // 瓦片尺寸，默认为 256x256
+            crossOrigin: 'anonymous',
+        })
+
+        // 添加栅格图层
+        m.addLayer({
+            id: layerId,
+            type: 'raster',
+            source: layerId,
+            paint: {}, // 可以在这里自定义渲染样式
+        })
+
+        console.log(`图层 "${layerId}" 已成功添加到地图。`)
+    })
+}
+
+export function removeRasterLayer(layerId: string = 'raster-layer'): void {
+    mapManager.withMap((m) => {
+        if (m.getLayer(layerId)) {
+            m.removeLayer(layerId)
+        }
+        if (m.getSource(layerId)) {
+            m.removeSource(layerId)
+        }
+    })
+}
+
 ////////////////////////////////////////////////////////
 /////// Draw Operation //////////////////////////////////
 export function draw_deleteAll(): void {
@@ -91,30 +143,23 @@ export function draw_pointMode(): void {
     })
 }
 
-// export async function getCurrentGeometry(): Promise<polygonGeometry> {
-//     return new Promise((resolve, reject) => {
-//         mapManager.withDraw((d) => {
-//             const features = d.getAll().features
-//             if (features.length) {
-//                 console.log('current geom', features[0].geometry)
-//                 resolve(features[0].geometry as polygonGeometry)
-//             }
-//             // 默认检索范围
-//             resolve({
-//                 type: 'Polygon',
-//                 coordinates: [
-//                     [
-//                         [0, 85],
-//                         [0, -85],
-//                         [180, -85],
-//                         [180, 85],
-//                         [0, 85],
-//                     ],
-//                 ],
-//             })
-//         })
-//     })
-// }
+export function getCurrentGeometry(): polygonGeometry {
+    if (ezStore.get('polygonFeature')) {
+        return ezStore.get('polygonFeature') as polygonGeometry
+    }
+    return {
+        type: 'Polygon',
+        coordinates: [
+            [
+                [0, 85],
+                [0, -85],
+                [180, -85],
+                [180, 85],
+                [0, 85],
+            ],
+        ],
+    }
+}
 
 ////////////////////////////////////////////////////////
 /////// Layer Operation //////////////////////////////////

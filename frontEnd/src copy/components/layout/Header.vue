@@ -12,7 +12,7 @@
                 />
                 <span
                     class="whitespace-nowrap ml-3 lg:text-3xl md:text-xl sm:text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-sky-950 to-sky-500"
-                    >卫星中心分析平台</span
+                    >遥感ARD平台</span
                 >
             </div>
 

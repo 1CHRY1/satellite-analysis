@@ -3,29 +3,36 @@ package nnu.mnr.satellite.service.modeling;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.dynamic.datasource.creator.DataSourceProperty;
 import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DynamicDataSourceProperties;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.SftpException;
 import lombok.extern.slf4j.Slf4j;
-import nnu.mnr.satellite.config.JSchConnectionManager;
-import nnu.mnr.satellite.config.MinioConfig;
+import nnu.mnr.satellite.config.web.JSchConnectionManager;
+import nnu.mnr.satellite.constants.DockerContants;
+import nnu.mnr.satellite.constants.UserConstants;
+import nnu.mnr.satellite.model.po.resources.Tile;
+import nnu.mnr.satellite.model.po.user.User;
+import nnu.mnr.satellite.model.pojo.modeling.MinioProperties;
 import nnu.mnr.satellite.model.dto.modeling.*;
 import nnu.mnr.satellite.model.po.modeling.Project;
 import nnu.mnr.satellite.model.pojo.common.DFileInfo;
 import nnu.mnr.satellite.model.pojo.modeling.DockerServerProperties;
 import nnu.mnr.satellite.model.vo.modeling.CodingProjectVO;
+import nnu.mnr.satellite.model.vo.user.UserVO;
 import nnu.mnr.satellite.repository.modeling.IProjectRepo;
+import nnu.mnr.satellite.repository.resources.ITileRepo;
 import nnu.mnr.satellite.service.common.DockerService;
 import nnu.mnr.satellite.service.common.SftpDataService;
+import nnu.mnr.satellite.service.user.UserService;
 import nnu.mnr.satellite.utils.common.FileUtil;
 import nnu.mnr.satellite.utils.common.IdUtil;
+import nnu.mnr.satellite.utils.data.MinioUtil;
 import nnu.mnr.satellite.utils.docker.DockerFileUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -60,17 +67,26 @@ public class ModelCodingService {
     DockerService dockerService;
 
     @Autowired
+    UserService userService;
+
+    @Autowired
     ProjectDataService projectDataService;
     
     @Autowired
     IProjectRepo projectRepo;
+
+    @Autowired
+    ITileRepo tileRepo;
+
+    @Autowired
+    MinioUtil minioUtil;
 
     // config info
     @Autowired
     private DynamicDataSourceProperties dynamicDataSourceProperties;
 
     @Autowired
-    private MinioConfig minioProperties;
+    private MinioProperties minioProperties;
 
     private final String projectDataBucket = "project-data-bucket";
 
@@ -101,9 +117,19 @@ public class ModelCodingService {
     // Coding Project Services
     public CodingProjectVO createCodingProject(CreateProjectDTO createProjectDTO) throws JSchException, SftpException, IOException {
         String userId = createProjectDTO.getUserId();
+        String responseInfo = "";
+        if ( !userService.ifUserExist(userId)) {
+            responseInfo = String.format(UserConstants.USER_NOT_FOUND, userId);
+            return CodingProjectVO.builder().status(-1).info(responseInfo).build();
+        }
+        User user = userService.getUserById(userId);
         String projectName = createProjectDTO.getProjectName();
         String env = createProjectDTO.getEnvironment();
         String imageEnv = DockerFileUtil.getImageByName(env);
+        if (imageEnv.equals(DockerContants.NO_IMAGE)) {
+            responseInfo = "No Such Image";
+            return CodingProjectVO.builder().status(-1).info(responseInfo).build();
+        }
         String projectId = IdUtil.generateProjectId();
         String serverDir = dockerServerProperties.getServerDir() + projectId + "/";
         String workDir = dockerServerProperties.getWorkDir();
@@ -114,15 +140,15 @@ public class ModelCodingService {
         String localPyPath = dockerServerProperties.getLocalPath() + projectId + "/" + "main.py";
         String serverPyPath = serverDir + "main.py";
         Project formerProject = projectDataService.getProjectByUserAndName(userId, projectName);
-        String responseInfo = "";
         if ( formerProject != null){
-            responseInfo = "Project " + projectId + " has been Registered";
-            return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
+            responseInfo = "Project " + formerProject.getProjectName() + " has been Registered";
+            return CodingProjectVO.builder().status(-1).info(responseInfo).build();
         }
         Project project = Project.builder()
                 .projectId(projectId).projectName(projectName)
                 .environment(env).createTime(LocalDateTime.now()).dataBucket(projectDataBucket)
-                .workDir(workDir).serverDir(serverDir).createUser(userId)
+                .workDir(workDir).serverDir(serverDir).description(createProjectDTO.getDescription())
+                .createUser(userId).createUserEmail(user.getEmail()).createUserName(user.getUserName())
                 .pyPath(pyPath).localPyPath(localPyPath).serverPyPath(serverPyPath)
                 .watchPath(watchPath).outputPath(outputPath).dataPath(dataPath)
                 .build();
@@ -139,9 +165,8 @@ public class ModelCodingService {
         dockerService.startContainer(containerId);
 
         // Start Watching Process
-        String watchCommand = "python " + project.getWatchPath();
-        CompletableFuture.runAsync( () -> dockerService.runCMDInContainer(userId, projectId, containerId, watchCommand));
-
+        String watchCommand = "nohup python -u " + project.getWatchPath() + " > watcher.out 2>&1 &";
+        CompletableFuture.runAsync(() -> dockerService.runCMDInContainerWithoutInteraction(userId, projectId, containerId, watchCommand));        dockerService.runCMDInContainerWithoutInteraction(userId, projectId, containerId, watchCommand);
         projectRepo.insert(project);
         responseInfo = "Project " + projectId + " has been Created";
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
@@ -161,21 +186,9 @@ public class ModelCodingService {
         }
         // Start Container
         try {
-            String containerId;
-            if (project.getContainerId() == null){
-                String imageEnv = DockerFileUtil.getImageByName(project.getEnvironment());
-                containerId = dockerService.createContainer(imageEnv, project.getProjectName(), project.getServerDir(), project.getWorkDir());
-                project.setContainerId(containerId);
-                projectRepo.insert(project);
-                responseInfo = "Project " + projectId + " has been Created and Opened";
-                return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
-            }
-            else {
-                containerId=project.getContainerId();
-            }
+            String containerId = project.getContainerId();
             // Container Running ?
-            boolean checkstate = dockerService.checkContainerState(containerId);
-            if (!checkstate){
+            if (!dockerService.checkContainerState(containerId)){
                 dockerService.startContainer(containerId);
                 responseInfo = "Project " + projectId + " is Opened";
             } else { responseInfo = "Project " + projectId + " has been Opened"; }
@@ -190,7 +203,7 @@ public class ModelCodingService {
         }
     }
 
-    public CodingProjectVO deleteCodingProject(ProjectOperateDTO projectOperateDTO) {
+    public CodingProjectVO deleteCodingProject(ProjectOperateDTO projectOperateDTO) throws InterruptedException {
         String userId = projectOperateDTO.getUserId(); String projectId = projectOperateDTO.getProjectId();
         String responseInfo = "";
         if ( !projectDataService.VerifyUserProject(userId, projectId) ) {
@@ -202,7 +215,9 @@ public class ModelCodingService {
             responseInfo = "Project " + projectId + " hasn't been Registered";
             return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
         }
-//        String projectWorkDir = project.getWorkDir();
+        // Delete Local Data & Remote Data
+        FileUtil.deleteFolder(new File(dockerServerProperties.getLocalPath() + projectId));
+        // Delete Container if Exists
         if (project.getContainerId() != null){
             String containerId = project.getContainerId();
             CompletableFuture.runAsync( () -> {
@@ -219,9 +234,25 @@ public class ModelCodingService {
                 }
             });
         }
-        // Delete Local Data & Remote Data
-        FileUtil.deleteFolder(new File(dockerServerProperties.getLocalPath() + projectId));
-        sftpDataService.deleteFolder(project.getServerDir());
+        // Wait for Watch Dog Deleting Data
+        CompletableFuture<Void> deleteContentsFuture = CompletableFuture.runAsync(() -> {
+            try {
+                sftpDataService.deleteFolderContents(project.getServerDir() + "output/");
+            } catch (Exception e) {
+                log.error("Failed to delete folder contents", e);
+            }
+        });
+        deleteContentsFuture.thenRunAsync(() -> {
+            try {
+                Thread.sleep(5000);
+                sftpDataService.deleteFolder(project.getServerDir());
+            } catch (Exception e) {
+                log.error("Failed to delete folder", e);
+            }
+        }).exceptionally(throwable -> {
+            log.error("Error in async deletion", throwable);
+            return null;
+        });
         log.info("Successfully deleted folder and its contents: " + project.getServerDir());
         projectRepo.deleteById(projectId);
         responseInfo = "Project " + projectId + " has been Deleted";
@@ -270,7 +301,7 @@ public class ModelCodingService {
         return sftpDataService.readRemoteFile(project.getServerPyPath());
     }
 
-    public List<DFileInfo> getProjectCurDirFiles(ProjectFileDTO projectFileDTO) {
+    public List<DFileInfo> getProjectCurDirFiles(ProjectFileDTO projectFileDTO) throws Exception {
         String projectId = projectFileDTO.getProjectId(); String userId = projectFileDTO.getUserId();
         if ( !projectDataService.VerifyUserProject(userId, projectId) ) {
             return null;
@@ -281,6 +312,9 @@ public class ModelCodingService {
             return null;
         }
         String containerId = project.getContainerId();
+        if (!dockerService.checkContainerState(containerId)) {
+            return null;
+        }
         List<DFileInfo> fileTree = new ArrayList<>();
         return dockerService.getCurDirFiles(projectId, containerId, path, fileTree);
     }
@@ -360,6 +394,78 @@ public class ModelCodingService {
             responseInfo = "Python Script " + projectId + " hasn't been Saved Because of: " + e.getMessage();
             return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
         }
+    }
+
+    public CodingProjectVO uploadGeoJson(ProjectDataDTO projectDataDTO) throws IOException {
+        String userId = projectDataDTO.getUserId(); String projectId = projectDataDTO.getProjectId();
+        String responseInfo = "";
+        if ( !projectDataService.VerifyUserProject(userId, projectId) ) {
+            responseInfo = "User " + userId + " Can't Operate Project " + projectId;
+            return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
+        }
+        Project project = projectDataService.getProjectById(projectId);
+        if ( project == null){
+            responseInfo = "Project " + projectId + " hasn't been Registered";
+            return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
+        }
+        String containerId = project.getContainerId();
+        try {
+            if (!dockerService.checkContainerState(containerId)){
+                responseInfo = "Container Not Activated";
+                return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
+            }
+        } catch (Exception e) {
+            responseInfo = "Container Not Connected";
+            return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
+        }
+        JSONObject geometry = projectDataDTO.getUploadData();
+        int lastSlashIndex = project.getLocalPyPath().lastIndexOf('/');
+        String fileName = projectDataDTO.getUploadDataName() + ".geojson";
+        String localPath = project.getLocalPyPath().substring(0, lastSlashIndex) + "/data/" + fileName;
+        String remotePath = project.getServerDir() + "data/" + fileName;
+        FileUtil.saveAsJsonFile(geometry, localPath);
+        sftpDataService.uploadFile(localPath, remotePath);
+        responseInfo = "Project Data has been Uploaded";
+        return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
+    }
+
+    public CodingProjectVO uploadTilesToProject(ProjectTileDataDTO projectTileDataDTO) {
+        String userId = projectTileDataDTO.getUserId(); String projectId = projectTileDataDTO.getProjectId();
+        String responseInfo = "";
+        if ( !projectDataService.VerifyUserProject(userId, projectId) ) {
+            responseInfo = "User " + userId + " Can't Operate Project " + projectId;
+            return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
+        }
+        Project project = projectDataService.getProjectById(projectId);
+        if ( project == null){
+            responseInfo = "Project " + projectId + " hasn't been Registered";
+            return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
+        }
+        String containerId = project.getContainerId();
+        try {
+            if (!dockerService.checkContainerState(containerId)){
+                responseInfo = "Container Not Activated";
+                return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
+            }
+        } catch (Exception e) {
+            responseInfo = "Container Not Connected";
+            return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
+        }
+        String sceneId = projectTileDataDTO.getSceneId();
+        List<String> tileIds = projectTileDataDTO.getTileIds();
+        CompletableFuture.runAsync(() -> {
+            String remoteDataPath = project.getServerDir() + "data/";
+            sftpDataService.createRemoteDir( remoteDataPath + sceneId + "/", 0777);
+            for (String tileId : tileIds) {
+                Tile tile = tileRepo.getTileByTileId(sceneId, tileId);
+                InputStream tileStream = minioUtil.getObjectStream(tile.getBucket(), tile.getPath());
+                int lastIndex = tile.getPath().lastIndexOf('/');
+                String tileName = tile.getPath().substring(lastIndex + 1);
+                sftpDataService.uploadFileFromStream(tileStream, remoteDataPath + sceneId + "/" + tileName);
+            }
+        });
+        responseInfo = "Data Uploading Successfully";
+        return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
     }
 
     // Operating Services
@@ -488,13 +594,22 @@ public class ModelCodingService {
         String name = projectPackageDTO.getName();
         String version = projectPackageDTO.getVersion();
         String command = "";
+        String pyPackage = version == null ? name : name + " " + version;
+        HashSet<String> installedPackages = project.getPackages();
+        String conditionStr = "";
         switch (action) {
             case "add" -> {
+                if (installedPackages.contains(pyPackage) ) {
+                    responseInfo = "Package " + name + version + " has been Installed";
+                    return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
+                }
                 if (version == null) {
                     command = "pip install " + name;
                 } else {
                     command = "pip install " + name + "==" + version;
                 }
+                project.getPackages().add(pyPackage);
+                conditionStr = "Installing";
             }
             case "remove" -> {
                 if (version == null) {
@@ -502,6 +617,8 @@ public class ModelCodingService {
                 } else {
                     command = "pip uninstall " + name + "==" + version + " -y";
                 }
+                project.getPackages().remove(pyPackage);
+                conditionStr = "Removing";
             }
         }
         String finalCommand = command;
@@ -509,10 +626,8 @@ public class ModelCodingService {
             dockerService.runCMDInContainer(userId, projectId, containerId, finalCommand);
         });
 
-        String pyPackage = version == null ? name : name + " " + version;
-        project.getPackages().add(pyPackage);
         projectRepo.updateById(project);
-        responseInfo = "Package " + name + version + " has been Installing";
+        responseInfo = "Package " + name + version + " has been " + conditionStr;
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
     }
 
