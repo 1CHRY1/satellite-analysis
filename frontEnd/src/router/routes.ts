@@ -35,6 +35,13 @@ export const routes = [
         },
     },
     {
+        path: '/project/:projectId',
+        component: () => import('@/views/Analysis.vue'),
+        meta: {
+            requiresAuth: true,
+        },
+    },
+    {
         path: '/analysis',
         component: () => import('@/views/Analysis.vue'),
         meta: {

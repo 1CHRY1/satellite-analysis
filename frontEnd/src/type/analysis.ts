@@ -29,4 +29,13 @@ export type project = {
     joinedUsers: Array<string>
     packages: string
     projectName: string
+    projectId: string
+}
+
+export type newProject = {
+    projectName: string
+    environment: string
+    keywords: string
+    description: string
+    authority: string
 }
