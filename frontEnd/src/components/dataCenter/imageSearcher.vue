@@ -114,7 +114,7 @@
             </section>
 
             <div class="panel-footer">
-                <a-button type="primary" class="search-button" @click="handleSearch">
+                <a-button type="primary" class="search-button" @click="handleImageFilterSearch">
                     <search-icon :size="18" class="button-icon" />
                     <span>开始检索</span>
                 </a-button>
@@ -125,10 +125,169 @@
             </div>
         </dv-border-box12>
 
-
         <dv-border-box12 v-if="UIStage === 'tile-stage'">
-            <button @click="UIStage = 'filter-stage'">返回</button>
-            <h1>现在该操作格网啦</h1>
+            <!-- Image List Section with Row Layout -->
+            <section class="panel-section">
+                <div class="section-header relative">
+                    <div class="section-icon">
+                        <ImageIcon :size="18" />
+                    </div>
+                    <h2 class="section-title">影像列表</h2>
+                    <div class="section-actions right-4">
+                        <a-tooltip title="刷新列表">
+                            <a-button type="text" size="small" @click="handleRefreshImageList">
+                                <RefreshCwIcon :size="16" :color="'#38bdf8'" />
+                            </a-button>
+                        </a-tooltip>
+                    </div>
+                    <div class="section-actions right-12">
+                        <a-tooltip title="返回">
+                            <a-button type="text" size="small" @click="UIStage = 'filter-stage'">
+                                <ArrowLeftFromLineIcon :size="16" :color="'#38bdf8'" />
+                            </a-button>
+                        </a-tooltip>
+                    </div>
+                </div>
+
+                <div class="section-content">
+                    <div class="my-3">
+                        <a-input-search v-model:value="searchQuery" placeholder="搜索影像" style="width: 100%"
+                            @search="handleInputSearch" allow-clear />
+                    </div>
+
+                    <!-- <a-spin :spinning="loading">
+                        <div class="image-list-row">
+                            <div v-for="image in filteredImages" :key="image.id" class="image-row-item"
+                                :class="{ selected: selectedImages.includes(image.id) }"
+                                @click="toggleImageSelection(image.id)">
+                                <div class="image-row-preview">
+                                    <img :src="image.thumbnail" :alt="image.name" class="row-thumbnail" />
+                                    <div class="image-row-overlay">
+                                        <check-circle-icon v-if="selectedImages.includes(image.id)" :size="16"
+                                            class="check-icon" />
+                                    </div>
+                                </div>
+                                <div class="image-row-details">
+                                    <h4 class="image-row-name">{{ image.name }}</h4>
+                                    <div class="image-row-meta">
+                                        <span class="image-row-date">
+                                            <calendar-icon :size="12" />
+                                            {{ formatDate(image.date) }}
+                                        </span>
+                                        <span class="image-row-resolution">
+                                            <maximize-icon :size="12" />
+                                            {{ image.resolution }}
+                                        </span>
+                                        <span class="image-row-cloud">
+                                            <cloud-icon :size="12" />
+                                            {{ image.cloudCover }}%
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="image-row-actions">
+                                    <a-checkbox :checked="selectedImages.includes(image.id)" @click.stop
+                                        @change="(e: any) => handleCheckboxChange(e, image.id)" />
+                                </div>
+                            </div>
+
+                            <div v-if="filteredImages.length === 0" class="empty-state">
+                                <file-search-icon :size="32" class="empty-icon" />
+                                <p>没有找到符合条件的影像</p>
+                            </div>
+                        </div>
+                    </a-spin> -->
+
+                    <!-- <div class="selection-summary" v-if="selectedImages.length > 0">
+                        <span>已选择 {{ selectedImages.length }} 个影像</span>
+                        <div>
+                            <a-button type="link" @click="clearSelection">清除选择</a-button>
+                            <a-button type="primary" @click="loadImage">加载影像</a-button>
+                        </div>
+                    </div> -->
+                </div>
+            </section>
+
+            <!-- Band Selection Section (Modified to work without grid selection) -->
+            <!-- <section class="panel-section" v-if="selectedImages.length > 0">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <layers-icon :size="18" />
+                    </div>
+                    <h2 class="section-title">波段选择</h2>
+                </div>
+
+                <div class="section-content">
+                    <div class="band-selection">
+                        <a-radio-group v-model:value="selectedBand" button-style="solid" class="band-radio-group">
+                            <a-radio-button v-for="band in availableBands" :key="band.id" :value="band.id"
+                                class="band-radio-button">
+                                {{ band.name }}
+                            </a-radio-button>
+                        </a-radio-group>
+
+                        <div class="band-preview" v-if="selectedBand">
+                            <div class="band-info">
+                                <h4>{{ getBandDetails.name }}</h4>
+                                <p>{{ getBandDetails.description }}</p>
+                                <div class="band-specs">
+                                    <span>波长: {{ getBandDetails.wavelength }}</span>
+                                    <span>分辨率: {{ getBandDetails.resolution }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section> -->
+
+            <!-- Selected Images Summary Section (New) -->
+            <!-- <section class="panel-section" v-if="selectedImages.length > 0">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <list-icon :size="18" />
+                    </div>
+                    <h2 class="section-title">切片选择</h2>
+                </div>
+
+                <div class="section-content">
+                    <div class="block-area" v-if="selectedGridIDs.length === 0">
+                        <mouse-pointer-click-icon :size="22" class="block-icon" />
+                        <span class="block-text">点击地图以选择切片</span>
+                    </div>
+                    <div class="block-area" v-else>
+                        <a-tag v-for="gridID in selectedGridIDs" :key="gridID" closable @close="removeGrid(gridID)"
+                            class="product-tag">
+                            {{ gridID }}
+                        </a-tag>
+                    </div>
+                </div>
+            </section> -->
+
+            <!-- Download Section (Modified to work without grid selection) -->
+            <!-- <section class="panel-section" v-if="selectedImages.length > 0 && selectedBand">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <download-icon :size="18" />
+                    </div>
+                    <h2 class="section-title">下载选项</h2>
+                </div>
+
+                <div class="section-content">
+                    <div class="download-options">
+                        <div class="download-summary">
+                            <div class="summary-item">
+                                <layers-icon :size="14" />
+                                <span>波段 {{ getBandDetails.name }}</span>
+                            </div>
+                        </div>
+
+                        <a-button type="primary" block class="download-button" @click="downloadMergedImage"
+                            :loading="downloading" :disabled="!selectedBand || selectedImages.length === 0">
+                            <download-icon :size="16" />
+                            <span>合并下载</span>
+                        </a-button>
+                    </div>
+                </div>
+            </section> -->
         </dv-border-box12>
 
 
@@ -158,6 +317,8 @@ import {
     CloudIcon,
     ApertureIcon,
     ClockIcon,
+    ArrowLeftFromLineIcon,
+    ImageIcon,
 } from 'lucide-vue-next'
 import type { Dayjs } from 'dayjs'
 import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'
@@ -171,7 +332,7 @@ import { ezStore } from '@/store'
 
 type RangeValue = [Dayjs, Dayjs] | undefined
 
-const UIStage = ref<'filter-stage' | 'tile-stage'>('filter-stage')
+const UIStage = ref<'filter-stage' | 'tile-stage'>('tile-stage')
 const modalOpen = ref<boolean>(false)
 const activeKey = ref('1')
 const selectedDistrict = ref<string[]>([])
@@ -193,6 +354,19 @@ const filterConditions = ref({
         ],
     },
 })
+// 搜索框
+const searchQuery = ref<string>('')
+// const filteredImages: ComputedRef<SceneView[]> = computed(() => {
+//     if (!searchQuery.value) {
+//         return images.value
+//     }
+//     return images.value.filter((image) =>
+//         image.name.toLowerCase().includes(searchQuery.value.toLowerCase()),
+//     )
+// })
+const handleInputSearch = () => {
+    console.log('searchQuery:', searchQuery.value)
+}
 
 // Cloud
 const marks = ref<Record<number, string>>({
@@ -248,7 +422,7 @@ const handleDrawPolygon = () => {
     MapOperation.draw_polygonMode()
 }
 
-const handleSearch = () => {
+const handleImageFilterSearch = () => {
     // 收集筛选条件
     filterConditions.value = {
         products: [selectedProduct.value] as any,
@@ -269,6 +443,11 @@ const handleSearch = () => {
         MapOperation.draw_deleteAll()
     }, 0);
 }
+
+const handleRefreshImageList = () => {
+    console.log('Refresh image list clicked')
+}
+
 
 const handleReset = () => {
     activeKey.value = '1'
@@ -384,9 +563,19 @@ const selectedProduct = ref<ProductView | undefined>()
     margin: 0;
 }
 
+.section-actions {
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
 .section-content {
     padding: 0.75rem 1rem;
 }
+
 
 .upload-area {
     display: flex;
