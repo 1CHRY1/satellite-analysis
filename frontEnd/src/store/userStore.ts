@@ -12,14 +12,17 @@ export const useUserStore = defineStore('user-store', {
             try {
                 const storedUser = localStorage.getItem('user')
                 if (storedUser) {
-                    return JSON.parse(storedUser) // 尝试解析并返回用户数据
+                    return {
+                        ...JSON.parse(storedUser),
+                        id: localStorage.getItem('userId'),
+                    } // 尝试解析并返回用户数据
                 }
             } catch (error) {
                 console.error('Failed to parse user from localStorage:', error)
             }
             // 如果解析失败或没有数据，返回默认值
             return {
-                id: localStorage.getItem('userId') || '',
+                id: localStorage.getItem('userId') || '???',
                 name: '',
                 email: '',
                 title: '',
