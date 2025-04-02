@@ -1,7 +1,14 @@
 <template>
     <a-tooltip :title="tooltip">
-        <a-button class="cuz-buttom" :type="type" :size="size" :shape="shape" :loading="loading" :disabled="disabled"
-            @click="handleClick">
+        <a-button
+            class="cuz-buttom"
+            :type="type"
+            :size="size"
+            :shape="shape"
+            :loading="loading"
+            :disabled="disabled"
+            @click="handleClick"
+        >
             <div class="flex flex-row items-center justify-center gap-2">
                 <slot></slot>
             </div>
@@ -10,7 +17,6 @@
 </template>
 
 <script setup lang="ts">
-
 defineProps<{
     type?: 'primary' | 'default' | 'dashed' | 'text' | 'link'
     size?: 'small' | 'middle' | 'large'

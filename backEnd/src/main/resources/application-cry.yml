@@ -30,6 +30,8 @@ spring:
       host: localhost
       port: 6379
       database: 0
+    mongodb:
+      uri: mongodb://OGMSROOT:ogms1qaz2wsx@172.21.252.208:23266/opengmp
 
 mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
@@ -37,6 +39,9 @@ mybatis-plus:
   type-handlers-package: nnu.mnr.satellite.utils.typeHandler
 #  configuration:
 #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+ca:
+  dir: D:/1tools/OpenSSL/ca
 
 minio:
   access-key: jTbgNHEqQafOpUxVg7Ol
@@ -54,9 +59,6 @@ docker:
   serverDir: /home/vge/satellite/
   workDir: /usr/local/coding/
 
-ca:
-  dir: D:/1tools/OpenSSL/ca
-
 modelServer:
   address: http://223.2.34.7
   api:
@@ -67,3 +69,6 @@ modelServer:
     ndviArea: /ndviArea
   interval:
     status: 2
+
+tiler:
+  end-point: http://223.2.32.242:8079

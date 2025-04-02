@@ -91,7 +91,6 @@ const navItems = [
     { name: '模型中心', path: '/models' },
     { name: '数据中心', path: '/data' },
     { name: '项目中心', path: '/projects' },
-    // { name: '分析中心', path: '/analysis' },
     { name: '关于我们', path: '/about' },
 ]
 

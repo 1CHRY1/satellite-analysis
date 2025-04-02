@@ -2,13 +2,17 @@ package nnu.mnr.satellite.service.modeling;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.model.po.modeling.Project;
+import nnu.mnr.satellite.model.vo.modeling.ProjectVO;
+import nnu.mnr.satellite.model.vo.resources.SensorInfoVO;
 import nnu.mnr.satellite.repository.modeling.IProjectRepo;
 import nnu.mnr.satellite.repository.resources.IImageRepo;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -42,12 +46,27 @@ public class ProjectDataService {
         return projectRepo.selectOne(queryWrapper);
     }
 
+    public List<ProjectVO> getProjectsByUserId(String userId) {
+        QueryWrapper<Project> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("create_user", userId);
+        List<Project> projects = projectRepo.selectList(queryWrapper);
+        return projectModelMapper.map(projects, new TypeToken<List<ProjectVO>>() {}.getType());
+    }
+
+    public List<ProjectVO> getAllProjects() {
+        QueryWrapper<Project> queryWrapper = new QueryWrapper<>();
+        List<Project> projects = projectRepo.selectList(queryWrapper);
+        return projectModelMapper.map(projects, new TypeToken<List<ProjectVO>>() {}.getType());
+    }
+
     public boolean VerifyUserProject(String userId, String projectId) {
-        // TODO: joined user verify
         QueryWrapper<Project> queryWrapper = new QueryWrapper();
         queryWrapper.eq("create_user", userId).eq("project_id", projectId);
         Project project = projectRepo.selectOne(queryWrapper);
-        return project != null;
+        if (project == null) {
+            return false;
+        }
+        return project.getJoinedUsers().contains(userId) || project.getCreateUser().equals(userId);
     }
 
 }

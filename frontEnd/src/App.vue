@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import DarkHeader from './components/layout/darkHeader.vue';
+import DarkHeader from './components/layout/darkHeader.vue'
 // import Header from '@/components/layout/Header.vue'
 import Footer from '@/components/layout/Footer.vue'
 import zhCN from 'ant-design-vue/es/locale/zh_CN'
