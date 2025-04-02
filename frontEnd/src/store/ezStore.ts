@@ -20,6 +20,10 @@ class EzStore {
     public set(key: string, value: any): void {
         this.store[key] = value
     }
+
+    public delete(key: string): void {
+        delete this.store[key]
+    }
 }
 
 export default EzStore.getInstance()

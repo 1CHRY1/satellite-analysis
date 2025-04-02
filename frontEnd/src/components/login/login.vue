@@ -27,38 +27,12 @@
                 </svg>
                 <div class="form">
                     <label for="email" class="bg-[#474a59]">邮 箱</label>
-                    <input
-                        type="email"
-                        placeholder="请输入您的邮箱地址"
-                        id="email"
-                        autocomplete="off"
-                        v-model="email"
-                    />
+                    <input type="email" placeholder="请输入您的邮箱地址" id="email" autocomplete="off" v-model="email" />
                     <label for="password">密 码</label>
-                    <input
-                        type="password"
-                        placeholder="请输入您的密码"
-                        id="password"
-                        autocomplete="new-password"
-                        v-model="password"
-                    />
+                    <input type="password" placeholder="请输入您的密码" id="password" autocomplete="new-password" v-model="password" />
                     <div class="flex h-[80px] w-[245px] flex-row items-center justify-center">
-                        <button
-                            type="register"
-                            id="register"
-                            @click="gotoRegister"
-                            class="submit cursor-pointer"
-                        >
-                            去 注 册
-                        </button>
-                        <button
-                            type="submit"
-                            id="submit"
-                            @click="handleLogin"
-                            class="submit cursor-pointer"
-                        >
-                            登 录
-                        </button>
+                        <button type="register" id="register" @click="gotoRegister" class="submit cursor-pointer">去 注 册</button>
+                        <button type="submit" id="submit" @click="handleLogin" class="submit cursor-pointer">登 录</button>
                     </div>
                 </div>
             </div>

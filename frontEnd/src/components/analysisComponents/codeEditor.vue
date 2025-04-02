@@ -31,9 +31,7 @@
                     </el-table-column>
                     <el-table-column label="操作">
                         <template #default="scope">
-                            <el-button link type="primary" @click="removePackage(scope.row)"
-                                >移除</el-button
-                            >
+                            <el-button link type="primary" @click="removePackage(scope.row)">移除</el-button>
                         </template>
                     </el-table-column>
                 </el-table>
@@ -41,19 +39,11 @@
                     <div class="">
                         <!-- <font-awesome-icon style="margin-left: 2px; font-size: 10px; color: red" icon="star-of-life" /> -->
                         <label><span style="color: red">*</span>包名: </label>
-                        <el-input
-                            v-model="addedPackageInfo.name"
-                            placeholder="package name"
-                            style="width: 120px; font-size: 14px"
-                        />
+                        <el-input v-model="addedPackageInfo.name" placeholder="package name" style="width: 120px; font-size: 14px" />
                     </div>
                     <div class="ml-4">
                         <label>版本: </label>
-                        <el-input
-                            v-model="addedPackageInfo.version"
-                            placeholder="version"
-                            style="width: 70px; font-size: 14px"
-                        />
+                        <el-input v-model="addedPackageInfo.version" placeholder="version" style="width: 70px; font-size: 14px" />
                     </div>
                     <div class="ml-4">
                         <el-button link type="primary" @click="installPackage()">安装</el-button>
@@ -68,50 +58,26 @@
                 </template>
             </el-dialog>
 
-            <div class="w-fit ml-2  rounded flex items-center my-1.5 relative ">
-                <div class="px-2 h-full flex items-center text-xs my-1 mr-2 bg-[#eaeaea] rounded shadow-md cursor-pointer relative "
-                    @click="">
+            <div class="relative my-1.5 ml-2 flex w-fit items-center rounded">
+                <div class="relative my-1 mr-2 flex h-full cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-xs shadow-md" @click="">
                     当前环境：{{ selectedEnv }}
                 </div>
-                <div v-if="showDropdown"
-                    class="absolute left-0 top-8 w-fit mt-1 bg-white border border-gray-300 rounded shadow-md z-10">
-
-                    <div v-for="env in envOptions" :key="env" class="px-3 py-2 hover:bg-gray-200 cursor-pointer text-sm"
-                        @click="">
-
+                <div v-if="showDropdown" class="absolute top-8 left-0 z-10 mt-1 w-fit rounded border border-gray-300 bg-white shadow-md">
+                    <div v-for="env in envOptions" :key="env" class="cursor-pointer px-3 py-2 text-sm hover:bg-gray-200" @click="">
                         {{ env }}
                     </div>
                 </div>
             </div>
         </div>
         <div class="code-editor !bg-[#f9fafb]">
-            <Codemirror
-                class="!p-0 !text-[12px]"
-                v-model="code"
-                :extensions="extensions"
-                @ready="onCmReady"
-                @update:model-value="onCmInput"
-            />
+            <Codemirror class="!p-0 !text-[12px]" v-model="code" :extensions="extensions" @ready="onCmReady" @update:model-value="onCmInput" />
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import {
-    CloudServerOutlined,
-    CaretRightOutlined,
-    SaveOutlined,
-    StopOutlined,
-} from '@ant-design/icons-vue'
-import {
-    projectOperating,
-    getScript,
-    updateScript,
-    runScript,
-    stopScript,
-    operatePackage,
-    getPackages,
-} from '@/api/http/analysis'
+import { CloudServerOutlined, CaretRightOutlined, SaveOutlined, StopOutlined } from '@ant-design/icons-vue'
+import { projectOperating, getScript, updateScript, runScript, stopScript, operatePackage, getPackages } from '@/api/http/analysis'
 import { ref, defineProps, onMounted, onBeforeUnmount, defineEmits } from 'vue'
 import { Codemirror } from 'vue-codemirror'
 import { python } from '@codemirror/lang-python'
@@ -130,7 +96,7 @@ const props = defineProps({
     },
 })
 
-const emit = defineEmits(['addMessage']);
+const emit = defineEmits(['addMessage'])
 
 /**
  * 在线编程工具条
@@ -173,7 +139,7 @@ const installPackage = async () => {
     } else {
         ElMessage.warning('请输入要安装的依赖包名')
     }
-    emit('addMessage', '正在安装依赖：' + addedPackageInfo.value.name + "，请等待并关注安装信息")
+    emit('addMessage', '正在安装依赖：' + addedPackageInfo.value.name + '，请等待并关注安装信息')
     await operatePackage(requestJson)
 }
 
@@ -210,7 +176,7 @@ const runCode = async () => {
     if (saveResult.status === 1) {
         // 2、再执行代码
 
-        emit("addMessage", 'code');
+        emit('addMessage', 'code')
 
         let runResult = await runScript({
             projectId: props.projectId,
@@ -257,15 +223,13 @@ const saveCode = async () => {
 //     showDropdown.value = false;
 // };
 
-
 /**
  * codemirror操作
  */
 
 // 定义代码内容
 
-const code = ref(`代码读取失败，请检查容器运行情况或联系管理员`);
-
+const code = ref(`代码读取失败，请检查容器运行情况或联系管理员`)
 
 // CodeMirror 配置项
 const extensions = [python()] // 使用正确的 light 主题

@@ -13,15 +13,6 @@ export namespace Sensor {
         platFormName: string | null
         description: string
     }
-
-    /////// UI interface
-    // export interface SensorView {
-    //     id: string
-    //     name: string
-    //     description: string
-    //     color: string
-    //     products: Array<Product.ProductView>
-    // }
 }
 
 ///// Product API /////////////////////////
@@ -38,16 +29,9 @@ export namespace Product {
         period: string
         description: string
     }
-
-    // export interface ProductView {
-    //     id: string
-    //     sensorId: string
-    //     name: string
-    //     description: string
-    //     resolution: string
-    //     period: string
-    // }
 }
+
+export namespace Scene {}
 
 ///// Sensor Image API /////////////////////////
 export namespace SensorImage {
@@ -72,15 +56,15 @@ export namespace SensorImage {
     }
 
     export interface SensorImageDetailResponse {
-        name: string
-        cloud: number
+        sceneName: string
         sceneTime: string
         tileLevelNum: number
         tileLevels: string[]
         crs: string
-        description: string | null
+        description: string
         bandNum: number
         bands: string[]
+        cloud: string
     }
 
     export interface SensorImageBandResponse {
@@ -89,25 +73,6 @@ export namespace SensorImage {
     }
 
     export interface SensorImageBandListResponse extends Array<SensorImageBandResponse> {}
-
-    // export interface BandView {
-    //     id: string
-    //     name: string
-    //     description: string
-    //     wavelength: string
-    //     resolution: string
-    // }
-
-    // export interface SensorImageView {
-    //     id: string
-    //     name: string
-    //     date: string
-    //     resolution: string
-    //     cloudCover: number
-    //     thumbnail: string
-    //     color: string
-    //     bands: Array<BandView>
-    // }
 }
 
 ///// Tile API /////////////////////////

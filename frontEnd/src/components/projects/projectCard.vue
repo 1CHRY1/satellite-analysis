@@ -1,7 +1,7 @@
 <template>
     <div
-        class="bg-grey-300 card box-border flex h-[380px] w-[300px] cursor-pointer flex-col justify-between rounded-lg border-t border-l border-solid border-t-[rgba(255,255,255,.5)] border-l-[rgba(255,255,255,.5)] px-6 py-1">
-
+        class="bg-grey-300 card box-border flex h-[380px] w-[300px] cursor-pointer flex-col justify-between rounded-lg border-t border-l border-solid border-t-[rgba(255,255,255,.5)] border-l-[rgba(255,255,255,.5)] px-6 py-1"
+    >
         <!-- 头部 -->
         <div class="my-2 flex flex-col items-center justify-center">
             <Satellite class="mt-4 mb-1 h-16 w-16" color="white" />
@@ -20,15 +20,9 @@
         <!-- 人员信息 -->
         <div class="flex flex-col space-y-1">
             <div class="subtitle my-2 text-[16px]">创建者</div>
-            <div class="flex">
-                <User color="white" class="mr-1.5" />{{ project.createUserName }}
-            </div>
-            <div class="flex">
-                <Mail color="white" class="mr-1.5" />{{ project.createUserEmail }}
-            </div>
-            <div class="flex">
-                <Clock3 color="white" class="mr-1.5" />{{ formatTime(project.createTime, "minutes", 0) }}
-            </div>
+            <div class="flex"><User color="white" class="mr-1.5" />{{ project.createUserName }}</div>
+            <div class="flex"><Mail color="white" class="mr-1.5" />{{ project.createUserEmail }}</div>
+            <div class="flex"><Clock3 color="white" class="mr-1.5" />{{ formatTime(project.createTime, 'minutes', 0) }}</div>
         </div>
     </div>
 </template>

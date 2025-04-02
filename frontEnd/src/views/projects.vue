@@ -1,8 +1,6 @@
 <template>
     <div>
-        <projectsBg
-            class="absolute inset-0 z-0 h-full w-full overflow-hidden bg-[radial-gradient(ellipse_at_bottom,_#1b2735_0%,_#090a0f_100%)]"
-        >
+        <projectsBg class="absolute inset-0 z-0 h-full w-full overflow-hidden bg-[radial-gradient(ellipse_at_bottom,_#1b2735_0%,_#090a0f_100%)]">
         </projectsBg>
         <div class="relative z-99 flex flex-col items-center justify-center">
             <div class="my-10 flex w-[50vw] flex-col items-center justify-center">
@@ -37,21 +35,18 @@
                             搜索
                         </el-button>
                     </div>
-                    <el-button type="primary" color="#049f40"
-                        style="margin-left: 10px;border-color: #049f40;font-size: 14px;height: 2rem;"
-                        @click="createProjectView = true">
-
+                    <el-button
+                        type="primary"
+                        color="#049f40"
+                        style="margin-left: 10px; border-color: #049f40; font-size: 14px; height: 2rem"
+                        @click="createProjectView = true"
+                    >
                         创建
                     </el-button>
                     <el-button
                         type="primary"
                         color="#049f40"
-                        style="
-                            margin-left: 10px;
-                            border-color: #049f40;
-                            font-size: 14px;
-                            height: 2rem;
-                        "
+                        style="margin-left: 10px; border-color: #049f40; font-size: 14px; height: 2rem"
                         @click=""
                     >
                         我的
@@ -59,34 +54,39 @@
                 </div>
             </div>
 
-            <div class="my-10 h-[calc(100vh-264px-56px)] w-full  justify-center">
-                <div class="inline-flex flex-wrap  gap-12">
-                    <projectCard v-if="!createProjectView" v-for="item in projectList" :project="item"
-                        @click="enterProject(item)"></projectCard>
+            <div class="my-10 h-[calc(100vh-264px-56px)] w-full justify-center">
+                <div class="inline-flex flex-wrap gap-12">
+                    <projectCard v-if="!createProjectView" v-for="item in projectList" :project="item" @click="enterProject(item)"></projectCard>
                 </div>
-
 
                 <!-- 创建项目的卡片 -->
                 <div v-if="createProjectView" class="fixed flex items-center justify-center opacity-80">
-                    <div class="bg-gray-600 text-white p-6 rounded-xl shadow-xl w-96">
-                        <h2 class="text-xl font-semibold mb-4 text-center">创建项目</h2>
+                    <div class="w-96 rounded-xl bg-gray-600 p-6 text-white shadow-xl">
+                        <h2 class="mb-4 text-center text-xl font-semibold">创建项目</h2>
 
                         <!-- 项目名称 -->
-                        <label class="flex text-sm mb-1">
-                            <div style="color: red;margin-right: 4px;">* </div> 项目名称
+                        <label class="mb-1 flex text-sm">
+                            <div style="color: red; margin-right: 4px">*</div>
+                            项目名称
                         </label>
-                        <input v-model="newProject.projectName" type="text"
-                            class="w-full p-2 rounded bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-green-400" />
+                        <input
+                            v-model="newProject.projectName"
+                            type="text"
+                            class="w-full rounded bg-gray-800 p-2 text-white focus:ring-2 focus:ring-green-400 focus:outline-none"
+                        />
 
                         <!-- 运行环境 -->
-                        <label class="flex text-sm mt-3 mb-1">
-                            <div style="color: red;margin-right: 4px;">* </div>运行环境
+                        <label class="mt-3 mb-1 flex text-sm">
+                            <div style="color: red; margin-right: 4px">*</div>
+                            运行环境
                         </label>
-                        <select v-model="newProject.environment"
-                            class="w-full p-2 rounded bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-green-400">
+                        <select
+                            v-model="newProject.environment"
+                            class="w-full rounded bg-gray-800 p-2 text-white focus:ring-2 focus:ring-green-400 focus:outline-none"
+                        >
                             <option value="Python2_7" disabled>Python 2.7 ( 暂不支持 )</option>
                             <option value="Python3_9">Python 3.9</option>
-                            <option value="Python3_10" disabled>Python 3.10 ( 暂不支持 ) </option>
+                            <option value="Python3_10" disabled>Python 3.10 ( 暂不支持 )</option>
                         </select>
 
                         <!-- 关键词 -->
@@ -105,11 +105,14 @@
                         </div> -->
 
                         <!-- 描述 -->
-                        <label class="flex text-sm mt-3 mb-1">
-                            <div style="color: red;margin-right: 4px;">* </div> 描述
+                        <label class="mt-3 mb-1 flex text-sm">
+                            <div style="color: red; margin-right: 4px">*</div>
+                            描述
                         </label>
-                        <textarea v-model="newProject.description"
-                            class="w-full p-2 rounded bg-gray-800 text-white h-20 focus:outline-none focus:ring-2 focus:ring-green-400"></textarea>
+                        <textarea
+                            v-model="newProject.description"
+                            class="h-20 w-full rounded bg-gray-800 p-2 text-white focus:ring-2 focus:ring-green-400 focus:outline-none"
+                        ></textarea>
 
                         <!-- 权限 -->
                         <!-- <label class="block text-sm mt-3 mb-1">* 权限</label>
@@ -124,15 +127,14 @@
                         </div> -->
 
                         <!-- 按钮 -->
-                        <div class="flex justify-center mt-6">
-                            <button @click="create"
-                                class="px-6 py-2 bg-green-600 rounded-xl hover:bg-green-500 mx-2">创建</button>
-                            <button @click="createProjectView = false"
-                                class="px-6 py-2 !ml-4 bg-gray-500 rounded-xl hover:bg-gray-400 mx-2">取消</button>
+                        <div class="mt-6 flex justify-center">
+                            <button @click="create" class="mx-2 rounded-xl bg-green-600 px-6 py-2 hover:bg-green-500">创建</button>
+                            <button @click="createProjectView = false" class="mx-2 !ml-4 rounded-xl bg-gray-500 px-6 py-2 hover:bg-gray-400">
+                                取消
+                            </button>
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
@@ -145,12 +147,11 @@ import { Search } from 'lucide-vue-next'
 import { getProjects, createProject } from '@/api/http/analysis'
 import projectCard from '@/components/projects/projectCard.vue'
 
-import type { project, newProject } from "@/type/analysis"
+import type { project, newProject } from '@/type/analysis'
 import { ElMessage } from 'element-plus'
-import { useRouter } from 'vue-router';
+import { useRouter } from 'vue-router'
 
-
-const router = useRouter();
+const router = useRouter()
 const userId = localStorage.getItem('userId')
 const searchInput = ref('')
 const projectList = ref([])
@@ -163,12 +164,10 @@ const newProject = ref({
     // authority: ''
 })
 
-
 const enterProject = (item: project) => {
-
-    console.log(item);
+    console.log(item)
     if (item.createUser === userId) {
-        router.push(`/project/${item.projectId}`);
+        router.push(`/project/${item.projectId}`)
     } else {
         ElMessage.error('您没有访问该项目的权限，请联系项目创建者')
     }
@@ -186,14 +185,12 @@ const create = async () => {
         ...newProject.value,
         userId,
     }
-    console.log(createBody, 11);
+    console.log(createBody, 11)
 
     await createProject(createBody)
     createProjectView.value = false
     projectList.value = await getProjects()
     ElMessage.success('创建成功')
-
-
 }
 
 onMounted(async () => {
