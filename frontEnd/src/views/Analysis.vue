@@ -9,15 +9,13 @@
             <div class="splitHandleVertical" id="splitHandleVertical2Id" style="left: 25%"></div>
             <!-- 上中在线编程 -->
             <div class="codeEditArea pl-2" id="codeEditAreaId">
-                <codeEditor :projectId="projectId" :userId="userId" @addMessage="addMessage
-                " class="h-[100%] w-full" />
+                <codeEditor :projectId="projectId" :userId="userId" @addMessage="addMessage" class="h-[100%] w-full" />
             </div>
 
             <div class="splitHandleVertical" id="splitHandleVertical3Id" style="left: 75%"></div>
             <!-- 上右控制台 -->
             <div class="consolerArea" id="consolerAreaId">
-                <consolerComponent :messages="messages" @clearConsole="clearConsole">
-                </consolerComponent>
+                <consolerComponent :messages="messages" @clearConsole="clearConsole"> </consolerComponent>
             </div>
         </div>
         <div class="splitHandleHorizontal" id="splitPaneHorizontal1Id"></div>
@@ -37,14 +35,12 @@ import codeEditor from '@/components/analysisComponents/codeEditor.vue'
 import dataDirectory from '@/components/analysisComponents/dataDirectory.vue'
 import { createWebSocket } from '@/api/websocket/websocketApi'
 import { useUserStore } from '@/store'
-import { useRoute } from 'vue-router';
-
+import { useRoute } from 'vue-router'
 
 const userStore = useUserStore()
 const route = useRoute()
 const userId = userStore.user.id
 const projectId = route.params.projectId as string
-
 
 onMounted(() => {
     ws.connect()
@@ -63,10 +59,9 @@ onUnmounted(() => {
  *
  */
 
-const addMessage = (messageContent: string = "code") => {
+const addMessage = (messageContent: string = 'code') => {
     if (messageContent === 'code') {
         messages.value.push('开始执行代码,请稍候...')
-
     } else {
         messages.value.push(messageContent)
     }

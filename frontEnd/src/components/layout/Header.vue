@@ -1,15 +1,8 @@
 <template>
-    <header
-        class="flex items-center justify-between rounded-2xl border-b-2 border-sky-700 bg-gray-50 px-10 py-4 shadow-sm select-none"
-    >
+    <header class="flex items-center justify-between rounded-2xl border-b-2 border-sky-700 bg-gray-50 px-10 py-4 shadow-sm select-none">
         <div class="flex flex-3/5 items-center justify-start">
             <div class="flex items-center">
-                <img
-                    :src="logo"
-                    alt="Logo"
-                    class="h-10 w-auto -translate-x-3 cursor-pointer"
-                    @click="jumpToOGMS"
-                />
+                <img :src="logo" alt="Logo" class="h-10 w-auto -translate-x-3 cursor-pointer" @click="jumpToOGMS" />
                 <span
                     class="ml-3 bg-gradient-to-r from-sky-950 to-sky-500 bg-clip-text font-semibold whitespace-nowrap text-transparent sm:text-lg md:text-xl lg:text-3xl"
                     >遥感ARD平台</span
@@ -29,19 +22,13 @@
                         }"
                         >{{ item.name }}
                     </router-link>
-                    <div
-                        class="h-8 w-0 border-r-2 border-gray-500"
-                        v-if="index < navItems.length - 1"
-                    ></div>
+                    <div class="h-8 w-0 border-r-2 border-gray-500" v-if="index < navItems.length - 1"></div>
                 </div>
             </nav>
         </div>
 
         <!-- user authenticated -->
-        <div
-            v-if="userStore.authenticated"
-            class="flex cursor-pointer items-center justify-between rounded-4xl bg-gray-200"
-        >
+        <div v-if="userStore.authenticated" class="flex cursor-pointer items-center justify-between rounded-4xl bg-gray-200">
             <span class="px-4 text-gray-500">{{ userStore.user.name }}</span>
             <div class="py-1">
                 <img :src="avator" alt="user-avator" class="h-8 w-auto" />

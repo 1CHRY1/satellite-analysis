@@ -29,7 +29,7 @@
                 <Mail color="white" class="mr-1.5" />{{ project.createUserEmail }}
             </div>
             <div class="flex">
-                <Clock3 color="white" class="mr-1.5" />{{ formatTime(project.createTime, "minutes", 0) }}
+                <Clock3 color="white" class="mr-1.5" />{{ formatTime(project.createTime, 'minutes', 0) }}
             </div>
         </div>
     </div>
