@@ -18,7 +18,7 @@
                 <RefreshCcw :size="16" class="text-primary" />
             </div>
         </div>
-        <div class="h-[calc(100vh-44px)] max-w-full overflow-x-auto">
+        <div class="h-[calc(100%-44px)] max-w-full overflow-x-auto">
             <table class="min-w-full table-auto border-collapse">
                 <thead>
                     <tr class="sticky top-0 bg-gray-200 text-[#818999]">
