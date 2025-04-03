@@ -1,5 +1,8 @@
 <template>
-    <div class=" ">
+    <div class="bgImage">
+        <!-- <div>
+            <img class=" w-[100vw]" src="@/assets/image/bg.jpg" alt="">
+        </div> -->
         <div class="layer1"></div>
         <div class="layer2"></div>
         <div class="layer3"></div>
@@ -16,6 +19,14 @@ html {
     height: 100%;
     background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
     overflow: hidden;
+}
+
+.bgImage {
+    // background-image: url("@/assets/image/bg2.png");
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+
 }
 
 .title {

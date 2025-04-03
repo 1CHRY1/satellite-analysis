@@ -1,74 +1,61 @@
 <template>
     <div>
         <projectsBg
-            class="absolute inset-0 z-0 h-full w-full overflow-hidden bg-[radial-gradient(ellipse_at_bottom,_#1b2735_0%,_#090a0f_100%)]"
-        >
+            class="absolute inset-0 z-0 h-full w-full overflow-hidden bg-[radial-gradient(ellipse_at_bottom,_#1b2735_0%,_#090a0f_100%)]">
         </projectsBg>
         <div class="relative z-99 flex flex-col items-center justify-center">
             <div class="my-10 flex w-[50vw] flex-col items-center justify-center">
                 <img src="@/assets/image/projectsName.png" class="h-12 w-fit" alt="" />
                 <div class="searchContainer mt-6 w-[100%]">
                     <div class="model_research">
-                        <input
-                            type="text"
-                            autocomplete="false"
-                            placeholder="输入项目名称搜索项目"
-                            class="model_research_input"
-                            v-model="searchInput"
-                            style="font-size: 14px"
-                            @keyup.enter=""
-                        />
+                        <input type="text" autocomplete="false" placeholder="根据项目名称、创建人或项目信息进行搜索，搜索词为空则显示所有项目"
+                            class="model_research_input" v-model="searchInput" style="font-size: 14px"
+                            @keyup.enter="researchProjects" />
 
-                        <el-button
-                            type="primary"
-                            color="#049f40"
-                            style="
+                        <el-button type="primary" color="#049f40" style="
                                 border-left: none;
                                 border-top-left-radius: 0px;
                                 border-bottom-left-radius: 0px;
                                 border-color: #ffffff;
                                 font-size: 14px;
                                 height: 2rem;
-                            "
-                            @click=""
-                        >
+                            " @click="researchProjects">
                             <Search class="h-4" />
-
                             搜索
                         </el-button>
                     </div>
                     <el-button type="primary" color="#049f40"
                         style="margin-left: 10px;border-color: #049f40;font-size: 14px;height: 2rem;"
-                        @click="createProjectView = true">
+                        @click="createProjectView = !createProjectView">
 
-                        创建
+                        {{ createProjectView ? '取消创建' : '创建项目' }}
                     </el-button>
-                    <el-button
-                        type="primary"
-                        color="#049f40"
-                        style="
+                    <el-button type="primary" color="#049f40" :disabled="searchProjectsVisible" style="
                             margin-left: 10px;
                             border-color: #049f40;
                             font-size: 14px;
                             height: 2rem;
-                        "
-                        @click=""
-                    >
-                        我的
+                        " @click="viewMyProjects">
+                        {{ myProjectsVisible ? '所有项目' : '我的项目' }}
                     </el-button>
                 </div>
             </div>
 
-            <div class="my-10 h-[calc(100vh-264px-56px)] w-full  justify-center">
-                <div class="inline-flex flex-wrap  gap-12">
-                    <projectCard v-if="!createProjectView" v-for="item in projectList" :project="item"
-                        @click="enterProject(item)"></projectCard>
+            <!-- 计算合适的高度，header是56px，搜索184px，即 50vh = 1/2x + 56px + 184px，x为容器高度，这样创建弹窗在容器内居中就会在视口居中 -->
+            <div class=" flex h-[calc(100vh-184px-56px)] w-full justify-center relative">
+                <!-- 计算合适的宽度 -->
+                <div v-if="!createProjectView" class="p-3 grid gap-12 overflow-y-auto"
+                    :style="{ gridTemplateColumns: `repeat(${columns}, ${cardWidth}px)` }">
+                    <projectCard
+                        v-for="item in searchProjectsVisible ? searchedProjects : myProjectsVisible ? myProjectList : projectList"
+                        :key="item.projectId" :project="item" @click="enterProject(item)">
+                    </projectCard>
                 </div>
 
 
                 <!-- 创建项目的卡片 -->
-                <div v-if="createProjectView" class="fixed flex items-center justify-center opacity-80">
-                    <div class="bg-gray-600 text-white p-6 rounded-xl shadow-xl w-96">
+                <div v-if="createProjectView" class="flex  opacity-80 absolute top-[calc(50vh-240px-206px)]">
+                    <div class="bg-gray-700 text-white p-6 rounded-xl shadow-xl w-96">
                         <h2 class="text-xl font-semibold mb-4 text-center">创建项目</h2>
 
                         <!-- 项目名称 -->
@@ -132,17 +119,16 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted, type Ref } from 'vue'
 import projectsBg from '@/components/projects/projectsBg.vue'
 import { Search } from 'lucide-vue-next'
-import { getProjects, createProject } from '@/api/http/analysis'
+import { getProjects, createProject, getModels, getMethods } from '@/api/http/analysis'
 import projectCard from '@/components/projects/projectCard.vue'
 
 import type { project, newProject } from "@/type/analysis"
@@ -150,10 +136,42 @@ import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router';
 
 
+
 const router = useRouter();
 const userId = localStorage.getItem('userId')
 const searchInput = ref('')
-const projectList = ref([])
+
+/**
+ * 搜索功能模块
+ */
+const myProjectsVisible = ref(false)
+const myProjectList: Ref<project[]> = ref([])
+const searchedProjects: Ref<project[]> = ref([])
+const searchProjectsVisible = ref(false)
+
+// 支持搜索项目名称、创建人和项目描述
+const researchProjects = () => {
+    if (searchInput.value.length > 0) {
+        searchedProjects.value = projectList.value.filter((item: project) => item.projectName.includes(searchInput.value) || item.createUserName.includes(searchInput.value) || item.description.includes(searchInput.value))
+        searchProjectsVisible.value = true
+        console.log(searchedProjects.value, 1115);
+    } else {
+        searchProjectsVisible.value = false
+    }
+
+}
+
+// 查看我的项目
+const viewMyProjects = () => {
+    myProjectsVisible.value = !myProjectsVisible.value
+    myProjectList.value = projectList.value.filter((item: project) => item.createUser === userId)
+}
+
+
+/**
+ * 项目列表模块
+ */
+const projectList: Ref<project[]> = ref([])
 const createProjectView = ref(false)
 const newProject = ref({
     projectName: '',
@@ -162,11 +180,17 @@ const newProject = ref({
     description: '',
     // authority: ''
 })
+const cardWidth = 300;
+const gap = 48;
+const columns = ref(1);
 
+const updateColumns = () => {
+    const containerWidth = window.innerWidth - 32; // 预留 100px 余量
+    columns.value = Math.max(1, Math.floor(containerWidth / (cardWidth + gap)));
+};
 
 const enterProject = (item: project) => {
 
-    console.log(item);
     if (item.createUser === userId) {
         router.push(`/project/${item.projectId}`);
     } else {
@@ -181,28 +205,73 @@ const create = async () => {
     } else if (!newProject.value.description) {
         ElMessage.error('描述不能为空')
         return
+    } else if (projectList.value.some((item: project) => item.projectName === newProject.value.projectName)) {
+        ElMessage.error('该项目已存在，请更换项目名称')
+        return
+
     }
     let createBody = {
         ...newProject.value,
         userId,
     }
-    console.log(createBody, 11);
-
-    await createProject(createBody)
+    // 先关闭再发起请求，起到防抖作用
     createProjectView.value = false
+    await createProject(createBody)
     projectList.value = await getProjects()
     ElMessage.success('创建成功')
+}
 
-
+const getProjectsInOrder = async () => {
+    projectList.value = await getProjects()
+    projectList.value.sort((a, b) => b.createTime.localeCompare(a.createTime));
 }
 
 onMounted(async () => {
-    projectList.value = await getProjects()
-    console.log(projectList.value)
+    await getProjectsInOrder()
+
+    console.log("所有项目：", projectList.value)
+    updateColumns();
+    window.addEventListener("resize", updateColumns);
+    console.log(await getModels({
+        "asc": false,
+        "page": 1,
+        "pageSize": 18,
+        "searchText": "",
+        "sortField": "createTime",
+        "tagClass": "problemTags",
+        "tagNames": [
+            ""
+        ]
+    }), 12132);
+    console.log(await getMethods({
+        "asc": false,
+        "page": 1,
+        "pageSize": 18,
+        "searchText": "",
+        "sortField": "createTime",
+        "tagClass": "problemTags",
+        "tagNames": [
+            ""
+        ]
+    }), 13132);
+
 })
+
+onUnmounted(() => {
+    window.removeEventListener("resize", updateColumns);
+});
 </script>
 
 <style scoped lang="scss">
+div::-webkit-scrollbar {
+    width: none !important;
+}
+
+div {
+    scrollbar-width: none !important;
+    scrollbar-color: rgba(37, 190, 255, 0.332) transparent !important;
+}
+
 .searchContainer {
     // height: 60px;
     // height: fit-content;

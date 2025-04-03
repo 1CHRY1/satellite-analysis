@@ -3,60 +3,31 @@
         <div class="container">
             <div class="left">
                 <div class="login">登 录</div>
-                <div class="eula">请使用您的邮箱和密码登录！</div>
+                <div class="eula">请使用您的邮箱（或用户名）和密码登录！</div>
             </div>
             <div class="right">
                 <svg viewBox="0 0 320 300">
                     <defs>
-                        <linearGradient
-                            inkscape:collect="always"
-                            id="linearGradient"
-                            x1="13"
-                            y1="193.49992"
-                            x2="307"
-                            y2="193.49992"
-                            gradientUnits="userSpaceOnUse"
-                        >
+                        <linearGradient inkscape:collect="always" id="linearGradient" x1="13" y1="193.49992" x2="307"
+                            y2="193.49992" gradientUnits="userSpaceOnUse">
                             <stop style="stop-color: #ff00ff" offset="0" id="stop876" />
                             <stop style="stop-color: #ff0000" offset="1" id="stop878" />
                         </linearGradient>
                     </defs>
                     <path
-                        d="m 40,120.00016 239.99984,-3.2e-4 c 0,0 24.99263,0.79932 25.00016,35.00016 0.008,34.20084 -25.00016,35 -25.00016,35 h -239.99984 c 0,-0.0205 -25,4.01348 -25,38.5 0,34.48652 25,38.5 25,38.5 h 215 c 0,0 20,-0.99604 20,-25 0,-24.00396 -20,-25 -20,-25 h -190 c 0,0 -20,1.71033 -20,25 0,24.00396 20,25 20,25 h 168.57143"
-                    />
+                        d="m 40,120.00016 239.99984,-3.2e-4 c 0,0 24.99263,0.79932 25.00016,35.00016 0.008,34.20084 -25.00016,35 -25.00016,35 h -239.99984 c 0,-0.0205 -25,4.01348 -25,38.5 0,34.48652 25,38.5 25,38.5 h 215 c 0,0 20,-0.99604 20,-25 0,-24.00396 -20,-25 -20,-25 h -190 c 0,0 -20,1.71033 -20,25 0,24.00396 20,25 20,25 h 168.57143" />
                 </svg>
                 <div class="form">
-                    <label for="email" class="bg-[#474a59]">邮 箱</label>
-                    <input
-                        type="email"
-                        placeholder="请输入您的邮箱地址"
-                        id="email"
-                        autocomplete="off"
-                        v-model="email"
-                    />
+                    <label for="email" class="bg-[#474a59]">邮 箱/用户名</label>
+                    <input type="email" placeholder="请输入您的邮箱地址" id="email" autocomplete="off" v-model="email" />
                     <label for="password">密 码</label>
-                    <input
-                        type="password"
-                        placeholder="请输入您的密码"
-                        id="password"
-                        autocomplete="new-password"
-                        v-model="password"
-                    />
+                    <input type="password" placeholder="请输入您的密码" id="password" autocomplete="new-password"
+                        v-model="password" />
                     <div class="flex h-[80px] w-[245px] flex-row items-center justify-center">
-                        <button
-                            type="register"
-                            id="register"
-                            @click="gotoRegister"
-                            class="submit cursor-pointer"
-                        >
+                        <button type="register" id="register" @click="gotoRegister" class="submit cursor-pointer">
                             去 注 册
                         </button>
-                        <button
-                            type="submit"
-                            id="submit"
-                            @click="handleLogin"
-                            class="submit cursor-pointer"
-                        >
+                        <button type="submit" id="submit" @click="handleLogin" class="submit cursor-pointer">
                             登 录
                         </button>
                     </div>
@@ -201,8 +172,10 @@ onMounted(() => {
 // 修改自动填充的样式
 input:-webkit-autofill {
     // background-color: #474a59 !important; /* 让背景色保持透明 */
-    box-shadow: 0 0 0px 1000px #474a59 inset !important; /* 强制覆盖背景 */
-    -webkit-text-fill-color: white !important; /* 让文本颜色保持不变 */
+    box-shadow: 0 0 0px 1000px #474a59 inset !important;
+    /* 强制覆盖背景 */
+    -webkit-text-fill-color: white !important;
+    /* 让文本颜色保持不变 */
 }
 
 ::selection {
