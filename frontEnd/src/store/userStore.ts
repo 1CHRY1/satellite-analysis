@@ -39,13 +39,7 @@ export const useUserStore = defineStore('user-store', {
             this.user = { ...this.user, ...newUser }
         },
         // Mock login logic
-        login(credentials: {
-            name: string
-            email: string
-            id: string
-            title: string
-            organization: string
-        }) {
+        login(credentials: { name: string; email: string; id: string; title: string; organization: string }) {
             this.authenticated = true
             this.user.id = credentials.id
             this.user.name = credentials.name

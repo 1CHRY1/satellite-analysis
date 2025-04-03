@@ -40,6 +40,7 @@ class HttpClient {
                 return response.data
             },
             async (error) => {
+                console.log('!!! response error', error)
                 if (error.response.status === 401) {
                     // 🚨 Token 过期，尝试刷新
                     const refreshToken = localStorage.getItem('refreshToken')
@@ -78,20 +79,7 @@ class HttpClient {
                         return Promise.reject(err)
                     }
                 }
-                if (error.response) {
-                    const status = error.response.status
-                    const errorMsg = `请求失败 (${status}): ${error.response.data?.message || error.message}`
-                    console.error(errorMsg, error)
-                    message.error(errorMsg)
-                } else if (error.request) {
-                    const errorMsg = `请求已发出，但服务器无响应`
-                    console.error(errorMsg, error)
-                    message.error(errorMsg)
-                } else {
-                    const errorMsg = `错误: ${error.message}`
-                    console.error(errorMsg, error)
-                    message.error(errorMsg)
-                }
+                
                 return Promise.reject(error)
             },
         )

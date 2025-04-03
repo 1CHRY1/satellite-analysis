@@ -5,9 +5,8 @@ class URLUtil:
     
     @staticmethod
     def resolve(object_url: str):
-
         endpoint = get_minio_client().endpoint
-        full_url = f"http://{endpoint}{object_url}"
+        full_url = f"/vsicurl/http://{endpoint}{object_url}"
         return full_url
     
     @staticmethod

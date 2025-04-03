@@ -20,13 +20,10 @@ class MapManager {
         return MapManager.instance
     }
 
-    async init(
-        container: string | HTMLDivElement,
-        style: Style = 'vector',
-        proj: 'mercator' | 'globe' = 'mercator',
-    ): Promise<mapboxgl.Map> {
+    async init(container: string | HTMLDivElement, style: Style = 'vector', proj: 'mercator' | 'globe' = 'mercator'): Promise<mapboxgl.Map> {
         if (this.map) return this.map
         this.initPromise = new Promise((resolve) => {
+            const conf = ezStore.get('conf')
             this.map = new mapboxgl.Map({
                 container,
                 projection: proj,
@@ -34,6 +31,19 @@ class MapManager {
                 zoom: 2,
                 maxZoom: 22,
                 style: StyleMap[style],
+                transformRequest: (url) => {
+                    if (url.indexOf(conf['back_app']) > -1) {
+                        const token = localStorage.getItem('token')
+                        return {
+                            url: url,
+                            headers: { Authorization: `Bearer ${token}` },
+                            credentials: 'include',
+                        }
+                    }
+                    return {
+                        url,
+                    }
+                },
             })
             const logo = document.querySelector('.mapboxgl-ctrl-logo') as HTMLElement
             logo.style.display = 'none'
@@ -72,8 +82,7 @@ class MapManager {
         this.map.on('draw.create', () => {
             const features = this.draw?.getAll().features
             if (features?.length) {
-                ezStore.set('polygonFeature', features[0])
-                console.log(' ezStore set polygonFeature:', features[0])
+                ezStore.set('polygonFeature', features[0].geometry)
             }
         })
     }
@@ -119,11 +128,8 @@ class MapManager {
 export const mapManager = MapManager.getInstance()
 
 /////// 外部简单调用 //////////////////////////////////
-export const initMap = (
-    container: string | HTMLDivElement,
-    style: Style = 'vector',
-    proj: 'mercator' | 'globe' = 'mercator',
-) => mapManager.init(container, style, proj)
+export const initMap = (container: string | HTMLDivElement, style: Style = 'vector', proj: 'mercator' | 'globe' = 'mercator') =>
+    mapManager.init(container, style, proj)
 
 export { type Style }
 //////// Example //////////////////////////////////

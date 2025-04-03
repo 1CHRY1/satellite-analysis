@@ -52,28 +52,29 @@
                     </projectCard>
                 </div>
 
-
                 <!-- 创建项目的卡片 -->
                 <div v-if="createProjectView" class="flex  opacity-80 absolute top-[calc(50vh-240px-206px)]">
                     <div class="bg-gray-700 text-white p-6 rounded-xl shadow-xl w-96">
                         <h2 class="text-xl font-semibold mb-4 text-center">创建项目</h2>
 
                         <!-- 项目名称 -->
-                        <label class="flex text-sm mb-1">
-                            <div style="color: red;margin-right: 4px;">* </div> 项目名称
+                        <label class="mb-1 flex text-sm">
+                            <div style="color: red; margin-right: 4px">*</div>
+                            项目名称
                         </label>
                         <input v-model="newProject.projectName" type="text"
-                            class="w-full p-2 rounded bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-green-400" />
+                            class="w-full rounded bg-gray-800 p-2 text-white focus:ring-2 focus:ring-green-400 focus:outline-none" />
 
                         <!-- 运行环境 -->
-                        <label class="flex text-sm mt-3 mb-1">
-                            <div style="color: red;margin-right: 4px;">* </div>运行环境
+                        <label class="mt-3 mb-1 flex text-sm">
+                            <div style="color: red; margin-right: 4px">*</div>
+                            运行环境
                         </label>
                         <select v-model="newProject.environment"
-                            class="w-full p-2 rounded bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-green-400">
+                            class="w-full rounded bg-gray-800 p-2 text-white focus:ring-2 focus:ring-green-400 focus:outline-none">
                             <option value="Python2_7" disabled>Python 2.7 ( 暂不支持 )</option>
                             <option value="Python3_9">Python 3.9</option>
-                            <option value="Python3_10" disabled>Python 3.10 ( 暂不支持 ) </option>
+                            <option value="Python3_10" disabled>Python 3.10 ( 暂不支持 )</option>
                         </select>
 
                         <!-- 关键词 -->
@@ -92,11 +93,12 @@
                         </div> -->
 
                         <!-- 描述 -->
-                        <label class="flex text-sm mt-3 mb-1">
-                            <div style="color: red;margin-right: 4px;">* </div> 描述
+                        <label class="mt-3 mb-1 flex text-sm">
+                            <div style="color: red; margin-right: 4px">*</div>
+                            描述
                         </label>
                         <textarea v-model="newProject.description"
-                            class="w-full p-2 rounded bg-gray-800 text-white h-20 focus:outline-none focus:ring-2 focus:ring-green-400"></textarea>
+                            class="h-20 w-full rounded bg-gray-800 p-2 text-white focus:ring-2 focus:ring-green-400 focus:outline-none"></textarea>
 
                         <!-- 权限 -->
                         <!-- <label class="block text-sm mt-3 mb-1">* 权限</label>
@@ -111,11 +113,13 @@
                         </div> -->
 
                         <!-- 按钮 -->
-                        <div class="flex justify-center mt-6">
+                        <div class="mt-6 flex justify-center">
                             <button @click="create"
-                                class="px-6 py-2 bg-green-600 rounded-xl hover:bg-green-500 mx-2">创建</button>
+                                class="mx-2 rounded-xl bg-green-600 px-6 py-2 hover:bg-green-500">创建</button>
                             <button @click="createProjectView = false"
-                                class="px-6 py-2 !ml-4 bg-gray-500 rounded-xl hover:bg-gray-400 mx-2">取消</button>
+                                class="mx-2 !ml-4 rounded-xl bg-gray-500 px-6 py-2 hover:bg-gray-400">
+                                取消
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -131,9 +135,9 @@ import { Search } from 'lucide-vue-next'
 import { getProjects, createProject, getModels, getMethods } from '@/api/http/analysis'
 import projectCard from '@/components/projects/projectCard.vue'
 
-import type { project, newProject } from "@/type/analysis"
+import type { project, newProject } from '@/type/analysis'
 import { ElMessage } from 'element-plus'
-import { useRouter } from 'vue-router';
+import { useRouter } from 'vue-router'
 
 
 
@@ -192,7 +196,7 @@ const updateColumns = () => {
 const enterProject = (item: project) => {
 
     if (item.createUser === userId) {
-        router.push(`/project/${item.projectId}`);
+        router.push(`/project/${item.projectId}`)
     } else {
         ElMessage.error('您没有访问该项目的权限，请联系项目创建者')
     }

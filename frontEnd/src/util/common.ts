@@ -1,3 +1,4 @@
+import { type polygonGeometry } from '@/util/share.type'
 // 标准化文件大小
 export const sizeConversion = (size: number) => {
     if (size < 1024) {
@@ -32,4 +33,15 @@ export const formatTime = (time: string, model: string = 'minutes', timeLag: num
     }
     const formattedTime = `${year}/${month}/${day} ${hours}:${minutes}`
     return formattedTime
+}
+
+// polygon feature 转 box coordinates 序列
+export function polygonGeometryToBoxCoordinates(polygonGeometry: polygonGeometry) {
+    const boxCoordinates = [
+        [polygonGeometry.coordinates[0][0][0], polygonGeometry.coordinates[0][0][1]],
+        [polygonGeometry.coordinates[0][1][0], polygonGeometry.coordinates[0][1][1]],
+        [polygonGeometry.coordinates[0][2][0], polygonGeometry.coordinates[0][2][1]],
+        [polygonGeometry.coordinates[0][3][0], polygonGeometry.coordinates[0][3][1]],
+    ]
+    return boxCoordinates as [[number, number], [number, number], [number, number], [number, number]]
 }

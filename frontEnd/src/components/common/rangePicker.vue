@@ -1,10 +1,5 @@
 <template>
-    <a-range-picker
-        class="custom-date-picker"
-        v-model:value="dateRangeValue"
-        picker="day"
-        :placeholder="['开始日期', '结束日期']"
-    />
+    <a-range-picker class="custom-date-picker" v-model:value="dateRangeValue" picker="day" :placeholder="['开始日期', '结束日期']" />
 </template>
 
 <script setup lang="ts">
