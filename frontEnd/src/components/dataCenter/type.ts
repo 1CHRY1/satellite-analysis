@@ -10,14 +10,14 @@ export interface ImageFilterCondition {
 }
 
 export interface Project {
-    projectId: string;
-    projectName: string;
-    environment: string;
-    createTime: string;
-    packages: string;
-    createUser: string;
-    createUserName: string;
-    createUserEmail: string;
-    joinedUsers: string[];
-    description: string;
+    projectId: string
+    projectName: string
+    environment: string
+    createTime: string
+    packages: string
+    createUser: string
+    createUserName: string
+    createUserEmail: string
+    joinedUsers: string[]
+    description: string
 }

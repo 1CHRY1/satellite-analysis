@@ -22,7 +22,9 @@ class EzStore {
     }
 
     public delete(key: string): void {
-        delete this.store[key]
+        if (this.store[key]) {
+            delete this.store[key]
+        }
     }
 }
 

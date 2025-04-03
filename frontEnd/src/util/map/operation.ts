@@ -1,5 +1,5 @@
 import { mapManager, initMap, type Style } from './mapManager'
-import { Popup, GeoJSONSource } from 'mapbox-gl'
+import { Popup, GeoJSONSource, MapMouseEvent } from 'mapbox-gl'
 import { CN_Bounds } from './constant'
 // import { type Image } from '@/types/satellite'
 // import { type polygonGeometry } from '@/types/sharing'
@@ -10,6 +10,7 @@ import { ezStore, useGridStore } from '@/store'
 ////////////////////////////////////////////////////////
 /////// Map Operation //////////////////////////////////
 
+const gridStore = useGridStore()
 let resizeObserver: ResizeObserver | null = null
 
 export async function map_initiliaze(id: string, style: Style = 'vector', proj: 'mercator' | 'globe' = 'mercator') {
@@ -198,8 +199,8 @@ export function map_destroyImagePolygon(): void {
     const id = ezStore.get('image-polygon-layer')
     const srcId = ezStore.get('image-polygon-source')
     mapManager.withMap((m) => {
-        m.getLayer(id) && m.removeLayer(id)
-        m.getSource(srcId) && m.removeSource(srcId)
+        id && m.getLayer(id) && m.removeLayer(id)
+        srcId && m.getSource(srcId) && m.removeSource(srcId)
         ezStore.delete('image-polygon-layer')
         ezStore.delete('image-polygon-source')
     })
@@ -217,28 +218,55 @@ export function map_addImagePreviewLayer(props: ImageLayerProp): void {
         if (m.getLayer(id) && m.getSource(srcId)) {
             m.removeLayer(id)
             m.removeSource(srcId)
-        } else {
-            m.addSource(srcId, {
-                type: 'image',
-                url: props.imageUrl,
-                coordinates: props.boxCoordinates,
-            })
-            m.addLayer({
-                id: id,
-                type: 'raster',
-                source: srcId,
-                paint: {
-                    'raster-opacity': 0.9,
-                },
-            })
-            ezStore.set('image-preview-layer', id)
         }
+
+        m.addSource(srcId, {
+            type: 'image',
+            url: props.imageUrl,
+            coordinates: props.boxCoordinates,
+        })
+        m.addLayer({
+            id: id,
+            type: 'raster',
+            source: srcId,
+            paint: {
+                'raster-opacity': 0.9,
+            },
+        })
+        ezStore.set('image-preview-layer', id)
+        ezStore.set('image-preview-source', srcId)
+
     })
+}
+export function map_destroyImagePreviewLayer(): void {
+    const id = ezStore.get('image-preview-layer')
+    const srcId = ezStore.get('image-preview-source')
+    mapManager.withMap((m) => {
+        id && m.getLayer(id) && m.removeLayer(id)
+        srcId && m.getSource(srcId) && m.removeSource(srcId)
+        ezStore.delete('image-preview-layer')
+        ezStore.delete('image-preview-source')
+    })
+}
+
+function grid_fill_click_handler(e: MapMouseEvent): void {
+    const features = e.features!
+    if (features.length) {
+        const featureId = features[0].properties?.id
+        console.log('click grid:', features[0])
+        // popup.setLngLat(e.lngLat).setText(text).addTo(m)
+
+        // Toggle highlight
+        if (gridStore.selectedGrids.includes(featureId)) {
+            gridStore.removeGrid(featureId)
+        } else {
+            gridStore.addGrid(featureId)
+        }
+    }
 }
 
 // Data-View:: grid-layer
 export function map_addGridLayer(gridGeoJsonURL: string): void {
-    const gridStore = useGridStore()
 
     const id = 'grid-layer'
     const fillId = id + '-fill'
@@ -291,24 +319,10 @@ export function map_addGridLayer(gridGeoJsonURL: string): void {
         })
 
         // Add a click event listener to the invisible fill layer
-        m.on('click', fillId, async (e) => {
-            const features = e.features!
-            if (features.length) {
-                const featureId = features[0].properties?.id
-                const text = `GridID : ${featureId}`
-                console.log('click grid:', features[0])
-                // popup.setLngLat(e.lngLat).setText(text).addTo(m)
-
-                // Toggle highlight
-                if (gridStore.selectedGrids.includes(featureId)) {
-                    gridStore.removeGrid(featureId)
-                } else {
-                    gridStore.addGrid(featureId)
-                }
-            }
-        })
+        m.on('click', fillId, grid_fill_click_handler)
 
         // Keep Watching gridStore.selectedGrids and update the highlight layer
+        console.log("!!! init cancel watch")
         const cancelWatch = watch(
             () => gridStore.selectedGrids,
             () => {
@@ -335,6 +349,7 @@ export function map_destroyGridLayer(): void {
     const cancelWatch = ezStore.get('grid-layer-cancel-watch')
 
     mapManager.withMap((m) => {
+        gridLayer && m.getLayer(gridLayer) && m.off('click', gridLayer, grid_fill_click_handler)
         gridLayer && m.getLayer(gridLayer) && m.removeLayer(gridLayer)
         gridLineLayer && m.getLayer(gridLineLayer) && m.removeLayer(gridLineLayer)
         gridHighlightLayer && m.getLayer(gridHighlightLayer) && m.removeLayer(gridHighlightLayer)

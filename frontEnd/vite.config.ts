@@ -13,14 +13,12 @@ export default defineConfig({
     },
     server: {
         host: '0.0.0.0',
-        // proxy: {
-        //     '/tiles': {
-        //         target: 'http://223.2.32.242:8079',
-        //         changeOrigin: true,
-        //         rewrite: (path) => path.replace(/^\/tiles/, ''),
-        //     },
-        // },
         proxy: {
+            '/tiles': {
+                target: 'http://223.2.32.242:8079',
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/tiles/, ''),
+            },
             '/api': {
                 // target: 'http://223.2.47.202:8999/api/v1',
                 target: 'http://223.2.47.202:9888/api/v1',

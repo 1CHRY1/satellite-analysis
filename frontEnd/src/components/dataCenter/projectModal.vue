@@ -1,12 +1,15 @@
 <template>
-    <a-modal v-model:open="modalVisible" title="选择项目" :width="700" :footer="null" :destroyOnClose="true"
-        class="dataset-modal">
+    <a-modal v-model:open="modalVisible" title="选择项目" :width="700" :footer="null" :destroyOnClose="true" class="dataset-modal">
         <div class="h-[350px] w-[620px] overflow-y-auto">
             <a-skeleton active :loading="projectList.length === 0">
-                <div class="flex flex-row flex-wrap gap-x-8 gap-y-4 relative justify-start">
-                    <ProjectCard v-for="project in projectList" :key="project.projectId" :project="project"
+                <div class="relative flex flex-row flex-wrap justify-start gap-x-8 gap-y-4">
+                    <ProjectCard
+                        v-for="project in projectList"
+                        :key="project.projectId"
+                        :project="project"
                         :checked="selectedProject?.projectId === project.projectId"
-                        @select="handleSelect" />
+                        @select="handleSelect"
+                    />
                 </div>
             </a-skeleton>
         </div>
@@ -43,5 +46,4 @@ const handleConfirm = () => {
 onMounted(async () => {
     projectList.value = await getProjects()
 })
-
 </script>
