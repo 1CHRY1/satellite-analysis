@@ -218,7 +218,7 @@
 
                     <div class="section-content band-selection">
                         <a-radio-group v-model:value="selectedBand" button-style="solid" class="band-radio-group">
-                            <a-radio-button v-for="band in bandViews" :key="band.id" :value="band.id"
+                            <a-radio-button v-for="band in bandViews" :key="band.id" :value="band"
                                 class="band-radio-button">
                                 {{ band.name }}
                             </a-radio-button>
@@ -243,7 +243,7 @@
                         <div class="block-area" v-else>
                             <a-tag v-for="gridID in selectedGridIDs" :key="gridID" closable
                                 @close="removeOneGrid(gridID)" class="product-tag">
-                                {{ gridID }}
+                                {{ gridID.slice(0, 10) }}
                             </a-tag>
                         </div>
                     </div>
@@ -256,19 +256,21 @@
                         <span>重置</span>
                     </a-button>
                     <a-button type="primary" class="search-button"
-                        v-if="selectedImage && selectedBand && selectedGridIDs.length > 0" @click="handleMergeDownload">
+                        v-if="selectedImage && selectedBand && selectedGridIDs.length > 0" @click="handleMergeDownload"
+                        :loading="mergingLoading">
                         <DownloadIcon :size="18" class="button-icon" />
                         <span>合并下载</span>
                     </a-button>
                     <a-button type="primary" class="search-button"
-                        v-if="selectedImage && selectedBand && selectedGridIDs.length > 0" @click="handleAddToProject">
+                        v-if="selectedImage && selectedBand && selectedGridIDs.length > 0" @click="handleAddToProject"
+                        :loading="projectUploadLoading">
                         <FilePlus2Icon :size="18" class="button-icon" />
                         <span>添加至项目</span>
                     </a-button>
                 </div>
             </div>
         </dv-border-box12>
-        <ProjectModal v-model="projectModalOpen" @select_project="handleSelectProject" />
+        <ProjectModal v-model="projectModalOpen" @select_project="handleConfirmSelectProject" />
     </div>
 </template>
 
@@ -315,7 +317,10 @@ import {
     type BandView,
     fetchBandViews,
     getSceneGridGeoJsonURL,
-    mergeGridsAndDownload,
+    startMergeTiles,
+    downloadMergeTiles,
+    intervalQueryMergingStatus,
+    uploadTilesToProject
 } from './apiAdapter/adapter'
 
 const UIStage = ref<'filter-stage' | 'tile-stage'>('filter-stage')
@@ -325,7 +330,7 @@ const UIStage = ref<'filter-stage' | 'tile-stage'>('filter-stage')
 const filterConditions = reactive<ImageFilterCondition>(initialFilterConditions)
 const imageFilterSearchResult = ref<SceneView[]>([])
 const datasetModalOpen = ref<boolean>(false)
-const projectModalOpen = ref<boolean>(true)
+const projectModalOpen = ref<boolean>(false)
 
 /// 01 Dataset Filter --> selectedProduct
 const selectedProduct = ref<ProductView | undefined>()
@@ -385,12 +390,7 @@ const handleImageFilterSearch = () => {
         imageFilterSearchResult.value = sceneViews
         searchResultLoading.value = false
     })
-    //// temp mock
-    // import('./constant/mock').then(({ mockFilterResult }) => {
-    //     imageFilterSearchResult.value = mockFilterResult
-    //     console.log('imageFilterSearchResult:', imageFilterSearchResult.value)
-    //     searchResultLoading.value = false
-    // })
+
 }
 // 06 Filter Stage Reset --> filterConditions
 const handleFilterStageReset = () => {
@@ -466,22 +466,46 @@ const handleTileStageReset = () => {
     gridStore.clearGrids()
     selectedBand.value = undefined
     selectedImage.value = undefined
+    MapOperation.map_destroyImagePolygon()
+    MapOperation.map_destroyImagePreviewLayer()
     MapOperation.map_destroyGridLayer()
     console.log('Reset Tile Stage')
 }
-const handleMergeDownload = () => {
-    console.log('Merge download clicked !')
-    // mergeGridsAndDownload(selectedGridIDs.value, selectedBand.value!.id)
+const mergingLoading = ref<boolean>(false)
+const handleMergeDownload = async () => {
+    console.log('Merge download clicked !', selectedBand.value)
+    mergingLoading.value = true
+    const outputFileName = 'merge_result.tif'
+    const caseId = await startMergeTiles(selectedImage.value!, [selectedBand.value!.name], selectedGridIDs.value)
+
+    const statusCallback = (status: string) => {
+        console.log('merging status:', status)
+    }
+    const completeCallback = () => {
+        mergingLoading.value = false
+        downloadMergeTiles(caseId, outputFileName)
+    }
+    const errorCallback = () => {
+        mergingLoading.value = false
+        message.error('合并tif失败, 请检查后台服务')
+    }
+    await intervalQueryMergingStatus(caseId, statusCallback, completeCallback, errorCallback)
 }
 
-const handleAddToProject = () => projectModalOpen.value = true
+const handleAddToProject = () => (projectModalOpen.value = true)
 
-const handleSelectProject = (project: Project) => {
-    console.log('selectedProject:', project)
-    // TODO: add selectedGrid to project 
-    console.log('add selectedGrid to project')
-    // console.log('selectedGridIDs:', selectedGridIDs.value)
-    // console.log('selectedBand:', selectedBand.value)
+const projectUploadLoading = ref<boolean>(false)
+const handleConfirmSelectProject = async (project: Project) => {
+    projectUploadLoading.value = true
+    const successCallback = () => {
+        message.success('上传成功')
+        projectUploadLoading.value = false
+    }
+    const errorCallback = () => {
+        message.error('上传失败')
+        projectUploadLoading.value = false
+    }
+    await uploadTilesToProject(selectedImage.value!.id, selectedGridIDs.value, project, successCallback, errorCallback)
 }
 
 // 06 Back to Filter Stage
@@ -885,9 +909,12 @@ const formatDate = (dateString: string) => {
     padding: 4px 8px;
     border-radius: 4px;
     margin-right: 0;
+    font-size: 0.8rem;
     background-color: rgba(14, 165, 233, 0.15);
     border-color: rgba(56, 189, 248, 0.3);
     color: #e0f2fe;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .tag-icon {
@@ -1242,8 +1269,9 @@ const formatDate = (dateString: string) => {
 .block-area {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
+    column-gap: 0.8rem;
     padding: 2rem 1rem;
     background-color: rgba(15, 23, 42, 0.4);
     border-radius: 0.5rem;

@@ -1,5 +1,5 @@
 import * as SatelliteDataApi from '@/api/http/satellite-data'
-import type { ImageFilterCondition } from '../type'
+import type { ImageFilterCondition, Project } from '../type'
 import type { polygonGeometry } from '@/util/share.type'
 
 ///// View /////////////////////////
@@ -172,10 +172,88 @@ export function getSceneGridGeoJsonURL(scene: SceneView) {
 }
 
 // 合并GridIDs 触发下载
-export async function mergeGridsAndDownload(gridIDs: string[], imageId: string) {
-    const params = {
-        imageId: imageId,
-        tiles: gridIDs,
+export async function startMergeTiles(scene: SceneView, bands: string[], gridIds: string[]): Promise<string> {
+    let sceneId = scene.id
+    let tileInfos: SatelliteDataApi.ImageTile.ImageTileTifMergeRequest['tiles'] = new Array(gridIds.length)
+    let promises = gridIds.map(async (gridId, index) => {
+        let tileInfo = await SatelliteDataApi.getImageTileDetail(sceneId, gridId)
+        tileInfos[index] = {
+            columnId: tileInfo.columnId.toString(),
+            rowId: tileInfo.rowId.toString(),
+        }
+    })
+    await Promise.all(promises)
+    let params: SatelliteDataApi.ImageTile.ImageTileTifMergeRequest = {
+        sceneId: scene.id,
+        tiles: tileInfos,
+        bands: bands,
     }
-    await SatelliteDataApi.downloadImageTileTifMerge(params)
+    let result = await SatelliteDataApi.startMergeImageTiles(params)
+    return result.data // return caseId
+}
+export async function mergingStatus(caseId: string) {
+    let result = await SatelliteDataApi.getMergeImageTilesStatus(caseId)
+    return result.data // return model status
+}
+export async function downloadMergeTiles(caseId: string, name?: string) {
+    SatelliteDataApi.downloadMergeImageTilesResult(caseId, name)
+}
+// beautiful interval query merging status
+export async function intervalQueryMergingStatus(caseId: string, statusCallback: (status: string) => void, completeCallback: () => void, errorCallback: () => void) {
+    const interval = 1000
+    return new Promise<void>((resolve, reject) => {
+        const checkStatus = async () => {
+            const status = await mergingStatus(caseId)
+            statusCallback(status)
+            if (status === 'COMPLETE') {
+                completeCallback()
+                resolve()
+                return
+            } else {
+                if (status === 'ERROR') {
+                    errorCallback()
+                    reject("merging tiff status error")
+                    return
+                }
+                setTimeout(checkStatus, interval)
+            }
+        }
+        checkStatus()
+    })
+}
+//// 上传选中的瓦片至已有项目
+export async function uploadTilesToProject(sceneId: string, tileIds: string[], project: Project, successCallback: () => void, errorCallback: () => void): Promise<void> {
+
+    return new Promise(async (resolve, reject) => {
+        // open project
+        let actionParams: SatelliteDataApi.Project.ProjectActionRequest = {
+            projectId: project.projectId,
+            userId: project.createUser,
+            action: 'open',
+        }
+        const res = await SatelliteDataApi.operateProject(actionParams)
+
+        if (res.status === 1) {
+            let params: SatelliteDataApi.Project.ImageTileUploadToProjectRequest = {
+                userId: project.createUser,
+                projectId: project.projectId,
+                sceneId: sceneId.toLowerCase(),
+                tileIds: tileIds,
+            }
+            await SatelliteDataApi.uploadImageTilesToProject(params)
+            successCallback()
+            setTimeout(() => {
+                let closeParams: SatelliteDataApi.Project.ProjectActionRequest = {
+                    projectId: project.projectId,
+                    userId: project.createUser,
+                    action: 'close',
+                }
+                SatelliteDataApi.operateProject(closeParams)
+            }, 5000);
+            resolve()
+        } else {
+            errorCallback()
+            reject("open project failed")
+        }
+    })
 }

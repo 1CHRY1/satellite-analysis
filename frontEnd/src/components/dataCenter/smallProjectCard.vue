@@ -1,6 +1,9 @@
 <template>
-    <div class="group relative flex h-[160px] w-[280px] cursor-pointer flex-col justify-between overflow-hidden rounded-lg bg-slate-900/80 px-4 py-3 transition-all ease-in-out duration-300  hover:shadow-lg hover:shadow-blue-500/10"
-        @click="handleClick" :class="{ 'checked': checked }">
+    <div
+        class="group relative flex h-[160px] w-[280px] cursor-pointer flex-col justify-between overflow-hidden rounded-lg bg-slate-900/80 px-4 py-3 transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-blue-500/10"
+        @click="handleClick"
+        :class="{ checked: checked }"
+    >
         <!-- 头部 -->
         <div class="flex items-center justify-between">
             <div class="flex items-center">

@@ -1,5 +1,5 @@
 import http from '../clientHttp'
-import type { Sensor, Product, SensorImage, ImageTile, Scene } from './satellite.type'
+import type { Sensor, Product, SensorImage, ImageTile, Project } from './satellite.type'
 import { blobDownload } from '../../util'
 
 export async function getSensorList(): Promise<Sensor.SensorListResponse> {
@@ -46,36 +46,42 @@ export async function getSensorImageBands(sensorImageId: string): Promise<Sensor
     return http.get<SensorImage.SensorImageBandListResponse>(`/data/image/sceneId/${sensorImageId}`)
 }
 
-// export async function getImageTiles(bandImageId: string, tileLevel: string): Promise<ImageTile.ImageTilesResponse> {
-//     return http.get<ImageTile.ImageTilesResponse>(`/data/tile/sceneId/${bandImageId}/tileLevel/${tileLevel}`)
-// }
+export async function getImageTilesGeojson(sceneId: string, tileLevel: string): Promise<ImageTile.ImageTilesResponse> {
+    return http.get<ImageTile.ImageTilesResponse>(`/data/tile/sceneId/${sceneId}/tileLevel/${tileLevel}`)
+}
 
-export function getImageTilesGeojsonURL(bandImageId: string, tileLevel: string): string {
-    const lowcase = bandImageId.toLowerCase()
+export function getImageTilesGeojsonURL(sceneId: string, tileLevel: string): string {
+    const lowcase = sceneId.toLowerCase()
     // @ts-ignore Property 'instance' is private and only accessible within class 'HttpClient'
     return `${http.instance.defaults.baseURL}/data/tile/sceneId/${lowcase}/tileLevel/${tileLevel}`
 }
 
-async function getImageTileTif(bandImageId: string, tileId: string): Promise<Blob> {
-    return http.get<Blob>(`/data/tile/tif/imageId/${bandImageId}/tileId/${tileId}`, {
-        responseType: 'blob',
-    })
+export async function getImageTileDetail(sceneId: string, tileId: string): Promise<ImageTile.ImageTileDetailResponse> {
+    return http.get<ImageTile.ImageTileDetailResponse>(`/data/tile/description/sceneId/${sceneId}/tileId/${tileId}`)
 }
 
-export async function downloadImageTileTif(bandImageId: string, tileId: string, name?: string): Promise<void> {
-    const blob = await getImageTileTif(bandImageId, tileId)
-    blobDownload(blob, name ?? `${bandImageId}_${tileId}.tif`)
+/// 合并tif (模型)
+export async function startMergeImageTiles(params: ImageTile.ImageTileTifMergeRequest): Promise<ImageTile.ImageTileTifMergeStatusResponse> {
+    return http.post<ImageTile.ImageTileTifMergeStatusResponse>(`/data/tile/tif/tiles`, params)
 }
-
-async function mergeImageTileTifs(params: ImageTile.ImageTileTifMergeRequest): Promise<Blob> {
-    return http.post<Blob>(`/data/tile/tif/tileIds`, params, { responseType: 'blob' })
+/// 查询模型状态
+export async function getMergeImageTilesStatus(caseId: string): Promise<ImageTile.ImageTileTifMergeStatusResponse> {
+    return http.get<ImageTile.ImageTileTifMergeStatusResponse>(`/model/case/status/caseId/${caseId}`)
 }
-
-export async function downloadImageTileTifMerge(params: ImageTile.ImageTileTifMergeRequest, name?: string): Promise<void> {
-    const blob = await mergeImageTileTifs(params)
-    blobDownload(blob, name ?? `${params.imageId}_merged.tif`)
+/// 合并结果
+export async function getMergeImageTilesResult(caseId: string): Promise<Blob> {
+    return http.get<Blob>(`/model/case/data/tif/caseId/${caseId}`, { responseType: 'blob' })
 }
-
-export async function getImageTileDetail(bandImageId: string, tileId: string): Promise<ImageTile.ImageTileDetailResponse> {
-    return http.get<ImageTile.ImageTileDetailResponse>(`/data/tile/description/imageId/${bandImageId}/tileId/${tileId}`)
+/// 下载结果
+export async function downloadMergeImageTilesResult(caseId: string, name?: string): Promise<void> {
+    const blob = await getMergeImageTilesResult(caseId)
+    blobDownload(blob, name ?? `${caseId}.tif`)
+}
+/// 操作项目
+export async function operateProject(params: Project.ProjectActionRequest): Promise<Project.ProjectActionResponse> {
+    return http.post<Project.ProjectActionResponse>(`/coding/project/operating`, params)
+}
+/// 上传瓦片至项目
+export async function uploadImageTilesToProject(params: Project.ImageTileUploadToProjectRequest): Promise<void> {
+    return http.post<void>(`/coding/project/file/tiles`, params)
 }
