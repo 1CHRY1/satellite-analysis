@@ -1,6 +1,6 @@
 from flask import Flask, send_file, abort, request
 from rio_tiler.io import Reader
-# from rio_tiler.colormap import cmap
+from rio_tiler.colormap import cmap
 from flask_cors import CORS
 import io, os, argparse
 import rasterio
@@ -38,6 +38,10 @@ def dynamic_tile(z, x, y):
         with rasterio.open(minio_raster_url) as src:
             with Reader(None, dataset=src) as image:
                 img = image.tile(tile_x=x, tile_y=y, tile_z=z)
+                img.rescale(
+                    in_range=(0, 1),
+                    out_range=(0, 255)
+                )
                 image_bytes = img.render(True, "PNG")
                 return send_file(io.BytesIO(image_bytes), mimetype='image/png')
     except Exception as e:
