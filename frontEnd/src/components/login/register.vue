@@ -28,24 +28,14 @@
                     <label for="email">邮 箱</label>
                     <input type="email" placeholder="请输入您的邮箱" id="email" v-model="email" />
                     <label for="password">密 码</label>
-                    <input
-                        type="password"
-                        placeholder="请输入密码"
-                        id="password"
-                        v-model="password"
-                    />
+                    <input type="password" placeholder="请输入密码" id="password" v-model="password" />
                     <label for="confirm-password">确认密码</label>
-                    <input
-                        type="password"
-                        placeholder="请再次输入密码"
-                        id="confirm-password"
-                        v-model="confirmPassword"
-                    />
+                    <input type="password" placeholder="请再次输入密码" id="confirm-password" v-model="confirmPassword" />
                     <label for="name">用户名</label>
                     <input type="text" placeholder="请输入您的用户名" id="name" v-model="name" />
-                    <label for="title">头 衔</label>
+                    <label for="title">称 谓</label>
                     <!-- <input type="text" placeholder="请输入您的头衔" id="title" v-model="title" /> -->
-                    <el-select v-model="title" class="!p-0" placeholder="请输入您的头衔">
+                    <el-select v-model="title" class="!p-0" placeholder="请选择您的称谓">
                         <el-option label="Professor" value="Professor"></el-option>
                         <el-option label="Dr" value="Dr"></el-option>
                         <el-option label="Mr" value="Mr"></el-option>
@@ -55,21 +45,12 @@
                         <el-option label="Mx" value="Mx"></el-option>
                     </el-select>
                     <label for="organization">组 织</label>
-                    <input
-                        type="text"
-                        placeholder="请输入您的组织"
-                        id="organization"
-                        v-model="organization"
-                    />
+                    <input type="text" placeholder="请输入您的组织" id="organization" v-model="organization" />
                     <div class="flex h-[80px] w-[245px] flex-row items-center justify-center">
                         <button type="button" class="submit cursor-pointer" @click="handleRegister">
                             注 册
                         </button>
-                        <button
-                            type="button"
-                            class="submit cursor-pointer"
-                            @click="router.push('/login')"
-                        >
+                        <button type="button" class="submit cursor-pointer" @click="router.push('/login')">
                             返 回
                         </button>
                     </div>
@@ -123,19 +104,25 @@ const handleRegister = async () => {
     box-shadow: none;
     color: white;
 }
+
 :deep(.el-select__wrapper.is-hovering:not(.is-focused)) {
     box-shadow: none;
 }
+
 :deep(.el-select__placeholder.is-transparent) {
     color: #a8abb2;
 }
+
 :deep(.el-select__placeholder) {
     color: white;
 }
+
 input:-webkit-autofill {
-    box-shadow: 0 0 0px 1000px #474a59 inset !important; /* 强制覆盖背景 */
+    box-shadow: 0 0 0px 1000px #474a59 inset !important;
+    /* 强制覆盖背景 */
     -webkit-text-fill-color: white !important;
 }
+
 ::selection {
     background: #2d2f36;
 }
@@ -177,7 +164,7 @@ body {
 
 .container {
     display: flex;
-    height: 600px;
+    height: 520px;
     margin: 0 auto;
     width: 640px;
 }
@@ -227,7 +214,7 @@ body {
     color: #f1f1f2;
     position: relative;
     width: 50%;
-    height: 600px;
+    height: 520px;
 }
 
 @media (max-width: 767px) {
@@ -261,7 +248,7 @@ label {
     display: block;
     font-size: 14px;
     height: 16px;
-    margin-top: 20px;
+    margin-top: 10px;
     margin-bottom: 5px;
 }
 

@@ -2,6 +2,15 @@ import http from '../clientHttp'
 import type { analysisResponse } from './analysis.type'
 // import type { Sensor, Product, SensorImage, ImageTile } from './satellite.type'
 
+//----------------------------- model API -----------------------------//
+export async function getModels(body: any): Promise<any> {
+    return http.post<any>(`model/models`, body)
+}
+
+export async function getMethods(body: any): Promise<any> {
+    return http.post<any>(`model/methods`, body)
+}
+
 //----------------------------- projects API -----------------------------//
 export async function getProjects(): Promise<any> {
     return http.get<any>(`project/all`)

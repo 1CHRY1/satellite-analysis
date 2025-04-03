@@ -79,8 +79,7 @@ const addMessage = (messageContent: string = "code") => {
 
 const messages = ref<string[]>([
     'Response and execution information will be displayed here .',
-    '项目初始化完成',
-    '正在预览数据，请稍候...',
+
 ])
 // 创建websocket实例
 const ws = createWebSocket(userId, projectId)
