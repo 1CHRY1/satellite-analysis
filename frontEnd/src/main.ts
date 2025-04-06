@@ -20,7 +20,8 @@ fetch('/app.conf.json').then((response) => {
     response.json().then((config) => {
         //// 3rd Party Config
         dayjs.locale('zh-cn')
-        mapboxgl.accessToken = 'pk.eyJ1IjoieWNzb2t1IiwiYSI6ImNrenozdWdodDAza3EzY3BtdHh4cm5pangifQ.ZigfygDi2bK4HXY1pWh-wg'
+        mapboxgl.accessToken =
+            'pk.eyJ1IjoieWNzb2t1IiwiYSI6ImNrenozdWdodDAza3EzY3BtdHh4cm5pangifQ.ZigfygDi2bK4HXY1pWh-wg'
         message.config({
             top: `100px`,
             duration: 2,

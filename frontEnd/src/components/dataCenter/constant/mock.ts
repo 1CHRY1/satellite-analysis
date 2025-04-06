@@ -85,18 +85,15 @@ export const mockFilterResult = [
     },
 ] as SceneView[]
 
-
-export const myTestProject: Project =
-{
-    "projectId": "PRJzYdhkbc9SAgmrM4yP",
-    "projectName": "huanyuTesting",
-    "environment": "Python3_9",
-    "createTime": "2025-04-03T11:19:10",
-    "packages": "[numpy]",
-    "createUser": "USR22DjM7sfWVlJeT3m2",
-    "createUserName": "huanyu",
-    "createUserEmail": "1923606858@qq.com",
-    "joinedUsers": [],
-    "description": "测试项目"
-
+export const myTestProject: Project = {
+    projectId: 'PRJzYdhkbc9SAgmrM4yP',
+    projectName: 'huanyuTesting',
+    environment: 'Python3_9',
+    createTime: '2025-04-03T11:19:10',
+    packages: '[numpy]',
+    createUser: 'USR22DjM7sfWVlJeT3m2',
+    createUserName: 'huanyu',
+    createUserEmail: '1923606858@qq.com',
+    joinedUsers: [],
+    description: '测试项目',
 }

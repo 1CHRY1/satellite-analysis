@@ -1,20 +1,29 @@
 <template>
     <div>
         <div class="flex h-[44px] w-full justify-between">
-            <div class="mx-2.5 my-1.5 flex w-fit items-center rounded bg-[#eaeaea] px-2 text-[14px] shadow-md">
-                <div @click="handleClick('data')"
+            <div
+                class="mx-2.5 my-1.5 flex w-fit items-center rounded bg-[#eaeaea] px-2 text-[14px] shadow-md"
+            >
+                <div
+                    @click="handleClick('data')"
                     class="mr-2 cursor-pointer border-r-1 border-dashed border-gray-500 pr-2"
-                    :class="activeDataBase === 'data' ? 'text-[#1479d7]' : 'text-[#818999]'">
+                    :class="activeDataBase === 'data' ? 'text-[#1479d7]' : 'text-[#818999]'"
+                >
                     容器数据列表
                 </div>
-                <div @click="handleClick('output')" class="cursor-pointer"
-                    :class="activeDataBase === 'output' ? 'text-[#1479d7]' : 'text-[#818999]'">
+                <div
+                    @click="handleClick('output')"
+                    class="cursor-pointer"
+                    :class="activeDataBase === 'output' ? 'text-[#1479d7]' : 'text-[#818999]'"
+                >
                     输出数据列表
                 </div>
             </div>
 
-            <div @click="refreshTableData"
-                class="mx-2.5 my-1 flex w-fit cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-[14px] text-[#818999] shadow-md">
+            <div
+                @click="refreshTableData"
+                class="mx-2.5 my-1 flex w-fit cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-[14px] text-[#818999] shadow-md"
+            >
                 <RefreshCcw :size="16" class="text-primary" />
             </div>
         </div>
@@ -30,13 +39,19 @@
                 </thead>
                 <tbody>
                     <tr class="text-[#818999]" v-for="(item, index) in tableData" :key="index">
-                        <td class="ml-4 flex cursor-pointer py-2" @click="handleCellClick(item, ' name')">
+                        <td
+                            class="ml-4 flex cursor-pointer py-2"
+                            @click="handleCellClick(item, ' name')"
+                        >
                             <div class="mr-1 flex h-4 w-4 items-center justify-center">
                                 <img :src="'/filesImg/' + item.fileType + '.png'" alt="" />
                             </div>
                             {{ item.fileName }}
                         </td>
-                        <td class="cursor-pointer px-4 py-2" @click="handleCellClick(item, 'updateTime')">
+                        <td
+                            class="cursor-pointer px-4 py-2"
+                            @click="handleCellClick(item, 'updateTime')"
+                        >
                             {{ formatTime(item.updateTime, 'minutes', 0) }}
                         </td>
                         <td class="cursor-pointer px-4 py-2" @click="handleCellClick(item, 'size')">
@@ -115,8 +130,8 @@ const refreshTableData = async () => {
 // 单元格点击事件处理
 const handleCellClick = async (item: dockerData, column: string) => {
     console.log(item)
-    if (activeDataBase.value === "data") {
-        ElMessage.info("目前仅支持输出数据预览")
+    if (activeDataBase.value === 'data') {
+        ElMessage.info('目前仅支持输出数据预览')
         return
     }
     if (column === 'view') {
@@ -145,7 +160,7 @@ const handleCellClick = async (item: dockerData, column: string) => {
                         console.info(
                             targetItem.fileName + '没有dataId，检查miniIo上是否存在这个数据实体',
                         )
-                        ElMessage.info("该数据正在切片，请稍后再预览")
+                        ElMessage.info('该数据正在切片，请稍后再预览')
                         return
                     }
                     console.log(targetInMiniIo.dataId, 18156)

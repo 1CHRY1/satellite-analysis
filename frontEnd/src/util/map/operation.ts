@@ -13,7 +13,11 @@ import { ezStore, useGridStore } from '@/store'
 const gridStore = useGridStore()
 let resizeObserver: ResizeObserver | null = null
 
-export async function map_initiliaze(id: string, style: Style = 'vector', proj: 'mercator' | 'globe' = 'mercator') {
+export async function map_initiliaze(
+    id: string,
+    style: Style = 'vector',
+    proj: 'mercator' | 'globe' = 'mercator',
+) {
     // return initMap(id)
     setTimeout(() => {
         initMap(id, style, proj).then((m) => {
@@ -56,6 +60,28 @@ export function map_fitViewToCN(): void {
     })
 }
 
+export function map_fitViewToFeature(feature: polygonGeometry): void {
+    console.log(feature)
+    const coordinates = feature.coordinates[0]
+    const bbox = coordinates.reduce(
+        (acc, coord) => {
+            acc[0] = Math.min(acc[0], coord[0]);
+            acc[1] = Math.min(acc[1], coord[1]);
+            acc[2] = Math.max(acc[2], coord[0]);
+            acc[3] = Math.max(acc[3], coord[1]);
+            return acc;
+        },
+        [Infinity, Infinity, -Infinity, -Infinity]
+    );
+
+    mapManager.withMap((m) => {
+        m.fitBounds([bbox[0], bbox[1], bbox[2], bbox[3]], {
+            padding: 100,
+            duration: 900,
+        });
+    });
+}
+
 export function map_zoomIn(): void {
     mapManager.withMap((m) => {
         m.zoomIn()
@@ -94,6 +120,7 @@ export function removeRasterLayer(layerId: string = 'raster-layer'): void {
 export function draw_deleteAll(): void {
     mapManager.withDraw((d) => {
         d.deleteAll()
+        d.changeMode('simple_select')
     })
 }
 
@@ -235,7 +262,6 @@ export function map_addImagePreviewLayer(props: ImageLayerProp): void {
         })
         ezStore.set('image-preview-layer', id)
         ezStore.set('image-preview-source', srcId)
-
     })
 }
 export function map_destroyImagePreviewLayer(): void {
@@ -253,7 +279,6 @@ function grid_fill_click_handler(e: MapMouseEvent): void {
     const features = e.features!
     if (features.length) {
         const featureId = features[0].properties?.id
-        console.log('click grid:', features[0])
         // popup.setLngLat(e.lngLat).setText(text).addTo(m)
 
         // Toggle highlight
@@ -266,8 +291,7 @@ function grid_fill_click_handler(e: MapMouseEvent): void {
 }
 
 // Data-View:: grid-layer
-export function map_addGridLayer(gridGeoJsonURL: string): void {
-
+export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
     const id = 'grid-layer'
     const fillId = id + '-fill'
     const lineId = id + '-line'
@@ -283,7 +307,7 @@ export function map_addGridLayer(gridGeoJsonURL: string): void {
         // Add a geojson source
         m.addSource(srcId, {
             type: 'geojson',
-            data: gridGeoJsonURL,
+            data: gridGeoJson,
         })
         // Add a line layer for **grid line visualization**
         m.addLayer({
@@ -307,26 +331,25 @@ export function map_addGridLayer(gridGeoJsonURL: string): void {
             },
         })
         // Add a filterable fill layer for **grid highlighting**
+        const nowSelectedGrids = Array.from(gridStore.selectedGrids) || ['']
         m.addLayer({
             id: highlightId,
             type: 'fill',
             source: srcId,
             paint: {
-                'fill-color': '#FFFFFF',
-                'fill-opacity': 0.4,
+                'fill-color': '#FF9900',
+                'fill-opacity': 0.3,
             },
-            filter: ['in', 'id', ''],
+            filter: ['in', 'id', ...nowSelectedGrids],
         })
 
         // Add a click event listener to the invisible fill layer
         m.on('click', fillId, grid_fill_click_handler)
 
         // Keep Watching gridStore.selectedGrids and update the highlight layer
-        console.log("!!! init cancel watch")
         const cancelWatch = watch(
             () => gridStore.selectedGrids,
             () => {
-                console.log('watch gridStore.selectedGrid')
                 const selectedGrids = Array.from(gridStore.selectedGrids) || ['']
                 m.setFilter(highlightId, ['in', 'id', ...selectedGrids])
             },
@@ -355,6 +378,7 @@ export function map_destroyGridLayer(): void {
         gridHighlightLayer && m.getLayer(gridHighlightLayer) && m.removeLayer(gridHighlightLayer)
         gridSourceId && m.getSource(gridSourceId) && m.removeSource(gridSourceId)
         cancelWatch && cancelWatch()
+        gridStore.cleadAllGrids()
         ezStore.delete('grid-layer-fill-id')
         ezStore.delete('grid-layer-line-id')
         ezStore.delete('grid-layer-highlight-id')

@@ -28,9 +28,19 @@
                     <label for="email">邮 箱</label>
                     <input type="email" placeholder="请输入您的邮箱" id="email" v-model="email" />
                     <label for="password">密 码</label>
-                    <input type="password" placeholder="请输入密码" id="password" v-model="password" />
+                    <input
+                        type="password"
+                        placeholder="请输入密码"
+                        id="password"
+                        v-model="password"
+                    />
                     <label for="confirm-password">确认密码</label>
-                    <input type="password" placeholder="请再次输入密码" id="confirm-password" v-model="confirmPassword" />
+                    <input
+                        type="password"
+                        placeholder="请再次输入密码"
+                        id="confirm-password"
+                        v-model="confirmPassword"
+                    />
                     <label for="name">用户名</label>
                     <input type="text" placeholder="请输入您的用户名" id="name" v-model="name" />
                     <label for="title">称 谓</label>
@@ -45,12 +55,21 @@
                         <el-option label="Mx" value="Mx"></el-option>
                     </el-select>
                     <label for="organization">组 织</label>
-                    <input type="text" placeholder="请输入您的组织" id="organization" v-model="organization" />
+                    <input
+                        type="text"
+                        placeholder="请输入您的组织"
+                        id="organization"
+                        v-model="organization"
+                    />
                     <div class="flex h-[80px] w-[245px] flex-row items-center justify-center">
                         <button type="button" class="submit cursor-pointer" @click="handleRegister">
                             注 册
                         </button>
-                        <button type="button" class="submit cursor-pointer" @click="router.push('/login')">
+                        <button
+                            type="button"
+                            class="submit cursor-pointer"
+                            @click="router.push('/login')"
+                        >
                             返 回
                         </button>
                     </div>

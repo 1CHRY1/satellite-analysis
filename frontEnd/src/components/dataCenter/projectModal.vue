@@ -1,5 +1,12 @@
 <template>
-    <a-modal v-model:open="modalVisible" title="选择项目" :width="700" :footer="null" :destroyOnClose="true" class="dataset-modal">
+    <a-modal
+        v-model:open="modalVisible"
+        title="选择项目"
+        :width="700"
+        :footer="null"
+        :destroyOnClose="true"
+        class="dataset-modal"
+    >
         <div class="h-[350px] w-[620px] overflow-y-auto">
             <a-skeleton active :loading="projectList.length === 0">
                 <div class="relative flex flex-row flex-wrap justify-start gap-x-8 gap-y-4">
@@ -20,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, defineModel } from 'vue'
+import { ref, onMounted } from 'vue'
 import ProjectCard from './smallProjectCard.vue'
 import { getProjects } from '@/api/http/analysis'
 import type { Project } from './type'

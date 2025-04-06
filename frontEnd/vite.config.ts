@@ -20,8 +20,8 @@ export default defineConfig({
                 rewrite: (path) => path.replace(/^\/tiles/, ''),
             },
             '/api': {
-                // target: 'http://223.2.47.202:8999/api/v1',
-                target: 'http://223.2.47.202:9888/api/v1',
+                target: 'http://223.2.43.228:30535/api/v1',
+                // target: 'http://223.2.47.202:9888/api/v1',
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/api/, ''),
             },

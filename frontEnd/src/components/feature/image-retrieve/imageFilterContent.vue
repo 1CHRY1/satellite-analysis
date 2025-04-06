@@ -83,7 +83,16 @@
 </template>
 
 <script setup lang="ts">
-import { DatabaseIcon, PointerIcon, MapPinIcon, CalendarIcon, RefreshCwIcon, SearchIcon, HexagonIcon, UploadCloudIcon } from 'lucide-vue-next'
+import {
+    DatabaseIcon,
+    PointerIcon,
+    MapPinIcon,
+    CalendarIcon,
+    RefreshCwIcon,
+    SearchIcon,
+    HexagonIcon,
+    UploadCloudIcon,
+} from 'lucide-vue-next'
 import { CommonCard, CommonArea, CommonRangePicker, CommonButton } from '@/components/common'
 import { districtOption } from './districts'
 import dayjs, { type Dayjs } from 'dayjs'
