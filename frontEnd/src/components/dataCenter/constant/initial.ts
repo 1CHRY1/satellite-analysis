@@ -19,9 +19,3 @@ export const initialFilterConditions: ImageFilterCondition = {
     },
     cloudCover: [10, 35],
 }
-
-export const cloudMarks: Record<number, string> = {
-    0: '0%',
-    50: '50%',
-    100: '100%',
-}

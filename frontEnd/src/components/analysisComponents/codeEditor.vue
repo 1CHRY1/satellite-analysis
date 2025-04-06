@@ -31,7 +31,9 @@
                     </el-table-column>
                     <el-table-column label="操作">
                         <template #default="scope">
-                            <el-button link type="primary" @click="removePackage(scope.row)">移除</el-button>
+                            <el-button link type="primary" @click="removePackage(scope.row)"
+                                >移除</el-button
+                            >
                         </template>
                     </el-table-column>
                 </el-table>
@@ -39,11 +41,19 @@
                     <div class="">
                         <!-- <font-awesome-icon style="margin-left: 2px; font-size: 10px; color: red" icon="star-of-life" /> -->
                         <label><span style="color: red">*</span>包名: </label>
-                        <el-input v-model="addedPackageInfo.name" placeholder="package name" style="width: 120px; font-size: 14px" />
+                        <el-input
+                            v-model="addedPackageInfo.name"
+                            placeholder="package name"
+                            style="width: 120px; font-size: 14px"
+                        />
                     </div>
                     <div class="ml-4">
                         <label>版本: </label>
-                        <el-input v-model="addedPackageInfo.version" placeholder="version" style="width: 70px; font-size: 14px" />
+                        <el-input
+                            v-model="addedPackageInfo.version"
+                            placeholder="version"
+                            style="width: 70px; font-size: 14px"
+                        />
                     </div>
                     <div class="ml-4">
                         <el-button link type="primary" @click="installPackage()">安装</el-button>
@@ -59,25 +69,55 @@
             </el-dialog>
 
             <div class="relative my-1.5 ml-2 flex w-fit items-center rounded">
-                <div class="relative my-1 mr-2 flex h-full cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-xs shadow-md" @click="">
+                <div
+                    class="relative my-1 mr-2 flex h-full cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-xs shadow-md"
+                    @click=""
+                >
                     当前环境：{{ selectedEnv }}
                 </div>
-                <div v-if="showDropdown" class="absolute top-8 left-0 z-10 mt-1 w-fit rounded border border-gray-300 bg-white shadow-md">
-                    <div v-for="env in envOptions" :key="env" class="cursor-pointer px-3 py-2 text-sm hover:bg-gray-200" @click="">
+                <div
+                    v-if="showDropdown"
+                    class="absolute top-8 left-0 z-10 mt-1 w-fit rounded border border-gray-300 bg-white shadow-md"
+                >
+                    <div
+                        v-for="env in envOptions"
+                        :key="env"
+                        class="cursor-pointer px-3 py-2 text-sm hover:bg-gray-200"
+                        @click=""
+                    >
                         {{ env }}
                     </div>
                 </div>
             </div>
         </div>
         <div class="code-editor !bg-[#f9fafb]">
-            <Codemirror class="!p-0 !text-[12px]" v-model="code" :extensions="extensions" @ready="onCmReady" @update:model-value="onCmInput" />
+            <Codemirror
+                class="!p-0 !text-[12px]"
+                v-model="code"
+                :extensions="extensions"
+                @ready="onCmReady"
+                @update:model-value="onCmInput"
+            />
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { CloudServerOutlined, CaretRightOutlined, SaveOutlined, StopOutlined } from '@ant-design/icons-vue'
-import { projectOperating, getScript, updateScript, runScript, stopScript, operatePackage, getPackages } from '@/api/http/analysis'
+import {
+    CloudServerOutlined,
+    CaretRightOutlined,
+    SaveOutlined,
+    StopOutlined,
+} from '@ant-design/icons-vue'
+import {
+    projectOperating,
+    getScript,
+    updateScript,
+    runScript,
+    stopScript,
+    operatePackage,
+    getPackages,
+} from '@/api/http/analysis'
 import { ref, defineProps, onMounted, onBeforeUnmount, defineEmits } from 'vue'
 import { Codemirror } from 'vue-codemirror'
 import { python } from '@codemirror/lang-python'

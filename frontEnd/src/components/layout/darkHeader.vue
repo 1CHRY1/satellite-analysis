@@ -2,7 +2,12 @@
     <header class="flex items-center justify-between px-10 py-2 shadow-md select-none">
         <div class="flex flex-3/5 items-center justify-start">
             <div class="flex items-center">
-                <img :src="logo" alt="Logo" class="h-10 w-auto -translate-x-3 cursor-pointer" @click="jumpToOGMS" />
+                <img
+                    :src="logo"
+                    alt="Logo"
+                    class="h-10 w-auto -translate-x-3 cursor-pointer"
+                    @click="jumpToOGMS"
+                />
                 <satellite class="text-primary h-8 w-8" />
 
                 <span
@@ -23,7 +28,10 @@
                         }"
                         >{{ item.name }}
                     </router-link>
-                    <div class="h-8 w-0 border-r-2 border-gray-600" v-if="index < navItems.length - 1"></div>
+                    <div
+                        class="h-8 w-0 border-r-2 border-gray-600"
+                        v-if="index < navItems.length - 1"
+                    ></div>
                 </div>
             </nav>
         </div>

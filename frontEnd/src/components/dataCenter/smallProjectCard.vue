@@ -7,7 +7,9 @@
         <!-- 头部 -->
         <div class="flex items-center justify-between">
             <div class="flex items-center">
-                <div class="mr-2.5 flex h-8 w-8 items-center justify-center rounded-md bg-blue-500/10 text-blue-400">
+                <div
+                    class="mr-2.5 flex h-8 w-8 items-center justify-center rounded-md bg-blue-500/10 text-blue-400"
+                >
                     <Satellite class="h-4 w-4" />
                 </div>
                 <div class="overflow-hidden text-base font-bold text-blue-400">

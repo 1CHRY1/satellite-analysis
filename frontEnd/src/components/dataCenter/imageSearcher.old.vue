@@ -1,25 +1,18 @@
 <template>
     <div class="remote-sensing-panel select-none">
-        <dv-border-box12>
+        <dv-border-box12 v-if="UIStage === 'filter-stage'">
             <div class="main-container">
                 <section class="panel-section">
                     <div class="section-header">
                         <div class="section-icon">
                             <DatabaseIcon :size="18" />
                         </div>
-                        <h2 class="section-title">影像产品选择</h2>
-                        <div class="section-actions right-4">
-                            <a-tooltip title="重置">
-                                <a-button type="text" size="small" @click=handleDatasetReset>
-                                    <RefreshCwIcon :size="16" :color="'#38bdf8'" />
-                                </a-button>
-                            </a-tooltip>
-                        </div>
+                        <h2 class="section-title">影像数据集</h2>
                     </div>
                     <div class="upload-area" @click="handleDatasetSelect">
                         <div class="upload-t" v-if="!selectedProduct">
                             <UploadCloudIcon :size="18" class="upload-icon" />
-                            <span class="upload-text">点击选择影像产品</span>
+                            <span class="upload-text">点击选择数据集</span>
                         </div>
 
                         <div v-else class="selected-product-info">
@@ -39,7 +32,10 @@
                             </div>
                         </div>
 
-                        <DataSetModal v-model="datasetModalOpen" @update:selected-product-id="handleSelectedProduct" />
+                        <DataSetModal
+                            v-model="datasetModalOpen"
+                            @update:selected-product-id="handleSelectedProduct"
+                        />
                     </div>
                 </section>
 
@@ -48,49 +44,48 @@
                         <div class="section-icon">
                             <MapPinIcon :size="18" />
                         </div>
-                        <h2 class="section-title">区域影像检索</h2>
-                        <div class="section-actions right-4">
-                            <a-tooltip title="重置">
-                                <a-button type="text" size="small" @click=handleRegionGridReset>
-                                    <RefreshCwIcon :size="16" :color="'#38bdf8'" />
-                                </a-button>
-                            </a-tooltip>
-                        </div>
+                        <h2 class="section-title">空间位置</h2>
                     </div>
                     <div class="section-content">
                         <a-tabs v-model:activeKey="spatialTabsKey" type="card" class="custom-tabs">
-                            <a-tab-pane key="1" tab="研究区绘制">
+                            <a-tab-pane key="1" tab="地图绘制">
                                 <div class="tab-content">
-                                    <div class="button-group !gap-x-5">
-                                        <a-button class="custom-button !h-16 flex-col justify-center"
-                                            @click="handleDrawPolygon">
-                                            <HexagonIcon :size="16" class="button-icon" />
-                                            <span>开始绘制</span>
+                                    <div class="button-group">
+                                        <a-button class="custom-button" @click="handleDrawPoint">
+                                            <MapPinIcon :size="16" class="button-icon" />
+                                            <span>点</span>
                                         </a-button>
-                                        <a-button class="custom-button !h-16 flex-col justify-center"
-                                            @click="handleCancelDraw">
-                                            <BanIcon :size="16" class="button-icon" />
-                                            <span>取消绘制</span>
+                                        <a-divider type="vertical" class="divider" />
+                                        <a-button class="custom-button" @click="handleDrawPolygon">
+                                            <HexagonIcon :size="16" class="button-icon" />
+                                            <span>多边形</span>
                                         </a-button>
                                     </div>
                                 </div>
                             </a-tab-pane>
-                            <a-tab-pane key="2" tab="瓦片筛选">
-                                <div class="tab-content flex flex-col justify-start gap-1">
-                                    <div class="block-area min-h-[100px] max-h-[150px] !flex-row overflow-y-scroll">
-                                        <a-tag v-for="gridID in selectedGridIDs" :key="gridID" closable
-                                            @close="handleRemoveOneGrid(gridID)" class="product-tag">
-                                            {{ gridID.slice(0, 10) }}
-                                        </a-tag>
+                            <a-tab-pane key="2" tab="文件上传" force-render>
+                                <div class="tab-content">
+                                    <div
+                                        class="upload-area !my-0 !h-[50px] !w-full !flex-row"
+                                        @click="handleGeojsonUpload"
+                                    >
+                                        <UploadCloudIcon
+                                            :size="18"
+                                            class="upload-icon !mr-2 !mb-1"
+                                        />
+                                        <span class="upload-text">点击上传矢量文件</span>
                                     </div>
-                                    <div class="button-group">
-                                        <a-button class="custom-button !px-2" @click=handleSelectAllGrids>全选</a-button>
-                                        <a-button class="custom-button !px-2"
-                                            @click=handleSelectNoneGrids>全不选</a-button>
-                                        <a-button class="custom-button !w-26 !bg-sky-800" @click=handleStartGridSearch>
-                                            开始检索
-                                        </a-button>
-                                    </div>
+                                </div>
+                            </a-tab-pane>
+                            <a-tab-pane key="3" tab="行政区检索">
+                                <div class="tab-content">
+                                    <a-cascader
+                                        class="custom-cascader"
+                                        v-model:value="selectedDistrict"
+                                        :allow-clear="false"
+                                        :options="districts"
+                                        placeholder="请选择行政区域"
+                                    />
                                 </div>
                             </a-tab-pane>
                         </a-tabs>
@@ -100,131 +95,249 @@
                 <section class="panel-section">
                     <div class="section-header">
                         <div class="section-icon">
-                            <BoltIcon :size="18" />
+                            <CalendarIcon :size="18" />
                         </div>
-                        <h2 class="section-title">影像检索结果信息</h2>
+                        <h2 class="section-title">时间范围</h2>
                     </div>
                     <div class="section-content">
-                        <div class="result-info-container">
-                            <div class="result-info-item">
-                                <div class="result-info-icon">
-                                    <MapIcon :size="16" />
-                                </div>
-                                <div class="result-info-content">
-                                    <div class="result-info-label">研究区面积</div>
-                                    <div class="result-info-value">{{ searchResultInfo.area }} km²</div>
-                                </div>
-                            </div>
-                            <div class="result-info-item">
-                                <div class="result-info-icon">
-                                    <ImageIcon :size="16" />
-                                </div>
-                                <div class="result-info-content">
-                                    <div class="result-info-label">当前已检索到</div>
-                                    <div class="result-info-value">{{ searchResultInfo.imageCount }} 景影像</div>
-                                </div>
-                            </div>
-                            <div class="result-info-item">
-                                <div class="result-info-icon">
-                                    <CalendarIcon :size="16" />
-                                </div>
-                                <div class="result-info-content">
-                                    <div class="result-info-label">涵盖时间范围</div>
-                                    <div class="result-info-value date-range">
-                                        <div class="date-item">{{ searchResultInfo.dateRange[0] }}</div>
-                                        <div class="date-item">{{ searchResultInfo.dateRange[1] }}</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="result-info-item">
-                                <div class="result-info-icon">
-                                    <CloudIcon :size="16" />
-                                </div>
-                                <div class="result-info-content">
-                                    <div class="result-info-label">云量范围</div>
-                                    <div class="result-info-value">{{ searchResultInfo.cloudRange[0] }} ~ {{
-                                        searchResultInfo.cloudRange[1] }}%</div>
-                                </div>
-                            </div>
-                        </div>
+                        <a-range-picker
+                            class="custom-date-picker"
+                            v-model:value="dateRangeValue"
+                            picker="day"
+                            :allow-clear="false"
+                            :placeholder="['开始日期', '结束日期']"
+                        />
                     </div>
                 </section>
 
                 <section class="panel-section">
                     <div class="section-header">
                         <div class="section-icon">
-                            <BoltIcon :size="18" />
+                            <CloudIcon :size="18" />
                         </div>
-                        <h2 class="section-title">区域影像聚合</h2>
+                        <h2 class="section-title">云量筛选</h2>
                     </div>
                     <div class="section-content">
-                        <div class="config-container">
-                            <div class="config-item">
-                                <div class="config-label">
-                                    <CalendarIcon :size="16" class="config-icon" />
-                                    <span>时间</span>
-                                </div>
-                                <div class="config-control">
-                                    <a-range-picker class="custom-date-picker" v-model:value="tileMergeConfig.dateRange"
-                                        picker="day" :allow-clear="false" :placeholder="['开始日期', '结束日期']" />
-                                </div>
+                        <div class="px-10">
+                            <a-slider
+                                class="custom-slider"
+                                range
+                                :cloudMarks="cloudMarks"
+                                v-model:value="cloudRange"
+                                :tipFormatter="(value: number) => value + '%'"
+                            />
+                        </div>
+                        <div class="mt-2 flex justify-around">
+                            <div class="flex items-center px-5">
+                                <span class="rounded-md bg-sky-400/20 px-2 py-1 text-sky-400"
+                                    >最小云量</span
+                                >
+                                <span class="ml-2 w-4 text-white">{{ cloudRange[0] }}%</span>
                             </div>
-                            <div class="config-item">
-                                <div class="config-label">
-                                    <CloudIcon :size="16" class="config-icon" />
-                                    <span>云量</span>
+                            <div class="flex items-center px-5">
+                                <span class="rounded-md bg-sky-400/20 px-2 py-1 text-sky-400"
+                                    >最大云量</span
+                                >
+                                <span class="ml-2 w-4 text-white">{{ cloudRange[1] }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="panel-footer">
+                    <a-button type="primary" class="search-button" @click="handleImageFilterSearch">
+                        <SearchIcon :size="18" class="button-icon" />
+                        <span>开始检索</span>
+                    </a-button>
+                    <a-button class="reset-button" @click="handleFilterStageReset">
+                        <RefreshCwIcon :size="18" class="button-icon" />
+                        <span>重置</span>
+                    </a-button>
+                </div>
+            </div>
+        </dv-border-box12>
+
+        <dv-border-box12 v-else-if="UIStage === 'tile-stage'">
+            <div class="main-container">
+                <!-- Image List Section with Row Layout -->
+                <section class="panel-section">
+                    <div class="section-header relative">
+                        <div class="section-icon">
+                            <ImageIcon :size="18" />
+                        </div>
+                        <h2 class="section-title">影像列表</h2>
+                        <div class="section-actions right-4">
+                            <a-tooltip title="刷新列表">
+                                <a-button type="text" size="small" @click="handleImageFilterSearch">
+                                    <RefreshCwIcon :size="16" :color="'#38bdf8'" />
+                                </a-button>
+                            </a-tooltip>
+                        </div>
+                        <div class="section-actions right-12">
+                            <a-tooltip title="返回">
+                                <a-button type="text" size="small" @click="handleBackToFilterStage">
+                                    <ArrowLeftFromLineIcon :size="16" :color="'#38bdf8'" />
+                                </a-button>
+                            </a-tooltip>
+                        </div>
+                    </div>
+
+                    <div class="section-content">
+                        <div class="my-3">
+                            <a-input-search
+                                v-model:value="searchText"
+                                placeholder="搜索影像"
+                                style="width: 100%"
+                                @search="handleTextSearch"
+                                allow-clear
+                            />
+                        </div>
+
+                        <a-spin :spinning="searchResultLoading">
+                            <div class="image-list-row">
+                                <div v-if="filteredImages.length === 0" class="empty-state">
+                                    <FileSearchIcon :size="32" class="empty-icon" />
+                                    <p>没有找到符合条件的影像</p>
                                 </div>
-                                <div class="config-control">
-                                    <div class="cloud-slider-container">
-                                        <span class="cloud-value">{{ tileMergeConfig.cloudRange[0] }}%</span>
-                                        <div class="slider-wrapper">
-                                            <a-slider class="custom-slider" range
-                                                v-model:value="tileMergeConfig.cloudRange"
-                                                :tipFormatter="(value: number) => value + '%'" />
+
+                                <div
+                                    v-else
+                                    v-for="image in filteredImages"
+                                    :key="image.id"
+                                    class="image-row-item"
+                                    :class="{ selected: selectedImage?.id === image.id }"
+                                    @click="toggleImageSelection(image.id)"
+                                >
+                                    <div class="image-row-preview">
+                                        <img
+                                            :src="image.preview_url"
+                                            :alt="image.name"
+                                            class="row-thumbnail"
+                                        />
+                                    </div>
+                                    <div class="image-row-details">
+                                        <h4 class="image-row-name">{{ image.name }}</h4>
+                                        <div class="image-row-meta">
+                                            <span class="image-row-date">
+                                                <CalendarIcon :size="12" />
+                                                {{ formatDate(image.date) }}
+                                            </span>
+                                            <span class="image-row-resolution">
+                                                <MaximizeIcon :size="12" />
+                                                {{ image.resolution }}
+                                            </span>
+                                            <span class="image-row-cloud">
+                                                <CloudIcon :size="12" />
+                                                {{ image.cloudCover }}%
+                                            </span>
                                         </div>
-                                        <span class="cloud-value">{{ tileMergeConfig.cloudRange[1] }}%</span>
+                                    </div>
+                                    <div class="image-row-actions">
+                                        <a-radio
+                                            :checked="selectedImage?.id === image.id"
+                                            @click.stop
+                                            @change="toggleImageSelection(image.id)"
+                                        />
                                     </div>
                                 </div>
                             </div>
-                            <div class="config-item">
-                                <div class="config-label">
-                                    <LayersIcon :size="16" class="config-icon" />
-                                    <span>波段</span>
-                                </div>
-                                <div class="config-control">
-                                    <a-checkbox-group v-model:value="tileMergeConfig.bands" class="band-radio-group">
-                                        <a-checkbox v-for="band in bandViews" :key="band.id" :value="band"
-                                            class="band-radio-button">
-                                            {{ band.name }}
-                                        </a-checkbox>
-                                    </a-checkbox-group>
-                                </div>
-                            </div>
+                        </a-spin>
+
+                        <div class="selection-summary">
+                            <a-button type="link" @click="clearSelection">清除选择</a-button>
+                            <a-button
+                                type="primary"
+                                @click="confirmSelection"
+                                :disabled="selectedImage === undefined"
+                            >
+                                确认选择
+                            </a-button>
                         </div>
                     </div>
-                    <div class="section-footer">
-                        <a-button class="reset-button" @click="handleAllReset">
-                            <RefreshCwIcon :size="18" class="button-icon" />
-                            <span>重置</span>
-                        </a-button>
-                        <a-button type="primary" class="search-button" v-if="
-                            selectedProduct &&
-                            tileMergeConfig.bands.length > 0 &&
-                            selectedGridIDs.length > 0
-                        " @click="handleMergeDownload" :loading="mergingLoading">
-                            <DownloadIcon :size="18" class="button-icon" />
-                            <span>合并下载</span>
-                        </a-button>
-                        <a-button type="primary" class="search-button" v-if="
-                            selectedProduct &&
-                            tileMergeConfig.bands.length > 0 &&
-                            selectedGridIDs.length > 0
-                        " @click="handleAddToProject" :loading="projectUploadLoading">
-                            <FilePlus2Icon :size="18" class="button-icon" />
-                            <span>添加至项目</span>
-                        </a-button>
+                </section>
+
+                <!-- Band Selection Section (Modified to work without grid selection) -->
+                <section class="panel-section" v-if="bandViews.length > 0">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <LayersIcon :size="18" />
+                        </div>
+                        <h2 class="section-title">波段选择</h2>
+                    </div>
+
+                    <div class="section-content band-selection">
+                        <a-radio-group
+                            v-model:value="selectedBand"
+                            button-style="solid"
+                            class="band-radio-group"
+                        >
+                            <a-radio-button
+                                v-for="band in bandViews"
+                                :key="band.id"
+                                :value="band"
+                                class="band-radio-button"
+                            >
+                                {{ band.name }}
+                            </a-radio-button>
+                        </a-radio-group>
                     </div>
                 </section>
+
+                <!-- Selected Images Summary Section (New) -->
+                <section class="panel-section" v-if="selectedImage && selectedBand">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <ListIcon :size="18" />
+                        </div>
+                        <h2 class="section-title">切片选择</h2>
+                    </div>
+
+                    <div class="section-content">
+                        <div class="block-area" v-if="selectedGridIDs.length === 0">
+                            <MousePointerClickIcon :size="20" class="block-icon" />
+                            <span class="block-text">点击地图以选择切片</span>
+                        </div>
+                        <div class="block-area" v-else>
+                            <a-tag
+                                v-for="gridID in selectedGridIDs"
+                                :key="gridID"
+                                closable
+                                @close="removeOneGrid(gridID)"
+                                class="product-tag"
+                            >
+                                {{ gridID.slice(0, 10) }}
+                            </a-tag>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Download Section (Modified to work without grid selection) -->
+                <div class="panel-footer">
+                    <a-button class="reset-button" @click="handleTileStageReset">
+                        <RefreshCwIcon :size="18" class="button-icon" />
+                        <span>重置</span>
+                    </a-button>
+                    <a-button
+                        type="primary"
+                        class="search-button"
+                        v-if="selectedImage && selectedBand && selectedGridIDs.length > 0"
+                        @click="handleMergeDownload"
+                        :loading="mergingLoading"
+                    >
+                        <DownloadIcon :size="18" class="button-icon" />
+                        <span>合并下载</span>
+                    </a-button>
+                    <a-button
+                        type="primary"
+                        class="search-button"
+                        v-if="selectedImage && selectedBand && selectedGridIDs.length > 0"
+                        @click="handleAddToProject"
+                        :loading="projectUploadLoading"
+                    >
+                        <FilePlus2Icon :size="18" class="button-icon" />
+                        <span>添加至项目</span>
+                    </a-button>
+                </div>
             </div>
         </dv-border-box12>
         <ProjectModal v-model="projectModalOpen" @select_project="handleConfirmSelectProject" />
@@ -232,201 +345,201 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, reactive, type ComputedRef, computed } from 'vue'
+import { ref, reactive, type ComputedRef, computed } from 'vue'
 import {
     DatabaseIcon,
     MapPinIcon,
     CalendarIcon,
     UploadCloudIcon,
+    SearchIcon,
     RefreshCwIcon,
     HexagonIcon,
     CloudIcon,
     ApertureIcon,
     ClockIcon,
+    ArrowLeftFromLineIcon,
     ImageIcon,
+    FileSearchIcon,
+    MaximizeIcon,
     LayersIcon,
+    ListIcon,
+    MousePointerClickIcon,
     DownloadIcon,
     FilePlus2Icon,
-    BoltIcon,
-    BanIcon,
-    MapIcon,
 } from 'lucide-vue-next'
 import type { Dayjs } from 'dayjs'
 import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'
 import DataSetModal from './imageDataModal.vue'
 import ProjectModal from './projectModal.vue'
-import { useGridStore } from '@/store'
+import { ezStore, useGridStore } from '@/store'
 import dayjs from 'dayjs'
-import { message, Modal, Alert } from 'ant-design-vue'
+import { message } from 'ant-design-vue'
 
 ///// Local /////////////////////////
+import { districts, initialFilterConditions, cloudMarks } from './constant'
 import { polygonGeometryToBoxCoordinates } from '@/util/common'
 import * as MapOperation from '@/util/map/operation'
-import { GridMaker } from '@/util/map/gridMaker'
-import type { Project } from './type'
+import type { ImageFilterCondition, Project } from './type'
 import {
     type ProductView,
     type SceneView,
-    type OverlapTileInfoView,
     searchSceneViews,
     type BandView,
     fetchBandViews,
+    getSceneGridGeoJsonURL,
     startMergeTiles,
     downloadMergeTiles,
-    queryOverlapTilesMap,
     intervalQueryMergingStatus,
     uploadTilesToProject,
-    statisticsOverlapTileInfoView,
 } from './apiAdapter/adapter'
-const projectModalOpen = ref<boolean>(false)
+
+const UIStage = ref<'filter-stage' | 'tile-stage'>('filter-stage')
 
 //////////////////////////////////////////////////////////////
-/////////////// 影像产品选择 //////////////////////////////////
+/////////////// Filter Stage /////////////////////////////////
+const filterConditions = reactive<ImageFilterCondition>(initialFilterConditions)
+const imageFilterSearchResult = ref<SceneView[]>([])
 const datasetModalOpen = ref<boolean>(false)
+const projectModalOpen = ref<boolean>(false)
 
+/// 01 Dataset Filter --> selectedProduct
 const selectedProduct = ref<ProductView | undefined>()
 const handleDatasetSelect = () => (datasetModalOpen.value = true)
 const handleSelectedProduct = (productInfo: ProductView) => (selectedProduct.value = productInfo)
-const handleDatasetReset = () => {
-    selectedProduct.value = undefined
-    datasetModalOpen.value = false
-}
 
-//////////////////////////////////////////////////////////////
-/////////////// 区域影像检索 //////////////////////////////////
-const gridStore = useGridStore()
-const gridMaker = new GridMaker(1, 500) // 1km分辨率, 500km2的限制
-/// 01 绘制研究区
+/// 02 Spatial Filter --> filterConditions
 const spatialTabsKey = ref('1')
-const handleDrawPolygon = () => { handleRegionGridReset(); MapOperation.draw_polygonMode() }
-const handleCancelDraw = () => MapOperation.draw_deleteAll()
-// 绘制完了就弹对话框
-watch(() => gridStore.polygon, (newVal, _) => {
-    if (newVal) { // 新多边形时trigger
-        Modal.confirm({
-            title: '确认选择该区域?',
-            okText: '确认并生成格网',
-            okType: 'primary',
-            cancelText: '取消',
-            onOk() {
-                MapOperation.map_fitViewToFeature(newVal)
-                makeGrid()
-            },
-            onCancel() {
-                handleCancelDraw()
-            },
-        })
-    }
-})
-// 确认了就添加格网
-const makeGrid = () => {
-    if (!gridStore.polygon) {
-        console.log('😠 怎么可能呢,你们知道吗? polygon居然为空!')
-        return
-    }
-    const gridGeoJson = gridMaker.makeGrid({
-        polygon: gridStore.polygon,
-        startCb: () => {
-            console.log('开始生成格网')
-        },
-        endCb: () => {
-            console.log('格网生成完成')
-        },
-        overboundCb: () => {
-            message.error('格网面积超过限制, 请缩小研究区范围')
-            MapOperation.draw_deleteAll()
+const selectedDistrict = ref<string[]>([])
+const handleDrawPoint = () => MapOperation.draw_pointMode()
+const handleDrawPolygon = () => MapOperation.draw_polygonMode()
+const handleGeojsonUpload = () => {
+    const fileInput = document.createElement('input')
+    fileInput.type = 'file'
+    fileInput.accept = '.geojson'
+    fileInput.onchange = async (event) => {
+        const file = (event.target as HTMLInputElement).files?.[0]
+        if (file) {
+            const reader = new FileReader()
+            reader.onload = (e: ProgressEvent<FileReader>) => {
+                try {
+                    const geojson = JSON.parse(e.target?.result as string)
+                    const polygonFeature = geojson.features[0]
+                    ezStore.set('polygonFeature', polygonFeature)
+                } catch (error) {
+                    message.error('不支持的文件')
+                    console.error('不支持的文件 GeoJSON:', error)
+                }
+            }
+            reader.readAsText(file)
         }
-    })
-    if (gridGeoJson) {
-        MapOperation.map_addGridLayer(gridGeoJson)
-        MapOperation.draw_deleteAll()
-        message.success('区域格网已加载')
-        // 加载了就到tab2
-        spatialTabsKey.value = '2'
     }
+    fileInput.click()
 }
-const handleRegionGridReset = () => {
-    MapOperation.map_destroyGridLayer()
+
+// 03 Time Filter --> filterConditions
+const dateRangeValue = ref<[Dayjs | undefined, Dayjs | undefined]>([
+    dayjs('2010-10'),
+    dayjs('2024-10'),
+])
+
+// 04 Cloud Filter --> filterConditions
+const cloudRange = ref<[number, number]>([23, 41])
+
+// 05 Image Filter Search --> imageFilterSearchResult
+const handleImageFilterSearch = () => {
+    // 收集筛选条件
+    filterConditions.product = selectedProduct.value!
+    filterConditions.dateRange = [dateRangeValue.value[0]!, dateRangeValue.value[1]!]
+    filterConditions.geometry = MapOperation.getCurrentGeometry()
+    filterConditions.cloudCover = cloudRange.value
+    // 切换到瓦片选择面板
+    UIStage.value = 'tile-stage'
     MapOperation.draw_deleteAll()
+    searchResultLoading.value = true
+    searchText.value = ''
+    // 搜索影像
+    searchSceneViews(filterConditions).then((sceneViews) => {
+        console.log('imageFilterSearchResult:', sceneViews)
+        imageFilterSearchResult.value = sceneViews
+        searchResultLoading.value = false
+    })
+}
+// 06 Filter Stage Reset --> filterConditions
+const handleFilterStageReset = () => {
     spatialTabsKey.value = '1'
+    selectedDistrict.value = []
+    selectedProduct.value = undefined
+    dateRangeValue.value = [undefined, undefined]
+    MapOperation.draw_deleteAll()
+    console.log('Reset Filter Stage')
 }
-/// 02 格网选择和开始检索
-const gridSearchLoading = ref<boolean>(false)
-const selectedGridIDs = computed(() => gridStore.selectedGrids)
-
-const handleRemoveOneGrid = (gridID: string) => { gridStore.removeGrid(gridID) }
-const handleSelectAllGrids = () => gridStore.addAllGrids()
-const handleSelectNoneGrids = () => gridStore.cleadAllGrids()
-const handleStartGridSearch = async () => {
-    gridSearchLoading.value = true
-    const gridOverlapTileMap = await queryOverlapTilesMap(selectedProduct.value!, selectedGridIDs.value)
-    console.log(gridOverlapTileMap)
-    await calculateSearchResultInfo(gridOverlapTileMap)
-    gridSearchLoading.value = false
-}
-
-//////////////////////////////////////////////////////////////
-/////////////// 检索信息面板 //////////////////////////////////
-const searchResultInfo = reactive({
-    area: 0,
-    imageCount: 0,
-    dateRange: ['', ''],
-    cloudRange: ['n/a', 'n/a'],
-    bands: ['1', '2', '3', '4', '5', '6'],
-})
-const calculateSearchResultInfo = async (gridOverlapTileMap: Map<string, OverlapTileInfoView[]>) => {
-    searchResultInfo.area = gridOverlapTileMap.size * 1
-    let tempKey = gridOverlapTileMap.keys().next().value!
-    if (!tempKey) {
-        message.info('该区域没有检索到影像')
-        return
-    }
-    let tempTileInfoViews = gridOverlapTileMap.get(tempKey)!
-    let { timeRange, cloudRange } = await statisticsOverlapTileInfoView(tempTileInfoViews)
-    searchResultInfo.imageCount = gridOverlapTileMap.get(tempKey)!.length
-    searchResultInfo.dateRange[0] = timeRange[0]
-    searchResultInfo.dateRange[1] = timeRange[1]
-    searchResultInfo.cloudRange[0] = cloudRange[0].toFixed(2)
-    searchResultInfo.cloudRange[1] = cloudRange[1].toFixed(2)
-}
-
-//////////////////////////////////////////////////////////////
-/////////////// 影像聚合配置 //////////////////////////////////
-const bandViews = ref<BandView[]>([{
-    id: '1',
-    name: '1',
-    sceneId: '1',
-}, {
-    id: '2',
-    name: '2',
-    sceneId: '2',
-}, {
-    id: '3',
-    name: '3',
-    sceneId: '3',
-}])
-const tileMergeConfig = reactive({
-    dateRange: [dayjs('2010-10'), dayjs('2024-10')],
-    cloudRange: [0, 100],
-    bands: [], //基于景id拿bands
-})
-
-
 
 /////////////////////////////////////////////////////////////
 /////////////// Tile Stage //////////////////////////////////
 
+/// 01 Input Search
+const searchText = ref<string>('')
+const searchResultLoading = ref<boolean>(false)
+const handleTextSearch = () => {
+    // just tricking
+    searchResultLoading.value = true
+    setTimeout(() => {
+        searchResultLoading.value = false
+    }, 400)
+}
+const filteredImages: ComputedRef<SceneView[]> = computed(() => {
+    // actual searching
+    if (!searchText.value) return imageFilterSearchResult.value
+    return imageFilterSearchResult.value.filter((image) =>
+        image.name.toLowerCase().includes(searchText.value.toLowerCase()),
+    )
+})
+/// 02 Select Image
+const selectedImage = ref<SceneView | undefined>()
+const toggleImageSelection = (imageId: string) => {
+    // Just toggle selection, add the image outline to map
+    selectedImage.value = imageFilterSearchResult.value.find((image) => image.id === imageId)
+    selectedImage.value && MapOperation.map_showImagePolygon(selectedImage.value.geoFeature)
+}
+const clearSelection = () => {
+    selectedImage.value = undefined
+    MapOperation.map_destroyImagePolygon()
+}
+const confirmSelection = async () => {
+    bandViews.value = await fetchBandViews(selectedImage.value!.id)
+
+    // remove the image outline from map
+    MapOperation.map_destroyImagePolygon()
+    // remove the grid from map
+    MapOperation.map_destroyGridLayer()
+
+    // add the preview png to map
+    const boxCoordinates = polygonGeometryToBoxCoordinates(selectedImage.value!.geoFeature)
+    MapOperation.map_addImagePreviewLayer({
+        imageUrl: selectedImage.value!.preview_url,
+        boxCoordinates: boxCoordinates,
+    })
+
+    // add the grid to map
+    const geojsonURL = getSceneGridGeoJsonURL(selectedImage.value!)
+    MapOperation.map_addGridLayer(geojsonURL)
+}
+/// 03 Select Band
+const bandViews = ref<BandView[]>([])
+const selectedBand = ref<BandView | undefined>()
+
+/// 04 Grid
+const gridStore = useGridStore()
+const selectedGridIDs = computed(() => gridStore.selectedGrids)
+const removeOneGrid = (gridID: string) => {
+    gridStore.removeGrid(gridID)
+}
 
 // 05 Bottom Buttons
-const handleAllReset = () => {
-
-    // reset config
-    tileMergeConfig.bands = []
-    tileMergeConfig.dateRange = [dayjs('2010-10'), dayjs('2024-10')]
-    tileMergeConfig.cloudRange = [0, 100]
-    // reset grid
+const handleTileStageReset = () => {
     gridStore.cleadAllGrids()
-    // reset map
+    selectedBand.value = undefined
+    selectedImage.value = undefined
     MapOperation.map_destroyImagePolygon()
     MapOperation.map_destroyImagePreviewLayer()
     MapOperation.map_destroyGridLayer()
@@ -434,27 +547,27 @@ const handleAllReset = () => {
 }
 const mergingLoading = ref<boolean>(false)
 const handleMergeDownload = async () => {
-    console.log('Merge download clicked !', tileMergeConfig.bands)
+    console.log('Merge download clicked !', selectedBand.value)
     mergingLoading.value = true
-    // const outputFileName = 'merge_result.tif'
-    // const caseId = await startMergeTiles(
-    //     selectedImage.value!,
-    //     selectedBands.value.map((band) => band.name),
-    //     selectedGridIDs.value,
-    // )
+    const outputFileName = 'merge_result.tif'
+    const caseId = await startMergeTiles(
+        selectedImage.value!,
+        [selectedBand.value!.name],
+        selectedGridIDs.value,
+    )
 
-    // const statusCallback = (status: string) => {
-    //     console.log('merging status:', status)
-    // }
-    // const completeCallback = () => {
-    //     mergingLoading.value = false
-    //     downloadMergeTiles(caseId, outputFileName)
-    // }
-    // const errorCallback = () => {
-    //     mergingLoading.value = false
-    //     message.error('合并tif失败, 请检查后台服务')
-    // }
-    // await intervalQueryMergingStatus(caseId, statusCallback, completeCallback, errorCallback)
+    const statusCallback = (status: string) => {
+        console.log('merging status:', status)
+    }
+    const completeCallback = () => {
+        mergingLoading.value = false
+        downloadMergeTiles(caseId, outputFileName)
+    }
+    const errorCallback = () => {
+        mergingLoading.value = false
+        message.error('合并tif失败, 请检查后台服务')
+    }
+    await intervalQueryMergingStatus(caseId, statusCallback, completeCallback, errorCallback)
 }
 
 const handleAddToProject = () => (projectModalOpen.value = true)
@@ -470,16 +583,26 @@ const handleConfirmSelectProject = async (project: Project) => {
         message.error('上传失败')
         projectUploadLoading.value = false
     }
-    // await uploadTilesToProject(
-    //     selectedImage.value!.id,
-    //     selectedGridIDs.value,
-    //     project,
-    //     successCallback,
-    //     errorCallback,
-    // )
+    await uploadTilesToProject(
+        selectedImage.value!.id,
+        selectedGridIDs.value,
+        project,
+        successCallback,
+        errorCallback,
+    )
 }
 
+// 06 Back to Filter Stage
+const handleBackToFilterStage = () => {
+    handleTileStageReset()
+    UIStage.value = 'filter-stage'
+}
 
+///// Local Helper /////////////////////////
+const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('zh-CN')
+}
 </script>
 
 <style scoped>
@@ -489,8 +612,6 @@ const handleConfirmSelectProject = async (project: Project) => {
     padding-left: 0.5rem;
     padding-right: 0.5rem;
     display: flex;
-    overflow: hidden;
-    transition: all 0.3s ease-in-out;
 }
 
 :deep(.border-box-content) {
@@ -548,7 +669,6 @@ const handleConfirmSelectProject = async (project: Project) => {
 }
 
 .section-header {
-    position: relative;
     display: flex;
     align-items: center;
     padding: 0.75rem 1rem;
@@ -586,13 +706,6 @@ const handleConfirmSelectProject = async (project: Project) => {
 
 .section-content {
     padding: 0.75rem 1rem;
-}
-
-.section-footer {
-    display: flex;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
-    background-color: rgba(34, 69, 96, 0.263);
 }
 
 .band-selection {
@@ -683,9 +796,8 @@ const handleConfirmSelectProject = async (project: Project) => {
 
 .tab-content {
     padding: 0.5rem 0;
-    transition: all 0.5s ease-in-out;
+    height: 7vh;
     display: flex;
-    height: 125px;
     justify-content: center;
 }
 
@@ -755,7 +867,8 @@ const handleConfirmSelectProject = async (project: Project) => {
 /* Date-Picker */
 .custom-date-picker {
     width: 100%;
-    height: 2rem;
+    margin: 1rem 0;
+    height: 3rem;
     background-color: rgba(56, 191, 248, 0.097);
     border-color: #247699;
     color: #3fc5ff;
@@ -789,7 +902,7 @@ const handleConfirmSelectProject = async (project: Project) => {
 .custom-date-picker :deep(.ant-picker-input input) {
     text-align: center;
     font-size: 1rem;
-    letter-spacing: 0.05rem;
+    letter-spacing: 0.1rem;
 }
 
 .custom-date-picker :deep(.ant-picker-active-bar) {
@@ -797,14 +910,16 @@ const handleConfirmSelectProject = async (project: Project) => {
 }
 
 /* Slider */
+.custom-slider {
+    /* position: relative;
+    left: 5%;
+    width: 90%; */
+}
+
 .custom-slider :deep(.ant-slider-mark-text) {
     color: #31a6d8;
     font-size: 0.9rem;
     padding-left: 0.5rem;
-}
-
-.custom-slider :deep(.ant-slider-rail) {
-    background-color: rgba(56, 191, 248, 0.395);
 }
 
 .custom-select {
@@ -875,10 +990,10 @@ const handleConfirmSelectProject = async (project: Project) => {
 .product-tag {
     display: flex;
     align-items: center;
-    padding: 4px 4px;
+    padding: 4px 8px;
     border-radius: 4px;
     margin-right: 0;
-    font-size: 0.5rem;
+    font-size: 0.8rem;
     background-color: rgba(14, 165, 233, 0.15);
     border-color: rgba(56, 189, 248, 0.3);
     color: #e0f2fe;
@@ -1218,19 +1333,22 @@ const handleConfirmSelectProject = async (project: Project) => {
     color: #38bdf8;
 }
 
-.band-radio-group :deep(.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled):hover) {
+.band-radio-group
+    :deep(.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled):hover) {
     color: #38bdf8;
     background-color: rgba(14, 165, 233, 0.3);
     border: none;
 }
 
-.band-radio-group :deep(.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled):active) {
+.band-radio-group
+    :deep(.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled):active) {
     color: #38bdf8;
     background-color: rgba(14, 165, 233, 0.4);
     border: none;
 }
 
-.band-radio-group :deep(.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled)::before) {
+.band-radio-group
+    :deep(.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled)::before) {
     background-color: #000000;
     border: none;
 }
@@ -1241,7 +1359,7 @@ const handleConfirmSelectProject = async (project: Project) => {
     align-items: flex-start;
     justify-content: center;
     column-gap: 0.8rem;
-    padding: 1rem 1rem;
+    padding: 2rem 1rem;
     background-color: rgba(15, 23, 42, 0.4);
     border-radius: 0.5rem;
     border: 1px dashed rgba(56, 189, 248, 0.3);
@@ -1321,139 +1439,5 @@ const handleConfirmSelectProject = async (project: Project) => {
 
 .product-tag :deep(.anticon:hover) {
     color: #ff4d4f;
-}
-
-/* 影像检索结果信息样式 */
-.result-info-container {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-    padding: 0.5rem;
-}
-
-.result-info-item {
-    display: flex;
-    align-items: center;
-    background-color: rgba(15, 23, 42, 0.4);
-    border-radius: 0.5rem;
-    padding: 0.75rem;
-    border: 1px solid rgba(56, 189, 248, 0.2);
-    transition: all 0.3s ease;
-}
-
-.result-info-item:hover {
-    background-color: rgba(14, 165, 233, 0.1);
-    border-color: rgba(56, 189, 248, 0.4);
-    box-shadow: 0 0 10px rgba(56, 189, 248, 0.15);
-    transform: translateY(-2px);
-}
-
-.result-info-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background-color: rgba(56, 189, 248, 0.15);
-    margin-right: 0.75rem;
-    color: #38bdf8;
-    flex-shrink: 0;
-}
-
-.result-info-content {
-    display: flex;
-    flex-direction: column;
-}
-
-.result-info-label {
-    font-size: 0.8rem;
-    color: #94a3b8;
-    margin-bottom: 0.25rem;
-}
-
-.result-info-value {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #e0f2fe;
-}
-
-.date-range {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.date-item {
-    font-size: 0.9rem;
-    color: #e0f2fe;
-    display: flex;
-    align-items: center;
-}
-
-.config-container {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-    padding: 0.5rem;
-}
-
-.config-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    background-color: rgba(15, 23, 42, 0.3);
-    border-radius: 0.5rem;
-    padding: 0.75rem;
-    border: 1px solid rgba(56, 189, 248, 0.15);
-    transition: all 0.3s ease;
-}
-
-.config-item:hover {
-    background-color: rgba(14, 165, 233, 0.1);
-    border-color: rgba(56, 189, 248, 0.3);
-    box-shadow: 0 0 10px rgba(56, 189, 248, 0.1);
-}
-
-.config-label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #e0f2fe;
-    margin-bottom: 0.25rem;
-}
-
-.config-control {
-    display: flex;
-    align-items: center;
-    width: 100%;
-}
-
-.cloud-slider-container {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    gap: 0.75rem;
-}
-
-.cloud-value {
-    font-size: 0.85rem;
-    color: #94a3b8;
-    min-width: 2.5rem;
-    text-align: center;
-}
-
-.slider-wrapper {
-    flex: 1;
-    padding: 0 0.5rem;
-}
-
-.config-icon {
-    color: #38bdf8;
-    background-color: rgba(56, 189, 248, 0.1);
-    padding: 0.25rem;
-    border-radius: 0.25rem;
 }
 </style>
