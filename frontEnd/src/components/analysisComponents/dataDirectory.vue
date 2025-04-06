@@ -211,7 +211,7 @@ const handleCellClick = async (item: dockerData, column: string) => {
                         console.info(
                             targetItem.fileName + '没有dataId，检查miniIo上是否存在这个数据实体',
                         )
-                        ElMessage.info("该数据正在切片，请稍后再预览")
+                        ElMessage.info('该数据正在切片，请稍后再预览')
                         return
                     }
                     console.log(targetInMiniIo.dataId, 18156)

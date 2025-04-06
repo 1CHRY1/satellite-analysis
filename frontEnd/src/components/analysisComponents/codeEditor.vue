@@ -88,9 +88,22 @@
 </template>
 
 <script setup lang="ts">
-import { CloudServerOutlined, CaretRightOutlined, SaveOutlined, StopOutlined } from '@ant-design/icons-vue'
-import { projectOperating, getScript, updateScript, runScript, stopScript, operatePackage, getPackages } from '@/api/http/analysis'
-import { ref, defineProps, onMounted, onBeforeUnmount, defineEmits } from 'vue'
+import {
+    CloudServerOutlined,
+    CaretRightOutlined,
+    SaveOutlined,
+    StopOutlined,
+} from '@ant-design/icons-vue'
+import {
+    projectOperating,
+    getScript,
+    updateScript,
+    runScript,
+    stopScript,
+    operatePackage,
+    getPackages,
+} from '@/api/http/analysis'
+import { ref, onMounted, onBeforeUnmount, defineEmits } from 'vue'
 import { Codemirror } from 'vue-codemirror'
 import { python } from '@codemirror/lang-python'
 import { ElMessage } from 'element-plus'

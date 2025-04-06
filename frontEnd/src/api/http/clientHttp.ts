@@ -12,7 +12,7 @@ class HttpClient {
     constructor(baseURL: string) {
         this.instance = axios.create({
             baseURL,
-            timeout: 5000,
+            timeout: 10000,
         })
 
         this.initializeInterceptors()
@@ -41,7 +41,7 @@ class HttpClient {
             },
             async (error) => {
                 console.log('!!! response error', error)
-                if (error.response.status === 401) {
+                if (error.response?.status === 401) {
                     // 🚨 Token 过期，尝试刷新
                     const refreshToken = localStorage.getItem('refreshToken')
                     if (!refreshToken) {

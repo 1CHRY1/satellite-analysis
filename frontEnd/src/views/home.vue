@@ -84,7 +84,9 @@
                             <bar-chart-2 class="text-primary h-6 w-6" />
                         </div>
                         <h3 class="mb-2 text-xl font-semibold text-slate-800">数据可视化</h3>
-                        <p class="text-slate-600">将复杂的卫星数据转化为清晰、可操作的可视化信息和视角。</p>
+                        <p class="text-slate-600">
+                            将复杂的卫星数据转化为清晰、可操作的可视化信息和视角。
+                        </p>
                     </div>
 
                     <div class="rounded-xl bg-slate-50 p-6 shadow-sm transition-shadow hover:shadow-md">
@@ -144,7 +146,9 @@
             <div class="container mx-auto px-4">
                 <div class="mb-12 text-center">
                     <h2 class="text-3xl font-bold text-slate-800">快速访问工具</h2>
-                    <p class="mx-auto mt-4 max-w-2xl text-slate-600">直接从仪表板访问我们最常用的工具。</p>
+                    <p class="mx-auto mt-4 max-w-2xl text-slate-600">
+                        直接从仪表板访问我们最常用的工具。
+                    </p>
                 </div>
 
                 <div class="grid grid-cols-2 gap-6 md:grid-cols-4">

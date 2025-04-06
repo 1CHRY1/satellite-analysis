@@ -1,21 +1,36 @@
 <template>
-    <div class="constructionContainer" id="container" @mousemove="handleMousemove($event)"
-        @mousedown="handleMousedown($event)" @mouseup="handleMouseup($event)">
+    <div
+        class="constructionContainer"
+        id="container"
+        @mousemove="handleMousemove($event)"
+        @mousedown="handleMousedown($event)"
+        @mouseup="handleMouseup($event)"
+    >
         <div v-show="showCodeContainer" class="codeContainer" id="codeContainerId">
             <!-- 上左数据模块 -->
             <div class="dataPaneArea" id="dataPaneAreaId">
-                <dataDirectory :projectId="projectId" :userId="userId" class="h-[100%] w-full rounded" />
+                <dataDirectory
+                    :projectId="projectId"
+                    :userId="userId"
+                    class="h-[100%] w-full rounded"
+                />
             </div>
             <div class="splitHandleVertical" id="splitHandleVertical2Id" style="left: 25%"></div>
             <!-- 上中在线编程 -->
             <div class="codeEditArea pl-2" id="codeEditAreaId">
-                <codeEditor :projectId="projectId" :userId="userId" @addMessage="addMessage" class="h-[100%] w-full" />
+                <codeEditor
+                    :projectId="projectId"
+                    :userId="userId"
+                    @addMessage="addMessage"
+                    class="h-[100%] w-full"
+                />
             </div>
 
             <div class="splitHandleVertical" id="splitHandleVertical3Id" style="left: 75%"></div>
             <!-- 上右控制台 -->
             <div class="consolerArea" id="consolerAreaId">
-                <consolerComponent :messages="messages" @clearConsole="clearConsole"> </consolerComponent>
+                <consolerComponent :messages="messages" @clearConsole="clearConsole">
+                </consolerComponent>
             </div>
         </div>
         <div class="splitHandleHorizontal" id="splitPaneHorizontal1Id"></div>
@@ -72,10 +87,7 @@ const addMessage = (messageContent: string = 'code') => {
  * 添加、清空、自动滚动
  */
 
-const messages = ref<string[]>([
-    'Response and execution information will be displayed here .',
-
-])
+const messages = ref<string[]>(['Response and execution information will be displayed here .'])
 // 创建websocket实例
 const ws = createWebSocket(userId, projectId)
 
