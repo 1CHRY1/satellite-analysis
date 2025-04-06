@@ -100,10 +100,11 @@ export namespace ImageTile {
     }
 
     export interface ImageTileTifMergeRequest {
-        sceneId: string
+        // sceneId: string
         tiles: Array<{
             columnId: string
             rowId: string
+            sceneId: string
         }>
         bands: string[]
     }
@@ -154,7 +155,6 @@ export namespace Project {
     export interface ImageTileUploadToProjectRequest {
         userId: string
         projectId: string
-        sceneId: string
-        tileIds: string[]
+        object: string
     }
 }

@@ -16,6 +16,13 @@ export async function getProjects(): Promise<any> {
     return http.get<any>(`project/all`)
 }
 
+export async function getUserProjects(): Promise<any> {
+    const userId = localStorage.getItem('userId')
+    const allProjects = await getProjects()
+    const userProjects = allProjects.filter((project: any) => project.createUser === userId)
+    return userProjects
+}
+
 export async function createProject(param: any): Promise<any> {
     return http.post<any>(`coding/project/new`, param)
 }

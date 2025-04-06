@@ -50,6 +50,13 @@ export interface OverlapTileInfoView {
     sceneId: string
     columnId: string
     rowId: string
+    sceneTime: string | null
+}
+
+export interface GridInfoView {
+    sceneId: string
+    columnId: string
+    rowId: string
 }
 
 ///// Adapter /////////////////////////
@@ -183,25 +190,11 @@ export function getSceneGridGeoJsonURL(scene: SceneView) {
 
 // 合并GridIDs 触发下载
 export async function startMergeTiles(
-    scene: SceneView,
     bands: string[],
-    gridIds: string[],
+    grids: GridInfoView[],
 ): Promise<string> {
-    let sceneId = scene.id
-    let tileInfos: SatelliteDataApi.ImageTile.ImageTileTifMergeRequest['tiles'] = new Array(
-        gridIds.length,
-    )
-    let promises = gridIds.map(async (gridId, index) => {
-        let tileInfo = await SatelliteDataApi.getImageTileDetail(sceneId, gridId)
-        tileInfos[index] = {
-            columnId: tileInfo.columnId.toString(),
-            rowId: tileInfo.rowId.toString(),
-        }
-    })
-    await Promise.all(promises)
     let params: SatelliteDataApi.ImageTile.ImageTileTifMergeRequest = {
-        sceneId: scene.id,
-        tiles: tileInfos,
+        tiles: grids,
         bands: bands,
     }
     let result = await SatelliteDataApi.startMergeImageTiles(params)
@@ -308,27 +301,50 @@ export async function queryOverlapTileInfo(product: ProductView, gridId: string)
             cloud: tileInfo.cloud,
             columnId: x,
             rowId: y,
+            sceneTime: null
         }
         overlapTileInfos.push(overlapTileInfo)
     }
     return overlapTileInfos
 }
 
+// 缓存对象，用于存储已查询过的瓦片信息
+const tileInfoCache = new Map<string, OverlapTileInfoView[]>();
+
 // 给一个格网ID列表，返回一个Map，key为格网ID，value为瓦片信息列表
 export async function queryOverlapTilesMap(product: ProductView, gridIDs: string[]): Promise<Map<string, OverlapTileInfoView[]>> {
-    const map = new Map<string, OverlapTileInfoView[]>()
+    const map = new Map<string, OverlapTileInfoView[]>();
 
-    let promises = gridIDs.map(async (gridID) => {
-        let overlapTileInfos = await queryOverlapTileInfo(product, gridID)
-        map.set(gridID, overlapTileInfos)
-    })
-    await Promise.all(promises)
+    const MAX_CONCURRENT_REQUESTS = 3;
 
-    return map
+    // 分批处理请求
+    for (let i = 0; i < gridIDs.length; i += MAX_CONCURRENT_REQUESTS) {
+        const batch = gridIDs.slice(i, i + MAX_CONCURRENT_REQUESTS);
+        const promises = batch.map(async (gridID) => {
+            // 检查缓存
+            const cacheKey = `${product.id}-${gridID}`;
+            if (tileInfoCache.has(cacheKey)) {
+                map.set(gridID, tileInfoCache.get(cacheKey)!);
+                return;
+            }
+
+            // 如果缓存中没有，则发起请求
+            const overlapTileInfos = await queryOverlapTileInfo(product, gridID);
+            map.set(gridID, overlapTileInfos);
+
+            // 存入缓存
+            tileInfoCache.set(cacheKey, overlapTileInfos);
+        });
+
+        // 等待当前批次的所有请求完成
+        await Promise.all(promises);
+    }
+
+    return map;
 }
 
-// 给一个OverlapTileInfoView列表，查询景的时间范围, 云量范围
-export async function statisticsOverlapTileInfoView(overlapTileInfos: OverlapTileInfoView[]): Promise<{timeRange: [string, string], cloudRange: [number, number]}> {
+// 给一个OverlapTileInfoView列表，统计查询景的时间范围, 云量范围
+export async function statisticsOverlapTileInfoView(overlapTileInfos: OverlapTileInfoView[]): Promise<{ timeRange: [string, string], cloudRange: [number, number] }> {
     let sceneTimeRange: [string, string] = ['', '']
     let minTime = new Date(2099, 11, 31)
     let maxTime = new Date(1900, 0, 1)
@@ -339,6 +355,7 @@ export async function statisticsOverlapTileInfoView(overlapTileInfos: OverlapTil
         let sceneId = tileInfo.sceneId
         let sceneDetail = await SatelliteDataApi.getSensorImageDetail(sceneId)
         let sceneTime = new Date(sceneDetail.sceneTime)
+        overlapTileInfos[i].sceneTime = sceneTime.toLocaleDateString('zh-CN')
         if (sceneTime < minTime) {
             minTime = sceneTime
         }

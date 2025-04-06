@@ -118,7 +118,7 @@ import {
     operatePackage,
     getPackages,
 } from '@/api/http/analysis'
-import { ref, defineProps, onMounted, onBeforeUnmount, defineEmits } from 'vue'
+import { ref, onMounted, onBeforeUnmount, defineEmits } from 'vue'
 import { Codemirror } from 'vue-codemirror'
 import { python } from '@codemirror/lang-python'
 import { ElMessage } from 'element-plus'
