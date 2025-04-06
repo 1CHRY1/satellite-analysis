@@ -17,7 +17,10 @@ public class ProjectTileDataDTO {
 
     private String userId;
     private String projectId;
-    private String sceneId;
-    private List<String> tileIds;
+    private String name;
+//    private String sceneId;
+//    private List<String> tileIds;
+    // TODO: add another data table
+    private String object;
 
 }

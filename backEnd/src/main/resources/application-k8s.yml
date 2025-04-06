@@ -41,7 +41,7 @@ mybatis-plus:
 #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 ca:
-  dir: D:/1tools/OpenSSL/ca
+  dir: /usr/resource/OpenSSL/ca
 
 minio:
   access-key: jTbgNHEqQafOpUxVg7Ol
@@ -55,7 +55,7 @@ docker:
     host: "223.2.35.208"
     username: "vge"
     password: "3J44.njnu.edu.cn"
-  localPath: D:/1study/Work/2025_03_05_satellite/modelDockerVolume/
+  localPath: /usr/resource/modelDockerVolume/
   serverDir: /home/vge/satellite/
   workDir: /usr/local/coding/
 

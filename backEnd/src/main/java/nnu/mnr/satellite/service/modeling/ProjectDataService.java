@@ -55,12 +55,14 @@ public class ProjectDataService {
 
     public List<ProjectVO> getAllProjects() {
         QueryWrapper<Project> queryWrapper = new QueryWrapper<>();
+        queryWrapper.orderBy(true, false, "create_time");
         List<Project> projects = projectRepo.selectList(queryWrapper);
         return projectModelMapper.map(projects, new TypeToken<List<ProjectVO>>() {}.getType());
     }
 
     public boolean VerifyUserProject(String userId, String projectId) {
         QueryWrapper<Project> queryWrapper = new QueryWrapper();
+        queryWrapper.orderBy(true, false, "create_time");
         queryWrapper.eq("create_user", userId).eq("project_id", projectId);
         Project project = projectRepo.selectOne(queryWrapper);
         if (project == null) {
