@@ -22,7 +22,7 @@
                         <!-- 搜索栏 -->
                         <div class="cardShadow mb-6 flex w-full items-center space-x-2">
                             <input v-model="searchQuery" type="text" placeholder="Search models..."
-                                class="w-[100%] rounded bg-white p-2 text-white focus:ring-2 focus:ring-blue-400 focus:outline-none" />
+                                class="w-[100%] rounded bg-white p-2 !text-black focus:ring-2 focus:ring-blue-400 focus:outline-none" />
                             <button class="w-20 cursor-pointer rounded bg-blue-600 px-4 py-2 hover:bg-blue-500"
                                 @click="">
                                 搜索
