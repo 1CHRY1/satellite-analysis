@@ -79,7 +79,7 @@ class HttpClient {
                         return Promise.reject(err)
                     }
                 }
-                
+
                 return Promise.reject(error)
             },
         )

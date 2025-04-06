@@ -6,13 +6,15 @@
         <el-row class="flex  h-[calc(100vh-56px)]  text-white z-10 relative " style="flex:none">
 
             <el-col :span="5" class="h-full">
-                <div class="cardShadow border-box mx-[3vw] my-[3vh] opacity-80 p-6">
-                    <h2 class="text-lg font-bold">Model Center</h2>
-                    <ul class="mt-4 space-y-2">
+                <div class="cardShadow border-box mx-[3vw] my-[3vh] opacity-80 p-6 h-[calc(100%-6vh)] overflow-auto">
+                    <h2 class="text-lg font-bold">模型目录</h2>
+                    <!-- <ul class="mt-4 space-y-2">
                         <li v-for="category in categories" :key="category" class="cursor-pointer hover:text-blue-400">
                             {{ category }}
                         </li>
-                    </ul>
+                    </ul> -->
+                    <el-tree :data="treeData" :props="defaultProps" default-expand-all :expand-on-click-node="false"
+                        :highlight-current="false" class="readonly-tree" node-key="label" />
                 </div>
             </el-col>
             <el-col :span="18" class="h-full">
@@ -66,8 +68,11 @@
                                 </div>
                                 <div
                                     class="px-4 py-2 text-[12px] rounded hover:text-blue-500 absolute bottom-2 font-bold right-2 flex items-center">
-                                    Add to project
-                                    <FilePlus2 :size="16" class="ml-1" />
+                                    <!-- Add to project -->
+                                    <a href="https://geomodeling.njnu.edu.cn/modelItem/repository" target="_blank">
+                                        详情信息
+                                    </a>
+                                    <!-- <FilePlus2 :size="16" class="ml-1" /> -->
                                 </div>
                             </div>
                         </el-col>
@@ -104,6 +109,67 @@ const categories = ref<string[]>([
     'Data Analysis',
     'Machine Learning'
 ]);
+const treeData = [
+    {
+        label: "面向应用的分类",
+        children: [
+            {
+                label: "自然视角",
+                children: [
+                    { label: "陆地圈" },
+                    { label: "海洋圈" },
+                    { label: "冰冻圈" },
+                    { label: "大气圈" },
+                    { label: "太空-地球" },
+                    { label: "固体地球" },
+                ],
+            },
+            {
+                label: "人文视角",
+                children: [
+                    { label: "发展活动" },
+                    { label: "社会活动" },
+                    { label: "经济活动" },
+                ],
+            },
+            {
+                label: "综合视角",
+                children: [
+                    { label: "全球尺度" },
+                    { label: "区域尺度" },
+                ],
+            },
+        ],
+    },
+    {
+        label: "面向方法的分类",
+        children: [
+            {
+                label: "数据视角",
+                children: [
+                    { label: "地理信息分析" },
+                    { label: "遥感分析" },
+                    { label: "地统计分析" },
+                    { label: "智能计算分析" },
+                ],
+            },
+            {
+                label: "过程视角",
+                children: [
+                    { label: "物理过程计算" },
+                    { label: "化学过程计算" },
+                    { label: "生物过程计算" },
+                    { label: "人类活动计算" },
+                ],
+            },
+        ],
+    },
+];
+
+const defaultProps = {
+    children: 'children',
+    label: 'label',
+};
 
 const searchQuery = ref<string>('');
 const models: Ref<modelsOrMethods[]> = ref([]);
@@ -119,7 +185,7 @@ const updateColumns = () => {
 const pageChange = async (page: number) => {
     models.value = (await getModels({
         asc: false,
-        page: page,
+        page: page === 1 ? 3 : page === 3 ? 1 : page,
         pageSize: 12,
         searchText: "",
         sortField: "createTime",
@@ -134,7 +200,7 @@ onMounted(async () => {
     window.addEventListener('resize', updateColumns);
     models.value = (await getModels({
         "asc": false,
-        "page": 1,
+        "page": 3,
         "pageSize": 12,
         "searchText": "",
         "sortField": "createTime",
@@ -153,6 +219,25 @@ const filteredModels = computed(() => {
 </script>
 
 <style scoped lang="scss">
+:deep(.readonly-tree .el-tree-node__content) {
+    pointer-events: none;
+    /* 禁用所有交互 */
+    user-select: none;
+    /* 禁止文本选中（可选） */
+}
+
+
+
+:deep(.readonly-tree .el-tree-node__expand-icon) {
+    display: none;
+    /* 隐藏展开收起图标 */
+}
+
+:deep(.el-tree) {
+    background-color: transparent;
+    color: white;
+}
+
 ::-webkit-scrollbar {
     width: 8px;
 }

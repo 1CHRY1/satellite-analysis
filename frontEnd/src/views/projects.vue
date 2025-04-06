@@ -114,10 +114,15 @@
 
                         <!-- 按钮 -->
                         <div class="mt-6 flex justify-center">
-                            <button @click="create"
-                                class="mx-2 rounded-xl bg-green-600 px-6 py-2 hover:bg-green-500">创建</button>
+                            <button @click="create" class="mx-2 rounded-xl bg-green-600 px-6 py-2 hover:bg-green-500"
+                                :class="{ 'cursor-pointer': !createLoading }" :disabled="createLoading">
+                                <div v-if="createLoading" class="is-loading flex items-center">
+                                    <Loading class="h-4 w-4 mr-1" />创建
+                                </div>
+                                <div v-else>创建</div>
+                            </button>
                             <button @click="createProjectView = false"
-                                class="mx-2 !ml-4 rounded-xl bg-gray-500 px-6 py-2 hover:bg-gray-400">
+                                class="mx-2 !ml-4 rounded-xl bg-gray-500 px-6 py-2 hover:bg-gray-400 cursor-pointer">
                                 取消
                             </button>
                         </div>
@@ -132,9 +137,9 @@
 import { ref, onMounted, onUnmounted, type Ref } from 'vue'
 import projectsBg from '@/components/projects/projectsBg.vue'
 import { Search } from 'lucide-vue-next'
-import { getProjects, createProject, getModels, getMethods } from '@/api/http/analysis'
+import { getProjects, createProject } from '@/api/http/analysis'
 import projectCard from '@/components/projects/projectCard.vue'
-
+import { Loading } from "@element-plus/icons-vue"
 import type { project, newProject } from '@/type/analysis'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
@@ -177,6 +182,7 @@ const viewMyProjects = () => {
  */
 const projectList: Ref<project[]> = ref([])
 const createProjectView = ref(false)
+const createLoading = ref(false)
 const newProject = ref({
     projectName: '',
     environment: 'Python3_9',
@@ -214,15 +220,16 @@ const create = async () => {
         return
 
     }
+    createLoading.value = true
     let createBody = {
         ...newProject.value,
         userId,
     }
-    // 先关闭再发起请求，起到防抖作用
-    createProjectView.value = false
-    await createProject(createBody)
-    projectList.value = await getProjects()
+    let createRes = await createProject(createBody)
+    router.push(`/project/${createRes.projectId}`)
     ElMessage.success('创建成功')
+    createLoading.value = false
+    createProjectView.value = false
 }
 
 const getProjectsInOrder = async () => {
@@ -236,28 +243,7 @@ onMounted(async () => {
     console.log("所有项目：", projectList.value)
     updateColumns();
     window.addEventListener("resize", updateColumns);
-    console.log(await getModels({
-        "asc": false,
-        "page": 1,
-        "pageSize": 18,
-        "searchText": "",
-        "sortField": "createTime",
-        "tagClass": "problemTags",
-        "tagNames": [
-            ""
-        ]
-    }), 12132);
-    console.log(await getMethods({
-        "asc": false,
-        "page": 1,
-        "pageSize": 18,
-        "searchText": "",
-        "sortField": "createTime",
-        "tagClass": "problemTags",
-        "tagNames": [
-            ""
-        ]
-    }), 13132);
+
 
 })
 

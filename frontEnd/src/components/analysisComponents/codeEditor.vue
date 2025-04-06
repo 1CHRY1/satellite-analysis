@@ -2,23 +2,29 @@
     <div>
         <div class="flex h-[44px] w-full justify-between">
             <div class="my-1.5 ml-2 flex w-fit items-center rounded bg-[#eaeaea] shadow-md">
-                <div class="toolItem" @click="showPackageList">
-                    <CloudServerOutlined />
+                <el-button link class="toolItem btHover" @click="showPackageList">
+                    <CloudServerOutlined class="mr-1" />
                     依赖管理
-                </div>
-                <div class="toolItem" @click="runCode">
-                    <CaretRightOutlined />
-                    运行
-                </div>
-                <div class="toolItem" @click="stopCode">
-                    <StopOutlined />
-                    停止
-                </div>
+                </el-button>
+                <div style="border-right: 1.5px dashed #5f6477; height: 20px;"></div>
 
-                <div class="toolItem" @click="saveCode">
-                    <SaveOutlined />
+                <el-button link class="toolItem" :class="{ 'btHover': !isRunning }" @click="runCode"
+                    :disabled="isRunning">
+                    <CaretRightOutlined class="mr-1" />
+                    运行
+                </el-button>
+                <div style="border-right: 1.5px dashed #5f6477; height: 20px;"></div>
+
+                <el-button link class="toolItem" :class="{ 'btHover': isRunning }" @click="stopCode"
+                    :disabled="!isRunning">
+                    <StopOutlined class="mr-1" />
+                    结束
+                </el-button>
+                <div style="border-right: 1.5px dashed #5f6477; height: 20px;"></div>
+                <el-button link class="toolItem btHover" @click="saveCode">
+                    <SaveOutlined class="mr-1" />
                     保存
-                </div>
+                </el-button>
             </div>
             <el-dialog title="依赖管理" v-model="dialogVisible" width="400px">
                 <!-- 表格 -->
@@ -39,11 +45,13 @@
                     <div class="">
                         <!-- <font-awesome-icon style="margin-left: 2px; font-size: 10px; color: red" icon="star-of-life" /> -->
                         <label><span style="color: red">*</span>包名: </label>
-                        <el-input v-model="addedPackageInfo.name" placeholder="package name" style="width: 120px; font-size: 14px" />
+                        <el-input v-model="addedPackageInfo.name" placeholder="package name"
+                            style="width: 120px; font-size: 14px" />
                     </div>
                     <div class="ml-4">
                         <label>版本: </label>
-                        <el-input v-model="addedPackageInfo.version" placeholder="version" style="width: 70px; font-size: 14px" />
+                        <el-input v-model="addedPackageInfo.version" placeholder="version"
+                            style="width: 70px; font-size: 14px" />
                     </div>
                     <div class="ml-4">
                         <el-button link type="primary" @click="installPackage()">安装</el-button>
@@ -59,18 +67,22 @@
             </el-dialog>
 
             <div class="relative my-1.5 ml-2 flex w-fit items-center rounded">
-                <div class="relative my-1 mr-2 flex h-full cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-xs shadow-md" @click="">
+                <div class="relative my-1 mr-2 flex h-full cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-xs shadow-md"
+                    @click="">
                     当前环境：{{ selectedEnv }}
                 </div>
-                <div v-if="showDropdown" class="absolute top-8 left-0 z-10 mt-1 w-fit rounded border border-gray-300 bg-white shadow-md">
-                    <div v-for="env in envOptions" :key="env" class="cursor-pointer px-3 py-2 text-sm hover:bg-gray-200" @click="">
+                <div v-if="showDropdown"
+                    class="absolute top-8 left-0 z-10 mt-1 w-fit rounded border border-gray-300 bg-white shadow-md">
+                    <div v-for="env in envOptions" :key="env" class="cursor-pointer px-3 py-2 text-sm hover:bg-gray-200"
+                        @click="">
                         {{ env }}
                     </div>
                 </div>
             </div>
         </div>
         <div class="code-editor !bg-[#f9fafb]">
-            <Codemirror class="!p-0 !text-[12px]" v-model="code" :extensions="extensions" @ready="onCmReady" @update:model-value="onCmInput" />
+            <Codemirror class="!p-0 !text-[12px]" v-model="code" :extensions="extensions" @ready="onCmReady"
+                @update:model-value="onCmInput" />
         </div>
     </div>
 </template>
@@ -112,6 +124,8 @@ const addedPackageInfo = ref({
     version: '',
 })
 const packageList = ref([])
+const isRunning = ref(false)
+
 
 const showPackageList = async () => {
     dialogVisible.value = true
@@ -124,18 +138,18 @@ const installPackage = async () => {
         dialogVisible.value = false
         requestJson = addedPackageInfo.value.version
             ? {
-                  projectId: props.projectId,
-                  userId: props.userId,
-                  action: 'add',
-                  name: addedPackageInfo.value.name,
-                  version: addedPackageInfo.value.version,
-              }
+                projectId: props.projectId,
+                userId: props.userId,
+                action: 'add',
+                name: addedPackageInfo.value.name,
+                version: addedPackageInfo.value.version,
+            }
             : {
-                  projectId: props.projectId,
-                  userId: props.userId,
-                  action: 'add',
-                  name: addedPackageInfo.value.name,
-              }
+                projectId: props.projectId,
+                userId: props.userId,
+                action: 'add',
+                name: addedPackageInfo.value.name,
+            }
     } else {
         ElMessage.warning('请输入要安装的依赖包名')
     }
@@ -167,6 +181,7 @@ const getPackageList = async () => {
 }
 
 const runCode = async () => {
+    isRunning.value = true
     // 1、先更新代码
     let saveResult = await updateScript({
         projectId: props.projectId,
@@ -193,10 +208,13 @@ const runCode = async () => {
 }
 
 const stopCode = async () => {
-    stopScript({
+    isRunning.value = false
+    let stopResult = await stopScript({
         projectId: props.projectId,
         userId: props.userId,
     })
+    console.log(stopResult, 'stopResult');
+
     ElMessage.info('正在停止运行')
 }
 const saveCode = async () => {
@@ -290,16 +308,18 @@ onBeforeUnmount(async () => {
     @apply h-[90%] w-full overflow-x-hidden overflow-y-auto rounded-lg bg-gray-100 font-sans text-sm;
 }
 
+
+
 .toolItem {
     font-size: 14px;
     padding: 0 12px;
-    border-right: 1.5px dashed #5f6477;
+    /* border-right: 1.5px dashed #5f6477; */
     color: #4c5160;
 }
 
-.toolItem:hover {
+.btHover:hover {
     color: #1479d7;
-    cursor: pointer;
+    /* cursor: pointer; */
 }
 
 .toolItem:last-child {
