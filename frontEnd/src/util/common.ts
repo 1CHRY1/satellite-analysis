@@ -43,5 +43,10 @@ export function polygonGeometryToBoxCoordinates(polygonGeometry: polygonGeometry
         [polygonGeometry.coordinates[0][2][0], polygonGeometry.coordinates[0][2][1]],
         [polygonGeometry.coordinates[0][3][0], polygonGeometry.coordinates[0][3][1]],
     ]
-    return boxCoordinates as [[number, number], [number, number], [number, number], [number, number]]
+    return boxCoordinates as [
+        [number, number],
+        [number, number],
+        [number, number],
+        [number, number],
+    ]
 }

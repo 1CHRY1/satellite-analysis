@@ -100,10 +100,11 @@ export namespace ImageTile {
     }
 
     export interface ImageTileTifMergeRequest {
-        sceneId: string
+        // sceneId: string
         tiles: Array<{
             columnId: string
             rowId: string
+            sceneId: string
         }>
         bands: string[]
     }
@@ -120,11 +121,27 @@ export namespace ImageTile {
         data: ModelStatus
     }
 
+    export interface ImageTileQueryRequest {
+        sensorId: string
+        productId: string
+        tileLevel: string
+        rowId: string
+        columnId: string
+        band: string
+    }
+
+    export interface ImageTileQueryResponseItem {
+        tilerUrl: string
+        object: string
+        tileId: string
+        cloud: string
+        sceneId: string
+    }
+    export interface ImageTileQueryResponse extends Array<ImageTileQueryResponseItem> { }
 }
 
 ///// Project API /////////////////////////
 export namespace Project {
-
     export interface ProjectActionRequest {
         projectId: string
         userId: string
@@ -136,9 +153,8 @@ export namespace Project {
         projectId: string
     }
     export interface ImageTileUploadToProjectRequest {
-        userId: string;
-        projectId: string;
-        sceneId: string;
-        tileIds: string[];
+        userId: string
+        projectId: string
+        object: string
     }
 }

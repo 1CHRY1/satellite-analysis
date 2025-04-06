@@ -24,10 +24,12 @@
                             搜索
                         </el-button>
                     </div>
-                    <el-button type="primary" color="#049f40"
-                        style="margin-left: 10px;border-color: #049f40;font-size: 14px;height: 2rem;"
-                        @click="createProjectView = !createProjectView">
-
+                    <el-button type="primary" color="#049f40" style="
+                            margin-left: 10px;
+                            border-color: #049f40;
+                            font-size: 14px;
+                            height: 2rem;
+                        " @click="createProjectView = !createProjectView">
                         {{ createProjectView ? '取消创建' : '创建项目' }}
                     </el-button>
                     <el-button type="primary" color="#049f40" :disabled="searchProjectsVisible" style="
@@ -42,20 +44,22 @@
             </div>
 
             <!-- 计算合适的高度，header是56px，搜索184px，即 50vh = 1/2x + 56px + 184px，x为容器高度，这样创建弹窗在容器内居中就会在视口居中 -->
-            <div class=" flex h-[calc(100vh-184px-56px)] w-full justify-center relative">
+            <div class="relative flex h-[calc(100vh-184px-56px)] w-full justify-center">
                 <!-- 计算合适的宽度 -->
-                <div v-if="!createProjectView" class="p-3 grid gap-12 overflow-y-auto"
+                <div v-if="!createProjectView" class="grid gap-12 overflow-y-auto p-3"
                     :style="{ gridTemplateColumns: `repeat(${columns}, ${cardWidth}px)` }">
-                    <projectCard
-                        v-for="item in searchProjectsVisible ? searchedProjects : myProjectsVisible ? myProjectList : projectList"
-                        :key="item.projectId" :project="item" @click="enterProject(item)">
+                    <projectCard v-for="item in searchProjectsVisible
+                        ? searchedProjects
+                        : myProjectsVisible
+                            ? myProjectList
+                            : projectList" :key="item.projectId" :project="item" @click="enterProject(item)">
                     </projectCard>
                 </div>
 
                 <!-- 创建项目的卡片 -->
-                <div v-if="createProjectView" class="flex  opacity-80 absolute top-[calc(50vh-240px-206px)]">
-                    <div class="bg-gray-700 text-white p-6 rounded-xl shadow-xl w-96">
-                        <h2 class="text-xl font-semibold mb-4 text-center">创建项目</h2>
+                <div v-if="createProjectView" class="absolute top-[calc(50vh-240px-206px)] flex opacity-80">
+                    <div class="w-96 rounded-xl bg-gray-700 p-6 text-white shadow-xl">
+                        <h2 class="mb-4 text-center text-xl font-semibold">创建项目</h2>
 
                         <!-- 项目名称 -->
                         <label class="mb-1 flex text-sm">
@@ -144,9 +148,7 @@ import type { project, newProject } from '@/type/analysis'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 
-
-
-const router = useRouter();
+const router = useRouter()
 const userId = localStorage.getItem('userId')
 const searchInput = ref('')
 
@@ -161,13 +163,17 @@ const searchProjectsVisible = ref(false)
 // 支持搜索项目名称、创建人和项目描述
 const researchProjects = () => {
     if (searchInput.value.length > 0) {
-        searchedProjects.value = projectList.value.filter((item: project) => item.projectName.includes(searchInput.value) || item.createUserName.includes(searchInput.value) || item.description.includes(searchInput.value))
+        searchedProjects.value = projectList.value.filter(
+            (item: project) =>
+                item.projectName.includes(searchInput.value) ||
+                item.createUserName.includes(searchInput.value) ||
+                item.description.includes(searchInput.value),
+        )
         searchProjectsVisible.value = true
-        console.log(searchedProjects.value, 1115);
+        console.log(searchedProjects.value, 1115)
     } else {
         searchProjectsVisible.value = false
     }
-
 }
 
 // 查看我的项目
@@ -175,7 +181,6 @@ const viewMyProjects = () => {
     myProjectsVisible.value = !myProjectsVisible.value
     myProjectList.value = projectList.value.filter((item: project) => item.createUser === userId)
 }
-
 
 /**
  * 项目列表模块
@@ -190,17 +195,16 @@ const newProject = ref({
     description: '',
     // authority: ''
 })
-const cardWidth = 300;
-const gap = 48;
-const columns = ref(1);
+const cardWidth = 300
+const gap = 48
+const columns = ref(1)
 
 const updateColumns = () => {
-    const containerWidth = window.innerWidth - 32; // 预留 100px 余量
-    columns.value = Math.max(1, Math.floor(containerWidth / (cardWidth + gap)));
-};
+    const containerWidth = window.innerWidth - 32 // 预留 100px 余量
+    columns.value = Math.max(1, Math.floor(containerWidth / (cardWidth + gap)))
+}
 
 const enterProject = (item: project) => {
-
     if (item.createUser === userId) {
         router.push(`/project/${item.projectId}`)
     } else {
@@ -215,10 +219,11 @@ const create = async () => {
     } else if (!newProject.value.description) {
         ElMessage.error('描述不能为空')
         return
-    } else if (projectList.value.some((item: project) => item.projectName === newProject.value.projectName)) {
+    } else if (
+        projectList.value.some((item: project) => item.projectName === newProject.value.projectName)
+    ) {
         ElMessage.error('该项目已存在，请更换项目名称')
         return
-
     }
     createLoading.value = true
     let createBody = {
@@ -234,7 +239,7 @@ const create = async () => {
 
 const getProjectsInOrder = async () => {
     projectList.value = await getProjects()
-    projectList.value.sort((a, b) => b.createTime.localeCompare(a.createTime));
+    projectList.value.sort((a, b) => b.createTime.localeCompare(a.createTime))
 }
 
 onMounted(async () => {
@@ -248,8 +253,8 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-    window.removeEventListener("resize", updateColumns);
-});
+    window.removeEventListener('resize', updateColumns)
+})
 </script>
 
 <style scoped lang="scss">
