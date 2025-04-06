@@ -87,7 +87,7 @@
                                         <a-button class="custom-button !px-2" @click=handleSelectAllGrids>全选</a-button>
                                         <a-button class="custom-button !px-2"
                                             @click=handleSelectNoneGrids>全不选</a-button>
-                                        <a-button class="custom-button !w-26 !bg-sky-800" @click=handleStartGridSearch>
+                                        <a-button class="custom-button !w-fit !bg-sky-800" :loading="gridSearchLoading" @click=handleStartGridSearch>
                                             开始检索
                                         </a-button>
                                     </div>
@@ -155,7 +155,7 @@
                         <div class="section-icon">
                             <BoltIcon :size="18" />
                         </div>
-                        <h2 class="section-title">区域影像聚合</h2>
+                        <h2 class="section-title">区域影像镶嵌配置</h2>
                     </div>
                     <div class="section-content">
                         <div class="config-container">
@@ -163,6 +163,10 @@
                                 <div class="config-label">
                                     <CalendarIcon :size="16" class="config-icon" />
                                     <span>时间</span>
+                                    <a-checkbox v-model:checked="tileMergeConfig.useLatestTime"
+                                        class="relative left-40 !text-sky-300">
+                                        时间最近优先
+                                    </a-checkbox>
                                 </div>
                                 <div class="config-control">
                                     <a-range-picker class="custom-date-picker" v-model:value="tileMergeConfig.dateRange"
@@ -173,6 +177,10 @@
                                 <div class="config-label">
                                     <CloudIcon :size="16" class="config-icon" />
                                     <span>云量</span>
+                                    <a-checkbox v-model:checked="tileMergeConfig.useMinCloud"
+                                        class="relative left-40 !text-sky-300">
+                                        云量最小优先
+                                    </a-checkbox>
                                 </div>
                                 <div class="config-control">
                                     <div class="cloud-slider-container">
@@ -232,7 +240,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, reactive, type ComputedRef, computed } from 'vue'
+import { ref, watch, reactive, computed } from 'vue'
 import {
     DatabaseIcon,
     MapPinIcon,
@@ -251,11 +259,10 @@ import {
     BanIcon,
     MapIcon,
 } from 'lucide-vue-next'
-import type { Dayjs } from 'dayjs'
 import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'
 import DataSetModal from './imageDataModal.vue'
 import ProjectModal from './projectModal.vue'
-import { useGridStore } from '@/store'
+import { useGridStore, ezStore } from '@/store'
 import dayjs from 'dayjs'
 import { message, Modal, Alert } from 'ant-design-vue'
 
@@ -267,6 +274,7 @@ import type { Project } from './type'
 import {
     type ProductView,
     type SceneView,
+    type GridInfoView,
     type OverlapTileInfoView,
     searchSceneViews,
     type BandView,
@@ -349,6 +357,7 @@ const handleRegionGridReset = () => {
     MapOperation.map_destroyGridLayer()
     MapOperation.draw_deleteAll()
     spatialTabsKey.value = '1'
+    gridSearchLoading.value = false
 }
 /// 02 格网选择和开始检索
 const gridSearchLoading = ref<boolean>(false)
@@ -360,6 +369,7 @@ const handleSelectNoneGrids = () => gridStore.cleadAllGrids()
 const handleStartGridSearch = async () => {
     gridSearchLoading.value = true
     const gridOverlapTileMap = await queryOverlapTilesMap(selectedProduct.value!, selectedGridIDs.value)
+    ezStore.set('gridOverlapTileMap', gridOverlapTileMap)
     console.log(gridOverlapTileMap)
     await calculateSearchResultInfo(gridOverlapTileMap)
     gridSearchLoading.value = false
@@ -388,27 +398,29 @@ const calculateSearchResultInfo = async (gridOverlapTileMap: Map<string, Overlap
     searchResultInfo.dateRange[1] = timeRange[1]
     searchResultInfo.cloudRange[0] = cloudRange[0].toFixed(2)
     searchResultInfo.cloudRange[1] = cloudRange[1].toFixed(2)
+
+    tileMergeConfig.dateRange[0] = dayjs(timeRange[0])
+    tileMergeConfig.dateRange[1] = dayjs(timeRange[1])
+    tileMergeConfig.cloudRange[0] = Number(cloudRange[0].toFixed(2))
+    tileMergeConfig.cloudRange[1] = Number(cloudRange[1].toFixed(2))
+
+    //从一景找波段信息
+    let oneSceneID = tempTileInfoViews[0].sceneId
+    let bands = await fetchBandViews(oneSceneID)
+    console.log('找到bands', bands)
+    bandViews.value = bands
+
 }
 
 //////////////////////////////////////////////////////////////
 /////////////// 影像聚合配置 //////////////////////////////////
-const bandViews = ref<BandView[]>([{
-    id: '1',
-    name: '1',
-    sceneId: '1',
-}, {
-    id: '2',
-    name: '2',
-    sceneId: '2',
-}, {
-    id: '3',
-    name: '3',
-    sceneId: '3',
-}])
+const bandViews = ref<BandView[]>([])
 const tileMergeConfig = reactive({
+    useLatestTime: false,
+    useMinCloud: false,
     dateRange: [dayjs('2010-10'), dayjs('2024-10')],
     cloudRange: [0, 100],
-    bands: [], //基于景id拿bands
+    bands: [] as BandView[], //基于景id拿bands
 })
 
 
@@ -433,28 +445,84 @@ const handleAllReset = () => {
     console.log('Reset Tile Stage')
 }
 const mergingLoading = ref<boolean>(false)
+
+const filterFinalGrids = (gridOverlapTileMap: Map<string, OverlapTileInfoView[]>): GridInfoView[] => {
+    console.log('gridOverlapTileMap', gridOverlapTileMap)
+    let finalGrids: GridInfoView[] = []
+    for (let gid of gridOverlapTileMap.keys()) {
+        const [columnId, rowId] = gid.split('-')
+        let tiles = gridOverlapTileMap.get(gid)!
+        let minCloudTile = tiles[0]
+        let latestTimeTile = tiles[0]
+
+        for (let tile of tiles) {
+            // 检查时间范围是否在配置范围内
+            if (tile.sceneTime) {
+                let tileTime = new Date(tile.sceneTime)
+                let startTime = tileMergeConfig.dateRange[0].toDate()
+                let endTime = tileMergeConfig.dateRange[1].toDate()
+                if (tileTime < startTime || tileTime > endTime) {
+                    continue
+                }
+            }
+
+            // 检查云量是否在配置范围内
+            let cloudValue = parseFloat(tile.cloud)
+            if (cloudValue < tileMergeConfig.cloudRange[0] || cloudValue > tileMergeConfig.cloudRange[1]) {
+                continue
+            }
+
+            // 查找云量最小的tile
+            if (parseFloat(tile.cloud) < parseFloat(minCloudTile.cloud)) {
+                minCloudTile = tile
+            }
+
+            // 查找时间最新的tile
+            if (tile.sceneTime && minCloudTile.sceneTime) {
+                let tileTime = new Date(tile.sceneTime)
+                let latestTime = new Date(latestTimeTile.sceneTime!)
+                if (tileTime > latestTime) {
+                    latestTimeTile = tile
+                }
+            }
+        }
+
+        // 优先使用云量最小的tile， 啥都没选就选时间最新的
+        let finalTile = tileMergeConfig.useMinCloud ? minCloudTile : latestTimeTile
+
+        finalGrids.push({
+            columnId: columnId,
+            rowId: rowId,
+            sceneId: finalTile.sceneId,
+        })
+    }
+    return finalGrids
+}
+
 const handleMergeDownload = async () => {
     console.log('Merge download clicked !', tileMergeConfig.bands)
     mergingLoading.value = true
-    // const outputFileName = 'merge_result.tif'
-    // const caseId = await startMergeTiles(
-    //     selectedImage.value!,
-    //     selectedBands.value.map((band) => band.name),
-    //     selectedGridIDs.value,
-    // )
+    const gridOverlapTileMap = ezStore.get('gridOverlapTileMap') as Map<string, OverlapTileInfoView[]>
+    const finalGrids = filterFinalGrids(gridOverlapTileMap)
+    const outputFileName = 'merge_result.tif'
+    const caseId = await startMergeTiles(
+        tileMergeConfig.bands.map((band) => band.name),
+        finalGrids,
+    )
 
-    // const statusCallback = (status: string) => {
-    //     console.log('merging status:', status)
-    // }
-    // const completeCallback = () => {
-    //     mergingLoading.value = false
-    //     downloadMergeTiles(caseId, outputFileName)
-    // }
-    // const errorCallback = () => {
-    //     mergingLoading.value = false
-    //     message.error('合并tif失败, 请检查后台服务')
-    // }
-    // await intervalQueryMergingStatus(caseId, statusCallback, completeCallback, errorCallback)
+    const statusCallback = (status: string) => {
+        console.log('merging status:', status)
+    }
+    const completeCallback = () => {
+        // 合并成功后， 下载tif
+        mergingLoading.value = false
+        downloadMergeTiles(caseId, outputFileName)
+    }
+    const errorCallback = () => {
+        mergingLoading.value = false
+        message.error('合并tif失败, 请检查后台服务')
+    }
+    await intervalQueryMergingStatus(caseId, statusCallback, completeCallback, errorCallback)
 }
 
 const handleAddToProject = () => (projectModalOpen.value = true)
@@ -470,6 +538,7 @@ const handleConfirmSelectProject = async (project: Project) => {
         message.error('上传失败')
         projectUploadLoading.value = false
     }
+    // NEED TO DO
     // await uploadTilesToProject(
     //     selectedImage.value!.id,
     //     selectedGridIDs.value,
@@ -1173,18 +1242,19 @@ const handleConfirmSelectProject = async (project: Project) => {
 .band-radio-group {
     display: flex;
     flex-wrap: wrap;
-    /* gap: 0.5rem; */
+    gap: 0.5rem;
     margin-bottom: 1rem;
 }
 
 .band-radio-button {
-    min-width: 2rem;
+    min-width: 3.5rem;
+    max-width: 3.5rem;
     flex: 1;
     text-align: center;
     transition: all 0.2s ease;
 }
 
-.band-radio-group :deep(.ant-radio-button-wrapper) {
+.band-radio-group :deep(.ant-checkbox-wrapper) {
     background-color: rgba(56, 189, 248, 0.3);
     border: none;
     color: #94a3b8;
@@ -1197,14 +1267,14 @@ const handleConfirmSelectProject = async (project: Project) => {
     transition: all 0.2s ease;
 }
 
-.band-radio-group :deep(.ant-radio-button-wrapper:hover) {
+.band-radio-group :deep(.ant-checkbox-wrapper:hover) {
     color: #e0f2fe;
     background-color: rgba(14, 165, 233, 0.1);
     border: none;
     box-shadow: 0 0 5px rgba(56, 189, 248, 0.2);
 }
 
-.band-radio-group :deep(.ant-radio-button-wrapper-checked) {
+.band-radio-group :deep(.ant-checkbox-wrapper-checked) {
     background-color: rgba(4, 167, 242, 0.733);
     border: none;
     color: #c7eeff;
@@ -1212,25 +1282,25 @@ const handleConfirmSelectProject = async (project: Project) => {
     font-weight: 500;
 }
 
-.band-radio-group :deep(.ant-radio-button-wrapper-checked:hover) {
+.band-radio-group :deep(.ant-checkbox-wrapper-checked:hover) {
     background-color: rgba(14, 165, 233, 0.3);
     border: none;
     color: #38bdf8;
 }
 
-.band-radio-group :deep(.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled):hover) {
+.band-radio-group :deep(.ant-checkbox-wrapper-checked:not(.ant-checkbox-wrapper-disabled):hover) {
     color: #38bdf8;
     background-color: rgba(14, 165, 233, 0.3);
     border: none;
 }
 
-.band-radio-group :deep(.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled):active) {
+.band-radio-group :deep(.ant-checkbox-wrapper-checked:not(.ant-checkbox-wrapper-disabled):active) {
     color: #38bdf8;
     background-color: rgba(14, 165, 233, 0.4);
     border: none;
 }
 
-.band-radio-group :deep(.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled)::before) {
+.band-radio-group :deep(.ant-checkbox-wrapper-checked:not(.ant-checkbox-wrapper-disabled)::before) {
     background-color: #000000;
     border: none;
 }

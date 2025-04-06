@@ -29,7 +29,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import ProjectCard from './smallProjectCard.vue'
-import { getProjects } from '@/api/http/analysis'
+import { getUserProjects } from '@/api/http/analysis'
 import type { Project } from './type'
 
 const modalVisible = defineModel<Boolean>({ required: true })
@@ -51,6 +51,6 @@ const handleConfirm = () => {
 }
 
 onMounted(async () => {
-    projectList.value = await getProjects()
+    projectList.value = await getUserProjects()
 })
 </script>
