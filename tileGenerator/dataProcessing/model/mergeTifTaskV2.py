@@ -1,9 +1,10 @@
 import os
+import time
 import uuid
 from datetime import datetime
 
 
-from dataProcessing.Utils.mySqlUtils import select_tile_by_column_and_row
+from dataProcessing.Utils.mySqlUtils import select_tile_by_column_and_row, select_tile_by_column_and_row_v2
 from dataProcessing.Utils.osUtils import uploadLocalFile
 from dataProcessing.Utils.tifUtils import mtif, mband, convert_tif2cog
 from dataProcessing.model.task import Task
@@ -12,20 +13,19 @@ import dataProcessing.config as config
 MINIO_ENDPOINT = f"{config.MINIO_IP}:{config.MINIO_PORT}"
 
 
-class MergeTifTask(Task):
+class MergeTifTaskV2(Task):
 
     def run(self):
         # --------- Extract the request info ---------------------------
         tiles = self.args[0].get('tiles', [])
         bands = self.args[0].get('bands', [])
-        sceneId = self.args[0].get('sceneId', "")
         if not tiles:
             return "No IDs provided", 400
         if isinstance(tiles, dict):
             tiles = [tiles]  # 转换为列表
 
         # --------- Get Source Data ------------------------------------
-        tile_list = select_tile_by_column_and_row(sceneId.lower(), tiles, bands)
+        tile_list = select_tile_by_column_and_row_v2(tiles, bands)
         merged_tif_list = []
         for band, tiles in tile_list.items():
             tif_paths = [f"http://{MINIO_ENDPOINT}/{tile['bucket']}/{tile['path']}" for tile in tiles]
