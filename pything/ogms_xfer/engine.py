@@ -50,4 +50,3 @@ class OGMS_Xfer:
 
     from .application.urlutil import URLUtil
     URL = URLUtil
-

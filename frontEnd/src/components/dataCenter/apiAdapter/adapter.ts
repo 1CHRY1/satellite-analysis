@@ -204,6 +204,11 @@ export async function mergingStatus(caseId: string) {
     let result = await SatelliteDataApi.getMergeImageTilesStatus(caseId)
     return result.data // return model status
 }
+// export async function mergingResult(caseId: string) {
+//     let result = await SatelliteDataApi.getMergeImageTilesResult(caseId)
+//     return result.data // return model result
+// }
+
 export async function downloadMergeTiles(caseId: string, name?: string) {
     SatelliteDataApi.downloadMergeImageTilesResult(caseId, name)
 }
@@ -245,35 +250,35 @@ export async function uploadTilesToProject(
 ): Promise<void> {
     return new Promise(async (resolve, reject) => {
         // open project
-        let actionParams: SatelliteDataApi.Project.ProjectActionRequest = {
-            projectId: project.projectId,
-            userId: project.createUser,
-            action: 'open',
-        }
-        const res = await SatelliteDataApi.operateProject(actionParams)
+        // let actionParams: SatelliteDataApi.Project.ProjectActionRequest = {
+        //     projectId: project.projectId,
+        //     userId: project.createUser,
+        //     action: 'open',
+        // }
+        // const res = await SatelliteDataApi.operateProject(actionParams)
 
-        if (res.status === 1) {
-            let params: SatelliteDataApi.Project.ImageTileUploadToProjectRequest = {
-                userId: project.createUser,
-                projectId: project.projectId,
-                sceneId: sceneId.toLowerCase(),
-                tileIds: tileIds,
-            }
-            await SatelliteDataApi.uploadImageTilesToProject(params)
-            successCallback()
-            setTimeout(() => {
-                let closeParams: SatelliteDataApi.Project.ProjectActionRequest = {
-                    projectId: project.projectId,
-                    userId: project.createUser,
-                    action: 'close',
-                }
-                SatelliteDataApi.operateProject(closeParams)
-            }, 5000)
-            resolve()
-        } else {
-            errorCallback()
-            reject('open project failed')
-        }
+        // if (res.status === 1) {
+        //     let params: SatelliteDataApi.Project.ImageTileUploadToProjectRequest = {
+        //         userId: project.createUser,
+        //         projectId: project.projectId,
+        //         sceneId: sceneId.toLowerCase(),
+        //         tileIds: tileIds,
+        //     }
+        //     await SatelliteDataApi.uploadImageTilesToProject(params)
+        //     successCallback()
+        //     setTimeout(() => {
+        //         let closeParams: SatelliteDataApi.Project.ProjectActionRequest = {
+        //             projectId: project.projectId,
+        //             userId: project.createUser,
+        //             action: 'close',
+        //         }
+        //         SatelliteDataApi.operateProject(closeParams)
+        //     }, 5000)
+        //     resolve()
+        // } else {
+        //     errorCallback()
+        //     reject('open project failed')
+        // }
     })
 }
 
