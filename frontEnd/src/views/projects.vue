@@ -52,7 +52,8 @@
                         ? searchedProjects
                         : myProjectsVisible
                             ? myProjectList
-                            : projectList" :key="item.projectId" :project="item" @click="enterProject(item)">
+                            : projectList" :key="item.projectId" :project="item" @click="enterProject(item)"
+                        @deleteProject=afterDeleteProject>
                     </projectCard>
                 </div>
 
@@ -235,6 +236,10 @@ const create = async () => {
     ElMessage.success('创建成功')
     createLoading.value = false
     createProjectView.value = false
+}
+
+const afterDeleteProject = async () => {
+    await getProjectsInOrder()
 }
 
 const getProjectsInOrder = async () => {

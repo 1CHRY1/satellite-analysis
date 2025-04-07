@@ -60,11 +60,11 @@ docker:
   workDir: /usr/local/coding/
 
 modelServer:
-  address: http://223.2.34.7
-  api:
-    status: /status
-    result: /result
-    merge: /merge
+  address: http://223.2.34.7:5000
+  apis:
+    status: /v0/task/status
+    result: /v0/task/result
+    merge: /v0/tif/merge_v2
     ndviPoint: /ndviPoint
     ndviArea: /ndviArea
   interval:

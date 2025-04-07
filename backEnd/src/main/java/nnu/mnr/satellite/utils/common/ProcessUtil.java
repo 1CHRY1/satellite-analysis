@@ -22,7 +22,7 @@ public class ProcessUtil {
 
     public static String getModelCaseStatus(String url, String caseId) {
         try {
-            return HttpUtil.doGet(url, JSONObject.of("caseId", caseId));
+            return HttpUtil.doGet(url, JSONObject.of("id", caseId));
         } catch (Exception e) {
             // TODO: verify
             return "STATUS WRONG";
@@ -31,7 +31,7 @@ public class ProcessUtil {
 
     public static JSONObject getModelCaseResult(String url, String caseId) {
         try {
-            String resultStr = HttpUtil.doGet(url, JSONObject.of("caseId", caseId));
+            String resultStr = HttpUtil.doGet(url, JSONObject.of("id", caseId));
             return JSONObject.parseObject(resultStr);
         } catch (Exception e) {
             // TODO: verify

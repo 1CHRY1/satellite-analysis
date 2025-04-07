@@ -211,7 +211,7 @@ const runCode = async () => {
             userId: props.userId,
         })
         if (runResult.status === 1) {
-            ElMessage.success('运行成功')
+            ElMessage.success('脚本启动')
         } else {
             ElMessage.error('启动失败，请重试或者联系管理员')
         }
@@ -243,6 +243,13 @@ const saveCode = async () => {
         ElMessage.error('代码保存失败')
     }
 }
+
+const keyboardSaveCode = (event: KeyboardEvent) => {
+    if (event.ctrlKey && event.key === 's') {
+        event.preventDefault(); // 阻止浏览器默认的保存页面行为
+        saveCode(); // 调用保存逻辑
+    }
+};
 
 // 切换环境选择下拉框状态
 
@@ -295,6 +302,7 @@ onMounted(async () => {
     } else {
         ElMessage.error('启动失败，请刷新页面或联系管理员')
     }
+    window.addEventListener('keydown', keyboardSaveCode);
 })
 onBeforeUnmount(async () => {
     let result = await projectOperating({
@@ -307,6 +315,7 @@ onBeforeUnmount(async () => {
     } else {
         console.error('关闭果然失败了')
     }
+    window.removeEventListener('keydown', keyboardSaveCode);
 })
 </script>
 
