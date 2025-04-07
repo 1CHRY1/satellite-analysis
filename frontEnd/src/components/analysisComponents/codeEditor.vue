@@ -244,6 +244,13 @@ const saveCode = async () => {
     }
 }
 
+const keyboardSaveCode = (event) => {
+    if (event.ctrlKey && event.key === 's') {
+        event.preventDefault(); // 阻止浏览器默认的保存页面行为
+        saveCode(); // 调用保存逻辑
+    }
+};
+
 // 切换环境选择下拉框状态
 
 // const toggleDropdown = () => {
@@ -295,6 +302,7 @@ onMounted(async () => {
     } else {
         ElMessage.error('启动失败，请刷新页面或联系管理员')
     }
+    window.addEventListener('keydown', keyboardSaveCode);
 })
 onBeforeUnmount(async () => {
     let result = await projectOperating({
@@ -307,6 +315,7 @@ onBeforeUnmount(async () => {
     } else {
         console.error('关闭果然失败了')
     }
+    window.removeEventListener('keydown', keyboardSaveCode);
 })
 </script>
 
