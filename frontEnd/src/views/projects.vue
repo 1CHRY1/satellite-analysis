@@ -1,66 +1,43 @@
 <template>
     <div>
         <projectsBg
-            class="absolute inset-0 z-0 h-full w-full overflow-hidden bg-[radial-gradient(ellipse_at_bottom,_#1b2735_0%,_#090a0f_100%)]"
-        >
+            class="absolute inset-0 z-0 h-full w-full overflow-hidden bg-[radial-gradient(ellipse_at_bottom,_#1b2735_0%,_#090a0f_100%)]">
         </projectsBg>
         <div class="relative z-99 flex flex-col items-center justify-center">
             <div class="my-10 flex w-[50vw] flex-col items-center justify-center">
                 <img src="@/assets/image/projectsName.png" class="h-12 w-fit" alt="" />
                 <div class="searchContainer mt-6 w-[100%]">
                     <div class="model_research">
-                        <input
-                            type="text"
-                            autocomplete="false"
-                            placeholder="根据项目名称、创建人或项目信息进行搜索，搜索词为空则显示所有项目"
-                            class="model_research_input"
-                            v-model="searchInput"
-                            style="font-size: 14px"
-                            @keyup.enter="researchProjects"
-                        />
+                        <input type="text" autocomplete="false" placeholder="根据项目名称、创建人或项目信息进行搜索，搜索词为空则显示所有项目"
+                            class="model_research_input" v-model="searchInput" style="font-size: 14px"
+                            @keyup.enter="researchProjects" />
 
-                        <el-button
-                            type="primary"
-                            color="#049f40"
-                            style="
+                        <el-button type="primary" color="#049f40" style="
                                 border-left: none;
                                 border-top-left-radius: 0px;
                                 border-bottom-left-radius: 0px;
                                 border-color: #ffffff;
                                 font-size: 14px;
                                 height: 2rem;
-                            "
-                            @click="researchProjects"
-                        >
+                            " @click="researchProjects">
                             <Search class="h-4" />
                             搜索
                         </el-button>
                     </div>
-                    <el-button
-                        type="primary"
-                        color="#049f40"
-                        style="
+                    <el-button type="primary" color="#049f40" style="
                             margin-left: 10px;
                             border-color: #049f40;
                             font-size: 14px;
                             height: 2rem;
-                        "
-                        @click="createProjectView = !createProjectView"
-                    >
+                        " @click="createProjectView = !createProjectView">
                         {{ createProjectView ? '取消创建' : '创建项目' }}
                     </el-button>
-                    <el-button
-                        type="primary"
-                        color="#049f40"
-                        :disabled="searchProjectsVisible"
-                        style="
+                    <el-button type="primary" color="#049f40" :disabled="searchProjectsVisible" style="
                             margin-left: 10px;
                             border-color: #049f40;
                             font-size: 14px;
                             height: 2rem;
-                        "
-                        @click="viewMyProjects"
-                    >
+                        " @click="viewMyProjects">
                         {{ myProjectsVisible ? '所有项目' : '我的项目' }}
                     </el-button>
                 </div>
@@ -69,29 +46,18 @@
             <!-- 计算合适的高度，header是56px，搜索184px，即 50vh = 1/2x + 56px + 184px，x为容器高度，这样创建弹窗在容器内居中就会在视口居中 -->
             <div class="relative flex h-[calc(100vh-184px-56px)] w-full justify-center">
                 <!-- 计算合适的宽度 -->
-                <div
-                    v-if="!createProjectView"
-                    class="grid gap-12 overflow-y-auto p-3"
-                    :style="{ gridTemplateColumns: `repeat(${columns}, ${cardWidth}px)` }"
-                >
-                    <projectCard
-                        v-for="item in searchProjectsVisible
-                            ? searchedProjects
-                            : myProjectsVisible
-                              ? myProjectList
-                              : projectList"
-                        :key="item.projectId"
-                        :project="item"
-                        @click="enterProject(item)"
-                    >
+                <div v-if="!createProjectView" class="grid gap-12 overflow-y-auto p-3"
+                    :style="{ gridTemplateColumns: `repeat(${columns}, ${cardWidth}px)` }">
+                    <projectCard v-for="item in searchProjectsVisible
+                        ? searchedProjects
+                        : myProjectsVisible
+                            ? myProjectList
+                            : projectList" :key="item.projectId" :project="item" @click="enterProject(item)">
                     </projectCard>
                 </div>
 
                 <!-- 创建项目的卡片 -->
-                <div
-                    v-if="createProjectView"
-                    class="absolute top-[calc(50vh-240px-206px)] flex opacity-80"
-                >
+                <div v-if="createProjectView" class="absolute top-[calc(50vh-240px-206px)] flex opacity-80">
                     <div class="w-96 rounded-xl bg-gray-700 p-6 text-white shadow-xl">
                         <h2 class="mb-4 text-center text-xl font-semibold">创建项目</h2>
 
@@ -100,21 +66,16 @@
                             <div style="color: red; margin-right: 4px">*</div>
                             项目名称
                         </label>
-                        <input
-                            v-model="newProject.projectName"
-                            type="text"
-                            class="w-full rounded bg-gray-800 p-2 text-white focus:ring-2 focus:ring-green-400 focus:outline-none"
-                        />
+                        <input v-model="newProject.projectName" type="text"
+                            class="w-full rounded bg-gray-800 p-2 text-white focus:ring-2 focus:ring-green-400 focus:outline-none" />
 
                         <!-- 运行环境 -->
                         <label class="mt-3 mb-1 flex text-sm">
                             <div style="color: red; margin-right: 4px">*</div>
                             运行环境
                         </label>
-                        <select
-                            v-model="newProject.environment"
-                            class="w-full rounded bg-gray-800 p-2 text-white focus:ring-2 focus:ring-green-400 focus:outline-none"
-                        >
+                        <select v-model="newProject.environment"
+                            class="w-full rounded bg-gray-800 p-2 text-white focus:ring-2 focus:ring-green-400 focus:outline-none">
                             <option value="Python2_7" disabled>Python 2.7 ( 暂不支持 )</option>
                             <option value="Python3_9">Python 3.9</option>
                             <option value="Python3_10" disabled>Python 3.10 ( 暂不支持 )</option>
@@ -140,10 +101,8 @@
                             <div style="color: red; margin-right: 4px">*</div>
                             描述
                         </label>
-                        <textarea
-                            v-model="newProject.description"
-                            class="h-20 w-full rounded bg-gray-800 p-2 text-white focus:ring-2 focus:ring-green-400 focus:outline-none"
-                        ></textarea>
+                        <textarea v-model="newProject.description"
+                            class="h-20 w-full rounded bg-gray-800 p-2 text-white focus:ring-2 focus:ring-green-400 focus:outline-none"></textarea>
 
                         <!-- 权限 -->
                         <!-- <label class="block text-sm mt-3 mb-1">* 权限</label>
@@ -159,16 +118,15 @@
 
                         <!-- 按钮 -->
                         <div class="mt-6 flex justify-center">
-                            <button
-                                @click="create"
-                                class="mx-2 rounded-xl bg-green-600 px-6 py-2 hover:bg-green-500"
-                            >
-                                创建
+                            <button @click="create" class="mx-2 rounded-xl bg-green-600 px-6 py-2 hover:bg-green-500"
+                                :class="{ 'cursor-pointer': !createLoading }" :disabled="createLoading">
+                                <div v-if="createLoading" class="is-loading flex items-center">
+                                    <Loading class="h-4 w-4 mr-1" />创建
+                                </div>
+                                <div v-else>创建</div>
                             </button>
-                            <button
-                                @click="createProjectView = false"
-                                class="mx-2 !ml-4 rounded-xl bg-gray-500 px-6 py-2 hover:bg-gray-400"
-                            >
+                            <button @click="createProjectView = false"
+                                class="mx-2 !ml-4 rounded-xl bg-gray-500 px-6 py-2 hover:bg-gray-400 cursor-pointer">
                                 取消
                             </button>
                         </div>
@@ -183,9 +141,9 @@
 import { ref, onMounted, onUnmounted, type Ref } from 'vue'
 import projectsBg from '@/components/projects/projectsBg.vue'
 import { Search } from 'lucide-vue-next'
-import { getProjects, createProject, getModels, getMethods } from '@/api/http/analysis'
+import { getProjects, createProject } from '@/api/http/analysis'
 import projectCard from '@/components/projects/projectCard.vue'
-
+import { Loading } from "@element-plus/icons-vue"
 import type { project, newProject } from '@/type/analysis'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
@@ -229,6 +187,7 @@ const viewMyProjects = () => {
  */
 const projectList: Ref<project[]> = ref([])
 const createProjectView = ref(false)
+const createLoading = ref(false)
 const newProject = ref({
     projectName: '',
     environment: 'Python3_9',
@@ -266,15 +225,16 @@ const create = async () => {
         ElMessage.error('该项目已存在，请更换项目名称')
         return
     }
+    createLoading.value = true
     let createBody = {
         ...newProject.value,
         userId,
     }
-    // 先关闭再发起请求，起到防抖作用
-    createProjectView.value = false
-    await createProject(createBody)
-    projectList.value = await getProjects()
+    let createRes = await createProject(createBody)
+    router.push(`/project/${createRes.projectId}`)
     ElMessage.success('创建成功')
+    createLoading.value = false
+    createProjectView.value = false
 }
 
 const getProjectsInOrder = async () => {
@@ -285,33 +245,11 @@ const getProjectsInOrder = async () => {
 onMounted(async () => {
     await getProjectsInOrder()
 
-    console.log('所有项目：', projectList.value)
-    updateColumns()
-    window.addEventListener('resize', updateColumns)
-    console.log(
-        await getModels({
-            asc: false,
-            page: 1,
-            pageSize: 18,
-            searchText: '',
-            sortField: 'createTime',
-            tagClass: 'problemTags',
-            tagNames: [''],
-        }),
-        12132,
-    )
-    console.log(
-        await getMethods({
-            asc: false,
-            page: 1,
-            pageSize: 18,
-            searchText: '',
-            sortField: 'createTime',
-            tagClass: 'problemTags',
-            tagNames: [''],
-        }),
-        13132,
-    )
+    console.log("所有项目：", projectList.value)
+    updateColumns();
+    window.addEventListener("resize", updateColumns);
+
+
 })
 
 onUnmounted(() => {

@@ -53,6 +53,13 @@ def merge_tifs():
     task_id = scheduler.start_task('merge_tif', data)
     return api_response(data={'taskId': task_id})
 
+@bp.route(config.API_TIF_MERGE_V2, methods=['POST'])
+def merge_tifs_v2():
+    scheduler = init_scheduler()
+    data = request.json
+    task_id = scheduler.start_task('merge_tif_v2', data)
+    return api_response(data={'taskId': task_id})
+
 
 @bp.route(config.API_TASK_RESULT, methods=['GET'])
 def get_result():
