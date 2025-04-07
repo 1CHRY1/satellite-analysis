@@ -77,7 +77,7 @@ def merge_tif(tif_paths, output_path):
 
 if __name__ == '__main__':
     
-    config_file_path = "example.json"
+    config_file_path = "config.json"
     xfer.initialize(config_file_path)
     
     scene = xfer.Scene("SC906772444")
@@ -85,7 +85,7 @@ if __name__ == '__main__':
     image_green = scene.get_band_image("3")
     image_blue = scene.get_band_image("2")
     
-    with open(xfer.URL.dataUrl('region.geojson'), "r") as f:
+    with open(xfer.URL.dataUrl('区域.geojson'), "r") as f:
         region = json.load(f)
     
     red_region_tiles = image_red.get_tiles_by_polygon(region)
