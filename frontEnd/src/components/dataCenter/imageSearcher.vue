@@ -160,11 +160,11 @@
                     <div class="section-content">
                         <div class="config-container">
                             <div class="config-item">
-                                <div class="config-label">
+                                <div class="config-label relative">
                                     <CalendarIcon :size="16" class="config-icon" />
                                     <span>时间</span>
                                     <a-checkbox v-model:checked="tileMergeConfig.useLatestTime"
-                                        class="relative left-40 !text-sky-300">
+                                        class="absolute right-1 !text-sky-300">
                                         时间最近优先
                                     </a-checkbox>
                                 </div>
@@ -174,11 +174,11 @@
                                 </div>
                             </div>
                             <div class="config-item">
-                                <div class="config-label">
+                                <div class="config-label relative">
                                     <CloudIcon :size="16" class="config-icon" />
                                     <span>云量</span>
                                     <a-checkbox v-model:checked="tileMergeConfig.useMinCloud"
-                                        class="relative left-40 !text-sky-300">
+                                        class="absolute right-1 !text-sky-300">
                                         云量最小优先
                                     </a-checkbox>
                                 </div>

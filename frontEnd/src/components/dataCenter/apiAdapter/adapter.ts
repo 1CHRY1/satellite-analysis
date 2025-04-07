@@ -313,6 +313,23 @@ export async function queryOverlapTileInfo(product: ProductView, gridId: string)
     return overlapTileInfos
 }
 
+// 重试函数封装
+async function withRetry<T>(fn: () => Promise<T>, retries: number = 3, delay: number = 500): Promise<T> {
+    let lastError;
+    for (let attempt = 0; attempt < retries; attempt++) {
+        try {
+            return await fn();
+        } catch (error) {
+            lastError = error;
+            if (attempt < retries - 1) {
+                await new Promise(res => setTimeout(res, delay));
+            }
+        }
+    }
+    throw lastError;
+}
+
+
 // 缓存对象，用于存储已查询过的瓦片信息
 const tileInfoCache = new Map<string, OverlapTileInfoView[]>();
 
@@ -334,7 +351,8 @@ export async function queryOverlapTilesMap(product: ProductView, gridIDs: string
             }
 
             // 如果缓存中没有，则发起请求
-            const overlapTileInfos = await queryOverlapTileInfo(product, gridID);
+            // const overlapTileInfos = await queryOverlapTileInfo(product, gridID);
+            const overlapTileInfos = await withRetry(() => queryOverlapTileInfo(product, gridID));
             map.set(gridID, overlapTileInfos);
 
             // 存入缓存
