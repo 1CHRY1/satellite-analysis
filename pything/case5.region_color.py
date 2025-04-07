@@ -4,7 +4,6 @@ import numpy as np
 from PIL import Image
 import json
 
-TEMP_OUTPUT_DIR = r'E:\Landset8_test\test'
 
 def read_band(path):
     """读取单波段栅格数据"""
@@ -97,23 +96,22 @@ if __name__ == '__main__':
     green_tif_paths = [xfer.URL.resolve(tile.url) for tile in green_region_tiles]
     blue_tif_paths = [xfer.URL.resolve(tile.url) for tile in blue_region_tiles]
     
+    print(f"检索到{len(red_tif_paths)}个红光波段瓦片...")
+    print(f"检索到{len(green_tif_paths)}个绿光波段瓦片...")
+    print(f"检索到{len(blue_tif_paths)}个蓝光波段瓦片...")
+    
     ref_tif_path = xfer.URL.outputUrl('red.tif')
     green_tif_path = xfer.URL.outputUrl('green.tif')
     blue_tif_path = xfer.URL.outputUrl('blue.tif')
     color_tif_path = xfer.URL.outputUrl('color.tif')
     
     merge_tif(red_tif_paths, ref_tif_path)
+    print(f"红光波段影像合并完成 {ref_tif_path}")
     merge_tif(green_tif_paths, green_tif_path)
+    print(f"绿光波段影像合并完成 {green_tif_path}")
     merge_tif(blue_tif_paths, blue_tif_path)
+    print(f"蓝光波段影像合并完成 {blue_tif_path}")
     
     generateColorfulTile(ref_tif_path, green_tif_path, blue_tif_path, color_tif_path)
-    
-    
-    
-   
-    red_path = r'E:\Landset8_test\LC08_L2SP_118038_20240320_20240402_02_T1\LC08_L2SP_118038_20240320_20240402_02_T1_SR_B4.TIF'
-    green_path = r'E:\Landset8_test\LC08_L2SP_118038_20240320_20240402_02_T1\LC08_L2SP_118038_20240320_20240402_02_T1_SR_B3.TIF'
-    blue_path = r'E:\Landset8_test\LC08_L2SP_118038_20240320_20240402_02_T1\LC08_L2SP_118038_20240320_20240402_02_T1_SR_B2.TIF'
-    output_path = r'E:\Landset8_test\test\output.tiff'
-    generateColorfulTile(red_path, green_path, blue_path, output_path)
-    print(f"真彩色合成已完成 {output_path}")
+    print(f"真彩色合成已完成!")
+
