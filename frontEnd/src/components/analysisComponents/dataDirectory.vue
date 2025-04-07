@@ -15,16 +15,18 @@
 
             <div class="flex">
                 <div @click="refreshTableData"
-                    class="mr-2.5 my-1.5 flex w-fit cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-[14px] text-[#818999] shadow-md">
+                    class="mr-2.5 my-1.5 flex w-fit cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-[14px] text-[#818999] shadow-md"
+                    title="刷新数据">
                     <RefreshCcw :size="16" class="text-primary" />
                 </div>
                 <div @click="triggerFileSelect"
-                    class="mr-2.5 my-1.5 flex w-fit cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-[14px] text-[#818999] shadow-md">
+                    class="mr-2.5 my-1.5 flex w-fit cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-[14px] text-[#818999] shadow-md"
+                    title="上传geojson">
                     <Upload :size="16" class="text-primary" />
                 </div>
 
                 <!-- 隐藏文件选择框 -->
-                <input ref="fileInput" type="file" accept=".json,.txt" @change="uploadFile" class="hidden" />
+                <input ref="fileInput" type="file" accept=".json,.txt,.geojson" @change="uploadFile" class="hidden" />
 
                 <!-- <div @click=""
                     class="mr-2.5 my-1.5 flex w-fit cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-[14px] text-[#818999] shadow-md">
@@ -150,10 +152,8 @@ const uploadFile = async (event: Event) => {
         try {
 
             const fileContent = e.target?.result as string
-            console.log(fileContent, 'fileContent');
 
             const jsonData = JSON.parse(fileContent)
-            console.log(jsonData, 'jsonData1');
 
             const res = await uploadGeoJson({
                 userId: props.userId,
@@ -220,11 +220,11 @@ const handleCellClick = async (item: dockerData, column: string) => {
                     let tileUrlObj = await getTileFromMiniIo(targetInMiniIo.dataId)
                     let wholeTileUrl
                     if (tileUrlObj.object.includes('ndvi')) {
-                        wholeTileUrl =
-                            tileUrlObj.tilerUrl + '/{z}/{x}/{y}.png?object=/' + tileUrlObj.object + "&colorStyle=red2green&range=[-0.8,0.8]"
+                        wholeTileUrl = tileUrlObj.tilerUrl + '/{z}/{x}/{y}.png?object=/' + tileUrlObj.object + "&colorStyle=red2green&range=[0,0.72]"
+                    } else if (tileUrlObj.object.includes('pbty')) {
+                        wholeTileUrl = tileUrlObj.tilerUrl + '/{z}/{x}/{y}.png?object=/' + tileUrlObj.object + "&colorStyle=red2green&range=[-0.8,0.8]"
                     } else {
-                        wholeTileUrl =
-                            tileUrlObj.tilerUrl + '/{z}/{x}/{y}.png?object=/' + tileUrlObj.object
+                        wholeTileUrl = tileUrlObj.tilerUrl + '/{z}/{x}/{y}.png?object=/' + tileUrlObj.object
                     }
 
                     console.log(tileUrlObj, wholeTileUrl, 'wholeTileUrl')
