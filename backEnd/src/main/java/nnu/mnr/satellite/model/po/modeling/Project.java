@@ -35,7 +35,6 @@ public class Project {
     private LocalDateTime createTime;
     private String dataBucket;
 
-    private String localPyPath;
     private String workDir;
     private String pyPath;
     private String serverDir;

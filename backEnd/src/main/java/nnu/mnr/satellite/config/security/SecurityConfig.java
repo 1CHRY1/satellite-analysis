@@ -1,5 +1,6 @@
 package nnu.mnr.satellite.config.security;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -44,7 +45,19 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/user/register", "/api/v1/user/login", "/api/v1/user/refresh").permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((req, resp, authEx) -> {
+                            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
+                            resp.setContentType("application/json");
+                            resp.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"" + authEx.getMessage() + "\"}");
+                        })
+                        .accessDeniedHandler((req, resp, accessEx) -> {
+                            resp.setStatus(HttpServletResponse.SC_FORBIDDEN); // 403
+                            resp.setContentType("application/json");
+                            resp.getWriter().write("{\"error\": \"Forbidden\", \"message\": \"" + accessEx.getMessage() + "\"}");
+                        })
+                );
 
         return http.build();
     }
