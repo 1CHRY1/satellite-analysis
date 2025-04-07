@@ -1,12 +1,10 @@
 package nnu.mnr.satellite.service.common;
 
-import com.jcraft.jsch.ChannelSftp;
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.Session;
-import com.jcraft.jsch.SftpException;
+import com.jcraft.jsch.*;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.model.pojo.common.SftpConn;
 import nnu.mnr.satellite.config.web.JSchConnectionManager;
+import org.apache.commons.compress.utils.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -73,6 +71,62 @@ public class SftpDataService {
         });
     }
 
+    public void createRemoteDir(String remoteDirPath, int permissions) {
+        executeWithChannel(channelSftp -> {
+            try {
+                createDirRecursive(channelSftp, remoteDirPath, permissions);
+                log.info("Directory created successfully: " + remoteDirPath);
+            } catch (SftpException e) {
+                log.error("Failed to create directory: " + remoteDirPath, e);
+                throw new RuntimeException("Failed to create directory: " + remoteDirPath, e);
+            }
+        });
+    }
+
+    private void createDirRecursive(ChannelSftp channelSftp, String remoteDirPath, int permissions) throws SftpException {
+        String normalizedPath = remoteDirPath.replaceAll("/+", "/").replaceAll("/$", "");
+        if (normalizedPath.isEmpty() || "/".equals(normalizedPath)) {
+            return;
+        }
+        try {
+            channelSftp.ls(normalizedPath);
+        } catch (SftpException e) {
+            if (e.id == ChannelSftp.SSH_FX_NO_SUCH_FILE) {
+                int lastSlashIndex = normalizedPath.lastIndexOf('/');
+                if (lastSlashIndex > 0) {
+                    String parentPath = normalizedPath.substring(0, lastSlashIndex);
+                    createDirRecursive(channelSftp, parentPath, permissions);
+                }
+                channelSftp.mkdir(normalizedPath);
+                if (permissions != -1) {
+                    channelSftp.chmod(permissions, normalizedPath);
+                }
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    public void uploadFileFromStream(InputStream inputStream, String remoteFilePath) {
+        executeWithChannel(channelSftp -> {
+            try (OutputStream outputStream = channelSftp.put(remoteFilePath)) {
+                IOUtils.copy(inputStream, outputStream); // 使用 Apache Commons IO 工具
+                outputStream.flush();
+            } catch (SftpException | IOException e) {
+                log.error("Failed to upload file to " + remoteFilePath, e);
+                throw new RuntimeException("Upload from stream operation failed", e);
+            } finally {
+                if (inputStream != null) {
+                    try {
+                        inputStream.close();
+                    } catch (IOException e) {
+                        log.error("Failed to close input stream", e);
+                    }
+                }
+            }
+        });
+    }
+
     public void uploadFile(String localFilePath, String remoteFilePath) {
         executeWithChannel(channelSftp -> {
             try (FileInputStream fis = new FileInputStream(localFilePath)) {
@@ -84,11 +138,33 @@ public class SftpDataService {
         });
     }
 
+    private void deleteFile(ChannelSftp channelSftp, String path) throws SftpException, JSchException, IOException {
+        try {
+            channelSftp.rm(path);
+        } catch (SftpException e) {
+            if (e.getMessage().contains("Permission denied")) {
+                Session session = jschConnectionManager.getSession();
+                ChannelExec channelExec = (ChannelExec) session.openChannel("exec");
+                channelExec.setCommand("sudo /bin/rm -f " + path);
+                channelExec.setErrStream(System.err);
+                InputStream in = channelExec.getInputStream();
+                channelExec.connect();
+                if (channelExec.getExitStatus() != 0) {
+                    log.info("Failed to delete file with sudo, exit status: " + channelExec.getExitStatus());
+                }
+                channelExec.disconnect();
+                jschConnectionManager.returnSession(session);
+            } else {
+                log.info("Failed to delete file: " + path, e);
+            }
+        }
+    }
+
     public void deleteFolder(String folderPath) {
         executeWithChannel(channelSftp -> {
             try {
                 deleteFolderRecursive(channelSftp, folderPath);
-            } catch (SftpException e) {
+            } catch (SftpException | JSchException | IOException e) {
                 log.error("Failed to delete folder: " + folderPath, e);
                 throw new RuntimeException("Delete folder operation failed", e);
             }
@@ -134,7 +210,7 @@ public class SftpDataService {
         }
     }
 
-    private void deleteFolderRecursive(ChannelSftp channelSftp, String folderPath) throws SftpException {
+    private void deleteFolderRecursive(ChannelSftp channelSftp, String folderPath) throws SftpException, JSchException, IOException {
         try {
             channelSftp.cd(folderPath);
         } catch (SftpException e) {
@@ -151,7 +227,8 @@ public class SftpDataService {
             if (entry.getAttrs().isDir()) {
                 deleteFolderRecursive(channelSftp, fullPath);
             } else {
-                channelSftp.rm(fullPath);
+//                channelSftp.rm(fullPath);
+                deleteFile(channelSftp, fullPath);
             }
         }
         channelSftp.cd("..");
@@ -203,8 +280,8 @@ public class SftpDataService {
 
             int lastSlashIndex = localProjectPath.lastIndexOf('/');
             // 上传 TransferEngine 目录
-            String packagePath = volumePath + "TransferEngine/";
-            uploadDirectory(channelSftp, localProjectPath.substring(0, lastSlashIndex) + "/devCli/TransferEngine", packagePath);
+            String packagePath = volumePath + "ogms_xfer/";
+            uploadDirectory(channelSftp, localProjectPath.substring(0, lastSlashIndex) + "/devCli/ogms_xfer", packagePath);
             channelSftp.chmod(0777, packagePath);
 
             // 上传 main.py 文件

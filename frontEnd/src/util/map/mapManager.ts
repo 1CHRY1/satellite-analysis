@@ -3,6 +3,9 @@ import 'mapbox-gl/dist/mapbox-gl.css'
 import MapboxDraw from '@mapbox/mapbox-gl-draw'
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css'
 import { StyleMap, type Style } from './tianMapStyle'
+import { ezStore } from '@/store'
+import { useGridStore } from '@/store/gridStore'
+import type { polygonGeometry } from '../share.type'
 
 class MapManager {
     private static instance: MapManager | null
@@ -10,7 +13,7 @@ class MapManager {
     private draw: MapboxDraw | null = null
     private initPromise: Promise<mapboxgl.Map> | null = null
 
-    private constructor() {}
+    private constructor() { }
 
     public static getInstance(): MapManager {
         if (!MapManager.instance) {
@@ -19,17 +22,45 @@ class MapManager {
         return MapManager.instance
     }
 
-    async init(container: string | HTMLDivElement): Promise<mapboxgl.Map> {
+    async init(
+        container: string | HTMLDivElement,
+        style: Style = 'vector',
+        proj: 'mercator' | 'globe' = 'mercator',
+    ): Promise<mapboxgl.Map> {
         if (this.map) return this.map
         this.initPromise = new Promise((resolve) => {
+            const conf = ezStore.get('conf')
             this.map = new mapboxgl.Map({
                 container,
-                projection: 'mercator',
+                projection: proj,
                 center: [117, 36],
                 zoom: 2,
                 maxZoom: 22,
-                style: StyleMap.vector,
+                style: StyleMap[style],
+                transformRequest: (url) => {
+                    if (url.indexOf(conf['back_app']) > -1) {
+                        const token = localStorage.getItem('token')
+                        return {
+                            url: url,
+                            headers: { Authorization: `Bearer ${token}` },
+                            credentials: 'include',
+                        }
+                    }
+                    return {
+                        url,
+                    }
+                },
             })
+            const logo = document.querySelector('.mapboxgl-ctrl-logo') as HTMLElement
+            logo.style.display = 'none'
+
+
+
+            const scale = new mapboxgl.ScaleControl({
+                maxWidth: 100,
+                unit: 'metric'
+            });
+            this.map.addControl(scale, 'bottom-left');
 
             this.map.once('load', () => {
                 this.initDrawControl()
@@ -39,7 +70,7 @@ class MapManager {
         return this.initPromise
     }
 
-    public registerDrawCallback(): void {}
+    public registerDrawCallback(): void { }
 
     private initDrawControl(): void {
         if (!this.map) return
@@ -65,7 +96,8 @@ class MapManager {
         this.map.on('draw.create', () => {
             const features = this.draw?.getAll().features
             if (features?.length) {
-                console.log('绘制的图形:', features[0])
+                ezStore.set('polygonFeature', features[0].geometry)
+                useGridStore().setPolygon(features[0].geometry as polygonGeometry)
             }
         })
     }
@@ -111,7 +143,11 @@ class MapManager {
 export const mapManager = MapManager.getInstance()
 
 /////// 外部简单调用 //////////////////////////////////
-export const initMap = (container: string | HTMLDivElement) => mapManager.init(container)
+export const initMap = (
+    container: string | HTMLDivElement,
+    style: Style = 'vector',
+    proj: 'mercator' | 'globe' = 'mercator',
+) => mapManager.init(container, style, proj)
 
 export { type Style }
 //////// Example //////////////////////////////////

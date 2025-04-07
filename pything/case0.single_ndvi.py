@@ -34,7 +34,7 @@ def calculate_ndvi(nir_path, red_path, output_path):
 
 if __name__ == "__main__":
     
-    config_file_path = "D:\\t\\3\\config.example.json"
+    config_file_path = "config.json"
     xfer.initialize(config_file_path)
 
     # 1. 检索影像
@@ -53,21 +53,20 @@ if __name__ == "__main__":
     print(' --------------------------------- ')
     
 
-    # 2.b.将云端数据下载到容器后计算 
-    start_time = datetime.datetime.now()
-    nir_band_image = scene.get_band_image(5)
-    red_band_image = scene.get_band_image(4)
-    local_nir_path = xfer.URL.dataUrl('/nir.tif')
-    local_red_path = xfer.URL.dataUrl('/red.tif')
-    
-    nir_band_image.pull(local_nir_path)
-    red_band_image.pull(local_red_path)
-    
-    end_time = datetime.datetime.now()
-    print(f"下载云端数据时间: {end_time - start_time}")
-    
-    start_time = datetime.datetime.now()
-    calculate_ndvi(local_nir_path, local_red_path, xfer.URL.outputUrl('/ndvibylocal.tif'))
-    end_time = datetime.datetime.now()
-    print(f"本地资源计算NDVI时间: {end_time - start_time}")
-    print(' --------------------------------- ')
+    # 2.b.将云端数据下载到容器后计算     # start_time = datetime.datetime.now()
+    #     # nir_band_image = scene.get_band_image(5)
+    #     # red_band_image = scene.get_band_image(4)
+    #     # local_nir_path = xfer.URL.dataUrl('/nir.tif')
+    #     # local_red_path = xfer.URL.dataUrl('/red.tif')
+    #     #
+    #     # nir_band_image.pull(local_nir_path)
+    #     # red_band_image.pull(local_red_path)
+    #     #
+    #     # end_time = datetime.datetime.now()
+    #     # print(f"下载云端数据时间: {end_time - start_time}")
+    #     #
+    #     # start_time = datetime.datetime.now()
+    #     # calculate_ndvi(local_nir_path, local_red_path, xfer.URL.outputUrl('/ndvibylocal.tif'))
+    #     # end_time = datetime.datetime.now()
+    #     # print(f"本地资源计算NDVI时间: {end_time - start_time}")
+    #     # print(' --------------------------------- ')

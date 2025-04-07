@@ -273,4 +273,23 @@ public class DockerService {
         }
     }
 
+    public void runCMDInContainerWithoutInteraction(String userId, String projectId, String containerId, String command) {
+        try{
+            String[] cmd = {"/bin/bash", "-c", command};
+            ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(containerId)
+                    .withAttachStdout(true)
+                    .withAttachStderr(true)
+                    .withTty(false)
+                    .withAttachStdin(false)
+                    .withCmd(cmd)
+                    .exec();
+
+            ModelResultCallBack callback = new ModelResultCallBack(userId, projectId, modelSocketService);
+            String exeId = execCreateCmdResponse.getId();
+            dockerClient.execStartCmd(exeId).withDetach(true).exec(callback).awaitCompletion(300, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }

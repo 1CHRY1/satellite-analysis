@@ -1,6 +1,10 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios'
 import { message } from 'ant-design-vue'
 import ezStore from '@/store/ezStore'
+import router from '@/router'
+import { useUserStore } from '@/store/userStore'
+
+const userStore = useUserStore()
 
 class HttpClient {
     private instance: AxiosInstance
@@ -8,7 +12,7 @@ class HttpClient {
     constructor(baseURL: string) {
         this.instance = axios.create({
             baseURL,
-            timeout: 5000,
+            timeout: 10000,
         })
 
         this.initializeInterceptors()
@@ -35,21 +39,47 @@ class HttpClient {
             (response) => {
                 return response.data
             },
-            (error) => {
-                if (error.response) {
-                    const status = error.response.status
-                    const errorMsg = `请求失败 (${status}): ${error.response.data?.message || error.message}`
-                    console.error(errorMsg, error)
-                    message.error(errorMsg)
-                } else if (error.request) {
-                    const errorMsg = `请求已发出，但服务器无响应`
-                    console.error(errorMsg, error)
-                    message.error(errorMsg)
-                } else {
-                    const errorMsg = `错误: ${error.message}`
-                    console.error(errorMsg, error)
-                    message.error(errorMsg)
+            async (error) => {
+                console.log('!!! response error', error)
+                if (error.response?.status === 401) {
+                    // 🚨 Token 过期，尝试刷新
+                    const refreshToken = localStorage.getItem('refreshToken')
+                    if (!refreshToken) {
+                        // 没有 refreshToken，跳转登录页
+                        userStore.logout()
+                        router.push('/login')
+                        return Promise.reject(error)
+                    }
+                    try {
+                        //  发送请求获取新 token
+                        // console.log('刷新 Token ', refreshToken)
+
+                        const res = await axios.post(
+                            'api/user/refresh',
+                            {},
+                            {
+                                headers: {
+                                    'Refresh-Token': refreshToken,
+                                },
+                            },
+                        )
+                        // console.log('刷新 Token 成功', res.data)
+
+                        if (!!res.data.data.accessToken) {
+                            //  存储新 token
+                            localStorage.setItem('token', res.data.data.accessToken)
+                            console.log('刷新 Token 成功', res.data.data.accessToken)
+                            //  重新请求失败的 API
+                            error.config.headers.Authorization = `Bearer ${res.data.data.accessToken}`
+                            return this.instance(error.config)
+                        }
+                    } catch (err) {
+                        console.error('刷新 Token 失败', err)
+                        router.push('/login')
+                        return Promise.reject(err)
+                    }
                 }
+
                 return Promise.reject(error)
             },
         )

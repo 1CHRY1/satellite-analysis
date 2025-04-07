@@ -48,6 +48,8 @@ public class Project {
     private HashSet<String> packages;
 
     private String createUser;
+    private String createUserName;
+    private String createUserEmail;
     private HashSet<String> joinedUsers;
 
     String description;

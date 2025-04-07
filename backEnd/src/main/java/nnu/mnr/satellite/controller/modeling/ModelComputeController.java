@@ -44,14 +44,4 @@ public class ModelComputeController {
                 .body(modelData);
     }
 
-    // Business Controllers ******************************
-    @PostMapping("/compute/ndvi/{modelName}")
-    public ResponseEntity<String> getNDVIPoints(@PathVariable String modelName, @RequestBody NdviDTO ndviDTO) {
-        return switch (modelName) {
-            case "point" -> ResponseEntity.ok(modelServerService.getNDVIByPoint(ndviDTO));
-            case "area" -> ResponseEntity.ok(modelServerService.getNDVIByPolygon(ndviDTO));
-            default -> ResponseEntity.ok("NO SUCH MODEL");
-        };
-    }
-
 }

@@ -46,7 +46,7 @@ next-env.d.ts
 output/
 __pycache__/
 *.pyc
-
+worldgrid/
 
 .vscode/
 .idea/

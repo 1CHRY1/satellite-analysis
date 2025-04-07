@@ -30,6 +30,8 @@ spring:
       host: localhost
       port: 6379
       database: 0
+    mongodb:
+      uri: mongodb://OGMSROOT:ogms1qaz2wsx@172.21.252.208:23266/opengmp
 
 mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
