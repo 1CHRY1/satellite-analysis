@@ -145,7 +145,7 @@ const uploadFile = async (event: Event) => {
 
     const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
     if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(`.${fileExtension}`)) {
-        ElMessage.warning('只支持 .json 或 .txt 文件')
+        ElMessage.warning('只支持 .geojson, .json 或 .txt 文件')
         return
     }
 
