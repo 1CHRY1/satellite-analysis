@@ -337,7 +337,7 @@ const tileInfoCache = new Map<string, OverlapTileInfoView[]>();
 export async function queryOverlapTilesMap(product: ProductView, gridIDs: string[]): Promise<Map<string, OverlapTileInfoView[]>> {
     const map = new Map<string, OverlapTileInfoView[]>();
 
-    const MAX_CONCURRENT_REQUESTS = 3;
+    const MAX_CONCURRENT_REQUESTS = 5;
 
     // 分批处理请求
     for (let i = 0; i < gridIDs.length; i += MAX_CONCURRENT_REQUESTS) {
