@@ -111,8 +111,8 @@
                         </div>
                     </div>
                     <div class="order-1 space-y-6 md:order-2">
-                        <h2 class="text-3xl font-bold text-slate-800">交互式数据可视化</h2>
-                        <p class="text-slate-600">提供强大的可视化工具，可将复杂的卫星数据转化为清晰、可操作的洞察信息。</p>
+                        <h2 class="text-3xl font-bold text-slate-800">交互式数据探索与可视化</h2>
+                        <p class="text-slate-600">提供直观的交互式工具，帮助您轻松探索卫星数据。</p>
                         <ul class="space-y-3">
                             <li class="flex items-start">
                                 <check-circle class="mt-0.5 mr-2 h-6 w-6 flex-shrink-0 text-green-500" />
@@ -140,7 +140,45 @@
                 </div>
             </div>
         </section>
-
+        <section class="bg-slate-50 py-16">
+            <div class="container mx-auto px-4">
+                <div class="grid items-center gap-12 md:grid-cols-2">
+                    <div class="order-2 md:order-2">
+                        <div class="rounded-xl bg-white p-1 shadow-lg">
+                            <img src="@/assets/image/home/codeOnline.png" alt="Data visualization dashboard"
+                                class=" rounded-lg" />
+                        </div>
+                    </div>
+                    <div class="order-1 space-y-6 md:order-1">
+                        <h2 class="text-3xl font-bold text-slate-800">在线编程分析卫星数据</h2>
+                        <p class="text-slate-600">提供强大的在线编程环境，用于分析和处理卫星数据，并实时生成可视化结果。</p>
+                        <ul class="space-y-3">
+                            <li class="flex items-start">
+                                <check-circle class="mt-0.5 mr-2 h-6 w-6 flex-shrink-0 text-green-500" />
+                                <span class="text-slate-700">内置丰富的卫星数据分析工具和库</span>
+                            </li>
+                            <!-- <li class="flex items-start">
+                                <check-circle class="mt-0.5 mr-2 h-6 w-6 flex-shrink-0 text-green-500" />
+                                <span class="text-slate-700">可定制的仪表板和报告工具</span>
+                            </li> -->
+                            <li class="flex items-start">
+                                <check-circle class="mt-0.5 mr-2 h-6 w-6 flex-shrink-0 text-green-500" />
+                                <span class="text-slate-700">支持多种编程语言</span>
+                            </li>
+                            <li class="flex items-start">
+                                <check-circle class="mt-0.5 mr-2 h-6 w-6 flex-shrink-0 text-green-500" />
+                                <span class="text-slate-700">实时数据处理与可视化反馈</span>
+                            </li>
+                        </ul>
+                        <button
+                            class="bg-primary hover:bg-primary/90 rounded-md px-6 py-3 font-medium text-white transition-colors cursor-pointer"
+                            @click=" gotoPages('/projects')">
+                            探索更多
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
         <!-- Quick Access Tools -->
         <!-- <section class="bg-white py-16">
             <div class="container mx-auto px-4">

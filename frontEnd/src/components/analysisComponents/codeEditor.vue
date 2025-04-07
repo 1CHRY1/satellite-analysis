@@ -244,7 +244,7 @@ const saveCode = async () => {
     }
 }
 
-const keyboardSaveCode = (event) => {
+const keyboardSaveCode = (event: KeyboardEvent) => {
     if (event.ctrlKey && event.key === 's') {
         event.preventDefault(); // 阻止浏览器默认的保存页面行为
         saveCode(); // 调用保存逻辑

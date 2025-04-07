@@ -141,7 +141,10 @@ const uploadFile = async (event: Event) => {
 
     // 检查文件类型
     const allowedTypes = ['application/json', 'text/plain']
-    if (!allowedTypes.includes(file.type)) {
+    const allowedExtensions = ['.json', '.txt', '.geojson'];
+
+    const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
+    if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(`.${fileExtension}`)) {
         ElMessage.warning('只支持 .json 或 .txt 文件')
         return
     }
