@@ -220,9 +220,9 @@ const handleCellClick = async (item: dockerData, column: string) => {
                     let tileUrlObj = await getTileFromMiniIo(targetInMiniIo.dataId)
                     let wholeTileUrl
                     if (tileUrlObj.object.includes('ndvi')) {
-                        wholeTileUrl = tileUrlObj.tilerUrl + '/{z}/{x}/{y}.png?object=/' + tileUrlObj.object + "&colorStyle=red2green&range=[0,0.72]"
-                    } else if (tileUrlObj.object.includes('pbty')) {
                         wholeTileUrl = tileUrlObj.tilerUrl + '/{z}/{x}/{y}.png?object=/' + tileUrlObj.object + "&colorStyle=red2green&range=[-0.8,0.8]"
+                    } else if (tileUrlObj.object.includes('pbty')) {
+                        wholeTileUrl = tileUrlObj.tilerUrl + '/{z}/{x}/{y}.png?object=/' + tileUrlObj.object + "&colorStyle=red2green&range=[0,0.72]"
                     } else {
                         wholeTileUrl = tileUrlObj.tilerUrl + '/{z}/{x}/{y}.png?object=/' + tileUrlObj.object
                     }
