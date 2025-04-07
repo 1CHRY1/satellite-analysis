@@ -211,7 +211,7 @@ const runCode = async () => {
             userId: props.userId,
         })
         if (runResult.status === 1) {
-            ElMessage.success('运行成功')
+            ElMessage.success('脚本启动')
         } else {
             ElMessage.error('启动失败，请重试或者联系管理员')
         }
