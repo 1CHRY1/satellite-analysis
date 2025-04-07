@@ -60,26 +60,35 @@ export function map_fitViewToCN(): void {
     })
 }
 
+export function map_fitView(bounds: any): void {
+    mapManager.withMap((m) => {
+        m.fitBounds(bounds, {
+            padding: 50,
+            duration: 700,
+        })
+    })
+}
+
 export function map_fitViewToFeature(feature: polygonGeometry): void {
     console.log(feature)
     const coordinates = feature.coordinates[0]
     const bbox = coordinates.reduce(
         (acc, coord) => {
-            acc[0] = Math.min(acc[0], coord[0]);
-            acc[1] = Math.min(acc[1], coord[1]);
-            acc[2] = Math.max(acc[2], coord[0]);
-            acc[3] = Math.max(acc[3], coord[1]);
-            return acc;
+            acc[0] = Math.min(acc[0], coord[0])
+            acc[1] = Math.min(acc[1], coord[1])
+            acc[2] = Math.max(acc[2], coord[0])
+            acc[3] = Math.max(acc[3], coord[1])
+            return acc
         },
-        [Infinity, Infinity, -Infinity, -Infinity]
-    );
+        [Infinity, Infinity, -Infinity, -Infinity],
+    )
 
     mapManager.withMap((m) => {
         m.fitBounds([bbox[0], bbox[1], bbox[2], bbox[3]], {
             padding: 100,
             duration: 900,
-        });
-    });
+        })
+    })
 }
 
 export function map_zoomIn(): void {

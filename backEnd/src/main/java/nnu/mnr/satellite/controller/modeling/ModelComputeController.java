@@ -1,6 +1,7 @@
 package nnu.mnr.satellite.controller.modeling;
 
 import nnu.mnr.satellite.model.dto.modeling.NdviDTO;
+import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.service.modeling.ModelServerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -17,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
  */
 
 @RestController
-@RequestMapping("/api/v1/model")
+@RequestMapping("/api/v1/model/case")
 public class ModelComputeController {
 
     @Autowired
@@ -25,18 +26,23 @@ public class ModelComputeController {
 
     // Common Controllers ******************************
     @GetMapping("/status/caseId/{caseId}")
-    public ResponseEntity<String> getModelCaseStatus(@PathVariable String caseId) {
+    public ResponseEntity<CommonResultVO> getModelCaseStatus(@PathVariable String caseId) {
         return ResponseEntity.ok(modelServerService.getModelCaseStatusById(caseId));
     }
 
     @GetMapping("/result/caseId/{caseId}")
-    public ResponseEntity<Object> getModelCaseResultById(@PathVariable String caseId) {
+    public ResponseEntity<CommonResultVO> getModelCaseResultById(@PathVariable String caseId) {
         return ResponseEntity.ok(modelServerService.getModelCaseResultById(caseId));
     }
 
-    @GetMapping("/data/dataId/{dataId}")
-    public ResponseEntity<byte[]> getModelDataById(@PathVariable String dataId) {
-        byte[] modelData = modelServerService.getModelDataById(dataId);
+    @GetMapping("/result/tif/caseId/{caseId}")
+    public ResponseEntity<CommonResultVO> getModelCaseTifResultById(@PathVariable String caseId) {
+        return ResponseEntity.ok(modelServerService.getModelCaseTifResultById(caseId));
+    }
+
+    @GetMapping("/data/tif/caseId/{caseId}")
+    public ResponseEntity<byte[]> getTifDataById(@PathVariable String caseId) {
+        byte[] modelData = modelServerService.getTifDataById(caseId);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.valueOf("image/tiff"));
         return ResponseEntity.ok()

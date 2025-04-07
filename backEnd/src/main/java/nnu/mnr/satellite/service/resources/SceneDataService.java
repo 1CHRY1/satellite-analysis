@@ -63,7 +63,6 @@ public class SceneDataService {
     }
 
     public GeoJsonVO getScenesByIdsTimeAndBBox(ScenesFetchDTO scenesFetchDTO) throws IOException {
-
         String sensorId = scenesFetchDTO.getSensorId();
         String productId = scenesFetchDTO.getProductId();
         String start = scenesFetchDTO.getStartTime();
@@ -92,6 +91,31 @@ public class SceneDataService {
         } else {
             // TODO: 其他的类型
             return new GeoJsonVO();
+        }
+    }
+
+    public List<Scene> getScenesByBBox(String sensorId, String productId, JSONObject geometry) throws IOException {
+        String type = geometry.getString("type");
+        JSONArray coordinates = geometry.getJSONArray("coordinates");
+        GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
+        if (type.equals("Polygon")) {
+            Geometry bbox = GeometryUtil.parse4326Polygon(coordinates, geometryFactory);
+            QueryWrapper<Scene> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("sensor_id", sensorId);
+            queryWrapper.eq("product_id", productId);
+
+            String wkt = bbox.toText(); // 转换为 WKT 格式
+
+            queryWrapper.apply(
+                    "( ST_Intersects(ST_GeomFromText( {0}, 4326, 'axis-order=long-lat'), bounding_box) OR " +
+                            "ST_Contains(ST_GeomFromText( {0}, 4326, 'axis-order=long-lat'), bounding_box) OR " +
+                            "ST_Within(ST_GeomFromText( {0}, 4326, 'axis-order=long-lat'), bounding_box) )",
+                    wkt
+            );
+            return sceneRepo.selectList(queryWrapper);
+        } else {
+            // TODO: 其他的类型
+            return null;
         }
     }
 
