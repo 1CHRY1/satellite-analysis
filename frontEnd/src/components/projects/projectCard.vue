@@ -1,11 +1,11 @@
 <template>
     <div
-        class="card box-border flex h-[360px] w-[280px] cursor-pointer flex-col justify-between rounded-lg border-t border-l border-solid border-t-[rgba(255,255,255,.5)] border-l-[rgba(255,255,255,.5)] bg-black px-6 py-1 opacity-80"
-    >
+        class="card box-border flex h-[360px] w-[280px] cursor-pointer flex-col justify-between rounded-lg border-t border-l border-solid border-t-[rgba(255,255,255,.5)] border-l-[rgba(255,255,255,.5)] bg-black px-6 py-1 opacity-80">
         <!-- 头部 -->
         <div class="my-2 flex flex-col items-center justify-center">
             <Satellite class="mt-4 mb-1 h-16 w-16" color="white" />
-            <div class="mb-1 overflow-hidden text-3xl font-bold whitespace-nowrap text-blue-400">
+            <div class="mb-1 w-full overflow-hidden text-3xl font-bold whitespace-nowrap text-blue-400 text-center"
+                :title="project.projectName">
                 {{ project.projectName }}
             </div>
         </div>

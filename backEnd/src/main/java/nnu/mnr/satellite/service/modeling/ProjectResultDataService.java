@@ -60,9 +60,9 @@ public class ProjectResultDataService {
         if (!Objects.equals(projectResult.getDataType(), "tiff")
                 && !Objects.equals(projectResult.getDataType(), "tif")
                 && !Objects.equals(projectResult.getDataType(), "TIF") ) {
-            return TilerVO.builder().build();
+            return TilerVO.tilerBuilder().build();
         }
-        return TilerVO.builder()
+        return TilerVO.tilerBuilder()
                 .tilerUrl(tilerProperties.getEndPoint())
                 .object(projectResult.getBucket() + projectResult.getPath())
                 .build();

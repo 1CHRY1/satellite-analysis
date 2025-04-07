@@ -4,20 +4,27 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.dynamic.datasource.annotation.DS;
 import lombok.extern.slf4j.Slf4j;
+import nnu.mnr.satellite.jobs.QuartzSchedulerManager;
 import nnu.mnr.satellite.model.dto.resources.TileBasicDTO;
 import nnu.mnr.satellite.model.dto.resources.TilesFetchDTO;
 import nnu.mnr.satellite.model.dto.resources.TilesMergeDTO;
+import nnu.mnr.satellite.model.po.resources.Scene;
 import nnu.mnr.satellite.model.po.resources.Tile;
 import nnu.mnr.satellite.model.pojo.modeling.ModelServerProperties;
+import nnu.mnr.satellite.model.pojo.modeling.TilerProperties;
+import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.model.vo.common.GeoJsonVO;
 import nnu.mnr.satellite.model.vo.resources.TileDesVO;
+import nnu.mnr.satellite.model.vo.resources.TilesFetchVO;
 import nnu.mnr.satellite.repository.resources.IImageRepo;
 import nnu.mnr.satellite.repository.resources.ITileRepo;
+import nnu.mnr.satellite.utils.common.ConcurrentUtil;
 import nnu.mnr.satellite.utils.common.HttpUtil;
 import nnu.mnr.satellite.utils.common.ProcessUtil;
 import nnu.mnr.satellite.utils.data.MinioUtil;
 import nnu.mnr.satellite.utils.data.RedisUtil;
 import nnu.mnr.satellite.utils.geom.GeometryUtil;
+import nnu.mnr.satellite.utils.geom.TileCalculateUtil;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.PrecisionModel;
@@ -27,7 +34,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Created with IntelliJ IDEA.
@@ -56,12 +72,21 @@ public class TileDataService {
     @Autowired
     ModelMapper tileModelMapper;
 
+    @Autowired
+    QuartzSchedulerManager quartzSchedulerManager;
 
     @Autowired
     ModelServerProperties modelServerProperties;
 
     @Autowired
+    TilerProperties tilerProperties;
+
+    @Autowired
     ImageDataService imageDataService;
+
+    @Autowired
+    SceneDataService sceneDataService;
+
 
     public GeoJsonVO getTilesBySceneAndLevel(String sceneId, String tileLevel) throws IOException {
         String band = imageDataService.getImagesBySceneId(sceneId).get(0).getBand();
@@ -69,20 +94,57 @@ public class TileDataService {
         return GeometryUtil.tileList2GeojsonVO(tiles);
     }
 
-    private String getBasicTilesBySceneLevelAndBBox(TilesFetchDTO tilesFetchDTO) {
-        String sceneId = tilesFetchDTO.getSceneId(), tileLevel = tilesFetchDTO.getTileLevel();
-        JSONObject geometry = tilesFetchDTO.getGeometry();
-        JSONArray coordinates = geometry.getJSONArray("coordinates");
-        GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
-        Geometry bbox = GeometryUtil.parse4326Polygon(coordinates, geometryFactory);
-        String wkt = bbox.toText();
-        List<TileBasicDTO> tileBasics = tileRepo.getBasicTileByBandAndLevel(sceneId, tileLevel, wkt);
-        JSONObject requestParam = JSONObject.of("sceneId", sceneId, "tiles", tileBasics);
-        String mergeUrl = modelServerProperties.getApis().get("merge");
-        String modelCaseId = ProcessUtil.runModelCase(mergeUrl, requestParam);
-        JSONObject modelCase = JSONObject.of("status", "running", "result", null);
-        redisUtil.addJsonDataWithExpiration(modelCaseId, modelCase, 60 * 10);
-        return modelCaseId;
+    // For Getting Different Tiles from Different Scenes by TileArea
+//    public List<TilesFetchVO> getTilesByBandLevelAndIds(TilesFetchDTO tilesFetchDTO) throws IOException {
+//        String sensorId = tilesFetchDTO.getSensorId(); String productId = tilesFetchDTO.getProductId();
+//        String rowId = tilesFetchDTO.getRowId(); String columnId = tilesFetchDTO.getColumnId();
+//        String band = tilesFetchDTO.getBand(); String level = tilesFetchDTO.getTileLevel();
+//        List<Scene> scenes = sceneDataService.getScenesByBBox(sensorId, productId, tilesFetchDTO.getGeometry());
+//        Function<Scene, TilesFetchVO> mapper = scene -> {
+//            Tile tile = tileRepo.getTileDataByBandLevelAndIds(scene.getSceneId(), band, level, rowId, columnId);
+//            return TilesFetchVO.tilesFetcherBuilder()
+//                    .tileId(tile.getTileId())
+//                    .cloud(tile.getCloud())
+//                    .tilerUrl(tilerProperties.getEndPoint())
+//                    .object(tile.getBucket() + tile.getPath())
+//                    .build();
+//        };
+//        return ConcurrentUtil.processConcurrently(scenes, mapper);
+//    }
+
+    public List<TilesFetchVO> getTilesByBandLevelAndIds(TilesFetchDTO tilesFetchDTO) throws IOException {
+        String sensorId = tilesFetchDTO.getSensorId(); String productId = tilesFetchDTO.getProductId();
+        Integer rowId = tilesFetchDTO.getRowId(); Integer columnId = tilesFetchDTO.getColumnId();
+        String band = tilesFetchDTO.getBand(); String level = tilesFetchDTO.getTileLevel();
+        int[] gridNums = TileCalculateUtil.getGridNumFromTileLevel(level);
+        JSONObject tileGeometry = TileCalculateUtil.getTileGeomByIds(rowId, columnId, gridNums[0], gridNums[1]);
+        List<Scene> scenes = sceneDataService.getScenesByBBox(sensorId, productId, tileGeometry);
+        ExecutorService executor = Executors.newFixedThreadPool(Math.min(scenes.size(), 10));
+
+        List<CompletableFuture<TilesFetchVO>> futures = scenes.stream()
+                .map(scene -> fetchTileAsync(scene, band, level, rowId, columnId, executor))
+                .toList();
+
+        List<TilesFetchVO> tilesFetchRes = futures.stream()
+                .map(CompletableFuture::join)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        executor.shutdown();
+        return tilesFetchRes;
+    }
+
+    private CompletableFuture<TilesFetchVO> fetchTileAsync(Scene scene, String band, String level, Integer rowId, Integer columnId, Executor executor) {
+        return CompletableFuture.supplyAsync(() -> {
+            Tile tile = tileRepo.getTileDataByBandLevelAndIds(scene.getSceneId(), band, level, rowId, columnId);
+            return TilesFetchVO.tilesFetcherBuilder()
+                    .tileId(tile.getTileId())
+                    .cloud(tile.getCloud())
+                    .tilerUrl(tilerProperties.getEndPoint())
+                    .sceneId(scene.getSceneId())
+                    .object(tile.getBucket() + "/" + tile.getPath())
+                    .build();
+        }, executor);
     }
 
     public byte[] getTileTifById(String sceneId, String tileId) {
@@ -90,13 +152,19 @@ public class TileDataService {
         return minioUtil.downloadByte(tile.getBucket(), tile.getPath());
     }
 
-    public String getMergeTileTif(TilesMergeDTO tilesMergeDTO) {
-        JSONObject mergeParam = JSONObject.of("sceneId", tilesMergeDTO.getSceneId(),"tiles", tilesMergeDTO.getTiles());
+    public CommonResultVO getMergeTileTif(TilesMergeDTO tilesMergeDTO) {
+        JSONObject mergeParam = JSONObject.of("tiles", tilesMergeDTO.getTiles(), "bands", tilesMergeDTO.getBands());
         String mergeUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("merge");
-        String modelCaseId = ProcessUtil.runModelCase(mergeUrl, mergeParam);
-        JSONObject modelCase = JSONObject.of("status", "running", "result", null);
-        redisUtil.addJsonDataWithExpiration(modelCaseId, modelCase, 60 * 10);
-        return modelCaseId;
+        try {
+            JSONObject modelCaseResponse = JSONObject.parseObject(ProcessUtil.runModelCase(mergeUrl, mergeParam));
+            String caseId = modelCaseResponse.getJSONObject("data").getString("taskId");
+            quartzSchedulerManager.startModelRunningStatusJob(caseId);
+            JSONObject modelCase = JSONObject.of("status", "running", "start", LocalDateTime.now());
+            redisUtil.addJsonDataWithExpiration(caseId, modelCase, 60 * 10);
+            return CommonResultVO.builder().status(1).message("success").data(caseId).build();
+        } catch (Exception e) {
+            return CommonResultVO.builder().status(-1).message("Wrong Because of " + e.getMessage()).build();
+        }
     }
 
     public TileDesVO getTileDescriptionById(String sceneId, String tileId) {
