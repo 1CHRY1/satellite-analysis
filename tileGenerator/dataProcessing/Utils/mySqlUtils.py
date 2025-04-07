@@ -168,9 +168,13 @@ def create_tile_table(table_name):
     create_idx_band_tile_level = f"""
     CREATE INDEX idx_band_tile_level ON {table_name} (band, tile_level);
     """
+    create_idx_column_row = f"""
+    CREATE INDEX idx_column_row_band ON {table_name} (column_id, row_id, band);
+    """
     sql_commands = [
         create_tile_table,
-        create_idx_band_tile_level
+        create_idx_band_tile_level,
+        create_idx_column_row
     ]
     connection, curser = connect_mysql(config.MYSQL_HOST, config.MYSQL_TILE_DB, config.MYSQL_USER, config.MYSQL_PWD)
 
@@ -469,13 +473,13 @@ def select_tile_by_column_and_row_v2(tiles, bands):
 
     # 按照 sceneId 分组查询，每个 sceneId 对应一个查询
     grouped_result = defaultdict(list)
-    tiles = filter_tiles(tiles)
+    # tiles = filter_tiles(tiles)
     for tile in tiles:
         sceneId = tile.get("sceneId", "").lower()
         tile_table_name = sceneId  # 根据 sceneId 确定表名
 
         # 生成 WHERE 条件，确保 columnId 和 rowId 必须是成对匹配的
-        tile_conditions = " OR ".join(["(column_id = %s AND row_id = %s)"] * len(tiles))
+        tile_conditions = " OR ".join(["(column_id = %s AND row_id = %s)"])
         band_placeholders = ', '.join(['%s'] * len(bands))
 
         select_query = f"""
@@ -486,8 +490,7 @@ def select_tile_by_column_and_row_v2(tiles, bands):
 
         # 构建参数列表
         tile_params = []
-        for t in tiles:
-            tile_params.extend([t["columnId"], t["rowId"]])
+        tile_params.extend([tile["columnId"], tile["rowId"]])
 
         query_params = tuple(tile_params + bands)
 
