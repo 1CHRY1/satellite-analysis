@@ -40,7 +40,8 @@ public class ModelRunStatusJob implements Job {
         ModelServerProperties modelServerProperties = (ModelServerProperties) dataMap.get("modelServerProperties");
         String caseId = dataMap.getString("caseId");
         String statusUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("status");
-        String status = ProcessUtil.getModelCaseStatus(statusUrl, caseId);
+        JSONObject statusResponse = JSONObject.parseObject(ProcessUtil.getModelCaseStatus(statusUrl, caseId));
+        String status = statusResponse.getJSONObject("data").getString("status");
         // Update Redis
         redisUtil.updateJsonField(caseId, "status", status);
         if (status.equals("COMPLETE")) {
@@ -48,12 +49,20 @@ public class ModelRunStatusJob implements Job {
             try {
                 quartzSchedulerManager.deleteJob(jobName, jobGroup);
                 String resultUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("result");
-                JSONObject resObj = ProcessUtil.getModelCaseResult(resultUrl, caseId);
+                JSONObject resultResponse = ProcessUtil.getModelCaseResult(resultUrl, caseId);
+                JSONObject resObj = resultResponse.getJSONObject("data").getJSONObject("result");
                 redisUtil.updateJsonField(caseId, "result", resObj);
                 redisUtil.updateJsonField(caseId, "end", LocalDateTime.now());
             } catch (SchedulerException e) {
                 log.info(e.toString());
             }
+        } else if (status.equals("ERROR")) {
+            try {
+                quartzSchedulerManager.deleteJob(jobName, jobGroup);
+            } catch (SchedulerException e) {
+                log.info(e.toString());
+            }
+            redisUtil.updateJsonField(caseId, "end", LocalDateTime.now());
         }
         // TODO: Add Other Conditions
     }

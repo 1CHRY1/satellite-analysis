@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -118,19 +119,8 @@ public class DockerService {
                 .host(defaultHost).username(defaultUser).password(defaultPassword)
                 .BuildSftpConn();
         try {
-            String localProjectPath = localPath + projectId;
-            File folder = new File(localProjectPath);
-            if (!folder.exists()) {
-                folder.mkdirs();
-            }
-
-            // create local py
-            Path sourcePath = Paths.get(localPath + "/devCli/main.py");
-            Path mainPath = Paths.get(localProjectPath + "/main.py");
-            Files.copy(sourcePath, mainPath, StandardCopyOption.REPLACE_EXISTING);
-
             // create folder for project docker
-            sftpDataService.createRemoteDirAndFile(sftpInfo, localProjectPath, serverDir);
+            sftpDataService.createRemoteDirAndFile(sftpInfo, projectId, serverDir);
         } catch (Exception e) {
             log.error("Error Initing Environment " + e);
         }

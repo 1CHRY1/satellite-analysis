@@ -3,11 +3,10 @@ import json
 import math
 import os
 import tempfile
-import uuid
-from datetime import datetime
-from multiprocessing import Pool
+import rasterio
+from rio_cogeo.cogeo import cog_validate, cog_translate, cog_info
 from types import SimpleNamespace
-
+from rio_cogeo.profiles import cog_profiles
 import rasterio
 from shapely.ops import transform
 from PIL import Image
@@ -546,7 +545,7 @@ def process_and_upload(files_dict: dict, bucket_name: str, object_prefix: str):
             band_name = os.path.basename(path)
             scene_info.scene_name = scene_name
             object_name = f"{object_prefix}/tif/{scene_info.scene_name}/{band_name}"
-            uploadLocalFile(path, bucket_name, object_name)
+            uploadLocalFile(convert_tif2cog(path), bucket_name, object_name)
             # Calculate the cloud coverage(for the whole image)
             if qa_data is None:
                 qa_data, no_data_value = read_qa_pixel(path, scene_info.scene_name)
@@ -714,6 +713,18 @@ def process_tiles(tiff_path, scene_name, output_dir, grid_resolution, tile_bucke
     gdal.Unlink(tif_in_geoCS)
     ds = None
     return tile_info_list
+
+
+def convert_tif2cog(tif_path):
+    if cog_info(tif_path)["COG"]:
+        return tif_path
+    else:
+        temp_dir = tempfile.gettempdir()
+        output_cog_tif = os.path.join(temp_dir, os.path.basename(tif_path))
+        with rasterio.open(tif_path) as src:
+            profile = cog_profiles.get("deflate")
+            cog_translate(src, output_cog_tif, profile, in_memory=False)
+        return output_cog_tif
 
 
 def validate_inputs(tif_paths):
