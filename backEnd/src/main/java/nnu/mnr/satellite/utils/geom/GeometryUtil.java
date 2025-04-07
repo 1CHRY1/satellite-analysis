@@ -103,6 +103,9 @@ public class GeometryUtil {
     }
 
     public static JSONObject geometry2Geojson(Geometry jtsGeometry, String id) throws IOException {
+        return geometry2Geojson(jtsGeometry, id, -1, -1);
+    }
+    public static JSONObject geometry2Geojson(Geometry jtsGeometry, String id, int columnId , int rowId) throws IOException {
         if (jtsGeometry == null || id == null) {
             return null;
         }
@@ -122,7 +125,12 @@ public class GeometryUtil {
         // 设置 Feature 的字段
         featureNode.put("id", id);
         featureNode.put("type", "Feature");
-        featureNode.set("properties", mapper.createObjectNode()); // 空 properties 对象
+        if (columnId != -1 && rowId != -1) {
+            featureNode.set("properties", mapper.createObjectNode().put("id", id));
+        } else {
+            featureNode.set("properties", mapper.createObjectNode().put("id", id)
+                    .put("columnId", columnId).put("rowId", rowId));
+        }
         featureNode.set("geometry", mapper.readTree(geometryJsonStr)); // 解析 geometry JSON
 
         // 转换为字符串
@@ -159,7 +167,7 @@ public class GeometryUtil {
             List<JSONObject> result = ConcurrentUtil.processConcurrently(
                     items, item -> {
                         try {
-                            return geometry2Geojson(item.getBbox(), item.getTileId());
+                            return geometry2Geojson(item.getBbox(), item.getTileId(), item.getColumnId(), item.getRowId());
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }

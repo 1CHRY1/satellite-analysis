@@ -14,7 +14,8 @@ import org.locationtech.jts.geom.Geometry;
 @Data
 public class TileBasicDTO {
 
-    private String rowId;
-    private String columnId;
+    private String tileLevel;
+    private Integer rowId;
+    private Integer columnId;
 
 }

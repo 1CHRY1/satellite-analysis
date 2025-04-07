@@ -1,7 +1,9 @@
 package nnu.mnr.satellite.model.vo.modeling;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.SuperBuilder;
 
 /**
  * Created with IntelliJ IDEA.
@@ -12,7 +14,7 @@ import lombok.Data;
  */
 
 @Data
-@Builder
+@SuperBuilder(builderMethodName = "tilerBuilder")
 public class TilerVO {
 
     private String tilerUrl;
