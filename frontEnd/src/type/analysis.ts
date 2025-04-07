@@ -18,3 +18,24 @@ export type analysisResponse = {
     info: string
     projectId: string
 }
+
+export type project = {
+    createTime: string
+    createUser: string
+    createUserEmail: string
+    createUserName: string
+    description: string
+    environment: string
+    joinedUsers: Array<string>
+    packages: string
+    projectName: string
+    projectId: string
+}
+
+export type newProject = {
+    projectName: string
+    environment: string
+    keywords: string
+    description: string
+    authority: string
+}

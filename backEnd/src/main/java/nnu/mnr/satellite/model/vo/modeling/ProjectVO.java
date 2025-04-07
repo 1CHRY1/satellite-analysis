@@ -15,11 +15,14 @@ import java.util.HashSet;
 @Data
 public class ProjectVO {
 
+    private String projectId;
     private String projectName;
     private String environment;
     private String createTime;
     private String packages;
     private String createUser;
+    private String createUserName;
+    private String createUserEmail;
     private HashSet<String> joinedUsers;
     private String description;
 

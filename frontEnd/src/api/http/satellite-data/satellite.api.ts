@@ -1,5 +1,5 @@
 import http from '../clientHttp'
-import type { Sensor, Product, SensorImage, ImageTile } from './satellite.type'
+import type { Sensor, Product, SensorImage, ImageTile, Project } from './satellite.type'
 import { blobDownload } from '../../util'
 
 export async function getSensorList(): Promise<Sensor.SensorListResponse> {
@@ -46,58 +46,80 @@ export function getSensorImagePreviewUrl(sensorImageId: string): string {
     return `${http.instance.defaults.baseURL}/data/scene/png/sceneId/${sensorImageId}`
 }
 
+export async function getSensorImagePreviewPng(sensorImageId: string): Promise<string> {
+    const blob = await http.get<Blob>(`/data/scene/png/sceneId/${sensorImageId}`, {
+        responseType: 'blob',
+    })
+    return URL.createObjectURL(blob)
+}
+
 export async function getSensorImageBands(
     sensorImageId: string,
 ): Promise<SensorImage.SensorImageBandListResponse> {
     return http.get<SensorImage.SensorImageBandListResponse>(`/data/image/sceneId/${sensorImageId}`)
 }
 
-export async function getImageTiles(
-    bandImageId: string,
-    worldGridNum: number = 40000,
+export async function getImageTilesGeojson(
+    sceneId: string,
+    tileLevel: string,
 ): Promise<ImageTile.ImageTilesResponse> {
     return http.get<ImageTile.ImageTilesResponse>(
-        `/data/tile/imageId/${bandImageId}/tileLevel/${worldGridNum}`,
+        `/data/tile/sceneId/${sceneId}/tileLevel/${tileLevel}`,
     )
 }
 
-export function getImageTilesGeojsonURL(bandImageId: string, worldGridNum: number = 40000): string {
+export function getImageTilesGeojsonURL(sceneId: string, tileLevel: string): string {
+    const lowcase = sceneId.toLowerCase()
     // @ts-ignore Property 'instance' is private and only accessible within class 'HttpClient'
-    return `${http.instance.defaults.baseURL}/data/tile/imageId/${bandImageId}/tileLevel/${worldGridNum}`
-}
-
-async function getImageTileTif(bandImageId: string, tileId: string): Promise<Blob> {
-    return http.get<Blob>(`/data/tile/tif/imageId/${bandImageId}/tileId/${tileId}`, {
-        responseType: 'blob',
-    })
-}
-
-export async function downloadImageTileTif(
-    bandImageId: string,
-    tileId: string,
-    name?: string,
-): Promise<void> {
-    const blob = await getImageTileTif(bandImageId, tileId)
-    blobDownload(blob, name ?? `${bandImageId}_${tileId}.tif`)
-}
-
-async function mergeImageTileTifs(params: ImageTile.ImageTileTifMergeRequest): Promise<Blob> {
-    return http.post<Blob>(`/data/tile/tif/tileIds`, params, { responseType: 'blob' })
-}
-
-export async function downloadImageTileTifMerge(
-    params: ImageTile.ImageTileTifMergeRequest,
-    name?: string,
-): Promise<void> {
-    const blob = await mergeImageTileTifs(params)
-    blobDownload(blob, name ?? `${params.imageId}_merged.tif`)
+    return `${http.instance.defaults.baseURL}/data/tile/sceneId/${lowcase}/tileLevel/${tileLevel}`
 }
 
 export async function getImageTileDetail(
-    bandImageId: string,
+    sceneId: string,
     tileId: string,
 ): Promise<ImageTile.ImageTileDetailResponse> {
     return http.get<ImageTile.ImageTileDetailResponse>(
-        `/data/tile/description/imageId/${bandImageId}/tileId/${tileId}`,
+        `/data/tile/description/sceneId/${sceneId}/tileId/${tileId}`,
     )
+}
+
+/// 合并tif (模型)
+export async function startMergeImageTiles(
+    params: ImageTile.ImageTileTifMergeRequest,
+): Promise<ImageTile.ImageTileTifMergeStatusResponse> {
+    return http.post<ImageTile.ImageTileTifMergeStatusResponse>(`/data/tile/tif/tiles`, params)
+}
+/// 查询模型状态
+export async function getMergeImageTilesStatus(
+    caseId: string,
+): Promise<ImageTile.ImageTileTifMergeStatusResponse> {
+    return http.get<ImageTile.ImageTileTifMergeStatusResponse>(
+        `/model/case/status/caseId/${caseId}`,
+    )
+}
+/// 合并结果
+export async function getMergeImageTilesResult(caseId: string): Promise<Blob> {
+    return http.get<Blob>(`/model/case/data/tif/caseId/${caseId}`, { responseType: 'blob' })
+}
+/// 下载结果
+export async function downloadMergeImageTilesResult(caseId: string, name?: string): Promise<void> {
+    const blob = await getMergeImageTilesResult(caseId)
+    blobDownload(blob, name ?? `${caseId}.tif`)
+}
+/// 操作项目
+export async function operateProject(
+    params: Project.ProjectActionRequest,
+): Promise<Project.ProjectActionResponse> {
+    return http.post<Project.ProjectActionResponse>(`/coding/project/operating`, params)
+}
+/// 上传瓦片至项目
+export async function uploadImageTilesToProject(
+    params: Project.ImageTileUploadToProjectRequest,
+): Promise<void> {
+    return http.post<void>(`/coding/project/file/tiles`, params)
+}
+
+/// 基于产品和行列号查询一个瓦片的信息
+export async function queryTileByXY(params: ImageTile.ImageTileQueryRequest): Promise<ImageTile.ImageTileQueryResponse> {
+    return http.post<ImageTile.ImageTileQueryResponse>(`/data/tile/tiler/tiles`, params)
 }
