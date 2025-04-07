@@ -307,12 +307,13 @@
                 <div class="grid gap-8 md:grid-cols-4">
                     <div>
                         <div class="mb-4 flex items-center space-x-2">
+                            <img :src="logo" alt="Logo" class="h-10 w-auto  cursor-pointer mr-12" @click="jumpToOGMS" />
                             <satellite class="text-primary h-8 w-8" />
                             <span class="text-xl font-bold text-white">遥感ARD平台</span>
-                        </div>
-                        <p class="text-sm">为研究人员、组织和政府机构提供先进的遥感ARD平台。</p>
-                    </div>
 
+                        </div>
+                        <p class="text-sm">为研究人员、组织和政府机构提供先进的遥感ARD方案</p>
+                    </div>
                     <div>
                         <h3 class="mb-4 font-semibold text-white">OpenGMS系统</h3>
                         <ul class="space-y-2 text-sm">
@@ -416,8 +417,14 @@ import {
 
 } from 'lucide-vue-next'
 import { useRouter } from 'vue-router';
+import logo from '@/assets/image/logo2.png'
 
 const router = useRouter();
+
+const jumpToOGMS = () => {
+    const OGMS_URL = 'https://geomodeling.njnu.edu.cn/'
+    window.open(OGMS_URL, '_blank')
+}
 
 const gotoPages = (path: string) => {
     router.push(path);
