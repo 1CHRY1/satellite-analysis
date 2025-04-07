@@ -8,6 +8,7 @@ from typing import Any, Dict
 from dataProcessing.config import STATUS_RUNNING, STATUS_COMPLETE, STATUS_ERROR, STATUS_PENDING, MAX_RUNNING_TASKS
 
 from dataProcessing.model.mergeTifTask import MergeTifTask
+from dataProcessing.model.mergeTifTaskV2 import MergeTifTaskV2
 
 
 class TaskScheduler:
@@ -48,6 +49,7 @@ class TaskScheduler:
         """根据任务类型返回相应的任务类"""
         task_classes = {
             'merge_tif': MergeTifTask,
+            'merge_tif_v2': MergeTifTaskV2,
             # 可以在这里扩展其他类型的任务
         }
         return task_classes.get(task_type)
@@ -84,6 +86,7 @@ class TaskScheduler:
                 self.task_results[task_id] = result
 
                 # 显式移除特定任务ID
+                # TODO RUNNING 数组
                 temp_queue = queue.Queue()
                 found = False
                 while not self.running_queue.empty():

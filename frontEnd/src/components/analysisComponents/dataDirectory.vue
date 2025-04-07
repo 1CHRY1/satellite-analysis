@@ -1,31 +1,37 @@
 <template>
     <div>
         <div class="flex h-[44px] w-full justify-between">
-            <div
-                class="mx-2.5 my-1.5 flex w-fit items-center rounded bg-[#eaeaea] px-2 text-[14px] shadow-md"
-            >
-                <div
-                    @click="handleClick('data')"
+            <div class="mx-2.5 my-1.5 flex w-fit items-center rounded bg-[#eaeaea] px-2 text-[14px] shadow-md">
+                <div @click="handleClick('data')"
                     class="mr-2 cursor-pointer border-r-1 border-dashed border-gray-500 pr-2"
-                    :class="activeDataBase === 'data' ? 'text-[#1479d7]' : 'text-[#818999]'"
-                >
+                    :class="activeDataBase === 'data' ? 'text-[#1479d7]' : 'text-[#818999]'">
                     容器数据列表
                 </div>
-                <div
-                    @click="handleClick('output')"
-                    class="cursor-pointer"
-                    :class="activeDataBase === 'output' ? 'text-[#1479d7]' : 'text-[#818999]'"
-                >
+                <div @click="handleClick('output')" class="cursor-pointer"
+                    :class="activeDataBase === 'output' ? 'text-[#1479d7]' : 'text-[#818999]'">
                     输出数据列表
                 </div>
             </div>
 
-            <div
-                @click="refreshTableData"
-                class="mx-2.5 my-1 flex w-fit cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-[14px] text-[#818999] shadow-md"
-            >
-                <RefreshCcw :size="16" class="text-primary" />
+            <div class="flex">
+                <div @click="refreshTableData"
+                    class="mr-2.5 my-1.5 flex w-fit cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-[14px] text-[#818999] shadow-md">
+                    <RefreshCcw :size="16" class="text-primary" />
+                </div>
+                <div @click="triggerFileSelect"
+                    class="mr-2.5 my-1.5 flex w-fit cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-[14px] text-[#818999] shadow-md">
+                    <Upload :size="16" class="text-primary" />
+                </div>
+
+                <!-- 隐藏文件选择框 -->
+                <input ref="fileInput" type="file" accept=".json,.txt" @change="uploadFile" class="hidden" />
+
+                <!-- <div @click=""
+                    class="mr-2.5 my-1.5 flex w-fit cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-[14px] text-[#818999] shadow-md">
+                    <FileUp :size="16" class="text-primary" />
+                </div> -->
             </div>
+
         </div>
         <div class="h-[calc(100%-44px)] max-w-full overflow-x-auto">
             <table class="min-w-full table-auto border-collapse">
@@ -39,19 +45,13 @@
                 </thead>
                 <tbody>
                     <tr class="text-[#818999]" v-for="(item, index) in tableData" :key="index">
-                        <td
-                            class="ml-4 flex cursor-pointer py-2"
-                            @click="handleCellClick(item, ' name')"
-                        >
+                        <td class="ml-4 flex cursor-pointer py-2" @click="handleCellClick(item, ' name')">
                             <div class="mr-1 flex h-4 w-4 items-center justify-center">
                                 <img :src="'/filesImg/' + item.fileType + '.png'" alt="" />
                             </div>
                             {{ item.fileName }}
                         </td>
-                        <td
-                            class="cursor-pointer px-4 py-2"
-                            @click="handleCellClick(item, 'updateTime')"
-                        >
+                        <td class="cursor-pointer px-4 py-2" @click="handleCellClick(item, 'updateTime')">
                             {{ formatTime(item.updateTime, 'minutes', 0) }}
                         </td>
                         <td class="cursor-pointer px-4 py-2" @click="handleCellClick(item, 'size')">
@@ -79,11 +79,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import type { dockerData } from '@/type/analysis'
-import { getFiles, getMiniIoFiles, getTileFromMiniIo } from '@/api/http/analysis'
+import { getFiles, getMiniIoFiles, getTileFromMiniIo, uploadGeoJson } from '@/api/http/analysis'
 import { sizeConversion, formatTime } from '@/util/common'
 import { ElMessage } from 'element-plus'
 import { map_flyTo, addRasterLayerFromUrl, removeRasterLayer } from '@/util/map/operation'
-import { RefreshCcw, CircleSlash } from 'lucide-vue-next'
+import { RefreshCcw, CircleSlash, Upload } from 'lucide-vue-next'
 
 const props = defineProps({
     projectId: {
@@ -99,7 +99,7 @@ const props = defineProps({
 const tableData = ref<Array<dockerData>>([])
 const inputData = ref<Array<dockerData>>([])
 const outputData = ref<Array<dockerData>>([])
-
+const fileInput = ref<HTMLInputElement | null>(null)
 const activeDataBase = ref('data')
 
 // 数据列表切换点击事件
@@ -127,11 +127,62 @@ const refreshTableData = async () => {
     }
 }
 
+const triggerFileSelect = () => {
+    fileInput.value?.click()
+}
+
+const uploadFile = async (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    if (!target.files || target.files.length === 0) return;
+    const file: File = target.files[0];
+    if (!file) return
+
+    // 检查文件类型
+    const allowedTypes = ['application/json', 'text/plain']
+    if (!allowedTypes.includes(file.type)) {
+        ElMessage.warning('只支持 .json 或 .txt 文件')
+        return
+    }
+
+    // 读取文件内容
+    const reader = new FileReader()
+    reader.onload = async (e: ProgressEvent<FileReader>) => {
+        try {
+
+            const fileContent = e.target?.result as string
+            console.log(fileContent, 'fileContent');
+
+            const jsonData = JSON.parse(fileContent)
+            console.log(jsonData, 'jsonData1');
+
+            const res = await uploadGeoJson({
+                userId: props.userId,
+                projectId: props.projectId,
+                uploadDataName: file.name.split('.')[0], // 文件名作为数据名
+                uploadData: jsonData
+            })
+
+            if (res.status === 1) {
+                await handleClick(activeDataBase.value)
+                ElMessage.success('上传成功')
+            } else {
+                ElMessage.error('上传失败')
+            }
+        } catch (err) {
+            ElMessage.error('文件内容不是有效的 JSON 格式')
+        }
+    }
+
+    reader.readAsText(file)
+
+    // 清空 input 的值，以便多次上传同一个文件时也能触发 change
+    target.value = '';
+}
+
 // 单元格点击事件处理
 const handleCellClick = async (item: dockerData, column: string) => {
-    console.log(item)
-    if (activeDataBase.value === 'data') {
-        ElMessage.info('目前仅支持输出数据预览')
+    if (activeDataBase.value === "data") {
+        ElMessage.info("目前仅支持输出数据预览")
         return
     }
     if (column === 'view') {
@@ -167,8 +218,15 @@ const handleCellClick = async (item: dockerData, column: string) => {
 
                     // 3、拿到数据实体的瓦片url
                     let tileUrlObj = await getTileFromMiniIo(targetInMiniIo.dataId)
-                    let wholeTileUrl =
-                        tileUrlObj.tilerUrl + '/{z}/{x}/{y}.png?object=/' + tileUrlObj.object
+                    let wholeTileUrl
+                    if (tileUrlObj.object.includes('ndvi')) {
+                        wholeTileUrl =
+                            tileUrlObj.tilerUrl + '/{z}/{x}/{y}.png?object=/' + tileUrlObj.object + "&colorStyle=red2green&range=[-0.8,0.8]"
+                    } else {
+                        wholeTileUrl =
+                            tileUrlObj.tilerUrl + '/{z}/{x}/{y}.png?object=/' + tileUrlObj.object
+                    }
+
                     console.log(tileUrlObj, wholeTileUrl, 'wholeTileUrl')
                     if (!tileUrlObj.object) {
                         console.info(wholeTileUrl, '没有拿到瓦片服务的URL呢,拼接的路径参数是空的')
