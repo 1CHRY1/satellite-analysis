@@ -18,7 +18,7 @@ import java.util.Map;
 @ConfigurationProperties(prefix = ModelServerProperties.MODELSERVER_PREFIX)
 public class ModelServerProperties {
 
-    public static final String MODELSERVER_PREFIX = "modelserver.api";
+    public static final String MODELSERVER_PREFIX = "modelserver";
 
     private String address;
     private Map<String, String> apis;

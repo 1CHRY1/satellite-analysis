@@ -3,6 +3,7 @@ package nnu.mnr.satellite.model.dto.resources;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created with IntelliJ IDEA.
@@ -15,7 +16,7 @@ import java.util.List;
 @Data
 public class TilesMergeDTO {
 
-    private String sceneId;
-    private List<String> tiles;
+    private List<Map<String, String>> tiles;
+    private List<String> bands;
 
 }

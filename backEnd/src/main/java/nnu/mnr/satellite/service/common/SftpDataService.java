@@ -4,6 +4,7 @@ import com.jcraft.jsch.*;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.model.pojo.common.SftpConn;
 import nnu.mnr.satellite.config.web.JSchConnectionManager;
+import nnu.mnr.satellite.model.pojo.modeling.DockerServerProperties;
 import org.apache.commons.compress.utils.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,9 @@ public class SftpDataService {
 
     @Autowired
     JSchConnectionManager jschConnectionManager;
+
+    @Autowired
+    DockerServerProperties dockerServerProperties;
 
     private void executeWithChannel(Consumer<ChannelSftp> operation) {
         Session session = jschConnectionManager.getSession();
@@ -258,7 +262,7 @@ public class SftpDataService {
         }
     }
 
-    public void createRemoteDirAndFile(SftpConn sftpConn, String localProjectPath, String volumePath) {
+    public void createRemoteDirAndFile(SftpConn sftpConn, String projectId, String volumePath) {
         Session session = jschConnectionManager.getSession(sftpConn);
         try {
             ChannelSftp channelSftp = (ChannelSftp) session.openChannel("sftp");
@@ -278,19 +282,18 @@ public class SftpDataService {
             channelSftp.mkdir(outputPath);
             channelSftp.chmod(0777, outputPath);
 
-            int lastSlashIndex = localProjectPath.lastIndexOf('/');
             // 上传 TransferEngine 目录
             String packagePath = volumePath + "ogms_xfer/";
-            uploadDirectory(channelSftp, localProjectPath.substring(0, lastSlashIndex) + "/devCli/ogms_xfer", packagePath);
+            uploadDirectory(channelSftp, dockerServerProperties.getLocalPath() + "/devCli/ogms_xfer", packagePath);
             channelSftp.chmod(0777, packagePath);
 
             // 上传 main.py 文件
-            String mainPath = localProjectPath.substring(0, lastSlashIndex) + "/devCli/main.py";
+            String mainPath = dockerServerProperties.getLocalPath() + "/devCli/main.py";
             try (FileInputStream fis = new FileInputStream(mainPath)) {
                 channelSftp.put(fis, volumePath + "/main.py");
             }
             // 上传 watcher.py 文件
-            String watchPath = localProjectPath.substring(0, lastSlashIndex) + "/devCli/watcher.py";
+            String watchPath = dockerServerProperties.getLocalPath() + "/devCli/watcher.py";
             try (FileInputStream fis = new FileInputStream(watchPath)) {
                 channelSftp.put(fis, volumePath + "/watcher.py");
             }
