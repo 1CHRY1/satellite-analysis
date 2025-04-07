@@ -40,7 +40,6 @@ class HttpClient {
                 return response.data
             },
             async (error) => {
-                console.log('!!! response error', error)
                 if (error.response?.status === 401) {
                     // 🚨 Token 过期，尝试刷新
                     const refreshToken = localStorage.getItem('refreshToken')
@@ -55,7 +54,7 @@ class HttpClient {
                         // console.log('刷新 Token ', refreshToken)
 
                         const res = await axios.post(
-                            'api/user/refresh',
+                            '/api/user/refresh',
                             {},
                             {
                                 headers: {
@@ -68,7 +67,6 @@ class HttpClient {
                         if (!!res.data.data.accessToken) {
                             //  存储新 token
                             localStorage.setItem('token', res.data.data.accessToken)
-                            console.log('刷新 Token 成功', res.data.data.accessToken)
                             //  重新请求失败的 API
                             error.config.headers.Authorization = `Bearer ${res.data.data.accessToken}`
                             return this.instance(error.config)
