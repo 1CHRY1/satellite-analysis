@@ -8,6 +8,7 @@ API_VERSION                                     =       '/v0'
 
 # API for TIF
 API_TIF_MERGE                                   =       API_VERSION + '/tif/merge'
+API_TIF_MERGE_V2                                =       API_VERSION + '/tif/merge_v2'
 
 # API for Task
 API_TASK_DELETE                                 =       API_VERSION + '/task'
@@ -30,6 +31,10 @@ MINIO_PORT                                      =       9000
 MINIO_IP                                        =       "223.2.34.7"
 MINIO_ACCESS_KEY                                =       "jTbgNHEqQafOpUxVg7Ol"
 MINIO_SECRET_KEY                                =       "7UxtrqhSOyN1KUeumbqTRMv1zeluLO69OwJnCC0M"
+# MINIO_PORT                                      =       30440
+# MINIO_IP                                        =       "223.2.43.228"
+# MINIO_ACCESS_KEY                                =       "lYttzgfJ51BNMxkPFxSU"
+# MINIO_SECRET_KEY                                =       "DHMu3R2CcbKqqPQ3OlFes5kjT4SoYrJqyY7kSH1O"
 MINIO_SECURE                                    =       False
 MINIO_IMAGES_BUCKET                             =       "test-images"
 MINIO_TILES_BUCKET                              =       "test-tiles"
@@ -44,7 +49,7 @@ MYSQL_USER                                      =       "root"
 MYSQL_PWD                                       =       "root"
 
 # Temp Config
-TEMP_INPUT_DIR                                  =       r"E:\Landset8_test\LC08_L2SP_118038_20241217_20241227_02_T1"
+TEMP_INPUT_DIR                                  =       r"E:\Landset8_test\LC08_L2SP_118038_20240320_20240402_02_T1"
 TEMP_OUTPUT_DIR                                 =       r"E:\Landset8_test\test"
 TEMP_SENSOR_NAME                                =       "landset8_test"
 TEMP_PRODUCT_NAME                               =       "landset8_L2SP_test"

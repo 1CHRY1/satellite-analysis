@@ -30,9 +30,11 @@ import nnu.mnr.satellite.utils.docker.DockerFileUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -137,7 +139,6 @@ public class ModelCodingService {
         String watchPath = workDir + "watcher.py";
         String outputPath = workDir + "output";
         String dataPath = workDir + "data";
-        String localPyPath = dockerServerProperties.getLocalPath() + projectId + "/" + "main.py";
         String serverPyPath = serverDir + "main.py";
         Project formerProject = projectDataService.getProjectByUserAndName(userId, projectName);
         if ( formerProject != null){
@@ -149,7 +150,7 @@ public class ModelCodingService {
                 .environment(env).createTime(LocalDateTime.now()).dataBucket(projectDataBucket)
                 .workDir(workDir).serverDir(serverDir).description(createProjectDTO.getDescription())
                 .createUser(userId).createUserEmail(user.getEmail()).createUserName(user.getUserName())
-                .pyPath(pyPath).localPyPath(localPyPath).serverPyPath(serverPyPath)
+                .pyPath(pyPath).serverPyPath(serverPyPath)
                 .watchPath(watchPath).outputPath(outputPath).dataPath(dataPath)
                 .build();
         dockerService.initEnv(projectId, serverDir);
@@ -165,8 +166,8 @@ public class ModelCodingService {
         dockerService.startContainer(containerId);
 
         // Start Watching Process
-        String watchCommand = "nohup python -u " + project.getWatchPath() + " > watcher.out 2>&1 &";
-        CompletableFuture.runAsync(() -> dockerService.runCMDInContainerWithoutInteraction(userId, projectId, containerId, watchCommand));        dockerService.runCMDInContainerWithoutInteraction(userId, projectId, containerId, watchCommand);
+        String watchCommand = "nohup python -u " + project.getWatchPath() + " > watcher.out 2>&1";
+        CompletableFuture.runAsync(() -> dockerService.runCMDInContainerWithoutInteraction(userId, projectId, containerId, watchCommand));
         projectRepo.insert(project);
         responseInfo = "Project " + projectId + " has been Created";
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
@@ -193,7 +194,7 @@ public class ModelCodingService {
                 responseInfo = "Project " + projectId + " is Opened";
             } else { responseInfo = "Project " + projectId + " has been Opened"; }
             // Start Watching Process
-            String watchCommand = "python " + project.getWatchPath();
+            String watchCommand = "nohup python -u " + project.getWatchPath() + " > watcher.out 2>&1";
             CompletableFuture.runAsync( () -> dockerService.runCMDInContainer(userId, projectId, containerId, watchCommand));
 
             return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
@@ -382,12 +383,12 @@ public class ModelCodingService {
             return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
         }
         try {
-            Files.writeString(Paths.get(project.getLocalPyPath()), projectFileDTO.getContent());
+            String content = projectFileDTO.getContent();
             project.setPyContent(projectFileDTO.getContent());
             projectRepo.updateById(project);
-            sftpDataService.uploadFile(
-                    project.getLocalPyPath(), project.getServerPyPath()
-            );
+            try (InputStream inputStream = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8))) {
+                sftpDataService.uploadFileFromStream(inputStream, project.getServerPyPath());
+            }
             responseInfo = "Python Script " + projectId + " has been Saved";
             return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
         } catch (Exception e) {
@@ -419,12 +420,11 @@ public class ModelCodingService {
             return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
         }
         JSONObject geometry = projectDataDTO.getUploadData();
-        int lastSlashIndex = project.getLocalPyPath().lastIndexOf('/');
         String fileName = projectDataDTO.getUploadDataName() + ".geojson";
-        String localPath = project.getLocalPyPath().substring(0, lastSlashIndex) + "/data/" + fileName;
         String remotePath = project.getServerDir() + "data/" + fileName;
-        FileUtil.saveAsJsonFile(geometry, localPath);
-        sftpDataService.uploadFile(localPath, remotePath);
+        try (InputStream inputStream = new ByteArrayInputStream(geometry.toString().getBytes(StandardCharsets.UTF_8))) {
+            sftpDataService.uploadFileFromStream(inputStream, remotePath);
+        }
         responseInfo = "Project Data has been Uploaded";
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
     }
@@ -451,18 +451,28 @@ public class ModelCodingService {
             responseInfo = "Container Not Connected";
             return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
         }
-        String sceneId = projectTileDataDTO.getSceneId();
-        List<String> tileIds = projectTileDataDTO.getTileIds();
+        // TODO: add another database
+        String object = projectTileDataDTO.getObject();
+        int index = object.indexOf("/");
+        String bucket = object.substring(0, index);
+        String path = object.substring(index + 1);
+//        String sceneId = projectTileDataDTO.getSceneId();
+//        List<String> tileIds = projectTileDataDTO.getTileIds();
+//        CompletableFuture.runAsync(() -> {
+//            String remoteDataPath = project.getServerDir() + "data/";
+//            sftpDataService.createRemoteDir( remoteDataPath + sceneId + "/", 0777);
+//            for (String tileId : tileIds) {
+//                Tile tile = tileRepo.getTileByTileId(sceneId, tileId);
+//                InputStream tileStream = minioUtil.getObjectStream(tile.getBucket(), tile.getPath());
+//                int lastIndex = tile.getPath().lastIndexOf('/');
+//                String tileName = tile.getPath().substring(lastIndex + 1);
+//                sftpDataService.uploadFileFromStream(tileStream, remoteDataPath + sceneId + "/" + tileName);
+//            }
+//        });
         CompletableFuture.runAsync(() -> {
             String remoteDataPath = project.getServerDir() + "data/";
-            sftpDataService.createRemoteDir( remoteDataPath + sceneId + "/", 0777);
-            for (String tileId : tileIds) {
-                Tile tile = tileRepo.getTileByTileId(sceneId, tileId);
-                InputStream tileStream = minioUtil.getObjectStream(tile.getBucket(), tile.getPath());
-                int lastIndex = tile.getPath().lastIndexOf('/');
-                String tileName = tile.getPath().substring(lastIndex + 1);
-                sftpDataService.uploadFileFromStream(tileStream, remoteDataPath + sceneId + "/" + tileName);
-            }
+            InputStream tileStream = minioUtil.getObjectStream(bucket, path);
+            sftpDataService.uploadFileFromStream(tileStream, remoteDataPath + projectTileDataDTO.getName() + ".tif");
         });
         responseInfo = "Data Uploading Successfully";
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
@@ -519,7 +529,7 @@ public class ModelCodingService {
             responseInfo = "Container Not Connected";
             return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
         }
-        String watchCommand = "python " + project.getWatchPath();
+        String watchCommand = "nohup python -u " + project.getWatchPath() + " > watcher.out 2>&1";
         CompletableFuture.runAsync( () -> dockerService.runCMDInContainer(userId, projectId, containerId, watchCommand));
         responseInfo = "Script Executing Successfully";
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();

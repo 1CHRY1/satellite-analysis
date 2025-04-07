@@ -1,9 +1,12 @@
 package nnu.mnr.satellite.controller.resources;
 
 import lombok.extern.slf4j.Slf4j;
+import nnu.mnr.satellite.model.dto.resources.TilesFetchDTO;
 import nnu.mnr.satellite.model.dto.resources.TilesMergeDTO;
+import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.model.vo.common.GeoJsonVO;
 import nnu.mnr.satellite.model.vo.resources.TileDesVO;
+import nnu.mnr.satellite.model.vo.resources.TilesFetchVO;
 import nnu.mnr.satellite.service.resources.TileDataService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -13,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -43,6 +47,11 @@ public class TileController {
         return ResponseEntity.ok(geoJsonVO);
     }
 
+    @PostMapping("/tiler/tiles")
+    public ResponseEntity<List<TilesFetchVO>> getTilesByLevelBandAndIds(@RequestBody TilesFetchDTO tilesFetchDTO) throws IOException {
+        return ResponseEntity.ok(tileDataService.getTilesByBandLevelAndIds(tilesFetchDTO));
+    }
+
     @GetMapping("/tif/scene/{sceneId}/tileId/{tileId}")
     public ResponseEntity<byte[]> getTifBySceneAndTileId(@PathVariable String sceneId, @PathVariable String tileId) {
         byte[] tifData = tileDataService.getTileTifById(sceneId, tileId);
@@ -53,8 +62,8 @@ public class TileController {
                 .body(tifData);
     }
 
-    @PostMapping("/tif/tileIds")
-    public ResponseEntity<String> getMergedTifBySceneAndTileId(@RequestBody TilesMergeDTO tilesMergeDTO) {
+    @PostMapping("/tif/tiles")
+    public ResponseEntity<CommonResultVO> getMergedTifBySceneBandsAndTiles(@RequestBody TilesMergeDTO tilesMergeDTO) {
         return ResponseEntity.ok(tileDataService.getMergeTileTif(tilesMergeDTO));
     }
 
