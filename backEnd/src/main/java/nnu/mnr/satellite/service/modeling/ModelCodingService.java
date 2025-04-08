@@ -1,4 +1,4 @@
-ackage nnu.mnr.satellite.service.modeling;
+package nnu.mnr.satellite.service.modeling;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.dynamic.datasource.creator.DataSourceProperty;
