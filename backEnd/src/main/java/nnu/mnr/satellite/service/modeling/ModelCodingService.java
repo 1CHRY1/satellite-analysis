@@ -153,7 +153,7 @@ public class ModelCodingService {
                 .pyPath(pyPath).serverPyPath(serverPyPath)
                 .watchPath(watchPath).outputPath(outputPath).dataPath(dataPath)
                 .build();
-        dockerService.initEnv(projectId, serverDir);
+        dockerService.initEnv(serverDir);
 
         // Load Config
         String configPath = serverDir + "config.json";

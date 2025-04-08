@@ -6,19 +6,17 @@ import nnu.mnr.satellite.model.dto.common.FileData;
 import nnu.mnr.satellite.model.dto.modeling.*;
 import nnu.mnr.satellite.model.pojo.common.DFileInfo;
 import nnu.mnr.satellite.model.vo.modeling.CodingProjectVO;
+import nnu.mnr.satellite.model.vo.modeling.JsonResultVO;
 import nnu.mnr.satellite.model.vo.modeling.ProjectResultVO;
-import nnu.mnr.satellite.model.vo.modeling.TilerVO;
+import nnu.mnr.satellite.model.vo.modeling.TilerResultVO;
 import nnu.mnr.satellite.service.modeling.ModelCodingService;
 import nnu.mnr.satellite.service.modeling.ProjectResultDataService;
 import nnu.mnr.satellite.utils.common.FileUtil;
-import nnu.mnr.satellite.utils.docker.DockerFileUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
@@ -136,11 +134,16 @@ public class ModelCodingController {
     }
 
     @GetMapping("/project/result/tif/{dataId}")
-    public ResponseEntity<TilerVO> getProjectTifResult(@PathVariable String dataId) {
+    public ResponseEntity<TilerResultVO> getProjectTifResult(@PathVariable String dataId) {
         return ResponseEntity.ok(projectResultDataService.getProjectTifResult(dataId));
     }
 
-    @PostMapping("/project/result")
+    @GetMapping("/project/result/json/{dataId}")
+    public ResponseEntity<JsonResultVO> getProjectJsonResult(@PathVariable String dataId) {
+        return ResponseEntity.ok(projectResultDataService.getProjectJsonResult(dataId));
+    }
+
+    @PostMapping("/project/result/file/")
     public ResponseEntity<byte[]> getProjectResult(@RequestBody ProjectResultDTO projectResultDTO) {
         FileData resultData = projectResultDataService.getProjectResult(projectResultDTO);
         HttpHeaders headers = new HttpHeaders();
