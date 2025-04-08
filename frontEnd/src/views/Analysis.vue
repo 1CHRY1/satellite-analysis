@@ -22,7 +22,8 @@
         <div class="splitHandleHorizontal" id="splitPaneHorizontal1Id"></div>
         <!-- 下方map控件 -->
         <div v-show="showMapContainer" class="mapContainer" id="mapContainerId">
-            <mapComp class="h-[100%]"> </mapComp>
+            < <mapComp class="h-[100%]">
+                </mapComp>
         </div>
     </div>
 </template>
@@ -45,9 +46,11 @@ const projectId = route.params.projectId as string
 
 onMounted(() => {
     ws.connect()
+    window.addEventListener('beforeunload', handleBeforeUnload)
 })
 
 onUnmounted(() => {
+    window.removeEventListener('beforeunload', handleBeforeUnload)
     ws.close() // 关闭连接
 })
 
@@ -85,9 +88,14 @@ ws.on('close', () => {
     console.log('WebSocket 连接已关闭')
 })
 
+const handleBeforeUnload = () => {
+    ws.close() // 当页面即将关闭时，手动关闭 WebSocket
+}
+
 const clearConsole = () => {
     messages.value = ['Response and execution information will be displayed here .']
 }
+
 
 // const addMessage = (msg: string) => {
 //   messages.value.push(msg);
@@ -249,6 +257,7 @@ const refreshContainerSize = () => {
         // flex-grow: 1;
         display: block;
         height: 50%;
+        position: relative;
         // background: red;
 
         .modelContent {

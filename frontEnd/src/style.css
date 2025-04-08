@@ -1,5 +1,9 @@
 @import 'tailwindcss';
 
+html {
+    font-size: 16px;
+}
+
 .text-shadow-deepblue {
 	text-shadow: rgb(0, 62, 107) 1px 1px 1px;
 }
