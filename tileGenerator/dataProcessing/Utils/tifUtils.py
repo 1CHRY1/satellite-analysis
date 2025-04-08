@@ -18,11 +18,12 @@ import pyproj
 from shapely.geometry import box
 import subprocess
 from collections import defaultdict
-from dataProcessing.Utils.filenameUtils import extract_landsat7_info
+from dataProcessing.Utils.filenameUtils import extract_info
 from dataProcessing.Utils.osUtils import uploadFileToMinio, uploadLocalFile, uploadLocalDirectory
 from dataProcessing.tifSlicer.tifSlice import tif2GeoCS, rasterInfo, lnglat2grid, grid2lnglat, grid_size_in_degree, \
     geo_to_pixel, grids2Geojson
 import dataProcessing.config as config
+from dataProcessing.imageConfig import CUR_SYNTHESIS_BANDS
 
 
 def read_band(path):
@@ -520,6 +521,19 @@ def clip_raster_by_polygon(raster_path, polygon, output_path):
         if out_ds:
             out_ds = None
 
+def color_synthesis_and_upload(b1_path, b2_path, b3_path, scene_info, object_prefix, bucket_name, scene_name):
+    #--------- Image true color synthesis and upload -----------------------------------
+    if b1_path and b2_path and b3_path:
+        tif_buffer, tif_dataLen = generateColorfulTile(b3_path, b2_path, b1_path)
+        png_buffer, png_dataLen = tif2Png(tif_buffer, 10)
+        object_name = f"{object_prefix}/png/{scene_name}.png"  # 可以根据需要调整路径和文件名
+        for image_info in scene_info.image_info_list:
+            image_info.png_path = object_name
+            scene_info.png_path = object_name
+        uploadFileToMinio(png_buffer, png_dataLen, bucket_name, object_name)
+    else:
+        print(f"Skipping {scene_name} as one or more required bands (B1, B2, B3) are missing.")
+    return scene_info
 
 def process_and_upload(files_dict: dict, bucket_name: str, object_prefix: str):
     """
@@ -533,7 +547,7 @@ def process_and_upload(files_dict: dict, bucket_name: str, object_prefix: str):
     #--------- process band files according to scene_name -----------------------------------
     for scene_name, band_paths in files_dict.items():
         scene_info = SimpleNamespace(image_info_list=[], bands=[], scene_name="")
-        # Make sure band_paths have B1, B2, B3, QA_PIXEL
+        # Make sure band_paths have B1, B2, B3, QA_PIXEL; b1/b2/b3 is for blue/green/red
         b1_path = None
         b2_path = None
         b3_path = None
@@ -547,15 +561,16 @@ def process_and_upload(files_dict: dict, bucket_name: str, object_prefix: str):
             object_name = f"{object_prefix}/tif/{scene_info.scene_name}/{band_name}"
             uploadLocalFile(convert_tif2cog(path), bucket_name, object_name)
             # Calculate the cloud coverage(for the whole image)
+            # TODO This is the version only for landsat8
             if qa_data is None:
                 qa_data, no_data_value = read_qa_pixel(path, scene_info.scene_name)
                 scene_info.cloud = get_cloud_coverage4image(qa_data, no_data_value)
             # Get b1/b2/b3 path
-            if 'B1' in os.path.basename(path):
+            if CUR_SYNTHESIS_BANDS[2] in os.path.basename(path):
                 b1_path = path
-            elif 'B2' in os.path.basename(path):
+            elif CUR_SYNTHESIS_BANDS[1] in os.path.basename(path):
                 b2_path = path
-            elif 'B3' in os.path.basename(path):
+            elif CUR_SYNTHESIS_BANDS[0] in os.path.basename(path):
                 b3_path = path
             # Process tiles and get tile info list
             with tempfile.TemporaryDirectory() as temp_dir:
@@ -563,7 +578,7 @@ def process_and_upload(files_dict: dict, bucket_name: str, object_prefix: str):
                                                config.MINIO_TILES_BUCKET,
                                                config.MINIO_GRID_BUCKET, object_prefix)
             # Prep image info
-            image_info = extract_landsat7_info(path)
+            image_info = extract_info(path)
             image_info.tif_path = object_name
             image_info.cloud = scene_info.cloud
             image_info.png_path = None
@@ -578,18 +593,8 @@ def process_and_upload(files_dict: dict, bucket_name: str, object_prefix: str):
             scene_info.image_info_list.append(image_info)
         # Calculate band num
         scene_info.band_num = len(scene_info.bands)
-
-        #--------- Image true color synthesis and upload -----------------------------------
-        if b1_path and b2_path and b3_path:
-            tif_buffer, tif_dataLen = generateColorfulTile(b3_path, b2_path, b1_path)
-            png_buffer, png_dataLen = tif2Png(tif_buffer, 10)
-            object_name = f"{object_prefix}/png/{scene_name}.png"  # 可以根据需要调整路径和文件名
-            for image_info in scene_info.image_info_list:
-                image_info.png_path = object_name
-                scene_info.png_path = object_name
-            uploadFileToMinio(png_buffer, png_dataLen, bucket_name, object_name)
-        else:
-            print(f"Skipping {scene_name} as one or more required bands (B1, B2, B3) are missing.")
+        # --Color synthesis and upload the png; -- Also update scene_info
+        scene_info = color_synthesis_and_upload(b1_path, b2_path, b3_path, scene_info, object_prefix, bucket_name, scene_name)
 
         scene_info_list.append(scene_info)
     return scene_info_list
