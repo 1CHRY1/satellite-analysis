@@ -1,5 +1,6 @@
 package nnu.mnr.satellite.model.vo.modeling;
 
+import com.alibaba.fastjson2.JSONObject;
 import lombok.Builder;
 import lombok.Data;
 
@@ -21,5 +22,6 @@ public class ProjectResultVO {
     private String dataName;
     private String dataType;
     private LocalDateTime createTime;
+    private JSONObject bbox;
 
 }

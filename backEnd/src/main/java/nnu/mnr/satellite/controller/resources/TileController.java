@@ -6,7 +6,7 @@ import nnu.mnr.satellite.model.dto.resources.TilesMergeDTO;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.model.vo.common.GeoJsonVO;
 import nnu.mnr.satellite.model.vo.resources.TileDesVO;
-import nnu.mnr.satellite.model.vo.resources.TilesFetchVO;
+import nnu.mnr.satellite.model.vo.resources.TilesFetchResultVO;
 import nnu.mnr.satellite.service.resources.TileDataService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -48,7 +48,7 @@ public class TileController {
     }
 
     @PostMapping("/tiler/tiles")
-    public ResponseEntity<List<TilesFetchVO>> getTilesByLevelBandAndIds(@RequestBody TilesFetchDTO tilesFetchDTO) throws IOException {
+    public ResponseEntity<List<TilesFetchResultVO>> getTilesByLevelBandAndIds(@RequestBody TilesFetchDTO tilesFetchDTO) throws IOException {
         return ResponseEntity.ok(tileDataService.getTilesByBandLevelAndIds(tilesFetchDTO));
     }
 

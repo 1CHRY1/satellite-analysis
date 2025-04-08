@@ -2,8 +2,7 @@ package nnu.mnr.satellite.model.vo.resources;
 
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import nnu.mnr.satellite.model.dto.resources.TilesFetchDTO;
-import nnu.mnr.satellite.model.vo.modeling.TilerVO;
+import nnu.mnr.satellite.model.vo.modeling.TilerResultVO;
 
 /**
  * Created with IntelliJ IDEA.
@@ -16,7 +15,7 @@ import nnu.mnr.satellite.model.vo.modeling.TilerVO;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(builderMethodName = "tilesFetcherBuilder")
 @Data
-public class TilesFetchVO extends TilerVO {
+public class TilesFetchResultVO extends TilerResultVO {
 
     String sceneId;
     String tileId;

@@ -1,7 +1,5 @@
 package nnu.mnr.satellite.model.vo.modeling;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.SuperBuilder;
 
@@ -15,7 +13,7 @@ import lombok.experimental.SuperBuilder;
 
 @Data
 @SuperBuilder(builderMethodName = "tilerBuilder")
-public class TilerVO {
+public class TilerResultVO {
 
     private String tilerUrl;
     private String object;
