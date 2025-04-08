@@ -1,15 +1,9 @@
 <template>
     <!-- Dataset selection modal -->
-    <a-modal
-        v-model:open="modalVisible"
-        title="选择数据集"
-        :width="800"
-        :footer="null"
-        :destroyOnClose="true"
-        class="dataset-modal"
-    >
+    <a-modal v-model:open="modalVisible" title="选择数据集" :width="800" :footer="null" :destroyOnClose="true"
+        class="dataset-modal">
         <div class="modal-content">
-            <a-skeleton active :loading="satellites.length === 0">
+            <a-skeleton active :loading="dataFetching">
                 <!-- Step indicator -->
                 <div class="steps-container">
                     <a-steps :current="currentUIStep" size="small">
@@ -21,13 +15,9 @@
                 <!-- Satellite selection view -->
                 <div v-if="currentUIStep === 0" class="satellites-container">
                     <div class="satellites-grid">
-                        <div
-                            v-for="satellite in satellites"
-                            :key="satellite.id"
-                            class="satellite-card"
+                        <div v-for="satellite in satellites" :key="satellite.id" class="satellite-card"
                             :class="{ selected: selectedSatellite?.id === satellite.id }"
-                            @click="selectSatelliteHandler(satellite)"
-                        >
+                            @click="selectSatelliteHandler(satellite)">
                             <div class="satellite-icon">
                                 <satellite-icon :size="24" :color="'#38bdf8'" />
                             </div>
@@ -35,27 +25,18 @@
                                 <h3 class="satellite-name">{{ satellite.name }}</h3>
                                 <p class="satellite-description">{{ satellite.description }}</p>
                                 <div class="satellite-meta">
-                                    <span class="satellite-products-count"
-                                        >{{ satellite.products.length }} 个产品</span
-                                    >
+                                    <span class="satellite-products-count">{{ satellite.products.length }} 个产品</span>
                                 </div>
                             </div>
                             <div class="satellite-select-indicator">
-                                <check-circle-icon
-                                    v-if="selectedSatellite?.id === satellite.id"
-                                    :size="20"
-                                />
+                                <check-circle-icon v-if="selectedSatellite?.id === satellite.id" :size="20" />
                             </div>
                         </div>
                     </div>
 
                     <div class="modal-footer">
                         <a-button @click="closeModal">取消</a-button>
-                        <a-button
-                            type="primary"
-                            @click="goToProductSelection"
-                            :disabled="!selectedSatellite"
-                        >
+                        <a-button type="primary" @click="goToProductSelection" :disabled="!selectedSatellite">
                             下一步
                         </a-button>
                     </div>
@@ -75,26 +56,15 @@
                     </div>
 
                     <div class="products-list">
-                        <a-radio-group
-                            v-model:value="selectedProductId"
-                            class="product-radio-group"
-                        >
-                            <div
-                                v-for="product in selectedSatellite.products"
-                                :key="product.id"
-                                class="product-item"
-                            >
+                        <a-radio-group v-model:value="selectedProductId" class="product-radio-group">
+                            <div v-for="product in selectedSatellite.products" :key="product.id" class="product-item">
                                 <a-radio :value="product.id">
                                     <div class="product-info">
                                         <h4 class="product-name">{{ product.name }}</h4>
                                         <p class="product-description">{{ product.description }}</p>
                                         <div class="product-meta">
-                                            <span class="product-resolution"
-                                                >分辨率: {{ product.resolution }}</span
-                                            >
-                                            <span class="product-period"
-                                                >周期: {{ product.period }}</span
-                                            >
+                                            <span class="product-resolution">分辨率: {{ product.resolution }}</span>
+                                            <span class="product-period">周期: {{ product.period }}</span>
                                         </div>
                                     </div>
                                 </a-radio>
@@ -104,11 +74,7 @@
 
                     <div class="modal-footer">
                         <a-button @click="backToSatellites">上一步</a-button>
-                        <a-button
-                            type="primary"
-                            @click="confirmSelection"
-                            :disabled="!selectedProductId"
-                        >
+                        <a-button type="primary" @click="confirmSelection" :disabled="!selectedProductId">
                             确认选择
                         </a-button>
                     </div>
@@ -121,7 +87,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { SatelliteIcon, CheckCircleIcon, ArrowLeftFromLineIcon } from 'lucide-vue-next'
-import { fetchAllSensorViews, type SensorView, type ProductView } from './apiAdapter/adapter'
+import { fetchAllSensorViews, type SensorView } from './apiAdapter/adapter'
+import { message } from 'ant-design-vue'
 
 /////// Modal Visible //////////////////////////////////
 const modalVisible = defineModel<Boolean>({ required: true })
@@ -141,9 +108,11 @@ const emit = defineEmits(['update:selectedProductId'])
 const satellites = ref<SensorView[]>([])
 const selectedSatellite = ref<SensorView | null>()
 const selectedProductId = ref<string>('')
-
+const dataFetching = ref<Boolean>(false)
 const fetchSatellitesData = async () => {
+    dataFetching.value = true
     satellites.value = await fetchAllSensorViews()
+    dataFetching.value = false
 }
 
 const selectSatelliteHandler = (satellite: any) => {
@@ -158,8 +127,11 @@ const confirmSelection = () => {
 }
 
 onMounted(() => {
-    fetchSatellitesData()
+    fetchSatellitesData().catch((_) => {
+        message.error('遥感数据产品获取失败', _)
+    })
 })
+
 
 onUnmounted(() => {
     // selectedSatellite.value = null
