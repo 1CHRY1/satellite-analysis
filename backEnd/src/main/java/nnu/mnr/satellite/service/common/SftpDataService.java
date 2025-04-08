@@ -262,7 +262,7 @@ public class SftpDataService {
         }
     }
 
-    public void createRemoteDirAndFile(SftpConn sftpConn, String projectId, String volumePath) {
+    public void createRemoteDirAndFile(SftpConn sftpConn, String volumePath) {
         Session session = jschConnectionManager.getSession(sftpConn);
         try {
             ChannelSftp channelSftp = (ChannelSftp) session.openChannel("sftp");
@@ -284,7 +284,10 @@ public class SftpDataService {
 
             // 上传 TransferEngine 目录
             String packagePath = volumePath + "ogms_xfer/";
+            long startTime = System.currentTimeMillis();
             uploadDirectory(channelSftp, dockerServerProperties.getLocalPath() + "/devCli/ogms_xfer", packagePath);
+            long endTime = System.currentTimeMillis();
+            log.info("Upload took {} ms", endTime - startTime);
             channelSftp.chmod(0777, packagePath);
 
             // 上传 main.py 文件
