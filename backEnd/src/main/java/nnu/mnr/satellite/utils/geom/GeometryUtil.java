@@ -102,10 +102,34 @@ public class GeometryUtil {
         return geometryFactory.createPoint(new org.locationtech.jts.geom.Coordinate(x, y));
     }
 
-    public static JSONObject geometry2Geojson(Geometry jtsGeometry, String id) throws IOException {
-        return geometry2Geojson(jtsGeometry, id, -1, -1);
+    public static JSONObject geometry2Geojson(Geometry jtsGeometry) throws IOException {
+        if (jtsGeometry == null) {
+            return null;
+        }
+
+        // 创建 GeometryJSON 对象，指定精度（例如 6 位小数）
+        GeometryJSON geometryJson = new GeometryJSON(6);
+
+        // 将 JTS Geometry 转换为 GeoJSON 几何部分的字符串
+        StringWriter writer = new StringWriter();
+        geometryJson.write(jtsGeometry, writer);
+        String geometryJsonStr = writer.toString();
+
+        // 使用 Jackson 创建完整的 GeoJSON Feature 对象
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode featureNode = mapper.createObjectNode();
+
+        featureNode.put("type", "Feature");
+        featureNode.set("geometry", mapper.readTree(geometryJsonStr)); // 解析 geometry JSON
+
+        // 转换为字符串
+        return JSONObject.parseObject(mapper.writeValueAsString(featureNode));
     }
-    public static JSONObject geometry2Geojson(Geometry jtsGeometry, String id, int columnId , int rowId) throws IOException {
+
+    public static JSONObject geometry2ResourceGeojson(Geometry jtsGeometry, String id) throws IOException {
+        return geometry2ResourceGeojson(jtsGeometry, id, -1, -1);
+    }
+    public static JSONObject geometry2ResourceGeojson(Geometry jtsGeometry, String id, int columnId, int rowId) throws IOException {
         if (jtsGeometry == null || id == null) {
             return null;
         }
@@ -146,7 +170,7 @@ public class GeometryUtil {
             List<JSONObject> result = ConcurrentUtil.processConcurrently(
                     items, item -> {
                         try {
-                            return geometry2Geojson(item.getBbox(), item.getSceneId());
+                            return geometry2ResourceGeojson(item.getBbox(), item.getSceneId());
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
@@ -167,7 +191,7 @@ public class GeometryUtil {
             List<JSONObject> result = ConcurrentUtil.processConcurrently(
                     items, item -> {
                         try {
-                            return geometry2Geojson(item.getBbox(), item.getTileId(), item.getColumnId(), item.getRowId());
+                            return geometry2ResourceGeojson(item.getBbox(), item.getTileId(), item.getColumnId(), item.getRowId());
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
