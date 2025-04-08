@@ -15,16 +15,18 @@
 
             <div class="flex">
                 <div @click="refreshTableData"
-                    class="mr-2.5 my-1.5 flex w-fit cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-[14px] text-[#818999] shadow-md">
+                    class="mr-2.5 my-1.5 flex w-fit cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-[14px] text-[#818999] shadow-md"
+                    title="刷新数据">
                     <RefreshCcw :size="16" class="text-primary" />
                 </div>
                 <div @click="triggerFileSelect"
-                    class="mr-2.5 my-1.5 flex w-fit cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-[14px] text-[#818999] shadow-md">
+                    class="mr-2.5 my-1.5 flex w-fit cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-[14px] text-[#818999] shadow-md"
+                    title="上传geojson">
                     <Upload :size="16" class="text-primary" />
                 </div>
 
                 <!-- 隐藏文件选择框 -->
-                <input ref="fileInput" type="file" accept=".json,.txt" @change="uploadFile" class="hidden" />
+                <input ref="fileInput" type="file" accept=".json,.txt,.geojson" @change="uploadFile" class="hidden" />
 
                 <!-- <div @click=""
                     class="mr-2.5 my-1.5 flex w-fit cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-[14px] text-[#818999] shadow-md">
@@ -82,7 +84,7 @@ import type { dockerData } from '@/type/analysis'
 import { getFiles, getMiniIoFiles, getTileFromMiniIo, uploadGeoJson } from '@/api/http/analysis'
 import { sizeConversion, formatTime } from '@/util/common'
 import { ElMessage } from 'element-plus'
-import { map_flyTo, addRasterLayerFromUrl, removeRasterLayer } from '@/util/map/operation'
+import { map_flyTo, addRasterLayerFromUrl, removeRasterLayer, map_fitView } from '@/util/map/operation'
 import { RefreshCcw, CircleSlash, Upload } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -139,8 +141,11 @@ const uploadFile = async (event: Event) => {
 
     // 检查文件类型
     const allowedTypes = ['application/json', 'text/plain']
-    if (!allowedTypes.includes(file.type)) {
-        ElMessage.warning('只支持 .json 或 .txt 文件')
+    const allowedExtensions = ['.json', '.txt', '.geojson'];
+
+    const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
+    if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(`.${fileExtension}`)) {
+        ElMessage.warning('只支持 .geojson, .json 或 .txt 文件')
         return
     }
 
@@ -150,10 +155,8 @@ const uploadFile = async (event: Event) => {
         try {
 
             const fileContent = e.target?.result as string
-            console.log(fileContent, 'fileContent');
 
             const jsonData = JSON.parse(fileContent)
-            console.log(jsonData, 'jsonData1');
 
             const res = await uploadGeoJson({
                 userId: props.userId,
@@ -214,20 +217,19 @@ const handleCellClick = async (item: dockerData, column: string) => {
                         ElMessage.info('该数据正在切片，请稍后再预览')
                         return
                     }
-                    console.log(targetInMiniIo.dataId, 18156)
-
+                    let mapPosition = targetInMiniIo.bbox.geometry.coordinates[0]
                     // 3、拿到数据实体的瓦片url
                     let tileUrlObj = await getTileFromMiniIo(targetInMiniIo.dataId)
                     let wholeTileUrl
                     if (tileUrlObj.object.includes('ndvi')) {
-                        wholeTileUrl =
-                            tileUrlObj.tilerUrl + '/{z}/{x}/{y}.png?object=/' + tileUrlObj.object + "&colorStyle=red2green&range=[-0.8,0.8]"
+                        wholeTileUrl = tileUrlObj.tilerUrl + '/{z}/{x}/{y}.png?object=/' + tileUrlObj.object + "&colorStyle=red2green&range=[-0.8,0.8]"
+                    } else if (tileUrlObj.object.includes('pbty')) {
+                        wholeTileUrl = tileUrlObj.tilerUrl + '/{z}/{x}/{y}.png?object=/' + tileUrlObj.object + "&colorStyle=red2green&range=[0,0.72]"
                     } else {
-                        wholeTileUrl =
-                            tileUrlObj.tilerUrl + '/{z}/{x}/{y}.png?object=/' + tileUrlObj.object
+                        wholeTileUrl = tileUrlObj.tilerUrl + '/{z}/{x}/{y}.png?object=/' + tileUrlObj.object
                     }
 
-                    console.log(tileUrlObj, wholeTileUrl, 'wholeTileUrl')
+                    // console.log(tileUrlObj, wholeTileUrl, mapPosition, 'wholeTileUrl')
                     if (!tileUrlObj.object) {
                         console.info(wholeTileUrl, '没有拿到瓦片服务的URL呢,拼接的路径参数是空的')
                         return
@@ -236,6 +238,7 @@ const handleCellClick = async (item: dockerData, column: string) => {
                     // 图层名为“文件名+文件大小”
                     addRasterLayerFromUrl(wholeTileUrl, item.fileName + item.fileSize)
                     // flyTo
+                    map_fitView(getBounds(mapPosition))
                     if (0) {
                         map_flyTo([114.305542, 30.592807])
                     }
@@ -250,6 +253,24 @@ const handleCellClick = async (item: dockerData, column: string) => {
             ElMessage.warning('暂不支持预览')
         }
     }
+}
+
+// 从一组坐标点中获得左下和右上坐标点
+const getBounds = (coordinates: number[][]) => {
+    let minLng = Infinity; // 最小经度（西经）
+    let maxLng = -Infinity; // 最大经度（东经）
+    let minLat = Infinity; // 最小纬度（南纬）
+    let maxLat = -Infinity; // 最大纬度（北纬）
+    for (const [lng, lat] of coordinates) {
+        if (lng < minLng) minLng = lng;
+        if (lng > maxLng) maxLng = lng;
+        if (lat < minLat) minLat = lat;
+        if (lat > maxLat) maxLat = lat;
+    }
+    return [
+        [minLng, minLat], // 左下角（西经, 南纬）
+        [maxLng, maxLat]  // 右上角（东经, 北纬）
+    ];
 }
 
 const getInputData = async () => {

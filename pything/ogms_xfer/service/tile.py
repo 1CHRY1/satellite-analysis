@@ -19,7 +19,7 @@ class TileService:
         with Session(self.db_engine) as session:
             return session.query(TileModel).filter(TileModel.tile_id == tile_id).first() if TileModel else None
 
-    def get_tiles(self, scene_id: str, image_id: str = None, cloud_range: tuple[float, float] = None, polygon: object = None, tile_ids: list[str] = None, band: int = None, tile_level: str = None):
+    def get_tiles(self, scene_id: str, image_id: str = None, cloud_range: tuple[float, float] = None, polygon: object = None, tile_ids: list[str] = None, band: int = None, tile_level: str = None, row_id: int = None, column_id: int = None):
         TileModel = self.tile_factory.get_tile_model(scene_id)  # 动态获取 ORM 模型
         with Session(self.db_engine) as session:
             query = session.query(TileModel)
@@ -39,6 +39,10 @@ class TileService:
                 query = query.filter(TileModel.band == band)
             if tile_level is not None:
                 query = query.filter(TileModel.tile_level == tile_level)
+            if row_id is not None:
+                query = query.filter(TileModel.row_id == row_id)
+            if column_id is not None:
+                query = query.filter(TileModel.column_id == column_id)
             return query.all()
         
     def pull_tile(self, scene_id: str, tile_id: str, output_path: str):

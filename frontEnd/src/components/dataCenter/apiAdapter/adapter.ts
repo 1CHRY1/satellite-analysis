@@ -204,6 +204,11 @@ export async function mergingStatus(caseId: string) {
     let result = await SatelliteDataApi.getMergeImageTilesStatus(caseId)
     return result.data // return model status
 }
+// export async function mergingResult(caseId: string) {
+//     let result = await SatelliteDataApi.getMergeImageTilesResult(caseId)
+//     return result.data // return model result
+// }
+
 export async function downloadMergeTiles(caseId: string, name?: string) {
     SatelliteDataApi.downloadMergeImageTilesResult(caseId, name)
 }
@@ -245,35 +250,35 @@ export async function uploadTilesToProject(
 ): Promise<void> {
     return new Promise(async (resolve, reject) => {
         // open project
-        let actionParams: SatelliteDataApi.Project.ProjectActionRequest = {
-            projectId: project.projectId,
-            userId: project.createUser,
-            action: 'open',
-        }
-        const res = await SatelliteDataApi.operateProject(actionParams)
+        // let actionParams: SatelliteDataApi.Project.ProjectActionRequest = {
+        //     projectId: project.projectId,
+        //     userId: project.createUser,
+        //     action: 'open',
+        // }
+        // const res = await SatelliteDataApi.operateProject(actionParams)
 
-        if (res.status === 1) {
-            let params: SatelliteDataApi.Project.ImageTileUploadToProjectRequest = {
-                userId: project.createUser,
-                projectId: project.projectId,
-                sceneId: sceneId.toLowerCase(),
-                tileIds: tileIds,
-            }
-            await SatelliteDataApi.uploadImageTilesToProject(params)
-            successCallback()
-            setTimeout(() => {
-                let closeParams: SatelliteDataApi.Project.ProjectActionRequest = {
-                    projectId: project.projectId,
-                    userId: project.createUser,
-                    action: 'close',
-                }
-                SatelliteDataApi.operateProject(closeParams)
-            }, 5000)
-            resolve()
-        } else {
-            errorCallback()
-            reject('open project failed')
-        }
+        // if (res.status === 1) {
+        //     let params: SatelliteDataApi.Project.ImageTileUploadToProjectRequest = {
+        //         userId: project.createUser,
+        //         projectId: project.projectId,
+        //         sceneId: sceneId.toLowerCase(),
+        //         tileIds: tileIds,
+        //     }
+        //     await SatelliteDataApi.uploadImageTilesToProject(params)
+        //     successCallback()
+        //     setTimeout(() => {
+        //         let closeParams: SatelliteDataApi.Project.ProjectActionRequest = {
+        //             projectId: project.projectId,
+        //             userId: project.createUser,
+        //             action: 'close',
+        //         }
+        //         SatelliteDataApi.operateProject(closeParams)
+        //     }, 5000)
+        //     resolve()
+        // } else {
+        //     errorCallback()
+        //     reject('open project failed')
+        // }
     })
 }
 
@@ -308,6 +313,23 @@ export async function queryOverlapTileInfo(product: ProductView, gridId: string)
     return overlapTileInfos
 }
 
+// 重试函数封装
+async function withRetry<T>(fn: () => Promise<T>, retries: number = 3, delay: number = 500): Promise<T> {
+    let lastError;
+    for (let attempt = 0; attempt < retries; attempt++) {
+        try {
+            return await fn();
+        } catch (error) {
+            lastError = error;
+            if (attempt < retries - 1) {
+                await new Promise(res => setTimeout(res, delay));
+            }
+        }
+    }
+    throw lastError;
+}
+
+
 // 缓存对象，用于存储已查询过的瓦片信息
 const tileInfoCache = new Map<string, OverlapTileInfoView[]>();
 
@@ -315,7 +337,7 @@ const tileInfoCache = new Map<string, OverlapTileInfoView[]>();
 export async function queryOverlapTilesMap(product: ProductView, gridIDs: string[]): Promise<Map<string, OverlapTileInfoView[]>> {
     const map = new Map<string, OverlapTileInfoView[]>();
 
-    const MAX_CONCURRENT_REQUESTS = 3;
+    const MAX_CONCURRENT_REQUESTS = 5;
 
     // 分批处理请求
     for (let i = 0; i < gridIDs.length; i += MAX_CONCURRENT_REQUESTS) {
@@ -329,7 +351,8 @@ export async function queryOverlapTilesMap(product: ProductView, gridIDs: string
             }
 
             // 如果缓存中没有，则发起请求
-            const overlapTileInfos = await queryOverlapTileInfo(product, gridID);
+            // const overlapTileInfos = await queryOverlapTileInfo(product, gridID);
+            const overlapTileInfos = await withRetry(() => queryOverlapTileInfo(product, gridID));
             map.set(gridID, overlapTileInfos);
 
             // 存入缓存
