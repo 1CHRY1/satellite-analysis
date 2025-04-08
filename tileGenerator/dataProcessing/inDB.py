@@ -2,8 +2,9 @@ from Utils.mySqlUtils import *
 from Utils.tifUtils import *
 from Utils.geometryUtils import *
 from Utils.osUtils import *
-from dataProcessing.Utils.filenameUtils import get_landsat7_files
+from dataProcessing.Utils.filenameUtils import get_files
 import config
+from dataProcessing.imageConfig import CUR_TILE_LEVEL
 
 os.environ['PROJ_LIB'] = config.GDAL_PROJ_LIB
 object_prefix = f'{config.TEMP_SENSOR_NAME}/{config.TEMP_PRODUCT_NAME}'  # 上传路径前缀
@@ -30,10 +31,10 @@ def insert_to_db(scene_info_list, sensor_name, product_name):
                 # insert image
                 image_id = insert_image(sceneId, info.tif_path, info.band, config.MINIO_IMAGES_BUCKET, info.cloud)
                 # insert tiles
-                insert_batch_tile(sceneId, image_id, '40031*20016', info.tile_info_list, info.band)
+                insert_batch_tile(sceneId, image_id, CUR_TILE_LEVEL, info.tile_info_list, info.band)
 
 if __name__ == "__main__":
-    landset_files = get_landsat7_files(config.TEMP_INPUT_DIR)
+    landset_files = get_files(config.TEMP_INPUT_DIR)
     # scene_info_list包含了景、波段、瓦片信息
     scene_info_list = process_and_upload(landset_files, config.MINIO_IMAGES_BUCKET, object_prefix)
     insert_to_db(scene_info_list, config.TEMP_SENSOR_NAME, config.TEMP_PRODUCT_NAME)
