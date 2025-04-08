@@ -1,11 +1,8 @@
-package nnu.mnr.satellite.service.resources;
+ackage nnu.mnr.satellite.service.resources;
 
-import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import com.baomidou.dynamic.datasource.annotation.DS;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.jobs.QuartzSchedulerManager;
-import nnu.mnr.satellite.model.dto.resources.TileBasicDTO;
 import nnu.mnr.satellite.model.dto.resources.TilesFetchDTO;
 import nnu.mnr.satellite.model.dto.resources.TilesMergeDTO;
 import nnu.mnr.satellite.model.po.resources.Scene;
@@ -15,19 +12,13 @@ import nnu.mnr.satellite.model.pojo.modeling.TilerProperties;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.model.vo.common.GeoJsonVO;
 import nnu.mnr.satellite.model.vo.resources.TileDesVO;
-import nnu.mnr.satellite.model.vo.resources.TilesFetchVO;
-import nnu.mnr.satellite.repository.resources.IImageRepo;
+import nnu.mnr.satellite.model.vo.resources.TilesFetchResultVO;
 import nnu.mnr.satellite.repository.resources.ITileRepo;
-import nnu.mnr.satellite.utils.common.ConcurrentUtil;
-import nnu.mnr.satellite.utils.common.HttpUtil;
 import nnu.mnr.satellite.utils.common.ProcessUtil;
 import nnu.mnr.satellite.utils.data.MinioUtil;
 import nnu.mnr.satellite.utils.data.RedisUtil;
 import nnu.mnr.satellite.utils.geom.GeometryUtil;
 import nnu.mnr.satellite.utils.geom.TileCalculateUtil;
-import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.PrecisionModel;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,14 +26,12 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -112,7 +101,7 @@ public class TileDataService {
 //        return ConcurrentUtil.processConcurrently(scenes, mapper);
 //    }
 
-    public List<TilesFetchVO> getTilesByBandLevelAndIds(TilesFetchDTO tilesFetchDTO) throws IOException {
+    public List<TilesFetchResultVO> getTilesByBandLevelAndIds(TilesFetchDTO tilesFetchDTO) throws IOException {
         String sensorId = tilesFetchDTO.getSensorId(); String productId = tilesFetchDTO.getProductId();
         Integer rowId = tilesFetchDTO.getRowId(); Integer columnId = tilesFetchDTO.getColumnId();
         String band = tilesFetchDTO.getBand(); String level = tilesFetchDTO.getTileLevel();
@@ -121,11 +110,11 @@ public class TileDataService {
         List<Scene> scenes = sceneDataService.getScenesByBBox(sensorId, productId, tileGeometry);
         ExecutorService executor = Executors.newFixedThreadPool(Math.min(scenes.size(), 10));
 
-        List<CompletableFuture<TilesFetchVO>> futures = scenes.stream()
+        List<CompletableFuture<TilesFetchResultVO>> futures = scenes.stream()
                 .map(scene -> fetchTileAsync(scene, band, level, rowId, columnId, executor))
                 .toList();
 
-        List<TilesFetchVO> tilesFetchRes = futures.stream()
+        List<TilesFetchResultVO> tilesFetchRes = futures.stream()
                 .map(CompletableFuture::join)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
@@ -134,10 +123,10 @@ public class TileDataService {
         return tilesFetchRes;
     }
 
-    private CompletableFuture<TilesFetchVO> fetchTileAsync(Scene scene, String band, String level, Integer rowId, Integer columnId, Executor executor) {
+    private CompletableFuture<TilesFetchResultVO> fetchTileAsync(Scene scene, String band, String level, Integer rowId, Integer columnId, Executor executor) {
         return CompletableFuture.supplyAsync(() -> {
             Tile tile = tileRepo.getTileDataByBandLevelAndIds(scene.getSceneId(), band, level, rowId, columnId);
-            return TilesFetchVO.tilesFetcherBuilder()
+            return TilesFetchResultVO.tilesFetcherBuilder()
                     .tileId(tile.getTileId())
                     .cloud(tile.getCloud())
                     .tilerUrl(tilerProperties.getEndPoint())

@@ -3,6 +3,7 @@ package nnu.mnr.satellite.controller.test;
 import nnu.mnr.satellite.model.pojo.common.DFileInfo;
 import nnu.mnr.satellite.service.common.DockerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,19 +25,22 @@ import java.util.List;
 @RequestMapping("api/v1/test")
 public class TestController {
 
+    @Value("${docker.serverDir}")
+    String serverDir;
+
     @Autowired
     DockerService dockerService;
 
     // dockerService测试接口
     @GetMapping("/docker/env")
     public ResponseEntity<String> testStartEnv() {
-        dockerService.initEnv("tetete", "/home/vge/satellite/tetete");
+        dockerService.initEnv(serverDir + "tetete");
         return ResponseEntity.ok("Docker Env started");
     }
 
     @GetMapping("/docker/container")
     public ResponseEntity<String> testCreateContainer() {
-        String containerId = dockerService.createContainer("318d67b5a508", "satelliteTest", "/home/vge/satellite/tetete", "/usr/local/coding");
+        String containerId = dockerService.createContainer("1bad66b78805", "satelliteTest", "/home/vge/satellite/tetete", "/usr/local/coding");
         return ResponseEntity.ok(containerId);
     }
 

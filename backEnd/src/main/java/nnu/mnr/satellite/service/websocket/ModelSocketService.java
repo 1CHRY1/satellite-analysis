@@ -32,9 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class ModelSocketService {
 
-    private final int USR_MAX_SESSIONS = 2;
-
-    private Session session;
+    private final int USR_MAX_SESSIONS = 10;
 
     @Autowired
     ProjectDataService projectDataService;
@@ -60,8 +58,9 @@ public class ModelSocketService {
                         userId, projectId, USR_MAX_SESSIONS);
                 return;
             }
-            userSessions.add(session);
-            this.session = session;
+            if (!userSessions.contains(session)) {
+                userSessions.add(session);
+            }
             log.info("User {} Joined Project {}. Online Sessions for User: {}, Total Users: {}",
                     userId, projectId, userSessions.size(), sessions.size());
         }
@@ -73,13 +72,26 @@ public class ModelSocketService {
     }
 
     @OnClose
-    public void onClose(@PathParam(value = "userId") String userId, @PathParam(value = "projectId") String projectId) {
+    public void onClose(Session session, @PathParam(value = "userId") String userId, @PathParam(value = "projectId") String projectId) {
         Map<String, Set<Session>> sessions = sessionPool.get(projectId);
         if (sessions != null) {
             Set<Session> userSessions = sessions.get(userId);
             if (userSessions != null) {
                 synchronized (userSessions) {
-                    userSessions.remove(session);
+                    String closingSessionId = session.getId();
+                    Session toRemove = null;
+                    for (Session s : userSessions) {
+                        if (s.getId().equals(closingSessionId)) {
+                            toRemove = s;
+                            break;
+                        }
+                    }
+                    if (toRemove != null) {
+                        userSessions.remove(toRemove);
+                    } else {
+                        log.warn("Session {} not found in pool", closingSessionId);
+                        return;
+                    }
                     if (userSessions.isEmpty()) {
                         sessions.remove(userId);
                     }

@@ -58,8 +58,8 @@ public class DockerService {
 
     private int startPort = 55000;
 
-    @Value("${ca.dir}")
-    private String localCADir;
+//    @Value("${ca.dir}")
+//    private String localCADir;
 
     @Autowired
     SftpDataService sftpDataService;
@@ -69,7 +69,7 @@ public class DockerService {
 
     private DockerClient dockerClient;
 
-    private String localPath;
+//    private String localPath;
     private String serverDir;
     private String workDir;
     private String defaultHost;
@@ -79,7 +79,7 @@ public class DockerService {
 
     @PostConstruct
     public void init() {
-        this.localPath = dockerServerProperties.getLocalPath();
+//        this.localPath = dockerServerProperties.getLocalPath();
         this.serverDir = dockerServerProperties.getServerDir();
         this.workDir = dockerServerProperties.getWorkDir();
         this.defaultHost = dockerServerProperties.getDefaultServer().get("host");
@@ -97,8 +97,8 @@ public class DockerService {
         // 构建 Docker 客户端配置
         DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder()
                 .withDockerHost("tcp://" + dockerServerIp + ":" + dockerServerPort)  // Docker Server Address
-                .withDockerTlsVerify(true)   // Use TLS Certification
-                .withDockerCertPath(localCADir)  // ca Dir
+//                .withDockerTlsVerify(true)   // Use TLS Certification
+//                .withDockerCertPath(localCADir)  // ca Dir
                 .withApiVersion("1.45")
                 .build();
 
@@ -114,13 +114,13 @@ public class DockerService {
                 .build();
     }
 
-    public void initEnv(String projectId, String serverDir) {
+    public void initEnv(String serverDir) {
         SftpConn sftpInfo = SftpConn.builder()
                 .host(defaultHost).username(defaultUser).password(defaultPassword)
                 .BuildSftpConn();
         try {
             // create folder for project docker
-            sftpDataService.createRemoteDirAndFile(sftpInfo, projectId, serverDir);
+            sftpDataService.createRemoteDirAndFile(sftpInfo, serverDir);
         } catch (Exception e) {
             log.error("Error Initing Environment " + e);
         }
