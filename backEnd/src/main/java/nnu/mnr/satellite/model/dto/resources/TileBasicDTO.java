@@ -1,4 +1,4 @@
-ackage nnu.mnr.satellite.model.dto.resources;
+package nnu.mnr.satellite.model.dto.resources;
 
 import lombok.Data;
 import org.locationtech.jts.geom.Geometry;

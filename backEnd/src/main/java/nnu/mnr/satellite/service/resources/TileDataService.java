@@ -1,4 +1,4 @@
-ackage nnu.mnr.satellite.service.resources;
+package nnu.mnr.satellite.service.resources;
 
 import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
