@@ -737,7 +737,7 @@ def validate_inputs(tif_paths):
 
 
 def mtif(tif_paths, output_path):
-    # --------- Merge tif --------------------------------------
+    # --------- Merge tif Using warp ----------------------------------
     merge_options = gdal.WarpOptions(
         format="GTiff",
         cutlineDSName=None,
@@ -753,6 +753,19 @@ def mtif(tif_paths, output_path):
         tif_paths,
         options=merge_options
     )
+
+def mtif_v2(tif_paths, output_path):
+    # --------- Merge tif using Translate --------------------------------------
+    from osgeo import gdal
+
+    # 执行合并操作
+    gdal.Translate(output_path, gdal.BuildVRT("", tif_paths),
+                   options=gdal.TranslateOptions(
+                       creationOptions=["COMPRESS=LZW"],
+                       format="GTiff"
+                   ))
+
+    return output_path
 
 
 def mband(merged_tif_list, output_path, output_name="merged.tif"):

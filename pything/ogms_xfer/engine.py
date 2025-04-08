@@ -4,7 +4,6 @@ from .application.provider import (
 )
 from .modelStore.model_store import ModelStore
 
-
 class OGMS_Xfer:
     modelStore = ModelStore()
 
@@ -46,8 +45,11 @@ class OGMS_Xfer:
     def Tile(cls, scene_id: str, tile_id: str):
         from .application.tile import Tile
         return Tile(scene_id, tile_id)
-
+    
+    @classmethod
+    def GridHelper(cls, grid_resolution_in_kilometer: float = 1):
+        from .application.tileUtil import GridHelper
+        return GridHelper(grid_resolution_in_kilometer)
 
     from .application.urlutil import URLUtil
     URL = URLUtil
-

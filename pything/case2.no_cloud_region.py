@@ -4,22 +4,16 @@ from osgeo import gdal
 from datetime import datetime
 
 def mtif(tif_paths, output_path):
-    # --------- Merge tif --------------------------------------
-    merge_options = gdal.WarpOptions(
-        format="GTiff",
-        cutlineDSName=None,
-        srcSRS=None,  # 自动识别输入投影
-        dstSRS=None,  # 保持输入投影
-        width=0,  # 自动计算输出尺寸
-        height=0,
-        resampleAlg="near",  # 重采样算法（near/bilinear等）
-        creationOptions=["COMPRESS=LZW"]
-    )
-    gdal.Warp(
-        output_path,
-        tif_paths,
-        options=merge_options
-    )
+    # --------- Merge tif using Translate --------------------------------------
+
+    gdal.Translate(output_path, gdal.BuildVRT("", tif_paths),
+                   options=gdal.TranslateOptions(
+                       creationOptions=["COMPRESS=LZW"],
+                       format="GTiff"
+                   ))
+
+    return output_path
+
 
 if __name__ == "__main__":
     
