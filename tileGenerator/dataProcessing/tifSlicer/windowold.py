@@ -8,10 +8,10 @@ from bigTifSlicer import process
 # --------------------- Multiprocessing ---------------------
 def process_band(args):
     """ 处理单个波段 (用于 multiprocessing) """
-    input_tif_path, band_output_dir, grid_resolution, clean, convert_to_wgs84 = args
-    process(input_tif_path, band_output_dir, grid_resolution, clean, convert_to_wgs84)
+    input_tif_path, band_output_dir, grid_resolution, clean = args
+    process(input_tif_path, band_output_dir, grid_resolution, clean)
     
-def process_folder(input_folder, output_root, grid_resolution, clean = False, convert_to_wgs84 = False):
+def process_folder(input_folder, output_root, grid_resolution, clean = False):
     """处理整个影像文件夹，针对每个波段的 TIFF 影像进行切片"""
 
     if not os.path.isdir(input_folder):
@@ -34,7 +34,7 @@ def process_folder(input_folder, output_root, grid_resolution, clean = False, co
         os.makedirs(band_output_dir, exist_ok=True)
 
         # 任务参数
-        tasks.append((input_tif_path, band_output_dir, grid_resolution, clean, convert_to_wgs84))
+        tasks.append((input_tif_path, band_output_dir, grid_resolution, clean))
 
     # 启动多进程
     num_workers = min(len(tasks), multiprocessing.cpu_count())  # 限制进程数
@@ -72,11 +72,7 @@ class RasterTilingGUI:
         self.delete_invalid_tiles = tk.BooleanVar(value=True)
         self.chk_delete_invalid = tk.Checkbutton(root, text="剔除无效值", variable=self.delete_invalid_tiles, command=self.warn_delete_invalid)
         self.chk_delete_invalid.grid(row=2, column=2, columnspan=2, pady=5, padx=1, sticky="w")
-        
-        # 复选框：是否要转到WGS84坐标系
-        self.convert_to_wgs84 = tk.BooleanVar(value=False)
-        self.chk_convert_to_wgs84 = tk.Checkbutton(root, text="转换到84", variable=self.convert_to_wgs84)
-        self.chk_convert_to_wgs84.grid(row=2, column=3, columnspan=3, pady=5, padx=1, sticky="w")
+
 
 
         # 输出文件路径
@@ -172,14 +168,13 @@ class RasterTilingGUI:
         
         is_folder_input = os.path.isdir(input_path)
         should_delete_invalid = self.delete_invalid_tiles.get()
-        convert_to_wgs84 = self.convert_to_wgs84.get()
         
         # Core
         if is_folder_input:
-            process_folder(input_path, output_path, grid_resolution, should_delete_invalid, convert_to_wgs84)
+            process_folder(input_path, output_path, grid_resolution, should_delete_invalid)
             pass
         else:
-            process(input_path, output_path, grid_resolution, should_delete_invalid, convert_to_wgs84)
+            process(input_path, output_path, grid_resolution, should_delete_invalid)
 
         # 计算耗时
         elapsed_time = time.time() - start_time
