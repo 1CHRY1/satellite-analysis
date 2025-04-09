@@ -1,8 +1,12 @@
 <template>
-    <div class="charts-container">
-        <div v-for="(chart, index) in charts" :key="index" class="chart-item">
-            <v-chart :option="chart.option" autoresize class="chart" />
-            <button class="delete-btn" @click="removeChart(index)">×</button>
+    <div class="flex gap-4 overflow-x-auto p-4">
+        <div v-for="(chart, index) in charts" :key="index"
+            class="relative flex-shrink-0 w-[300px] h-[300px] border border-gray-300 bg-white rounded-xl resize overflow-hidden mt-8">
+            <VChart class="w-full h-full" :option="chart.option" autoresize />
+            <button @click="removeChart(index)"
+                class="absolute top-2 right-2 bg-red-500 hover:bg-red-600 !text-white w-6 h-6 rounded-full flex items-center justify-center cursor-pointer">
+                ×
+            </button>
         </div>
     </div>
 </template>
@@ -14,13 +18,13 @@ import * as echarts from 'echarts/core';
 import {
     BarChart,
     LineChart,
-    PieChart
+    PieChart,
 } from 'echarts/charts';
 import {
     TitleComponent,
     TooltipComponent,
     GridComponent,
-    LegendComponent
+    LegendComponent,
 } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 
@@ -32,12 +36,58 @@ echarts.use([
     BarChart,
     LineChart,
     PieChart,
-    CanvasRenderer
+    CanvasRenderer,
 ]);
+
+interface ChartData {
+    labels: string[];
+    values: number[];
+}
 
 const charts = ref<{ option: any }[]>([]);
 
-const addChart = (type: 'bar' | 'line' | 'pie', data: any) => {
+const getChartOption = (type: 'bar' | 'line' | 'pie', data: ChartData) => {
+    if (type === 'bar') {
+        return {
+            title: { text: 'Bar Chart' },
+            tooltip: {},
+            xAxis: { data: data.labels },
+            yAxis: {},
+            series: [{ type: 'bar', data: data.values }],
+        };
+    }
+
+    if (type === 'line') {
+        return {
+            title: { text: 'Line Chart' },
+            tooltip: {},
+            xAxis: { data: data.labels },
+            yAxis: {},
+            series: [{ type: 'line', data: data.values }],
+        };
+    }
+
+    if (type === 'pie') {
+        return {
+            title: { text: 'Pie Chart' },
+            tooltip: { trigger: 'item' },
+            series: [
+                {
+                    type: 'pie',
+                    radius: '50%',
+                    data: data.labels.map((label, i) => ({
+                        name: label,
+                        value: data.values[i],
+                    })),
+                },
+            ],
+        };
+    }
+
+    return {};
+};
+
+const addChart = (type: 'bar' | 'line' | 'pie', data: ChartData) => {
     const option = getChartOption(type, data);
     charts.value.push({ option });
 };
@@ -46,97 +96,16 @@ const removeChart = (index: number) => {
     charts.value.splice(index, 1);
 };
 
-const getChartOption = (type: string, data: any) => {
-    switch (type) {
-        case 'bar':
-            return {
-                title: { text: 'Bar Chart' },
-                tooltip: {},
-                xAxis: { data: data.labels },
-                yAxis: {},
-                series: [{ type: 'bar', data: data.values }]
-            };
-        case 'line':
-            return {
-                title: { text: 'Line Chart' },
-                tooltip: {},
-                xAxis: { data: data.labels },
-                yAxis: {},
-                series: [{ type: 'line', data: data.values }]
-            };
-        case 'pie':
-            return {
-                title: { text: 'Pie Chart' },
-                tooltip: { trigger: 'item' },
-                series: [
-                    {
-                        type: 'pie',
-                        radius: '50%',
-                        data: data.labels.map((label: string, i: number) => ({
-                            name: label,
-                            value: data.values[i]
-                        }))
-                    }
-                ]
-            };
-        default:
-            return {};
-    }
-};
+// 示例添加两个图表（可移除）
+// addChart('bar', {
+//     labels: ['A', 'B', 'C', 'D'],
+//     values: [10, 20, 30, 40],
+// });
 
-// 示例：创建几个图表（实际可暴露给父组件来动态添加）
-addChart('bar', {
-    labels: ['A', 'B', 'C', 'D'],
-    values: [10, 20, 30, 40]
-});
-addChart('line', {
-    labels: ['Jan', 'Feb', 'Mar'],
-    values: [15, 25, 35]
-});
+// addChart('pie', {
+//     labels: ['Apples', 'Bananas', 'Cherries'],
+//     values: [5, 15, 25],
+// });
+defineExpose({ addChart, removeChart });
+
 </script>
-
-<style scoped lang="scss">
-.charts-container {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    gap: 12px;
-    padding: 10px;
-}
-
-.chart-item {
-    position: relative;
-    flex: 0 0 auto;
-    width: 300px;
-    height: 300px;
-    resize: both;
-    overflow: hidden;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    background: #fff;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
-
-.chart {
-    width: 100%;
-    height: 100%;
-}
-
-.delete-btn {
-    position: absolute;
-    top: 4px;
-    right: 6px;
-    background: #f56c6c;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    font-size: 16px;
-    line-height: 20px;
-    cursor: pointer;
-}
-</style>

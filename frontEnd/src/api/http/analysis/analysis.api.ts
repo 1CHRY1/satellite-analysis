@@ -74,6 +74,10 @@ export async function getTileFromMiniIo(dataId: any): Promise<any> {
     return http.get<any>(`coding/project/result/tif/${dataId}`)
 }
 
+export async function getJsonFileContent(dataId: any): Promise<any> {
+    return http.get<any>(`coding/project/result/json/${dataId}`)
+}
+
 export async function uploadGeoJson(param: any): Promise<any> {
     return http.post<any>(`coding/project/file/geojson`, param)
 }

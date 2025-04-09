@@ -4,7 +4,8 @@
         <div v-show="showCodeContainer" class="codeContainer" id="codeContainerId">
             <!-- 上左数据模块 -->
             <div class="dataPaneArea" id="dataPaneAreaId">
-                <dataDirectory :projectId="projectId" :userId="userId" class="h-[100%] w-full rounded" />
+                <dataDirectory :projectId="projectId" :userId="userId" @removeCharts="removeCharts"
+                    @showMap="changeMapState" @addCharts="addCharts" class="h-[100%] w-full rounded" />
             </div>
             <div class="splitHandleVertical" id="splitHandleVertical2Id" style="left: 25%"></div>
             <!-- 上中在线编程 -->
@@ -22,7 +23,7 @@
         <div class="splitHandleHorizontal" id="splitPaneHorizontal1Id"></div>
         <!-- 下方map控件 -->
         <div v-show="showMapContainer" class="mapContainer" id="mapContainerId">
-            <div class="absolute z-99 top-3 left-2">
+            <div class="absolute z-99 top-3 left-2 opacity-80">
                 <div class="mx-2 my-1 px-2 py-1 flex w-fit items-center rounded bg-[#eaeaea]  text-[14px] shadow-md">
                     <div @click="showMap = true"
                         class="mr-2 cursor-pointer border-r-1 border-dashed border-gray-500 pr-2"
@@ -36,9 +37,9 @@
                 </div>
             </div>
 
-            <mapComp v-if="showMap" class="h-[100%]">
+            <mapComp v-show="showMap" class="h-[100%]">
             </mapComp>
-            <charts v-if="!showMap"></charts>
+            <charts ref="chartsRef" v-show="!showMap"></charts>
         </div>
     </div>
 </template>
@@ -59,6 +60,7 @@ const userStore = useUserStore()
 const route = useRoute()
 const userId = userStore.user.id
 const projectId = route.params.projectId as string
+
 
 onMounted(() => {
     ws.connect()
@@ -125,7 +127,34 @@ const clearConsole = () => {
  * 下半可视化模块
  */
 
-const showMap = ref(true)
+const showMap = ref(false)
+interface ChartInstance {
+    addChart: (type: string, config: { labels: string[]; values: number[] }) => void;
+    removeChart: (index: number) => void;
+}
+const chartsRef = ref<ChartInstance | null>(null)
+
+const addCharts = (config: { labels: string[]; values: number[], type: string }) => {
+    if (showMap.value === true) {
+        showMap.value = false
+    }
+    if (chartsRef.value) {
+        chartsRef.value.addChart(config.type, config)
+    }
+}
+
+const removeCharts = () => {
+    // if (showMap.value === true) {
+    //     showMap.value = false
+    // }
+    // if (chartsRef.value) {
+    //     chartsRef.value.removeChart()
+    // }
+}
+
+const changeMapState = () => {
+    showMap.value = true
+}
 
 /**
  * 页面模块大小分割模块
