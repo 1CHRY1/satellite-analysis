@@ -43,9 +43,9 @@ export class GridMaker {
         const endGridY = Math.ceil(((90 - minLat) / 180) * this.gridNumY)
 
         // 默认选中所有网格
-        const gridIds = []
+        const gridIds: string[] = []
 
-        const features = []
+        const features: GeoJSON.Feature[] = []
         for (let i = startGridX; i < endGridX; i++) {
             for (let j = startGridY; j < endGridY; j++) {
                 const [leftLng, topLat] = grid2lnglat(i, j, this.gridNumX, this.gridNumY)
@@ -123,16 +123,22 @@ function calculateGridArea(
     rightLng: number,
     bottomLat: number,
 ): number {
-    const leftLngRad = (leftLng * Math.PI) / 180
-    const rightLngRad = (rightLng * Math.PI) / 180
-    const topLatRad = (topLat * Math.PI) / 180
-    const bottomLatRad = (bottomLat * Math.PI) / 180
+    // 使用Haversine公式计算网格的实际宽度和高度
+    const width = calculateDistance(leftLng, topLat, rightLng, topLat);
+    const height = calculateDistance(leftLng, topLat, leftLng, bottomLat);
+    
+    // 返回网格面积（平方米）
+    return width * height;
+}
 
-    // 使用球面距离公式计算面积
-    const area =
-        Math.abs((rightLngRad - leftLngRad) * (Math.sin(topLatRad) - Math.sin(bottomLatRad))) *
-        EarthRadius *
-        EarthRadius
-
-    return area
+// 使用Haversine公式计算两点间距离
+function calculateDistance(lng1: number, lat1: number, lng2: number, lat2: number): number {
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+        Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return EarthRadius * c;
 }
