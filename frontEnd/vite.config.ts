@@ -2,10 +2,20 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
 import tailwindcss from '@tailwindcss/vite'
+// import { visualizer } from 'rollup-plugin-visualizer'
 
 // https://vite.dev/config/
 export default defineConfig({
-    plugins: [vue(), tailwindcss()],
+    plugins: [vue(), tailwindcss(),
+    // visualizer({
+    //     open: true,
+    //     gzipSize: true,
+    //     brotliSize: true,
+    //     filename: 'dist/bundle.html',
+    //     title: 'Vite Bundle Visualizer',
+    //     sourcemap: true,
+    // })
+    ],
     resolve: {
         alias: {
             '@': resolve(__dirname, 'src'),
