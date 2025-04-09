@@ -72,7 +72,7 @@ import { useRoute } from 'vue-router'
 import { useUserStore } from '@/store'
 import { useRouter } from 'vue-router'
 
-import logo from '@/assets/image/logo2.png'
+// import logo from '@/assets/image/logo2.png'
 import avator from '@/assets/image/avator.png'
 import { Satellite } from 'lucide-vue-next'
 
@@ -85,14 +85,14 @@ const navItems = [
     { external: false, name: '首页', path: '/home' },
     { external: false, name: '模型中心', path: '/models' },
     { external: false, name: '数据中心', path: '/data' },
-    { external: false, name: '项目中心', path: '/projects' },
+    { external: false, name: '工具发布', path: '/projects' },
     { external: true, name: '关于我们', path: 'http://opengmsteam.com/' },
 ]
 
-const jumpToOGMS = () => {
-    const OGMS_URL = 'https://geomodeling.njnu.edu.cn/'
-    window.open(OGMS_URL, '_blank')
-}
+// const jumpToOGMS = () => {
+//     const OGMS_URL = 'https://geomodeling.njnu.edu.cn/'
+//     window.open(OGMS_URL, '_blank')
+// }
 
 /////// User //////////////////////////////////
 const userStore = useUserStore()
