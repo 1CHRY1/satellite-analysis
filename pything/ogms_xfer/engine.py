@@ -48,7 +48,7 @@ class OGMS_Xfer:
     
     @classmethod
     def GridHelper(cls, grid_resolution_in_kilometer: float = 1):
-        from .application.tileUtil import GridHelper
+        from .application.gridUtil import GridHelper
         return GridHelper(grid_resolution_in_kilometer)
 
     from .application.urlutil import URLUtil
