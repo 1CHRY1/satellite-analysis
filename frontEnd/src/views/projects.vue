@@ -5,10 +5,10 @@
         </projectsBg>
         <div class="relative z-99 flex flex-col items-center justify-center">
             <div class="my-10 flex w-[50vw] flex-col items-center justify-center">
-                <img src="@/assets/image/projectsName.png" class="h-12 w-fit" alt="" />
+                <img src="@/assets/image/toolsEstablish.png" class="h-12 w-fit" alt="" />
                 <div class="searchContainer mt-6 w-[100%]">
                     <div class="model_research">
-                        <input type="text" autocomplete="false" placeholder="根据项目名称、创建人或项目信息进行搜索，搜索词为空则显示所有项目"
+                        <input type="text" autocomplete="false" placeholder="根据工具名称、创建人或工具信息进行搜索，搜索词为空则显示所有工具"
                             class="model_research_input" v-model="searchInput" style="font-size: 14px"
                             @keyup.enter="researchProjects" />
 
@@ -30,7 +30,7 @@
                             font-size: 14px;
                             height: 2rem;
                         " @click="createProjectView = !createProjectView">
-                        {{ createProjectView ? '取消创建' : '创建项目' }}
+                        {{ createProjectView ? '取消创建' : '创建工具' }}
                     </el-button>
                     <el-button type="primary" color="#049f40" :disabled="searchProjectsVisible" style="
                             margin-left: 10px;
@@ -38,7 +38,7 @@
                             font-size: 14px;
                             height: 2rem;
                         " @click="viewMyProjects">
-                        {{ myProjectsVisible ? '所有项目' : '我的项目' }}
+                        {{ myProjectsVisible ? '所有工具' : '我的工具' }}
                     </el-button>
                 </div>
             </div>
@@ -57,15 +57,15 @@
                     </projectCard>
                 </div>
 
-                <!-- 创建项目的卡片 -->
+                <!-- 创建工具的卡片 -->
                 <div v-if="createProjectView" class="absolute top-[calc(50vh-240px-206px)] flex opacity-80">
                     <div class="w-96 rounded-xl bg-gray-700 p-6 text-white shadow-xl">
-                        <h2 class="mb-4 text-center text-xl font-semibold">创建项目</h2>
+                        <h2 class="mb-4 text-center text-xl font-semibold">创建工具</h2>
 
-                        <!-- 项目名称 -->
+                        <!-- 工具名称 -->
                         <label class="mb-1 flex text-sm">
                             <div style="color: red; margin-right: 4px">*</div>
-                            项目名称
+                            工具名称
                         </label>
                         <input v-model="newProject.projectName" type="text"
                             class="w-full rounded bg-gray-800 p-2 text-white focus:ring-2 focus:ring-green-400 focus:outline-none" />
@@ -161,7 +161,7 @@ const myProjectList: Ref<project[]> = ref([])
 const searchedProjects: Ref<project[]> = ref([])
 const searchProjectsVisible = ref(false)
 
-// 支持搜索项目名称、创建人和项目描述
+// 支持搜索工具名称、创建人和工具描述
 const researchProjects = () => {
     if (searchInput.value.length > 0) {
         searchedProjects.value = projectList.value.filter(
@@ -177,14 +177,14 @@ const researchProjects = () => {
     }
 }
 
-// 查看我的项目
+// 查看我的工具
 const viewMyProjects = () => {
     myProjectsVisible.value = !myProjectsVisible.value
     myProjectList.value = projectList.value.filter((item: project) => item.createUser === userId)
 }
 
 /**
- * 项目列表模块
+ * 工具列表模块
  */
 const projectList: Ref<project[]> = ref([])
 const createProjectView = ref(false)
@@ -209,13 +209,13 @@ const enterProject = (item: project) => {
     if (item.createUser === userId) {
         router.push(`/project/${item.projectId}`)
     } else {
-        ElMessage.error('您没有访问该项目的权限，请联系项目创建者')
+        ElMessage.error('您没有访问该工具的权限，请联系工具创建者')
     }
 }
 
 const create = async () => {
     if (!newProject.value.projectName) {
-        ElMessage.error('项目名称不能为空')
+        ElMessage.error('工具名称不能为空')
         return
     } else if (!newProject.value.description) {
         ElMessage.error('描述不能为空')
@@ -223,7 +223,7 @@ const create = async () => {
     } else if (
         projectList.value.some((item: project) => item.projectName === newProject.value.projectName)
     ) {
-        ElMessage.error('该项目已存在，请更换项目名称')
+        ElMessage.error('该工具已存在，请更换工具名称')
         return
     }
     createLoading.value = true
@@ -250,7 +250,7 @@ const getProjectsInOrder = async () => {
 onMounted(async () => {
     await getProjectsInOrder()
 
-    console.log("所有项目：", projectList.value)
+    console.log("所有工具：", projectList.value)
     updateColumns();
     window.addEventListener("resize", updateColumns);
 
@@ -288,7 +288,7 @@ div {
 }
 
 .model_research_input {
-    -webkit-appearance: none;
+    // -webkit-appearance: none;
     background-color: rgba(0, 0, 0, 0.6);
     background-image: none;
     border-radius: 4px 0px 0px 4px;
