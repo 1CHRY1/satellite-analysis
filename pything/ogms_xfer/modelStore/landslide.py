@@ -18,7 +18,9 @@ def reproject_raster(input_raster, input_meta, output_meta):
     return output_raster
 
 def landslide_probability_model(inputTifFile1, inputTifFile2, inputTifFile3, Output1, Output2):
-    
+    """
+    计算滑坡概率
+    """
     base_tif = inputTifFile1
     pga_tif = inputTifFile2
     intensity_tif = inputTifFile3

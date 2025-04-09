@@ -94,7 +94,6 @@ def sample_raster(raster_path, longitude, latitude, band=1):
     return sample_value
 
 
-
 def calculate_scene_ndvi(scene, region, ndvi_output_path):
     print('------------------------------------------')
     print(f"处理影像{scene.scene_id}...")
@@ -114,7 +113,6 @@ def calculate_scene_ndvi(scene, region, ndvi_output_path):
    
     print(f"NDVI计算完毕....")
     return ndvi_output_path
-
 
 
 if __name__ == "__main__":
