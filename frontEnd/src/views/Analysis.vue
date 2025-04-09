@@ -22,8 +22,23 @@
         <div class="splitHandleHorizontal" id="splitPaneHorizontal1Id"></div>
         <!-- 下方map控件 -->
         <div v-show="showMapContainer" class="mapContainer" id="mapContainerId">
-            <mapComp class="h-[100%]">
+            <div class="absolute z-99 top-3 left-2">
+                <div class="mx-2 my-1 px-2 py-1 flex w-fit items-center rounded bg-[#eaeaea]  text-[14px] shadow-md">
+                    <div @click="showMap = true"
+                        class="mr-2 cursor-pointer border-r-1 border-dashed border-gray-500 pr-2"
+                        :class="showMap === true ? 'text-[#1479d7]' : 'text-[#818999]'">
+                        地图
+                    </div>
+                    <div @click="showMap = false" class="cursor-pointer"
+                        :class="showMap === false ? 'text-[#1479d7]' : 'text-[#818999]'">
+                        图表
+                    </div>
+                </div>
+            </div>
+
+            <mapComp v-if="showMap" class="h-[100%]">
             </mapComp>
+            <charts v-if="!showMap"></charts>
         </div>
     </div>
 </template>
@@ -32,6 +47,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 
 import mapComp from '@/components/feature/map/mapComp.vue'
+import charts from '@/components/analysisComponents/charts.vue'
 import consolerComponent from '@/components/analysisComponents/consoler.vue'
 import codeEditor from '@/components/analysisComponents/codeEditor.vue'
 import dataDirectory from '@/components/analysisComponents/dataDirectory.vue'
@@ -104,6 +120,12 @@ const clearConsole = () => {
 // setInterval(() => {
 //   addMessage(`Log: ${new Date().toLocaleTimeString()}`);
 // }, 500);
+
+/**
+ * 下半可视化模块
+ */
+
+const showMap = ref(true)
 
 /**
  * 页面模块大小分割模块
