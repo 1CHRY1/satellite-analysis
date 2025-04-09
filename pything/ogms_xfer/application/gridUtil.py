@@ -72,6 +72,22 @@ class GridHelper:
         print(f"Found {len(grid_cells)} intersecting grid cells in {(time.time() - start_time) * 1000:.2f}ms")
         return grid_cells
 
+    def get_grid_cell(self, longitude: float, latitude: float) -> GridCell:
+        """
+        Get the grid cell that contains the input longitude and latitude.
+        
+        Args:
+            longitude: Longitude coordinate 
+            latitude: Latitude coordinate
+            
+        Returns:
+            GridCell object that contains the input longitude and latitude
+        """
+        grid_x = math.floor(((longitude + 180) / 360) * self.grid_num_x)
+        grid_y = math.floor(((90 - latitude) / 180) * self.grid_num_y)
+        return GridCell(columnId=grid_x, rowId=grid_y)
+
+
     def _create_shapely_polygon(self, polygon: PolygonGeometry) -> Polygon:
         """Convert GeoJSON-like polygon to Shapely polygon."""
         return Polygon(polygon.coordinates[0])
