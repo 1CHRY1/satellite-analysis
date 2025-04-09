@@ -7,6 +7,12 @@ from ..connection.database import DatabaseClient
 from ..connection.minio import MinioClient
 from ..dataModel.tile import TileFactory
 from ..service.util import geojson_to_wkt
+
+from dataclasses import dataclass
+@dataclass
+class GridCell:
+    columnId: int
+    rowId: int
 class TileService:
     def __init__(self, db_client: DatabaseClient, minio_client: MinioClient):
 
@@ -19,7 +25,7 @@ class TileService:
         with Session(self.db_engine) as session:
             return session.query(TileModel).filter(TileModel.tile_id == tile_id).first() if TileModel else None
 
-    def get_tiles(self, scene_id: str, image_id: str = None, cloud_range: tuple[float, float] = None, polygon: object = None, tile_ids: list[str] = None, band: int = None, tile_level: str = None, row_id: int = None, column_id: int = None):
+    def get_tiles(self, scene_id: str, image_id: str = None, cloud_range: tuple[float, float] = None, polygon: object = None, tile_ids: list[str] = None, band: int = None, tile_level: str = None, row_id: int = None, column_id: int = None, grid_cells: list[GridCell] = None):
         TileModel = self.tile_factory.get_tile_model(scene_id)  # 动态获取 ORM 模型
         with Session(self.db_engine) as session:
             query = session.query(TileModel)
@@ -43,6 +49,11 @@ class TileService:
                 query = query.filter(TileModel.row_id == row_id)
             if column_id is not None:
                 query = query.filter(TileModel.column_id == column_id)
+            if grid_cells is not None:
+                rowids = [cell.rowId for cell in grid_cells]
+                columnids = [cell.columnId for cell in grid_cells]
+                query = query.filter(TileModel.row_id.in_(rowids) and TileModel.column_id.in_(columnids))
+                
             return query.all()
         
     def pull_tile(self, scene_id: str, tile_id: str, output_path: str):
