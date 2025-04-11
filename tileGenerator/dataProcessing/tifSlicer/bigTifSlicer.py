@@ -81,7 +81,6 @@ def geo_to_pixel(geo_x, geo_y, geo_transform):
 
     return int(math.floor(pixel_x)), int(math.floor(pixel_y))  # 取整保证是像素索引
 
-
 def tif2GeoCS(input_image, out_image):
     options = gdal.WarpOptions(dstSRS="EPSG:4326")  # 目标坐标系为 WGS 84
     gdal.Warp(out_image, input_image, options=options)
