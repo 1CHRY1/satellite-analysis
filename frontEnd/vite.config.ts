@@ -44,6 +44,11 @@ export default defineConfig({
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/model\/websocket/, ''),
             },
+            '/basemap': {
+                target: 'http://172.31.13.21:5001/tiles',
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/basemap/, ''),
+            },
         },
     },
 })

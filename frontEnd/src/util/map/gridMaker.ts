@@ -29,18 +29,25 @@ export class GridMaker {
         const { topLeft, bottomRight } = calculateBbox(polygon)
         const [minLng, maxLat] = topLeft
         const [maxLng, minLat] = bottomRight
-        const area = calculateGridArea(minLng, maxLat, maxLng, minLat) // 平方米
-        if (area > this.areaLimitKm2 * 1000 * 1000) {
-            console.warn(`💢 格网总面积：${area / 1000000} 平方公里了！`)
-            overboundCb && overboundCb()
-            return null
-        }
+        // const area = calculateGridArea(minLng, maxLat, maxLng, minLat) // 平方米
+        // if (area > this.areaLimitKm2 * 1000 * 1000) {
+        //     console.warn(`💢 格网总面积：${area / 1000000} 平方公里了！`)
+        //     overboundCb && overboundCb()
+        //     return null
+        // }
 
         // 计算网格索引范围
         const startGridX = Math.floor(((minLng + 180) / 360) * this.gridNumX)
         const endGridX = Math.ceil(((maxLng + 180) / 360) * this.gridNumX)
         const startGridY = Math.floor(((90 - maxLat) / 180) * this.gridNumY)
         const endGridY = Math.ceil(((90 - minLat) / 180) * this.gridNumY)
+
+        const area = (endGridX - startGridX) * (endGridY - startGridY) * this.gridResolutionInMeter * this.gridResolutionInMeter
+        if (area > this.areaLimitKm2 * 1000 * 1000) {
+            console.warn(`💢 格网总面积：${area / 1000000} 平方公里了！`)
+            overboundCb && overboundCb()
+            return null
+        }
 
         // 默认选中所有网格
         const gridIds: string[] = []
