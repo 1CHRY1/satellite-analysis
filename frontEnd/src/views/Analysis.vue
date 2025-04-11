@@ -1,29 +1,16 @@
 <template>
-    <div
-        class="constructionContainer"
-        id="container"
-        @mousemove="handleMousemove($event)"
-        @mousedown="handleMousedown($event)"
-        @mouseup="handleMouseup($event)"
-    >
+    <div class="constructionContainer" id="container" @mousemove="handleMousemove($event)"
+        @mousedown="handleMousedown($event)" @mouseup="handleMouseup($event)">
         <div v-show="showCodeContainer" class="codeContainer" id="codeContainerId">
             <!-- 上左数据模块 -->
             <div class="dataPaneArea" id="dataPaneAreaId">
-                <dataDirectory
-                    :projectId="projectId"
-                    :userId="userId"
-                    class="h-[100%] w-full rounded"
-                />
+                <dataDirectory :projectId="projectId" :userId="userId" @removeCharts="removeCharts"
+                    @showMap="changeMapState" @addCharts="addCharts" class="h-[100%] w-full rounded" />
             </div>
             <div class="splitHandleVertical" id="splitHandleVertical2Id" style="left: 25%"></div>
             <!-- 上中在线编程 -->
             <div class="codeEditArea pl-2" id="codeEditAreaId">
-                <codeEditor
-                    :projectId="projectId"
-                    :userId="userId"
-                    @addMessage="addMessage"
-                    class="h-[100%] w-full"
-                />
+                <codeEditor :projectId="projectId" :userId="userId" @addMessage="addMessage" class="h-[100%] w-full" />
             </div>
 
             <div class="splitHandleVertical" id="splitHandleVertical3Id" style="left: 75%"></div>
@@ -36,7 +23,23 @@
         <div class="splitHandleHorizontal" id="splitPaneHorizontal1Id"></div>
         <!-- 下方map控件 -->
         <div v-show="showMapContainer" class="mapContainer" id="mapContainerId">
-            <mapComp class="h-[100%]"> </mapComp>
+            <div class="absolute z-99 top-3 left-2 opacity-80">
+                <div class="mx-2 my-1 px-2 py-1 flex w-fit items-center rounded bg-[#eaeaea]  text-[14px] shadow-md">
+                    <div @click="showMap = true"
+                        class="mr-2 cursor-pointer border-r-1 border-dashed border-gray-500 pr-2"
+                        :class="showMap === true ? 'text-[#1479d7]' : 'text-[#818999]'">
+                        地图
+                    </div>
+                    <div @click="showMap = false" class="cursor-pointer"
+                        :class="showMap === false ? 'text-[#1479d7]' : 'text-[#818999]'">
+                        图表
+                    </div>
+                </div>
+            </div>
+
+            <mapComp v-show="showMap" class="h-[100%]">
+            </mapComp>
+            <charts ref="chartsRef" v-show="!showMap"></charts>
         </div>
     </div>
 </template>
@@ -45,6 +48,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 
 import mapComp from '@/components/feature/map/mapComp.vue'
+import charts from '@/components/analysisComponents/charts.vue'
 import consolerComponent from '@/components/analysisComponents/consoler.vue'
 import codeEditor from '@/components/analysisComponents/codeEditor.vue'
 import dataDirectory from '@/components/analysisComponents/dataDirectory.vue'
@@ -57,11 +61,14 @@ const route = useRoute()
 const userId = userStore.user.id
 const projectId = route.params.projectId as string
 
+
 onMounted(() => {
     ws.connect()
+    window.addEventListener('beforeunload', handleBeforeUnload)
 })
 
 onUnmounted(() => {
+    window.removeEventListener('beforeunload', handleBeforeUnload)
     ws.close() // 关闭连接
 })
 
@@ -99,9 +106,14 @@ ws.on('close', () => {
     console.log('WebSocket 连接已关闭')
 })
 
+const handleBeforeUnload = () => {
+    ws.close() // 当页面即将关闭时，手动关闭 WebSocket
+}
+
 const clearConsole = () => {
     messages.value = ['Response and execution information will be displayed here .']
 }
+
 
 // const addMessage = (msg: string) => {
 //   messages.value.push(msg);
@@ -110,6 +122,39 @@ const clearConsole = () => {
 // setInterval(() => {
 //   addMessage(`Log: ${new Date().toLocaleTimeString()}`);
 // }, 500);
+
+/**
+ * 下半可视化模块
+ */
+
+const showMap = ref(true)
+interface ChartInstance {
+    addChart: (type: string, config: { labels: string[]; values: number[] }) => void;
+    removeChart: (index: number) => void;
+}
+const chartsRef = ref<ChartInstance | null>(null)
+
+const addCharts = (config: { labels: string[]; values: number[], type: string }) => {
+    if (showMap.value === true) {
+        showMap.value = false
+    }
+    if (chartsRef.value) {
+        chartsRef.value.addChart(config.type, config)
+    }
+}
+
+const removeCharts = () => {
+    // if (showMap.value === true) {
+    //     showMap.value = false
+    // }
+    // if (chartsRef.value) {
+    //     chartsRef.value.removeChart()
+    // }
+}
+
+const changeMapState = () => {
+    showMap.value = true
+}
 
 /**
  * 页面模块大小分割模块
@@ -263,6 +308,7 @@ const refreshContainerSize = () => {
         // flex-grow: 1;
         display: block;
         height: 50%;
+        position: relative;
         // background: red;
 
         .modelContent {

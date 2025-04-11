@@ -2,16 +2,10 @@
     <div class="absolute top-0 left-0 h-screen w-screen">
         <div class="h-[92vh]" id="map"></div>
         <div class="absolute top-10 right-10 z-10 flex flex-col gap-y-4">
-            <button
-                class="h-10 w-24 bg-amber-950 text-lg"
-                @click="() => Operations.draw_polygonMode()"
-            >
+            <button class="h-10 w-24 bg-amber-950 text-lg" @click="() => Operations.draw_polygonMode()">
                 绘制多边形
             </button>
-            <button
-                class="h-10 w-24 bg-amber-950 text-lg"
-                @click="() => Operations.map_destroyGridLayer()"
-            >
+            <button class="h-10 w-24 bg-amber-950 text-lg" @click="() => Operations.map_destroyGridLayer()">
                 删除格网
             </button>
         </div>
@@ -29,7 +23,7 @@ const gridStore = useGridStore()
 
 watch(
     () => gridStore.polygon,
-    (newVal, oldVal) => {
+    (newVal) => {
         if (newVal) {
             //保证绘制后触发，清空时不触发
             showConfirm()

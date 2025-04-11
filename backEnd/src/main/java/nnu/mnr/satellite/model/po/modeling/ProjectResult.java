@@ -1,11 +1,14 @@
 package nnu.mnr.satellite.model.po.modeling;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nnu.mnr.satellite.utils.typeHandler.GeometryTypeHandler;
+import org.locationtech.jts.geom.Geometry;
 
 import java.time.LocalDateTime;
 
@@ -33,5 +36,7 @@ public class ProjectResult {
     private String path;
     private String bucket;
     private LocalDateTime createTime;
+    @TableField(value="bounding_box", typeHandler = GeometryTypeHandler.class)
+    private Geometry bbox;
 
 }

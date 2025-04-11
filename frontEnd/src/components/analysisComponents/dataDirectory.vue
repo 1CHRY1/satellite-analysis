@@ -15,16 +15,18 @@
 
             <div class="flex">
                 <div @click="refreshTableData"
-                    class="mr-2.5 my-1.5 flex w-fit cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-[14px] text-[#818999] shadow-md">
+                    class="mr-2.5 my-1.5 flex w-fit cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-[14px] text-[#818999] shadow-md"
+                    title="刷新数据">
                     <RefreshCcw :size="16" class="text-primary" />
                 </div>
                 <div @click="triggerFileSelect"
-                    class="mr-2.5 my-1.5 flex w-fit cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-[14px] text-[#818999] shadow-md">
+                    class="mr-2.5 my-1.5 flex w-fit cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-[14px] text-[#818999] shadow-md"
+                    title="上传geojson">
                     <Upload :size="16" class="text-primary" />
                 </div>
 
                 <!-- 隐藏文件选择框 -->
-                <input ref="fileInput" type="file" accept=".json,.txt" @change="uploadFile" class="hidden" />
+                <input ref="fileInput" type="file" accept=".json,.txt,.geojson" @change="uploadFile" class="hidden" />
 
                 <!-- <div @click=""
                     class="mr-2.5 my-1.5 flex w-fit cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-[14px] text-[#818999] shadow-md">
@@ -34,18 +36,19 @@
 
         </div>
         <div class="h-[calc(100%-44px)] max-w-full overflow-x-auto">
-            <table class="min-w-full table-auto border-collapse">
+            <table class="w-full table-auto border-collapse">
                 <thead>
                     <tr class="sticky top-0 bg-gray-200 text-[#818999]">
-                        <th class="w-2/5 px-4 py-2 text-left">文件名</th>
-                        <th class="w-3/10 px-4 py-2 text-left">更新时间</th>
-                        <th class="w-1/5 px-4 py-2 text-left">文件大小</th>
-                        <th class="w-1/10 px-4 py-2 text-left">预览</th>
+                        <th class="w-auto min-w-[100px] px-4 py-2 text-left">文件名</th>
+                        <th class="w-[100px] px-4 py-2 text-left">更新时间</th>
+                        <th class="w-[60px] px-4 py-2 text-left">文件大小</th>
+                        <th class="w-[60px] px-4 py-2 text-left">预览</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr class="text-[#818999]" v-for="(item, index) in tableData" :key="index">
-                        <td class="ml-4 flex cursor-pointer py-2" @click="handleCellClick(item, ' name')">
+                        <td class="ml-4 flex cursor-pointer py-2 overflow-hidden whitespace-nowrap text-ellipsis"
+                            @click="handleCellClick(item, ' name')" :title="item.fileName">
                             <div class="mr-1 flex h-4 w-4 items-center justify-center">
                                 <img :src="'/filesImg/' + item.fileType + '.png'" alt="" />
                             </div>
@@ -58,8 +61,16 @@
                             {{ sizeConversion(item.fileSize) }}
                         </td>
                         <td class="cursor-pointer px-4 py-2" @click="handleCellClick(item, 'view')">
-                            <span v-if="item.view" class="text-green-500">✔️</span>
-                            <span v-else class="text-red-500">❌</span>
+                            <span v-if="item.fileName.split('.')[1] === 'json'">
+                                <ChartColumn :size="16" class="text-red-400 hover:text-red-600" />
+                            </span>
+                            <span v-else-if="item.view" class="text-green-400 hover:text-green-600">
+                                <Eye :size="16" />
+                            </span>
+                            <span v-else class="text-red-400 hover:text-red-600">
+                                <EyeOff :size="16" />
+                            </span>
+
                         </td>
                     </tr>
                     <tr v-if="tableData.length === 0">
@@ -79,11 +90,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import type { dockerData } from '@/type/analysis'
-import { getFiles, getMiniIoFiles, getTileFromMiniIo, uploadGeoJson } from '@/api/http/analysis'
+import { getFiles, getMiniIoFiles, getTileFromMiniIo, uploadGeoJson, getJsonFileContent } from '@/api/http/analysis'
 import { sizeConversion, formatTime } from '@/util/common'
 import { ElMessage } from 'element-plus'
-import { map_flyTo, addRasterLayerFromUrl, removeRasterLayer } from '@/util/map/operation'
-import { RefreshCcw, CircleSlash, Upload } from 'lucide-vue-next'
+import { addRasterLayerFromUrl, removeRasterLayer, map_fitView } from '@/util/map/operation'
+import { RefreshCcw, CircleSlash, Upload, Eye, EyeOff, ChartColumn } from 'lucide-vue-next'
 
 const props = defineProps({
     projectId: {
@@ -95,6 +106,8 @@ const props = defineProps({
         required: true,
     },
 })
+
+const emit = defineEmits(["addCharts", "removeCharts", "showMap"])
 
 const tableData = ref<Array<dockerData>>([])
 const inputData = ref<Array<dockerData>>([])
@@ -131,6 +144,7 @@ const triggerFileSelect = () => {
     fileInput.value?.click()
 }
 
+// 上传geojson的方法
 const uploadFile = async (event: Event) => {
     const target = event.target as HTMLInputElement;
     if (!target.files || target.files.length === 0) return;
@@ -139,8 +153,11 @@ const uploadFile = async (event: Event) => {
 
     // 检查文件类型
     const allowedTypes = ['application/json', 'text/plain']
-    if (!allowedTypes.includes(file.type)) {
-        ElMessage.warning('只支持 .json 或 .txt 文件')
+    const allowedExtensions = ['.json', '.txt', '.geojson'];
+
+    const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
+    if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(`.${fileExtension}`)) {
+        ElMessage.warning('只支持 .geojson, .json 或 .txt 文件')
         return
     }
 
@@ -150,10 +167,8 @@ const uploadFile = async (event: Event) => {
         try {
 
             const fileContent = e.target?.result as string
-            console.log(fileContent, 'fileContent');
 
             const jsonData = JSON.parse(fileContent)
-            console.log(jsonData, 'jsonData1');
 
             const res = await uploadGeoJson({
                 userId: props.userId,
@@ -181,20 +196,21 @@ const uploadFile = async (event: Event) => {
 
 // 单元格点击事件处理
 const handleCellClick = async (item: dockerData, column: string) => {
-    if (activeDataBase.value === "data") {
-        ElMessage.info("目前仅支持输出数据预览")
-        return
-    }
+    console.log(item);
+
+    const fileSuffix = item.fileName.split('.').pop()?.toLowerCase()
     if (column === 'view') {
-        if (item.fileType === 'tif' || item.fileType === 'tiff' || item.fileType === 'TIF') {
+        if (activeDataBase.value === "data") {
+            ElMessage.info("目前仅支持输出数据预览")
+            return
+        }
+        if (fileSuffix === 'tif' || fileSuffix === 'tiff' || fileSuffix === 'TIF') {
+            emit('showMap')
+
+            // 先拿到数据元数据
             const targetItem = (
                 activeDataBase.value === 'data' ? inputData.value : outputData.value
-            ).find(
-                (data) =>
-                    data.updateTime === item.updateTime &&
-                    data.fileSize === item.fileSize &&
-                    data.fileName === item.fileName,
-            )
+            ).find((data) => data.fileName === item.fileName)
             if (targetItem) {
                 // false变true才需要展示
                 if (!targetItem.view) {
@@ -214,31 +230,30 @@ const handleCellClick = async (item: dockerData, column: string) => {
                         ElMessage.info('该数据正在切片，请稍后再预览')
                         return
                     }
-                    console.log(targetInMiniIo.dataId, 18156)
-
+                    let mapPosition = targetInMiniIo.bbox.geometry.coordinates[0]
                     // 3、拿到数据实体的瓦片url
                     let tileUrlObj = await getTileFromMiniIo(targetInMiniIo.dataId)
-                    let wholeTileUrl
+                    let wholeTileUrl: string
                     if (tileUrlObj.object.includes('ndvi')) {
-                        wholeTileUrl =
-                            tileUrlObj.tilerUrl + '/{z}/{x}/{y}.png?object=/' + tileUrlObj.object + "&colorStyle=red2green&range=[-0.8,0.8]"
+                        wholeTileUrl = tileUrlObj.tilerUrl + '/{z}/{x}/{y}.png?object=/' + tileUrlObj.object + "&colorStyle=red2green&range=[-0.8,0.8]"
+                    } else if (tileUrlObj.object.includes('pbty')) {
+                        wholeTileUrl = tileUrlObj.tilerUrl + '/{z}/{x}/{y}.png?object=/' + tileUrlObj.object + "&colorStyle=red2green&range=[0,0.72]"
                     } else {
-                        wholeTileUrl =
-                            tileUrlObj.tilerUrl + '/{z}/{x}/{y}.png?object=/' + tileUrlObj.object
+                        wholeTileUrl = tileUrlObj.tilerUrl + '/{z}/{x}/{y}.png?object=/' + tileUrlObj.object
                     }
 
-                    console.log(tileUrlObj, wholeTileUrl, 'wholeTileUrl')
+                    // console.log(tileUrlObj, wholeTileUrl, mapPosition, 'wholeTileUrl')
                     if (!tileUrlObj.object) {
                         console.info(wholeTileUrl, '没有拿到瓦片服务的URL呢,拼接的路径参数是空的')
+                        ElMessage.error('瓦片服务错误')
                         return
                     }
                     // addRasterLayerFromUrl("http://223.2.32.242:8079/{z}/{x}/{y}.png?object=/test-images/landset8_test/landset8_L2SP_test/tif/LC08_L2SP_118038_20241201_20241203_02_T1/LC08_L2SP_118038_20241201_20241203_02_T1_SR_B4.TIF", item.fileName + item.fileSize)
                     // 图层名为“文件名+文件大小”
                     addRasterLayerFromUrl(wholeTileUrl, item.fileName + item.fileSize)
                     // flyTo
-                    if (0) {
-                        map_flyTo([114.305542, 30.592807])
-                    }
+                    map_fitView(getBounds(mapPosition))
+
                     targetItem.view = !targetItem.view
                 } else {
                     // 关闭时移除图层
@@ -246,10 +261,62 @@ const handleCellClick = async (item: dockerData, column: string) => {
                     targetItem.view = !targetItem.view
                 }
             }
+        } else if (fileSuffix === 'json' || fileSuffix === 'txt') {
+            const targetItem = (
+                activeDataBase.value === 'data' ? inputData.value : outputData.value
+            ).find((data) => data.fileName === item.fileName)
+
+            if (targetItem) {
+                if (!targetItem.view) {
+                    // 1、拿到miniIo里面的数据列表
+                    let miniIoFile = await getMiniIoFiles({
+                        userId: props.userId,
+                        projectId: props.projectId,
+                    })
+
+                    // 2、根据view行所代表的数据信息，找到对应的miniIo实体
+                    let targetInMiniIo = miniIoFile.find(
+                        (data: any) => data.dataName === targetItem.fileName,
+                    )
+                    if (!targetInMiniIo?.dataId) {
+                        console.info(
+                            targetItem.fileName + '没有dataId，检查miniIo上是否存在这个数据实体',
+                        )
+                        ElMessage.info('该数据正在上传，请稍后再预览')
+                        return
+                    }
+
+                    let dataEntity = await getJsonFileContent(targetInMiniIo.dataId)
+                    // console.log(dataEntity);
+                    emit('addCharts', dataEntity.data)
+                    // targetItem.view = true
+                } else {
+                    console.log("关闭预览？");
+                    // targetItem.view = false
+                }
+            }
         } else {
             ElMessage.warning('暂不支持预览')
         }
     }
+}
+
+// 从一组坐标点中获得左下和右上坐标点
+const getBounds = (coordinates: number[][]) => {
+    let minLng = Infinity; // 最小经度（西经）
+    let maxLng = -Infinity; // 最大经度（东经）
+    let minLat = Infinity; // 最小纬度（南纬）
+    let maxLat = -Infinity; // 最大纬度（北纬）
+    for (const [lng, lat] of coordinates) {
+        if (lng < minLng) minLng = lng;
+        if (lng > maxLng) maxLng = lng;
+        if (lat < minLat) minLat = lat;
+        if (lat > maxLat) maxLat = lat;
+    }
+    return [
+        [minLng, minLat], // 左下角（西经, 南纬）
+        [maxLng, maxLat]  // 右上角（东经, 北纬）
+    ];
 }
 
 const getInputData = async () => {

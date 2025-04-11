@@ -223,14 +223,14 @@
                             <DownloadIcon :size="18" class="button-icon" />
                             <span>合并下载</span>
                         </a-button>
-                        <a-button type="primary" class="search-button" v-if="
+                        <!-- <a-button type="primary" class="search-button" v-if="
                             selectedProduct &&
                             tileMergeConfig.bands.length > 0 &&
                             selectedGridIDs.length > 0
                         " @click="handleAddToProject" :loading="projectUploadLoading">
                             <FilePlus2Icon :size="18" class="button-icon" />
                             <span>添加至项目</span>
-                        </a-button>
+                        </a-button> -->
                     </div>
                 </section>
             </div>

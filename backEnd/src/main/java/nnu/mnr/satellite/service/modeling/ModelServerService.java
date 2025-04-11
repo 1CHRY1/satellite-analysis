@@ -3,19 +3,15 @@ package nnu.mnr.satellite.service.modeling;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import nnu.mnr.satellite.jobs.QuartzSchedulerManager;
-import nnu.mnr.satellite.model.dto.common.FileData;
-import nnu.mnr.satellite.model.dto.modeling.NdviDTO;
 import nnu.mnr.satellite.model.pojo.modeling.ModelServerProperties;
 import nnu.mnr.satellite.model.pojo.modeling.TilerProperties;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
-import nnu.mnr.satellite.model.vo.modeling.TilerVO;
-import nnu.mnr.satellite.utils.common.ProcessUtil;
+import nnu.mnr.satellite.model.vo.modeling.TilerResultVO;
 import nnu.mnr.satellite.utils.data.MinioUtil;
 import nnu.mnr.satellite.utils.data.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
@@ -91,7 +87,7 @@ public class ModelServerService {
         String modelResult = oModelResult.get();
         JSONObject modelResultJson = JSONObject.parseObject(modelResult);
         String bucket = modelResultJson.getString("bucket"); String path = modelResultJson.getString("path");
-        TilerVO tilerInfo = TilerVO.tilerBuilder()
+        TilerResultVO tilerInfo = TilerResultVO.tilerBuilder()
                 .tilerUrl(tilerProperties.getEndPoint())
                 .object(bucket + path)
                 .build();

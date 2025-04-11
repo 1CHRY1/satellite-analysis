@@ -43,9 +43,9 @@ export class GridMaker {
         const endGridY = Math.ceil(((90 - minLat) / 180) * this.gridNumY)
 
         // 默认选中所有网格
-        const gridIds = []
+        const gridIds: string[] = []
 
-        const features = []
+        const features: GeoJSON.Feature[] = []
         for (let i = startGridX; i < endGridX; i++) {
             for (let j = startGridY; j < endGridY; j++) {
                 const [leftLng, topLat] = grid2lnglat(i, j, this.gridNumX, this.gridNumY)
