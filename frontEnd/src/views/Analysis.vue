@@ -127,7 +127,7 @@ const clearConsole = () => {
  * 下半可视化模块
  */
 
-const showMap = ref(false)
+const showMap = ref(true)
 interface ChartInstance {
     addChart: (type: string, config: { labels: string[]; values: number[] }) => void;
     removeChart: (index: number) => void;
