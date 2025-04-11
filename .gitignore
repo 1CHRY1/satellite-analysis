@@ -47,6 +47,9 @@ output/
 __pycache__/
 *.pyc
 worldgrid/
+hytemp/
 
 .vscode/
 .idea/
+window.build/
+window.dist/

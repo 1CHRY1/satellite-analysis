@@ -283,34 +283,8 @@ class FileEventHandler(FileSystemEventHandler):
         if event.src_path.startswith('temp_cog'):
             return
         
-        if(self.timer):
-            self.timer.cancel()
-            self.timer.join()
-        
-        self.timer = Timer(1, self.process_event, [event])
-        self.timer.start()
-        
-        # if(event.event_type == 'deleted'): # 只触发一次， 直接处理
-        #     print('$2 deleted事件 : ', event.src_path )
-        # #     delete_remote_object(event.src_path)
-        # #     self.file_event_history.pop(event.src_path, None)
-        # elif event.event_type in ['created', 'moved']:  # 只记录状态
-        #     print('$2 记录事件状态 : ', event.src_path, " : ", event.event_type)
-            # print('$2 record event status : ', event.src_path, " : ", event.event_type)
-            # self.file_event_history[event.src_path] = event.event_type
-            
-        # elif(event.event_type == 'modified'): # 延时确认
-        #     event_history = self.file_event_history.get(event.src_path)
-            
-        #     # 如果是created之后的第一次modified，则记录为created-modified
-        #     if event_history == 'created': 
-        #         self.file_event_history[event.src_path] = 'created-modified'
-        #     # 如果是created-modified之后的一次modified，则执行push_to_remote, 并删除created-modified
-        #     elif event_history == 'created-modified':
-        #         self.process_event(event)
-        #     # 如果是moved之后的第一次modified，则执行push_to_remote, 并删除moved
-        #     elif event_history == 'moved':
-        #         self.process_event(event)
+        self.process_event(event)
+    
             
     def process_event(self, event: FileSystemEvent):
         
@@ -335,26 +309,6 @@ class FileEventHandler(FileSystemEventHandler):
             print('$2 其他事件 : ', event.src_path, " : ", event.event_type)
             pass
     
-        
-        # if event.event_type == 'modified':
-        #     print(' #push# : ', event.src_path )
-        #     push_to_remote(event.src_path)
-        #     self.file_event_history.pop(event.src_path, None)
-            
-        # elif event.event_type == 'deleted':
-        #     print(' #delete# : ', event.src_path )
-        #     delete_remote_object(event.src_path)
-        #     self.file_event_history.pop(event.src_path, None)
-            
-        # elif event.event_type == 'moved':
-        #     print(' #delete# : ', event.src_path + ' AND ', ' #push# : ', event.dest_path)
-        #     delete_remote_object(event.src_path)
-        #     push_to_remote(event.dest_path)
-        #     self.file_event_history.pop(event.src_path, None)
-        #     self.file_event_history.pop(event.dest_path, None)
-
-        # else:
-        #     pass
             
 
 def clear_test_bucket():

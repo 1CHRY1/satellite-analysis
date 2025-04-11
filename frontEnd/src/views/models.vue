@@ -74,7 +74,7 @@
                                     <a href="https://geomodeling.njnu.edu.cn/modelItem/repository" target="_blank">
                                         详情信息
                                     </a>
-                                    <!-- <FilePlus2 :size="16" class="ml-1" /> -->
+                                    <FilePlus2 v-if="0" :size="16" class="ml-1" />
                                 </div>
                             </div>
                         </el-col>
@@ -91,20 +91,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, type Ref, watch } from 'vue'
+import { ref, computed, onMounted, type Ref } from 'vue'
 import projectsBg from '@/components/projects/projectsBg.vue'
-import { getModels, getMethods } from '@/api/http/analysis'
+import { getModels } from '@/api/http/analysis'
 import { FilePlus2, Mail, Package } from 'lucide-vue-next'
 import type { modelsOrMethods } from '@/type/modelCentral'
 
-const categories = ref<string[]>([
-    'Natural Perspective',
-    'Human Perspective',
-    'Global Scale',
-    'Regional Scale',
-    'Data Analysis',
-    'Machine Learning'
-]);
+
 const treeData = [
     {
         label: "面向应用的分类",

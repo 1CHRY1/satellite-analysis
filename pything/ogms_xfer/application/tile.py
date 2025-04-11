@@ -1,12 +1,19 @@
+from dataclasses import dataclass
 from ..service.tile import TileService
 from ..application.provider import Singleton
 from ..dataModel.tile import TileBase as TileDataModel
 
+@dataclass
+class GridCell:
+    columnId: int
+    rowId: int
+
 class Tile:
     
     @staticmethod
-    def query(scene_id: str = None, image_id: str = None, cloud_range: tuple[float, float] = None, polygon: object = None, tile_ids: list[str] = None, band: int = None, tile_level: str = None):
+    def query(scene_id: str = None, image_id: str = None, cloud_range: tuple[float, float] = None, polygon: object = None, tile_ids: list[str] = None, band: int = None, tile_level: str = None, grid_cells: list[GridCell] = None):
         tile_service: TileService = Singleton.get_instance(id="tile_service")
+
         return [Tile(scene_id, tile_id) for scene_id, tile_id in tile_service.get_tiles(
             scene_id=scene_id, 
             image_id=image_id,
@@ -14,7 +21,8 @@ class Tile:
             polygon=polygon, 
             tile_ids=tile_ids, 
             band=band, 
-            tile_level=tile_level)]
+            tile_level=tile_level,
+            grid_cells=grid_cells)]
 
     def __new__(cls, scene_id: str, tile_id: str):
         """创建 Tile 实例，若 tile_id 不存在，则返回 None"""

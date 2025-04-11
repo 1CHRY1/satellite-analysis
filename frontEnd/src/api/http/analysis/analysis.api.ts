@@ -27,11 +27,12 @@ export async function createProject(param: any): Promise<any> {
     return http.post<any>(`coding/project/new`, param)
 }
 
-//----------------------------- code online API -----------------------------//
-// 项目的启动、关闭、创建和删除
+// 项目的启动、关闭和删除
 export async function projectOperating(param: any): Promise<any> {
     return http.post<any>(`coding/project/operating`, param)
 }
+
+//----------------------------- code online API -----------------------------//
 
 export async function getScript(param: any): Promise<any> {
     return http.post<any>(`coding/project/file/script`, param)
@@ -71,6 +72,10 @@ export async function getMiniIoFiles(param: any): Promise<any> {
 // 获取miniIo里面的文件信息列表
 export async function getTileFromMiniIo(dataId: any): Promise<any> {
     return http.get<any>(`coding/project/result/tif/${dataId}`)
+}
+
+export async function getJsonFileContent(dataId: any): Promise<any> {
+    return http.get<any>(`coding/project/result/json/${dataId}`)
 }
 
 export async function uploadGeoJson(param: any): Promise<any> {

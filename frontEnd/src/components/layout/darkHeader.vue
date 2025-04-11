@@ -2,8 +2,8 @@
     <header class="flex items-center justify-between px-10 py-2 shadow-md select-none">
         <div class="flex flex-3/5 items-center justify-start">
             <div class="flex items-center">
-                <img :src="logo" alt="Logo" class="h-10 w-auto -translate-x-3 cursor-pointer" @click="jumpToOGMS" />
-                <satellite class="text-primary h-8 w-8" />
+                <!-- <img :src="logo" alt="Logo" class="h-10 w-auto -translate-x-3 cursor-pointer" @click="jumpToOGMS" /> -->
+                <satellite class="text-primary h-8 w-8 mr-2" />
 
                 <span
                     class="bg-gradient-to-r from-sky-100 to-white bg-clip-text font-semibold whitespace-nowrap text-transparent sm:text-lg md:text-xl lg:text-2xl">遥感ARD平台</span>
@@ -72,7 +72,7 @@ import { useRoute } from 'vue-router'
 import { useUserStore } from '@/store'
 import { useRouter } from 'vue-router'
 
-import logo from '@/assets/image/logo2.png'
+// import logo from '@/assets/image/logo2.png'
 import avator from '@/assets/image/avator.png'
 import { Satellite } from 'lucide-vue-next'
 
@@ -85,14 +85,14 @@ const navItems = [
     { external: false, name: '首页', path: '/home' },
     { external: false, name: '模型中心', path: '/models' },
     { external: false, name: '数据中心', path: '/data' },
-    { external: false, name: '项目中心', path: '/projects' },
+    { external: false, name: '工具发布', path: '/projects' },
     { external: true, name: '关于我们', path: 'http://opengmsteam.com/' },
 ]
 
-const jumpToOGMS = () => {
-    const OGMS_URL = 'https://geomodeling.njnu.edu.cn/'
-    window.open(OGMS_URL, '_blank')
-}
+// const jumpToOGMS = () => {
+//     const OGMS_URL = 'https://geomodeling.njnu.edu.cn/'
+//     window.open(OGMS_URL, '_blank')
+// }
 
 /////// User //////////////////////////////////
 const userStore = useUserStore()
