@@ -4,6 +4,12 @@ from ..application.provider import Singleton
 from ..application.tile import Tile
 from ..dataModel.image import Image as ImageDataModel
 
+from dataclasses import dataclass
+@dataclass
+class GridCell:
+    columnId: int
+    rowId: int
+    
 class Image:
     
     @staticmethod
@@ -91,6 +97,10 @@ class Image:
     
     def get_tiles_by_polygon(self, polygon: object):
         tiles = self._tile_service.get_tiles(scene_id=self.scene_id, image_id=self.image_id, polygon=polygon)
+        return [Tile.from_data_model(tile, self.scene_id) for tile in tiles]
+    
+    def get_tiles_by_grid_cells(self, grid_cells: list[GridCell]):
+        tiles = self._tile_service.get_tiles(scene_id=self.scene_id, image_id=self.image_id, grid_cells=grid_cells)
         return [Tile.from_data_model(tile, self.scene_id) for tile in tiles]
     
     def get_tiles_by_tile_level(self, tile_level: str):
