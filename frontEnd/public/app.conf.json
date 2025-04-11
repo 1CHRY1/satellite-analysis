@@ -1,5 +1,6 @@
 {
     "mock": false,
     "back_app": "/api",
-    "back_websocket": ""
+    "back_websocket": "",
+    "basemap_server": "/basemap"
 }

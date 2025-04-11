@@ -12,8 +12,6 @@ if(scene.scene_id == None):
     print("无法检索到影像, 请检查影像ID是否正确")
     exit()
 
-    
-
 
 print("检索到影像： ", scene.scene_name)
 print("波段数： ",scene.band_num)
