@@ -6,15 +6,17 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-    plugins: [vue(), tailwindcss(),
-    // visualizer({
-    //     open: true,
-    //     gzipSize: true,
-    //     brotliSize: true,
-    //     filename: 'dist/bundle.html',
-    //     title: 'Vite Bundle Visualizer',
-    //     sourcemap: true,
-    // })
+    plugins: [
+        vue(),
+        tailwindcss(),
+        // visualizer({
+        //     open: true,
+        //     gzipSize: true,
+        //     brotliSize: true,
+        //     filename: 'dist/bundle.html',
+        //     title: 'Vite Bundle Visualizer',
+        //     sourcemap: true,
+        // })
     ],
     resolve: {
         alias: {
@@ -34,6 +36,13 @@ export default defineConfig({
                 // target: 'http://223.2.43.228:30535/api/v1',
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/api/, ''),
+            },
+            '/model/websocket': {
+                target: 'http://223.2.47.202:9001/model/websocket',
+                // target: 'http://223.2.43.228:30535/api/v1',
+                ws: true,
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/model\/websocket/, ''),
             },
         },
     },
