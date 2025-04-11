@@ -3,17 +3,17 @@ from osgeo import gdal
 import numpy as np
 
 # 获取程序所在路径（对于打包的 .exe 文件）
-if getattr(sys, 'frozen', False):
-    # Nuitka 打包后的临时路径
-    base_path = os.path.dirname(sys.argv[0])
-else:
-    # 原始 Python 脚本路径
-    base_path = os.path.dirname(__file__)
+# if getattr(sys, 'frozen', False):
+#     # Nuitka 打包后的临时路径
+#     base_path = os.path.dirname(sys.argv[0])
+# else:
+#     # 原始 Python 脚本路径
+#     base_path = os.path.dirname(__file__)
 
-# proj.db存储在base_path下
-os.environ['PROJ_LIB'] = base_path
+# # proj.db存储在base_path下
+# os.environ['PROJ_LIB'] = base_path
 
-print("os.environ['PROJ_LIB'] -- ", os.environ['PROJ_LIB'])
+# print("os.environ['PROJ_LIB'] -- ", os.environ['PROJ_LIB'])
 
 #
 # Approximate radius of the earth in meters.
@@ -81,10 +81,10 @@ def geo_to_pixel(geo_x, geo_y, geo_transform):
 
     return int(math.floor(pixel_x)), int(math.floor(pixel_y))  # 取整保证是像素索引
 
-
 def tif2GeoCS(input_image, out_image):
     options = gdal.WarpOptions(dstSRS="EPSG:4326")  # 目标坐标系为 WGS 84
     gdal.Warp(out_image, input_image, options=options)
+
 
 
 def process(input_image, output_dir, grid_resolution, clearNodata=True, convert_to_wgs84=False):
@@ -108,10 +108,10 @@ def process(input_image, output_dir, grid_resolution, clearNodata=True, convert_
     # 获取影像的波段数量
     band_count = ds.RasterCount
     
-    # no_data_values = {
-    #     band_index: ds.GetRasterBand(band_index).GetNoDataValue() or 0
-    #     for band_index in range(1, band_count + 1)
-    # }
+    no_data_values = {
+        band_index: ds.GetRasterBand(band_index).GetNoDataValue() or 0
+        for band_index in range(1, band_count + 1)
+    }
 
     print("开始计算网格参数...", time.strftime("%Y-%m-%d %H:%M:%S"))
     # 计算网格参数
@@ -156,17 +156,17 @@ def process(input_image, output_dir, grid_resolution, clearNodata=True, convert_
                 band_output_dir = os.path.join(output_dir, f"band_{band_index}")
                 tile_filename = os.path.join(band_output_dir, f"tile_{grid_id_x}_{grid_id_y}.tif")
 
-                # # 读取当前波段的数据
-                # band = ds.GetRasterBand(band_index)
-                # tile_data = band.ReadAsArray(x, y, w, h)
+                # 读取当前波段的数据
+                band = ds.GetRasterBand(band_index)
+                tile_data = band.ReadAsArray(x, y, w, h)
 
-                # # 检查是否包含 NoData 值
-                # no_data_value = no_data_values[band_index]
-                # if no_data_value is None:
-                #     no_data_value = 0
+                # 检查是否包含 NoData 值
+                no_data_value = no_data_values[band_index]
+                if no_data_value is None:
+                    no_data_value = 0
 
-                # if np.all(tile_data == no_data_value):
-                #     continue
+                if np.all(tile_data == no_data_value):
+                    continue
 
                 # 保存当前波段的瓦片
                 gdal.Translate(tile_filename, ds, srcWin=[x, y, w, h], bandList=[band_index])
@@ -183,17 +183,30 @@ def process(input_image, output_dir, grid_resolution, clearNodata=True, convert_
 
 
 ###################################################################
-# if __name__ == "__main__":
 
-#     #---------- External input parameters-------------
-#     input_image = "D:\\edgedownload\\LT51190382000261BJC00\\LT51190382000261BJC00_B1.TIF"
-#     output_dir = "C:\\Users\\19236\\Desktop\\test\\2"
-#     grid_resolution_in_kilometer = 5
+if __name__ == "__main__":
+    import argparse
+    
+    # 创建命令行参数解析器
+    parser = argparse.ArgumentParser(description='Slice large TIF image into grid tiles.')
+    parser.add_argument('input_image', help='Input TIF image path')
+    parser.add_argument('output_dir', help='Output directory for tiles')
+    parser.add_argument('grid_resolution', type=float, help='Grid resolution in kilometers')
+    parser.add_argument('--clear-nodata', action='store_true', default=True, 
+                        help='Clear tiles containing only nodata values (default: True)')
+    parser.add_argument('--convert-wgs84', action='store_true', default=False,
+                        help='Convert input to WGS84 projection before processing (default: False)')
 
-#     start_time = time.time()
+    # 解析命令行参数
+    args = parser.parse_args()
 
-#     #---------- Core ---------------------------------
-#     process(input_image, output_dir, grid_resolution_in_kilometer, clearNodata = True)
+    start_time = time.time()
 
-#     end_time = time.time()
-#     print('Time cost:', end_time - start_time, 's')
+    # 执行处理
+    process(args.input_image, args.output_dir, args.grid_resolution, 
+           clearNodata=args.clear_nodata, convert_to_wgs84=args.convert_wgs84)
+
+    end_time = time.time()
+    print('Time cost:', end_time - start_time, 's')
+
+# python bigTifSlicer.py input_image.tif output_directory 5

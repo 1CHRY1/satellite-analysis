@@ -185,7 +185,7 @@ if __name__ == "__main__":
         calculate_grid_ndvi(scene, grid_cells, out_ndvi_path)
         time = datetime(2012 + i, 1, 1)
         data['date'].append(time.strftime('%Y/%m/%d'))
-        data['value'].append(float(xfer.Toolbox().sample_raster(out_ndvi_path, point[0], point[1])))
+        data['value'].append(float(xfer.Toolbox.sample_raster(out_ndvi_path, point[0], point[1])))
         
     with open(json_path, 'w') as f:
         json.dump(data, f, indent=4)
