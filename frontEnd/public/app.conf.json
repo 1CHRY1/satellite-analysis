@@ -1,4 +1,5 @@
 {
     "mock": false,
-    "back_app": "/api"
+    "back_app": "/api",
+    "back_websocket": ""
 }

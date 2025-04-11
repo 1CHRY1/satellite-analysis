@@ -107,6 +107,8 @@ const props = defineProps({
     },
 })
 
+const showedCache = ref<string[]>([])
+
 const emit = defineEmits(["addCharts", "removeCharts", "showMap"])
 
 const tableData = ref<Array<dockerData>>([])
@@ -253,11 +255,14 @@ const handleCellClick = async (item: dockerData, column: string) => {
                     addRasterLayerFromUrl(wholeTileUrl, item.fileName + item.fileSize)
                     // flyTo
                     map_fitView(getBounds(mapPosition))
-
+                    // 放到缓存中
+                    showedCache.value.push(item.fileName + item.fileSize)
                     targetItem.view = !targetItem.view
                 } else {
                     // 关闭时移除图层
                     removeRasterLayer(item.fileName + item.fileSize)
+                    // 从缓存中移除
+                    showedCache.value = showedCache.value.filter((cache) => cache !== item.fileName + item.fileSize)
                     targetItem.view = !targetItem.view
                 }
             }
@@ -343,7 +348,10 @@ const getOutputData = async () => {
         return []
     }
     outputData.value = tempData.map((item: any) => {
-        return { ...item, view: false }
+        if (showedCache.value.includes(item.fileName + item.fileSize)) item.view = true
+        else item.view = false
+
+        return item
     })
 }
 
