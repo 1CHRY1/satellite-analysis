@@ -86,10 +86,10 @@ def tif2GeoCS(input_image, out_image):
     gdal.Warp(out_image, input_image, options=options)
 
 
-
 def process(input_image, output_dir, grid_resolution, clearNodata=True, convert_to_wgs84=False):
     # 初始化 GDAL 缓存
-    gdal.SetCacheMax(2**27)
+    # gdal.SetCacheMax(2**32)
+    gdal.SetCacheMax(16 * 1024 * 1024 * 1024)  # 16GB
     
     print("开始读取影像...", time.strftime("%Y-%m-%d %H:%M:%S"))
     
@@ -107,10 +107,10 @@ def process(input_image, output_dir, grid_resolution, clearNodata=True, convert_
     # 获取影像的波段数量
     band_count = ds.RasterCount
     
-    no_data_values = {
-        band_index: ds.GetRasterBand(band_index).GetNoDataValue() or 0
-        for band_index in range(1, band_count + 1)
-    }
+    # no_data_values = {
+    #     band_index: ds.GetRasterBand(band_index).GetNoDataValue() or 0
+    #     for band_index in range(1, band_count + 1)
+    # }
 
     print("开始计算网格参数...", time.strftime("%Y-%m-%d %H:%M:%S"))
     # 计算网格参数
@@ -155,17 +155,17 @@ def process(input_image, output_dir, grid_resolution, clearNodata=True, convert_
                 band_output_dir = os.path.join(output_dir, f"band_{band_index}")
                 tile_filename = os.path.join(band_output_dir, f"tile_{grid_id_x}_{grid_id_y}.tif")
 
-                # 读取当前波段的数据
-                band = ds.GetRasterBand(band_index)
-                tile_data = band.ReadAsArray(x, y, w, h)
+                # # 读取当前波段的数据
+                # band = ds.GetRasterBand(band_index)
+                # tile_data = band.ReadAsArray(x, y, w, h)
 
-                # 检查是否包含 NoData 值
-                no_data_value = no_data_values[band_index]
-                if no_data_value is None:
-                    no_data_value = 0
+                # # 检查是否包含 NoData 值
+                # no_data_value = no_data_values[band_index]
+                # if no_data_value is None:
+                #     no_data_value = 0
 
-                if np.all(tile_data == no_data_value):
-                    continue
+                # if np.all(tile_data == no_data_value):
+                #     continue
 
                 # 保存当前波段的瓦片
                 gdal.Translate(tile_filename, ds, srcWin=[x, y, w, h], bandList=[band_index])
