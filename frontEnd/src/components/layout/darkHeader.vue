@@ -3,7 +3,7 @@
         <div class="flex flex-3/5 items-center justify-start">
             <div class="flex items-center">
                 <!-- <img :src="logo" alt="Logo" class="h-10 w-auto -translate-x-3 cursor-pointer" @click="jumpToOGMS" /> -->
-                <satellite class="text-primary h-8 w-8 mr-2" />
+                <satellite class="!text-[#3b82f6] h-8 w-8 mr-2" />
 
                 <span
                     class="bg-gradient-to-r from-sky-100 to-white bg-clip-text font-semibold whitespace-nowrap text-transparent sm:text-lg md:text-xl lg:text-2xl">遥感ARD平台</span>
