@@ -73,7 +73,7 @@ public class ProjectResultDataService {
         QueryWrapper<ProjectResult> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("data_id", dataId);
         ProjectResult projectResult = projectResultRepo.selectOne(queryWrapper);
-        if (!Objects.equals(projectResult.getDataType(), "table")) {
+        if (!Objects.equals(projectResult.getDataType(), "json")) {
             return JsonResultVO.jsonResultBuilder().build();
         }
         String jsonString = minioUtil.readJsonFile(projectResult.getBucket(), projectResult.getPath());
