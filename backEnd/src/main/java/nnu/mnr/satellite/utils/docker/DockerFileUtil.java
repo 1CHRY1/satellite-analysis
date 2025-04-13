@@ -48,6 +48,8 @@ public class DockerFileUtil {
             case "png" -> FileType.image;
             case "jpeg" -> FileType.image;
             case "py" -> FileType.python;
+            case "json" -> FileType.json;
+            case "geojson" -> FileType.geojson;
             default -> FileType.unknown;
         };
     }
