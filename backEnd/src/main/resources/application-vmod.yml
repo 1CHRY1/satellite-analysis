@@ -1,0 +1,80 @@
+server:
+  port: 8999
+
+netty:
+  websocket:
+    port: 9888
+
+spring:
+  datasource:
+    dynamic:
+      primary: mysql_satellite
+      strict: false
+      datasource:
+        mysql_satellite:
+          url: jdbc:mysql://172.31.13.21:3306/satellite
+          username: root
+          password: ogms250410
+          driver-class-name: com.mysql.cj.jdbc.Driver
+        mysql_tile:
+          url: jdbc:mysql://172.31.13.21:3306/tile
+          username: root
+          password: ogms250410
+          driver-class-name: com.mysql.cj.jdbc.Driver
+  servlet:
+    multipart:
+      max-file-size: 1GB
+      max-request-size: 1GB
+  data:
+    redis:
+      host: 172.31.13.21
+      port: 6379
+      database: 0
+    mongodb:
+      uri: mongodb://172.31.13.21:27017/PortalModel
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: nnu.mnr.satellite.model.po
+  type-handlers-package: nnu.mnr.satellite.utils.typeHandler
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+#ca:
+#  dir: D:/1tools/OpenSSL/ca
+
+minio:
+  access-key: 8q88Eh2XwPEEPxT1VSaG
+  secret-key: vMsgWbHqUGt1B9Yl9E0ZEMzJsPAuEvZvsysyVYzO
+  url: http://172.31.13.21:9000
+
+docker:
+  defaultServer:
+    #    port: 2376
+    #    host: "223.2.35.208"
+    #    username: "vge"
+    #    password: "3J44.njnu.edu.cn"
+    #  serverDir: /home/vge/satellite/
+    port: 2375
+#    host: "172.31.13.20"
+    host: "172.31.11.170"
+    username: "root"
+#    password: "Sasmac@123"
+    password: "dky.njnu.edu.cn"
+  localPath: /usr/resource/modelDockerVolume/
+  serverDir: /home/satellite/
+  workDir: /usr/local/coding/
+
+modelServer:
+  address: http://172.31.13.21:5000
+  apis:
+    status: /v0/task/status
+    result: /v0/task/result
+    merge: /v0/tif/merge_v2
+    ndviPoint: /ndviPoint
+    ndviArea: /ndviArea
+  interval:
+    status: 2
+
+tiler:
+  end-point: http://172.31.13.21:8079
