@@ -19,8 +19,8 @@ import java.util.*;
 public class JwtUtil {
 
     private static final SecretKey SECRET_KEY = Keys.hmacShaKeyFor("NNU-satellite-analysis-center-for-MNR".getBytes(StandardCharsets.UTF_8));
-//    private static final long ACCESS_TOKEN_EXPIRATION = 15 * 60 * 1000; // 15 Min
-    private static final long ACCESS_TOKEN_EXPIRATION = 1500 * 60 * 1000; // 15 Min
+    private static final long ACCESS_TOKEN_EXPIRATION = 15 * 60 * 1000; // 15 Min
+//    private static final long ACCESS_TOKEN_EXPIRATION = 1 * 60 * 1000 / 10; // 15 Min
     private static final long REFRESH_TOKEN_EXPIRATION = 7 * 24 * 60 * 60 * 1000; // 7 Day
 
     public static String generateAccessToken(String userId, String username, Collection<? extends GrantedAuthority> roles) {
