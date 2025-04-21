@@ -1,7 +1,7 @@
 package nnu.mnr.satelliteresource.model.vo.resources;
-
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.experimental.SuperBuilder;
-import nnu.mnr.satellite.model.vo.modeling.TilerResultVO;
 
 /**
  * Created with IntelliJ IDEA.

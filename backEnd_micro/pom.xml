@@ -30,13 +30,17 @@
         <spring-boot.version>3.4.3</spring-boot.version>
         <spring-cloud.version>2024.0.0</spring-cloud.version>
         <spring-cloud.gateway>4.1.5</spring-cloud.gateway>
+        <spring-cloud.openfeign>3.1.2</spring-cloud.openfeign>
 
         <mysql.version>8.0.33</mysql.version>
         <mybatis-plus.version>3.5.10.1</mybatis-plus.version>
         <mybatis-plus-dynamic.version>4.2.0</mybatis-plus-dynamic.version>
         <redis.version>3.4.0</redis.version>
+        <minio.version>8.5.12</minio.version>
 
         <locationtech.version>1.18.1</locationtech.version>
+        <geotools-geojson.version>24.0</geotools-geojson.version>
+        <geotools-opengis.version>28.2</geotools-opengis.version>
 
         <alibaba.fastjson>2.0.53</alibaba.fastjson>
         <lombok.version>RELEASE</lombok.version>
@@ -76,15 +80,13 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-
-            <!--spring cloud alibaba-->
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-dependencies</artifactId>
-                <version>${spring-cloud.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
+                <artifactId>spring-cloud-starter-openfeign</artifactId>
+                <version>${spring-cloud.openfeign}</version>
             </dependency>
+
+            <!--spring cloud alibaba-->
             <dependency>
                 <groupId>com.alibaba.cloud</groupId>
                 <artifactId>spring-cloud-alibaba-dependencies</artifactId>
@@ -119,11 +121,26 @@
                 <artifactId>spring-data-redis</artifactId>
                 <version>${redis.version}</version>
             </dependency>
+            <dependency>
+                <groupId>io.minio</groupId>
+                <artifactId>minio</artifactId>
+                <version>${minio.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.locationtech.jts</groupId>
                 <artifactId>jts-core</artifactId>
                 <version>${locationtech.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.geotools</groupId>
+                <artifactId>gt-geojson</artifactId>
+                <version>${geotools-geojson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.geotools</groupId>
+                <artifactId>gt-opengis</artifactId>
+                <version>${geotools-opengis.version}</version>
             </dependency>
 
             <dependency>
@@ -141,6 +158,12 @@
                 <groupId>com.alibaba.fastjson2</groupId>
                 <artifactId>fastjson2-extension</artifactId>
                 <version>${fastjson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains</groupId>
+                <artifactId>annotations</artifactId>
+                <version>RELEASE</version>
+                <scope>compile</scope>
             </dependency>
 
             <!--spring security-->
