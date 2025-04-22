@@ -90,7 +90,8 @@ class GridHelper:
 
     def _create_shapely_polygon(self, polygon: PolygonGeometry) -> Polygon:
         """Convert GeoJSON-like polygon to Shapely polygon."""
-        return Polygon(polygon.coordinates[0])
+        print(polygon.get("features")[0].get("geometry"))
+        return Polygon(polygon.get("features")[0].get("geometry").get("coordinates")[0])
 
     def _get_grid_polygon(self, grid_x: int, grid_y: int) -> Polygon:
         """Create Shapely polygon for a grid cell."""
@@ -106,7 +107,7 @@ class GridHelper:
 
     def _calculate_bbox(self, polygon: PolygonGeometry) -> Dict[str, List[float]]:
         """Calculate bounding box of a polygon."""
-        coordinates = polygon.coordinates[0]
+        coordinates = polygon.get("features")[0].get("geometry").get("coordinates")[0]
         min_x = min(coord[0] for coord in coordinates)
         max_x = max(coord[0] for coord in coordinates)
         min_y = min(coord[1] for coord in coordinates)
