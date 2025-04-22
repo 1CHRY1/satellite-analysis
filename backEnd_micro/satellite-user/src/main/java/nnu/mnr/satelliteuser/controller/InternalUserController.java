@@ -30,4 +30,10 @@ public class InternalUserController {
         return ResponseEntity.ok(user != null);
     }
 
+    @GetMapping("/id")
+    public ResponseEntity<User> getUserById(@RequestHeader("X-User-Id") String userId) {
+        User user = userRepo.selectById(userId);
+        return ResponseEntity.ok(user);
+    }
+
 }
