@@ -33,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, defineEmits, onMounted, nextTick } from 'vue'
+import { ref, watch, onMounted, nextTick } from 'vue'
 import { ClearOutlined } from '@ant-design/icons-vue' // 引入图标
 
 const props = defineProps<{
