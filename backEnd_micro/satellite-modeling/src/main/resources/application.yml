@@ -1,9 +1,9 @@
 spring:
   application:
-    name: satellite-resource
+    name: satellite-modeling
   config:
     import:
-      - nacos:satellite-resource-dev.yaml?refreshEnabled=true
+      - nacos:satellite-modeling-dev.yaml?refreshEnabled=true
   cloud:
     nacos:
       discovery:
