@@ -19,6 +19,7 @@
         <module>satellite-gateway</module>
         <module>satellite-user</module>
         <module>satellite-resource</module>
+        <module>satellite-modeling</module>
     </modules>
     <packaging>pom</packaging>
 
@@ -46,6 +47,7 @@
         <lombok.version>RELEASE</lombok.version>
         <modelMapper.version>3.1.1</modelMapper.version>
         <fastjson.version>2.0.43</fastjson.version>
+        <apache-pool2.version>2.12.0</apache-pool2.version>
 
         <alibaba.cloud>2023.0.1.0</alibaba.cloud>
 
@@ -54,6 +56,14 @@
         <jjwt-api.version>0.11.5</jjwt-api.version>
         <jjwt-impl.version>0.11.5</jjwt-impl.version>
         <jjwt-jackson.version>0.11.5</jjwt-jackson.version>
+
+        <jcraft.version>0.1.55</jcraft.version>
+
+        <docker-java.version>3.3.2</docker-java.version>
+        <docker-api.version>3.3.2</docker-api.version>
+        <docker-core.version>3.3.2</docker-core.version>
+        <docker-transport-httpclient5.version>3.3.2</docker-transport-httpclient5.version>
+        <docker-transport-okhttp.version>3.3.2</docker-transport-okhttp.version>
     </properties>
 
     <dependencyManagement>
@@ -165,6 +175,11 @@
                 <version>RELEASE</version>
                 <scope>compile</scope>
             </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-pool2</artifactId>
+                <version>${apache-pool2.version}</version>
+            </dependency>
 
             <!--spring security-->
             <dependency>
@@ -193,6 +208,40 @@
                 <artifactId>jjwt-jackson</artifactId>
                 <version>${jjwt-jackson.version}</version>
                 <scope>runtime</scope>
+            </dependency>
+
+            <!-- sftp -->
+            <dependency>
+                <groupId>com.jcraft</groupId>
+                <artifactId>jsch</artifactId>
+                <version>${jcraft.version}</version>
+            </dependency>
+
+            <!-- docker -->
+            <dependency>
+                <groupId>com.github.docker-java</groupId>
+                <artifactId>docker-java-api</artifactId>
+                <version>${docker-api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.docker-java</groupId>
+                <artifactId>docker-java-core</artifactId>
+                <version>${docker-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.docker-java</groupId>
+                <artifactId>docker-java</artifactId>
+                <version>${docker-transport-httpclient5.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.docker-java</groupId>
+                <artifactId>docker-java-transport-httpclient5</artifactId>
+                <version>${docker-java.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.docker-java</groupId>
+                <artifactId>docker-java-transport-okhttp</artifactId>
+                <version>${docker-transport-okhttp.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
