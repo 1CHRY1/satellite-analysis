@@ -21,9 +21,9 @@ scenes = xfer.Scene().query(
     time_range=(datetime(2021, 1, 1), datetime(2025, 1, 31)),
     cloud_range=(0, 10)
 )
+print(f"已检索到{len(scenes)}景影像...")
 
 start_time = datetime.now()
-
 # 无云瓦片检索
 target_tiles_map = {}
 max_cloud = 0
