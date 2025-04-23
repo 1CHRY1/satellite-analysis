@@ -4,7 +4,7 @@ import com.jcraft.jsch.*;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellitemodeling.config.web.JSchConnectionManager;
 import nnu.mnr.satellitemodeling.model.pojo.common.SftpConn;
-import nnu.mnr.satellitemodeling.model.pojo.modeling.DockerServerProperties;
+import nnu.mnr.satellitemodeling.model.properties.DockerServerProperties;
 import org.apache.commons.compress.utils.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

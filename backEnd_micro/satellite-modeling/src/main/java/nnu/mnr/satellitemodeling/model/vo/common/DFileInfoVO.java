@@ -4,12 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import nnu.mnr.satellite.enums.common.FileType;
 import org.apache.tomcat.jni.FileInfo;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import nnu.mnr.satellitemodeling.enums.FileType;
 
 /**
  * Created with IntelliJ IDEA.

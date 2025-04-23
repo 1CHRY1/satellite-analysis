@@ -30,7 +30,7 @@ import java.util.List;
  */
 
 @RestController
-@RequestMapping("/api/v1/coding")
+@RequestMapping("/api/v1/modeling/coding")
 public class ModelCodingController {
 
     @Autowired
