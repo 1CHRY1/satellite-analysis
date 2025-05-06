@@ -1,13 +1,18 @@
-import mysql.connector
+import pymysql
 import uuid
 import time
 import socket
 import os
 import random
-import dataProcessing.config as config
 from datetime import datetime
 
+DB_CONFIG = {}
 namespace = uuid.NAMESPACE_DNS
+
+
+def set_initial_mysql_config(D_CONFIG):
+    global DB_CONFIG
+    DB_CONFIG = D_CONFIG
 
 
 def generate_custom_id(prefix, digit):
@@ -26,20 +31,35 @@ def generate_custom_id(prefix, digit):
     return custom_id
 
 
-def connect_mysql(host, database, user, password):
+def connect_mysql(host, port, database, user, password):
     global cursor, connection
-    connection = mysql.connector.connect(
-        host=host,
-        database=database,
-        user=user,
-        password=password
-    )
-    if connection.is_connected():
-        cursor = connection.cursor(dictionary=True)
-    return connection, cursor
+    try:
+        connection = pymysql.connect(
+            host=host,
+            port=port,
+            database=database,
+            user=user,
+            password=password,
+            cursorclass=pymysql.cursors.DictCursor
+        )
+        cursor = connection.cursor()
+        return connection, cursor
+    except pymysql.Error as err:
+        print(f"Error connecting to MySQL: {err}")
+        if err.errno == pymysql.err.ER_ACCESS_DENIED_ERROR:
+            print("Invalid username or password")
+        elif err.errno == pymysql.err.ER_BAD_DB_ERROR:
+            print("Database does not exist")
+        else:
+            print(f"Error {err.errno}: {err.args[1]}")
+        return None, None
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        return None, None
 
 
 def create_DB():
+    global DB_CONFIG
     create_sensor_table = """
     CREATE TABLE `sensor_table` (
         `sensor_id` VARCHAR(36) NOT NULL UNIQUE,
@@ -132,8 +152,9 @@ def create_DB():
         add_fk_product_scene,
         add_fk_scene_image,
     ]
-    connection, curser = connect_mysql(config.MYSQL_HOST, config.MYSQL_SATELLITE_DB, config.MYSQL_USER,
-                                       config.MYSQL_PWD)
+    connection, cursor = connect_mysql(DB_CONFIG["MYSQL_HOST"], DB_CONFIG["MYSQL_RESOURCE_PORT"],
+                                       DB_CONFIG["MYSQL_RESOURCE_DB"], DB_CONFIG["MYSQL_USER"],
+                                       DB_CONFIG["MYSQL_PWD"])
 
     for command in sql_commands:
         try:
@@ -148,6 +169,8 @@ def create_DB():
 
 
 def create_tile_table(table_name):
+    global DB_CONFIG
+    table_name = table_name.lower()
     create_tile_table = f"""
     CREATE TABLE `{table_name}` (
         `tile_id` VARCHAR(36) NOT NULL,
@@ -176,7 +199,9 @@ def create_tile_table(table_name):
         create_idx_band_tile_level,
         create_idx_column_row
     ]
-    connection, curser = connect_mysql(config.MYSQL_HOST, config.MYSQL_TILE_DB, config.MYSQL_USER, config.MYSQL_PWD)
+    connection, cursor = connect_mysql(DB_CONFIG["MYSQL_HOST"], DB_CONFIG["MYSQL_TILE_PORT"],
+                                       DB_CONFIG["MYSQL_TILE_DB"], DB_CONFIG["MYSQL_USER"],
+                                       DB_CONFIG["MYSQL_PWD"])
 
     for command in sql_commands:
         try:
@@ -190,44 +215,11 @@ def create_tile_table(table_name):
     print("All SQL Executed")
 
 
-def delete_DB():
-    table_names = [
-        'sensor_table',
-        'product_table',
-        'scene_table',
-        'image_table'
-    ]
-    foreign_key_map = {
-        'image_table': 'fk_scene_image',
-        'scene_table': 'fk_product_scene',
-        'product_table': 'fk_sensor_product',
-    }
-    connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_SATELLITE_DB, config.MYSQL_USER,
-                                       config.MYSQL_PWD)
-    for key, value in foreign_key_map.items():
-        try:
-            drop_table_query = f"ALTER TABLE `{key}` DROP FOREIGN KEY `{value}`"
-            cursor.execute(drop_table_query)
-            print(f"foreign_key {key}:{value} deleted")
-        except Exception as e:
-            print(f"Wrong when executing {key}:{value} : {e}")
-    for table_name in table_names:
-        try:
-            # 构建删除表的 SQL 语句
-            drop_table_query = f"DROP TABLE IF EXISTS {table_name};"
-            cursor.execute(drop_table_query)
-            print(f"table {table_name} deleted")
-        except Exception as e:
-            print(f"Wrong when executing {table_name} : {e}")
-    connection.commit()
-    cursor.close()
-    connection.close()
-    print("All table deleted。")
-
-
 def insert_sensor(sensorName, platformName, description):
-    connection, curser = connect_mysql(config.MYSQL_HOST, config.MYSQL_SATELLITE_DB, config.MYSQL_USER,
-                                       config.MYSQL_PWD)
+    global DB_CONFIG
+    connection, cursor = connect_mysql(DB_CONFIG["MYSQL_HOST"], DB_CONFIG["MYSQL_RESOURCE_PORT"],
+                                       DB_CONFIG["MYSQL_RESOURCE_DB"], DB_CONFIG["MYSQL_USER"],
+                                       DB_CONFIG["MYSQL_PWD"])
     insert_query = "INSERT INTO sensor_table (sensor_id, sensor_name, platform_name, description) VALUES (%s, %s, %s, %s)"
     data = (generate_custom_id('SE', 7), sensorName, platformName, description)
     cursor.execute(insert_query, data)
@@ -240,8 +232,10 @@ def insert_sensor(sensorName, platformName, description):
 
 
 def get_sensor_byName(sensorName):
-    connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_SATELLITE_DB, config.MYSQL_USER,
-                                       config.MYSQL_PWD)
+    global DB_CONFIG
+    connection, cursor = connect_mysql(DB_CONFIG["MYSQL_HOST"], DB_CONFIG["MYSQL_RESOURCE_PORT"],
+                                       DB_CONFIG["MYSQL_RESOURCE_DB"], DB_CONFIG["MYSQL_USER"],
+                                       DB_CONFIG["MYSQL_PWD"])
     select_query = "SELECT sensor_id FROM sensor_table WHERE sensor_name = %s"
     cursor.execute(select_query, (sensorName,))
     result = cursor.fetchone()
@@ -255,8 +249,11 @@ def get_sensor_byName(sensorName):
 
 
 def insert_product(sensorName, productName, description, resolution, period):
-    connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_SATELLITE_DB, config.MYSQL_USER,
-                                       config.MYSQL_PWD)
+    global DB_CONFIG
+    connection, cursor = connect_mysql(DB_CONFIG["MYSQL_HOST"], DB_CONFIG["MYSQL_RESOURCE_PORT"],
+                                       DB_CONFIG["MYSQL_RESOURCE_DB"], DB_CONFIG["MYSQL_USER"],
+                                       DB_CONFIG["MYSQL_PWD"])
+
     sensorId = get_sensor_byName(sensorName)
     insert_query = "INSERT INTO product_table (product_id, sensor_id, product_name, description, resolution, period) VALUES (%s, %s, %s, %s, %s, %s)"
     data = (generate_custom_id('P', 9), sensorId, productName, description, resolution, period)
@@ -270,9 +267,10 @@ def insert_product(sensorName, productName, description, resolution, period):
 
 
 def get_product_byName(sensorName, productName):
-    uuidName = "imageName"
-    connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_SATELLITE_DB, config.MYSQL_USER,
-                                       config.MYSQL_PWD)
+    global DB_CONFIG
+    connection, cursor = connect_mysql(DB_CONFIG["MYSQL_HOST"], DB_CONFIG["MYSQL_RESOURCE_PORT"],
+                                       DB_CONFIG["MYSQL_RESOURCE_DB"], DB_CONFIG["MYSQL_USER"],
+                                       DB_CONFIG["MYSQL_PWD"])
     select_query = """
         SELECT p.sensor_id, p.product_id 
         FROM product_table p
@@ -293,9 +291,11 @@ def get_product_byName(sensorName, productName):
 
 def insert_scene(sensorName, productName, sceneName, sceneTime, tileLevelNum, tileLevels, pngPath, crs, bbox,
                  description, bands, band_num, bucket, cloud):
+    global DB_CONFIG
     bands_str = ",".join(bands) if bands else None
-    connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_SATELLITE_DB, config.MYSQL_USER,
-                                       config.MYSQL_PWD)
+    connection, cursor = connect_mysql(DB_CONFIG["MYSQL_HOST"], DB_CONFIG["MYSQL_RESOURCE_PORT"],
+                                       DB_CONFIG["MYSQL_RESOURCE_DB"], DB_CONFIG["MYSQL_USER"],
+                                       DB_CONFIG["MYSQL_PWD"])
     sensorId, productId = get_product_byName(sensorName, productName)
     insert_query = (
         "INSERT INTO scene_table (scene_id, sensor_id, product_id, scene_name, scene_time, tile_level_num, tile_levels, coordinate_system, bounding_box, png_path, description, bands, band_num, bucket, cloud) "
@@ -303,8 +303,8 @@ def insert_scene(sensorName, productName, sceneName, sceneTime, tileLevelNum, ti
     # sceneId = str(uuid.uuid5(namespace, uuidName))
     sceneId = generate_custom_id('SC', 11)
     data = (
-    sceneId, sensorId, productId, sceneName, sceneTime, tileLevelNum, tileLevels, crs, bbox, pngPath, description,
-    bands_str, band_num, bucket, cloud)
+        sceneId, sensorId, productId, sceneName, sceneTime, tileLevelNum, tileLevels, crs, bbox, pngPath, description,
+        bands_str, band_num, bucket, cloud)
     try:
         # 执行插入操作
         cursor.execute(insert_query, data)
@@ -322,8 +322,10 @@ def insert_scene(sensorName, productName, sceneName, sceneTime, tileLevelNum, ti
 
 
 def insert_image(sceneId, tifPath, band, bucket, cloud):
-    connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_SATELLITE_DB, config.MYSQL_USER,
-                                       config.MYSQL_PWD)
+    global DB_CONFIG
+    connection, cursor = connect_mysql(DB_CONFIG["MYSQL_HOST"], DB_CONFIG["MYSQL_RESOURCE_PORT"],
+                                       DB_CONFIG["MYSQL_RESOURCE_DB"], DB_CONFIG["MYSQL_USER"],
+                                       DB_CONFIG["MYSQL_PWD"])
     insert_query = ("INSERT INTO image_table (image_id, scene_id, tif_path, band, bucket, cloud) "
                     "VALUES (%s, %s, %s, %s, %s, %s)")
     # imageId = str(uuid.uuid5(namespace, uuidName))
@@ -346,8 +348,11 @@ def insert_image(sceneId, tifPath, band, bucket, cloud):
 
 
 def insert_tile(tile_table_name, image_id, tileLevel, columnId, rowId, path, bucket, bbox, cloud, band):
-    uuidName = "tileName"
-    connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_TILE_DB, config.MYSQL_USER, config.MYSQL_PWD)
+    global DB_CONFIG
+    tile_table_name = tile_table_name.lower()
+    connection, cursor = connect_mysql(DB_CONFIG["MYSQL_HOST"], DB_CONFIG["MYSQL_TILE_PORT"],
+                                       DB_CONFIG["MYSQL_TILE_DB"], DB_CONFIG["MYSQL_USER"],
+                                       DB_CONFIG["MYSQL_PWD"])
     insert_query = f"INSERT INTO {tile_table_name} (tile_id, image_id, tile_level, column_id, row_id, path, bucket, bounding_box, cloud, band) VALUES (%s, %s, %s, %s, %s, %s, %s, ST_GeomFromText(%s, 4326, 'axis-order=long-lat'), %s, %s)"
     tileId = str(uuid.uuid4())
     data = (tileId, image_id, tileLevel, columnId, rowId, path, bucket, bbox, cloud, band)
@@ -367,7 +372,11 @@ def insert_tile(tile_table_name, image_id, tileLevel, columnId, rowId, path, buc
 
 
 def insert_batch_tile(tile_table_name, image_id, tileLevel, tile_info_list, band):
-    connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_TILE_DB, config.MYSQL_USER, config.MYSQL_PWD)
+    global DB_CONFIG
+    tile_table_name = tile_table_name.lower()
+    connection, cursor = connect_mysql(DB_CONFIG["MYSQL_HOST"], DB_CONFIG["MYSQL_TILE_PORT"],
+                                       DB_CONFIG["MYSQL_TILE_DB"], DB_CONFIG["MYSQL_USER"],
+                                       DB_CONFIG["MYSQL_PWD"])
     insert_query = f"INSERT INTO {tile_table_name} (tile_id, image_id, tile_level, column_id, row_id, path, bucket, bounding_box, cloud, band) VALUES (%s, %s, %s, %s, %s, %s, %s, ST_GeomFromText(%s, 4326, 'axis-order=long-lat'), %s, %s)"
     data_list = [
         (str(uuid.uuid4()), image_id, tileLevel, tile['column_id'], tile['row_id'], tile['path'], tile['bucket'],
@@ -389,132 +398,12 @@ def insert_batch_tile(tile_table_name, image_id, tileLevel, tile_info_list, band
         connection.close()
 
 
-def select_tile_by_ids(tile_table_name, id_list):
-    connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_TILE_DB, config.MYSQL_USER, config.MYSQL_PWD)
-
-    # 构建查询语句，使用占位符为每个 ID
-    placeholders = ', '.join(['%s'] * len(id_list))  # 用于 SQL 查询中多个 ID 的占位符
-    select_query = f"SELECT * FROM {tile_table_name} WHERE tile_id IN ({placeholders})"
-
-    # 执行查询
-    cursor.execute(select_query, tuple(id_list))
-
-    # 获取所有查询结果
-    result = cursor.fetchall()
-
-    print(f"Found {len(result)} tiles with the provided IDs.")
-
-    cursor.close()
-    connection.close()
-
-    return result
-
-
-def select_tile_by_column_and_row(tile_table_name, tiles, bands):
-    """
-    根据 columnId, rowId 和 bands 查询数据库中的瓦片信息，确保 columnId 和 rowId 成对匹配，按 band 分组返回结果。
-
-    :param tile_table_name: str, 数据表名
-    :param tiles: list, 包含多个 {"columnId": X, "rowId": Y} 的字典
-    :param bands: list, 需要的波段列表
-    :return: dict, 按 band 分组的查询结果
-    """
-    from collections import defaultdict
-
-    connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_TILE_DB, config.MYSQL_USER, config.MYSQL_PWD)
-
-    # 生成 WHERE 条件，确保 columnId 和 rowId 必须是成对匹配的
-    tile_conditions = " OR ".join(["(column_id = %s AND row_id = %s)"] * len(tiles))
-    band_placeholders = ', '.join(['%s'] * len(bands))
-
-    select_query = f"""
-        SELECT * FROM {tile_table_name}
-        WHERE ({tile_conditions}) 
-        AND band IN ({band_placeholders})
-    """
-
-    # 构建参数列表
-    tile_params = []
-    for tile in tiles:
-        tile_params.extend([tile["columnId"], tile["rowId"]])
-
-    query_params = tuple(tile_params + bands)
-
-    # 执行查询
-    cursor.execute(select_query, query_params)
-
-    # 获取所有查询结果
-    result = cursor.fetchall()
-
-    # 将结果按 band 分组
-    grouped_result = defaultdict(list)
-    for tile in result:
-        grouped_result[tile["band"]].append(tile)
-
-    print(f"Found {len(result)} tiles matching the provided columnId, rowId pairs, and bands. Grouped by band.")
-
-    cursor.close()
-    connection.close()
-
-    return dict(grouped_result)
-
-
-def select_tile_by_column_and_row_v2(tiles, bands):
-    """
-    根据 columnId, rowId 和 bands 查询数据库中的瓦片信息，确保 columnId 和 rowId 成对匹配，按 band 分组返回结果。
-
-    :param tiles: list, 包含多个 {"columnId": X, "rowId": Y, "sceneId": Z} 的字典
-    :param bands: list, 需要的波段列表
-    :return: dict, 按 band 分组的查询结果
-    """
-    from collections import defaultdict
-
-    connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_TILE_DB, config.MYSQL_USER, config.MYSQL_PWD)
-
-    # 按照 sceneId 分组查询，每个 sceneId 对应一个查询
-    grouped_result = defaultdict(list)
-    # tiles = filter_tiles(tiles)
-    for tile in tiles:
-        sceneId = tile.get("sceneId", "").lower()
-        tile_table_name = sceneId  # 根据 sceneId 确定表名
-
-        # 生成 WHERE 条件，确保 columnId 和 rowId 必须是成对匹配的
-        tile_conditions = " OR ".join(["(column_id = %s AND row_id = %s)"])
-        band_placeholders = ', '.join(['%s'] * len(bands))
-
-        select_query = f"""
-            SELECT * FROM {tile_table_name}
-            WHERE ({tile_conditions}) 
-            AND band IN ({band_placeholders})
-        """
-
-        # 构建参数列表
-        tile_params = []
-        tile_params.extend([tile["columnId"], tile["rowId"]])
-
-        query_params = tuple(tile_params + bands)
-
-        # 执行查询
-        cursor.execute(select_query, query_params)
-
-        # 获取所有查询结果
-        result = cursor.fetchall()
-
-        # 将结果按 band 分组
-        for tile in result:
-            grouped_result[tile["band"]].append(tile)
-
-        print(f"Found {len(result)} tiles for sceneId '{sceneId}' matching the provided columnId, rowId pairs, and bands. Grouped by band.")
-
-    cursor.close()
-    connection.close()
-
-    return dict(grouped_result)
-
-
 def select_scene_time(sceneId):
+    global DB_CONFIG
     # 建立数据库连接
-    connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_SATELLITE_DB, config.MYSQL_USER, config.MYSQL_PWD)
+    connection, cursor = connect_mysql(DB_CONFIG["MYSQL_HOST"], DB_CONFIG["MYSQL_RESOURCE_PORT"],
+                                       DB_CONFIG["MYSQL_RESOURCE_DB"], DB_CONFIG["MYSQL_USER"],
+                                       DB_CONFIG["MYSQL_PWD"])
     # 查询scene_table中的scene_time
     query = f"SELECT scene_time FROM scene_table WHERE scene_id = %s"
     cursor.execute(query, (sceneId,))
@@ -522,40 +411,3 @@ def select_scene_time(sceneId):
     cursor.close()
     connection.close()
     return result['scene_time']
-
-
-def filter_tiles(tiles):
-    # 用来存储过滤后的结果
-    final_tiles = []
-
-    # 临时字典存储按 columnId 和 rowId 分组的 tile
-    tile_groups = {}
-
-    # 根据 columnId 和 rowId 进行分组
-    for tile in tiles:
-        columnId = tile.get("columnId")
-        rowId = tile.get("rowId")
-        key = (columnId, rowId)  # 创建一个由 columnId 和 rowId 组成的唯一键
-
-        if key not in tile_groups:
-            tile_groups[key] = []
-        tile_groups[key].append(tile)
-
-    # 对每一组相同 columnId 和 rowId 的 tiles，进行 scene_time 比较，保留最接近的 tile
-    for key, group in tile_groups.items():
-        # 获取所有 tile 的 sceneId
-        sceneIds = [tile["sceneId"] for tile in group]
-
-        # 查询每个 sceneId 对应的 scene_time
-        scene_times = {}
-        for sceneId in sceneIds:
-            scene_time = select_scene_time(sceneId)
-            if scene_time:
-                scene_times[sceneId] = scene_time
-
-        # 按照 scene_time 排序，选择时间最接近的 tile
-        current_time = datetime.now()
-        group_sorted = sorted(group, key=lambda tile: abs(current_time - scene_times.get(tile["sceneId"], current_time)))
-        final_tiles.append(group_sorted[0])  # 保留最接近的那个
-
-    return final_tiles

@@ -1,15 +1,41 @@
-from Utils.mySqlUtils import *
-from Utils.tifUtils import *
-from Utils.geometryUtils import *
-from Utils.osUtils import *
-from dataProcessing.Utils.filenameUtils import get_files
-import config
-from dataProcessing.imageConfig import CUR_TILE_LEVEL
+import sys, os
+from pathlib import Path
 
-os.environ['PROJ_LIB'] = config.GDAL_PROJ_LIB
-object_prefix = f'{config.TEMP_SENSOR_NAME}/{config.TEMP_PRODUCT_NAME}'  # 上传路径前缀
+## 环境变量和文件模块 ##################################################################################
+# nuitka 获取程序所在路径（对于打包的 .exe 文件）
+if getattr(sys, 'frozen', False):
+    base_path = os.path.dirname(sys.argv[0])
+else:
+    base_path = os.path.dirname(__file__)
+os.environ['PROJ_LIB'] = base_path
+print("os.environ['PROJ_LIB'] -- ", os.environ['PROJ_LIB'])
 
-def insert_to_db(scene_info_list, sensor_name, product_name):
+# 获取当前文件的绝对路径，并向上定位到项目根目录（tileGenerator）
+project_root = Path(__file__).parent.parent  # 假设 inDB.py 在 dataProcessing/ 下
+sys.path.append(str(project_root))  # 添加进 Python 路径
+
+
+## 潜在依赖显式引入 ###################################################################################
+import rasterio.sample
+import rasterio._features
+import morecantile
+import _cffi_backend
+
+
+
+## Main ##############################################################################################
+from dataProcessing.Utils.mySqlUtils import *
+from dataProcessing.Utils.tifUtils import *
+from dataProcessing.Utils.minioUtil import *
+from dataProcessing.Utils.extractor import get_scene_info_list, set_initial_config
+import argparse
+import json
+import sys
+
+CUR_TILE_LEVEL                                  =       '40031*20016'
+
+def insert_to_db(scene_info_list, scene_conf, db_conf):
+    sensor_name, product_name = scene_conf["CUR_SENSOR_NAME"], scene_conf["CUR_PRODUCT_NAME"]
     # insert sensor/product/scene/image/tile into db in order
     if get_sensor_byName(sensor_name) is None:
         insert_sensor(sensor_name, sensor_name, None)
@@ -23,18 +49,55 @@ def insert_to_db(scene_info_list, sensor_name, product_name):
         for scene_info in scene_info_list:
             # insert scene
             sceneId = insert_scene(sensor_name, product_name, scene_info.scene_name, scene_info.image_time, scene_info.tile_level_num, scene_info.tile_levels, scene_info.png_path,
-                                   scene_info.crs, scene_info.bbox, None, scene_info.bands, scene_info.band_num, config.MINIO_IMAGES_BUCKET, scene_info.cloud)
+                                   scene_info.crs, scene_info.bbox, None, scene_info.bands, scene_info.band_num, db_conf["MINIO_IMAGES_BUCKET"], scene_info.cloud)
             image_info_list = scene_info.image_info_list
             # create a tile table for this image(tiles are stored in tile db)
             create_tile_table(sceneId)
             for info in image_info_list:
                 # insert image
-                image_id = insert_image(sceneId, info.tif_path, info.band, config.MINIO_IMAGES_BUCKET, info.cloud)
+                image_id = insert_image(sceneId, info.tif_path, info.band, db_conf["MINIO_IMAGES_BUCKET"], info.cloud)
                 # insert tiles
                 insert_batch_tile(sceneId, image_id, CUR_TILE_LEVEL, info.tile_info_list, info.band)
 
+
+# 命令行参数
+parser = argparse.ArgumentParser(description='处理遥感影像数据并入库')
+parser.add_argument('--db_config', type=str, required=True, help='数据库配置文件路径')
+parser.add_argument('--scene_config', type=str, required=True, help='影像文件路径')
+args = parser.parse_args()
+
+
 if __name__ == "__main__":
-    landset_files = get_files(config.TEMP_INPUT_DIR)
-    # scene_info_list包含了景、波段、瓦片信息
-    scene_info_list = process_and_upload(landset_files, config.MINIO_IMAGES_BUCKET, object_prefix)
-    insert_to_db(scene_info_list, config.TEMP_SENSOR_NAME, config.TEMP_PRODUCT_NAME)
+    COMMON_CONFIG = {}
+    SCENE_CONFIG = {}
+    
+    # 加载公共配置, minio 之类的
+    json_db_config = json.load(open(args.db_config, 'r',encoding="UTF-8"))
+    for key, value in json_db_config.items():
+        COMMON_CONFIG[key] = value
+    
+    # 加载场景配置, 传感器, 产品, 分辨率, 周期
+    json_scene_config = json.load(open(args.scene_config, 'r',encoding="UTF-8"))
+    for key, value in json_scene_config.items():
+        SCENE_CONFIG[key] = value
+    
+    # 上传路径前缀    
+    object_prefix = f'{SCENE_CONFIG["CUR_SENSOR_NAME"]}/{SCENE_CONFIG["CUR_PRODUCT_NAME"]}'
+    
+    print("程序开始执行")
+    print("设定传感器：", SCENE_CONFIG['CUR_SENSOR_NAME'])
+    print("设定产品：", SCENE_CONFIG['CUR_PRODUCT_NAME'])
+    print("设定分辨率：", SCENE_CONFIG['CUR_RESOLUTION'])
+    print("设定周期：", SCENE_CONFIG['CUR_PERIOD'])
+
+    print("初始化配置...")
+    set_initial_config(SCENE_CONFIG, COMMON_CONFIG)
+    set_initial_mysql_config(COMMON_CONFIG)
+    set_initial_minio_config(COMMON_CONFIG)
+    print("初始化配置完成...")
+    
+    start_time = datetime.now()
+    scene_info_list = get_scene_info_list(object_prefix)
+    print(f"成功将 scene_info_list 写入")
+    insert_to_db(scene_info_list, SCENE_CONFIG, COMMON_CONFIG)
+    print(f"共花时间{datetime.now() - start_time}")
