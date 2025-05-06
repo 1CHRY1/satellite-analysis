@@ -87,7 +87,8 @@
                                         <a-button class="custom-button !px-2" @click=handleSelectAllGrids>全选</a-button>
                                         <a-button class="custom-button !px-2"
                                             @click=handleSelectNoneGrids>全不选</a-button>
-                                        <a-button class="custom-button !w-fit !bg-sky-800" :loading="gridSearchLoading" @click=handleStartGridSearch>
+                                        <a-button class="custom-button !w-fit !bg-sky-800" :loading="gridSearchLoading"
+                                            @click=handleStartGridSearch>
                                             开始检索
                                         </a-button>
                                     </div>
@@ -303,7 +304,7 @@ const handleDatasetReset = () => {
 //////////////////////////////////////////////////////////////
 /////////////// 区域影像检索 //////////////////////////////////
 const gridStore = useGridStore()
-const gridMaker = new GridMaker(1, 500) // 1km分辨率, 500km2的限制
+const gridMaker = new GridMaker(1, 20) // 1km分辨率, 25km2的限制
 /// 01 绘制研究区
 const spatialTabsKey = ref('1')
 const handleDrawPolygon = () => { handleRegionGridReset(); MapOperation.draw_polygonMode() }
@@ -341,7 +342,7 @@ const makeGrid = () => {
             console.log('格网生成完成')
         },
         overboundCb: () => {
-            message.error('格网面积超过限制, 请缩小研究区范围')
+            message.error('格网面积超过限制, 请缩小区域范围')
             MapOperation.draw_deleteAll()
         }
     })
@@ -368,11 +369,22 @@ const handleSelectAllGrids = () => gridStore.addAllGrids()
 const handleSelectNoneGrids = () => gridStore.cleadAllGrids()
 const handleStartGridSearch = async () => {
     gridSearchLoading.value = true
-    const gridOverlapTileMap = await queryOverlapTilesMap(selectedProduct.value!, selectedGridIDs.value)
-    ezStore.set('gridOverlapTileMap', gridOverlapTileMap)
-    console.log(gridOverlapTileMap)
-    await calculateSearchResultInfo(gridOverlapTileMap)
-    gridSearchLoading.value = false
+    // const gridOverlapTileMap = await queryOverlapTilesMap(selectedProduct.value!, selectedGridIDs.value)
+    // ezStore.set('gridOverlapTileMap', gridOverlapTileMap)
+    // console.log(gridOverlapTileMap)
+    // await calculateSearchResultInfo(gridOverlapTileMap)
+    // gridSearchLoading.value = false
+
+    queryOverlapTilesMap(selectedProduct.value!, selectedGridIDs.value).then((gridOverlapTileMap) => {
+        ezStore.set('gridOverlapTileMap', gridOverlapTileMap)
+        console.log(gridOverlapTileMap)
+        calculateSearchResultInfo(gridOverlapTileMap)
+        gridSearchLoading.value = false
+    }).catch((error) => {
+        message.error('检索失败，此区域暂无影像')
+        gridSearchLoading.value = false
+    })
+
 }
 
 //////////////////////////////////////////////////////////////
@@ -438,6 +450,8 @@ const handleAllReset = () => {
     tileMergeConfig.cloudRange = [0, 100]
     // reset grid
     gridStore.cleadAllGrids()
+    // reset merging 
+    mergingLoading.value = false
     // reset map
     MapOperation.map_destroyImagePolygon()
     MapOperation.map_destroyImagePreviewLayer()

@@ -1,39 +1,31 @@
-from ogms_xfer import OGMS_Xfer as xfer
 import json
-from osgeo import gdal
 from datetime import datetime
+from ogms_xfer import OGMS_Xfer as xfer
 
-def mtif(tif_paths, output_path):
-    # --------- Merge tif using Translate --------------------------------------
+config_file_path = "config.json"
+xfer.initialize(config_file_path)
 
-    gdal.Translate(output_path, gdal.BuildVRT("", tif_paths),
-                   options=gdal.TranslateOptions(
-                       creationOptions=["COMPRESS=LZW"],
-                       format="GTiff"
-                   ))
+##################################################
+# 感兴趣区
+with open(xfer.URL.dataUrl('region.geojson'), "r") as f:
+    region = json.load(f)
 
-    return output_path
+grid_cells = xfer.Toolbox.polygon_to_grid_cells(region)
+print(f"该区域包含{len(grid_cells)}个格网...")
 
-if __name__ == "__main__":
-    
-    config_file_path = "D:\\t\\3\\config.example.json"
-    xfer.initialize(config_file_path)
-    
-    scene = xfer.Scene("SC906772444")
-    image = scene.get_band_image("1")
-    
-    with open(xfer.URL.dataUrl('region.geojson'), "r") as f:
-        region = json.load(f)
-        
-    region_tiles = image.get_tiles_by_polygon(region)
-    
-    tif_paths = [xfer.URL.resolve(tile.url) for tile in region_tiles]
-    print(f"已检索到{len(region_tiles)}个瓦片")
-    
-    start_time = datetime.now()
-    merged_tif_path = xfer.URL.outputUrl('region_merged_tile.tif')
-    
-    mtif(tif_paths, merged_tif_path)
-    end_time = datetime.now()
-    print(f"区域影像检索合并完成，用时{end_time - start_time}")
-    print("--------------------------------")
+# 目标产品和影像查询
+scene = xfer.Scene("SC906772444")
+image = scene.get_band_image("1")
+tiles = image.get_tiles_by_grid_cells(grid_cells)
+
+tif_paths = [xfer.URL.resolve(tile.url) for tile in tiles]
+merged_tif_path = xfer.URL.outputUrl('region_merged_tile.tif')
+print("已获取到瓦片资源路径...")
+
+# 合并瓦片
+start_time = datetime.now()
+print("开始合并瓦片...")
+xfer.Toolbox.merge_tiles(tif_paths, merged_tif_path)
+end_time = datetime.now()
+print(f"区域影像检索合并完成，用时{end_time - start_time}")
+print("--------------------------------------")

@@ -1,72 +1,73 @@
 from ogms_xfer import OGMS_Xfer as xfer
-import numpy as np
-from osgeo import gdal
-import datetime
+from datetime import datetime
 
-def calculate_ndvi(nir_path, red_path, output_path):
+config_file_path = "config.json"
+xfer.initialize(config_file_path)
+
+
+
+##################################################
+from osgeo import gdal
+import numpy as np
+
+def calc_ndvi(nir_path, red_path, output_path):
+    # 打开输入文件
     nir_ds = gdal.Open(nir_path)
     red_ds = gdal.Open(red_path)
 
-    if not nir_ds or not red_ds:
-        raise ValueError("无法打开影像数据，请检查 URL 是否有效")
+    # 获取输入文件的大小
+    nir_xsize, nir_ysize = nir_ds.RasterXSize, nir_ds.RasterYSize
+    red_xsize, red_ysize = red_ds.RasterXSize, red_ds.RasterYSize
 
-    nir_band = nir_ds.GetRasterBand(1).ReadAsArray().astype(np.float32)
-    red_band = red_ds.GetRasterBand(1).ReadAsArray().astype(np.float32)
+    if nir_xsize != red_xsize or nir_ysize != red_ysize:
+        raise ValueError("Input images do not have the same size")
 
-    ndvi = (nir_band - red_band) / (nir_band + red_band + 1e-10)
+    # 读取波段数据
+    nir_band = nir_ds.GetRasterBand(1).ReadAsArray()
+    red_band = red_ds.GetRasterBand(1).ReadAsArray()
 
-    geo_transform = nir_ds.GetGeoTransform()
-    projection = nir_ds.GetProjection()
-    cols, rows = nir_band.shape
+    # 计算 NDVI
+    ndvi = (nir_band.astype(float) - red_band.astype(float)) / (nir_band + red_band + 1e-6)
+    ndvi = np.nan_to_num(ndvi, nan=-9999)
 
-    driver = gdal.GetDriverByName("GTiff")
-    ndvi_ds = driver.Create(output_path, rows, cols, 1, gdal.GDT_Float32)
+    # 创建输出文件
+    driver = gdal.GetDriverByName('GTiff')
+    ndvi_ds = driver.Create(output_path, nir_xsize, nir_ysize, 1, gdal.GDT_Float32)
 
-    ndvi_ds.SetGeoTransform(geo_transform)
-    ndvi_ds.SetProjection(projection)
+    # 设置投影和地理变换信息
+    ndvi_ds.SetProjection(nir_ds.GetProjection())
+    ndvi_ds.SetGeoTransform(nir_ds.GetGeoTransform())
 
+    # 写入 NDVI 数据
     ndvi_ds.GetRasterBand(1).WriteArray(ndvi)
-    ndvi_ds.GetRasterBand(1).SetNoDataValue(-9999)
+    ndvi_ds.FlushCache()  # 确保数据写入磁盘
 
-    nir_ds, red_ds, ndvi_ds = None, None, None
-    return output_path
+    print("NDVI calculation completed successfully")
 
 
-if __name__ == "__main__":
-    
-    config_file_path = "config.json"
-    xfer.initialize(config_file_path)
 
-    # 1. 检索影像
-    scene = xfer.Scene("SC906772444")
-    print(scene.band_num)
-    print(scene.bands)
- 
-    # 2.a.直接使用GDAL读取云端数据计算
-    start_time = datetime.datetime.now()
-    nir_url = xfer.URL.resolve(scene.get_band_image(5).url)
-    red_url = xfer.URL.resolve(scene.get_band_image(4).url)
-    output_path = xfer.URL.outputUrl('ndvibyremote.tif')
-    calculate_ndvi(nir_url, red_url, output_path)
-    end_time = datetime.datetime.now()
-    print(f"云端资源计算NDVI总时间: {end_time - start_time}")
-    print(' --------------------------------- ')
-    
+# 1. 检索影像 用ID检索
+print('3333')
+# scene = xfer.Scene().query(scene_name='LC08_L2SP_118038_20240320_20240402_02_T1')[0] # 直接通过ID检索
+print('2222')
 
-    # 2.b.将云端数据下载到容器后计算     # start_time = datetime.datetime.now()
-    #     # nir_band_image = scene.get_band_image(5)
-    #     # red_band_image = scene.get_band_image(4)
-    #     # local_nir_path = xfer.URL.dataUrl('/nir.tif')
-    #     # local_red_path = xfer.URL.dataUrl('/red.tif')
-    #     #
-    #     # nir_band_image.pull(local_nir_path)
-    #     # red_band_image.pull(local_red_path)
-    #     #
-    #     # end_time = datetime.datetime.now()
-    #     # print(f"下载云端数据时间: {end_time - start_time}")
-    #     #
-    #     # start_time = datetime.datetime.now()
-    #     # calculate_ndvi(local_nir_path, local_red_path, xfer.URL.outputUrl('/ndvibylocal.tif'))
-    #     # end_time = datetime.datetime.now()
-    #     # print(f"本地资源计算NDVI时间: {end_time - start_time}")
-    #     # print(' --------------------------------- ')
+# if(scene.scene_id == None):
+#     print("无法检索到影像, 请检查影像ID是否正确")
+#     exit()
+# print('111')
+# print("检索到影像： ", scene.scene_name)
+# print("波段数： ",scene.band_num)
+# print("波段列表： ",scene.bands)
+
+# 2. 取影像红光和近红外波段URL， 传入计算NDVI
+# scene.get_band_image(5).pull('./data/nir.tif')
+# scene.get_band_image(4).pull('./data/red.tif')
+print('999')
+
+output_path = xfer.URL.outputUrl('ndvibyremote.tif')
+
+# start_time = datetime.now()
+calc_ndvi('./data/nir.tif', './data/red.tif', output_path)
+# end_time = datetime.datetime.now()
+# print(f"云端资源计算NDVI总时间: {end_time - start_time}")
+# print(' --------------------------------- ')

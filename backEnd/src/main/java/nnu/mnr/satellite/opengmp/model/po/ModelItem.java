@@ -40,7 +40,7 @@ public class ModelItem {
     String md5; //模型的md5
     String mdl;  //模型的mdl xml直接存储为string
     Object mdlJson; //模型mdl的json格式
-    ModelItemData data; //模型数据
+//    ModelItemData data; //模型数据
 
     //数据方法属性
     String uuid;
@@ -54,9 +54,9 @@ public class ModelItem {
     String imgWebAddress; //图像文件下载请求的地址
     String imgRelativePath;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
-    Date createTime=new Date(); //创建时间
+//    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
+//    Date createTime=new Date(); //创建时间
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
-    Date updateTime=new Date(); //创建时间
+//    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
+//    Date updateTime=new Date(); //创建时间
 }

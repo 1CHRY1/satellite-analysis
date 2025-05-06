@@ -11,11 +11,11 @@ export const sizeConversion = (size: number) => {
 }
 
 // 时间格式化
-export const formatTime = (time: string, model: string = 'minutes', timeLag: number = 8) => {
+export const formatTime = (time: string, model: string = 'minutes', timeLag: number = 0) => {
     // 将时间戳解析为 Date 对象
     const utcDate = new Date(time)
 
-    // 转换为北京时间（UTC+8）
+    // 转换为北京时间
     const beijingTime = new Date(utcDate.getTime() + timeLag * 60 * 60 * 1000)
 
     // 格式化日期和时间为 xxxx/xx/xx xx:xx

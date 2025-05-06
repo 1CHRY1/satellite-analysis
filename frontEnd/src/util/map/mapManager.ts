@@ -24,8 +24,9 @@ class MapManager {
 
     async init(
         container: string | HTMLDivElement,
-        style: Style = 'vector',
-        proj: 'mercator' | 'globe' = 'mercator',
+        // style: Style = 'vector',
+        style: Style = 'local', // 默认用本地影像
+        proj: 'mercator' | 'globe' = 'mercator',  // 默认用Mercortor平面
     ): Promise<mapboxgl.Map> {
         if (this.map) return this.map
         this.initPromise = new Promise((resolve) => {
@@ -145,7 +146,7 @@ export const mapManager = MapManager.getInstance()
 /////// 外部简单调用 //////////////////////////////////
 export const initMap = (
     container: string | HTMLDivElement,
-    style: Style = 'vector',
+    style: Style = 'local',
     proj: 'mercator' | 'globe' = 'mercator',
 ) => mapManager.init(container, style, proj)
 

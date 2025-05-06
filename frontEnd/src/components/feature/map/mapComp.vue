@@ -15,8 +15,8 @@ import * as MapOperation from '@/util/map/operation'
 
 const props = defineProps({
     style: {
-        type: String as PropType<'vector' | 'image'>,
-        default: 'vector',
+        type: String as PropType<'vector' | 'image' | 'local'>,
+        default: 'local',
     },
     proj: {
         type: String as PropType<'mercator' | 'globe'>,

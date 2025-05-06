@@ -1,41 +1,9 @@
 <template>
     <div class="min-h-screen bg-slate-50">
-        <!-- Header Navigation -->
-        <!-- <header class="bg-white shadow-sm">
-            <div class="container mx-auto px-4 py-4">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-2">
-                        <satellite class="h-8 w-8 text-primary" />
-                        <span class="text-xl font-bold text-slate-800">SatelliteIQ</span>
-                    </div>
-                    <nav class="hidden md:flex space-x-8">
-                        <a href="#" class="text-primary font-medium">Dashboard</a>
-                        <a href="#" class="text-slate-600 hover:text-primary transition-colors">Image Library</a>
-                        <a href="#" class="text-slate-600 hover:text-primary transition-colors">Analysis Tools</a>
-                        <a href="#" class="text-slate-600 hover:text-primary transition-colors">Documentation</a>
-                    </nav>
-                    <div class="flex items-center space-x-4">
-                        <button
-                            class="hidden md:block px-4 py-2 rounded-md border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors">
-                            Sign In
-                        </button>
-                        <button
-                            class="hidden md:block px-4 py-2 rounded-md bg-primary text-white hover:bg-primary/90 transition-colors">
-                            Get Started
-                        </button>
-                        <menu class="md:hidden text-slate-700 cursor-pointer">
-                            <menu-icon class="h-6 w-6" />
-                        </menu>
-                    </div>
-                </div>
-            </div>
-        </header> -->
 
-        <!-- Hero Section -->
-        <section class="bg-gradient-to-br from-slate-800 to-slate-900 py-16 text-white md:py-24">
+        <!-- <section class="bg-gradient-to-br from-slate-800 to-slate-900 py-16 text-white md:py-24">
             <div class="container mx-auto px-4">
                 <div class="grid items-center gap-0 md:grid-cols-2">
-                    <!-- <div class="flex items-center mx-10 justify-between"> -->
                     <div class="space-y-6">
                         <h1 class="flex items-center text-4xl leading-tight font-bold md:text-5xl">遥感ARD平台</h1>
                         <p class="text-lg text-slate-300">通过集成分析工具与可视化功能，深度挖掘卫星数据中的洞察力。</p>
@@ -43,12 +11,12 @@
                             <button
                                 class="bg-primary hover:bg-primary/90 rounded-md px-6 py-3 font-medium text-white transition-colors cursor-pointer"
                                 @click="gotoPages('data')">
-                                探索数据
+                                🚀探索数据
                             </button>
                             <button
                                 class="rounded-md border border-slate-600 px-6 py-3 text-white transition-colors hover:bg-white/10 cursor-pointer"
                                 @click="gotoPages('projects')">
-                                开始分析
+                               🧪 开始分析
                             </button>
                         </div>
                     </div>
@@ -60,7 +28,36 @@
                     </div>
                 </div>
             </div>
+        </section> -->
+        <!-- Hero Section -->
+        <section class="relative h-[calc(100vh-56px)] w-full bg-cover bg-center bg-no-repeat"
+            :style="{ backgroundImage: `url(${banner})` }">
+            <!-- 黑色渐变遮罩 -->
+            <div class="absolute inset-0 bg-gradient-to-br from-black/80 via-black/60 to-black/70"></div>
+
+            <div class="relative z-10 flex h-full flex-col items-center justify-center text-center text-white px-6">
+                <h1 class="!text-[3vw] font-bold md:text-6xl leading-tight">遥感 ARD 平台</h1>
+                <p class="mt-4 !text-[0.9vw] text-slate-300 md:text-xl ">
+                    通过集成分析工具与可视化功能，深度挖掘卫星数据中的洞察力，探索地球的每一寸变化。
+                </p>
+                <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+                    <button
+                        class="bg-blue-600 hover:bg-blue-700 rounded-xl px-6 py-3 text-white font-semibold transition cursor-pointer"
+                        @click="gotoPages('data')">
+                        🚀 探索数据
+                    </button>
+                    <button
+                        class="rounded-xl border border-slate-500 px-6 py-3 text-white hover:bg-white/10 transition cursor-pointer"
+                        @click="gotoPages('projects')">
+                        🧪 开始分析
+                    </button>
+                </div>
+            </div>
         </section>
+
+
+
+
 
         <!-- Features Section -->
         <section class="bg-white py-16">
@@ -406,11 +403,11 @@ import {
     // MenuIcon,
     BarChart2,
     CheckCircle,
-    Layers,
-    Activity,
-    Download,
-    ChevronRight,
-    Map,
+    // Layers,
+    // Activity,
+    // Download,
+    // ChevronRight,
+    // Map,
     Search,
     SquareChevronRight,
     Mail,
@@ -418,6 +415,7 @@ import {
 } from 'lucide-vue-next'
 import { useRouter } from 'vue-router';
 import logo from '@/assets/image/logo2.png'
+import banner from "@/assets/image/home/banner.jpeg"
 
 const router = useRouter();
 

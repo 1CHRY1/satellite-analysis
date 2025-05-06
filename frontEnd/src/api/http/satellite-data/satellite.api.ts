@@ -94,12 +94,12 @@ export async function getMergeImageTilesStatus(
     caseId: string,
 ): Promise<ImageTile.ImageTileTifMergeStatusResponse> {
     return http.get<ImageTile.ImageTileTifMergeStatusResponse>(
-        `/model/case/status/caseId/${caseId}`,
+        `/modeling/case/status/caseId/${caseId}`,
     )
 }
 /// 合并结果
 export async function getMergeImageTilesResult(caseId: string): Promise<Blob> {
-    return http.get<Blob>(`/model/case/data/tif/caseId/${caseId}`, { responseType: 'blob' })
+    return http.get<Blob>(`/modeling/case/data/tif/caseId/${caseId}`, { responseType: 'blob' })
 }
 /// 下载结果
 export async function downloadMergeImageTilesResult(caseId: string, name?: string): Promise<void> {
