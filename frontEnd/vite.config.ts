@@ -5,7 +5,10 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-    plugins: [vue(), tailwindcss()],
+    plugins: [
+        vue(),
+        tailwindcss(),
+    ],
     resolve: {
         alias: {
             '@': resolve(__dirname, 'src'),
@@ -14,16 +17,23 @@ export default defineConfig({
     server: {
         host: '0.0.0.0',
         proxy: {
-            '/tiles': {
-                target: 'http://223.2.32.242:8079',
-                changeOrigin: true,
-                rewrite: (path) => path.replace(/^\/tiles/, ''),
-            },
             '/api': {
-                target: 'http://223.2.47.202:9888/api/v1',
+                target: 'http://223.2.47.202:8899/api/v1',
                 // target: 'http://223.2.43.228:30535/api/v1',
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/api/, ''),
+            },
+            '/websocket': {
+                target: 'ws://223.2.47.202:8899/model/websocket',
+                // target: 'http://223.2.43.228:30535/api/v1',
+                ws: true,
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/websocket/, ''),
+            },
+            '/basemap': {
+                target: 'http://172.31.13.21:5001/tiles',
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/basemap/, ''),
             },
         },
     },

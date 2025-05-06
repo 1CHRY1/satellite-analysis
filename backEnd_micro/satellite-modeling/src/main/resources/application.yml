@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: satellite-modeling
+  config:
+    import:
+      - nacos:satellite-modeling-dev.yaml?refreshEnabled=true
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 223.2.43.228:30848
+        namespace: 0fd34842-08ff-45f3-8a8c-8f3daf770d6f
+        enabled: true
+      config:
+        server-addr: 223.2.43.228:30848
+        file-extension: yaml
+        namespace: 0fd34842-08ff-45f3-8a8c-8f3daf770d6f
+#logging:
+#  level:
+#    org.springframework.cloud.openfeign: DEBUG

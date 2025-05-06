@@ -15,7 +15,7 @@ let resizeObserver: ResizeObserver | null = null
 
 export async function map_initiliaze(
     id: string,
-    style: Style = 'vector',
+    style: Style = 'local',
     proj: 'mercator' | 'globe' = 'mercator',
 ) {
     // return initMap(id)

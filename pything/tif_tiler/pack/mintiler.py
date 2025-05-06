@@ -28,7 +28,7 @@ CORS(app)
 
 color_style_dict = {
     'gray': 'gray',
-    'red2green': 'rdylgn_r',
+    'red2green': 'rdylgn',
 }
 
 data_range_dict = dict()
@@ -57,6 +57,7 @@ def dynamic_tile(z, x, y):
         range = [float(i) for i in range]
         
     minio_raster_url = f"{MINIO_ENDPOINT}{url_field}"
+    print(minio_raster_url)
     ndvi_min_val, ndvi_max_val = -1, 1
     try:
         with rasterio.open(minio_raster_url) as src:

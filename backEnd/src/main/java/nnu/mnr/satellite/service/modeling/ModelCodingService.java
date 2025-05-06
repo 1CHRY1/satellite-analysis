@@ -153,7 +153,7 @@ public class ModelCodingService {
                 .pyPath(pyPath).serverPyPath(serverPyPath)
                 .watchPath(watchPath).outputPath(outputPath).dataPath(dataPath)
                 .build();
-        dockerService.initEnv(projectId, serverDir);
+        dockerService.initEnv(serverDir);
 
         // Load Config
         String configPath = serverDir + "config.json";
@@ -551,6 +551,7 @@ public class ModelCodingService {
         String containerId = project.getContainerId();
         String common = "kill -INT `pidof python`";
         dockerService.runCMDInContainer(userId, projectId, containerId, common);
+        runWatcher(projectBasicDTO);
         responseInfo = "Script Stopped Successfully";
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
     }
