@@ -87,10 +87,10 @@ class GridHelper:
         grid_y = math.floor(((90 - latitude) / 180) * self.grid_num_y)
         return GridCell(columnId=grid_x, rowId=grid_y)
 
-
     def _create_shapely_polygon(self, polygon: PolygonGeometry) -> Polygon:
         """Convert GeoJSON-like polygon to Shapely polygon."""
-        return Polygon(polygon.coordinates[0])
+        print(polygon.get("features")[0].get("geometry"))
+        return Polygon(polygon.get("features")[0].get("geometry").get("coordinates")[0])
 
     def _get_grid_polygon(self, grid_x: int, grid_y: int) -> Polygon:
         """Create Shapely polygon for a grid cell."""
@@ -106,7 +106,7 @@ class GridHelper:
 
     def _calculate_bbox(self, polygon: PolygonGeometry) -> Dict[str, List[float]]:
         """Calculate bounding box of a polygon."""
-        coordinates = polygon.coordinates[0]
+        coordinates = polygon.get("features")[0].get("geometry").get("coordinates")[0]
         min_x = min(coord[0] for coord in coordinates)
         max_x = max(coord[0] for coord in coordinates)
         min_y = min(coord[1] for coord in coordinates)
@@ -115,4 +115,53 @@ class GridHelper:
         return {
             "topLeft": [min_x, max_y],
             "bottomRight": [max_x, min_y]
+        }
+        
+    def get_grid_cells_by_bbox(self, bbox: List[float]) -> List[GridCell]:
+
+        left_bottom_grid = self.get_grid_cell(bbox[0], bbox[1])
+
+        right_top_grid = self.get_grid_cell(bbox[2], bbox[3])
+
+        grid_cells = []
+
+        for i in range(left_bottom_grid.columnId, right_top_grid.columnId + 1):
+            for j in range(right_top_grid.rowId, left_bottom_grid.rowId + 1):
+                grid_cells.append(GridCell(columnId=i, rowId=j))
+
+        return grid_cells
+    
+    def get_grid_bbox(self, grid_cell: GridCell) -> List[float]:
+        """Get the bounding box of a grid cell."""
+        left_bottom_lng, left_bottom_lat = self._grid_to_lnglat(grid_cell.columnId, grid_cell.rowId + 1)
+        right_top_lng, right_top_lat = self._grid_to_lnglat(grid_cell.columnId + 1, grid_cell.rowId)
+        return [left_bottom_lng, left_bottom_lat, right_top_lng, right_top_lat]
+    
+    def grid_to_geojsonfeature(self, grid_cell: GridCell) -> Dict:
+        """Convert a grid cell to a GeoJSON polygon feature."""
+        left_bottom_lng, left_bottom_lat = self._grid_to_lnglat(grid_cell.columnId, grid_cell.rowId + 1)
+        right_top_lng, right_top_lat = self._grid_to_lnglat(grid_cell.columnId + 1, grid_cell.rowId)
+
+        return {
+            "type": "Feature",
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [left_bottom_lng, left_bottom_lat],
+                        [right_top_lng, left_bottom_lat],
+                        [right_top_lng, right_top_lat],
+                        [left_bottom_lng, right_top_lat],
+                        [left_bottom_lng, left_bottom_lat]
+                    ]
+                ]
+            }
+        }
+        
+    def grid_to_geojson(self, grid_cells: List[GridCell]) -> Dict:
+        """Convert a list of grid cells to a GeoJSON FeatureCollection."""
+        features = [self.grid_to_geojsonfeature(grid_cell) for grid_cell in grid_cells]
+        return {
+            "type": "FeatureCollection",
+            "features": features
         }

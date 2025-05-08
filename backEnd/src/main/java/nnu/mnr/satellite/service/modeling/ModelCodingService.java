@@ -551,6 +551,7 @@ public class ModelCodingService {
         String containerId = project.getContainerId();
         String common = "kill -INT `pidof python`";
         dockerService.runCMDInContainer(userId, projectId, containerId, common);
+        runWatcher(projectBasicDTO);
         responseInfo = "Script Stopped Successfully";
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
     }

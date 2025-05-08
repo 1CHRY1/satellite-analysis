@@ -1,7 +1,7 @@
 <template>
     <div class="relative flex flex-1 flex-row bg-black">
         <ImageSearcher class="w-[28vw]" />
-        <MapComp class="flex-1" :style="'local'" :proj="'globe'" />
+        <MapComp class="flex-1" :style="'image'" :proj="'globe'" />
     </div>
 </template>
 

@@ -13,7 +13,7 @@ export async function getMethods(body: any): Promise<any> {
 
 //----------------------------- projects API -----------------------------//
 export async function getProjects(): Promise<any> {
-    return http.get<any>(`project/all`)
+    return http.get<any>(`modeling/project/all`)
 }
 
 export async function getUserProjects(): Promise<any> {
@@ -24,66 +24,66 @@ export async function getUserProjects(): Promise<any> {
 }
 
 export async function createProject(param: any): Promise<any> {
-    return http.post<any>(`coding/project/new`, param)
+    return http.post<any>(`modeling/coding/project/new`, param)
 }
 
 // 项目的启动、关闭和删除
 export async function projectOperating(param: any): Promise<any> {
-    return http.post<any>(`coding/project/operating`, param)
+    return http.post<any>(`modeling/coding/project/operating`, param)
 }
 
 //----------------------------- code online API -----------------------------//
 
 export async function getScript(param: any): Promise<any> {
-    return http.post<any>(`coding/project/file/script`, param)
+    return http.post<any>(`modeling/coding/project/file/script`, param)
 }
 
 export async function updateScript(param: any): Promise<analysisResponse> {
-    return http.put<any>(`coding/project/file/script`, param)
+    return http.put<any>(`modeling/coding/project/file/script`, param)
 }
 
 export async function runScript(param: any): Promise<any> {
-    return http.post<any>(`coding/project/executing`, param)
+    return http.post<any>(`modeling/coding/project/executing`, param)
 }
 
 export async function stopScript(param: any): Promise<any> {
-    return http.post<any>(`coding/project/canceling`, param)
+    return http.post<any>(`modeling/coding/project/canceling`, param)
 }
 
 export async function operatePackage(param: any): Promise<any> {
-    return http.post<any>(`coding/project/package`, param)
+    return http.post<any>(`modeling/coding/project/package`, param)
 }
 
 export async function getPackages(param: any): Promise<any> {
-    return http.post<any>(`coding/project/package/list`, param)
+    return http.post<any>(`modeling/coding/project/package/list`, param)
 }
 
 //----------------------------- data directory API -----------------------------//
 
 export async function getFiles(param: any): Promise<any> {
-    return http.post<any>(`coding/project/file`, param)
+    return http.post<any>(`modeling/coding/project/file`, param)
 }
 
 // 获取miniIo里面的文件信息列表
 export async function getMiniIoFiles(param: any): Promise<any> {
-    return http.post<any>(`coding/project/results`, param)
+    return http.post<any>(`modeling/coding/project/results`, param)
 }
 
 // 获取miniIo里面的文件信息列表
 export async function getTileFromMiniIo(dataId: any): Promise<any> {
-    return http.get<any>(`coding/project/result/tif/${dataId}`)
+    return http.get<any>(`modeling/coding/project/result/tif/${dataId}`)
 }
 
 export async function getJsonFileContent(dataId: any): Promise<any> {
-    return http.get<any>(`coding/project/result/json/${dataId}`)
+    return http.get<any>(`modeling/coding/project/result/json/${dataId}`)
 }
 
 export async function uploadGeoJson(param: any): Promise<any> {
-    return http.post<any>(`coding/project/file/geojson`, param)
+    return http.post<any>(`modeling/coding/project/file/geojson`, param)
 }
 
 //----------------------------- extra API -----------------------------//
 // 后门指令：命令行操作
 export async function cmdOperation(param: any): Promise<any> {
-    return http.post<any>(`coding/project/environment`, param)
+    return http.post<any>(`modeling/coding/project/environment`, param)
 }
