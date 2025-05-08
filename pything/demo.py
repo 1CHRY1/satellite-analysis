@@ -5,7 +5,6 @@ import requests
 import rasterio
 from rasterio.mask import mask
 from rasterio.warp import transform_bounds
-import numpy as np
 from ogms_xfer.application.gridUtil import GridHelper
 from ogms_xfer import OGMS_Xfer as xfer
 
@@ -95,23 +94,23 @@ def calculate_cloud_coverage(image_path, bbox):
     total_pixels = out_image[0].size
     cloud_coverage = cloud_pixels / total_pixels
     
-    print(f"云量百分比：{cloud_coverage * 100}%")
+    # print(f"云量百分比：{cloud_coverage * 100}%")
     return cloud_coverage
 
 
 
 #### Main ########################################################################
-
-grid_resolution_in_kilometer = 25
+## Input : 网格分辨率 + 行政区GeojsonURL
+geojsonPath = "D:\\edgedownload\\胶州市.json"
+grid_resolution_in_kilometer = 2
+maxCloudThreshold = 0.2 # 可接受的最大云量 20%
 
 ## Step 1 : 行政区范围 ————> 覆盖格网 ————> 检索影像
-geojsonPath = "D:\\edgedownload\\胶州市.json"
 f = open(geojsonPath, 'r', encoding='utf-8')
 geojson_input = json.load(f)
 f.close()
 
 bbox = get_geojson_bbox(geojson_input)
-bbox_geojson = bbox_to_geojson(bbox)
 gridHelper = GridHelper(grid_resolution_in_kilometer)
 grid_cells = gridHelper.get_grid_cells_by_bbox(bbox)
 print("共",len(grid_cells),"个格网")
@@ -134,7 +133,7 @@ scenes = [
 ]
 
 
-# Step 2 : 遍历格网 & 遍历影像 ————> 实时切片并下载影像瓦片 ————> 采样QA计算云量 ————> 筛选出覆盖目标区域的云量最小的影像瓦片
+## Step 2 : 遍历格网 & 遍历影像 ————> 实时切片并下载影像瓦片 ————> 采样QA计算云量 ————> 筛选出覆盖目标区域的云量最小的影像瓦片
 target_tiles_map = {}
 baseParams = {
     'bidx': '1',
@@ -143,48 +142,58 @@ baseParams = {
     'reproject': 'nearest',
     'return_mask': 'false'
 }
-if True:
-    start_time = time.time()
-    for (idx, gcell) in enumerate(grid_cells):
 
-        bbox = gridHelper.get_grid_bbox(gcell)
+start_time = time.time()
 
-        for scene in scenes:
-            params = baseParams.copy()
-            params['url'] = scene['imageUrl']
-            QAImagePath = scene['qaUrl']
-            response = requests.get(f"http://127.0.0.1:8000/bbox/{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}.tif", params=params)
-            
-            if response.status_code != 200:
-                print(f'下载失败，状态码：{response.status_code}')
-                continue
-            grid_id = f"{grid_resolution_in_kilometer}_{gcell.columnId}_{gcell.rowId}"
-            fname = './temp/' + f'{scene["name"]}_{grid_id}.tif'
-            with open(fname, 'wb') as file:
-                for chunk in response.iter_content(chunk_size=1024):
-                    if chunk:
-                        file.write(chunk)
-            cloud = calculate_cloud_coverage(QAImagePath, bbox)
-            
-            if grid_id not in target_tiles_map:
+# 遍历格网
+for (idx, gcell) in enumerate(grid_cells):
+
+    bbox = gridHelper.get_grid_bbox(gcell)
+
+    # 遍历影像
+    for scene in scenes:
+        
+        # 实时切片请求参数
+        params = baseParams.copy()
+        params['url'] = scene['imageUrl']
+        response = requests.get(f"http://127.0.0.1:8000/bbox/{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}.tif", params=params)
+        
+        # 该影像不包含该格网时可能Error
+        if response.status_code != 200:
+            print(f'下载失败，状态码：{response.status_code}')
+            continue
+        
+        # 切片结果文件写入
+        grid_id = f"{grid_resolution_in_kilometer}_{gcell.columnId}_{gcell.rowId}"
+        fname = './temp/' + f'{scene["name"]}_{grid_id}.tif'
+        with open(fname, 'wb') as file:
+            for chunk in response.iter_content(chunk_size=1024):
+                if chunk:
+                    file.write(chunk)
+              
+        # 采样QA计算云量      
+        cloud = calculate_cloud_coverage(scene['qaUrl'], bbox)
+        
+        # 基于云量更新 target_tiles_map
+        if grid_id not in target_tiles_map:
+            if cloud < maxCloudThreshold:
                 target_tiles_map[grid_id] = {
                     "grid_id": grid_id,
                     "cloud": cloud,
                     "file_path": fname,
                 }
+        elif cloud < target_tiles_map[grid_id]["cloud"] :
+            target_tiles_map[grid_id] = {
+                "grid_id": grid_id,
+                "cloud": cloud,
+                "file_path": fname,
+            }
 
-            elif target_tiles_map[grid_id]["cloud"] > cloud: # replace with lower cloud
-                target_tiles_map[grid_id] = {
-                    "grid_id": grid_id,
-                    "cloud": cloud,
-                    "file_path": fname,
-                }
+print(f'切片+保存本地+最小云量筛选耗时: + {round(time.time()-start_time, 4)} s')
+start_time = time.time()
+    
 
-    print('总耗时：',time.time()-start_time)
-    
-    
-    
-# Step 3 : 合并所有影像瓦片
+## Step 3 : 合并所有影像瓦片
 pathes = [target_tiles_map[grid_id]['file_path'] for grid_id in target_tiles_map]
-print(pathes)
 xfer.toolbox.merge_tiles(pathes, './temp/merged.tif')
+print(f'合并耗时：,{round(time.time()-start_time, 4)} s')
