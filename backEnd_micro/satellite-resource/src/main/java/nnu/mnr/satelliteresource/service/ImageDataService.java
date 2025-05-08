@@ -36,7 +36,6 @@ public class ImageDataService {
         this.imageRepo = imageRepo;
     }
 
-    @DS("mysql_satellite")
     public List<ImageInfoVO> getImagesBySceneId(String sceneId) {
         QueryWrapper<Image> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("image_id", "band", "cloud").eq("scene_id", sceneId);

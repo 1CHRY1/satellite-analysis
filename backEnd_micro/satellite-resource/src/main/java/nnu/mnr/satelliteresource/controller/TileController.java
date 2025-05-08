@@ -39,11 +39,7 @@ public class TileController {
 
     @GetMapping("/sceneId/{sceneId}/tileLevel/{tileLevel}")
     public ResponseEntity<GeoJsonVO> getTilesByImageAndLevel(@PathVariable String sceneId, @PathVariable String tileLevel) throws IOException {
-//        return ResponseEntity.ok(tileDataService.getTilesBySceneAndLevel(sceneId, tileLevel));
-        LocalDateTime beforetime = LocalDateTime.now();
         GeoJsonVO geoJsonVO = tileDataService.getTilesBySceneAndLevel(sceneId, tileLevel);
-        LocalDateTime afterTime = LocalDateTime.now();
-        System.out.println(Duration.between(beforetime, afterTime));
         return ResponseEntity.ok(geoJsonVO);
     }
 

@@ -2,11 +2,11 @@ package nnu.mnr.satellitemodeling.jobs.modeling;
 
 import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
-import nnu.mnr.satelliteresource.jobs.QuartzSchedulerManager;
-import nnu.mnr.satelliteresource.model.properties.ModelServerProperties;
-import nnu.mnr.satelliteresource.utils.common.BeanUtil;
-import nnu.mnr.satelliteresource.utils.common.ProcessUtil;
-import nnu.mnr.satelliteresource.utils.data.RedisUtil;
+import nnu.mnr.satellitemodeling.jobs.QuartzSchedulerManager;
+import nnu.mnr.satellitemodeling.model.properties.ModelServerProperties;
+import nnu.mnr.satellitemodeling.utils.common.BeanUtil;
+import nnu.mnr.satellitemodeling.utils.common.ProcessUtil;
+import nnu.mnr.satellitemodeling.utils.data.RedisUtil;
 import org.quartz.*;
 
 import java.time.LocalDateTime;

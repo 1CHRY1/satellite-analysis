@@ -4,10 +4,7 @@ import nnu.mnr.satelliteuser.model.po.User;
 import nnu.mnr.satelliteuser.repository.IUserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -30,8 +27,8 @@ public class InternalUserController {
         return ResponseEntity.ok(user != null);
     }
 
-    @GetMapping("/id")
-    public ResponseEntity<User> getUserById(@RequestHeader("X-User-Id") String userId) {
+    @GetMapping("/id/{userId}")
+    public ResponseEntity<User> getUserById(@PathVariable String userId) {
         User user = userRepo.selectById(userId);
         return ResponseEntity.ok(user);
     }

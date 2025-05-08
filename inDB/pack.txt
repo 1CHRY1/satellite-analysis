@@ -1,0 +1,2 @@
+
+nuitka --standalone --include-data-files=./dataProcessing/proj.db=proj.db --jobs=14 --remove-output ./dataProcessing/inDB.py

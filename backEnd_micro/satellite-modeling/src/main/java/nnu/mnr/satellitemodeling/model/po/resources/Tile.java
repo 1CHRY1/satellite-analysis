@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import nnu.mnr.satellite.utils.typeHandler.GeometryTypeHandler;
+import nnu.mnr.satellitemodeling.utils.typeHandler.GeometryTypeHandler;
 import org.locationtech.jts.geom.Geometry;
 
 /**

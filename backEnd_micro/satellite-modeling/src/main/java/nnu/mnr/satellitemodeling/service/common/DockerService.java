@@ -17,10 +17,12 @@ import com.github.dockerjava.okhttp.OkDockerHttpClient;
 import com.github.dockerjava.transport.DockerHttpClient;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import nnu.mnr.satellitemodeling.client.WebsocketClient;
 import nnu.mnr.satellitemodeling.model.pojo.common.DFileInfo;
+import nnu.mnr.satellitemodeling.model.pojo.common.ModelResultCallBack;
 import nnu.mnr.satellitemodeling.model.pojo.common.SftpConn;
 import nnu.mnr.satellitemodeling.enums.FileType;
-import nnu.mnr.satellitemodeling.model.pojo.modeling.DockerServerProperties;
+import nnu.mnr.satellitemodeling.model.properties.DockerServerProperties;
 import nnu.mnr.satellitemodeling.utils.docker.DockerFileUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -55,7 +57,7 @@ public class DockerService {
     SftpDataService sftpDataService;
 
     @Autowired
-    ModelSocketService modelSocketService;
+    WebsocketClient websocketClient;
 
     private DockerClient dockerClient;
 
@@ -245,7 +247,7 @@ public class DockerService {
                     .withCmd(cmd)
                     .exec();
 
-            ModelResultCallBack callback = new ModelResultCallBack(userId, projectId, modelSocketService);
+            ModelResultCallBack callback = new ModelResultCallBack(userId, projectId, websocketClient);
             String exeId = execCreateCmdResponse.getId();
             dockerClient.execStartCmd(exeId).exec(callback).awaitCompletion(300, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
@@ -264,7 +266,7 @@ public class DockerService {
                     .withCmd(cmd)
                     .exec();
 
-            ModelResultCallBack callback = new ModelResultCallBack(userId, projectId, modelSocketService);
+            ModelResultCallBack callback = new ModelResultCallBack(userId, projectId, websocketClient);
             String exeId = execCreateCmdResponse.getId();
             dockerClient.execStartCmd(exeId).withDetach(true).exec(callback).awaitCompletion(300, TimeUnit.SECONDS);
         } catch (InterruptedException e) {

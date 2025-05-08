@@ -7,12 +7,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import nnu.mnr.satellite.utils.typeHandler.GeometryTypeHandler;
-import nnu.mnr.satellite.utils.typeHandler.SetTypeHandler;
+import nnu.mnr.satellitemodeling.utils.typeHandler.GeometryTypeHandler;
+import nnu.mnr.satellitemodeling.utils.typeHandler.SetTypeHandler;
 import org.locationtech.jts.geom.Geometry;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Created with IntelliJ IDEA.

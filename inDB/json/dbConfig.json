@@ -1,0 +1,18 @@
+{
+    "MINIO_PORT": 30900,
+    "MINIO_IP": "223.2.43.228",
+    "MINIO_ACCESS_KEY": "minioadmin",
+    "MINIO_SECRET_KEY": "minioadmin",
+    "MINIO_SECURE": false,
+    "MINIO_IMAGES_BUCKET": "test-images",
+    "MINIO_TILES_BUCKET": "test-tiles",
+    "MINIO_GRID_BUCKET": "test-tiles",
+    "MINIO_TEMP_FILES_BUCKET": "temp-files",
+    "MYSQL_HOST": "223.2.43.228",
+    "MYSQL_USER": "root",
+    "MYSQL_PWD": "123456",
+    "MYSQL_TILE_PORT": 30779,
+    "MYSQL_TILE_DB": "tile",
+    "MYSQL_RESOURCE_PORT": 30778,
+    "MYSQL_RESOURCE_DB": "resource"
+}
