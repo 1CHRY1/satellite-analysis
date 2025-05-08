@@ -33,4 +33,4 @@ def read_index():
     return {"message": "Welcome to TiTiler"}
 
 # Start Server
-# cd "D:\myProject\funnyScripts\project\TiTilerServer" && uvicorn main:app --reload
+# cd "D:\myProject\2025\satellite-analysis\pything\tif_tiler\version2" && uvicorn main:app --reload
