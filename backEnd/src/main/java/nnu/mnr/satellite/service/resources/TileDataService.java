@@ -117,7 +117,6 @@ public class TileDataService {
                 .map(CompletableFuture::join)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-        System.out.println(tilesFetchRes);
         executor.shutdown();
         return tilesFetchRes;
     }

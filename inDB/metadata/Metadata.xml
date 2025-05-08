@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ProductMetaData>
+    <SatelliteID>GF2</SatelliteID>
+    <ReceiveStationID>MYC</ReceiveStationID>
+    <SensorID>PMS2</SensorID>
+	<SensorMode>NAD</SensorMode>
+	<TimeType>BJ</TimeType>
+    <ReceiveTime>2024-10-27 23:34:59</ReceiveTime>
+    <OrbitID>55420</OrbitID>
+    <OrbitType>GPS</OrbitType>
+    <AttType>DMA</AttType>
+    <StripID>493630</StripID>
+    <ProduceType>STANDARD</ProduceType>
+    <SceneID>14206039</SceneID>
+    <DDSFlag>TRUE</DDSFlag>
+    <ProductID>14206039001</ProductID>
+    <ProductLevel>LEVEL1A</ProductLevel>
+    <ProductFormat>GEOTIFF</ProductFormat>
+    <ProduceTime>2024-10-28 10:34:52</ProduceTime>
+    <BandsCount>4</BandsCount>
+    <Bands>1,2,3,4</Bands>
+    <ScenePath>914</ScenePath>
+    <SceneRow>306</SceneRow>
+    <SatPath>914</SatPath>
+    <SatRow>306</SatRow>
+    <SceneCount>1</SceneCount>
+    <SceneShift>1</SceneShift>
+    <StartTime>2024-10-28 07:34:58</StartTime>
+    <EndTime>2024-10-28 07:35:01</EndTime>
+    <CenterTime>2024-10-28 07:35:00</CenterTime>
+    <ImageGSD>3.24</ImageGSD>
+    <WidthInPixels>7300</WidthInPixels>
+    <HeightInPixels>6920</HeightInPixels>
+    <RegionName>C</RegionName>
+    <CloudPercent>0</CloudPercent>
+    <DataSize>385</DataSize>
+    <RollViewingAngle>0.000000</RollViewingAngle>
+    <PitchViewingAngle>0.000000</PitchViewingAngle>
+    <RollSatelliteAngle>4.991414</RollSatelliteAngle>
+    <PitchSatelliteAngle>-0.002692</PitchSatelliteAngle>
+    <YawSatelliteAngle>3.567599</YawSatelliteAngle>
+    <SolarAzimuth>86.973378</SolarAzimuth>
+    <SolarZenith>40.676791</SolarZenith>
+    <SolarAltitude>xxx</SolarAltitude>
+	<SatelliteAzimuth>285.063484</SatelliteAzimuth>
+    <SatelliteZenith>6.278885</SatelliteZenith>
+	<SatelliteAltitude>xxx</SatelliteAltitude>
+    <GainMode>G2,G1,G1,G2</GainMode>
+    <IntegrationTime>0.000474</IntegrationTime>
+    <IntegrationLevel>S5,S4,S5,S3</IntegrationLevel>
+    <MapProjection>WGS84</MapProjection>
+    <EarthEllipsoid></EarthEllipsoid>
+    <ResamplingKernel>BL</ResamplingKernel>
+    <HeightMode>DEM</HeightMode>
+    <EphemerisData>GPS</EphemerisData>
+    <AttitudeData>DMA</AttitudeData>
+    <RadiometricMethod>LAB</RadiometricMethod>
+    <MtfCorrection>LAB</MtfCorrection>
+    <Denoise>MOMENT</Denoise>
+    <RayleighCorrection>N</RayleighCorrection>
+    <CenterLatitude>-20.109320</CenterLatitude>
+    <CenterLongitude>140.216912</CenterLongitude>
+    <TopLeftLatitude>-19.986719</TopLeftLatitude>
+    <TopLeftLongitude>140.128472</TopLeftLongitude>
+    <TopRightLatitude>-20.031388</TopRightLatitude>
+    <TopRightLongitude>140.350840</TopRightLongitude>
+    <BottomRightLatitude>-20.232001</BottomRightLatitude>
+    <BottomRightLongitude>140.305954</BottomRightLongitude>
+    <BottomLeftLatitude>-20.187313</BottomLeftLatitude>
+    <BottomLeftLongitude>140.083284</BottomLeftLongitude>
+    <AuxInfo></AuxInfo>
+    <FocusLength></FocusLength>
+    <PixelSize></PixelSize>
+    <DetectorNumber></DetectorNumber>
+    <FirstDetectorPositionX></FirstDetectorPositionX>
+    <FirstDetectorPositionY></FirstDetectorPositionY>
+    <LastDetectorPositionX></LastDetectorPositionX>
+    <LastDetectorPositionY></LastDetectorPositionY>
+    <GpsTIME></GpsTIME>
+    <GpsPOINT></GpsPOINT>
+    <CentralWavelength></CentralWavelength>
+    <SpectralRangeStart></SpectralRangeStart>
+    <MeasureBits></MeasureBits>
+    <IntegrationTime></IntegrationTime>
+    <IntegrationLevel></IntegrationLevel>
+   </ProductMetaData>   
+   <ARDProductMetaData>
+    <ARDProductID>88888888</ARDProductID>
+    <ARDProductTime>2024-04-02 05:18:31</ARDProductTime>
+    <ARDLevel>P2</ARDLevel>
+    <OutputFormat>GEOTIFF</OutputFormat>
+    <CollectionNumber>01</CollectionNumber>
+    <TileNumber>111222</TileNumber>
+    <ARDProduceUnit>DataProcessingDivision</ARDProduceUnit>
+   </ARDProductMetaData>
+   <ImageQuality>
+    <CloudPercent>9</CloudPercent>
+    <CloudShadowPercent>10</CloudShadowPercent>
+    <SnowPercent>0</SnowPercent>
+    <IcePercent>0</IcePercent>
+    <RadiometricCheck>
+    <CCDErrorCheck>0</CCDErrorCheck>
+    <RandomCodeCheck>0</RandomCodeCheck>
+    <TapandDeadPixelCheck>0</TapCheck>
+    <ImageMissingCheck>0</ImageMissingCheck>
+    <ColorOffsetCheck>0</ColorOffsetCheck>
+    <StripingNoiseCheck>0</StripingNoiseCheck>
+    </RadiometricCheck>
+    <GeometricCheck>
+    <Reference>DOM_8m,DEM_30m</Reference>
+    <CheckPointNum>218</CheckPointNum>
+    <LinePrecision>165.612681</LinePrecision>
+    <SamplePrecision>30.850595</SamplePrecision>
+    <Precision>168.461625</Precision>
+    <Checktime>2024-10-29 16:20:30</Checktime>
+    <CheckUnit>QualityDivision</CheckUnit>
+    </GeometricCheck>
+   </ImageQuality>
+   
+   <ProcessData>
+   
+   </ProcessData>

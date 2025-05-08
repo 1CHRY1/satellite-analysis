@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
  */
 
 @RestController
-@RequestMapping("/api/v1/model/case")
+@RequestMapping("/api/v1/modeling/case")
 public class ModelComputeController {
 
     @Autowired
