@@ -19,7 +19,7 @@ import java.util.List;
  */
 
 @RestController
-@RequestMapping("/api/v1/project")
+@RequestMapping("/api/v1/modeling/project")
 public class ProjectController {
 
     private final ProjectDataService projectDataService;

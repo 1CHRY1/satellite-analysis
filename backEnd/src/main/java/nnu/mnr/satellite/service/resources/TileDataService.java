@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -109,23 +110,26 @@ public class TileDataService {
         JSONObject tileGeometry = TileCalculateUtil.getTileGeomByIds(rowId, columnId, gridNums[0], gridNums[1]);
         List<Scene> scenes = sceneDataService.getScenesByBBox(sensorId, productId, tileGeometry);
         ExecutorService executor = Executors.newFixedThreadPool(Math.min(scenes.size(), 10));
-
         List<CompletableFuture<TilesFetchResultVO>> futures = scenes.stream()
                 .map(scene -> fetchTileAsync(scene, band, level, rowId, columnId, executor))
                 .toList();
-
         List<TilesFetchResultVO> tilesFetchRes = futures.stream()
                 .map(CompletableFuture::join)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-
         executor.shutdown();
         return tilesFetchRes;
     }
 
     private CompletableFuture<TilesFetchResultVO> fetchTileAsync(Scene scene, String band, String level, Integer rowId, Integer columnId, Executor executor) {
         return CompletableFuture.supplyAsync(() -> {
-            Tile tile = tileRepo.getTileDataByBandLevelAndIds(scene.getSceneId(), band, level, rowId, columnId);
+            String sceneTableName = scene.getSceneId(); String sceneTableNameLow = sceneTableName.toLowerCase();
+            Tile tile;
+            try {
+                tile = tileRepo.getTileDataByBandLevelAndIds(sceneTableName, band, level, rowId, columnId);
+            } catch (Exception e ) {
+                tile = tileRepo.getTileDataByBandLevelAndIds(sceneTableNameLow, band, level, rowId, columnId);
+            }
             return TilesFetchResultVO.tilesFetcherBuilder()
                     .tileId(tile.getTileId())
                     .cloud(tile.getCloud())

@@ -52,7 +52,7 @@ class TileService:
             if grid_cells is not None:
                 rowids = [cell.rowId for cell in grid_cells]
                 columnids = [cell.columnId for cell in grid_cells]
-                query = query.filter(TileModel.row_id.in_(rowids) and TileModel.column_id.in_(columnids))
+                query = query.filter(TileModel.row_id.in_(rowids), TileModel.column_id.in_(columnids))
                 
             return query.all()
         
