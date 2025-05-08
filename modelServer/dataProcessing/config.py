@@ -24,8 +24,8 @@ STATUS_ERROR                                    =       0b100000
 STATUS_DELETE                                   =       0b1000000
 
 # MinIO Config
-MINIO_PORT                                      =       9000
-MINIO_IP                                        =       "223.2.34.7"
+MINIO_PORT                                      =       30900
+MINIO_IP                                        =       "223.2.43.228"
 MINIO_ACCESS_KEY                                =       "jTbgNHEqQafOpUxVg7Ol"
 MINIO_SECRET_KEY                                =       "7UxtrqhSOyN1KUeumbqTRMv1zeluLO69OwJnCC0M"
 MINIO_SECURE                                    =       False
