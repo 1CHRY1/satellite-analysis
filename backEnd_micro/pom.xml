@@ -41,7 +41,7 @@
         <redis.version>3.4.0</redis.version>
         <minio.version>8.5.12</minio.version>
 
-        <locationtech.version>1.18.1</locationtech.version>
+        <locationtech.version>1.20.0</locationtech.version>
         <geotools-geojson.version>24.0</geotools-geojson.version>
         <geotools-opengis.version>28.2</geotools-opengis.version>
 

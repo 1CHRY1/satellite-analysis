@@ -25,5 +25,6 @@ public class SceneDesVO {
     private Integer bandNum;
     private HashSet<String> bands;
     private String cloud;
+    private String path;
 
 }
