@@ -1,5 +1,6 @@
 package nnu.mnr.satellite.model.po.resources;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -53,4 +54,6 @@ public class Scene {
 
     private String cloud;
     private String bucket;
+
+    private JSONObject tags;
 }
