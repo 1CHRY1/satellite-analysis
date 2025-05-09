@@ -108,6 +108,7 @@ public class TileDataService {
         int[] gridNums = TileCalculateUtil.getGridNumFromTileLevel(level);
         JSONObject tileGeometry = TileCalculateUtil.getTileGeomByIds(rowId, columnId, gridNums[0], gridNums[1]);
         List<Scene> scenes = sceneDataService.getScenesByBBox(sensorId, productId, tileGeometry);
+        if (scenes.isEmpty()) return null;
         ExecutorService executor = Executors.newFixedThreadPool(Math.min(scenes.size(), 10));
         List<CompletableFuture<TilesFetchResultVO>> futures = scenes.stream()
                 .map(scene -> fetchTileAsync(scene, band, level, rowId, columnId, executor))

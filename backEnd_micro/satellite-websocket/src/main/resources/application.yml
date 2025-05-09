@@ -3,17 +3,21 @@ spring:
     name: satellite-websocket
   config:
     import:
-      - nacos:satellite-websocket-dev.yaml?refreshEnabled=true
+      - nacos:satellite-websocket.yaml?refreshEnabled=true
   cloud:
     nacos:
       discovery:
         server-addr: 223.2.43.228:30848
         namespace: 0fd34842-08ff-45f3-8a8c-8f3daf770d6f
         enabled: true
+        group: PROD
+      #        group: DEV
       config:
         server-addr: 223.2.43.228:30848
         file-extension: yaml
         namespace: 0fd34842-08ff-45f3-8a8c-8f3daf770d6f
+        group: PROD
+#        group: DEV
 #logging:
 #  level:
 #    org.springframework.cloud.openfeign: DEBUG
