@@ -1,7 +1,5 @@
-package nnu.mnr.satellite.model.po.resources;
+package nnu.mnr.satelliteresource.model.po;
 
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;

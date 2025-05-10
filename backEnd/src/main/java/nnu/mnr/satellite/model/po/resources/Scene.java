@@ -44,7 +44,6 @@ public class Scene {
 
     @TableField(value="bounding_box", typeHandler = GeometryTypeHandler.class)
     private Geometry bbox;
-    private String pngPath;
     private String description;
 
     private Integer bandNum;
@@ -52,7 +51,8 @@ public class Scene {
     @TableField(value = "bands", typeHandler = SetTypeHandler.class)
     private HashSet<String> bands;
 
-    private String cloud;
+    private Integer cloud;
+    private String cloudPath;
     private String bucket;
 
     private JSONObject tags;

@@ -89,15 +89,15 @@ public class GeometryUtil {
         return geometryFactory.createPolygon(outerRing, innerRings);
     }
 
-    public static Point parse4326Point(JSONArray coordinates) {
+    public static Geometry parse4326Point(Double[] coordinates) {
 
         GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
         // 点的坐标通常是 [x, y] 形式，这里直接获取 x 和 y 坐标
-        double x = coordinates.getDoubleValue(0);
-        double y = coordinates.getDoubleValue(1);
+        double x = coordinates[0];
+        double y = coordinates[1];
 
         // 使用 GeometryFactory 创建 Point 对象
-        return geometryFactory.createPoint(new Coordinate(x, y));
+        return geometryFactory.createPoint(new org.locationtech.jts.geom.Coordinate(x, y));
     }
 
     public static JSONObject geometry2Geojson(Geometry jtsGeometry) throws IOException {
