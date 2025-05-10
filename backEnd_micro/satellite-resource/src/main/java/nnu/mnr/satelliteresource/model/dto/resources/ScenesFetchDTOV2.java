@@ -1,6 +1,5 @@
-package nnu.mnr.satellite.model.dto.resources;
+package nnu.mnr.satelliteresource.model.dto.resources;
 
-import com.alibaba.fastjson2.JSONObject;
 import lombok.Builder;
 import lombok.Data;
 

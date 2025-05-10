@@ -1,14 +1,11 @@
-package nnu.mnr.satellite.service.resources;
+package nnu.mnr.satelliteresource.service;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import nnu.mnr.satellite.model.po.resources.Region;
-import nnu.mnr.satellite.model.vo.common.GeoJsonVO;
-import nnu.mnr.satellite.model.vo.resources.RegionInfoVO;
-import nnu.mnr.satellite.model.vo.resources.SensorInfoVO;
-import nnu.mnr.satellite.repository.resources.IRegionRepo;
-import nnu.mnr.satellite.repository.resources.ISceneRepo;
-import nnu.mnr.satellite.utils.geom.GeometryUtil;
+import nnu.mnr.satelliteresource.model.po.Region;
+import nnu.mnr.satelliteresource.model.vo.resources.RegionInfoVO;
+import nnu.mnr.satelliteresource.repository.IRegionRepo;
+import nnu.mnr.satelliteresource.utils.geom.GeometryUtil;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
