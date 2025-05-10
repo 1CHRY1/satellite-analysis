@@ -1,10 +1,10 @@
-package nnu.mnr.satellite.controller.resources;
+package nnu.mnr.satelliteresource.controller;
 
 import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
-import nnu.mnr.satellite.model.dto.resources.ScenesFetchDTOV2;
-import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
-import nnu.mnr.satellite.service.resources.SceneDataServiceV2;
+import nnu.mnr.satelliteresource.model.dto.resources.ScenesFetchDTOV2;
+import nnu.mnr.satelliteresource.model.vo.resources.SceneDesVO;
+import nnu.mnr.satelliteresource.service.SceneDataServiceV2;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

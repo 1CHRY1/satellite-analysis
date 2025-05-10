@@ -101,8 +101,8 @@ def calculate_cloud_coverage(image_path, bbox):
 
 #### Main ########################################################################
 ## Input : 网格分辨率 + 行政区GeojsonURL
-geojsonPath = "D:\\edgedownload\\胶州市.json"
-grid_resolution_in_kilometer = 2
+geojsonPath = "D:\\1study\\Work\\胶州市.json"
+grid_resolution_in_kilometer = 25
 maxCloudThreshold = 0.2 # 可接受的最大云量 20%
 
 ## Step 1 : 行政区范围 ————> 覆盖格网 ————> 检索影像

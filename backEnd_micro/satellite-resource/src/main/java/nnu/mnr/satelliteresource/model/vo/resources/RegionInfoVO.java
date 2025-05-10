@@ -1,7 +1,5 @@
-package nnu.mnr.satellite.model.vo.resources;
+package nnu.mnr.satelliteresource.model.vo.resources;
 
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
 import lombok.Data;
 
 import java.util.List;

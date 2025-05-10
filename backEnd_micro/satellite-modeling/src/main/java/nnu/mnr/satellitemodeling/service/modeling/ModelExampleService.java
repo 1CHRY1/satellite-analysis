@@ -1,27 +1,23 @@
-package nnu.mnr.satellite.service.modeling;
+package nnu.mnr.satellitemodeling.service.modeling;
 
 import com.alibaba.fastjson2.JSONObject;
-import nnu.mnr.satellite.jobs.QuartzSchedulerManager;
-import nnu.mnr.satellite.model.dto.modeling.ModelServerImageDTO;
-import nnu.mnr.satellite.model.dto.modeling.ModelServerSceneDTO;
-import nnu.mnr.satellite.model.dto.modeling.NdviFetchDTO;
-import nnu.mnr.satellite.model.dto.modeling.NoCloudFetchDTO;
-import nnu.mnr.satellite.model.dto.resources.ScenesFetchDTOV2;
-import nnu.mnr.satellite.model.po.resources.Scene;
-import nnu.mnr.satellite.model.pojo.modeling.ModelServerProperties;
-import nnu.mnr.satellite.model.vo.common.CommonResultVO;
-import nnu.mnr.satellite.service.resources.ImageDataService;
-import nnu.mnr.satellite.service.resources.RegionDataService;
-import nnu.mnr.satellite.service.resources.SceneDataServiceV2;
-import nnu.mnr.satellite.utils.common.ProcessUtil;
-import nnu.mnr.satellite.utils.data.RedisUtil;
-import nnu.mnr.satellite.utils.geom.GeometryUtil;
-import nnu.mnr.satellite.utils.geom.TileCalculateUtil;
+import nnu.mnr.satellitemodeling.client.ResourceClient;
+import nnu.mnr.satellitemodeling.jobs.QuartzSchedulerManager;
+import nnu.mnr.satellitemodeling.model.dto.modeling.ModelServerImageDTO;
+import nnu.mnr.satellitemodeling.model.dto.modeling.ModelServerSceneDTO;
+import nnu.mnr.satellitemodeling.model.dto.modeling.NdviFetchDTO;
+import nnu.mnr.satellitemodeling.model.dto.modeling.NoCloudFetchDTO;
+import nnu.mnr.satellitemodeling.model.po.resources.Scene;
+import nnu.mnr.satellitemodeling.model.properties.ModelServerProperties;
+import nnu.mnr.satellitemodeling.model.vo.common.CommonResultVO;
+import nnu.mnr.satellitemodeling.utils.common.ProcessUtil;
+import nnu.mnr.satellitemodeling.utils.data.RedisUtil;
+import nnu.mnr.satellitemodeling.utils.geom.GeometryUtil;
+import nnu.mnr.satellitemodeling.utils.geom.TileCalculateUtil;
 import org.locationtech.jts.geom.Geometry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,13 +43,7 @@ public class ModelExampleService {
     RedisUtil redisUtil;
 
     @Autowired
-    SceneDataServiceV2 sceneDataService;
-
-    @Autowired
-    ImageDataService imageDataService;
-
-    @Autowired
-    RegionDataService regionDataService;
+    ResourceClient resourceClient;
 
     private CommonResultVO runModelServerModel(String url, JSONObject param, long expirationTime) {
         try {
@@ -78,14 +68,14 @@ public class ModelExampleService {
 
         // 构成影像景参数信息
         for (String sceneId : sceneIds) {
-            List<ModelServerImageDTO> imageDTO = imageDataService.getModelServerImageDTOBySceneId(sceneId);
+            List<ModelServerImageDTO> imageDTO = resourceClient.getModelServerImageDTO(sceneId);
             ModelServerSceneDTO modelServerSceneDTO = ModelServerSceneDTO.builder()
                     .sceneId(sceneId).images(imageDTO).build();
             modelServerSceneDTOs.add(modelServerSceneDTO);
         }
 
         // 构成网格行列号信息
-        Geometry region = regionDataService.getRegionById(regionId).getBoundary();
+        Geometry region = resourceClient.getRegionById(regionId).getBoundary();
         List<Integer[]> tileIds = TileCalculateUtil.getRowColByRegionAndResolution(region, resolution);
 
         // 请求modelServer
@@ -106,9 +96,9 @@ public class ModelExampleService {
         // 构成影像景参数信息
         for (String sceneId : sceneIds) {
             Geometry geomPoint = GeometryUtil.parse4326Point(point);
-            Scene scene = sceneDataService.getSceneById(sceneId);
+            Scene scene = resourceClient.getSceneById(sceneId);
             if (scene.getBbox().contains(geomPoint)) {
-                List<ModelServerImageDTO> imageDTO = imageDataService.getModelServerImageDTOBySceneId(sceneId);
+                List<ModelServerImageDTO> imageDTO = resourceClient.getModelServerImageDTO(sceneId);
                 ModelServerSceneDTO modelServerSceneDTO = ModelServerSceneDTO.builder()
                         .sceneId(sceneId).images(imageDTO).build();
                 modelServerSceneDTOs.add(modelServerSceneDTO);

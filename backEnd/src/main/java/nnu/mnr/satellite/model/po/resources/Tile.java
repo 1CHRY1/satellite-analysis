@@ -27,7 +27,7 @@ public class Tile {
     private String tileId;
     private String tileLevel;
     private String imageId;
-    private String cloud;
+    private Integer cloud;
     private String band;
     private Integer columnId;
     private Integer rowId;
