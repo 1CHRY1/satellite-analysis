@@ -16,7 +16,7 @@ public class TileDesVO {
     private String tileLevel;
     private String sceneId;
     private String imageId;
-    private String cloud;
+    private Integer cloud;
     private Integer columnId;
     private Integer rowId;
 

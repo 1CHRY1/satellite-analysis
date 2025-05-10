@@ -1,29 +1,20 @@
-package nnu.mnr.satellite.service.resources;
+package nnu.mnr.satelliteresource.service;
 
-import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import nnu.mnr.satellite.model.dto.resources.ScenesFetchDTO;
-import nnu.mnr.satellite.model.dto.resources.ScenesFetchDTOV2;
-import nnu.mnr.satellite.model.po.resources.Region;
-import nnu.mnr.satellite.model.po.resources.Scene;
-import nnu.mnr.satellite.model.vo.common.GeoJsonVO;
-import nnu.mnr.satellite.model.vo.resources.RegionInfoVO;
-import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
-import nnu.mnr.satellite.repository.resources.ISceneRepo;
-import nnu.mnr.satellite.utils.data.MinioUtil;
-import nnu.mnr.satellite.utils.geom.GeometryUtil;
+import nnu.mnr.satelliteresource.model.dto.resources.ScenesFetchDTOV2;
+import nnu.mnr.satelliteresource.model.po.Region;
+import nnu.mnr.satelliteresource.model.po.Scene;
+import nnu.mnr.satelliteresource.model.vo.resources.SceneDesVO;
+import nnu.mnr.satelliteresource.repository.ISceneRepo;
+import nnu.mnr.satelliteresource.utils.geom.GeometryUtil;
 import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.PrecisionModel;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
-import org.opengis.referencing.FactoryException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 

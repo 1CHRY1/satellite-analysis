@@ -2,10 +2,12 @@ package nnu.mnr.satellite.service.resources;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import nnu.mnr.satellite.model.dto.modeling.ModelServerImageDTO;
 import nnu.mnr.satellite.model.vo.resources.ImageInfoVO;
 import nnu.mnr.satellite.model.po.resources.Image;
 import nnu.mnr.satellite.repository.resources.IImageRepo;
 import nnu.mnr.satellite.utils.data.MinioUtil;
+import org.json.simple.JSONObject;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,12 +38,18 @@ public class ImageDataService {
         this.imageRepo = imageRepo;
     }
 
-    @DS("mysql_satellite")
     public List<ImageInfoVO> getImagesBySceneId(String sceneId) {
         QueryWrapper<Image> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("image_id", "band", "cloud").eq("scene_id", sceneId);
         List<Image> images = imageRepo.selectList(queryWrapper);
         return imageModelMapper.map(images, new TypeToken<List<ImageInfoVO>>() {}.getType());
+    }
+
+    public List<ModelServerImageDTO> getModelServerImageDTOBySceneId(String sceneId) {
+        QueryWrapper<Image> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("scene_id", sceneId);
+        List<Image> images = imageRepo.selectList(queryWrapper);
+        return imageModelMapper.map(images, new TypeToken<List<ModelServerImageDTO>>() {}.getType());
     }
 
     public byte[] getTifByImageId(String imageId) {

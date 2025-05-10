@@ -1,6 +1,5 @@
 package nnu.mnr.satellite.controller.modeling;
 
-import nnu.mnr.satellite.model.dto.modeling.NdviDTO;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.service.modeling.ModelServerService;
 import org.springframework.beans.factory.annotation.Autowired;

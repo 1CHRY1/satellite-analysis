@@ -1,10 +1,8 @@
-package nnu.mnr.satellite.controller.resources;
+package nnu.mnr.satelliteresource.controller;
 
 import com.alibaba.fastjson2.JSONObject;
-import nnu.mnr.satellite.model.po.resources.Region;
-import nnu.mnr.satellite.model.vo.resources.RegionInfoVO;
-import nnu.mnr.satellite.service.resources.RegionDataService;
-import org.springframework.beans.factory.annotation.Autowired;
+import nnu.mnr.satelliteresource.model.vo.resources.RegionInfoVO;
+import nnu.mnr.satelliteresource.service.RegionDataService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
