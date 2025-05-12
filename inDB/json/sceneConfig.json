@@ -1,0 +1,24 @@
+{
+    "TEMP_OUTPUT_DIR": "C:\\Users\\lkshi\\AppData\\Local\\Temp\\inDB",
+    "CUR_SENSOR_NAME": "Landsat8 OLI",
+    "CUR_PRODUCT_NAME": "L2SP",
+    "CUR_RESOLUTION": "30m",
+    "CUR_PERIOD": "16d",
+    "XML_PATH": "D:\\code\\satellite-data\\data\\images\\Landsat8\\LC08_L2SP_120035_20250116_20250127_02_T1\\Metadata.xml",
+    "SCENE_PATH": [
+      {
+        "path": "D:\\code\\satellite-data\\data\\images\\Landsat8\\LC08_L2SP_120035_20250116_20250127_02_T1\\Bands\\LC08_L2SP_120035_20250116_20250127_02_T1_SR_B1.TIF",
+        "band": 1
+      },
+      {
+        "path": "D:\\code\\satellite-data\\data\\images\\Landsat8\\LC08_L2SP_120035_20250116_20250127_02_T1\\Bands\\LC08_L2SP_120035_20250116_20250127_02_T1_SR_B2.TIF",
+        "band": 2
+      }
+    ],
+    "CLOUD_PATH": "D:\\code\\satellite-data\\data\\images\\Landsat8\\LC08_L2SP_120035_20250116_20250127_02_T1\\LC08_L2SP_120035_20250116_20250127_02_T1_QA_PIXEL.TIF",
+    "TAGS": {
+      "source": "international",
+      "production": "light",
+      "category": "traditional"
+    }
+  }

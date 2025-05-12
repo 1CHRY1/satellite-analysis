@@ -27,37 +27,30 @@ import _cffi_backend
 from dataProcessing.Utils.mySqlUtils import *
 from dataProcessing.Utils.tifUtils import *
 from dataProcessing.Utils.minioUtil import *
-from dataProcessing.Utils.extractor import get_scene_info_list, set_initial_config
+from dataProcessing.Utils.extractor import main, set_initial_config
 import argparse
 import json
 import sys
 
 CUR_TILE_LEVEL                                  =       '40031*20016'
 
-def insert_to_db(scene_info_list, scene_conf, db_conf):
+def insert_to_db(scene_info, scene_conf, db_conf):
     sensor_name, product_name = scene_conf["CUR_SENSOR_NAME"], scene_conf["CUR_PRODUCT_NAME"]
-    # insert sensor/product/scene/image/tile into db in order
+    # insert sensor/product/scene/image into db in order
     if get_sensor_byName(sensor_name) is None:
         insert_sensor(sensor_name, sensor_name, None)
-    # if scene exists
-    if (len(scene_info_list) > 0):
-        resolution = scene_info_list[0].resolution
-        period = scene_info_list[0].period
-        # insert product
-        if get_product_byName(sensor_name, product_name) is None:
-            insert_product(sensor_name, product_name, None, resolution, period)
-        for scene_info in scene_info_list:
-            # insert scene
-            sceneId = insert_scene(sensor_name, product_name, scene_info.scene_name, scene_info.image_time, scene_info.tile_level_num, scene_info.tile_levels, scene_info.png_path,
-                                   scene_info.crs, scene_info.bbox, None, scene_info.bands, scene_info.band_num, db_conf["MINIO_IMAGES_BUCKET"], scene_info.cloud)
-            image_info_list = scene_info.image_info_list
-            # create a tile table for this image(tiles are stored in tile db)
-            create_tile_table(sceneId)
-            for info in image_info_list:
-                # insert image
-                image_id = insert_image(sceneId, info.tif_path, info.band, db_conf["MINIO_IMAGES_BUCKET"], info.cloud)
-                # insert tiles
-                insert_batch_tile(sceneId, image_id, CUR_TILE_LEVEL, info.tile_info_list, info.band)
+    resolution = scene_info["resolution"]
+    period = scene_info["period"]
+    # insert product
+    if get_product_byName(sensor_name, product_name) is None:
+        insert_product(sensor_name, product_name, None, resolution, period)
+    # insert scene
+    sceneId = insert_scene(sensor_name, product_name, scene_info["scene_name"], scene_info["image_time"], scene_info["tile_level_num"], scene_info["tile_levels"], scene_info["cloud_path"],
+                            scene_info["crs"], scene_info["bbox"], None, scene_info["bands"], scene_info["band_num"], db_conf["MINIO_IMAGES_BUCKET"], scene_info["cloud"], scene_info["tags"])
+    image_info_list = scene_info["image_info_list"]
+    for info in image_info_list:
+        # insert image
+        image_id = insert_image(sceneId, info["tif_path"], info["band"], db_conf["MINIO_IMAGES_BUCKET"], info["cloud"])
 
 
 # 命令行参数
@@ -97,7 +90,7 @@ if __name__ == "__main__":
     print("初始化配置完成...")
     
     start_time = datetime.now()
-    scene_info_list = get_scene_info_list(object_prefix)
-    print(f"成功将 scene_info_list 写入")
-    insert_to_db(scene_info_list, SCENE_CONFIG, COMMON_CONFIG)
+    scene_info = main(object_prefix)
+    print(f"正在将 影像信息 写入数据库")
+    insert_to_db(scene_info, SCENE_CONFIG, COMMON_CONFIG)
     print(f"共花时间{datetime.now() - start_time}")
