@@ -37,7 +37,7 @@
                 </div>
             </div>
 
-            <mapComp v-show="showMap" class="h-[100%]" :style="'image'" :proj="'mercator'">
+            <mapComp v-show="showMap" class="h-[100%]" :style="'vector'" :proj="'mercator'">
             </mapComp>
             <charts ref="chartsRef" v-show="!showMap"></charts>
         </div>

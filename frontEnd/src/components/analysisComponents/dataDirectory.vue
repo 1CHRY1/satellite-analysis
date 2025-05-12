@@ -55,7 +55,7 @@
                             {{ item.fileName }}
                         </td>
                         <td class="cursor-pointer px-4 py-2" @click="handleCellClick(item, 'updateTime')">
-                            {{ formatTime(item.updateTime, 'minutes', 0) }}
+                            {{ formatTime(item.updateTime, 'minutes', -8) }}
                         </td>
                         <td class="cursor-pointer px-4 py-2" @click="handleCellClick(item, 'size')">
                             {{ sizeConversion(item.fileSize) }}
@@ -215,7 +215,7 @@ const triggerFileSelect = () => {
     fileInput.value?.click()
 }
 
-// 上传geojson的方法
+// 上传geojson的方法,这里最好检查一下键名，比如feature什么的，进一步收紧限制，防止用户上传错误的geojson
 const uploadFile = async (event: Event) => {
     const target = event.target as HTMLInputElement;
     if (!target.files || target.files.length === 0) return;

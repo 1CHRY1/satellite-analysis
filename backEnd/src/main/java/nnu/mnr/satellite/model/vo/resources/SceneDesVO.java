@@ -1,5 +1,6 @@
 package nnu.mnr.satellite.model.vo.resources;
 
+import com.alibaba.fastjson2.JSONObject;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -24,6 +25,6 @@ public class SceneDesVO {
     private String description;
     private Integer bandNum;
     private HashSet<String> bands;
-    private String cloud;
-
+    private Integer cloud;
+    private JSONObject tags;
 }
