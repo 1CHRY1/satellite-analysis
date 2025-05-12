@@ -17,8 +17,8 @@ import nnu.mnr.satellite.model.vo.modeling.TilerResultVO;
 @Data
 public class TilesFetchResultVO extends TilerResultVO {
 
-    String sceneId;
-    String tileId;
-    String cloud;
+    private String sceneId;
+    private String tileId;
+    private Integer cloud;
 
 }

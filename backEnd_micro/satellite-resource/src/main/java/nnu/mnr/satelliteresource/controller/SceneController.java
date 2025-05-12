@@ -42,14 +42,4 @@ public class SceneController {
         return ResponseEntity.ok(sceneDataService.getScenesByIdsTimeAndBBox(scenesFetchDTO));
     }
 
-    @GetMapping("/png/sceneId/{sceneId}")
-    public ResponseEntity<byte[]> getScenePngById(@PathVariable String sceneId) {
-        byte[] imageData = sceneDataService.getPngById(sceneId);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.valueOf("image/png"));
-        return ResponseEntity.ok()
-                .headers(headers)
-                .body(imageData);
-    }
-
 }
