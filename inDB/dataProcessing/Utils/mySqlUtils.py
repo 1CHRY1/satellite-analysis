@@ -28,17 +28,6 @@ def generate_custom_id(prefix, digit):
     custom_id = prefix + random_part
     return custom_id
 
-    # 生成各部分
-    timestamp = str(int(time.time()))[-4:]  # 取时间戳后4位
-    machine_id = str(abs(hash(socket.gethostname())) % 100).zfill(2)  # 取 hostname 哈希后两位
-    process_id = str(os.getpid() % 100).zfill(2)  # 取进程 ID 后两位
-    counter = str(random.randint(10, 99))  # 取随机两位数
-    # 拼接各部分
-    raw_id = timestamp + machine_id + process_id + counter
-    # 根据剩余长度进行截取或填充
-    custom_id = prefix + raw_id[:remaining_length]
-    return custom_id
-
 
 def connect_mysql(host, port, database, user, password):
     global cursor, connection
