@@ -2,13 +2,13 @@ package nnu.mnr.satellite.service.resources;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import nnu.mnr.satellite.model.vo.resources.GridBoundaryVO;
 import nnu.mnr.satellite.model.po.resources.Region;
-import nnu.mnr.satellite.model.vo.common.GeoJsonVO;
 import nnu.mnr.satellite.model.vo.resources.RegionInfoVO;
-import nnu.mnr.satellite.model.vo.resources.SensorInfoVO;
+import nnu.mnr.satellite.model.vo.resources.RegionWindowVO;
 import nnu.mnr.satellite.repository.resources.IRegionRepo;
-import nnu.mnr.satellite.repository.resources.ISceneRepo;
 import nnu.mnr.satellite.utils.geom.GeometryUtil;
+import nnu.mnr.satellite.utils.geom.TileCalculateUtil;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,6 +63,17 @@ public class RegionDataService {
         QueryWrapper<Region> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("adcode", regionId);
         return regionRepo.selectOne(queryWrapper);
+    }
+
+    public RegionWindowVO getRegionWindowById(Integer regionId) {
+        Region region = getRegionById(regionId);
+        return RegionWindowVO.builder()
+                .center(region.getCenter()).bounds(GeometryUtil.getGeometryBounds(region.getBoundary())).build();
+    }
+
+    public List<GridBoundaryVO> getGridsByRegionAndResolution(Integer regionId, Integer resolution) throws IOException {
+        Region region = getRegionById(regionId);
+        return TileCalculateUtil.getStrictlyCoveredRowColByRegionAndResolution(region.getBoundary(), resolution);
     }
 
 }

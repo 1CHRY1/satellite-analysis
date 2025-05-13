@@ -15,6 +15,7 @@ import org.locationtech.jts.geom.impl.CoordinateArraySequence;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -201,5 +202,22 @@ public class GeometryUtil {
         }
         geoJsonVO.setFeatures(features);
         return geoJsonVO;
+    }
+
+    public static List<Double> getGeometryBounds(Geometry geometry) {
+        if (geometry == null || geometry.isEmpty()) {
+            throw new IllegalArgumentException("Geometry cannot be null or empty");
+        }
+
+        // 获取几何的包络线（Envelope）
+        Envelope envelope = geometry.getEnvelopeInternal();
+
+        // 返回左下角和右上角坐标
+        return Arrays.asList(
+                envelope.getMinX(), // 左下角X
+                envelope.getMinY(), // 左下角Y
+                envelope.getMaxX(), // 右上角X
+                envelope.getMaxY()  // 右上角Y
+        );
     }
 }

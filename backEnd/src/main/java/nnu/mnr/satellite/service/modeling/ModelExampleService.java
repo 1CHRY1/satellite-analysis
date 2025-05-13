@@ -81,7 +81,8 @@ public class ModelExampleService {
             Scene scene = sceneDataService.getSceneById(sceneId);
             List<ModelServerImageDTO> imageDTO = imageDataService.getModelServerImageDTOBySceneId(sceneId);
             ModelServerSceneDTO modelServerSceneDTO = ModelServerSceneDTO.builder()
-                    .sceneId(sceneId).images(imageDTO).cloudPath(scene.getCloudPath()).build();
+                    .sceneId(sceneId).images(imageDTO).sceneTime(scene.getSceneTime())
+                    .cloudPath(scene.getCloudPath()).build();
             modelServerSceneDTOs.add(modelServerSceneDTO);
         }
 
@@ -111,7 +112,8 @@ public class ModelExampleService {
             if (scene.getBbox().contains(geomPoint)) {
                 List<ModelServerImageDTO> imageDTO = imageDataService.getModelServerImageDTOBySceneId(sceneId);
                 ModelServerSceneDTO modelServerSceneDTO = ModelServerSceneDTO.builder()
-                        .sceneId(sceneId).images(imageDTO).cloudPath(scene.getCloudPath()).build();
+                        .sceneId(sceneId).images(imageDTO).sceneTime(scene.getSceneTime())
+                        .cloudPath(scene.getCloudPath()).build();
                 modelServerSceneDTOs.add(modelServerSceneDTO);
             }
         }
