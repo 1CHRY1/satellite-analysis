@@ -44,15 +44,14 @@ public class SceneDataService {
         this.sceneRepo = sceneRepo;
     }
 
+    public SceneDesVO getSceneById(String sceneId) {
+        return sceneRepo.getScenesDesById(sceneId);
+    }
+
     public List<Scene> getScenesByProductId(String productId) {
         QueryWrapper<Scene> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("product_id", productId);
         return sceneRepo.selectList(queryWrapper);
-    }
-
-    public SceneDesVO getSceneById(String sceneId) throws IOException, FactoryException {
-        Scene scene = sceneRepo.getSceneById(sceneId);
-        return sceneModelMapper.map(scene, SceneDesVO.class);
     }
 
     public GeoJsonVO getScenesByIdsTimeAndBBox(ScenesFetchDTO scenesFetchDTO) throws IOException {

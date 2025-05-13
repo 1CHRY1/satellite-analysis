@@ -1,8 +1,8 @@
-package nnu.mnr.satellitemodeling.config.web;
+package nnu.mnr.satellitewebsocket.config.web;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import nnu.mnr.satellitemodeling.client.UserClient;
+import nnu.mnr.satellitewebsocket.client.UserClient;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;

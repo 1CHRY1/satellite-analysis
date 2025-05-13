@@ -4,10 +4,13 @@ import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nnu.mnr.satelliteresource.utils.typeHandler.FastJson2TypeHandler;
 import nnu.mnr.satelliteresource.utils.typeHandler.GeometryTypeHandler;
 import nnu.mnr.satelliteresource.utils.typeHandler.SetTypeHandler;
 import org.locationtech.jts.geom.Geometry;
@@ -43,6 +46,8 @@ public class Scene {
     private String coordinateSystem;
 
     @TableField(value="bounding_box", typeHandler = GeometryTypeHandler.class)
+    @JsonSerialize
+    @JsonDeserialize
     private Geometry bbox;
     private String description;
 
@@ -55,5 +60,6 @@ public class Scene {
     private String cloudPath;
     private String bucket;
 
+    @TableField(typeHandler = FastJson2TypeHandler.class)
     private JSONObject tags;
 }
