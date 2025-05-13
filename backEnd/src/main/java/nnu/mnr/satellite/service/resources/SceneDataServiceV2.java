@@ -58,13 +58,13 @@ public class SceneDataServiceV2 {
 //        List<Scene> scenes = getScenesByTimeRegionAndCloud(scenesFetchDTO);
 //        return sceneModelMapper.map(scenes, new TypeToken<List<SceneDesVO>>() {}.getType());
 //    }
-    public List<SceneDesVO> getScenesDesByTimeRegionAndTag(ScenesFetchDTOV2 scenesFetchDTO) {
-        String startTime = scenesFetchDTO.getStartTime(); String endTime = scenesFetchDTO.getEndTime();
-        Integer regionId = scenesFetchDTO.getRegionId(); Integer cloud = scenesFetchDTO.getCloud();
-        Region region = regionDataService.getRegionById(regionId);
-        String wkt = region.getBoundary().toText();
-        return sceneRepo.getScenesDesByTimeCloudAndGeometry(startTime, endTime, cloud, wkt);
-    }
+public List<SceneDesVO> getScenesDesByTimeRegionAndTag(ScenesFetchDTOV2 scenesFetchDTO) {
+    String startTime = scenesFetchDTO.getStartTime(); String endTime = scenesFetchDTO.getEndTime();
+    Integer regionId = scenesFetchDTO.getRegionId(); Integer cloud = scenesFetchDTO.getCloud();
+    Region region = regionDataService.getRegionById(regionId);
+    String wkt = region.getBoundary().toText();
+    return sceneRepo.getScenesDesByTimeCloudAndGeometry(startTime, endTime, cloud, wkt);
+}
 
     public List<Scene> getScenesByTimeRegionAndCloud(ScenesFetchDTOV2 scenesFetchDTO) {
         String startTime = scenesFetchDTO.getStartTime(); String endTime = scenesFetchDTO.getEndTime();

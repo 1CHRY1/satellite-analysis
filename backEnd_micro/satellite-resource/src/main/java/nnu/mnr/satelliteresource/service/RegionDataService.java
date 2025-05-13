@@ -3,9 +3,12 @@ package nnu.mnr.satelliteresource.service;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satelliteresource.model.po.Region;
+import nnu.mnr.satelliteresource.model.vo.resources.GridBoundaryVO;
 import nnu.mnr.satelliteresource.model.vo.resources.RegionInfoVO;
+import nnu.mnr.satelliteresource.model.vo.resources.RegionWindowVO;
 import nnu.mnr.satelliteresource.repository.IRegionRepo;
 import nnu.mnr.satelliteresource.utils.geom.GeometryUtil;
+import nnu.mnr.satelliteresource.utils.geom.TileCalculateUtil;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +63,17 @@ public class RegionDataService {
         QueryWrapper<Region> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("adcode", regionId);
         return regionRepo.selectOne(queryWrapper);
+    }
+
+    public RegionWindowVO getRegionWindowById(Integer regionId) {
+        Region region = getRegionById(regionId);
+        return RegionWindowVO.builder()
+                .center(region.getCenter()).bounds(GeometryUtil.getGeometryBounds(region.getBoundary())).build();
+    }
+
+    public List<GridBoundaryVO> getGridsByRegionAndResolution(Integer regionId, Integer resolution) throws IOException {
+        Region region = getRegionById(regionId);
+        return TileCalculateUtil.getStrictlyCoveredRowColByRegionAndResolution(region.getBoundary(), resolution);
     }
 
 }

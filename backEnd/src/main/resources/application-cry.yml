@@ -16,6 +16,8 @@ spring:
           username: root
           password: root
           driver-class-name: com.mysql.cj.jdbc.Driver
+          hikari:
+            connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
         mysql_tile:
           url: jdbc:mysql://223.2.34.7:3306/tile
           username: root
