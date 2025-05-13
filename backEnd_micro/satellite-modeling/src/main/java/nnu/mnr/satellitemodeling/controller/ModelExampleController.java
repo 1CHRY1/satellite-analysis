@@ -1,16 +1,14 @@
-package nnu.mnr.satellite.controller.modeling;
+package nnu.mnr.satellitemodeling.controller;
 
-import nnu.mnr.satellite.model.dto.modeling.NdviFetchDTO;
-import nnu.mnr.satellite.model.dto.modeling.NoCloudFetchDTO;
-import nnu.mnr.satellite.model.vo.common.CommonResultVO;
-import nnu.mnr.satellite.service.modeling.ModelExampleService;
+import nnu.mnr.satellitemodeling.model.dto.modeling.NdviFetchDTO;
+import nnu.mnr.satellitemodeling.model.dto.modeling.NoCloudFetchDTO;
+import nnu.mnr.satellitemodeling.model.vo.common.CommonResultVO;
+import nnu.mnr.satellitemodeling.service.modeling.ModelExampleService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.io.IOException;
 
 /**
  * Created with IntelliJ IDEA.

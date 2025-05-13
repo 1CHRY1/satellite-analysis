@@ -31,7 +31,6 @@ public class GeometryTypeHandler implements TypeHandler<Geometry> {
 
     private final WKBReader wkbReader = new WKBReader();
     private final WKBWriter wkbWriter = new WKBWriter();
-    private static final ThreadLocal<WKBReader> wkbReaderThreadLocal = ThreadLocal.withInitial(WKBReader::new);
 
     @Override
     public void setParameter(PreparedStatement ps, int i, Geometry geom, JdbcType jdbcType) throws SQLException {
@@ -44,46 +43,17 @@ public class GeometryTypeHandler implements TypeHandler<Geometry> {
 
     }
 
-//    @Override
-//    public Geometry getResult(ResultSet rs, String columnName) throws SQLException {
-//        try {
-//            byte[] mysqlWkb = rs.getBytes(columnName);
-//            if (mysqlWkb != null && mysqlWkb.length >= 4) {
-//                int srid = ((mysqlWkb[3] & 0xFF) << 24) | ((mysqlWkb[2] & 0xFF) << 16) |
-//                        ((mysqlWkb[1] & 0xFF) << 8) | (mysqlWkb[0] & 0xFF);
-//                byte[] wkb = Arrays.copyOfRange(mysqlWkb, 4, mysqlWkb.length);
-//                Geometry geom = wkbReader.read(wkb);
-//                geom.setSRID(srid);
-//                return geom;
-//            }
-//            return null;
-//        } catch (Exception e) {
-//            throw new SQLException("Error converting MySQL GEOMETRY to Geometry", e);
-//        }
-//    }
     @Override
     public Geometry getResult(ResultSet rs, String columnName) throws SQLException {
         try {
             byte[] mysqlWkb = rs.getBytes(columnName);
-            if (mysqlWkb != null && mysqlWkb.length > 4) {
+            if (mysqlWkb != null && mysqlWkb.length >= 4) {
                 int srid = ((mysqlWkb[3] & 0xFF) << 24) | ((mysqlWkb[2] & 0xFF) << 16) |
                         ((mysqlWkb[1] & 0xFF) << 8) | (mysqlWkb[0] & 0xFF);
                 byte[] wkb = Arrays.copyOfRange(mysqlWkb, 4, mysqlWkb.length);
-                try {
-                    WKBReader reader = wkbReaderThreadLocal.get();
-                    Geometry geom = reader.read(wkb);
-                    geom.setSRID(srid);
-                    return geom;
-                } catch (ParseException e) {
-                    if (e.getMessage().contains("Unknown WKB type 0")) {
-                        System.err.println("Unknown WKB type 0 for scene_id: " + rs.getString("scene_id"));
-                        return null;
-                    } else if (e.getMessage().contains("numRings value is too large")) {
-                        System.err.println("numRings value is too large for scene_id: " + rs.getString("scene_id"));
-                        return null;
-                    }
-                    throw e;
-                }
+                Geometry geom = wkbReader.read(wkb);
+                geom.setSRID(srid);
+                return geom;
             }
             return null;
         } catch (Exception e) {
