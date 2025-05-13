@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nnu.mnr.satellite.utils.typeHandler.FastJson2TypeHandler;
 import nnu.mnr.satellite.utils.typeHandler.GeometryTypeHandler;
 import nnu.mnr.satellite.utils.typeHandler.SetTypeHandler;
 import org.locationtech.jts.geom.Geometry;
@@ -55,5 +56,6 @@ public class Scene {
     private String cloudPath;
     private String bucket;
 
+    @TableField(typeHandler = FastJson2TypeHandler.class)
     private JSONObject tags;
 }
