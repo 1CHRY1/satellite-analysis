@@ -118,6 +118,10 @@
             <artifactId>annotations</artifactId>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>org.n52.jackson</groupId>
+            <artifactId>jackson-datatype-jts</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.jcraft</groupId>
@@ -144,6 +148,7 @@
             <groupId>com.github.docker-java</groupId>
             <artifactId>docker-java-transport-okhttp</artifactId>
         </dependency>
+
     </dependencies>
 
     <build>

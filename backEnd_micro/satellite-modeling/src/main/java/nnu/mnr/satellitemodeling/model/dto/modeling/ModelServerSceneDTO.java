@@ -18,6 +18,7 @@ import java.util.List;
 public class ModelServerSceneDTO {
 
     private String sceneId;
+    private String cloudPath;
     private List<ModelServerImageDTO> images;
 
 }

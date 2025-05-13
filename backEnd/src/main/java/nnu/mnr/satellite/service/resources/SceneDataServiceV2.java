@@ -51,12 +51,19 @@ public class SceneDataServiceV2 {
     }
 
     public Scene getSceneById(String sceneId) {
-        return sceneRepo.getSceneById(sceneId);
+        return sceneRepo.selectById(sceneId);
     }
 
+//    public List<SceneDesVO> getScenesDesByTimeRegionAndTag(ScenesFetchDTOV2 scenesFetchDTO) {
+//        List<Scene> scenes = getScenesByTimeRegionAndCloud(scenesFetchDTO);
+//        return sceneModelMapper.map(scenes, new TypeToken<List<SceneDesVO>>() {}.getType());
+//    }
     public List<SceneDesVO> getScenesDesByTimeRegionAndTag(ScenesFetchDTOV2 scenesFetchDTO) {
-        List<Scene> scenes = getScenesByTimeRegionAndCloud(scenesFetchDTO);
-        return sceneModelMapper.map(scenes, new TypeToken<List<SceneDesVO>>() {}.getType());
+        String startTime = scenesFetchDTO.getStartTime(); String endTime = scenesFetchDTO.getEndTime();
+        Integer regionId = scenesFetchDTO.getRegionId(); Integer cloud = scenesFetchDTO.getCloud();
+        Region region = regionDataService.getRegionById(regionId);
+        String wkt = region.getBoundary().toText();
+        return sceneRepo.getScenesDesByTimeCloudAndGeometry(startTime, endTime, cloud, wkt);
     }
 
     public List<Scene> getScenesByTimeRegionAndCloud(ScenesFetchDTOV2 scenesFetchDTO) {
@@ -64,15 +71,8 @@ public class SceneDataServiceV2 {
         Integer regionId = scenesFetchDTO.getRegionId(); Integer cloud = scenesFetchDTO.getCloud();
         Region region = regionDataService.getRegionById(regionId);
         Geometry regionBoundary = region.getBoundary();
-        QueryWrapper<Scene> queryWrapper = getQuaryByTimeCloudAndGeometry(startTime, endTime, cloud, regionBoundary);
-        return sceneRepo.selectList(queryWrapper);
+        return sceneRepo.selectList(getQuaryByTimeCloudAndGeometry(startTime, endTime, cloud, regionBoundary));
     }
-
-    public List<Scene> getScenesByTimeGeometryAndCloud(String startTime, String endTime, Integer cloud, Geometry geometry) {
-        QueryWrapper<Scene> queryWrapper = getQuaryByTimeCloudAndGeometry(startTime, endTime, cloud, geometry);
-        return sceneRepo.selectList(queryWrapper);
-    }
-
     // Get Scene Quary By Time And Geometry
     private QueryWrapper<Scene> getQuaryByTimeCloudAndGeometry(String startTime, String endTime, Integer cloud, Geometry geometry) {
         String wkt = geometry.toText();
@@ -93,19 +93,6 @@ public class SceneDataServiceV2 {
         queryWrapper.eq("scene_id", sceneId);
         Scene scene = sceneRepo.selectOne(queryWrapper);
         return GeometryUtil.geometry2Geojson(scene.getBbox());
-    }
-
-    // Scene Tag Selector
-    public List<Scene> getScenesByTag(List<Scene> scenes, JSONObject tags) {
-        return scenes.stream()
-                .filter(scene -> {
-                    JSONObject sceneTags = scene.getTags();
-//                    return tags.entrySet().stream().allMatch(tag ->
-//                            sceneTags.containsKey(tag.getKey()) && sceneTags.get(tag.getKey()).equals(tag.getValue())
-//                    );
-                    return sceneTags == tags;
-                })
-                .collect(Collectors.toList());
     }
 
 }

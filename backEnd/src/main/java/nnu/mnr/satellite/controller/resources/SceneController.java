@@ -33,7 +33,7 @@ public class SceneController {
     }
 
     @GetMapping("/description/sceneId/{sceneId}")
-    public ResponseEntity<SceneDesVO> getDescriptionById(@PathVariable String sceneId) throws IOException, FactoryException {
+    public ResponseEntity<SceneDesVO> getSceneDescriptionById(@PathVariable("sceneId") String sceneId) {
         return ResponseEntity.ok(sceneDataService.getSceneById(sceneId));
     }
 

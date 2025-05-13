@@ -14,10 +14,9 @@ import org.springframework.web.bind.annotation.RequestHeader;
  * @Description:
  */
 
-@FeignClient(name = "satellite-modeling", contextId = "modelingClient", configuration = FeignConfig.class)
-public interface ModelingClient {
+@FeignClient(name = "satellite-user", contextId = "userClient", configuration = FeignConfig.class)
+public interface UserClient {
 
-    @GetMapping("/api/v1/modeling/internal/validation")
-    Boolean validateProject(@RequestHeader("X-User-Id") String userId, @RequestHeader("X-Project-Id") String projectId);
-
+    @GetMapping("/api/v1/user/internal/validation")
+    Boolean validateUser(@RequestHeader("X-User-Id") String userId);
 }
