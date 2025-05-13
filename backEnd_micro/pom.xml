@@ -50,6 +50,7 @@
         <modelMapper.version>3.1.1</modelMapper.version>
         <fastjson.version>2.0.43</fastjson.version>
         <apache-pool2.version>2.12.0</apache-pool2.version>
+        <jackson-datatype.version>1.2.10</jackson-datatype.version>
 
         <alibaba.cloud>2023.0.1.0</alibaba.cloud>
 
@@ -183,6 +184,11 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-pool2</artifactId>
                 <version>${apache-pool2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.n52.jackson</groupId>
+                <artifactId>jackson-datatype-jts</artifactId>
+                <version>${jackson-datatype.version}</version>
             </dependency>
 
             <!-- web socket -->

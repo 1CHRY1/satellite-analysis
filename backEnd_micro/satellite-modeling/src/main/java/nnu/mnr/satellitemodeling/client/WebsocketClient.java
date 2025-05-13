@@ -1,5 +1,6 @@
 package nnu.mnr.satellitemodeling.client;
 
+import feign.Headers;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
