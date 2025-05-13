@@ -2,15 +2,16 @@ import math
 import os.path
 import uuid
 from types import SimpleNamespace
+import sys
 
 from lxml import etree
 from osgeo import gdal, osr
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from dataProcessing.Utils.filenameUtils import get_tif_files
 from dataProcessing.Utils.metaDataUtils import get_xml_content, get_bbox_from_xml_node
 from dataProcessing.Utils.minioUtil import uploadLocalFile, upload_file_by_mc
-from dataProcessing.Utils.tifUtils import convert_tif2cog, create_preview_image, convert_bbox_to_4326
+from dataProcessing.Utils.tifUtils import convert_tif2cog, convert_bbox_to_4326
 
 EARTH_RADIUS                                    =       6371008.8
 EARTH_CIRCUMFERENCE                             =       2 * math.pi * EARTH_RADIUS
@@ -75,10 +76,13 @@ def get_basic_info_from_ds(dataset):
     # 获取图像的空间参考和仿射变换信息
     basic_info["geotransform"] = dataset.GetGeoTransform()
     basic_info["projection"] = dataset.GetProjection()
+    if basic_info["projection"] is None or basic_info["projection"] == "":
+        print("缺失投影信息")
     spatial_ref = osr.SpatialReference()
     spatial_ref.ImportFromWkt(basic_info["projection"])
     basic_info["crs"] = spatial_ref.GetAttrValue("AUTHORITY", 1)  # 获取 EPSG 代码
     if basic_info["crs"] is None:
+        print("缺失EPSG CODE，已恢复默认4326")
         basic_info["crs"] = 4326
     basic_info["bbox"] = convert_bbox_to_4326(dataset)
     if isinstance(SCENE_CONFIG["SCENE_PATH"], list):
@@ -112,29 +116,36 @@ def get_basic_info_from_xml():
     try:
         xml_content = get_xml_content(xml_path)
         root = etree.XML(xml_content, parser=etree.XMLParser(recover=True))
-        node = root.find('ProductMetaData')
+        # node = root.find('ProductMetaData')
+        imageMetaDataNode = root.find('ImageMetaData')
+        productInfoNode = root.find('ProductInfo')
+
     except Exception as e:
         print(f"Error processing the xml: {e}")
         return basic_info
-    if node is None:
+    if imageMetaDataNode is None or productInfoNode is None:
         print(f"Error processing the xml")
         return basic_info
 
     # 安全地获取各个标签，标签缺失则保持默认值
-    cloud_node = node.find('CloudPercent')
-    if cloud_node is not None and cloud_node.text:
-        basic_info["cloud"] = cloud_node.text
-    time_node = node.find('EndTime')
-    if time_node is not None and time_node.text:
-        basic_info["image_time"] = time_node.text
+    cloud_nodes = imageMetaDataNode.xpath('.//ImageQuality/CloudCoverPercent')
+    if cloud_nodes is not None and cloud_nodes[0] is not None and cloud_nodes[0].text:
+        basic_info["cloud"] = cloud_nodes[0].text
+    time_nodes = imageMetaDataNode.xpath('.//GeneralInfo/EndTime')
+    if time_nodes is not None and time_nodes[0] is not None and time_nodes[0].text:
+        basic_info["image_time"] = parse_time(time_nodes[0])
     try:
-        basic_info["bbox"] = get_bbox_from_xml_node(node)
+        productMetaDataNode = productInfoNode.find('ProductMetaData')
+        if productMetaDataNode is not None:
+            basic_info["bbox"] = get_bbox_from_xml_node(productMetaDataNode)
     except Exception:
         pass  # 保持默认值
-    bands_node = node.find('Bands')
-    if bands_node is not None and bands_node.text:
-        basic_info["bands"] = bands_node.text.split(',')
-        basic_info["band_num"] = len(basic_info["bands"])
+    
+    # 暂时不管band
+    # bands_node = node.find('Bands')
+    # if bands_node is not None and bands_node.text:
+    #     basic_info["bands"] = bands_node.text.split(',')
+    #     basic_info["band_num"] = len(basic_info["bands"])
 
     return basic_info
 
@@ -144,6 +155,7 @@ def parse_time(time_node):
         return None
     
     time_str = time_node.text.strip()
+    BEIJING_TZ = timezone(timedelta(hours=8))
     
     # List of possible time formats to try
     time_formats = [
@@ -159,9 +171,9 @@ def parse_time(time_node):
             # Parse the time, converting to local time if a timezone is present
             parsed_time = datetime.strptime(time_str, fmt)
             
-            # If timezone is naive, assume UTC
+            # If timezone is naive, assume BEIJING_TZ
             if parsed_time.tzinfo is None:
-                parsed_time = parsed_time.replace(tzinfo=timezone.utc)
+                parsed_time = parsed_time.replace(tzinfo=BEIJING_TZ)
             
             # Convert to local time and remove timezone info
             local_time = parsed_time.astimezone().replace(tzinfo=None)
@@ -186,6 +198,9 @@ def get_scene_basic_info(info_from_ds, info_from_xml):
     # bbox XML优先, bands/band_num DS优先
     if info_from_xml["bbox"] is not None:
         basic_info["bbox"] = info_from_xml["bbox"]
+    if basic_info["bbox"] is None:
+        print("空间范围 Bbox 缺失，程序自动退出")
+        sys.exit(1)
     if info_from_ds["bands"] is None:
         basic_info["bands"] = info_from_xml["bands"]
     if info_from_ds["band_num"] is None:
