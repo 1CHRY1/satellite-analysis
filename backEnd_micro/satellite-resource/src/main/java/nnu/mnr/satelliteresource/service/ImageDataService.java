@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created with IntelliJ IDEA.
@@ -54,7 +55,13 @@ public class ImageDataService {
         QueryWrapper<Image> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("scene_id", sceneId);
         List<Image> images = imageRepo.selectList(queryWrapper);
-        return imageModelMapper.map(images, new TypeToken<List<ModelServerImageDTO>>() {}.getType());
+//        return imageModelMapper.map(images, new TypeToken<List<ModelServerImageDTO>>() {}.getType());
+        return images.stream()
+                .map(image -> ModelServerImageDTO.builder()
+                        .tifPath(image.getTifPath())
+                        .band(image.getBand())
+                        .build())
+                .collect(Collectors.toList());
     }
 
 }
