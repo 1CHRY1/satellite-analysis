@@ -61,19 +61,19 @@ args = parser.parse_args()
 
 
 if __name__ == "__main__":
-    COMMON_CONFIG = {}
+    DB_CONFIG = {}
     SCENE_CONFIG = {}
     
-    # 加载公共配置, minio 之类的
+    # 加载数据库配置, minio 之类的
     json_db_config = json.load(open(args.db_config, 'r',encoding="UTF-8"))
     for key, value in json_db_config.items():
-        COMMON_CONFIG[key] = value
+        DB_CONFIG[key] = value
     
     # 加载场景配置, 传感器, 产品, 分辨率, 周期
     json_scene_config = json.load(open(args.scene_config, 'r',encoding="UTF-8"))
     for key, value in json_scene_config.items():
         SCENE_CONFIG[key] = value
-    
+
     # 上传路径前缀    
     object_prefix = f'{SCENE_CONFIG["CUR_SENSOR_NAME"]}/{SCENE_CONFIG["CUR_PRODUCT_NAME"]}'
     
@@ -84,13 +84,27 @@ if __name__ == "__main__":
     print("设定周期：", SCENE_CONFIG['CUR_PERIOD'])
 
     print("初始化配置...")
-    set_initial_config(SCENE_CONFIG, COMMON_CONFIG)
-    set_initial_mysql_config(COMMON_CONFIG)
-    set_initial_minio_config(COMMON_CONFIG)
-    print("初始化配置完成...")
-    
+    set_initial_config(SCENE_CONFIG, DB_CONFIG)
+    set_initial_mysql_config(DB_CONFIG)
+    set_initial_minio_config(DB_CONFIG)
+    print("初始化配置完成，正在验证配置")
+
+    connection, cursor = connect_mysql(DB_CONFIG["MYSQL_HOST"], DB_CONFIG["MYSQL_RESOURCE_PORT"],
+                                       DB_CONFIG["MYSQL_RESOURCE_DB"], DB_CONFIG["MYSQL_USER"],
+                                       DB_CONFIG["MYSQL_PWD"])
+    if cursor is None:
+        print("数据库连接失败")
+        sys.exit(1)
+    try:
+        client = getMinioClient()
+        buckets = client.list_buckets()
+    except Exception as e:
+        print(f"MinIO连接失败：{e}")
+        sys.exit(1)
+    print("验证成功")
+
     start_time = datetime.now()
     scene_info = main(object_prefix)
     print(f"正在将 影像信息 写入数据库")
-    insert_to_db(scene_info, SCENE_CONFIG, COMMON_CONFIG)
+    insert_to_db(scene_info, SCENE_CONFIG, DB_CONFIG)
     print(f"共花时间{datetime.now() - start_time}")
