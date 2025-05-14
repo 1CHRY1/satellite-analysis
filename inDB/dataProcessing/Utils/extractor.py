@@ -128,22 +128,30 @@ def get_basic_info_from_xml():
         return basic_info
 
     # 安全地获取各个标签，标签缺失则保持默认值
+    # 获取云量信息
     cloud_nodes = imageMetaDataNode.xpath('.//ImageQuality/CloudCoverPercent')
     if cloud_nodes is not None and cloud_nodes[0] is not None and cloud_nodes[0].text:
         basic_info["cloud"] = cloud_nodes[0].text
+    
+    # 获取时间信息
     end_time_nodes = imageMetaDataNode.xpath('.//GeneralInfo/EndTime')
     start_time_nodes = imageMetaDataNode.xpath('.//GeneralInfo/StartTime')
     center_time_nodes = imageMetaDataNode.xpath('.//GeneralInfo/CenterTime')
     if end_time_nodes is not None and end_time_nodes[0] is not None and end_time_nodes[0].text:
         basic_info["image_time"] = parse_time(end_time_nodes[0])
-    if start_time_nodes is not None and start_time_nodes[0] is not None and start_time_nodes[0].text:
+    elif start_time_nodes is not None and start_time_nodes[0] is not None and start_time_nodes[0].text:
         basic_info["image_time"] = parse_time(start_time_nodes[0])
-    if center_time_nodes is not None and center_time_nodes[0] is not None and center_time_nodes[0].text:
+    elif center_time_nodes is not None and center_time_nodes[0] is not None and center_time_nodes[0].text:
         basic_info["image_time"] = parse_time(center_time_nodes[0])
     try:
-        productMetaDataNode = productInfoNode.find('ProductMetaData')
-        if productMetaDataNode is not None:
-            basic_info["bbox"] = get_bbox_from_xml_node(productMetaDataNode)
+        generalInfoNode = imageMetaDataNode.find('GeneralInfo')
+        if generalInfoNode is not None:
+            basic_info["bbox"] = get_bbox_from_xml_node(generalInfoNode)
+        if basic_info["bbox"] is None:
+            productInfoNode = imageMetaDataNode.find('ProductInfo')
+            productMetaDataNode = productInfoNode.find('ProductMetaData')
+            if productMetaDataNode is not None:
+                basic_info["bbox"] = get_bbox_from_xml_node(productMetaDataNode)
     except Exception:
         pass  # 保持默认值
     
