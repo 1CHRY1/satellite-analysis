@@ -61,6 +61,21 @@ def merge_tifs_v2():
     return api_response(data={'taskId': task_id})
 
 
+@bp.route(config.API_TIF_calc_qa, methods=['POST'])
+def calc_qa():
+    scheduler = init_scheduler()
+    data = request.json
+    task_id = scheduler.start_task('calc_qa', data)
+    return api_response(data={'taskId': task_id})
+
+@bp.route(config.API_TIF_calc_NDVI, methods=['POST'])
+def calc_NDVI():
+    scheduler = init_scheduler()
+    data = request.json
+    task_id = scheduler.start_task('calc_NDVI', data)
+    return api_response(data={'taskId': task_id})
+
+
 @bp.route(config.API_TASK_RESULT, methods=['GET'])
 def get_result():
     scheduler = init_scheduler()
