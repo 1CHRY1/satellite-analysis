@@ -142,6 +142,7 @@ export function draw_polygonMode(): void {
 
 export function draw_pointMode(): void {
     mapManager.withDraw((d) => {
+        console.log(d)
         d.deleteAll()
         d.changeMode('draw_point')
     })
@@ -167,6 +168,76 @@ export function getCurrentGeometry(): polygonGeometry {
 
 ////////////////////////////////////////////////////////
 /////// Layer Operation ////////////////////////////////
+
+// 添加一个矢量图层，用来显示选中的行政区
+export function map_addPolygonLayer(options: {
+    geoJson: GeoJSON.FeatureCollection
+    id: string
+    lineColor?: string
+    fillColor?: string
+    fillOpacity?: number
+    onClick?: (feature: GeoJSON.Feature) => void
+}) {
+    const {
+        geoJson,
+        id,
+        lineColor = '#00FFFF',
+        fillColor = '#00FFFF',
+        fillOpacity = 0.2,
+        onClick,
+    } = options
+
+    const fillId = `${id}-fill`
+    const lineId = `${id}-line`
+    const sourceId = `${id}-source`
+
+    mapManager.withMap((map) => {
+        // 👉 移除已存在的图层和数据源
+        if (map.getLayer(fillId)) map.removeLayer(fillId)
+        if (map.getLayer(lineId)) map.removeLayer(lineId)
+        if (map.getSource(sourceId)) map.removeSource(sourceId)
+
+        // 添加新的 source
+        map.addSource(sourceId, {
+            type: 'geojson',
+            data: geoJson,
+        })
+
+        // 添加填充层
+        map.addLayer({
+            id: fillId,
+            type: 'fill',
+            source: sourceId,
+            paint: {
+                'fill-color': fillColor,
+                'fill-opacity': fillOpacity,
+            },
+        })
+
+        // 添加边界线层
+        map.addLayer({
+            id: lineId,
+            type: 'line',
+            source: sourceId,
+            paint: {
+                'line-color': lineColor,
+                'line-width': 1,
+            },
+        })
+
+        // 绑定点击事件
+        // if (onClick) {
+        //     map.on('click', fillId, (e) => {
+        //         const features = map.queryRenderedFeatures(e.point, {
+        //             layers: [fillId],
+        //         })
+        //         if (features.length > 0) {
+        //             onClick(features[0])
+        //         }
+        //     })
+        // }
+    })
+}
 
 export function addRasterLayerFromUrl(url: string, layerId: string = 'raster-layer'): void {
     mapManager.withMap((m) => {
@@ -335,8 +406,8 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
             type: 'fill',
             source: srcId,
             paint: {
-                'fill-color': '#FF0000',
-                'fill-opacity': 0.01,
+                'fill-color': '#00FFFF',
+                'fill-opacity': ['coalesce', ['to-number', ['get', 'opacity']], 0.01],
             },
         })
         // Add a filterable fill layer for **grid highlighting**
@@ -352,19 +423,19 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
             filter: ['in', 'id', ...nowSelectedGrids],
         })
 
-        // Add a click event listener to the invisible fill layer
-        m.on('click', fillId, grid_fill_click_handler)
+        // // Add a click event listener to the invisible fill layer
+        // m.on('click', fillId, grid_fill_click_handler)
 
-        // Keep Watching gridStore.selectedGrids and update the highlight layer
-        const cancelWatch = watch(
-            () => gridStore.selectedGrids,
-            () => {
-                const selectedGrids = Array.from(gridStore.selectedGrids) || ['']
-                m.setFilter(highlightId, ['in', 'id', ...selectedGrids])
-            },
-        )
+        // // Keep Watching gridStore.selectedGrids and update the highlight layer
+        // const cancelWatch = watch(
+        //     () => gridStore.selectedGrids,
+        //     () => {
+        //         const selectedGrids = Array.from(gridStore.selectedGrids) || ['']
+        //         m.setFilter(highlightId, ['in', 'id', ...selectedGrids])
+        //     },
+        // )
 
-        ezStore.set('grid-layer-cancel-watch', cancelWatch)
+        // ezStore.set('grid-layer-cancel-watch', cancelWatch)
         ezStore.set('grid-layer-fill-id', fillId)
         ezStore.set('grid-layer-line-id', lineId)
         ezStore.set('grid-layer-highlight-id', highlightId)

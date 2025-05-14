@@ -1,6 +1,8 @@
 {
     "mock": false,
     "back_app": "/api",
+    "back_app2": "/api2",
     "back_websocket": "",
-    "basemap_server": "/basemap"
+    "basemap_server": "/basemap",
+    "minioIpAndPort": ""
 }

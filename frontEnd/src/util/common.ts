@@ -11,7 +11,7 @@ export const sizeConversion = (size: number) => {
 }
 
 // 时间格式化
-export const formatTime = (time: string, model: string = 'minutes', timeLag: number = 0) => {
+export const formatTime = (time: string | any, model: string = 'minutes', timeLag: number = 0) => {
     // 将时间戳解析为 Date 对象
     const utcDate = new Date(time)
 

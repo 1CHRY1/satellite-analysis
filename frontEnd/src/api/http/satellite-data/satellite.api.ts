@@ -120,6 +120,28 @@ export async function uploadImageTilesToProject(
 }
 
 /// 基于产品和行列号查询一个瓦片的信息
-export async function queryTileByXY(params: ImageTile.ImageTileQueryRequest): Promise<ImageTile.ImageTileQueryResponse> {
+export async function queryTileByXY(
+    params: ImageTile.ImageTileQueryRequest,
+): Promise<ImageTile.ImageTileQueryResponse> {
     return http.post<ImageTile.ImageTileQueryResponse>(`/data/tile/tiler/tiles`, params)
+}
+
+//----------------------------- v2版本 API -----------------------------//
+export async function getGridByRegionAndResolution(
+    region: number,
+    resolution: number,
+): Promise<any> {
+    return http.get<any>(`data/region/grids/region/${region}/resolution/${resolution}`)
+}
+
+export async function getBoundary(region: number): Promise<any> {
+    return http.get<any>(`data/region/boundary/${region}`)
+}
+
+export async function getRegionPosition(region: number): Promise<any> {
+    return http.get<any>(`data/region/window/region/${region}`)
+}
+
+export async function getSceneGrids(param: any): Promise<any> {
+    return http.post<any>(`data/grid/scene/grids`, param)
 }
