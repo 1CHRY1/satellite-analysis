@@ -8,7 +8,13 @@ import io
 import numpy as np
 from osgeo import gdal
 from collections import defaultdict
-
+from pyproj import CRS, Transformer
+# 计算云量新增包
+from rasterio.warp import transform_bounds
+from rasterio.mask import mask
+from shapely.geometry import shape
+from shapely.ops import unary_union
+from osgeo import osr
 
 
 def read_band(path):
@@ -417,3 +423,145 @@ def mband(merged_tif_list, output_path, output_name="merged.tif"):
     print(f"多波段 TIFF 影像已保存至 {output_file}")
     return output_file
 
+# 3个计算云量新增函数
+
+def get_geojson_bbox(geojson):
+
+    def extract_geometries(obj):
+        geometries = []
+        if obj["type"] == "FeatureCollection":
+            for feature in obj["features"]:
+                geometries.extend(extract_geometries(feature))
+        elif obj["type"] == "Feature":
+            geometries.append(shape(obj["geometry"]))
+        elif obj["type"] in ("Polygon", "MultiPolygon", "Point", "MultiPoint", "LineString", "MultiLineString"):
+            geometries.append(shape(obj))
+        else:
+            raise ValueError(f"Unsupported GeoJSON type: {obj['type']}")
+        return geometries
+
+    geometries = extract_geometries(geojson)
+    combined = unary_union(geometries)
+    minx, miny, maxx, maxy = combined.bounds
+    return [minx, miny, maxx, maxy]
+
+def bbox_to_geojsonFeatureGeometry(bbox):
+    minx, miny, maxx, maxy = bbox
+    return {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [minx, miny],
+                        [maxx, miny],
+                        [maxx, maxy],
+                        [minx, maxy],
+                        [minx, miny]
+                    ]
+                ]
+        }
+
+def calculate_cloud_coverage(image_path, bbox):
+    with rasterio.open(image_path) as src:
+        bbox_proj = transform_bounds(
+            'EPSG:4326',  # WGS84
+            src.crs,  # 图像的投影
+            *bbox  # 解包 bbox: minx, miny, maxx, maxy
+        )
+        out_image, out_transform = mask(src, [bbox_to_geojsonFeatureGeometry(bbox_proj)], crop=True)
+        out_meta = src.meta.copy()
+
+    # 更新元数据
+    out_meta.update({
+        "driver": "GTiff",
+        "height": out_image.shape[1],
+        "width": out_image.shape[2],
+        "transform": out_transform
+    })
+
+    cloud_mask = (out_image[0] & (1 << 3)) > 0  # 提取第3位
+
+    cloud_pixels = cloud_mask.sum()
+    total_pixels = out_image[0].size
+    cloud_coverage = cloud_pixels / total_pixels
+
+    # print(f"云量百分比：{cloud_coverage * 100}%")
+    return cloud_coverage
+
+
+def get_epsg_from_wkt(wkt_string):
+    # 使用 pyproj 的 CRS 类来解析 WKT 字符串
+    crs = CRS.from_wkt(wkt_string)
+
+    # 获取 EPSG 代码
+    epsg_code = crs.to_epsg()
+
+    return epsg_code
+
+
+def get_tif_epsg(file_path):
+    # 打开 TIFF 文件
+    dataset = gdal.Open(file_path)
+    if dataset is None:
+        print("无法打开文件")
+        return None
+
+    # 获取坐标系信息
+    projection_wkt = dataset.GetProjection()
+
+    # 解析 EPSG 代码
+    epsg_code = get_epsg_from_wkt(projection_wkt)
+
+    # 关闭数据集
+    dataset = None
+
+    return epsg_code
+
+
+def convert_bbox_to_utm(bbox, epsg_code):
+    """
+    将 WGS84 坐标系下的边界框转换为 UTM 投影坐标系。
+
+    参数:
+        bbox: 边界框列表，格式为 [min_lat, min_lon, max_lat, max_lon]
+        epsg_code: 目标 UTM 投影坐标系的 EPSG 代码
+
+    返回:
+        一个列表，包含转换后的 UTM 边界框，格式为 [min_x, min_y, max_x, max_y]
+    """
+    # 提取边界框的四个角点
+    min_lon, min_lat, max_lon, max_lat = bbox
+
+    # 创建转换器，从 WGS84 经纬度转换到 UTM 投影坐标系
+    transformer = Transformer.from_crs("EPSG:4326", f"EPSG:{epsg_code}", always_xy=True)
+
+    # 转换左下角的坐标
+    min_x, min_y = transformer.transform(min_lon, min_lat)
+
+    # 转换右上角的坐标
+    max_x, max_y = transformer.transform(max_lon, max_lat)
+
+    # 返回转换后的边界框列表
+    return [min_x, min_y, max_x, max_y]
+
+
+def get_pixel_value_at_utm(x, y, tiff_path):
+    with rasterio.open(tiff_path) as src:
+        # 将 UTM 坐标转换为像素坐标
+        row, col = src.index(x, y)
+
+        # 读取像素值
+        # 注意：如果 TIFF 是多波段的，返回的是一个数组
+        pixel_value = src.read(1, window=((row, row + 1), (col, col + 1)))[0, 0]
+        return pixel_value
+
+
+def latlon_to_utm(longitude, latitude, epsg_code):
+    # 定义 WGS84 坐标系（EPSG:4326）
+    wgs84 = "EPSG:4326"
+
+    # 创建转换器
+    transformer = Transformer.from_crs(wgs84, epsg_code, always_xy=True)
+
+    # 转换坐标
+    x, y = transformer.transform(longitude, latitude)
+    return x, y
