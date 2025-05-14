@@ -21,3 +21,10 @@ export interface Project {
     joinedUsers: string[]
     description: string
 }
+
+export interface interactiveExplore {
+    regionCode: number
+    dataRange: string[]
+    cloud: number
+    space: number
+}

@@ -6,6 +6,7 @@ export const useGridStore = defineStore('gridStore', {
         _selectedGrids: new Set(),
         _allGrids: new Set(),
         _polygon: null as polygonGeometry | null,
+        _point: [] as number[],
     }),
     getters: {
         selectedGrids: (state) => Array.from(state._selectedGrids) as Array<string>,
@@ -44,6 +45,9 @@ export const useGridStore = defineStore('gridStore', {
         },
         clearPolygon() {
             this._polygon = null
+        },
+        setPickedPoint(point: number[]) {
+            this._point = point
         },
     },
 })
