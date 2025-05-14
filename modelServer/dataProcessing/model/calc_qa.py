@@ -10,7 +10,7 @@ from dataProcessing.model.task import Task
 import dataProcessing.config as config
 
 
-MINIO_ENDPOINT = f"{config.MINIO_IP}:{config.MINIO_PORT}"
+MINIO_ENDPOINT = f"http://{config.MINIO_IP}:{config.MINIO_PORT}"
 
 
 class calc_qa(Task):
@@ -39,7 +39,7 @@ class calc_qa(Task):
             images = self.scenes[min_index]['images']
             tif_paths = list() # 记录需要融合的tif路径
             for image in images:
-                tif_paths.append(MINIO_ENDPOINT + "/" + image['bucket'] + "/" + image['path'])
+                tif_paths.append(MINIO_ENDPOINT + "/" + image['bucket'] + "/" + image['tifPath'])
             # 需要将wgs 84 转成 utm，才能正常裁剪范围
             epsg_code = get_tif_epsg(tif_paths[0])
             bbox = convert_bbox_to_utm(bbox, epsg_code)

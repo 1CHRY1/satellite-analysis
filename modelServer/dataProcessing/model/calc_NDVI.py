@@ -8,12 +8,12 @@ from osgeo import gdal
 from dataProcessing.Utils.mySqlUtils import select_tile_by_column_and_row, select_tile_by_column_and_row_v2
 from dataProcessing.Utils.osUtils import uploadLocalFile
 from dataProcessing.Utils.tifUtils import latlon_to_utm, get_pixel_value_at_utm
-from dataProcessing.Utils.tifUtils import calculate_cloud_coverage, get_tif_epsg, convert_bbox_to_utm
+from dataProcessing.Utils.tifUtils import calculate_cloud_coverage, get_tif_epsg, convert_bbox_to_utm, parse_time_in_scene
 from dataProcessing.Utils.gridUtil import GridHelper, GridCell
 from dataProcessing.model.task import Task
 import dataProcessing.config as config
 
-MINIO_ENDPOINT = f"{config.MINIO_IP}:{config.MINIO_PORT}"
+MINIO_ENDPOINT = f"http://{config.MINIO_IP}:{config.MINIO_PORT}"
 
 
 class calc_NDVI(Task):
@@ -27,21 +27,22 @@ class calc_NDVI(Task):
     def run(self):
         print("calc_NDVI run")
         # 按sceneTime排序
-        scenes = sorted(self.scenes, key=lambda scene: scene["sceneTime"])
+        scenes = sorted(self.scenes, key=parse_time_in_scene)
+        # scenes = sorted(self.scenes, key=lambda scene: scene["sceneTime"])
         NDVI_list = []
         for scene in scenes:
-            epsg_code = get_tif_epsg(MINIO_ENDPOINT + "/" + scene['images'][0]['bucket'] + "/" + scene['images'][0]['path'])
+            epsg_code = get_tif_epsg(MINIO_ENDPOINT + "/" + scene['images'][0]['bucket'] + "/" + scene['images'][0]['tifPath'])
             x, y = latlon_to_utm(self.lng, self.lat, epsg_code)
             # 以landsat8为例，波段4为红光，波段5为近红外
             band_4_path = ''
             band_5_path = ''
             for image in scene["images"]:
                 if image["band"] == "4":
-                    band_4_path = MINIO_ENDPOINT + "/" + image['bucket'] + "/" + image["path"]
+                    band_4_path = MINIO_ENDPOINT + "/" + image['bucket'] + "/" + image["tifPath"]
                     break
             for image in scene["images"]:
                 if image["band"] == "5":
-                    band_5_path = MINIO_ENDPOINT + "/" + image['bucket'] + "/" + image["path"]
+                    band_5_path = MINIO_ENDPOINT + "/" + image['bucket'] + "/" + image["tifPath"]
                     break
             Red = int(get_pixel_value_at_utm(x, y, band_4_path))
             NIR = int(get_pixel_value_at_utm(x, y, band_5_path))
@@ -50,8 +51,8 @@ class calc_NDVI(Task):
             else:
                 NDVI = (NIR - Red) / (NIR + Red)
             NDVI_list.append(NDVI)
-        print(NDVI_list)
-        return NDVI_list
+        print({"NDVI": NDVI_list})
+        return json.dumps({"NDVI": NDVI_list})
 
 
 
