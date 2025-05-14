@@ -43,6 +43,10 @@ def get_status():
     print(f"正在执行的任务数：{scheduler.running_queue.qsize()}")
     print(f"错误的任务数：{scheduler.error_queue.qsize()}")
     print(f"任务完成的任务数：{scheduler.complete_queue.qsize()}")
+    if status == 'ERROR':
+        print(f"报错信息：{scheduler.task_results[task_id]}")
+    elif status == 'COMPLETE':
+        print(f"结果信息：{scheduler.task_results[task_id]}")
     return api_response(data={'status': status})
 
 
@@ -58,6 +62,21 @@ def merge_tifs_v2():
     scheduler = init_scheduler()
     data = request.json
     task_id = scheduler.start_task('merge_tif_v2', data)
+    return api_response(data={'taskId': task_id})
+
+
+@bp.route(config.API_TIF_calc_qa, methods=['POST'])
+def calc_qa():
+    scheduler = init_scheduler()
+    data = request.json
+    task_id = scheduler.start_task('calc_qa', data)
+    return api_response(data={'taskId': task_id})
+
+@bp.route(config.API_TIF_calc_NDVI, methods=['POST'])
+def calc_NDVI():
+    scheduler = init_scheduler()
+    data = request.json
+    task_id = scheduler.start_task('calc_NDVI', data)
     return api_response(data={'taskId': task_id})
 
 

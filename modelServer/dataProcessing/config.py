@@ -9,6 +9,8 @@ API_VERSION                                     =       '/v0'
 # API for TIF
 API_TIF_MERGE                                   =       API_VERSION + '/tif/merge'
 API_TIF_MERGE_V2                                =       API_VERSION + '/tif/merge_v2'
+API_TIF_calc_qa                                 =       API_VERSION + '/tif/calc_qa'
+API_TIF_calc_NDVI                               =       API_VERSION + '/tif/calc_NDVI'
 
 # API for Task
 API_TASK_STATUS                                 =       API_VERSION + '/task/status'

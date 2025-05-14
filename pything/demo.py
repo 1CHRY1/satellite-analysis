@@ -79,7 +79,7 @@ def calculate_cloud_coverage(image_path, bbox):
         )
         out_image, out_transform = mask(src, [bbox_to_geojsonFeatureGeometry(bbox_proj)], crop=True)
         out_meta = src.meta.copy()
-        
+
     # 更新元数据
     out_meta.update({
         "driver": "GTiff",
@@ -93,7 +93,7 @@ def calculate_cloud_coverage(image_path, bbox):
     cloud_pixels = cloud_mask.sum()
     total_pixels = out_image[0].size
     cloud_coverage = cloud_pixels / total_pixels
-    
+
     # print(f"云量百分比：{cloud_coverage * 100}%")
     return cloud_coverage
 
@@ -101,8 +101,8 @@ def calculate_cloud_coverage(image_path, bbox):
 
 #### Main ########################################################################
 ## Input : 网格分辨率 + 行政区GeojsonURL
-geojsonPath = "D:\\edgedownload\\胶州市.json"
-grid_resolution_in_kilometer = 2
+geojsonPath = "D:\\IdeaProjects\\test\\胶州市.json"
+grid_resolution_in_kilometer = 25
 maxCloudThreshold = 0.2 # 可接受的最大云量 20%
 
 ## Step 1 : 行政区范围 ————> 覆盖格网 ————> 检索影像

@@ -75,7 +75,7 @@ public class ModelMapperConfig {
 
         modelMapper.typeMap(Scene.class, SceneDesVO.class)
                 .addMappings(mapper -> {
-                    mapper.using(crsConverter).map(Scene::getCoordinateSystem, SceneDesVO::setCrs);
+                    mapper.using(crsConverter).map(Scene::getCoordinateSystem, SceneDesVO::setCoordinateSystem);
                 });
 
         return modelMapper;

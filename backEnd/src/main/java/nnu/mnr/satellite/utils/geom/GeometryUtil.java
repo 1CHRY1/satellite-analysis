@@ -15,6 +15,7 @@ import org.locationtech.jts.geom.impl.CoordinateArraySequence;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -91,12 +92,12 @@ public class GeometryUtil {
         return geometryFactory.createPolygon(outerRing, innerRings);
     }
 
-    public static Point parse4326Point(JSONArray coordinates) {
+    public static Geometry parse4326Point(Double[] coordinates) {
 
         GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
         // 点的坐标通常是 [x, y] 形式，这里直接获取 x 和 y 坐标
-        double x = coordinates.getDoubleValue(0);
-        double y = coordinates.getDoubleValue(1);
+        double x = coordinates[0];
+        double y = coordinates[1];
 
         // 使用 GeometryFactory 创建 Point 对象
         return geometryFactory.createPoint(new org.locationtech.jts.geom.Coordinate(x, y));
@@ -201,5 +202,22 @@ public class GeometryUtil {
         }
         geoJsonVO.setFeatures(features);
         return geoJsonVO;
+    }
+
+    public static List<Double> getGeometryBounds(Geometry geometry) {
+        if (geometry == null || geometry.isEmpty()) {
+            throw new IllegalArgumentException("Geometry cannot be null or empty");
+        }
+
+        // 获取几何的包络线（Envelope）
+        Envelope envelope = geometry.getEnvelopeInternal();
+
+        // 返回左下角和右上角坐标
+        return Arrays.asList(
+                envelope.getMinX(), // 左下角X
+                envelope.getMinY(), // 左下角Y
+                envelope.getMaxX(), // 右上角X
+                envelope.getMaxY()  // 右上角Y
+        );
     }
 }

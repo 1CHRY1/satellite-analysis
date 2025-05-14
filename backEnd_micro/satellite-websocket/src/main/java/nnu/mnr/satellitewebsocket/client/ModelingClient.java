@@ -1,5 +1,7 @@
 package nnu.mnr.satellitewebsocket.client;
 
+import feign.Headers;
+import nnu.mnr.satellitewebsocket.config.web.FeignConfig;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -12,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
  * @Description:
  */
 
-@FeignClient(name = "satellite-modeling", contextId = "modelingClient")
+@FeignClient(name = "satellite-modeling", contextId = "modelingClient", configuration = FeignConfig.class)
 public interface ModelingClient {
 
     @GetMapping("/api/v1/modeling/internal/validation")
