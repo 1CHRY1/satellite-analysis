@@ -152,7 +152,7 @@ public class TileDataService {
             JSONObject modelCaseResponse = JSONObject.parseObject(ProcessUtil.runModelCase(mergeUrl, mergeParam));
             String caseId = modelCaseResponse.getJSONObject("data").getString("taskId");
             quartzSchedulerManager.startModelRunningStatusJob(caseId);
-            JSONObject modelCase = JSONObject.of("status", "running", "start", LocalDateTime.now());
+            JSONObject modelCase = JSONObject.of("status", "RUNNING", "start", LocalDateTime.now());
             redisUtil.addJsonDataWithExpiration(caseId, modelCase, 60 * 10);
             return CommonResultVO.builder().status(1).message("success").data(caseId).build();
         } catch (Exception e) {
