@@ -1,7 +1,7 @@
 package nnu.mnr.satelliteresource.service;
 
-import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import nnu.mnr.satelliteresource.model.dto.modeling.ModelServerImageDTO;
 import nnu.mnr.satelliteresource.model.po.Image;
 import nnu.mnr.satelliteresource.model.vo.resources.ImageInfoVO;
 import nnu.mnr.satelliteresource.repository.IImageRepo;
@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created with IntelliJ IDEA.
@@ -48,6 +49,21 @@ public class ImageDataService {
         queryWrapper.eq("image_id", imageId);
         Image image = imageRepo.selectOne(queryWrapper);
         return minioUtil.downloadByte(image.getBucket(), image.getTifPath());
+    }
+
+    public List<ModelServerImageDTO> getModelServerImageDTOBySceneId(String sceneId) {
+        QueryWrapper<Image> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("tif_path", "band", "bucket").eq("scene_id", sceneId);
+        List<Image> images = imageRepo.selectList(queryWrapper);
+//        return imageModelMapper.map(images, new TypeToken<List<ModelServerImageDTO>>() {}.getType());
+        return images.stream()
+                .map(image -> ModelServerImageDTO.builder()
+                        .tifPath(image.getTifPath())
+                        .band(image.getBand())
+                        .bucket(image.getBucket())
+                        .build())
+                .collect(Collectors.toList());
+
     }
 
 }

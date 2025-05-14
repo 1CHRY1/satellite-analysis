@@ -33,23 +33,13 @@ public class SceneController {
     }
 
     @GetMapping("/description/sceneId/{sceneId}")
-    public ResponseEntity<SceneDesVO> getDescriptionById(@PathVariable String sceneId) throws IOException, FactoryException {
+    public ResponseEntity<SceneDesVO> getSceneDescriptionById(@PathVariable("sceneId") String sceneId) {
         return ResponseEntity.ok(sceneDataService.getSceneById(sceneId));
     }
 
     @PostMapping("/sensorId/productId/time/area")
     public ResponseEntity<GeoJsonVO> getScenesByIdsTimeAndBBox(@RequestBody ScenesFetchDTO scenesFetchDTO) throws IOException {
         return ResponseEntity.ok(sceneDataService.getScenesByIdsTimeAndBBox(scenesFetchDTO));
-    }
-
-    @GetMapping("/png/sceneId/{sceneId}")
-    public ResponseEntity<byte[]> getScenePngById(@PathVariable String sceneId) {
-        byte[] imageData = sceneDataService.getPngById(sceneId);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.valueOf("image/png"));
-        return ResponseEntity.ok()
-                .headers(headers)
-                .body(imageData);
     }
 
 }

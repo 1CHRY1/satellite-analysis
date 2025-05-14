@@ -19,15 +19,13 @@ def generate_custom_id(prefix, digit):
     remaining_length = digit - len(prefix)  # 计算除去 prefix 后可用的长度
     if remaining_length <= 0:
         return prefix[:digit]  # 如果 prefix 已经超长，则直接截断返回
-    # 生成各部分
-    timestamp = str(int(time.time()))[-4:]  # 取时间戳后4位
-    machine_id = str(abs(hash(socket.gethostname())) % 100).zfill(2)  # 取 hostname 哈希后两位
-    process_id = str(os.getpid() % 100).zfill(2)  # 取进程 ID 后两位
-    counter = str(random.randint(10, 99))  # 取随机两位数
-    # 拼接各部分
-    raw_id = timestamp + machine_id + process_id + counter
-    # 根据剩余长度进行截取或填充
-    custom_id = prefix + raw_id[:remaining_length]
+
+    # 定义可用字符集 (类似UUID格式: 数字和小写字母)
+    characters = "abcdefghijklmnopqrstuvwxyz0123456789"
+    # 生成随机字符串
+    random_part = ''.join(random.choice(characters) for _ in range(remaining_length))
+    # 拼接前缀和随机部分
+    custom_id = prefix + random_part
     return custom_id
 
 
@@ -82,7 +80,7 @@ def create_DB():
         `coordinate_system` VARCHAR(255),
         `bounding_box` GEOMETRY NOT NULL SRID 4326,
         `description` TEXT(65535),
-        `png_path` VARCHAR(255),
+        `cloud_path` VARCHAR(255),
         `bands` SET('1', '2', '3', '4', '5', '6', '7'),
         `band_num` INT,
         `bucket` VARCHAR(36),
@@ -289,22 +287,22 @@ def get_product_byName(sensorName, productName):
         return None
 
 
-def insert_scene(sensorName, productName, sceneName, sceneTime, tileLevelNum, tileLevels, pngPath, crs, bbox,
-                 description, bands, band_num, bucket, cloud):
+def insert_scene(sensorName, productName, sceneName, sceneTime, tileLevelNum, tileLevels, cloudPath, crs, bbox,
+                 description, bands, band_num, bucket, cloud, tags):
     global DB_CONFIG
-    bands_str = ",".join(bands) if bands else None
+    bands_str = ",".join([str(band) for band in bands or []]) if bands is not None else ""
     connection, cursor = connect_mysql(DB_CONFIG["MYSQL_HOST"], DB_CONFIG["MYSQL_RESOURCE_PORT"],
                                        DB_CONFIG["MYSQL_RESOURCE_DB"], DB_CONFIG["MYSQL_USER"],
                                        DB_CONFIG["MYSQL_PWD"])
     sensorId, productId = get_product_byName(sensorName, productName)
     insert_query = (
-        "INSERT INTO scene_table (scene_id, sensor_id, product_id, scene_name, scene_time, tile_level_num, tile_levels, coordinate_system, bounding_box, png_path, description, bands, band_num, bucket, cloud) "
-        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, ST_GeomFromText(%s, 4326, 'axis-order=long-lat'), %s, %s, %s, %s, %s, %s)")
+        "INSERT INTO scene_table (scene_id, sensor_id, product_id, scene_name, scene_time, tile_level_num, tile_levels, coordinate_system, bounding_box, cloud_path, description, bands, band_num, bucket, cloud, tags) "
+        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, ST_GeomFromText(%s, 4326, 'axis-order=long-lat'), %s, %s, %s, %s, %s, %s, %s)")
     # sceneId = str(uuid.uuid5(namespace, uuidName))
     sceneId = generate_custom_id('SC', 11)
     data = (
-        sceneId, sensorId, productId, sceneName, sceneTime, tileLevelNum, tileLevels, crs, bbox, pngPath, description,
-        bands_str, band_num, bucket, cloud)
+        sceneId, sensorId, productId, sceneName, sceneTime, tileLevelNum, tileLevels, crs, bbox, cloudPath, description,
+        bands_str, band_num, bucket, cloud, tags)
     try:
         # 执行插入操作
         cursor.execute(insert_query, data)
@@ -337,7 +335,7 @@ def insert_image(sceneId, tifPath, band, bucket, cloud):
         connection.commit()
 
         print(cursor.rowcount, f"Image {imageId} inserted!")
-    except mysql.connector.Error as err:
+    except pymysql.Error as err:
         print(f"Error: {err}")
         connection.rollback()
     finally:
@@ -362,7 +360,7 @@ def insert_tile(tile_table_name, image_id, tileLevel, columnId, rowId, path, buc
         connection.commit()
 
         print(cursor.rowcount, f"Tile {tileId} inserted!")
-    except mysql.connector.Error as err:
+    except pymysql.Error as err:
         print(f"Error: {err}")
         connection.rollback()
     finally:
@@ -389,7 +387,7 @@ def insert_batch_tile(tile_table_name, image_id, tileLevel, tile_info_list, band
         connection.commit()
 
         print(cursor.rowcount, f"tiles inserted!")
-    except mysql.connector.Error as err:
+    except pymysql.Error as err:
         print(f"Error: {err}")
         connection.rollback()
     finally:

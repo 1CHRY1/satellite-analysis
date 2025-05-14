@@ -9,6 +9,8 @@ from dataProcessing.config import STATUS_RUNNING, STATUS_COMPLETE, STATUS_ERROR,
 
 from dataProcessing.model.mergeTifTask import MergeTifTask
 from dataProcessing.model.mergeTifTaskV2 import MergeTifTaskV2
+from dataProcessing.model.calc_qa import calc_qa
+from dataProcessing.model.calc_NDVI import calc_NDVI
 
 
 class TaskScheduler:
@@ -50,6 +52,8 @@ class TaskScheduler:
         task_classes = {
             'merge_tif': MergeTifTask,
             'merge_tif_v2': MergeTifTaskV2,
+            'calc_qa': calc_qa,
+            'calc_NDVI': calc_NDVI,
             # 可以在这里扩展其他类型的任务
         }
         return task_classes.get(task_type)

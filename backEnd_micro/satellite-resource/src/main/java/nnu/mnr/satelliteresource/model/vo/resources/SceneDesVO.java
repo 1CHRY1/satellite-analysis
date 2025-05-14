@@ -1,6 +1,9 @@
 package nnu.mnr.satelliteresource.model.vo.resources;
 
+import com.alibaba.fastjson2.JSONObject;
+import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Data;
+import nnu.mnr.satelliteresource.utils.typeHandler.FastJson2TypeHandler;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -20,10 +23,18 @@ public class SceneDesVO {
     private LocalDateTime sceneTime;
     private Integer tileLevelNum;
     private HashSet<String> tileLevels;
-    private String crs;
+    private String coordinateSystem;
     private String description;
     private Integer bandNum;
     private HashSet<String> bands;
-    private String cloud;
+    private Integer cloud;
 
+    @TableField(typeHandler = FastJson2TypeHandler.class)
+    private JSONObject tags;
+
+    // 外键
+    private String sensorName;
+    private String productName;
+//    @TableField(typeHandler = JSONArrayTypeHandler.class)
+//    private JSONArray imageList;
 }

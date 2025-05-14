@@ -28,6 +28,10 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response, Object handler) throws Exception {
         try {
+            String internalHeader = request.getHeader("X-Internal-Request");
+            if ("true".equalsIgnoreCase(internalHeader)) {
+                return true;
+            }
             UserClient userClient = userClientProvider.getIfAvailable();
             String userId = request.getHeader("X-User-Id");
             Boolean isValid = userClient.validateUser(userId);

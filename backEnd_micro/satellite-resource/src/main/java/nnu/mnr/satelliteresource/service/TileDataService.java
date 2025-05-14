@@ -106,7 +106,7 @@ public class TileDataService {
         Integer rowId = tilesFetchDTO.getRowId(); Integer columnId = tilesFetchDTO.getColumnId();
         String band = tilesFetchDTO.getBand(); String level = tilesFetchDTO.getTileLevel();
         int[] gridNums = TileCalculateUtil.getGridNumFromTileLevel(level);
-        JSONObject tileGeometry = TileCalculateUtil.getTileGeomByIds(rowId, columnId, gridNums[0], gridNums[1]);
+        JSONObject tileGeometry = TileCalculateUtil.getTileGeoJsonByIds(rowId, columnId, gridNums[0], gridNums[1]);
         List<Scene> scenes = sceneDataService.getScenesByBBox(sensorId, productId, tileGeometry);
         ExecutorService executor = Executors.newFixedThreadPool(Math.min(scenes.size(), 10));
         List<CompletableFuture<TilesFetchResultVO>> futures = scenes.stream()
