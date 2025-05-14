@@ -467,7 +467,11 @@ def calculate_cloud_coverage(image_path, bbox):
             src.crs,  # 图像的投影
             *bbox  # 解包 bbox: minx, miny, maxx, maxy
         )
-        out_image, out_transform = mask(src, [bbox_to_geojsonFeatureGeometry(bbox_proj)], crop=True)
+        try:
+            out_image, out_transform = mask(src, [bbox_to_geojsonFeatureGeometry(bbox_proj)], crop=True)
+        except Exception as e:
+            print(f"裁剪失败：{e}")
+            return 0
         out_meta = src.meta.copy()
 
     # 更新元数据
@@ -565,3 +569,8 @@ def latlon_to_utm(longitude, latitude, epsg_code):
     # 转换坐标
     x, y = transformer.transform(longitude, latitude)
     return x, y
+
+# 转时间戳函数
+def parse_time_in_scene(scene):
+    from datetime import datetime
+    return datetime.strptime(scene["sceneTime"], "%Y-%m-%d %H:%M:%S")
