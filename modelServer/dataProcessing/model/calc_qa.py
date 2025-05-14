@@ -32,14 +32,14 @@ class calc_qa(Task):
             bbox = gridHelper.get_grid_bbox(gridCell) # 计算bbox
             qas = list() # 用一个列表来保存每个景的云量
             for scene in self.scenes:
-                qa = calculate_cloud_coverage(scene['cloudPath'], bbox)
+                qa = calculate_cloud_coverage(MINIO_ENDPOINT + "/" + scene['bucket'] + "/" + scene['cloudPath'], bbox)
                 qas.append(qa)
             min_qa = min(qas)
             min_index = qas.index(min_qa) # 获取云量列表中最小值索引
             images = self.scenes[min_index]['images']
             tif_paths = list() # 记录需要融合的tif路径
             for image in images:
-                tif_paths.append(image['path'])
+                tif_paths.append(MINIO_ENDPOINT + "/" + image['bucket'] + "/" + image['path'])
             # 需要将wgs 84 转成 utm，才能正常裁剪范围
             epsg_code = get_tif_epsg(tif_paths[0])
             bbox = convert_bbox_to_utm(bbox, epsg_code)
