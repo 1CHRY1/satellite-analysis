@@ -43,6 +43,10 @@ def get_status():
     print(f"正在执行的任务数：{scheduler.running_queue.qsize()}")
     print(f"错误的任务数：{scheduler.error_queue.qsize()}")
     print(f"任务完成的任务数：{scheduler.complete_queue.qsize()}")
+    if status == 'ERROR':
+        print(f"报错信息：{scheduler.task_results[task_id]}")
+    elif status == 'COMPLETE':
+        print(f"结果信息：{scheduler.task_results[task_id]}")
     return api_response(data={'status': status})
 
 

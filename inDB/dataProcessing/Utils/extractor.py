@@ -118,12 +118,12 @@ def get_basic_info_from_xml():
         root = etree.XML(xml_content, parser=etree.XMLParser(recover=True))
         # node = root.find('ProductMetaData')
         imageMetaDataNode = root.find('ImageMetaData')
-        productInfoNode = root.find('ProductInfo')
+        # productInfoNode = root.find('ProductInfo')
 
     except Exception as e:
         print(f"Error processing the xml: {e}")
         return basic_info
-    if imageMetaDataNode is None or productInfoNode is None:
+    if imageMetaDataNode is None:
         print(f"Error processing the xml")
         return basic_info
 
@@ -131,9 +131,15 @@ def get_basic_info_from_xml():
     cloud_nodes = imageMetaDataNode.xpath('.//ImageQuality/CloudCoverPercent')
     if cloud_nodes is not None and cloud_nodes[0] is not None and cloud_nodes[0].text:
         basic_info["cloud"] = cloud_nodes[0].text
-    time_nodes = imageMetaDataNode.xpath('.//GeneralInfo/EndTime')
-    if time_nodes is not None and time_nodes[0] is not None and time_nodes[0].text:
-        basic_info["image_time"] = parse_time(time_nodes[0])
+    end_time_nodes = imageMetaDataNode.xpath('.//GeneralInfo/EndTime')
+    start_time_nodes = imageMetaDataNode.xpath('.//GeneralInfo/StartTime')
+    center_time_nodes = imageMetaDataNode.xpath('.//GeneralInfo/CenterTime')
+    if end_time_nodes is not None and end_time_nodes[0] is not None and end_time_nodes[0].text:
+        basic_info["image_time"] = parse_time(end_time_nodes[0])
+    if start_time_nodes is not None and start_time_nodes[0] is not None and start_time_nodes[0].text:
+        basic_info["image_time"] = parse_time(start_time_nodes[0])
+    if center_time_nodes is not None and center_time_nodes[0] is not None and center_time_nodes[0].text:
+        basic_info["image_time"] = parse_time(center_time_nodes[0])
     try:
         productMetaDataNode = productInfoNode.find('ProductMetaData')
         if productMetaDataNode is not None:
