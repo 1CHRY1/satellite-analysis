@@ -1,6 +1,10 @@
 <template>
     <div class="remote-sensing-panel select-none">
-        <dv-border-box12>
+        <!-- 这里设计好像有点问题，
+             又不是由父组件决定高度，也不是由子组件撑起高度，是由中间元素的border的高度撑起的高度
+             并且内容并不是填充到content里面，下面部分还占用了padding的空间
+        -->
+        <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]">
             <div class="main-container">
                 <section class="panel-section">
                     <div class="section-header">
@@ -582,7 +586,7 @@ const handleConfirmSelectProject = async (project: Project) => {
 
 .main-container {
     overflow-y: auto;
-    max-height: calc(100vh - 12vh);
+    max-height: calc(100vh - 48px - 56px - 32px) !important;
     flex: 1;
     scrollbar-width: none !important;
     scrollbar-color: rgba(37, 190, 255, 0.332) transparent !important;

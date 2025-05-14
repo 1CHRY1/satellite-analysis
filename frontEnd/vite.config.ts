@@ -5,10 +5,7 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-    plugins: [
-        vue(),
-        tailwindcss(),
-    ],
+    plugins: [vue(), tailwindcss()],
     resolve: {
         alias: {
             '@': resolve(__dirname, 'src'),
@@ -17,17 +14,24 @@ export default defineConfig({
     server: {
         host: '0.0.0.0',
         proxy: {
-            '/api': {
-                target: 'http://223.2.47.202:8899/api/v1',
+            '/api2': {
+                // target: 'http://223.2.47.202:8999/api/v1',
+                target: 'http://223.2.47.202:9888/api/v2',
                 // target: 'http://223.2.43.228:30899/api/v1',
-                // target: 'http://223.2.43.228:30535/api/v1',
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/api2/, ''),
+            },
+            '/api': {
+                // target: 'http://223.2.47.202:8999/api/v1',
+                target: 'http://223.2.47.202:9888/api/v1',
+                // target: 'http://223.2.43.228:30899/api/v1',
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/api/, ''),
             },
             '/websocket': {
-                target: 'http://223.2.47.202:8499/model/websocket',
-                // target: 'ws://223.2.43.228:30499/model/websocket',
+                // target: 'ws://223.2.47.202:8899/model/websocket',
                 // target: 'http://223.2.43.228:30535/api/v1',
+                target: 'http://223.2.43.228:30499/model/websocket',
                 ws: true,
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/websocket/, ''),
