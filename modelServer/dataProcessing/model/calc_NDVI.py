@@ -30,18 +30,18 @@ class calc_NDVI(Task):
         scenes = sorted(self.scenes, key=lambda scene: scene["sceneTime"])
         NDVI_list = []
         for scene in scenes:
-            epsg_code = get_tif_epsg(scene['images'][0]['path'])
+            epsg_code = get_tif_epsg(MINIO_ENDPOINT + "/" + scene['images'][0]['bucket'] + "/" + scene['images'][0]['path'])
             x, y = latlon_to_utm(self.lng, self.lat, epsg_code)
             # 以landsat8为例，波段4为红光，波段5为近红外
             band_4_path = ''
             band_5_path = ''
             for image in scene["images"]:
                 if image["band"] == "4":
-                    band_4_path = image["path"]
+                    band_4_path = MINIO_ENDPOINT + "/" + image['bucket'] + "/" + image["path"]
                     break
             for image in scene["images"]:
                 if image["band"] == "5":
-                    band_5_path = image["path"]
+                    band_5_path = MINIO_ENDPOINT + "/" + image['bucket'] + "/" + image["path"]
                     break
             Red = int(get_pixel_value_at_utm(x, y, band_4_path))
             NIR = int(get_pixel_value_at_utm(x, y, band_5_path))
