@@ -5,8 +5,10 @@ from dataclasses import dataclass
 from shapely.geometry import Polygon, box
 
 # Constants
-EARTH_RADIUS = 6371008.8  # meters
-EARTH_CIRCUMFERENCE = 2 * math.pi * EARTH_RADIUS
+# EARTH_RADIUS = 6371008.8  # meters
+# EARTH_CIRCUMFERENCE = 2 * math.pi * EARTH_RADIUS
+EARTH_CIRCUMFERENCE_EQUATOR = 40075.0
+EARTH_CIRCUMFERENCE_MERIDIAN = 40008.0
 
 @dataclass
 class PolygonGeometry:
@@ -26,9 +28,14 @@ class GridHelper:
         Args:
             grid_resolution_in_kilometer: Grid resolution in kilometers
         """
-        self.grid_resolution_in_meter = grid_resolution_in_kilometer * 1000
-        self.grid_num_x = math.ceil(EARTH_CIRCUMFERENCE / self.grid_resolution_in_meter)
-        self.grid_num_y = math.ceil(EARTH_CIRCUMFERENCE / 2.0 / self.grid_resolution_in_meter)
+        # self.grid_resolution_in_meter = grid_resolution_in_kilometer * 1000
+        # self.grid_num_x = math.ceil(EARTH_CIRCUMFERENCE / self.grid_resolution_in_meter)
+        # self.grid_num_y = math.ceil(EARTH_CIRCUMFERENCE / 2.0 / self.grid_resolution_in_meter)
+        self.degreePerGridX = (360.0 * grid_resolution_in_kilometer) / EARTH_CIRCUMFERENCE_EQUATOR
+        self.degreePerGridY = (180.0 * grid_resolution_in_kilometer) / EARTH_CIRCUMFERENCE_MERIDIAN
+
+        self.grid_num_x = int(math.ceil(360.0 / self.degreePerGridX))
+        self.grid_num_y = int(math.ceil(180.0 / self.degreePerGridY))
 
     def get_grid_cells(self, polygon: PolygonGeometry) -> List[GridCell]:
         """

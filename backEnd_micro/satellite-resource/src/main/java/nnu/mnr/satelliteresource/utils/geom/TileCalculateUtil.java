@@ -26,6 +26,7 @@ public class TileCalculateUtil {
         int[] gridNum = getGridNumFromTileResolution(resolution);
         int gridNumX = gridNum[0];
         int gridNumY = gridNum[1];
+
         Envelope env = region.getEnvelopeInternal();
         double minLng = env.getMinX();
         double minLat = env.getMinY();
@@ -44,6 +45,8 @@ public class TileCalculateUtil {
         startCol = Math.max(0, startCol);
         endCol = Math.min(gridNumX, endCol);
 
+        GeometryFactory geometryFactory = region.getFactory();
+
         // 遍历网格，生成瓦片几何
         for (int row = startRow; row < endRow; row++) {
             for (int col = startCol; col < endCol; col++) {
@@ -51,7 +54,25 @@ public class TileCalculateUtil {
 //                if (region.intersects(tileGeom)) {
 //                    tileGeoms.add(tileGeom);
 //                }
-                tileIds.add(new Integer[]{row, col});
+                // 计算当前网格的地理边界
+                double tileMinLat = 90.0 - (row + 1) * 180.0 / gridNumY;
+                double tileMaxLat = 90.0 - row * 180.0 / gridNumY;
+                double tileMinLng = col * 360.0 / gridNumX - 180.0;
+                double tileMaxLng = (col + 1) * 360.0 / gridNumX - 180.0;
+
+                // 创建当前网格的多边形表示
+                Coordinate[] coords = new Coordinate[5];
+                coords[0] = new Coordinate(tileMinLng, tileMinLat);
+                coords[1] = new Coordinate(tileMinLng, tileMaxLat);
+                coords[2] = new Coordinate(tileMaxLng, tileMaxLat);
+                coords[3] = new Coordinate(tileMaxLng, tileMinLat);
+                coords[4] = new Coordinate(tileMinLng, tileMinLat); // 闭合环
+                Polygon tilePolygon = geometryFactory.createPolygon(geometryFactory.createLinearRing(coords), null);
+
+                // 精确判断覆盖关系
+                if (region.covers(tilePolygon) || region.intersects(tilePolygon)) {
+                    tileIds.add(new Integer[]{col, row});
+                }
             }
         }
 
