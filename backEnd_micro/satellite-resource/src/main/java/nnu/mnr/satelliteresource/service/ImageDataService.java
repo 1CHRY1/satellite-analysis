@@ -53,15 +53,17 @@ public class ImageDataService {
 
     public List<ModelServerImageDTO> getModelServerImageDTOBySceneId(String sceneId) {
         QueryWrapper<Image> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("scene_id", sceneId);
+        queryWrapper.select("tif_path", "band", "bucket").eq("scene_id", sceneId);
         List<Image> images = imageRepo.selectList(queryWrapper);
 //        return imageModelMapper.map(images, new TypeToken<List<ModelServerImageDTO>>() {}.getType());
         return images.stream()
                 .map(image -> ModelServerImageDTO.builder()
                         .tifPath(image.getTifPath())
                         .band(image.getBand())
+                        .bucket(image.getBucket())
                         .build())
                 .collect(Collectors.toList());
+
     }
 
 }
