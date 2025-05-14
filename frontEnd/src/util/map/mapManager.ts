@@ -13,7 +13,7 @@ class MapManager {
     private draw: MapboxDraw | null = null
     private initPromise: Promise<mapboxgl.Map> | null = null
 
-    private constructor() { }
+    private constructor() {}
 
     public static getInstance(): MapManager {
         if (!MapManager.instance) {
@@ -26,7 +26,7 @@ class MapManager {
         container: string | HTMLDivElement,
         // style: Style = 'vector',
         style: Style = 'local', // 默认用本地影像
-        proj: 'mercator' | 'globe' = 'mercator',  // 默认用Mercortor平面
+        proj: 'mercator' | 'globe' = 'mercator', // 默认用Mercortor平面
     ): Promise<mapboxgl.Map> {
         if (this.map) return this.map
         this.initPromise = new Promise((resolve) => {
@@ -54,14 +54,11 @@ class MapManager {
             })
             const logo = document.querySelector('.mapboxgl-ctrl-logo') as HTMLElement
             logo.style.display = 'none'
-
-
-
             const scale = new mapboxgl.ScaleControl({
                 maxWidth: 100,
-                unit: 'metric'
-            });
-            this.map.addControl(scale, 'bottom-left');
+                unit: 'metric',
+            })
+            this.map.addControl(scale, 'bottom-left')
 
             this.map.once('load', () => {
                 this.initDrawControl()
@@ -71,7 +68,7 @@ class MapManager {
         return this.initPromise
     }
 
-    public registerDrawCallback(): void { }
+    public registerDrawCallback(): void {}
 
     private initDrawControl(): void {
         if (!this.map) return
@@ -95,10 +92,20 @@ class MapManager {
         if (!this.map || !this.draw) return
 
         this.map.on('draw.create', () => {
-            const features = this.draw?.getAll().features
-            if (features?.length) {
-                ezStore.set('polygonFeature', features[0].geometry)
-                useGridStore().setPolygon(features[0].geometry as polygonGeometry)
+            // const features = this.draw?.getAll().features
+            // if (features?.length) {
+            //     ezStore.set('polygonFeature', features[0].geometry)
+            //     useGridStore().setPolygon(features[0].geometry as polygonGeometry)
+            // }
+            const feature = this.draw?.getAll().features[0]
+            if (!feature) return
+
+            if (feature.geometry.type === 'Point') {
+                const [lng, lat] = feature.geometry.coordinates
+                useGridStore().setPickedPoint([lat, lng])
+            } else if (feature.geometry.type === 'Polygon') {
+                ezStore.set('polygonFeature', feature.geometry)
+                useGridStore().setPolygon(feature.geometry as polygonGeometry)
             }
         })
     }
@@ -108,7 +115,6 @@ class MapManager {
             console.warn('Map not initialized')
             return null
         }
-
         await this.initPromise
         return callback(this.map)
     }
