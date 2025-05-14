@@ -22,6 +22,10 @@ const props = defineProps({
         type: String as PropType<'mercator' | 'globe'>,
         default: 'mercator',
     },
+    isPicking: {
+        type: Boolean,
+        default: false
+    }
 })
 
 const handleFitView = () => {
