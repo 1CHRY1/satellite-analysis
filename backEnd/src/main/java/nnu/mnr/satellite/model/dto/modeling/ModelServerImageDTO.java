@@ -15,6 +15,7 @@ import lombok.Data;
 @Builder
 public class ModelServerImageDTO {
 
+    private String bucket;
     private String tifPath;
     private String band;
 
