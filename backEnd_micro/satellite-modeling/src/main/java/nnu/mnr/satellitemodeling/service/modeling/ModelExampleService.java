@@ -72,7 +72,8 @@ public class ModelExampleService {
             Scene scene = resourceClient.getSceneById(sceneId);
             List<ModelServerImageDTO> imageDTO = resourceClient.getModelServerImageDTO(sceneId);
             ModelServerSceneDTO modelServerSceneDTO = ModelServerSceneDTO.builder()
-                    .sceneId(sceneId).images(imageDTO).cloudPath(scene.getCloudPath()).build();
+                    .sceneId(sceneId).images(imageDTO).sceneTime(scene.getSceneTime())
+                    .cloudPath(scene.getCloudPath()).bucket(scene.getBucket()).build();
             modelServerSceneDTOs.add(modelServerSceneDTO);
         }
 
@@ -102,8 +103,17 @@ public class ModelExampleService {
             Scene scene = resourceClient.getSceneById(sceneId);
             if (scene.getBbox().contains(geomPoint)) {
                 List<ModelServerImageDTO> imageDTO = resourceClient.getModelServerImageDTO(sceneId);
+
+                // TODO: 临时需求删选波段45
+                boolean hasBand4 = imageDTO.stream().anyMatch(img -> "4".equals(img.getBand()));
+                boolean hasBand5 = imageDTO.stream().anyMatch(img -> "5".equals(img.getBand()));
+                if (!hasBand4 || !hasBand5) {
+                    continue;
+                }
+
                 ModelServerSceneDTO modelServerSceneDTO = ModelServerSceneDTO.builder()
-                        .sceneId(sceneId).images(imageDTO).cloudPath(scene.getCloudPath()).build();
+                        .sceneId(sceneId).images(imageDTO).sceneTime(scene.getSceneTime())
+                        .cloudPath(scene.getCloudPath()).bucket(scene.getBucket()).build();
                 modelServerSceneDTOs.add(modelServerSceneDTO);
             }
         }

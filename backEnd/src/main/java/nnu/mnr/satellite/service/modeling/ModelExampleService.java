@@ -79,10 +79,13 @@ public class ModelExampleService {
         // 构成影像景参数信息
         for (String sceneId : sceneIds) {
             Scene scene = sceneDataService.getSceneById(sceneId);
+             if (scene.getCloudPath() == null) {
+                continue;
+            }
             List<ModelServerImageDTO> imageDTO = imageDataService.getModelServerImageDTOBySceneId(sceneId);
             ModelServerSceneDTO modelServerSceneDTO = ModelServerSceneDTO.builder()
                     .sceneId(sceneId).images(imageDTO).sceneTime(scene.getSceneTime())
-                    .cloudPath(scene.getCloudPath()).build();
+                    .cloudPath(scene.getCloudPath()).bucket(scene.getBucket()).build();
             modelServerSceneDTOs.add(modelServerSceneDTO);
         }
 
@@ -111,9 +114,17 @@ public class ModelExampleService {
             Scene scene = sceneDataService.getSceneById(sceneId);
             if (scene.getBbox().contains(geomPoint)) {
                 List<ModelServerImageDTO> imageDTO = imageDataService.getModelServerImageDTOBySceneId(sceneId);
-                ModelServerSceneDTO modelServerSceneDTO = ModelServerSceneDTO.builder()
+
+                // TODO: 临时需求删选波段45
+                boolean hasBand4 = imageDTO.stream().anyMatch(img -> "4".equals(img.getBand()));
+                boolean hasBand5 = imageDTO.stream().anyMatch(img -> "5".equals(img.getBand()));
+                if (!hasBand4 || !hasBand5) {
+                    continue;
+                }
+
+               ModelServerSceneDTO modelServerSceneDTO = ModelServerSceneDTO.builder()
                         .sceneId(sceneId).images(imageDTO).sceneTime(scene.getSceneTime())
-                        .cloudPath(scene.getCloudPath()).build();
+                        .cloudPath(scene.getCloudPath()).bucket(scene.getBucket()).build();
                 modelServerSceneDTOs.add(modelServerSceneDTO);
             }
         }
