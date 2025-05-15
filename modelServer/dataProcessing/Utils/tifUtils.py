@@ -585,12 +585,10 @@ def parse_time_in_scene(scene):
 # 判断bbox与tif是否相交
 def check_intersection(tif_path, bounding_box):
     # 打开GeoTIFF文件
-    print('打开tif')
     dataset = gdal.Open(tif_path)
     if dataset is None:
         raise ValueError("Could not open the GeoTIFF file.")
     # 获取GeoTIFF的地理变换信息
-    print('tif打开完毕')
     try:
         # 可能引发异常的代码
         geotransform = dataset.GetGeoTransform()
