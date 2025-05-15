@@ -36,7 +36,7 @@ type GridInfoType = {
 const show = defineModel<boolean>()
 const images = ref<ImageInfoType[]>([{ sceneId: '', time: '', tifFullPath: '' }])
 const grid = ref<GridInfoType>({ rowId: 0, columnId: 0, resolution: 0 })
-const activeIndex = ref(0)
+const activeIndex = ref(-1)
 
 const handleClick = async (index: number) => {
 
@@ -65,7 +65,7 @@ onMounted(() => {
 
     bus.on('cubeVisualize', updateHandler)
     bus.on('closeTimeline', () => {
-        activeIndex.value = 0
+        activeIndex.value = -1
     })
 
 
