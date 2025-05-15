@@ -8,6 +8,7 @@ import nnu.mnr.satellite.model.dto.modeling.NdviFetchDTO;
 import nnu.mnr.satellite.model.dto.modeling.NoCloudFetchDTO;
 import nnu.mnr.satellite.model.dto.resources.ScenesFetchDTOV2;
 import nnu.mnr.satellite.model.po.resources.Scene;
+import nnu.mnr.satellite.model.po.resources.SceneSP;
 import nnu.mnr.satellite.model.pojo.modeling.ModelServerProperties;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.service.resources.ImageDataService;
@@ -78,7 +79,7 @@ public class ModelExampleService {
 
         // 构成影像景参数信息
         for (String sceneId : sceneIds) {
-            Scene scene = sceneDataService.getSceneById(sceneId);
+            SceneSP scene = sceneDataService.getSceneByIdWithProductAndSensor(sceneId);
              if (scene.getCloudPath() == null) {
                 continue;
             }
