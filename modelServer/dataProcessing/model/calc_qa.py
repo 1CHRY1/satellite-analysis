@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime
 from osgeo import gdal
 import json
+import os
 
 from dataProcessing.Utils.osUtils import uploadLocalFile
 from dataProcessing.Utils.tifUtils import mband, convert_tif2cog, check_intersection
@@ -24,6 +25,7 @@ class calc_qa(Task):
 
 
     def run(self):
+        # 5个瓦片，158秒
         print("calc_qa run")
         gridHelper = GridHelper(self.resolution) # 实例化
         # 循环，针对每个瓦片进行操作
@@ -40,16 +42,29 @@ class calc_qa(Task):
                     qa = calculate_cloud_coverage(cloud_path, bbox)
                     print("云量:", qa)
                     qas.append(qa)
+                else:
+                    qa = 9999
+                    qas.append(qa)
             min_qa = min(qas)
+            print("最小云量值为：", min_qa)
             min_index = qas.index(min_qa) # 获取云量列表中最小值索引
+            print("最小云量的索引为：", min_index)
             images = self.scenes[min_index]['images']
             images = [image for image in images if image['band'] in ("2", "3", "4")]
+            sceneId = self.scenes[min_index]['sceneId']
             print("需要融合波段图像：", images)
             # 需要将wgs 84 转成 utm，才能正常裁剪范围
             epsg_code = get_tif_epsg(MINIO_ENDPOINT + "/" + self.scenes[min_index]['bucket'] + "/" + images[0]["tifPath"])
             bbox = convert_bbox_to_utm(bbox, epsg_code)
-            print("开始融合多波段影像")
-            mband_output_file = mband(images, config.TEMP_OUTPUT_DIR, output_name='mband' + str(index) + '.tif')
+            print("准备融合多波段影像")
+            output_name = 'mband_' + sceneId + '.tif'   # 融合景的多波段生成的文件名
+            output_file = os.path.join(config.TEMP_OUTPUT_DIR, output_name)  # 组成文件存储路径
+            if os.path.exists(output_file):
+                print("已有融合后影像，直接调用")
+                mband_output_file = output_file
+            else:
+                print("开始融合多波段影像")
+                mband_output_file = mband(images, config.TEMP_OUTPUT_DIR, output_name=output_name)
             warp_file = config.TEMP_OUTPUT_DIR + '\\mtif' + str(index) + '.tif'
             print("开始按瓦片范围裁剪:", bbox)
             gdal.Warp(
@@ -60,6 +75,7 @@ class calc_qa(Task):
             print(f'裁剪影像已保存至{warp_file}')
             warp_file_list.append(warp_file)
         result_file = config.TEMP_OUTPUT_DIR + '\\mtif.tif'
+        print(f"开始影像镶嵌，共{index+1}个瓦片")
         gdal.Warp(
             result_file,
             warp_file_list,
