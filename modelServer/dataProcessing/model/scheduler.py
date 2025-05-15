@@ -4,6 +4,9 @@ import uuid
 import threading
 from datetime import datetime
 from typing import Any, Dict
+import os
+import json
+import hashlib
 
 from dataProcessing.config import STATUS_RUNNING, STATUS_COMPLETE, STATUS_ERROR, STATUS_PENDING, MAX_RUNNING_TASKS
 
@@ -22,6 +25,7 @@ class TaskScheduler:
         self.task_status: Dict[str, Any] = {}
         self.task_info: Dict[str, Any] = {}
         self.task_results: Dict[str, Any] = {}
+        self.task_md5: Dict[str, Any] = {}
 
         # 锁和条件变量
         self.lock = threading.Lock()
@@ -30,6 +34,28 @@ class TaskScheduler:
         # 启动调度线程
         self.scheduler_thread = threading.Thread(target=self._scheduler_worker, daemon=True)
         self.scheduler_thread.start()
+
+        # 加载历史任务
+        self.load_history()
+
+    def load_history(self):
+        # --------- Load the history of the task ---------------------------
+        file_path = os.path.join(os.path.dirname(__file__), "..", "history")
+        for file in os.listdir(file_path):
+            with open(os.path.join(file_path, file), "r", encoding="utf-8") as f:
+                try:
+                    json_data = json.load(f)
+                    self.set_status(json_data["ID"], json_data["STATUS"])
+                    self.task_results[json_data["ID"]] = json_data["RESULT"]
+                    self.task_md5[json_data["ID"]] = json_data["MD5"]
+                    task_id = json_data["ID"]
+                    if self.task_status[task_id] == STATUS_COMPLETE:
+                        self.complete_queue.put(task_id)
+                    # elif self.task_status[task_id] == STATUS_ERROR:
+                    #     self.error_queue.put(task_id)
+                except Exception as e:
+                    print(f"Error loading history: {e}")
+                    traceback.print_exc()
 
     def start_task(self, task_type, *args, **kwargs):
         # --------- Start task -------------------------------------
@@ -40,12 +66,34 @@ class TaskScheduler:
             self.task_status[task_id] = STATUS_PENDING
             task_instance = task_class(task_id, *args, **kwargs)
             self.task_info[task_id] = task_instance
+            self.task_md5[task_id] = self.generate_md5(json.dumps(args))
 
-            # 加入pending队列
-            self.pending_queue.put(task_id)
-            self.condition.notify_all()  # 通知调度线程
+            # 复用逻辑
+            reuse_id = None
+            for key, value in self.task_md5.items():
+                if key == task_id:
+                    continue
+                if value == self.task_md5[task_id]:
+                    reuse_id = key
+                    self.task_md5[task_id] = None # 置空，防止再次查询到
+                    break
+            if reuse_id:
+                self.task_status[task_id] = STATUS_COMPLETE
+                self.task_results[task_id] = self.task_results[reuse_id]
+                self.complete_queue.put((datetime.now(), task_id))
+                return task_id
+            else:
+                # 加入pending队列
+                self.pending_queue.put(task_id)
+                self.condition.notify_all()  # 通知调度线程
 
         return task_id
+
+    def generate_md5(self, input_string):
+        md5_hasher = hashlib.md5()
+        md5_hasher.update(input_string.encode('utf-8'))
+        md5_hash = md5_hasher.hexdigest()
+        return md5_hash
 
     def _get_task_class(self, task_type):
         """根据任务类型返回相应的任务类"""
@@ -82,6 +130,8 @@ class TaskScheduler:
         try:
             task_instance = self.task_info[task_id]
             self.task_status[task_id] = STATUS_RUNNING
+            # Reuse the result of the task
+            
             result = task_instance.run()
 
             # --------- Update the status and queue ---------------------------
@@ -133,6 +183,11 @@ class TaskScheduler:
 
                 self.error_queue.put(task_id)
                 self.condition.notify_all()
+        finally:
+            if self.get_status(task_id) != 'COMPLETE':
+                return
+            # 持久化任务记录至history
+            self.save_to_history(task_id)
 
     def get_status(self, task_id):
         # --------- Get the status of the task ---------------------------
@@ -147,6 +202,20 @@ class TaskScheduler:
             return 'COMPLETE'
         elif current_status == STATUS_ERROR:
             return 'ERROR'
+        
+    def set_status(self, task_id, status):
+        # --------- Set the status of the task ---------------------------
+        self.task_status[task_id] = status
+        if status == 'COMPLETE':
+            self.task_status[task_id] = STATUS_COMPLETE
+        elif status == 'ERROR':
+            self.task_status[task_id] = STATUS_ERROR
+        elif status == 'PENDING':
+            self.task_status[task_id] = STATUS_PENDING
+        elif status == 'RUNNING':
+            self.task_status[task_id] = STATUS_RUNNING
+        elif status == 'NONE':
+            self.task_status[task_id] = None
 
     def get_result(self, task_id):
         # --------- Get the result of the task ---------------------------
@@ -154,6 +223,19 @@ class TaskScheduler:
             return self.task_results.get(task_id, "Result Not Available")
         return "Task Not Completed or Not Found"
 
+    def save_to_history(self, task_id):
+        # 持久化任务记录至history
+        file_path = os.path.join(os.path.dirname(__file__), "..", "history", f"{task_id}.json")
+        json_data = {
+            "STATUS": self.get_status(task_id),
+            "RESULT": self.get_result(task_id),
+            "TIME": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            # TASK TYPE
+            "ID": task_id,
+            "MD5": self.task_md5[task_id]
+        }
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(json_data, f, ensure_ascii=False, indent=2)
 
 scheduler = None
 
