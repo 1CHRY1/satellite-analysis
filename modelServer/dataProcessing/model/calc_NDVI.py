@@ -29,7 +29,9 @@ class calc_NDVI(Task):
         # 按sceneTime排序
         scenes = sorted(self.scenes, key=parse_time_in_scene)
         # scenes = sorted(self.scenes, key=lambda scene: scene["sceneTime"])
+        sceneTime_list = []
         NDVI_list = []
+        data = []
         for scene in scenes:
             epsg_code = get_tif_epsg(MINIO_ENDPOINT + "/" + scene['images'][0]['bucket'] + "/" + scene['images'][0]['tifPath'])
             x, y = latlon_to_utm(self.lng, self.lat, epsg_code)
@@ -50,9 +52,12 @@ class calc_NDVI(Task):
                 NDVI = 'Nan'
             else:
                 NDVI = (NIR - Red) / (NIR + Red)
+            sceneTime_list.append(scene['sceneTime'])
             NDVI_list.append(NDVI)
-        print({"NDVI": NDVI_list})
-        return json.dumps({"NDVI": NDVI_list})
+            data = [{"sceneTime": sceneTime, "value": value} for sceneTime, value in zip(sceneTime_list, NDVI_list)]
+        NDVI_result = json.dumps({"NDVI": data}, indent=4)
+        print(NDVI_result)
+        return NDVI_result
 
 
 
