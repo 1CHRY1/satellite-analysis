@@ -4,13 +4,9 @@ import uuid
 from types import SimpleNamespace
 import sys
 
-from lxml import etree
 from osgeo import gdal, osr
 import json
-from datetime import datetime, timezone, timedelta
-from dataProcessing.Utils.filenameUtils import get_tif_files
-from dataProcessing.Utils.metaDataUtils import get_xml_content, get_bbox_from_xml_node
-from dataProcessing.Utils.minioUtil import uploadLocalFile, upload_file_by_mc
+from dataProcessing.Utils.minioUtil import uploadLocalFile
 from dataProcessing.Utils.tifUtils import convert_tif2cog, convert_bbox_to_4326
 
 EARTH_RADIUS                                    =       6371008.8
@@ -64,12 +60,6 @@ DB_CONFIG                                       =       {}
 #####    -- upload_data(scene_info)
 #####    -- return
 
-def grid2lnglat(grid_x, grid_y, world_grid_num):
-    """return the left-top geo position of the grid"""
-    lng = grid_x / world_grid_num[0] * 360.0 - 180.0
-    lat = 90.0 - grid_y / world_grid_num[1] * 180.0
-    return lng, lat # left top (lng, lat)
-
 
 def get_basic_info_from_ds(dataset):
     basic_info = {}
@@ -98,7 +88,7 @@ def get_basic_info_from_ds(dataset):
     return basic_info
 
 
-def get_basic_info_from_xml():
+def get_basic_info_from_config():
     global SCENE_CONFIG, DB_CONFIG
     # 初始默认值
     basic_info = {
@@ -110,107 +100,71 @@ def get_basic_info_from_xml():
         "resolution": SCENE_CONFIG["CUR_RESOLUTION"],
         "period": SCENE_CONFIG["CUR_PERIOD"]
     }
-
-    # 读取初步XML
-    xml_path = SCENE_CONFIG["XML_PATH"]
-    try:
-        xml_content = get_xml_content(xml_path)
-        root = etree.XML(xml_content, parser=etree.XMLParser(recover=True))
-        # node = root.find('ProductMetaData')
-        imageMetaDataNode = root.find('ImageMetaData')
-        # productInfoNode = root.find('ProductInfo')
-
-    except Exception as e:
-        print(f"Error processing the xml: {e}")
-        return basic_info
-    if imageMetaDataNode is None:
-        print(f"Error processing the xml")
-        return basic_info
-
-    # 安全地获取各个标签，标签缺失则保持默认值
-    cloud_nodes = imageMetaDataNode.xpath('.//ImageQuality/CloudCoverPercent')
-    if cloud_nodes is not None and cloud_nodes[0] is not None and cloud_nodes[0].text:
-        basic_info["cloud"] = cloud_nodes[0].text
-    end_time_nodes = imageMetaDataNode.xpath('.//GeneralInfo/EndTime')
-    start_time_nodes = imageMetaDataNode.xpath('.//GeneralInfo/StartTime')
-    center_time_nodes = imageMetaDataNode.xpath('.//GeneralInfo/CenterTime')
-    if end_time_nodes is not None and end_time_nodes[0] is not None and end_time_nodes[0].text:
-        basic_info["image_time"] = parse_time(end_time_nodes[0])
-    if start_time_nodes is not None and start_time_nodes[0] is not None and start_time_nodes[0].text:
-        basic_info["image_time"] = parse_time(start_time_nodes[0])
-    if center_time_nodes is not None and center_time_nodes[0] is not None and center_time_nodes[0].text:
-        basic_info["image_time"] = parse_time(center_time_nodes[0])
-    try:
-        productMetaDataNode = productInfoNode.find('ProductMetaData')
-        if productMetaDataNode is not None:
-            basic_info["bbox"] = get_bbox_from_xml_node(productMetaDataNode)
-    except Exception:
-        pass  # 保持默认值
-    
-    # 暂时不管band
-    # bands_node = node.find('Bands')
-    # if bands_node is not None and bands_node.text:
-    #     basic_info["bands"] = bands_node.text.split(',')
-    #     basic_info["band_num"] = len(basic_info["bands"])
+    # cloud/image_time/bbox
+    basic_info["cloud"] = SCENE_CONFIG["XML"]["CLOUD"]
+    basic_info["image_time"] = SCENE_CONFIG["XML"]["IMAGE_TIME"]
+    basic_info["bbox"] = get_bbox_from_config()
 
     return basic_info
 
 
-def parse_time(time_node):
-    if time_node is None or not time_node.text:
+def get_bbox_from_config():
+    global SCENE_CONFIG
+    if SCENE_CONFIG["XML"]["TL"] is None or SCENE_CONFIG["XML"]["BR"] is None or SCENE_CONFIG["XML"]["BL"] is None or SCENE_CONFIG["XML"]["TR"] is None:
         return None
-    
-    time_str = time_node.text.strip()
-    BEIJING_TZ = timezone(timedelta(hours=8))
-    
-    # List of possible time formats to try
-    time_formats = [
-        '%Y-%m-%d %H:%M:%S',  # Existing format
-        '%Y-%m-%dT%H:%M:%S.%fZ',  # ISO 8601 with milliseconds
-        '%Y-%m-%dT%H:%M:%SZ',  # ISO 8601 without milliseconds
-        '%Y-%m-%dT%H:%M:%S.%f%z',  # ISO 8601 with timezone
-        '%Y-%m-%dT%H:%M:%S%z'  # ISO 8601 with timezone, no milliseconds
-    ]
-    
-    for fmt in time_formats:
-        try:
-            # Parse the time, converting to local time if a timezone is present
-            parsed_time = datetime.strptime(time_str, fmt)
-            
-            # If timezone is naive, assume BEIJING_TZ
-            if parsed_time.tzinfo is None:
-                parsed_time = parsed_time.replace(tzinfo=BEIJING_TZ)
-            
-            # Convert to local time and remove timezone info
-            local_time = parsed_time.astimezone().replace(tzinfo=None)
-            
-            # Return in the desired format
-            return local_time.strftime('%Y-%m-%d %H:%M:%S')
-        except ValueError:
-            continue
-    
-    # If no format matches, return None
-    return None
+    # cloud/image_time/bbox
+    top_left_latitude = float(SCENE_CONFIG["XML"]["TL"][1])
+    top_left_longitude = float(SCENE_CONFIG["XML"]["TL"][0])
+    top_right_latitude = float(SCENE_CONFIG["XML"]["TR"][1])
+    top_right_longitude = float(SCENE_CONFIG["XML"]["TR"][0])
+    bottom_right_latitude = float(SCENE_CONFIG["XML"]["BR"][1])
+    bottom_right_longitude = float(SCENE_CONFIG["XML"]["BR"][0])
+    bottom_left_latitude = float(SCENE_CONFIG["XML"]["BL"][1])
+    bottom_left_longitude = float(SCENE_CONFIG["XML"]["BL"][0])
+
+    # Find the minimum and maximum latitude values
+    min_lat = min(top_left_latitude, top_right_latitude, bottom_right_latitude, bottom_left_latitude)
+    max_lat = max(top_left_latitude, top_right_latitude, bottom_right_latitude, bottom_left_latitude)
+
+    # Find the minimum and maximum longitude values
+    min_lon = min(top_left_longitude, top_right_longitude, bottom_right_longitude, bottom_left_longitude)
+    max_lon = max(top_left_longitude, top_right_longitude, bottom_right_longitude, bottom_left_longitude)
+    # 从之前计算的结果中获取值
+    left_lng = min_lon
+    right_lng = max_lon
+    bottom_lat = min_lat
+    top_lat = max_lat
+    # 按照要求的格式创建wgs84_corners
+    wgs84_corners = [(left_lng, top_lat), (right_lng, top_lat), (right_lng, bottom_lat), (left_lng, bottom_lat),
+                     (left_lng, top_lat)]
+    coords_str = ", ".join([f"{x} {y}" for x, y in wgs84_corners])
+    bbox = f"POLYGON(({coords_str}))"
+    return bbox
 
 
-def get_scene_basic_info(info_from_ds, info_from_xml):
+def get_scene_basic_info(info_from_ds, info_from_config):
+    global SCENE_CONFIG
     # 比较两个参数，得出最后结果
     # 以info_from_ds为主，冲突的变量是bbox/bands/band_num，需要新加cloud/image_time/resolution/period
     basic_info = info_from_ds
-    basic_info["cloud"] = info_from_xml["cloud"]
-    basic_info["image_time"] = info_from_xml["image_time"]
-    basic_info["resolution"] = info_from_xml["resolution"]
-    basic_info["period"] = info_from_xml["period"]
-    # bbox XML优先, bands/band_num DS优先
-    if info_from_xml["bbox"] is not None:
-        basic_info["bbox"] = info_from_xml["bbox"]
+    basic_info["cloud"] = info_from_config["cloud"]
+    basic_info["image_time"] = info_from_config["image_time"]
+    basic_info["resolution"] = info_from_config["resolution"]
+    basic_info["period"] = info_from_config["period"]
+    # bbox Config优先, bands/band_num DS优先
+    if info_from_config["bbox"] is not None:
+        basic_info["bbox"] = info_from_config["bbox"]
     if basic_info["bbox"] is None:
         print("空间范围 Bbox 缺失，程序自动退出")
         sys.exit(1)
     if info_from_ds["bands"] is None:
-        basic_info["bands"] = info_from_xml["bands"]
+        basic_info["bands"] = info_from_config["bands"]
     if info_from_ds["band_num"] is None:
-        basic_info["band_num"] = info_from_xml["band_num"]
+        basic_info["band_num"] = info_from_config["band_num"]
+
+    # 如果不是雷达数据，但缺失云量path，云量设置为9999
+    if SCENE_CONFIG["CLOUD_PATH"] is None and SCENE_CONFIG["TAGS"]["production"] != "radar":
+        basic_info["cloud"] = "9999"
     return basic_info
 
 
@@ -298,8 +252,8 @@ def get_scene_info(object_prefix, scene_basic_info_from_ds):
     global SCENE_CONFIG, DB_CONFIG
     scene_path = SCENE_CONFIG["SCENE_PATH"]
     #初始化scene_info
-    scene_basic_info_from_xml = get_basic_info_from_xml()
-    scene_basic_info = get_scene_basic_info(scene_basic_info_from_ds, scene_basic_info_from_xml)
+    scene_basic_info_from_config = get_basic_info_from_config()
+    scene_basic_info = get_scene_basic_info(scene_basic_info_from_ds, scene_basic_info_from_config)
     scene_info = scene_basic_info
     scene_info["image_info_list"] = []
     scene_info["scene_name"] = ""

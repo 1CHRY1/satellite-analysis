@@ -217,7 +217,7 @@
                                                 <div class="result-info-value date-range">
                                                     <div class="date-item">{{ formatTime(tileMergeConfig.dateRange[0],
                                                         'day')
-                                                        }}~
+                                                    }}~
                                                         {{ formatTime(tileMergeConfig.dateRange[1], 'day')
                                                         }}</div>
                                                 </div>
@@ -285,6 +285,7 @@ import {
     Images,
 } from 'lucide-vue-next'
 import { ElMessage } from 'element-plus'
+import { all } from 'axios'
 
 const emit = defineEmits(['submitConfig'])
 const gridStore = useGridStore()
@@ -476,6 +477,19 @@ const filterByTags = async () => {
     // 这个是用网格去切割景，看各个网格里面有哪些景的数据
     let sceneGridsRes = await getSceneGrids(sceneGridParam)
 
+    // console.log("sceneGridsRes", sceneGridsRes)
+    // console.log("all grids ", allGrids.value)
+    // {
+    //     for (let i = 0; i < allGrids.value.length; i++) {
+    //         if (allGrids.value[i].rowId === sceneGridsRes[i].rowId && allGrids.value[i].colId === sceneGridsRes[i].colId) {
+    //             console.log('1')
+    //         } else {
+    //             console.log("not match")
+    //         }
+    //     }
+    // }
+    ezStore.set('sceneGridsRes', sceneGridsRes)
+
 
     // 算覆盖率
     const nonEmptyScenesCount = sceneGridsRes.filter(item => item.scenes.length > 0).length
@@ -501,7 +515,11 @@ const filterByTags = async () => {
                 properties: {
                     ...(item.properties || {}),
                     id: item.properties?.id ?? index, // 确保每个都有 id
-                    opacity: judgeGridOpacity(index, sceneGridsRes)
+                    opacity: judgeGridOpacity(item, sceneGridsRes),
+                    rowId: item.rowId,
+                    columnId: item.columnId,
+                    resolution: item.resolution,
+                    flag: true, // flag means its time to trigger the visual effect
                 }
             }
         })
@@ -510,7 +528,6 @@ const filterByTags = async () => {
     MapOperation.draw_deleteAll()
 
     ElMessage.success(`检索完毕，请查看统计信息并进行下一步操作`)
-    console.log(sceneGridsRes, coverageRate.value);
 }
 
 // 判断格网到底有没有数据，有就返回0.3
