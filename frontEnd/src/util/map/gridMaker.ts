@@ -1,8 +1,8 @@
 import type { polygonGeometry } from '@/util/share.type'
 import { useGridStore } from '@/store/gridStore'
 
-const EarthRadius = 6371008.8
-const EarthCircumference = 2 * Math.PI * EarthRadius
+const EarthCircumference = 40075.0
+const EarchMerdian = 40008.0
 
 export class GridMaker {
     private gridResolutionInMeter: number
@@ -13,7 +13,7 @@ export class GridMaker {
     constructor(gridResolutionInKilometer: number, areaLimitKm2?: number) {
         this.gridResolutionInMeter = gridResolutionInKilometer * 1000
         this.gridNumX = Math.ceil(EarthCircumference / this.gridResolutionInMeter)
-        this.gridNumY = Math.ceil(EarthCircumference / 2.0 / this.gridResolutionInMeter)
+        this.gridNumY = Math.ceil(EarchMerdian / 2.0 / this.gridResolutionInMeter)
         this.areaLimitKm2 = areaLimitKm2 || 2500
     }
 
@@ -116,7 +116,7 @@ function calculateBbox(polygon: polygonGeometry) {
         topLeft: [minX, maxY], // 左上角经纬度
         bottomRight: [maxX, minY], // 右下角经纬度
     }
-}
+}``
 
 function grid2lnglat(gridX: number, gridY: number, gridNumX: number, gridNumY: number) {
     const lng = (gridX / gridNumX) * 360.0 - 180.0
@@ -124,28 +124,49 @@ function grid2lnglat(gridX: number, gridY: number, gridNumX: number, gridNumY: n
     return [lng, lat]
 }
 
-function calculateGridArea(
-    leftLng: number,
-    topLat: number,
-    rightLng: number,
-    bottomLat: number,
-): number {
-    // 使用Haversine公式计算网格的实际宽度和高度
-    const width = calculateDistance(leftLng, topLat, rightLng, topLat);
-    const height = calculateDistance(leftLng, topLat, leftLng, bottomLat);
-    
-    // 返回网格面积（平方米）
-    return width * height;
+export function grid2bbox(gridX: number, gridY: number, resolutionKM: number) {
+    const gridNumX = Math.ceil(EarthCircumference / resolutionKM);
+    const gridNumY = Math.ceil(EarchMerdian / 2.0 / resolutionKM);
+    return [
+        ...grid2lnglat(gridX, gridY + 1, gridNumX, gridNumY),
+        ...grid2lnglat(gridX + 1, gridY, gridNumX, gridNumY),
+    ]
 }
 
-// 使用Haversine公式计算两点间距离
-function calculateDistance(lng1: number, lat1: number, lng2: number, lat2: number): number {
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a = 
-        Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-        Math.sin(dLng/2) * Math.sin(dLng/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return EarthRadius * c;
+export function grid2Coordinates(gridX: number, gridY: number, resolutionKM: number) {
+    const [minLng, minLat, maxLng, maxLat] = grid2bbox(gridX, gridY, resolutionKM)
+    const result = [
+        [minLng, minLat],
+        [minLng, maxLat],
+        [maxLng, maxLat],
+        [maxLng, minLat],
+    ]
+    return result
 }
+
+
+// function calculateGridArea(
+//     leftLng: number,
+//     topLat: number,
+//     rightLng: number,
+//     bottomLat: number,
+// ): number {
+//     // 使用Haversine公式计算网格的实际宽度和高度
+//     const width = calculateDistance(leftLng, topLat, rightLng, topLat);
+//     const height = calculateDistance(leftLng, topLat, leftLng, bottomLat);
+
+//     // 返回网格面积（平方米）
+//     return width * height;
+// }
+
+// // 使用Haversine公式计算两点间距离
+// function calculateDistance(lng1: number, lat1: number, lng2: number, lat2: number): number {
+//     const dLat = (lat2 - lat1) * Math.PI / 180;
+//     const dLng = (lng2 - lng1) * Math.PI / 180;
+//     const a =
+//         Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+//         Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+//         Math.sin(dLng / 2) * Math.sin(dLng / 2);
+//     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+//     return EarthRadius * c;
+// }
