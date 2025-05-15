@@ -12,16 +12,19 @@ spring:
       strict: false
       datasource:
         mysql_satellite:
-          url: jdbc:mysql://223.2.34.7:3306/satellite
+          #          url: jdbc:mysql://223.2.34.7:3306/satellite
+          url: jdbc:mysql://223.2.47.202:3306/satellite
           username: root
-          password: root
+#          password: root
+          password: 123456
           driver-class-name: com.mysql.cj.jdbc.Driver
           hikari:
             connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
         mysql_tile:
-          url: jdbc:mysql://223.2.34.7:3306/tile
+          #          url: jdbc:mysql://223.2.34.7:3306/tile
+          url: jdbc:mysql://223.2.47.202:3306/tile
           username: root
-          password: root
+          password: 123456
           driver-class-name: com.mysql.cj.jdbc.Driver
   servlet:
     multipart:
@@ -48,7 +51,9 @@ mybatis-plus:
 minio:
   access-key: jTbgNHEqQafOpUxVg7Ol
   secret-key: 7UxtrqhSOyN1KUeumbqTRMv1zeluLO69OwJnCC0M
-  url: http://223.2.34.7:9000
+  #  url: http://223.2.34.7:9000
+  url: http://223.2.43.228:30900
+
 
 docker:
   defaultServer:
@@ -66,13 +71,13 @@ docker:
   workDir: /usr/local/coding/
 
 modelServer:
-  address: http://223.2.34.7:5000
+  address: http://223.2.43.228:30500
   apis:
     status: /v0/task/status
     result: /v0/task/result
     merge: /v0/tif/merge_v2
-    ndviPoint: /ndviPoint
-    ndviArea: /ndviArea
+    noCloud: /v0/tif/calc_qa
+    ndvi: /v0/tif/calc_NDVI
   interval:
     status: 2
 
