@@ -44,13 +44,13 @@ public class GridDataService {
             for (String sceneId : sceneIds) {
                 Scene scene = sceneDataService.getSceneById(sceneId);
                 Geometry gridPoly = TileCalculateUtil.getTileGeomByIdsAndResolution(grid.getRowId(), grid.getColumnId(), grid.getResolution());
-                if (scene.getBbox().disjoint(gridPoly)) {
+                if (scene.getBbox().disjoint(gridPoly) ) {
                     continue;
                 }
                 List<ModelServerImageDTO> imageDTOS = imageDataService.getModelServerImageDTOBySceneId(sceneId);
                 ModelServerSceneDTO sceneDto = ModelServerSceneDTO.builder()
                         .sceneId(sceneId).cloudPath(scene.getCloudPath())
-                        .sceneTime(scene.getSceneTime()).images(imageDTOS).build();
+                        .sceneTime(scene.getSceneTime()).bucket(scene.getBucket()).images(imageDTOS).build();
                 sceneDtos.add(sceneDto);
             }
             GridSceneVO gridRes = GridSceneVO.builder()

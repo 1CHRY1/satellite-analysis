@@ -23,6 +23,7 @@ def create_cron_scheduler():
     # --------- Create Cron Jobs -------------------------------
     global cron_scheduler
     if not cron_scheduler.running:
-        cron_scheduler.add_job(delete_old_objects, 'cron', hour=0, minute=0)  # 每天 00:00 运行
-        cron_scheduler.add_job(reset_scheduler, 'cron', minute='*/30')
+        # 暂时屏蔽以下任务
+        # cron_scheduler.add_job(delete_old_objects, 'cron', hour=0, minute=0)  # 每天 00:00 运行
+        # cron_scheduler.add_job(reset_scheduler, 'cron', minute='*/30')
         cron_scheduler.start()

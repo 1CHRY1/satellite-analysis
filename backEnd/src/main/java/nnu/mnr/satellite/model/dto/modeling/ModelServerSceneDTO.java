@@ -21,6 +21,7 @@ public class ModelServerSceneDTO {
 
     private String sceneId;
     private String cloudPath;
+    private String bucket;
     private LocalDateTime sceneTime;
     private List<ModelServerImageDTO> images;
 

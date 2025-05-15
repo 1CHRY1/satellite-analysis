@@ -6,7 +6,7 @@ import rasterio
 from PIL import Image
 import io
 import numpy as np
-from osgeo import gdal
+from osgeo import gdal, ogr
 from collections import defaultdict
 from pyproj import CRS, Transformer
 # 计算云量新增包
@@ -15,7 +15,9 @@ from rasterio.mask import mask
 from shapely.geometry import shape
 from shapely.ops import unary_union
 from osgeo import osr
+import dataProcessing.config as config
 
+MINIO_ENDPOINT = f"http://{config.MINIO_IP}:{config.MINIO_PORT}"
 
 def read_band(path):
     """读取单波段栅格数据"""
@@ -386,14 +388,15 @@ def mband(merged_tif_list, output_path, output_name="merged.tif"):
     grouped_by_band = defaultdict(list)
     for entry in merged_tif_list:
         band = entry["band"]
-        path = entry["path"]
+        path = MINIO_ENDPOINT + "/" + entry["bucket"] + "/" + entry["tifPath"]
         grouped_by_band[band].append(path)
 
     os.makedirs(output_path, exist_ok=True)
     output_file = os.path.join(output_path, output_name)
 
     # --------- Create output ds according to first tif -------------
-    sample_ds = gdal.Open(merged_tif_list[0]["path"])
+    sample_path = MINIO_ENDPOINT + "/" + entry["bucket"] + "/" + merged_tif_list[0]["tifPath"]
+    sample_ds = gdal.Open(sample_path)
     geotransform = sample_ds.GetGeoTransform()
     projection = sample_ds.GetProjection()
     cols = sample_ds.RasterXSize
@@ -462,12 +465,20 @@ def bbox_to_geojsonFeatureGeometry(bbox):
 
 def calculate_cloud_coverage(image_path, bbox):
     with rasterio.open(image_path) as src:
-        bbox_proj = transform_bounds(
-            'EPSG:4326',  # WGS84
-            src.crs,  # 图像的投影
-            *bbox  # 解包 bbox: minx, miny, maxx, maxy
-        )
-        out_image, out_transform = mask(src, [bbox_to_geojsonFeatureGeometry(bbox_proj)], crop=True)
+        # TEMP 如果crs为空，则认为bbox为WGS84坐标系,不予转换
+        if src.crs is None:
+            bbox_proj = bbox
+        else:
+            bbox_proj = transform_bounds(
+                'EPSG:4326',  # WGS84
+                src.crs,  # 图像的投影
+                *bbox  # 解包 bbox: minx, miny, maxx, maxy
+            )
+        try:
+            out_image, out_transform = mask(src, [bbox_to_geojsonFeatureGeometry(bbox_proj)], crop=True)
+        except Exception as e:
+            print(f"裁剪失败：{e}")
+            return 0
         out_meta = src.meta.copy()
 
     # 更新元数据
@@ -565,3 +576,62 @@ def latlon_to_utm(longitude, latitude, epsg_code):
     # 转换坐标
     x, y = transformer.transform(longitude, latitude)
     return x, y
+
+# 转时间戳函数
+def parse_time_in_scene(scene):
+    from datetime import datetime
+    return datetime.strptime(scene["sceneTime"], "%Y-%m-%d %H:%M:%S")
+
+# 判断bbox与tif是否相交
+def check_intersection(tif_path, bounding_box):
+    # 打开GeoTIFF文件
+    dataset = gdal.Open(tif_path)
+    if dataset is None:
+        raise ValueError("Could not open the GeoTIFF file.")
+    # 获取GeoTIFF的地理变换信息
+    try:
+        # 可能引发异常的代码
+        geotransform = dataset.GetGeoTransform()
+    except Exception as e:
+        # 捕获所有异常并打印类型
+        print(dataset)
+        print(f"Caught an exception: {type(e).__name__}")
+        print(f"Exception details: {e}")
+    geotransform = dataset.GetGeoTransform()
+    originX = geotransform[0]
+    originY = geotransform[3]
+    pixelWidth = geotransform[1]
+    pixelHeight = geotransform[5]
+    # 获取GeoTIFF的宽度和高度
+    cols = dataset.RasterXSize
+    rows = dataset.RasterYSize
+
+    # 计算GeoTIFF的边界
+    tif_min_x = originX
+    tif_max_x = originX + cols * pixelWidth
+    tif_min_y = originY + rows * pixelHeight
+    tif_max_y = originY
+
+    # 创建GeoTIFF的边界多边形
+    tif_polygon = ogr.Geometry(ogr.wkbPolygon)
+    ring = ogr.Geometry(ogr.wkbLinearRing)
+    ring.AddPoint(tif_min_x, tif_min_y)
+    ring.AddPoint(tif_max_x, tif_min_y)
+    ring.AddPoint(tif_max_x, tif_max_y)
+    ring.AddPoint(tif_min_x, tif_max_y)
+    ring.AddPoint(tif_min_x, tif_min_y)  # 闭合多边形
+    tif_polygon.AddGeometry(ring)
+
+    # 从bounding_box创建多边形
+    bbox_polygon = ogr.Geometry(ogr.wkbPolygon)
+    ring = ogr.Geometry(ogr.wkbLinearRing)
+    ring.AddPoint(bounding_box[0], bounding_box[1])  # 左下角
+    ring.AddPoint(bounding_box[2], bounding_box[1])  # 右下角
+    ring.AddPoint(bounding_box[2], bounding_box[3])  # 右上角
+    ring.AddPoint(bounding_box[0], bounding_box[3])  # 左上角
+    ring.AddPoint(bounding_box[0], bounding_box[1])  # 闭合多边形
+    bbox_polygon.AddGeometry(ring)
+
+    # 检查相交
+    print(tif_polygon.Intersects(bbox_polygon))
+    return tif_polygon.Intersects(bbox_polygon)

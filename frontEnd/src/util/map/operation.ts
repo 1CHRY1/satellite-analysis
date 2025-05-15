@@ -7,6 +7,10 @@ import { watch } from 'vue'
 import type { polygonGeometry } from '../share.type'
 import { ezStore, useGridStore } from '@/store'
 
+import { createApp, type ComponentInstance, ref, type Ref } from 'vue'
+import PopoverContent, { type GridData } from '@/components/feature/map/popoverContent.vue'
+
+
 ////////////////////////////////////////////////////////
 /////// Map Operation //////////////////////////////////
 
@@ -165,6 +169,32 @@ export function getCurrentGeometry(): polygonGeometry {
         ],
     }
 }
+
+
+////////////////////////////////////////////////////////
+/////// Grid Popup ////////////////////////////////
+
+function createPopoverContent() {
+    const div = document.createElement('div')
+    div.id = 'popover-content'
+    document.body.appendChild(div)
+
+    const gridDataRef = ref<GridData>({
+        rowId: 0,
+        columnId: 0,
+        resolution: 0,
+        scenes: []
+    })
+
+    ezStore.set('gridPopupDataRef', gridDataRef)
+
+    const app = createApp(PopoverContent, {
+        gridData: gridDataRef,
+    })
+    app.mount('#popover-content') as ComponentInstance<typeof PopoverContent>
+    return div
+}
+
 
 ////////////////////////////////////////////////////////
 /////// Layer Operation ////////////////////////////////
@@ -357,16 +387,27 @@ export function map_destroyImagePreviewLayer(): void {
 
 function grid_fill_click_handler(e: MapMouseEvent): void {
     const features = e.features!
-    if (features.length) {
-        const featureId = features[0].properties?.id
-        // popup.setLngLat(e.lngLat).setText(text).addTo(m)
 
-        // Toggle highlight
-        if (gridStore.selectedGrids.includes(featureId)) {
-            gridStore.removeGrid(featureId)
-        } else {
-            gridStore.addGrid(featureId)
-        }
+    if (features.length && features[0].properties && features[0].properties.flag) {
+
+        const sceneGridsRes = ezStore.get('sceneGridsRes')
+
+        const gridInfo = sceneGridsRes.find((item: any) => {
+            return item.rowId === features[0].properties!.rowId && item.columnId === features[0].properties?.columnId
+        })
+
+        const gridPopupDataRef = ezStore.get('gridPopupDataRef')
+        gridPopupDataRef.value = gridInfo
+
+        const popup = ezStore.get('gridPopup') as Popup
+        popup.setLngLat(e.lngLat).addTo(ezStore.get('map'))
+
+        const id = 'grid-layer'
+        const highlightId = id + '-highlight'
+        ezStore.get('map').setFilter(highlightId, ['in', 'id', e.features![0].properties!.id])
+
+
+        console.log(features[0], gridInfo)
     }
 }
 
@@ -379,11 +420,20 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
     const srcId = id + '-source'
 
     mapManager.withMap((m) => {
+        ezStore.set('map', m)
         // Add a popup to show grid info
-        // const popup = new mapboxgl.Popup({
-        //     closeButton: false,
-        //     closeOnMove: true,
-        // })
+        if (!ezStore.get('gridPopup')) {
+            const popup = new Popup({
+                closeButton: false,
+                closeOnMove: false,
+            })
+            const dom = createPopoverContent()
+            popup.setDOMContent(dom).addTo(m)
+
+            ezStore.set('gridPopup', popup)
+        }
+
+
         // Add a geojson source
         m.addSource(srcId, {
             type: 'geojson',
@@ -411,21 +461,22 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
             },
         })
         // Add a filterable fill layer for **grid highlighting**
-        const nowSelectedGrids = Array.from(gridStore.selectedGrids) || ['']
+        // const nowSelectedGrids = Array.from(gridStore.selectedGrids) || ['']
         m.addLayer({
             id: highlightId,
             type: 'fill',
             source: srcId,
             paint: {
-                'fill-color': '#FF9900',
+                // 'fill-color': '#FF9900',
+                'fill-color': '#0000FF',
                 'fill-opacity': 0.3,
             },
-            filter: ['in', 'id', ...nowSelectedGrids],
+            // filter: ['in', 'id', ...nowSelectedGrids],
+            filter: ['in', 'id', ''],
         })
 
         // // Add a click event listener to the invisible fill layer
-        // m.on('click', fillId, grid_fill_click_handler)
-
+        m.on('click', fillId, grid_fill_click_handler)
         // // Keep Watching gridStore.selectedGrids and update the highlight layer
         // const cancelWatch = watch(
         //     () => gridStore.selectedGrids,
@@ -466,3 +517,6 @@ export function map_destroyGridLayer(): void {
         ezStore.delete('grid-layer-cancel-watch')
     })
 }
+
+
+
