@@ -4,5 +4,6 @@
     "back_app2": "/api2",
     "back_websocket": "",
     "basemap_server": "/basemap",
-    "minioIpAndPort": ""
+    "minioIpAndPort": "http://223.2.32.166:30900",
+    "titiler": "http://223.2.32.166:31800"
 }
