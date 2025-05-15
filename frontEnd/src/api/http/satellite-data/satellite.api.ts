@@ -145,3 +145,23 @@ export async function getRegionPosition(region: number): Promise<any> {
 export async function getSceneGrids(param: any): Promise<any> {
     return http.post<any>(`data/grid/scene/grids`, param)
 }
+
+export async function getNoCloud(param: any): Promise<any> {
+    return http.post<any>(`modeling/example/noCloud`, param)
+}
+
+export async function getNdviPoint(param: any): Promise<any> {
+    return http.post<any>(`modeling/example/ndvi/point`, param)
+}
+
+export async function getCaseStatus(taskId: string): Promise<any> {
+    return http.get<any>(`modeling/case/status/caseId/${taskId}`)
+}
+
+export async function getCaseTifResult(taskId: string): Promise<any> {
+    return http.get<any>(`modeling/case/result/tif/caseId/${taskId}`)
+}
+
+export async function getCaseResult(taskId: string): Promise<any> {
+    return http.get<any>(`modeling/case/result/caseId/${taskId}`)
+}
