@@ -26,8 +26,8 @@ STATUS_ERROR                                    =       0b100000
 STATUS_DELETE                                   =       0b1000000
 
 # MinIO Config
-MINIO_PORT                                      =       30900
-MINIO_IP                                        =       "223.2.43.228"
+MINIO_PORT                                      =       9000
+MINIO_IP                                        =       "127.0.0.1"
 MINIO_ACCESS_KEY                                =       "jTbgNHEqQafOpUxVg7Ol"
 MINIO_SECRET_KEY                                =       "7UxtrqhSOyN1KUeumbqTRMv1zeluLO69OwJnCC0M"
 MINIO_SECURE                                    =       False
@@ -37,13 +37,13 @@ MINIO_GRID_BUCKET                               =       "test-tiles"
 MINIO_TEMP_FILES_BUCKET                         =       "temp-files"
 
 # MySQL Config
-MYSQL_HOST                                      =       "223.2.43.228"
-MYSQL_TILE_PORT                                 =       30779
+MYSQL_HOST                                      =       "127.0.0.1"
+MYSQL_TILE_PORT                                 =       3306
 MYSQL_TILE_DB                                   =       "tile"
-MYSQL_RESOURCE_PORT                             =       30778
-MYSQL_RESOURCE_DB                               =       "resource"
+MYSQL_RESOURCE_PORT                             =       3306
+MYSQL_RESOURCE_DB                               =       "satellite"
 MYSQL_USER                                      =       "root"
-MYSQL_PWD                                       =       "123456"
+MYSQL_PWD                                       =       "root"
 
 # Gdal_Config
 GDAL_PROJ_LIB                                   =       r"F:\App\anaconda3\envs\bankModel\Library\share"
