@@ -6,12 +6,17 @@
             <button @click="handleZoomIn" class="map-button">➕</button>
             <button @click="handleZoomOut" class="map-button">➖</button>
         </div>
+        <CubeTimeline class="absolute bottom-10 right-1/2 flex gap-2 translate-x-1/2" v-model="cubeTimelineShow">
+        </CubeTimeline>
     </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, type PropType } from 'vue'
+import { onMounted, onUnmounted, type PropType, ref } from 'vue'
 import * as MapOperation from '@/util/map/operation'
+import CubeTimeline from './cubeTimeline.vue'
+import bus from '@/store/bus'
+
 
 const props = defineProps({
     style: {
@@ -28,6 +33,8 @@ const props = defineProps({
     }
 })
 
+const cubeTimelineShow = ref(true)
+
 const handleFitView = () => {
     MapOperation.map_fitViewToCN()
 }
@@ -40,6 +47,38 @@ const handleZoomOut = () => {
 
 onMounted(() => {
     MapOperation.map_initiliaze('mapContainer', props.style, props.proj)
+
+    window.addEventListener('keydown', e => {
+        if (e.key === '1') {
+            cubeTimelineShow.value = !cubeTimelineShow.value
+        }
+        if (e.key === '2') {
+
+            // debug
+            const mockImgs = [{
+                tifFullPath: '/a/b',
+                sceneId: '123',
+                time: '2022-01-01',
+            }, {
+                tifFullPath: '/a/b/c',
+                sceneId: '123',
+                time: '2022-05-01',
+            }, {
+                tifFullPath: '/a/b',
+                sceneId: '213',
+                time: '2023-01-01',
+            }]
+            const mockGrid = {
+                rowId: 0,
+                columnId: 0,
+                resolution: 0
+            }
+
+            bus.emit('cubeVisualize', mockImgs, mockGrid)
+
+        }
+    })
+
 })
 
 onUnmounted(() => {
@@ -55,6 +94,12 @@ onUnmounted(() => {
 }
 
 :deep(.mapboxgl-popup-content) {
-    @apply bg-white font-medium text-black;
+    /* @apply  font-medium text-black; */
+    background-color: transparent;
+    padding: 0;
+}
+
+:deep(.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip) {
+    border-top-color: rgb(1, 0, 51);
 }
 </style>
