@@ -36,22 +36,25 @@ class calc_qa(Task):
             for scene in self.scenes:
                 cloud_path = MINIO_ENDPOINT + "/" + scene['bucket'] + "/" + scene['cloudPath']
                 if check_intersection(cloud_path, bbox):
+                    print("开始计算云量")
                     qa = calculate_cloud_coverage(cloud_path, bbox)
+                    print("云量:", qa)
                     qas.append(qa)
             min_qa = min(qas)
             min_index = qas.index(min_qa) # 获取云量列表中最小值索引
             images = self.scenes[min_index]['images']
-            tif_paths = list() # 记录需要融合的tif路径
-            for image in images:
-                tif_paths.append(MINIO_ENDPOINT + "/" + image['bucket'] + "/" + image['tifPath'])
+            images = [image for image in images if image['band'] in ("2", "3", "4")]
+            print("需要融合波段图像：", images)
             # 需要将wgs 84 转成 utm，才能正常裁剪范围
-            epsg_code = get_tif_epsg(tif_paths[0])
+            epsg_code = get_tif_epsg(MINIO_ENDPOINT + "/" + self.scenes[min_index]['bucket'] + "/" + images[0]["tifPath"])
             bbox = convert_bbox_to_utm(bbox, epsg_code)
-            output_file = mband(images, config.TEMP_OUTPUT_DIR, output_name='mband' + str(index) + '.tif')
+            print("开始融合多波段影像")
+            mband_output_file = mband(images, config.TEMP_OUTPUT_DIR, output_name='mband' + str(index) + '.tif')
             warp_file = config.TEMP_OUTPUT_DIR + '\\mtif' + str(index) + '.tif'
+            print("开始按瓦片范围裁剪:", bbox)
             gdal.Warp(
                 warp_file,
-                output_file,
+                mband_output_file,
                 outputBounds=bbox
             )
             print(f'裁剪影像已保存至{warp_file}')
@@ -65,8 +68,9 @@ class calc_qa(Task):
         output_file_path = convert_tif2cog(result_file)
         object_name = f"{datetime.now().strftime('%Y-%m/%d')}/{uuid.uuid4()}.tif"
         uploadLocalFile(output_file_path, config.MINIO_TEMP_FILES_BUCKET, object_name)
-        print(f'文件已上传至{config.MINIO_TEMP_FILES_BUCKET + '/' + object_name}')
-        return json.dumps({"path":config.MINIO_TEMP_FILES_BUCKET + '/' + object_name})
+        print(f"文件已上传至{config.MINIO_TEMP_FILES_BUCKET + '/' + object_name}")
+        print(json.dumps({"bucket": config.MINIO_TEMP_FILES_BUCKET, "tifPath": object_name}))
+        return json.dumps({"bucket": config.MINIO_TEMP_FILES_BUCKET, "tifPath": object_name})
 
 # if __name__ == "__main__":
 #     data_root_path = 'D:\\IdeaProjects\\test\\'
