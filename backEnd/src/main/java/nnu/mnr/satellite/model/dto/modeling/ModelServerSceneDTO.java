@@ -25,4 +25,8 @@ public class ModelServerSceneDTO {
     private LocalDateTime sceneTime;
     private List<ModelServerImageDTO> images;
 
+    // 关联表字段
+    private String sensorName;
+    private String productName;
+
 }
