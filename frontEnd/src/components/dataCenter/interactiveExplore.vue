@@ -217,7 +217,7 @@
                                                 <div class="result-info-value date-range">
                                                     <div class="date-item">{{ formatTime(tileMergeConfig.dateRange[0],
                                                         'day')
-                                                    }}~
+                                                        }}~
                                                         {{ formatTime(tileMergeConfig.dateRange[1], 'day')
                                                         }}</div>
                                                 </div>

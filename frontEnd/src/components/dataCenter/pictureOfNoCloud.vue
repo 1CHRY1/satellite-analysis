@@ -494,7 +494,7 @@ const previewNoCloud = async (imageUrl: string) => {
 
 }
 // 假操作进度条统一时间
-const mockProgressTime = 2000
+const mockProgressTime = 6000
 // 操控进度条
 const controlProgress = (index: number) => {
 
