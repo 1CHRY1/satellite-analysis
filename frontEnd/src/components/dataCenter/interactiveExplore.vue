@@ -217,7 +217,7 @@
                                                 <div class="result-info-value date-range">
                                                     <div class="date-item">{{ formatTime(tileMergeConfig.dateRange[0],
                                                         'day')
-                                                        }}~
+                                                    }}~
                                                         {{ formatTime(tileMergeConfig.dateRange[1], 'day')
                                                         }}</div>
                                                 </div>
@@ -303,11 +303,12 @@ const tileMergeConfig = ref({
     cloudRange: [0, 100],
 })
 const region = ref<RegionValues>({
-    province: '',
+    province: '110000',
     city: '',
     area: '',
 })
-const allGrids = ref<any[]>([])
+const allGrids = ref([])
+const currentCityBounds = ref([])
 // 计算到了哪一级行政单位
 const displayLabel = computed(() => {
     let info = region.value
@@ -332,6 +333,7 @@ const getAllGrid = async () => {
     let gridRes = await getGridByRegionAndResolution(displayLabel.value, selectedRadius.value)
     allGrids.value = gridRes
     let window = await getRegionPosition(displayLabel.value)
+    currentCityBounds.value = boundaryRes
     // 先清除现有的矢量边界，然后再添加新的
     MapOperation.map_addPolygonLayer({
         geoJson: boundaryRes,
@@ -403,10 +405,10 @@ const filterByCloudAndDate = async () => {
 const buttonGroups = [
     ['国产影像', '国外影像'],
     ['光学影像', 'SAR影像'],
-    ['原始数据', 'ARD数据']
+    ['原始影像', 'ARD影像']
 ]
 // 存储已激活的按钮标签
-const activeButtons = ref<Set<string>>(new Set(['国产影像', '光学影像', '原始数据']))
+const activeButtons = ref<Set<string>>(new Set(['国产影像', '光学影像', '原始影像']))
 // 切换按钮选中状态
 const toggleButton = (label: string) => {
     if (activeButtons.value.has(label)) {
@@ -424,13 +426,23 @@ const tagMap: Record<string, string> = {
     '国外影像': 'international',
     '光学影像': 'light',
     'SAR影像': 'radar',
-    '原始数据': 'traditional',
-    'ARD数据': 'ard',
+    '原始影像': 'traditional',
+    'ARD影像': 'ard',
 }
 
 const filteredImages: Ref<any[]> = ref([])
 const coverageRate = ref('0.00%')
 const filterByTags = async () => {
+    emit('submitConfig', {
+        regionCode: displayLabel.value,
+        dataRange: [...tileMergeConfig.value.dateRange],
+        cloud: tileMergeConfig.value.cloudRange[1],
+        space: selectedRadius.value,
+        coverage: coverageRate.value,
+        images: allFilteredImages.value,
+        grids: allGrids.value,
+        boundary: currentCityBounds.value
+    })
     if (!verifyFilterByTags()) {
         return
     }
@@ -456,6 +468,7 @@ const filterByTags = async () => {
         }),
         sceneIds: filteredImages.value.map(images => images.sceneId)
     }
+
     // 清除格网图层，得放到一个请求上面，不然添加图层的时候还没销毁
     gridStore.cleadAllGrids()
     MapOperation.map_destroyImagePolygon()
@@ -481,15 +494,18 @@ const filterByTags = async () => {
     // 算覆盖率
     const nonEmptyScenesCount = sceneGridsRes.filter(item => item.scenes.length > 0).length
     coverageRate.value = (nonEmptyScenesCount * 100 / sceneGridsRes.length).toFixed(2) + '%';
-    emit('submitConfig', {
-        regionCode: displayLabel.value,
-        dataRange: [...tileMergeConfig.value.dateRange],
-        cloud: tileMergeConfig.value.cloudRange[1],
-        space: selectedRadius,
-        coverage: coverageRate.value,
-        images: allFilteredImages.value,
-        grids: allGrids.value,
-    })
+
+    // emit('submitConfig', {
+    //     regionCode: displayLabel.value,
+    //     dataRange: [...tileMergeConfig.value.dateRange],
+    //     cloud: tileMergeConfig.value.cloudRange[1],
+    //     space: selectedRadius.value,
+    //     coverage: coverageRate.value,
+    //     images: allFilteredImages.value,
+    //     grids: allGrids.value,
+    // })
+
+    // 添加带有数据指示的格网
     let gridFeature: FeatureCollection = {
         type: 'FeatureCollection',
         features: allGrids.value.map((item: any, index) => {
@@ -515,15 +531,10 @@ const filterByTags = async () => {
 }
 
 // 判断格网到底有没有数据，有就返回0.3
-const judgeGridOpacity = (item: any, sceneGridsRes: any) => {
+const judgeGridOpacity = (index: number, sceneGridsRes: any) => {
     let opacity = 0.01
-    sceneGridsRes.forEach(element => {
-        if (element.columnId === item.columnId && element.rowId === item.rowId) {
-            element.scenes.length > 0 ? opacity = 0.3 : opacity = 0.01;
-        }
-    });
+    sceneGridsRes[index].scenes.length > 0 ? opacity = 0.3 : opacity = 0.01;
     return opacity
-
 }
 // 卫语句
 const verifyFilterByTags = () => {
@@ -544,16 +555,13 @@ const verifyFilterByTags = () => {
         ElMessage.warning('请选择您需要的传感器类型')
         return false
     }
-    if (!buttons.has('原始数据') && !buttons.has('ARD数据')) {
+    if (!buttons.has('原始影像') && !buttons.has('ARD影像')) {
         ElMessage.warning('请选择您需要的数据级别')
         return false
     }
     return true
 }
 
-/**
- * 检索结果
- */
 
 
 </script>
