@@ -36,10 +36,11 @@ class MergeTifTaskV2(Task):
             merged_tif_list.append({"path": temp_tif_path, "band": band})
 
         # --------- Merge and upload tif -------------------------------
-        output_file_path = mband(merged_tif_list, config.TEMP_OUTPUT_DIR, f"{uuid.uuid4()}.tif")
-        output_file_path = convert_tif2cog(output_file_path)
+        # mband 变化，以下逻辑暂时不可用
+        # output_file_path = mband(merged_tif_list, config.TEMP_OUTPUT_DIR, f"{uuid.uuid4()}.tif")
+        # output_file_path = convert_tif2cog(output_file_path)
         object_name = f"{datetime.now().strftime('%Y-%m/%d')}/{uuid.uuid4()}.tif"
-        uploadLocalFile(output_file_path, config.MINIO_TEMP_FILES_BUCKET, object_name)
+        # uploadLocalFile(output_file_path, config.MINIO_TEMP_FILES_BUCKET, object_name)
         # time.sleep(20)
         return {
             "bucket": config.MINIO_TEMP_FILES_BUCKET,
