@@ -1,4 +1,4 @@
-package nnu.mnr.satellite.model.po.resources;
+package nnu.mnr.satellitemodeling.model.po.resources;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -8,9 +8,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import nnu.mnr.satellite.utils.typeHandler.FastJson2TypeHandler;
-import nnu.mnr.satellite.utils.typeHandler.GeometryTypeHandler;
-import nnu.mnr.satellite.utils.typeHandler.SetTypeHandler;
+import nnu.mnr.satellitemodeling.utils.typeHandler.FastJson2TypeHandler;
+import nnu.mnr.satellitemodeling.utils.typeHandler.GeometryTypeHandler;
+import nnu.mnr.satellitemodeling.utils.typeHandler.SetTypeHandler;
 import org.locationtech.jts.geom.Geometry;
 
 import java.time.LocalDateTime;

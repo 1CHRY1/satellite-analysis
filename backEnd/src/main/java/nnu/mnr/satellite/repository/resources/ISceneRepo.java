@@ -27,7 +27,7 @@ public interface ISceneRepo extends BaseMapper<Scene> {
 
     @Select("SELECT sc.scene_id, sc.scene_name, sc.scene_time, sc.tile_level_num, sc.tile_levels, sc.coordinate_system, " +
             "sc.description, sc.band_num, sc.bands, sc.cloud, sc.tags, " +
-            "ss.sensor_name, pd.product_name, " +
+            "ss.sensor_name, pd.product_name, pd.resolution, " +
             "(SELECT CONCAT('[', GROUP_CONCAT(JSON_OBJECT('path', im.tif_path, 'band', im.band)), ']') " +
             "FROM image_table im WHERE im.scene_id = sc.scene_id) AS image_list " +
             "FROM scene_table sc " +
@@ -52,6 +52,7 @@ public interface ISceneRepo extends BaseMapper<Scene> {
             @Result(property = "tags", column = "tags", typeHandler = FastJson2TypeHandler.class),
             @Result(property = "sensorName", column = "sensor_name"),
             @Result(property = "productName", column = "product_name"),
+            @Result(property = "resolution", column = "resolution"),
 //            @Result(property = "imageList", column = "image_list", typeHandler = JSONArrayTypeHandler.class)
     })
     List<SceneDesVO> getScenesDesByTimeCloudAndGeometry(
@@ -62,7 +63,7 @@ public interface ISceneRepo extends BaseMapper<Scene> {
 
     @Select("SELECT sc.scene_id, sc.scene_name, sc.scene_time, sc.tile_level_num, sc.tile_levels, sc.coordinate_system, " +
             "sc.description, sc.band_num, sc.bands, sc.cloud, sc.tags, " +
-            "ss.sensor_name, pd.product_name, " +
+            "ss.sensor_name, pd.product_name, pd.resolution, " +
             "(SELECT CONCAT('[', GROUP_CONCAT(JSON_OBJECT('path', im.tif_path, 'band', im.band)), ']') " +
             "FROM image_table im WHERE im.scene_id = sc.scene_id) AS image_list " +
             "FROM scene_table sc " +
@@ -83,13 +84,14 @@ public interface ISceneRepo extends BaseMapper<Scene> {
             @Result(property = "tags", column = "tags", typeHandler = FastJson2TypeHandler.class),
             @Result(property = "sensorName", column = "sensor_name"),
             @Result(property = "productName", column = "product_name"),
+            @Result(property = "resolution", column = "resolution"),
 //            @Result(property = "imageList", column = "image_list", typeHandler = JSONArrayTypeHandler.class)
     })
     SceneDesVO getScenesDesById(@Param("sceneId") String sceneId);
 
     @Select("SELECT sc.scene_id, sc.scene_name, sc.scene_time, sc.coordinate_system, " +
-            "sc.band_num, sc.bands, sc.cloud, sc.tags, sc.bbox, ss.bucket, ss.cloud_path, " +
-            "ss.sensor_name, pd.product_name, " +
+            "sc.band_num, sc.bands, sc.cloud, sc.tags, sc.bounding_box, sc.bucket, sc.cloud_path, " +
+            "ss.sensor_name, pd.product_name, pd.resolution " +
             "FROM scene_table sc " +
             "LEFT JOIN sensor_table ss ON sc.sensor_id = ss.sensor_id " +
             "LEFT JOIN product_table pd ON sc.product_id = pd.product_id " +
@@ -99,6 +101,7 @@ public interface ISceneRepo extends BaseMapper<Scene> {
             @Result(property = "sceneName", column = "scene_name"),
             @Result(property = "sensorName", column = "sensor_name"),
             @Result(property = "productName", column = "product_name"),
+            @Result(property = "resolution", column = "resolution"),
             @Result(property = "sceneTime", column = "scene_time"),
             @Result(property = "coordinateSystem", column = "coordinate_system"),
             @Result(property = "bandNum", column = "band_num"),
