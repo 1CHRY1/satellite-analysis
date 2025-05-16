@@ -86,6 +86,7 @@ public class ModelExampleService {
             List<ModelServerImageDTO> imageDTO = imageDataService.getModelServerImageDTOBySceneId(sceneId);
             ModelServerSceneDTO modelServerSceneDTO = ModelServerSceneDTO.builder()
                     .sceneId(sceneId).images(imageDTO).sceneTime(scene.getSceneTime())
+                    .sensorName(scene.getSensorName()).productName(scene.getProductName())
                     .cloudPath(scene.getCloudPath()).bucket(scene.getBucket()).build();
             modelServerSceneDTOs.add(modelServerSceneDTO);
         }
@@ -112,7 +113,7 @@ public class ModelExampleService {
         // 构成影像景参数信息
         for (String sceneId : sceneIds) {
             Geometry geomPoint = GeometryUtil.parse4326Point(point);
-            Scene scene = sceneDataService.getSceneById(sceneId);
+            SceneSP scene = sceneDataService.getSceneByIdWithProductAndSensor(sceneId);
             if (scene.getBbox().contains(geomPoint)) {
                 List<ModelServerImageDTO> imageDTO = imageDataService.getModelServerImageDTOBySceneId(sceneId);
 
@@ -125,6 +126,7 @@ public class ModelExampleService {
 
                ModelServerSceneDTO modelServerSceneDTO = ModelServerSceneDTO.builder()
                         .sceneId(sceneId).images(imageDTO).sceneTime(scene.getSceneTime())
+                       .sensorName(scene.getSensorName()).productName(scene.getProductName())
                         .cloudPath(scene.getCloudPath()).bucket(scene.getBucket()).build();
                 modelServerSceneDTOs.add(modelServerSceneDTO);
             }
