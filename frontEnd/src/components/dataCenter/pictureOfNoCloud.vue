@@ -18,7 +18,23 @@
                                     <span>国产光学影像</span>
                                 </div>
                                 <div class="config-control flex-col !items-start">
-
+                                    <div class="flex flex-col gap-2 w-full">
+                                        <label class="flex items-center gap-2">
+                                            <input type="checkbox" v-model="demoticCheckbox[0]" disabled
+                                                class="w-4 h-4 rounded">
+                                            国产亚米级影像
+                                        </label>
+                                        <label class="flex items-center gap-2">
+                                            <input type="checkbox" v-model="demoticCheckbox[1]"
+                                                @click="add2mDemoticImages" class="w-4 h-4 rounded">
+                                            使用国产2m级影像超分重建亚米数据
+                                        </label>
+                                        <div v-if="showProgress[3]"
+                                            class="w-full  bg-[#1e293b] rounded-lg overflow-hidden border border-[#2c3e50]">
+                                            <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
+                                                :style="{ width: `${progress[3]}%` }"></div>
+                                        </div>
+                                    </div>
                                     <div class="result-info-container">
                                         <div class="result-info-item">
                                             <div class="result-info-icon">
@@ -68,7 +84,7 @@
                                                 <CloudIcon :size="16" />
                                             </div>
                                             <div class="result-info-content">
-                                                <div class="result-info-label">研究区国产影像</div>
+                                                <div class="result-info-label">研究区亚米级国产影像</div>
                                                 <div class="result-info-value">{{ demotic }}景影像</div>
                                             </div>
                                         </div>
@@ -77,7 +93,25 @@
                                                 <CloudIcon :size="16" />
                                             </div>
                                             <div class="result-info-content">
-                                                <div class="result-info-label">影像覆盖率</div>
+                                                <div class="result-info-label">影像亚米级覆盖率</div>
+                                                <div class="result-info-value">{{ coverageRate.demotic }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="result-info-item">
+                                            <div class="result-info-icon">
+                                                <CloudIcon :size="16" />
+                                            </div>
+                                            <div class="result-info-content">
+                                                <div class="result-info-label">研究区国产影像（2m超分后）</div>
+                                                <div class="result-info-value">{{ demotic }}景影像</div>
+                                            </div>
+                                        </div>
+                                        <div class="result-info-item">
+                                            <div class="result-info-icon">
+                                                <CloudIcon :size="16" />
+                                            </div>
+                                            <div class="result-info-content">
+                                                <div class="result-info-label">影像覆盖率（2m超分后）</div>
                                                 <div class="result-info-value">{{ coverageRate.demotic }}</div>
                                             </div>
                                         </div>
@@ -261,6 +295,7 @@ const radarImages: Ref<any[]> = ref([])
 const demoticGridImages: Ref<any[]> = ref([])
 const interGridImages: Ref<any[]> = ref([])
 const radarGridImages: Ref<any[]> = ref([])
+const demoticCheckbox = ref([true, false])
 interface CoverageRate {
     demotic: string | null;
     international: string | null;
@@ -287,6 +322,40 @@ const demotic = computed(() => {
     })
     return demoticImages.value.length
 })
+
+const add2mDemoticImages = () => {
+    // 逻辑与addRadarImages中的一样，可以参考
+    // let operateData = additionalData.value[0] ? demoticGridImages.value : interGridImages.value
+
+    // 清除格网图层，得放到一个请求上面，不然添加图层的时候还没销毁
+    // gridStore.cleadAllGrids()
+    // MapOperation.map_destroyImagePolygon()
+    // MapOperation.map_destroyImagePreviewLayer()
+    // MapOperation.map_destroyGridLayer()
+
+    // 不管是否勾选，都要调用这个，因为取消勾选的进度条显示逻辑也在里面！！！
+    controlProgress(3)
+
+    // 进度条加载完毕才能进行渲染图层，但是取消勾选不需要等待，而是立刻加载上一级的图层
+    // setTimeout(() => {
+    //     let gridFeature: FeatureCollection = {
+    //         type: 'FeatureCollection',
+    //         features: props.regionConfig.grids.map((item: any, index) => {
+    //             return {
+    //                 type: 'Feature',
+    //                 geometry: item.boundary.geometry as Geometry,
+    //                 properties: {
+    //                     ...(item.properties || {}),
+    //                     id: item.properties?.id ?? index, // 确保每个都有 id
+    //                     opacity: judgeGridOpacity(item, operateData)
+    //                 }
+    //             }
+    //         })
+    //     }
+    //     MapOperation.map_addGridLayer(gridFeature)
+    //     MapOperation.draw_deleteAll()
+    // }, demoticCheckbox.value[1] ? 100 : mockProgressTime)
+}
 
 /**
  * 欧美区
@@ -368,9 +437,9 @@ const addRadarImages = () => {
  * 快进进度条
  */
 
-const progress = ref([0, 0, 0])
+const progress = ref([0, 0, 0, 0])
 const showProgress = ref([
-    false, false, false
+    false, false, false, false
 ])
 
 
@@ -494,7 +563,7 @@ const previewNoCloud = async (imageUrl: string) => {
 
 }
 // 假操作进度条统一时间
-const mockProgressTime = 6000
+const mockProgressTime = 2000
 // 操控进度条
 const controlProgress = (index: number) => {
 

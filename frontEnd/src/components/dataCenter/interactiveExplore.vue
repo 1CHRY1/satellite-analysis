@@ -217,7 +217,7 @@
                                                 <div class="result-info-value date-range">
                                                     <div class="date-item">{{ formatTime(tileMergeConfig.dateRange[0],
                                                         'day')
-                                                    }}~
+                                                        }}~
                                                         {{ formatTime(tileMergeConfig.dateRange[1], 'day')
                                                         }}</div>
                                                 </div>
@@ -533,7 +533,7 @@ const filterByTags = async () => {
 // 判断格网到底有没有数据，有就返回0.3
 const judgeGridOpacity = (index: number, sceneGridsRes: any) => {
     let opacity = 0.01
-    sceneGridsRes[index].scenes.length > 0 ? opacity = 0.3 : opacity = 0.01;
+    sceneGridsRes[index]?.scenes.length > 0 ? opacity = 0.3 : opacity = 0.01;
     return opacity
 }
 // 卫语句
