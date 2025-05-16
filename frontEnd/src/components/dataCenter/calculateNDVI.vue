@@ -90,7 +90,7 @@
                                         <div class="result-info-label">涵盖时间范围</div>
                                         <div class="result-info-value date-range">
                                             <div class="date-item">{{ formatTime(props.regionConfig.dataRange[0], 'day')
-                                            }}~
+                                                }}~
                                                 {{ formatTime(props.regionConfig.dataRange[1], 'day')
                                                 }}</div>
                                         </div>
