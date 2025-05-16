@@ -116,7 +116,7 @@ function calculateBbox(polygon: polygonGeometry) {
         topLeft: [minX, maxY], // 左上角经纬度
         bottomRight: [maxX, minY], // 右下角经纬度
     }
-}``
+} ``
 
 function grid2lnglat(gridX: number, gridY: number, gridNumX: number, gridNumY: number) {
     const lng = (gridX / gridNumX) * 360.0 - 180.0
@@ -135,11 +135,12 @@ export function grid2bbox(gridX: number, gridY: number, resolutionKM: number) {
 
 export function grid2Coordinates(gridX: number, gridY: number, resolutionKM: number) {
     const [minLng, minLat, maxLng, maxLat] = grid2bbox(gridX, gridY, resolutionKM)
+
     const result = [
-        [minLng, minLat],
         [minLng, maxLat],
         [maxLng, maxLat],
         [maxLng, minLat],
+        [minLng, minLat]
     ]
     return result
 }

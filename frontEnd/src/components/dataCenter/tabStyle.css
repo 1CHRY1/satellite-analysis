@@ -972,3 +972,14 @@
     padding: 0.25rem;
     border-radius: 0.25rem;
 }
+
+.cov-btn{
+    position: absolute;
+    right: 1vw;
+    background-color: transparent;
+    border-radius: 0.5rem;
+    /* line-height: 2rem; */
+    padding: 0.15rem 1rem;
+    border: #d8fffca7 1px solid;
+    cursor: pointer;
+}

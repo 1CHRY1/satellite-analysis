@@ -1,6 +1,6 @@
 <template>
     <div class="timeline" v-if="show">
-        <ChevronLeftIcon :size="32" class="w-10 cursor-pointer" />
+        <ChevronLeftIcon :size="32" class="w-10 cursor-pointer" @click="handleClick(activeIndex - 1)" />
         <div class="flex-1 flex flex-row justify-evenly items-center">
             <div v-for="(item, index) in images" :key="index" class="timeline-item"
                 :class="{ active: index === activeIndex }" @click="handleClick(index)">
@@ -8,7 +8,7 @@
                 <div class="label">{{ item.time }}</div>
             </div>
         </div>
-        <ChevronRightIcon :size="32" class="w-10 cursor-pointer" />
+        <ChevronRightIcon :size="32" class="w-10 cursor-pointer" @click="handleClick(activeIndex + 1)" />
     </div>
 </template>
 
@@ -39,6 +39,9 @@ const grid = ref<GridInfoType>({ rowId: 0, columnId: 0, resolution: 0 })
 const activeIndex = ref(-1)
 
 const handleClick = async (index: number) => {
+
+    if (index > images.value.length - 1) return
+    if (index < 0) return
 
     activeIndex.value = index
     const img: ImageInfoType = images.value[activeIndex.value]
