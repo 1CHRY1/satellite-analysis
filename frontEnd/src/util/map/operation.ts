@@ -12,7 +12,6 @@ import { createApp, type ComponentInstance, ref, type Ref } from 'vue'
 import PopoverContent, { type GridData } from '@/components/feature/map/popoverContent.vue'
 import bus from '@/store/bus'
 
-
 ////////////////////////////////////////////////////////
 /////// Map Operation //////////////////////////////////
 
@@ -170,7 +169,6 @@ export function getCurrentGeometry(): polygonGeometry {
     }
 }
 
-
 ////////////////////////////////////////////////////////
 /////// Grid Popup ////////////////////////////////
 
@@ -183,7 +181,7 @@ function createPopoverContent() {
         rowId: 0,
         columnId: 0,
         resolution: 0,
-        scenes: []
+        scenes: [],
     })
 
     ezStore.set('gridPopupDataRef', gridDataRef)
@@ -194,7 +192,6 @@ function createPopoverContent() {
     app.mount('#popover-content') as ComponentInstance<typeof PopoverContent>
     return div
 }
-
 
 ////////////////////////////////////////////////////////
 /////// Layer Operation ////////////////////////////////
@@ -386,18 +383,16 @@ export function map_destroyImagePreviewLayer(): void {
 }
 
 function uid() {
-    return Math.random().toString(36).substring(2, 15);
+    return Math.random().toString(36).substring(2, 15)
 }
 
 export function map_addGridPreviewLayer(img: string, coords: number[][], prefix: string) {
-
     const gridPreviewID = prefix + uid()
     const gridPreviewSourceID = gridPreviewID + '-source'
 
     if (!ezStore.get('grid-preview-layer-map')) {
         ezStore.set('grid-preview-layer-map', new window.Map())
     }
-
 
     mapManager.withMap((m) => {
         // if (m.getLayer(gridPreviewID)) {
@@ -424,32 +419,31 @@ export function map_addGridPreviewLayer(img: string, coords: number[][], prefix:
             id: gridPreviewID,
             source: gridPreviewSourceID,
         })
-
     })
 }
 
 export function map_removeGridPreviewLayer(pre: string) {
     const grid_preview_layer_map = ezStore.get('grid-preview-layer-map') as Map<string, any>
     const map = ezStore.get('map') as mapboxgl.Map
-    for(let [key, value] of grid_preview_layer_map){
-        if(key.indexOf(pre) != -1){
-            if(map.getLayer(value.id)) map.removeLayer(value.id)
-            if(map.getSource(value.id)) map.removeSource(value.id)
+    for (let [key, value] of grid_preview_layer_map) {
+        if (key.indexOf(pre) != -1) {
+            if (map.getLayer(value.id)) map.removeLayer(value.id)
+            if (map.getSource(value.id)) map.removeSource(value.id)
         }
     }
 }
-
-
 
 function grid_fill_click_handler(e: MapMouseEvent): void {
     const features = e.features!
 
     if (features.length && features[0].properties && features[0].properties.flag) {
-
         const sceneGridsRes = ezStore.get('sceneGridsRes')
 
         const gridInfo = sceneGridsRes.find((item: any) => {
-            return item.rowId === features[0].properties!.rowId && item.columnId === features[0].properties?.columnId
+            return (
+                item.rowId === features[0].properties!.rowId &&
+                item.columnId === features[0].properties?.columnId
+            )
         })
 
         const gridPopupDataRef = ezStore.get('gridPopupDataRef')
@@ -461,8 +455,6 @@ function grid_fill_click_handler(e: MapMouseEvent): void {
         const id = 'grid-layer'
         const highlightId = id + '-highlight'
         ezStore.get('map').setFilter(highlightId, ['in', 'id', e.features![0].properties!.id])
-
-
     }
 }
 
@@ -495,7 +487,6 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
             ezStore.set('gridPopup', popup)
         }
 
-
         // Add a geojson source
         m.addSource(srcId, {
             type: 'geojson',
@@ -513,15 +504,41 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
             },
         })
         // Add a invisible fill layer for **grid picking**
+        // 这是之前的绘制方案，我先注释，确定没问题就可以删除了
+        // 绘制的效果是有数据就半透明，没数据就透明
+        // m.addLayer({
+        //     id: fillId,
+        //     type: 'fill',
+        //     source: srcId,
+        //     paint: {
+        //         'fill-color': '#00FFFF',
+        //         'fill-opacity': ['coalesce', ['to-number', ['get', 'opacity']], 0.01],
+        //     },
+        // })
         m.addLayer({
             id: fillId,
             type: 'fill',
             source: srcId,
             paint: {
-                'fill-color': '#00FFFF',
-                'fill-opacity': ['coalesce', ['to-number', ['get', 'opacity']], 0.01],
+                'fill-color': [
+                    'match',
+                    ['get', 'source'],
+                    'demotic1m',
+                    '#00FFFF',
+                    'demotic2m',
+                    // '#FFFF00',黄色
+                    '#00FF00',
+                    'international',
+                    '#FFA500',
+                    'radar',
+                    '#FF0000',
+                    /* default */ 'rgba(0,0,0,0)',
+                ],
+                'fill-opacity': 0.3,
+                // 'fill-opacity': ['coalesce', ['to-number', ['get', 'opacity']], 0.01],
             },
         })
+
         // Add a filterable fill layer for **grid highlighting**
         // const nowSelectedGrids = Array.from(gridStore.selectedGrids) || ['']
         m.addLayer({
@@ -579,6 +596,3 @@ export function map_destroyGridLayer(): void {
         ezStore.delete('grid-layer-cancel-watch')
     })
 }
-
-
-

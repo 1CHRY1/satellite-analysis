@@ -88,7 +88,8 @@
                                     <div class="cloud-slider-container">
                                         <span class="cloud-value">{{ tileMergeConfig.cloudRange[0] }}%</span>
                                         <div class="slider-wrapper">
-                                            <a-slider class="custom-slider" range v-model:value="tileMergeConfig.cloudRange"
+                                            <a-slider class="custom-slider" range
+                                                v-model:value="tileMergeConfig.cloudRange"
                                                 :tipFormatter="(value: number) => value + '%'" />
                                         </div>
                                         <span class="cloud-value">{{ tileMergeConfig.cloudRange[1] }}%</span>
@@ -216,7 +217,7 @@
                                                 <div class="result-info-value date-range">
                                                     <div class="date-item">{{ formatTime(tileMergeConfig.dateRange[0],
                                                         'day')
-                                                        }}~
+                                                    }}~
                                                         {{ formatTime(tileMergeConfig.dateRange[1], 'day')
                                                         }}</div>
                                                 </div>
@@ -302,7 +303,7 @@ const tileMergeConfig = ref({
     cloudRange: [0, 100],
 })
 const region = ref<RegionValues>({
-    province: '110000',
+    province: '140000',
     city: '',
     area: '',
 })
