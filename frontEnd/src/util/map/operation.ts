@@ -1,14 +1,16 @@
 import { mapManager, initMap, type Style } from './mapManager'
+import mapboxgl from 'mapbox-gl'
 import { Popup, GeoJSONSource, MapMouseEvent } from 'mapbox-gl'
 import { CN_Bounds } from './constant'
 // import { type Image } from '@/types/satellite'
 // import { type polygonGeometry } from '@/types/sharing'
-import { watch } from 'vue'
+// import { watch } from 'vue'
 import type { polygonGeometry } from '../share.type'
 import { ezStore, useGridStore } from '@/store'
 
 import { createApp, type ComponentInstance, ref, type Ref } from 'vue'
 import PopoverContent, { type GridData } from '@/components/feature/map/popoverContent.vue'
+import bus from '@/store/bus'
 
 
 ////////////////////////////////////////////////////////
@@ -74,7 +76,6 @@ export function map_fitView(bounds: any): void {
 }
 
 export function map_fitViewToFeature(feature: polygonGeometry): void {
-    console.log(feature)
     const coordinates = feature.coordinates[0]
     const bbox = coordinates.reduce(
         (acc, coord) => {
@@ -146,7 +147,6 @@ export function draw_polygonMode(): void {
 
 export function draw_pointMode(): void {
     mapManager.withDraw((d) => {
-        console.log(d)
         d.deleteAll()
         d.changeMode('draw_point')
     })
@@ -385,11 +385,68 @@ export function map_destroyImagePreviewLayer(): void {
     })
 }
 
+function uid() {
+    return Math.random().toString(36).substring(2, 15);
+}
+
+export function map_addGridPreviewLayer(img: string, coords: number[][], prefix: string) {
+
+    const gridPreviewID = prefix + uid()
+    const gridPreviewSourceID = gridPreviewID + '-source'
+
+    if (!ezStore.get('grid-preview-layer-map')) {
+        ezStore.set('grid-preview-layer-map', new window.Map())
+    }
+
+
+    mapManager.withMap((m) => {
+        // if (m.getLayer(gridPreviewID)) {
+        //     m.removeLayer(gridPreviewID)
+        //     m.removeSource(gridPreviewSourceID)
+        // }
+
+        m.addSource(gridPreviewSourceID, {
+            type: 'image',
+            url: img,
+            coordinates: coords,
+        })
+        m.addLayer({
+            id: gridPreviewID,
+            type: 'raster',
+            source: gridPreviewSourceID,
+            paint: {
+                'raster-opacity': 0.9,
+            },
+        })
+
+        const grid_preview_layer_map = ezStore.get('grid-preview-layer-map') as Map<string, any>
+        grid_preview_layer_map.set(gridPreviewID, {
+            id: gridPreviewID,
+            source: gridPreviewSourceID,
+        })
+
+    })
+}
+
+export function map_removeGridPreviewLayer(pre: string) {
+    const grid_preview_layer_map = ezStore.get('grid-preview-layer-map') as Map<string, any>
+    const map = ezStore.get('map') as mapboxgl.Map
+    for(let [key, value] of grid_preview_layer_map){
+        if(key.indexOf(pre) != -1){
+            if(map.getLayer(value.id)) map.removeLayer(value.id)
+            if(map.getSource(value.id)) map.removeSource(value.id)
+        }
+    }
+}
+
+
+
 function grid_fill_click_handler(e: MapMouseEvent): void {
     const features = e.features!
 
     if (features.length && features[0].properties && features[0].properties.flag) {
-
+        
+        console.log(features[0].properties)
         const sceneGridsRes = ezStore.get('sceneGridsRes')
 
         const gridInfo = sceneGridsRes.find((item: any) => {
@@ -407,7 +464,6 @@ function grid_fill_click_handler(e: MapMouseEvent): void {
         ezStore.get('map').setFilter(highlightId, ['in', 'id', e.features![0].properties!.id])
 
 
-        console.log(features[0], gridInfo)
     }
 }
 
@@ -426,6 +482,13 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
             const popup = new Popup({
                 closeButton: false,
                 closeOnMove: false,
+                closeOnClick: true,
+            })
+            popup.on('close', () => {
+                bus.emit('closeTimeline')
+                const id = 'grid-layer'
+                const highlightId = id + '-highlight'
+                ezStore.get('map').setFilter(highlightId, ['in', 'id', ''])
             })
             const dom = createPopoverContent()
             popup.setDOMContent(dom).addTo(m)
@@ -476,7 +539,7 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
         })
 
         // // Add a click event listener to the invisible fill layer
-        m.on('click', fillId, grid_fill_click_handler)
+        m.on('contextmenu', fillId, grid_fill_click_handler)
         // // Keep Watching gridStore.selectedGrids and update the highlight layer
         // const cancelWatch = watch(
         //     () => gridStore.selectedGrids,
