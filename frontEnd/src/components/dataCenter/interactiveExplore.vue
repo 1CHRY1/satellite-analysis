@@ -15,7 +15,6 @@
                                 <div class="config-label relative">
                                     <MapIcon :size="16" class="config-icon" />
                                     <span>行政区</span>
-
                                 </div>
                                 <div class="config-control justify-center">
                                     <RegionSelects v-model="region" :placeholder="['选择省份', '选择城市', '选择区县']"
@@ -98,9 +97,84 @@
                             </div>
                             <button @click="filterByCloudAndDate"
                                 class="bg-[#0d1526] cursor-pointer text-white border border-[#2c3e50] rounded-lg px-4 py-2 hover:bg-[#1a2b4c] hover:border-[#2bb2ff] transition-all duration-200 active:scale-95">
-                                影像初筛
+                                影像筛选
                             </button>
 
+                        </div>
+                    </div>
+
+                    <div class="config-item">
+                        <div class="config-label relative">
+                            <BoltIcon :size="16" class="config-icon" />
+                            <span>统计信息</span>
+                        </div>
+                        <div class="config-control flex-col gap-4">
+                            <div class="result-info-container">
+                                <div class="result-info-item">
+                                    <div class="result-info-icon">
+                                        <MapIcon :size="16" />
+                                    </div>
+                                    <div class="result-info-content">
+                                        <div class="result-info-label">行政区划编码</div>
+                                        <div class="result-info-value">{{ displayLabel }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="result-info-item">
+                                    <div class="result-info-icon">
+                                        <MapIcon :size="16" />
+                                    </div>
+                                    <div class="result-info-content">
+                                        <div class="result-info-label">格网分辨率</div>
+                                        <div class="result-info-value">{{ selectedRadius }}km
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="result-info-item">
+                                    <div class="result-info-icon">
+                                        <ImageIcon :size="16" />
+                                    </div>
+                                    <div class="result-info-content">
+                                        <div class="result-info-label">云量</div>
+                                        <div class="result-info-value"> {{ tileMergeConfig.cloudRange[0] }}% ~
+                                            {{ tileMergeConfig.cloudRange[1] }}%
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="result-info-item">
+                                    <div class="result-info-icon">
+                                        <CalendarIcon :size="16" />
+                                    </div>
+                                    <div class="result-info-content">
+                                        <div class="result-info-label">涵盖时间范围</div>
+                                        <div class="result-info-value date-range">
+                                            <div class="date-item">{{ formatTime(tileMergeConfig.dateRange[0],
+                                                'day')
+                                                }}~
+                                                {{ formatTime(tileMergeConfig.dateRange[1], 'day')
+                                                }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="result-info-item">
+                                    <div class="result-info-icon">
+                                        <CloudIcon :size="16" />
+                                    </div>
+                                    <div class="result-info-content">
+                                        <div class="result-info-label">当前已检索到</div>
+                                        <div class="result-info-value">{{ allScenes.length }}景影像</div>
+                                    </div>
+                                </div>
+                                <div class="result-info-item">
+                                    <div class="result-info-icon">
+                                        <CloudIcon :size="16" />
+                                    </div>
+                                    <div class="result-info-content">
+                                        <div class="result-info-label">影像覆盖率</div>
+                                        <div class="result-info-value">{{ coverageRate }}</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -109,7 +183,7 @@
                         <div class="section-icon">
                             <DatabaseIcon :size="18" />
                         </div>
-                        <h2 class="section-title">筛选影像</h2>
+                        <h2 class="section-title">交互探索</h2>
                     </div>
                     <div class="section-content">
                         <div class="config-container">
@@ -118,8 +192,11 @@
                                 <div class="config-label relative">
                                     <BoltIcon :size="16" class="config-icon" />
                                     <span>数据来源</span>
+                                    <button class="cov-btn" @click="handleCoverageVisualClick('1')">
+                                        覆盖度对比
+                                    </button>
                                 </div>
-                                <div class="config-control gap-4">
+                                <div class="config-control gap-6">
                                     <button v-for="label in buttonGroups[0]" :key="label" @click="toggleButton(label)"
                                         class="cursor-pointer border rounded-lg px-4 py-1 transition-all duration-200 active:scale-90"
                                         :class="[
@@ -135,6 +212,9 @@
                                 <div class="config-label relative">
                                     <BoltIcon :size="16" class="config-icon" />
                                     <span>传感器类型</span>
+                                    <button class="cov-btn" @click="handleCoverageVisualClick('2')">
+                                        覆盖度对比
+                                    </button>
                                 </div>
                                 <div class="config-control gap-4">
                                     <button v-for="label in buttonGroups[1]" :key="label" @click="toggleButton(label)"
@@ -152,6 +232,10 @@
                                 <div class="config-label relative">
                                     <BoltIcon :size="16" class="config-icon" />
                                     <span>数据级别</span>
+
+                                    <button class="cov-btn" @click="handleCoverageVisualClick('3')">
+                                        覆盖度对比
+                                    </button>
                                 </div>
                                 <div class="config-control gap-4">
                                     <button v-for="label in buttonGroups[2]" :key="label" @click="toggleButton(label)"
@@ -165,10 +249,10 @@
                                     </button>
                                 </div>
                             </div>
-                            <button @click="filterByTags"
+                            <!-- <button @click="filterByTags"
                                 class="bg-[#0d1526] cursor-pointer text-white border border-[#2c3e50] rounded-lg px-4 py-2 hover:bg-[#1a2b4c] hover:border-[#2bb2ff] transition-all duration-200 active:scale-95">
                                 检索影像
-                            </button>
+                            </button> -->
                             <!-- 检索后的统计信息 -->
                             <div class="config-item">
                                 <div class="config-label relative">
@@ -253,7 +337,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, type Ref } from 'vue'
+import { ref, computed, type Ref, watch } from 'vue'
 import dayjs from 'dayjs'
 import { RegionSelects } from 'v-region'
 import type { RegionValues } from 'v-region'
@@ -285,8 +369,7 @@ import {
     Images,
 } from 'lucide-vue-next'
 import { ElMessage } from 'element-plus'
-import { all } from 'axios'
-
+import mapboxgl from 'mapbox-gl'
 const emit = defineEmits(['submitConfig'])
 const gridStore = useGridStore()
 
@@ -295,7 +378,7 @@ const gridStore = useGridStore()
  */
 
 const radiusOptions = [2, 5, 10, 15, 20, 25, 30, 40, 50]
-const selectedRadius = ref(25)
+const selectedRadius = ref(20)
 const tileMergeConfig = ref({
     useLatestTime: false,
     useMinCloud: false,
@@ -303,11 +386,12 @@ const tileMergeConfig = ref({
     cloudRange: [0, 100],
 })
 const region = ref<RegionValues>({
-    province: '',
+    province: '110000',
     city: '',
     area: '',
 })
-const allGrids = ref<any[]>([])
+const allGrids = ref([])
+const currentCityBounds = ref([])
 // 计算到了哪一级行政单位
 const displayLabel = computed(() => {
     let info = region.value
@@ -332,12 +416,13 @@ const getAllGrid = async () => {
     let gridRes = await getGridByRegionAndResolution(displayLabel.value, selectedRadius.value)
     allGrids.value = gridRes
     let window = await getRegionPosition(displayLabel.value)
+    currentCityBounds.value = boundaryRes
     // 先清除现有的矢量边界，然后再添加新的
     MapOperation.map_addPolygonLayer({
         geoJson: boundaryRes,
         id: 'UniqueLayer',
-        lineColor: '#00FFFF',
-        fillColor: '#00FFFF',
+        lineColor: '#8fffff',
+        fillColor: '#a4ffff',
         fillOpacity: 0.2,
         // onClick: (f) => {
         //     console.log('点击的边界要素:', f)
@@ -368,8 +453,8 @@ const getAllGrid = async () => {
 /**
  * 用云量和日期初步获取影像数据
  */
-const allFilteredImages = ref([])
-
+const allScenes = ref<any>([])
+// const allFilteredImages = ref<any>([])
 const filterByCloudAndDate = async () => {
     if (displayLabel.value === '未选择') {
         ElMessage.warning('请先选择行政区并获取格网')
@@ -381,20 +466,194 @@ const filterByCloudAndDate = async () => {
         cloud: tileMergeConfig.value.cloudRange[1],
         regionId: displayLabel.value
     }
-    allFilteredImages.value = (await getSceneByConfig(filterData)).map((image) => {
+    // allFilteredImages.value = await getSceneByConfig(filterData)
+    allScenes.value = (await getSceneByConfig(filterData)).map((image) => {
         return {
             ...image,
             tags: [image.tags.source, image.tags.production, image.tags.category]
         }
     })
-    if (allFilteredImages.value.length === 0) {
+
+    console.log(allScenes.value);
+
+    await makeFullSceneGrid()
+
+    if (allScenes.value.length === 0) {
         ElMessage.warning('未筛选出符合要求的影像，请重新设置条件')
     } else {
-        ElMessage.success(`已检索到${allFilteredImages.value.length}景影像，请进一步筛选您所需的影像`)
+        ElMessage.success(`已检索到${allScenes.value.length}景影像，请进一步筛选您所需的影像`)
     }
-    console.log(allFilteredImages.value);
 
 }
+
+const makeFullSceneGrid = async () => {
+    let sceneGridParam = {
+        grids: allGrids.value.map((item: any) => {
+            return {
+                rowId: item.rowId,
+                columnId: item.columnId,
+                resolution: item.resolution
+            }
+        }),
+        sceneIds: allScenes.value.map((image: any) => image.sceneId)
+    }
+
+    // Destroy layer
+    gridStore.cleadAllGrids()
+    MapOperation.map_destroyImagePolygon()
+    MapOperation.map_destroyImagePreviewLayer()
+    MapOperation.map_destroyGridLayer()
+
+    // Get scene grids
+    let sceneGridsRes = await getSceneGrids(sceneGridParam)
+    let scenes = allScenes.value
+
+    const sceneTagMap = new Map<string, string[]>()
+    for (let sc of scenes) {
+        sceneTagMap.set(sc.sceneId, sc.tags)
+    }
+    ezStore.set('sceneTagMap', sceneTagMap)
+
+    console.log(scenes)
+
+    // Plus sceneGridsRes
+    for (let i = 0; i < sceneGridsRes.length; i++) {
+
+        let grid = sceneGridsRes[i]
+        grid.international = 0
+        grid.national = 0
+        grid.light = 0
+        grid.radar = 0
+        grid.traditional = 0
+        grid.ard = 0
+
+        let scenes = sceneGridsRes[i].scenes
+        for (let scene of scenes) {
+            const scTag = sceneTagMap.get(scene.sceneId) as string[]
+            for (let tag of scTag) {
+                if (grid[tag] === undefined) console.log("未知tag: ", tag)
+                grid[tag] = grid[tag] + 1
+            }
+        }
+    }
+    ezStore.set('sceneGridsRes', sceneGridsRes)
+
+    // 算覆盖率
+    const nonEmptyScenesCount = sceneGridsRes.filter(item => item.scenes.length > 0).length
+    coverageRate.value = (nonEmptyScenesCount * 100 / sceneGridsRes.length).toFixed(2) + '%';
+
+    let gridFeature: FeatureCollection = {
+        type: 'FeatureCollection',
+        features: allGrids.value.map((item: any, index: number) => {
+            return {
+                type: 'Feature',
+                geometry: item.boundary.geometry as Geometry,
+                properties: {
+                    ...(item.properties || {}),
+                    id: item.properties?.id ?? index, // 确保每个都有 id
+                    opacity: judgeGridOpacity(index, sceneGridsRes),
+                    rowId: item.rowId,
+                    columnId: item.columnId,
+                    resolution: item.resolution,
+                    flag: true, // flag means its time to trigger the visual effect
+                    international: sceneGridsRes[index].international,
+                    national: sceneGridsRes[index].national,
+                    light: sceneGridsRes[index].light,
+                    radar: sceneGridsRes[index].radar,
+                    traditional: sceneGridsRes[index].traditional,
+                    ard: sceneGridsRes[index].ard
+                }
+            }
+        })
+    }
+    MapOperation.map_addGridLayer(gridFeature)
+    MapOperation.draw_deleteAll()
+
+    emit('submitConfig', {
+        regionCode: displayLabel.value,
+        dataRange: [...tileMergeConfig.value.dateRange],
+        cloud: tileMergeConfig.value.cloudRange[1],
+        space: selectedRadius.value,
+        coverage: coverageRate.value,
+        images: allScenes.value,
+        grids: allGrids.value,
+        boundary: currentCityBounds.value
+    })
+
+}
+
+/**
+ * 覆盖度可视化
+ */
+
+const coverageVisualActive = ref('0')
+const handleCoverageVisualClick = (value: string) => {
+    coverageVisualActive.value = value
+
+    const gridLayerId = ezStore.get('grid-layer-fill-id')
+    const m = ezStore.get('map') as mapboxgl.Map
+
+    const newV = coverageVisualActive.value
+    if (newV === '0') { // 清除filter
+        console.log('清除filter')
+        m.setPaintProperty(gridLayerId, 'fill-color', '#00FFFF')
+    } else { //添加filter
+        console.log('添加filter')
+        if (newV === '1') { // international or national
+
+            const baseExp: any[] = ['case']
+            console.log(activeImgTags.value)
+            if (activeImgTags.value.has(rTagMap['international'])) {
+                baseExp.push(['>', ['get', 'international'], 0], '#ff7700')
+            }
+            if (activeImgTags.value.has(rTagMap['national'])) {
+                baseExp.push(['>', ['get', 'national'], 0], '#ff7700')
+            }
+            if (baseExp.length > 1) {
+                baseExp.push('#00FFFF')
+                m.setPaintProperty(gridLayerId, 'fill-color', baseExp as any)
+            } else {
+                m.setPaintProperty(gridLayerId, 'fill-color', '#00FFFF')
+            }
+        }
+        else if (newV === '2') {
+
+            const baseExp: any[] = ['case']
+
+            if (activeImgTags.value.has(rTagMap['radar'])) {
+                baseExp.push(['>', ['get', 'radar'], 0], '#ff7700')
+            }
+            if (activeImgTags.value.has(rTagMap['light'])) {
+                baseExp.push(['>', ['get', 'light'], 0], '#ff7700')
+            }
+            if (baseExp.length > 1) {
+                baseExp.push('#00FFFF')
+                m.setPaintProperty(gridLayerId, 'fill-color', baseExp as any)
+            } else {
+                m.setPaintProperty(gridLayerId, 'fill-color', '#00FFFF')
+            }
+        }
+        else if (newV === '3') {
+
+            const baseExp: any[] = ['case']
+            if (activeImgTags.value.has(rTagMap['traditional'])) {
+                baseExp.push(['>', ['get', 'traditional'], 0], '#ff7700')
+            }
+            if (activeImgTags.value.has(rTagMap['ard'])) {
+                baseExp.push(['>', ['get', 'ard'], 0], '#ff7700')
+            }
+            if (baseExp.length > 1) {
+                baseExp.push('#00FFFF')
+                m.setPaintProperty(gridLayerId, 'fill-color', baseExp as any)
+            } else {
+                m.setPaintProperty(gridLayerId, 'fill-color', '#00FFFF')
+            }
+        }
+
+    }
+}
+
+
 
 /**
  * 标签筛选
@@ -403,47 +662,71 @@ const filterByCloudAndDate = async () => {
 const buttonGroups = [
     ['国产影像', '国外影像'],
     ['光学影像', 'SAR影像'],
-    ['原始数据', 'ARD数据']
+    ['原始影像', 'ARD影像']
 ]
 // 存储已激活的按钮标签
-const activeButtons = ref<Set<string>>(new Set(['国产影像', '光学影像', '原始数据']))
+const activeImgTags = ref<Set<string>>(new Set(['国产影像', '光学影像', '原始影像']))
 // 切换按钮选中状态
 const toggleButton = (label: string) => {
-    if (activeButtons.value.has(label)) {
-        activeButtons.value.delete(label)
+    if (activeImgTags.value.has(label)) {
+        activeImgTags.value.delete(label)
     } else {
-        activeButtons.value.add(label)
+        activeImgTags.value.add(label)
     }
 }
 
 // 判断按钮是否被选中
-const isActive = (label: string) => activeButtons.value.has(label)
+const isActive = (label: string) => activeImgTags.value.has(label)
 
 const tagMap: Record<string, string> = {
     '国产影像': 'national',
     '国外影像': 'international',
     '光学影像': 'light',
     'SAR影像': 'radar',
-    '原始数据': 'traditional',
-    'ARD数据': 'ard',
+    '原始影像': 'traditional',
+    'ARD影像': 'ard',
+}
+const rTagMap: Record<string, string> = {
+    'national': '国产影像',
+    'international': '国外影像',
+    'light': '光学影像',
+    'radar': 'SAR影像',
+    'traditional': '原始影像',
+    'ard': 'ARD影像'
 }
 
 const filteredImages: Ref<any[]> = ref([])
 const coverageRate = ref('0.00%')
 const filterByTags = async () => {
+
     if (!verifyFilterByTags()) {
         return
     }
     // 1、根据tags进行筛选
-    const flattenedButtons = buttonGroups.flat()
+    // const flattenedButtons = buttonGroups.flat()
 
-    filteredImages.value = allFilteredImages.value.filter((img: any) => {
-        return flattenedButtons.every(btn => {
-            const tagKey = tagMap[btn] // 将中文映射为英文
-            // 如果某个按钮未激活，图像不能包含这个按钮对应的标签
-            return activeButtons.value.has(btn) || !img.tags.includes(tagKey)
-        })
-    })
+    // filteredImages.value = allScenes.value.filter((img: any) => {
+    //     // return flattenedButtons.every(btn => {
+    //     //     const tagKey = tagMap[btn] // 将中文映射为英文
+    //     //     console.log(tagKey, activeImgTags.value.has(btn))
+    //     //     // 如果某个按钮未激活，图像不能包含这个按钮对应的标签s
+    //     //     console.log(activeImgTags.value.has(btn))
+    //     //     return activeImgTags.value.has(btn) || !img.tags.includes(tagKey)
+    //     // })
+    // })
+    const res = new Set<any>()
+    for (let img of allScenes.value) {
+        let flag = true
+        for (let btn of activeImgTags.value) {
+            if (!img.tags.includes(tagMap[btn])) {
+                flag = false
+            }
+        }
+        flag && res.add(img)
+    }
+    filteredImages.value = Array.from(res)
+
+    console.log(filteredImages.value)
 
     // 2、获取格网覆盖信息
     let sceneGridParam = {
@@ -456,6 +739,7 @@ const filterByTags = async () => {
         }),
         sceneIds: filteredImages.value.map(images => images.sceneId)
     }
+
     // 清除格网图层，得放到一个请求上面，不然添加图层的时候还没销毁
     gridStore.cleadAllGrids()
     MapOperation.map_destroyImagePolygon()
@@ -464,7 +748,7 @@ const filterByTags = async () => {
     // 这个是用网格去切割景，看各个网格里面有哪些景的数据
     let sceneGridsRes = await getSceneGrids(sceneGridParam)
 
-    // console.log("sceneGridsRes", sceneGridsRes)
+
     // console.log("all grids ", allGrids.value)
     // {
     //     for (let i = 0; i < allGrids.value.length; i++) {
@@ -475,21 +759,24 @@ const filterByTags = async () => {
     //         }
     //     }
     // }
-    ezStore.set('sceneGridsRes', sceneGridsRes)
+    // ezStore.set('sceneGridsRes', sceneGridsRes)
 
 
     // 算覆盖率
     const nonEmptyScenesCount = sceneGridsRes.filter(item => item.scenes.length > 0).length
     coverageRate.value = (nonEmptyScenesCount * 100 / sceneGridsRes.length).toFixed(2) + '%';
-    emit('submitConfig', {
-        regionCode: displayLabel.value,
-        dataRange: [...tileMergeConfig.value.dateRange],
-        cloud: tileMergeConfig.value.cloudRange[1],
-        space: selectedRadius,
-        coverage: coverageRate.value,
-        images: allFilteredImages.value,
-        grids: allGrids.value,
-    })
+
+    // emit('submitConfig', {
+    //     regionCode: displayLabel.value,
+    //     dataRange: [...tileMergeConfig.value.dateRange],
+    //     cloud: tileMergeConfig.value.cloudRange[1],
+    //     space: selectedRadius.value,
+    //     coverage: coverageRate.value,
+    //     images: allScenes.value,
+    //     grids: allGrids.value,
+    // })
+
+    // 添加带有数据指示的格网
     let gridFeature: FeatureCollection = {
         type: 'FeatureCollection',
         features: allGrids.value.map((item: any, index) => {
@@ -499,7 +786,7 @@ const filterByTags = async () => {
                 properties: {
                     ...(item.properties || {}),
                     id: item.properties?.id ?? index, // 确保每个都有 id
-                    opacity: judgeGridOpacity(item, sceneGridsRes),
+                    opacity: judgeGridOpacity(index, sceneGridsRes),
                     rowId: item.rowId,
                     columnId: item.columnId,
                     resolution: item.resolution,
@@ -514,26 +801,22 @@ const filterByTags = async () => {
     ElMessage.success(`检索完毕，请查看统计信息并进行下一步操作`)
 }
 
-// 判断格网到底有没有数据，有就返回0.3
-const judgeGridOpacity = (item: any, sceneGridsRes: any) => {
+// 基于覆盖度返回opacity
+const judgeGridOpacity = (index: number, sceneGridsRes: any) => {
     let opacity = 0.01
-    sceneGridsRes.forEach(element => {
-        if (element.columnId === item.columnId && element.rowId === item.rowId) {
-            element.scenes.length > 0 ? opacity = 0.3 : opacity = 0.01;
-        }
-    });
+    const totalImgLenght = allScenes.value.length
+    opacity = sceneGridsRes[index].scenes.length / totalImgLenght * 0.7
     return opacity
-
 }
 // 卫语句
 const verifyFilterByTags = () => {
-    let buttons = activeButtons.value
+    let buttons = activeImgTags.value
     if (buttons.size === 0) {
         ElMessage.warning('请设置筛选条件')
         return false
     }
-    if (allFilteredImages.value.length === 0) {
-        ElMessage.warning('请先进行影像初筛')
+    if (allScenes.value.length === 0) {
+        ElMessage.warning('请先进行影像筛选')
         return false
     }
     if (!buttons.has('国产影像') && !buttons.has('国外影像')) {
@@ -544,16 +827,13 @@ const verifyFilterByTags = () => {
         ElMessage.warning('请选择您需要的传感器类型')
         return false
     }
-    if (!buttons.has('原始数据') && !buttons.has('ARD数据')) {
+    if (!buttons.has('原始影像') && !buttons.has('ARD影像')) {
         ElMessage.warning('请选择您需要的数据级别')
         return false
     }
     return true
 }
 
-/**
- * 检索结果
- */
 
 
 </script>
