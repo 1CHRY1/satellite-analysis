@@ -150,7 +150,7 @@
                                         <div class="result-info-value date-range">
                                             <div class="date-item">{{ formatTime(tileMergeConfig.dateRange[0],
                                                 'day')
-                                            }}~
+                                                }}~
                                                 {{ formatTime(tileMergeConfig.dateRange[1], 'day')
                                                 }}</div>
                                         </div>
@@ -301,7 +301,7 @@
                                                 <div class="result-info-value date-range">
                                                     <div class="date-item">{{ formatTime(tileMergeConfig.dateRange[0],
                                                         'day')
-                                                    }}~
+                                                        }}~
                                                         {{ formatTime(tileMergeConfig.dateRange[1], 'day')
                                                         }}</div>
                                                 </div>
@@ -378,7 +378,7 @@ const gridStore = useGridStore()
  */
 
 const radiusOptions = [2, 5, 10, 15, 20, 25, 30, 40, 50]
-const selectedRadius = ref(25)
+const selectedRadius = ref(20)
 const tileMergeConfig = ref({
     useLatestTime: false,
     useMinCloud: false,
@@ -386,7 +386,7 @@ const tileMergeConfig = ref({
     cloudRange: [0, 100],
 })
 const region = ref<RegionValues>({
-    province: '140000',
+    province: '110000',
     city: '',
     area: '',
 })

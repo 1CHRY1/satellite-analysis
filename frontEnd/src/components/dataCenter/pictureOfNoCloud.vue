@@ -103,7 +103,7 @@
                                             </div>
                                             <div class="result-info-content">
                                                 <div class="result-info-label">研究区国产影像（2m超分后）</div>
-                                                <div class="result-info-value">{{ demotic }}景影像</div>
+                                                <div class="result-info-value">{{ demotic2mImages.length }}景影像</div>
                                             </div>
                                         </div>
                                         <div class="result-info-item">
@@ -239,19 +239,18 @@
                 </section>
 
 
-                <section class="panel-section">
+                <section class="panel-section" v-if="calImage.length > 0">
                     <div class="section-header">
                         <div class="section-icon">
                             <CloudIcon :size="18" />
                         </div>
-                        <h2 class="section-title">重构结果</h2>
+                        <h2 class="section-title">重构信息</h2>
                     </div>
                     <div class="section-content">
                         <div class="config-container">
                             <div v-for="(image, index) in calImage" class="config-item">
-                                第{{ index + 1 }}次计算结果为：
-                                无云一版图计算结果为：xxx
-                                统计数据-统计数据-统计数据-统计数据
+                                <div>无云一版图第{{ index + 1 }}次计算完成！</div>
+                                本次使用的数据包括：{{ image.dataSet }}
                             </div>
                         </div>
                     </div>
@@ -338,7 +337,6 @@ const coverageRate: Ref<CoverageRate> = ref({
 // 看起来是计算属性，其实已经影像分类初始化了
 const demotic = computed(() => {
     let allImages = props.regionConfig.images
-    console.log(allImages, 'allImages');
 
     allImages.forEach((image: any) => {
         if (image.tags.includes('radar')) {
@@ -497,10 +495,7 @@ const additionalData = ref([true, false, false])
 const dataReconstruction = ref([false, false, false])
 
 
-const calImage: Ref<any[]> = ref([{
-    tifPath: "",
-    bucket: ""
-}])
+const calImage: Ref<any[]> = ref([])
 let progressTimer: ReturnType<typeof setInterval> | null = null
 
 // 控制进度条
@@ -529,13 +524,18 @@ const calNoClouds = async () => {
 
     // 根据勾选情况合并影像
     // 1、国产亚米
+
     let addedImages = [...demotic1mImages.value]
-    if (additionalData.value[0] === true) {
+    if (dataReconstruction.value[0] === true) {
+        addedImages = addedImages.concat(demotic2mImages.value)
+    }
+    if (dataReconstruction.value[1] === true) {
         addedImages = addedImages.concat(internationalImages.value)
     }
-    if (additionalData.value[1] === true) {
+    if (dataReconstruction.value[2] === true) {
         addedImages = addedImages.concat(radarImages.value)
     }
+
 
     let getNoCloudParam = {
         regionId: props.regionConfig.regionCode,
@@ -585,21 +585,35 @@ const calNoClouds = async () => {
         await pollStatus(calTask.value.taskId)
         // ✅ 成功后设置状态
         calTask.value.calState = 'success'
+        console.log('成功，开始拿结果');
+
         let res = await getCaseResult(calTask.value.taskId)
         console.log(res, '结果');
-        // drawData.value.push(drawData.value[0])
+        // 1、先预览无云一版图影像
+
+        // 2、补充数据
+
+        let calResult = {
+            demotic1m: true,
+            demotic2m: dataReconstruction.value[0],
+            international: dataReconstruction.value[1],
+            radar: dataReconstruction.value[2],
+            dataSet: [
+                '国产亚米影像',
+                dataReconstruction.value[0] ? '国产2m超分影像' : null,
+                dataReconstruction.value[1] ? '国外影像超分数据' : null,
+                dataReconstruction.value[2] ? 'SAR色彩转换数据' : null,
+            ].filter(Boolean).join('、')
+        }
+        console.log(dataReconstruction.value, calResult);
+
+        calImage.value.push(calResult)
+
         ElMessage.success('无云一版图计算完成')
     } catch (error) {
         calTask.value.calState = 'failed'
         ElMessage.error('NDVI计算失败，请重试')
     }
-    console.log(getNoCloudParam, startCalcRes, 1111);
-
-
-
-    // 3、渲染运行结果
-    let imageUrl = 'http://223.2.32.166:30900/test-images/landset8_test/landset8_L2SP_test/tif/LC08_L2SP_118038_20240320_20240402_02_T1/LC08_L2SP_118038_20240320_20240402_02_T1_SR_B2.TIF'
-    previewNoCloud(imageUrl)
 }
 // 预览无云一版图
 const previewNoCloud = async (imageUrl: string) => {
@@ -679,6 +693,7 @@ onMounted(async () => {
         }
     })
 
+
     // 计算四种情况的格网分布情况
     demotic1mGridImages.value = await getSceneGrids({
         grids: allGrids,
@@ -724,6 +739,8 @@ onMounted(async () => {
             }
         })
     }
+    console.log(props.regionConfig.grids, 111);
+
     demotic1mGridFeature.value = gridFeature
     MapOperation.map_addGridLayer(gridFeature)
     MapOperation.draw_deleteAll()
