@@ -532,7 +532,6 @@ const filterByTags = async () => {
 // 判断格网到底有没有数据，有就返回0.3
 const judgeGridOpacity = (index: number, sceneGridsRes: any) => {
     let opacity = 0.01
-    console.log(sceneGridsRes, index)
     sceneGridsRes[index].scenes.length > 0 ? opacity = 0.3 : opacity = 0.01;
     return opacity
 }

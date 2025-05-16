@@ -220,7 +220,7 @@ import { computed, onMounted, ref, type PropType, type Ref } from 'vue'
 import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'
 import { type interactiveExplore } from '@/components/dataCenter/type'
 import { formatTime } from '@/util/common'
-import { getSceneGrids, getNoCloud, getCaseStatus, getCaseTifResult } from '@/api/http/satellite-data'
+import { getSceneGrids, getNoCloud, getCaseStatus, getCaseResult } from '@/api/http/satellite-data'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import * as MapOperation from '@/util/map/operation'
 import { ElMessage } from 'element-plus'
@@ -467,7 +467,7 @@ const calNoClouds = async () => {
         await pollStatus(calTask.value.taskId)
         // ✅ 成功后设置状态
         calTask.value.calState = 'success'
-        let res = await getCaseTifResult(calTask.value.taskId)
+        let res = await getCaseResult(calTask.value.taskId)
         console.log(res, '结果');
         // drawData.value.push(drawData.value[0])
         ElMessage.success('无云一版图计算完成')
@@ -488,9 +488,10 @@ const previewNoCloud = async (imageUrl: string) => {
     console.log(imageUrl);
 
     const res = await fetch('/app.conf.json')
-    let minioIpAndPort = (await res.json()).minioIpAndPort
-    let requestUrl = minioIpAndPort +
-        console.log(minioIpAndPort, props.regionConfig.boundary);
+    let conf = await res.json()
+    let minioIpAndPort = conf.minioIpAndPort
+    let requestUrl = conf.titiler +
+        console.log(conf.minioIpAndPort, props.regionConfig.boundary);
 
 }
 // 假操作进度条统一时间
