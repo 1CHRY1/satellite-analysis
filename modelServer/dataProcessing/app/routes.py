@@ -79,6 +79,13 @@ def calc_qa_simple():
     task_id = scheduler.start_task('calc_qa_simple', data)
     return api_response(data={'taskId': task_id})
 
+@bp.route(config.API_TIF_calc_qa_middle, methods=['POST'])
+def calc_qa_middle():
+    scheduler = init_scheduler()
+    data = request.json
+    task_id = scheduler.start_task('calc_qa_middle', data)
+    return api_response(data={'taskId': task_id})
+
 @bp.route(config.API_TIF_calc_NDVI, methods=['POST'])
 def calc_NDVI():
     scheduler = init_scheduler()
