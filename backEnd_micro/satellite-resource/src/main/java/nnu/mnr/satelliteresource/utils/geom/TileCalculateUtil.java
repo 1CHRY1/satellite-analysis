@@ -207,7 +207,7 @@ public class TileCalculateUtil {
         final double EARTH_CIRCUMFERENCE_MERIDIAN = 40008.0;
 
         double degreePerGridX = (360.0 * resolution) / EARTH_CIRCUMFERENCE_EQUATOR;
-        double degreePerGridY = (180.0 * resolution) / EARTH_CIRCUMFERENCE_MERIDIAN;
+        double degreePerGridY = (180.0 * resolution) / EARTH_CIRCUMFERENCE_MERIDIAN * 2.0;
 
         int gridNumX = (int) Math.ceil(360.0 / degreePerGridX);
         int gridNumY = (int) Math.ceil(180.0 / degreePerGridY);
