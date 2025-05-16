@@ -485,6 +485,9 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
             })
             popup.on('close', () => {
                 bus.emit('closeTimeline')
+                const id = 'grid-layer'
+                const highlightId = id + '-highlight'
+                ezStore.get('map').setFilter(highlightId, ['in', 'id', ''])
             })
             const dom = createPopoverContent()
             popup.setDOMContent(dom).addTo(m)
