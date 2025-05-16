@@ -64,7 +64,7 @@
                                                 <div class="result-info-value date-range">
                                                     <div class="date-item">{{
                                                         formatTime(props.regionConfig.dataRange[0], 'day')
-                                                    }}~
+                                                        }}~
                                                         {{ formatTime(props.regionConfig.dataRange[1], 'day')
                                                         }}</div>
                                                 </div>
@@ -612,7 +612,7 @@ const calNoClouds = async () => {
         ElMessage.success('无云一版图计算完成')
     } catch (error) {
         calTask.value.calState = 'failed'
-        ElMessage.error('NDVI计算失败，请重试')
+        ElMessage.error('无云一版图计算失败，请重试')
     }
 }
 // 预览无云一版图
