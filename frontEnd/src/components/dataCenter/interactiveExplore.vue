@@ -88,8 +88,7 @@
                                     <div class="cloud-slider-container">
                                         <span class="cloud-value">{{ tileMergeConfig.cloudRange[0] }}%</span>
                                         <div class="slider-wrapper">
-                                            <a-slider class="custom-slider" range
-                                                v-model:value="tileMergeConfig.cloudRange"
+                                            <a-slider class="custom-slider" range v-model:value="tileMergeConfig.cloudRange"
                                                 :tipFormatter="(value: number) => value + '%'" />
                                         </div>
                                         <span class="cloud-value">{{ tileMergeConfig.cloudRange[1] }}%</span>
@@ -515,7 +514,7 @@ const filterByTags = async () => {
                 properties: {
                     ...(item.properties || {}),
                     id: item.properties?.id ?? index, // 确保每个都有 id
-                    opacity: judgeGridOpacity(item, sceneGridsRes),
+                    opacity: judgeGridOpacity(index, sceneGridsRes),
                     rowId: item.rowId,
                     columnId: item.columnId,
                     resolution: item.resolution,
