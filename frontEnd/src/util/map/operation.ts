@@ -399,11 +399,15 @@ export function map_addGridPreviewLayer(img: string, coords: number[][], prefix:
         //     m.removeLayer(gridPreviewID)
         //     m.removeSource(gridPreviewSourceID)
         // }
-
         m.addSource(gridPreviewSourceID, {
             type: 'image',
             url: img,
-            coordinates: coords,
+            coordinates: coords as [
+                [number, number],
+                [number, number],
+                [number, number],
+                [number, number],
+            ],
         })
         m.addLayer({
             id: gridPreviewID,
@@ -437,6 +441,7 @@ function grid_fill_click_handler(e: MapMouseEvent): void {
     const features = e.features!
 
     if (features.length && features[0].properties && features[0].properties.flag) {
+        console.log(features[0].properties)
         const sceneGridsRes = ezStore.get('sceneGridsRes')
 
         const gridInfo = sceneGridsRes.find((item: any) => {
