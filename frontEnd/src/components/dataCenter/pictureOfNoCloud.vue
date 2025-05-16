@@ -590,9 +590,9 @@ const calNoClouds = async () => {
         let res = await getCaseResult(calTask.value.taskId)
         console.log(res, '结果');
         // 1、先预览无云一版图影像
+        let data = res.data.noCloud.tiles
 
         // 2、补充数据
-
         let calResult = {
             demotic1m: true,
             demotic2m: dataReconstruction.value[0],

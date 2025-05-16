@@ -570,6 +570,14 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
         //     },
         // )
 
+        m.on('click', fillId, (e) => {
+            console.log(e)
+
+            const features = m.queryRenderedFeatures(e.point, {
+                layers: [fillId],
+            })
+        })
+
         // ezStore.set('grid-layer-cancel-watch', cancelWatch)
         ezStore.set('grid-layer-fill-id', fillId)
         ezStore.set('grid-layer-line-id', lineId)
