@@ -4,6 +4,17 @@
             <p>Grid: {{ gridID }}</p>
         </div>
 
+
+        <div class="band-selection">
+            <label for="band-select">传感器:</label>
+            <select id="band-select" v-model="selectedSensor" class="band-select">
+                <option disabled value="">请选择</option>
+                <option v-for="sensor in sensors" :key="sensor" :value="sensor">
+                    {{ sensor }}
+                </option>
+            </select>
+        </div>
+
         <div class="band-selection">
             <label for="band-select">波段:</label>
             <select id="band-select" v-model="selectedBand" class="band-select">
@@ -14,20 +25,27 @@
             </select>
         </div>
 
-        <button class="visualize-btn" @click="handleVisualize" :disabled="!selectedBand">
-            <span class="btn-icon">
-                <GalleryHorizontalIcon :size="18" />
-            </span>
-            时空立方体可视化
-        </button>
+        <div class="btns">
+            <button class="visualize-btn" @click="handleVisualize" :disabled="!selectedBand">
+                <span class="btn-icon">
+                    <GalleryHorizontalIcon :size="18" />
+                </span>
+                网格影像可视化
+            </button>
+            <button class="delete-btn" @click="handleRemove">
+                <span class="btn-icon">
+                    <Trash2Icon :size="18" />
+                </span>
+            </button>
+        </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, type Ref } from 'vue';
-import { GalleryHorizontalIcon } from 'lucide-vue-next'
+import { ref, computed, onMounted, type Ref } from 'vue';
+import { GalleryHorizontalIcon, Trash2Icon } from 'lucide-vue-next'
 import bus from '@/store/bus';
-
+import { map_removeGridPreviewLayer } from '@/util/map/operation'
 type Image = {
     bucket: string
     tifPath: string
@@ -39,6 +57,8 @@ type Scene = {
     cloudPath: string
     sceneId: string
     sceneTime: string
+    sensorName: string
+    productName: string
     images: Image[]
 }
 
@@ -71,24 +91,44 @@ const gridID = computed(() => {
     return `${rowId}-${columnId}-${resolution}`;
 })
 
-const bands = computed(() => {
-
+const sensors = computed(() => {
     let result: string[] = []
 
-    // 有就放进去， 没有强制要求所有景都有
     props.gridData.value.scenes.forEach((scene: Scene) => {
-        scene.images.forEach((bandImg: Image) => {
-            if (!result.includes(bandImg.band)) {
-                result.push(bandImg.band)
-            }
-        })
+        if (!result.includes(scene.sensorName)) {
+            result.push(scene.sensorName)
+        }
     })
 
     return result
 })
 
-// State for selected band
-const selectedBand = ref('');
+const bands = computed(() => {
+
+    let result: string[] = []
+
+    if (selectedSensor.value != '') {
+        props.gridData.value.scenes.forEach((scene: Scene) => {
+            if (scene.sensorName === selectedSensor.value) {
+                scene.images.forEach((bandImg: Image) => {
+                    if (!result.includes(bandImg.band)) {
+                        result.push(bandImg.band)
+                    }
+                })
+            }
+        })
+    }
+    result.sort((a, b) => {
+        return a.localeCompare(b)
+    })
+
+    return result
+})
+
+
+
+const selectedBand = ref('')
+const selectedSensor = ref('')
 
 
 // Handle visualization button click
@@ -103,19 +143,41 @@ const handleVisualize = () => {
 
     const imageData: ImageInfoType[] = []
     for (let scene of props.gridData.value.scenes) {
-        scene.images.forEach((bandImg: Image) => {
-            if (bandImg.band === selectedBand.value) {
-                imageData.push({
-                    tifFullPath: '/' + bandImg.bucket + '/' + bandImg.tifPath,
-                    sceneId: scene.sceneId,
-                    time: scene.sceneTime,
-                })
-            }
-        })
+
+        if (scene.sensorName == selectedSensor.value) {
+
+            scene.images.forEach((bandImg: Image) => {
+
+                if (bandImg.band === selectedBand.value) {
+                    imageData.push({
+                        tifFullPath: '/' + bandImg.bucket + '/' + bandImg.tifPath,
+                        sceneId: scene.sceneId,
+                        time: scene.sceneTime,
+                    })
+                }
+            })
+
+        }
+
     }
 
     bus.emit('cubeVisualize', imageData, gridData)
-};
+    bus.emit('openTimeline')
+}
+
+const handleRemove = () => {
+    const { rowId, columnId, resolution } = props.gridData.value;
+    const prefix = rowId + '' + columnId
+    map_removeGridPreviewLayer(prefix)
+}
+
+onMounted(() => {
+    bus.on('closeTimeline', () => {
+        selectedBand.value = ''
+        selectedSensor.value = ''
+    })
+})
+
 </script>
 
 <style scoped>
@@ -146,12 +208,12 @@ const handleVisualize = () => {
 .band-selection {
     display: grid;
     grid-template-columns: 40% 60%;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1rem;
 }
 
 .band-selection label {
     display: inline-block;
-    margin-right: 1.25rem;
+    margin-right: 1 rem;
     height: 2.75rem;
     line-height: 2.75rem;
     font-size: 1rem;
@@ -181,9 +243,14 @@ const handleVisualize = () => {
     box-shadow: 0 0 0 2px rgba(77, 171, 247, 0.25);
 }
 
+.btns {
+    display: flex;
+}
+
 .visualize-btn {
-    width: 100%;
-    padding: 0.75rem 1rem;
+    width: 80%;
+    padding: 0.75rem 0.5rem;
+    padding-right: 0;
     background-color: #0c4a6e;
     color: #e6f1ff;
     border: none;
@@ -193,7 +260,7 @@ const handleVisualize = () => {
     cursor: pointer;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     transition: background-color 0.2s ease;
 }
 
@@ -201,9 +268,26 @@ const handleVisualize = () => {
     background-color: #075985;
 }
 
-.visualize-btn:disabled {
+.visualize-btn:disabled,
+.delete-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+}
+
+.delete-btn {
+    width: 20%;
+    color: #e6f1ff;
+    /* padding: 0.75rem 1rem; */
+    padding-left: 0.75rem;
+    border: none;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
 }
 
 .btn-icon {

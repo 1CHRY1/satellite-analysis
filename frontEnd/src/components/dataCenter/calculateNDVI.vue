@@ -36,8 +36,7 @@
                                             </div>
                                             <div class="result-info-content">
                                                 <div class="result-info-label">纬度</div>
-                                                <div class="result-info-value">{{ Math.round(pickedPoint[0] * 1000000) /
-                                                    1000000 }}
+                                                <div class="result-info-value">{{ pickedPoint[0] }}
                                                 </div>
                                             </div>
                                         </div>
@@ -47,8 +46,7 @@
                                             </div>
                                             <div class="result-info-content">
                                                 <div class="result-info-label">经度</div>
-                                                <div class="result-info-value">{{ Math.round(pickedPoint[1] * 1000000) /
-                                                    1000000 }} </div>
+                                                <div class="result-info-value">{{ pickedPoint[1] }} </div>
                                             </div>
                                         </div>
 
@@ -130,11 +128,18 @@
                     </div>
                     <div class="section-content">
                         <div class="config-container">
-                            <div v-for="(image, index) in drawData" class="config-item">
-                                第{{ index + 1 }}次计算结果为：
-                                NDVI计算结果为：xxx
-                                统计数据-统计数据-统计数据-统计数据
-                                二维折线图/三维折线图/复式折线图
+                            <div class="config-item" v-for="(item, index) in drawData" :key="index">
+                                <div>第{{ index + 1 }}次计算结果为：</div>
+                                <!-- <div>NDVI计算结果为：xxx</div> -->
+                                <!-- <div>统计数据-统计数据-统计数据-统计数据</div> -->
+                                <div>经纬度：（{{ item.point[0] }},{{ item.point[1] }}）</div>
+
+                                <div class="chart-wrapper flex flex-col items-end">
+                                    <div class="chart" :ref="el => setChartRef(el, index)" :id="`chart-${index}`"
+                                        style="width: 100%; height: 400px;"></div>
+                                    <button class="!text-[#38bdf8] cursor-pointer"
+                                        @click="fullscreenChart(index)">全屏查看</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -145,10 +150,12 @@
     </div>
 </template>
 <script setup lang="ts">
-import { ref, type PropType, computed, type Ref } from 'vue'
+import { ref, type PropType, computed, type Ref, nextTick, onUpdated, onMounted, reactive, onBeforeUnmount, watch, type ComponentPublicInstance } from 'vue'
 import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'
 import { type interactiveExplore } from '@/components/dataCenter/type'
 import { formatTime } from '@/util/common'
+import { getNdviPoint, getCaseStatus, getCaseResult } from '@/api/http/satellite-data'
+import * as echarts from 'echarts'
 
 import * as MapOperation from '@/util/map/operation'
 import { useGridStore, ezStore } from '@/store'
@@ -180,11 +187,19 @@ const props = defineProps({
 })
 
 const gridStore = useGridStore()
-const pickedPoint = computed(() => gridStore._point)
+const pickedPoint = computed(() => {
+    return [
+        Math.round(gridStore._point[0] * 1000000) / 1000000,
+        Math.round(gridStore._point[1] * 1000000) / 1000000
+    ];
+})
 const showProgress = ref(false)
 const progress = ref(0)
 const showCalResult = ref(false)
-const calState = ref('start')
+const calTask: Ref<any> = ref({
+    calState: 'start',
+    taskId: ''
+})
 const selectedTask = ref('NDVI时序计算')
 const optionalTasks = ref(['NDVI时序计算', '滑坡概率计算', '洪水频发风险区域计算'])
 
@@ -193,11 +208,11 @@ let progressTimer: ReturnType<typeof setInterval> | null = null
 
 // 控制进度条
 const progressControl = () => {
-    if (calState.value === 'pending') return
+    if (calTask.value.calState === 'pending') return
     progress.value = 0
-    calState.value = 'pending'
+    calTask.value.calState = 'pending'
     progressTimer = setInterval(() => {
-        if (calState.value === 'success' || calState.value === 'error') {
+        if (calTask.value.calState === 'success' || calTask.value.calState === 'failed') {
             progress.value = 100
             showCalResult.value = true
             clearInterval(progressTimer!)
@@ -214,25 +229,199 @@ const startDraw = () => {
     MapOperation.draw_pointMode()
 }
 
-const calNDVI = () => {
+const calNDVI = async () => {
+
     if (pickedPoint.value.length === 0) {
         ElMessage.warning('请先选择您要计算的区域')
         return
     }
+    let getNdviPointParam = {
+        sceneIds: props.regionConfig.images.map(image => image.sceneId),
+        point: [pickedPoint.value[1], pickedPoint.value[0]]
+    }
+    console.log(getNdviPointParam, '开始计算ndvi');
+
+    let getNdviRes = await getNdviPoint(getNdviPointParam)
+    if (getNdviRes.message !== 'success') {
+        ElMessage.error('计算失败，请重试')
+        console.error(getNdviRes)
+        return
+    }
+
+    calTask.value.taskId = getNdviRes.data
+    console.log(getNdviPointParam, getNdviRes, 1561);
+
     // 1、启动进度条
     showProgress.value = true
     progressControl()
 
     // 2、轮询运行状态，直到运行完成
-    setTimeout(() => {
-        calState.value = 'success'
-    }, 4000)
+    // ✅ 轮询函数，直到 data === 'COMPLETE'
+    const pollStatus = async (taskId: string) => {
+        const interval = 1000 // 每秒轮询一次
+        return new Promise<void>((resolve, reject) => {
+            const timer = setInterval(async () => {
+                try {
+                    const res = await getCaseStatus(taskId)
+                    console.log('轮询结果:', res)
 
-    // 3、渲染运行结果
-    drawData.value.push(11)
+                    if (res?.data === 'COMPLETE') {
+                        clearInterval(timer)
+                        resolve()
+                    } else if (res?.data === 'ERROR') {
+                        console.log(res, res.data, 15616);
+
+                        clearInterval(timer)
+                        reject(new Error('任务失败'))
+                    }
+                } catch (err) {
+                    clearInterval(timer)
+                    reject(err)
+                }
+            }, interval)
+        })
+    }
+
+    try {
+        await pollStatus(calTask.value.taskId)
+        // ✅ 成功后设置状态
+        calTask.value.calState = 'success'
+        let res = await getCaseResult(calTask.value.taskId)
+        console.log(res, '结果');
+        let NDVIData = res.data.NDVI
+        let xData = NDVIData.map(data => data.sceneTime)
+        let yData = NDVIData.map(data => data.value)
+        console.log(pickedPoint.value, 1111);
+
+        drawData.value.push({
+            yData,
+            xData,
+            type: 'line',
+            point: [...pickedPoint.value]
+        })
+        ElMessage.success('NDVI计算完成')
+    } catch (error) {
+        calTask.value.calState = 'failed'
+        ElMessage.error('NDVI计算失败，请重试')
+        console.error(error);
+    }
+
 }
 
-const drawData: Ref<number[]> = ref([])
+/**
+ * 结果展示
+ */
+const drawData: Ref<any> = ref([])
+
+const chartInstances = ref<(echarts.ECharts | null)[]>([])
+
+// 初始化图表
+const initChart = (el: HTMLElement, data: any, index: number) => {
+    if (!el) return
+    const existingInstance = echarts.getInstanceByDom(el)
+    if (existingInstance) {
+        existingInstance.dispose()
+    }
+    let chart = echarts.init(el)
+    chart.setOption({
+        title: {
+            text: `图表 ${index + 1}`
+        },
+        xAxis: {
+            type: 'category',
+            data: data.xData
+        },
+        yAxis: {
+            type: 'value'
+        },
+        series: [
+            {
+                data: data.yData,
+                type: data.type
+            }
+        ],
+        tooltip: {
+            trigger: 'axis'
+        },
+        responsive: true
+    })
+    chart.resize()
+    chartInstances.value[index] = chart
+}
+
+// 设置 ref 并初始化图表
+const setChartRef = (el: Element | ComponentPublicInstance | null, index: number) => {
+    if (el instanceof HTMLElement) {
+        nextTick(() => {
+
+            initChart(el, drawData.value[index], index)
+        })
+    }
+}
+
+// 全屏查看功能
+const fullscreenChart = (index: number) => {
+    const dom = document.getElementById(`chart-${index}`)
+    if (dom?.requestFullscreen) {
+        dom.requestFullscreen()
+    } else if ((dom as any).webkitRequestFullScreen) {
+        (dom as any).webkitRequestFullScreen()
+    } else if ((dom as any).mozRequestFullScreen) {
+        (dom as any).mozRequestFullScreen()
+    } else if ((dom as any).msRequestFullscreen) {
+        (dom as any).msRequestFullscreen()
+    }
+}
+
+// 图表自适应
+window.addEventListener('resize', () => {
+    chartInstances.value.forEach(chart => {
+        if (chart) chart.resize()
+    })
+})
+
+// 响应式监听 drawData 变化并重新渲染
+watch(drawData, (newData) => {
+    nextTick(() => {
+        newData.forEach((item, index) => {
+            const el = document.getElementById(`chart-${index}`)
+            if (el) {
+                initChart(el, item, index)
+            }
+        })
+    })
+}, { deep: true })
+
+onMounted(() => {
+    nextTick(() => {
+        drawData.value.forEach((item, index) => {
+            const el = document.getElementById(`chart-${index}`)
+            if (el) {
+                initChart(el, item, index)
+            }
+        })
+    })
+})
 </script>
 
-<style scoped src="./tabStyle.css"></style>
+<style scoped src="./tabStyle.css">
+.chart-wrapper {
+    margin-top: 10px;
+}
+
+.chart {
+    width: 100%;
+    height: 400px !important;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+}
+
+:fullscreen .chart {
+    width: 100vw !important;
+    height: 100vh !important;
+}
+
+button {
+    margin-top: 5px;
+}
+</style>
