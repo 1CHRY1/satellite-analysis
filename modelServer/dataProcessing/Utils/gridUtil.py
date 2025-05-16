@@ -32,7 +32,7 @@ class GridHelper:
         # self.grid_num_x = math.ceil(EARTH_CIRCUMFERENCE / self.grid_resolution_in_meter)
         # self.grid_num_y = math.ceil(EARTH_CIRCUMFERENCE / 2.0 / self.grid_resolution_in_meter)
         self.degreePerGridX = (360.0 * grid_resolution_in_kilometer) / EARTH_CIRCUMFERENCE_EQUATOR
-        self.degreePerGridY = (180.0 * grid_resolution_in_kilometer) / EARTH_CIRCUMFERENCE_MERIDIAN
+        self.degreePerGridY = (180.0 * grid_resolution_in_kilometer) / EARTH_CIRCUMFERENCE_MERIDIAN * 2.0
 
         self.grid_num_x = int(math.ceil(360.0 / self.degreePerGridX))
         self.grid_num_y = int(math.ceil(180.0 / self.degreePerGridY))
