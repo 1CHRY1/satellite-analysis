@@ -8,6 +8,7 @@ import nnu.mnr.satellitemodeling.model.dto.modeling.ModelServerSceneDTO;
 import nnu.mnr.satellitemodeling.model.dto.modeling.NdviFetchDTO;
 import nnu.mnr.satellitemodeling.model.dto.modeling.NoCloudFetchDTO;
 import nnu.mnr.satellitemodeling.model.po.resources.Scene;
+import nnu.mnr.satellitemodeling.model.po.resources.SceneSP;
 import nnu.mnr.satellitemodeling.model.properties.ModelServerProperties;
 import nnu.mnr.satellitemodeling.model.vo.common.CommonResultVO;
 import nnu.mnr.satellitemodeling.utils.common.ProcessUtil;
@@ -69,7 +70,7 @@ public class ModelExampleService {
 
         // 构成影像景参数信息
         for (String sceneId : sceneIds) {
-            Scene scene = resourceClient.getSceneById(sceneId);
+            SceneSP scene = resourceClient.getSceneByIdWithProductAndSensor(sceneId);
             List<ModelServerImageDTO> imageDTO = resourceClient.getModelServerImageDTO(sceneId);
             ModelServerSceneDTO modelServerSceneDTO = ModelServerSceneDTO.builder()
                     .sceneId(sceneId).images(imageDTO).sceneTime(scene.getSceneTime())
@@ -100,7 +101,7 @@ public class ModelExampleService {
         // 构成影像景参数信息
         for (String sceneId : sceneIds) {
             Geometry geomPoint = GeometryUtil.parse4326Point(point);
-            Scene scene = resourceClient.getSceneById(sceneId);
+            SceneSP scene = resourceClient.getSceneByIdWithProductAndSensor(sceneId);
             if (scene.getBbox().contains(geomPoint)) {
                 List<ModelServerImageDTO> imageDTO = resourceClient.getModelServerImageDTO(sceneId);
 

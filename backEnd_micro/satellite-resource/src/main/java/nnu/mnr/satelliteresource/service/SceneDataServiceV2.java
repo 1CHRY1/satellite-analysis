@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satelliteresource.model.dto.resources.ScenesFetchDTOV2;
 import nnu.mnr.satelliteresource.model.po.Region;
 import nnu.mnr.satelliteresource.model.po.Scene;
+import nnu.mnr.satelliteresource.model.po.SceneSP;
 import nnu.mnr.satelliteresource.model.vo.resources.SceneDesVO;
 import nnu.mnr.satelliteresource.repository.ISceneRepo;
 import nnu.mnr.satelliteresource.utils.geom.GeometryUtil;
@@ -43,6 +44,10 @@ public class SceneDataServiceV2 {
 
     public Scene getSceneById(String sceneId) {
         return sceneRepo.selectById(sceneId);
+    }
+
+    public SceneSP getSceneByIdWithProductAndSensor(String sceneId) {
+        return sceneRepo.getSceneByIdWithProductAndSensor(sceneId);
     }
 
     //    public List<SceneDesVO> getScenesDesByTimeRegionAndTag(ScenesFetchDTOV2 scenesFetchDTO) {
