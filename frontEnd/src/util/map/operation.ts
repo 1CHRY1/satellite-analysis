@@ -445,7 +445,8 @@ function grid_fill_click_handler(e: MapMouseEvent): void {
     const features = e.features!
 
     if (features.length && features[0].properties && features[0].properties.flag) {
-
+        
+        console.log(features[0].properties)
         const sceneGridsRes = ezStore.get('sceneGridsRes')
 
         const gridInfo = sceneGridsRes.find((item: any) => {

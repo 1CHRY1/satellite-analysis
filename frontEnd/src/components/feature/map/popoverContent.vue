@@ -32,7 +32,7 @@
                 </span>
                 网格影像可视化
             </button>
-            <button class="delete-btn" @click="handleRemove" :disabled="!selectedBand">
+            <button class="delete-btn" @click="handleRemove">
                 <span class="btn-icon">
                     <Trash2Icon :size="18" />
                 </span>
@@ -118,6 +118,9 @@ const bands = computed(() => {
             }
         })
     }
+    result.sort((a, b) => {
+        return a.localeCompare(b)
+    })
 
     return result
 })
