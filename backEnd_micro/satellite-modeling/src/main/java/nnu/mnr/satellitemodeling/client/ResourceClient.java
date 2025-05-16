@@ -5,6 +5,7 @@ import nnu.mnr.satellitemodeling.config.web.FeignConfig;
 import nnu.mnr.satellitemodeling.model.dto.modeling.ModelServerImageDTO;
 import nnu.mnr.satellitemodeling.model.po.resources.Region;
 import nnu.mnr.satellitemodeling.model.po.resources.Scene;
+import nnu.mnr.satellitemodeling.model.po.resources.SceneSP;
 import nnu.mnr.satellitemodeling.model.po.user.User;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +33,6 @@ public interface ResourceClient {
     List<ModelServerImageDTO> getModelServerImageDTO(@PathVariable String sceneId);
 
     @GetMapping("/api/v1/resource/internal/scene/id/{sceneId}")
-    Scene getSceneById(@PathVariable String sceneId);
+    SceneSP getSceneByIdWithProductAndSensor(@PathVariable String sceneId);
 
 }
