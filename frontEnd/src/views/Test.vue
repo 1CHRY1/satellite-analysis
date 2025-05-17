@@ -1,6 +1,6 @@
 <template>
     <div>
-        <PopupContent class="absolute" :gridData="mk"  v-draggable="configuration" ></PopupContent>
+        <PopupContent class="absolute" :gridData="mk"></PopupContent>
     </div>
 </template>
 
@@ -8,19 +8,7 @@
 import { onMounted, ref, type Ref } from 'vue'
 import PopupContent, { type GridData } from '@/components/feature/map/popoverContent.vue'
 
-import useDraggable from 'vue-draggable-anywhere'
 
-const { vDraggable, position } = useDraggable()
-const configuration = {
-    boundaryElement: '.parentClass',
-    boundary: true,
-    boundaryOffset: {
-        x: 30,
-        y: 100
-    },
-    onDragging: test,
-    afterDragEnd: test
-}
 
 function test(position) {
     console.log(position)
@@ -37,12 +25,74 @@ const mk = ref({
             cloudPath: '',
             sceneId: '',
             sceneTime: '',
-            sensorName: '',
-            productName: '',
-            resolution: '',
+            sensorName: 'GF-1',
+            productName: 'GF-1',
+            resolution: '10m',
             images: [
                 {
                     'band': '1',
+                    'bucket': '1',
+                    'tifPath': '2'
+                },
+                {
+                    'band': '2',
+                    'bucket': '1',
+                    'tifPath': '2'
+                },
+                {
+                    'band': '3',
+                    'bucket': '1',
+                    'tifPath': '2'
+                }
+            ]
+        },
+        {
+            bucket: '',
+            cloudPath: '',
+            sceneId: '',
+            sceneTime: '',
+            sensorName: 'GF-2',
+            productName: 'GF-2',
+            resolution: '120m',
+            images: [
+                {
+                    'band': '1',
+                    'bucket': '1',
+                    'tifPath': '2'
+                },
+                {
+                    'band': '2',
+                    'bucket': '1',
+                    'tifPath': '2'
+                },
+                {
+                    'band': '3',
+                    'bucket': '1',
+                    'tifPath': '2'
+                }
+            ]
+        },
+        {
+            bucket: '',
+            cloudPath: '',
+            sceneId: '',
+            sceneTime: '',
+            sensorName: 'GF-1',
+            productName: 'GF-1',
+            resolution: '10m',
+            images: [
+                {
+                    'band': '1',
+                    'bucket': '1',
+                    'tifPath': '2'
+                },
+                {
+                    'band': '2',
+                    'bucket': '1',
+                    'tifPath': '2'
+                },
+                {
+                    'band': '3',
                     'bucket': '1',
                     'tifPath': '2'
                 }

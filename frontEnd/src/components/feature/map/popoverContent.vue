@@ -1,109 +1,96 @@
 <template>
-    <div class="popup-content">
-        <div class="grid-id">
-            <p>时空立方体编号: {{ gridID }}</p>
-        </div>
+    <Vue3DraggableResizable :draggable="true" :resizable="false" :initW="250">
+        <div class="popup-content">
+            <div class="grid-id">
+                <p>时空立方体编号: {{ gridID }}</p>
+            </div>
 
-        <div class="band-selection">
-            <label for="resolution-select">分辨率:</label>
-            <select id="resolution-select" v-model="selectedResolution" class="band-select">
-                <option disabled value="">请选择</option>
-                <option v-for="reso in resolutions" :key="reso" :value="reso">
-                    {{ reso }}
-                </option>
-            </select>
-        </div>
-
-        <div class="band-selection">
-            <label for="sensor-select">传感器:</label>
-            <select id="sensor-select" v-model="selectedSensor" class="band-select">
-                <option disabled value="">请选择</option>
-                <option v-for="sensor in sensors" :key="sensor" :value="sensor">
-                    {{ sensor }}
-                </option>
-            </select>
-        </div>
-
-        <!-- Tab selection -->
-        <div class="tabs">
-            <button 
-                class="tab-btn" 
-                :class="{ active: activeTab === 'single' }" 
-                @click="activeTab = 'single'"
-            >
-                单波段
-            </button>
-            <button 
-                class="tab-btn" 
-                :class="{ active: activeTab === 'rgb' }" 
-                @click="activeTab = 'rgb'"
-            >
-                三波段合成
-            </button>
-        </div>
-
-        <!-- Single band tab content -->
-        <div v-if="activeTab === 'single'" class="tab-content">
             <div class="band-selection">
-                <label for="band-select">波段:</label>
-                <select id="band-select" v-model="selectedBand" class="band-select">
+                <label for="resolution-select">分辨率:</label>
+                <select id="resolution-select" v-model="selectedResolution" class="band-select">
                     <option disabled value="">请选择</option>
-                    <option v-for="band in bands" :key="band" :value="band">
-                        {{ band }}
+                    <option v-for="reso in resolutions" :key="reso" :value="reso">
+                        {{ reso }}
                     </option>
                 </select>
             </div>
-        </div>
 
-        <!-- RGB band tab content -->
-        <div v-if="activeTab === 'rgb'" class="tab-content">
             <div class="band-selection">
-                <label for="r-band-select">R波段:</label>
-                <select id="r-band-select" v-model="selectedRBand" class="band-select">
+                <label for="sensor-select">传感器:</label>
+                <select id="sensor-select" v-model="selectedSensor" class="band-select">
                     <option disabled value="">请选择</option>
-                    <option v-for="band in bands" :key="band" :value="band">
-                        {{ band }}
+                    <option v-for="sensor in sensors" :key="sensor" :value="sensor">
+                        {{ sensor }}
                     </option>
                 </select>
             </div>
-            <div class="band-selection">
-                <label for="g-band-select">G波段:</label>
-                <select id="g-band-select" v-model="selectedGBand" class="band-select">
-                    <option disabled value="">请选择</option>
-                    <option v-for="band in bands" :key="band" :value="band">
-                        {{ band }}
-                    </option>
-                </select>
-            </div>
-            <div class="band-selection">
-                <label for="b-band-select">B波段:</label>
-                <select id="b-band-select" v-model="selectedBBand" class="band-select">
-                    <option disabled value="">请选择</option>
-                    <option v-for="band in bands" :key="band" :value="band">
-                        {{ band }}
-                    </option>
-                </select>
-            </div>
-        </div>
 
-        <div class="btns">
-            <button 
-                class="visualize-btn" 
-                @click="handleVisualize" 
-                :disabled="!canVisualize"
-            >
-                <span class="btn-icon">
-                    <GalleryHorizontalIcon :size="18" />
-                </span>
-                网格影像可视化
-            </button>
-            <button class="delete-btn" @click="handleRemove">
-                <span class="btn-icon">
-                    <Trash2Icon :size="18" />
-                </span>
-            </button>
+            <div class="tabs">
+                <button class="tab-btn" :class="{ active: activeTab === 'single' }" @click="activeTab = 'single'">
+                    单波段
+                </button>
+                <button class="tab-btn" :class="{ active: activeTab === 'rgb' }" @click="activeTab = 'rgb'">
+                    三波段合成
+                </button>
+            </div>
+
+            <div v-if="activeTab === 'single'" class="tab-content">
+                <div class="band-selection">
+                    <label for="band-select">波段:</label>
+                    <select id="band-select" v-model="selectedBand" class="band-select">
+                        <option disabled value="">请选择</option>
+                        <option v-for="band in bands" :key="band" :value="band">
+                            {{ band }}
+                        </option>
+                    </select>
+                </div>
+            </div>
+
+            <div v-if="activeTab === 'rgb'" class="tab-content">
+                <div class="band-selection">
+                    <label for="r-band-select">R波段:</label>
+                    <select id="r-band-select" v-model="selectedRBand" class="band-select">
+                        <option disabled value="">请选择</option>
+                        <option v-for="band in bands" :key="band" :value="band">
+                            {{ band }}
+                        </option>
+                    </select>
+                </div>
+                <div class="band-selection">
+                    <label for="g-band-select">G波段:</label>
+                    <select id="g-band-select" v-model="selectedGBand" class="band-select">
+                        <option disabled value="">请选择</option>
+                        <option v-for="band in bands" :key="band" :value="band">
+                            {{ band }}
+                        </option>
+                    </select>
+                </div>
+                <div class="band-selection">
+                    <label for="b-band-select">B波段:</label>
+                    <select id="b-band-select" v-model="selectedBBand" class="band-select">
+                        <option disabled value="">请选择</option>
+                        <option v-for="band in bands" :key="band" :value="band">
+                            {{ band }}
+                        </option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="btns">
+                <button class="visualize-btn" @click="handleVisualize" :disabled="!canVisualize">
+                    <span class="btn-icon">
+                        <GalleryHorizontalIcon :size="18" />
+                    </span>
+                    网格影像可视化
+                </button>
+                <button class="delete-btn" @click="handleRemove">
+                    <span class="btn-icon">
+                        <Trash2Icon :size="18" />
+                    </span>
+                </button>
+            </div>
         </div>
-    </div>
+    </Vue3DraggableResizable>
 </template>
 
 <script setup lang="ts">
@@ -111,8 +98,11 @@ import { ref, computed, onMounted, type Ref } from 'vue';
 import { GalleryHorizontalIcon, Trash2Icon } from 'lucide-vue-next'
 import bus from '@/store/bus';
 import { map_removeGridPreviewLayer } from '@/util/map/operation'
-import ezStore from '@/store/ezStore';
+import Vue3DraggableResizable from 'vue3-draggable-resizable'
+import 'vue3-draggable-resizable/dist/Vue3DraggableResizable.css'
 
+
+/////// Types //////////////////////////////////
 type Image = {
     bucket: string
     tifPath: string
@@ -143,19 +133,28 @@ type ImageInfoType = {
     tifFullPath: string
 }
 
+type MultiImageInfoType = {
+    sceneId: string
+    time: string
+    redPath: string
+    greenPath: string
+    bluePath: string
+}
+
 type GridInfoType = {
     rowId: number
     columnId: number
     resolution: number
 }
 
+/////// Main //////////////////////////////////
 const props = defineProps<{
     gridData: GridData;
 }>()
 
-// Tab state
 const activeTab = ref('single')
 
+// Select options
 const gridID = computed(() => {
     const { rowId, columnId, resolution } = props.gridData;
     return `${rowId}-${columnId}-${resolution}`;
@@ -172,7 +171,9 @@ const resolutions = computed(() => {
 const sensors = computed(() => {
     let result = new Set<string>()
     props.gridData.scenes.forEach((scene: Scene) => {
+        console.log(selectedResolution.value, scene.resolution)
         if (selectedResolution.value && scene.resolution == selectedResolution.value) {
+            console.log('1')
             result.add(scene.sensorName)
         } else {
             result.add(scene.sensorName)
@@ -202,15 +203,6 @@ const bands = computed(() => {
     return result
 })
 
-// Form state
-const selectedResolution = ref('')
-const selectedSensor = ref('')
-const selectedBand = ref('')
-const selectedRBand = ref('')
-const selectedGBand = ref('')
-const selectedBBand = ref('')
-
-// Check if visualization is possible based on active tab
 const canVisualize = computed(() => {
     if (activeTab.value === 'single') {
         return !!selectedBand.value
@@ -219,7 +211,15 @@ const canVisualize = computed(() => {
     }
 })
 
-// Handle visualization button click
+// Form state
+const selectedResolution = ref('')
+const selectedSensor = ref('')
+const selectedBand = ref('')
+const selectedRBand = ref('')
+const selectedGBand = ref('')
+const selectedBBand = ref('')
+
+// Handle visualization
 const handleVisualize = () => {
     const { rowId, columnId, resolution } = props.gridData;
     const gridData: GridInfoType = {
@@ -244,61 +244,49 @@ const handleVisualize = () => {
                 })
             }
         }
-        
+
         bus.emit('cubeVisualize', imageData, gridData, { mode: 'single' })
+
     } else {
-        // RGB band visualization
-        const rgbImageData: {
-            r: ImageInfoType[],
-            g: ImageInfoType[],
-            b: ImageInfoType[]
-        } = {
-            r: [],
-            g: [],
-            b: []
-        }
-        
+
+        const rgbImageData: MultiImageInfoType[] = []
+
+        const filteredScene = props.gridData.scenes.filter(scene => {
+            return scene.resolution === selectedResolution.value && scene.sensorName === selectedSensor.value
+        })
+
         // Process each band (R, G, B)
-        for (let scene of props.gridData.scenes) {
-            if (scene.sensorName == selectedSensor.value) {
-                // Process R band
-                scene.images.forEach((bandImg: Image) => {
-                    if (bandImg.band === selectedRBand.value) {
-                        rgbImageData.r.push({
-                            tifFullPath: bandImg.bucket + '/' + bandImg.tifPath,
-                            sceneId: scene.sceneId,
-                            time: scene.sceneTime,
-                        })
-                    }
-                })
-                
-                // Process G band
-                scene.images.forEach((bandImg: Image) => {
-                    if (bandImg.band === selectedGBand.value) {
-                        rgbImageData.g.push({
-                            tifFullPath: bandImg.bucket + '/' + bandImg.tifPath,
-                            sceneId: scene.sceneId,
-                            time: scene.sceneTime,
-                        })
-                    }
-                })
-                
-                // Process B band
-                scene.images.forEach((bandImg: Image) => {
-                    if (bandImg.band === selectedBBand.value) {
-                        rgbImageData.b.push({
-                            tifFullPath: bandImg.bucket + '/' + bandImg.tifPath,
-                            sceneId: scene.sceneId,
-                            time: scene.sceneTime,
-                        })
-                    }
-                })
-            }
+        for (let scene of filteredScene) {
+
+            let redPath = ''
+            let greenPath = ''
+            let bluePath = ''
+
+            scene.images.forEach((bandImg: Image) => {
+                if (bandImg.band === selectedBBand.value) {
+                    redPath = bandImg.bucket + '/' + bandImg.tifPath
+                }
+                else if (bandImg.band === selectedGBand.value) {
+                    greenPath = bandImg.bucket + '/' + bandImg.tifPath
+                }
+                else if (bandImg.band === selectedBBand.value) {
+                    bluePath = bandImg.bucket + '/' + bandImg.tifPath
+                }
+            })
+
+            rgbImageData.push({
+                sceneId: scene.sceneId,
+                time: scene.sceneTime,
+                redPath: redPath,
+                greenPath: greenPath,
+                bluePath: bluePath
+            })
+
         }
-        
+
         bus.emit('cubeVisualize', rgbImageData, gridData, { mode: 'rgb' })
     }
-    
+
     bus.emit('openTimeline')
 }
 
@@ -326,7 +314,7 @@ onMounted(() => {
     padding: 0.75rem;
     border-radius: 0.5rem;
     width: 100%;
-    max-width: 285px;
+    max-width: 250px;
     user-select: none;
 }
 
@@ -338,7 +326,7 @@ onMounted(() => {
 }
 
 .grid-id p {
-    font-size: 0.875rem;
+    font-size: 0.9rem;
     font-weight: 600;
     margin: 0;
     color: #7eb3dd;
@@ -436,7 +424,7 @@ onMounted(() => {
     cursor: pointer;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
     transition: background-color 0.2s ease;
 }
 
