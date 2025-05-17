@@ -35,9 +35,9 @@
 		"v-region": "^3.4.1",
 		"vue": "^3.5.13",
 		"vue-codemirror": "^6.1.1",
-		"vue-draggable-anywhere": "^1.2.0",
 		"vue-echarts": "^7.0.3",
-		"vue-router": "^4.5.0"
+		"vue-router": "^4.5.0",
+		"vue3-draggable-resizable": "^1.6.5"
 	},
 	"devDependencies": {
 		"@types/codemirror": "^5.60.15",
