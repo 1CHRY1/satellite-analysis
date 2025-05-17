@@ -41,6 +41,11 @@ export default defineConfig({
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/basemap/, ''),
             },
+            '/tiler':{
+                target: 'http://223.2.32.166:31800',
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/tiler/, ''),
+            }
         },
     },
 })
