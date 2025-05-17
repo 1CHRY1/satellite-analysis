@@ -4,7 +4,6 @@
             <p>Grid: {{ gridID }}</p>
         </div>
 
-
         <div class="band-selection">
             <label for="band-select">传感器:</label>
             <select id="band-select" v-model="selectedSensor" class="band-select">
@@ -150,7 +149,7 @@ const handleVisualize = () => {
 
                 if (bandImg.band === selectedBand.value) {
                     imageData.push({
-                        tifFullPath: '/' + bandImg.bucket + '/' + bandImg.tifPath,
+                        tifFullPath: bandImg.bucket + '/' + bandImg.tifPath,
                         sceneId: scene.sceneId,
                         time: scene.sceneTime,
                     })

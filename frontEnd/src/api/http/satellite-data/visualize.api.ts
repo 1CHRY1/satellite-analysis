@@ -15,7 +15,7 @@ type GridImageParams = {
 export async function getGridImage(params: GridImageParams): Promise<string> {
 
     const statisticsJson = await getImgStatistics(params.tifFullPath)
-    console.log(statisticsJson)
+    // console.log(statisticsJson)
 
     const percentile_2 = statisticsJson.b1 ? statisticsJson.b1.min : 0;
     const percentile_98 = statisticsJson.b1 ? statisticsJson.b1.max : 20000;
