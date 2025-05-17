@@ -259,7 +259,6 @@
             </div>
         </dv-border-box12>
     </div>
-
 </template>
 
 <script setup lang="ts">
@@ -271,6 +270,7 @@ import { getSceneGrids, getNoCloud, getCaseStatus, getCaseResult } from '@/api/h
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import * as MapOperation from '@/util/map/operation'
 import { ElMessage } from 'element-plus'
+import ezStore from '@/store/ezStore'
 
 import {
     DatabaseIcon,
@@ -588,9 +588,14 @@ const calNoClouds = async () => {
         console.log('成功，开始拿结果');
 
         let res = await getCaseResult(calTask.value.taskId)
-        console.log(res, '结果');
+        console.log(res, '结果')
+
         // 1、先预览无云一版图影像
         let data = res.data.noCloud.tiles
+        previewNoCloud(data)
+
+
+
 
         // 2、补充数据
         let calResult = {
@@ -616,14 +621,9 @@ const calNoClouds = async () => {
     }
 }
 // 预览无云一版图
-const previewNoCloud = async (imageUrl: string) => {
-    console.log(imageUrl);
+const previewNoCloud = async (data: any) => {
 
-    const res = await fetch('/app.conf.json')
-    let conf = await res.json()
-    let minioIpAndPort = conf.minioIpAndPort
-    let requestUrl = conf.titiler +
-        console.log(conf.minioIpAndPort, props.regionConfig.boundary);
+
 
 }
 // 假操作进度条统一时间

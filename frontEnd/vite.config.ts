@@ -16,14 +16,14 @@ export default defineConfig({
         proxy: {
             '/api2': {
                 // target: 'http://223.2.47.202:8999/api/v1',
-                target: 'http://223.2.47.202:8999/api/v2',
+                target: 'http://223.2.47.202:9888/api/v2',
                 // target: 'http://223.2.43.228:30899/api/v1',
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/api2/, ''),
             },
             '/api': {
                 // target: 'http://223.2.47.202:8999/api/v1',
-                target: 'http://223.2.47.202:8999/api/v1',
+                target: 'http://223.2.47.202:9888/api/v1',
                 // target: 'http://223.2.43.228:30899/api/v1',
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/api/, ''),
