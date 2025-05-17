@@ -148,21 +148,25 @@ type GridInfoType = {
 }
 
 /////// Main //////////////////////////////////
-const props = defineProps<{
-    gridData: GridData;
-}>()
+
+const gridData = ref<GridData>({
+    rowId: 0,
+    columnId: 0,
+    resolution: 0,
+    scenes: [],
+})
 
 const activeTab = ref('single')
 
 // Select options
 const gridID = computed(() => {
-    const { rowId, columnId, resolution } = props.gridData;
+    const { rowId, columnId, resolution } = gridData.value;
     return `${rowId}-${columnId}-${resolution}`;
 })
 
 const resolutions = computed(() => {
     const result = new Set<string>()
-    props.gridData.scenes.forEach((scene: Scene) => {
+    gridData.value.scenes.forEach((scene: Scene) => {
         result.add(scene.resolution)
     })
     return Array.from(result)
@@ -170,12 +174,8 @@ const resolutions = computed(() => {
 
 const sensors = computed(() => {
     let result = new Set<string>()
-    props.gridData.scenes.forEach((scene: Scene) => {
-        console.log(selectedResolution.value, scene.resolution)
+    gridData.value.scenes.forEach((scene: Scene) => {
         if (selectedResolution.value && scene.resolution == selectedResolution.value) {
-            console.log('1')
-            result.add(scene.sensorName)
-        } else {
             result.add(scene.sensorName)
         }
     })
@@ -186,7 +186,7 @@ const bands = computed(() => {
     let result: string[] = []
 
     if (selectedSensor.value != '') {
-        props.gridData.scenes.forEach((scene: Scene) => {
+        gridData.value.scenes.forEach((scene: Scene) => {
             if (scene.sensorName === selectedSensor.value) {
                 scene.images.forEach((bandImg: Image) => {
                     if (!result.includes(bandImg.band)) {
@@ -221,8 +221,8 @@ const selectedBBand = ref('')
 
 // Handle visualization
 const handleVisualize = () => {
-    const { rowId, columnId, resolution } = props.gridData;
-    const gridData: GridInfoType = {
+    const { rowId, columnId, resolution } = gridData.value;
+    const gridInfo: GridInfoType = {
         rowId,
         columnId,
         resolution
@@ -231,7 +231,7 @@ const handleVisualize = () => {
     if (activeTab.value === 'single') {
         // Single band visualization
         const imageData: ImageInfoType[] = []
-        for (let scene of props.gridData.scenes) {
+        for (let scene of gridData.value.scenes) {
             if (scene.sensorName == selectedSensor.value) {
                 scene.images.forEach((bandImg: Image) => {
                     if (bandImg.band === selectedBand.value) {
@@ -245,13 +245,13 @@ const handleVisualize = () => {
             }
         }
 
-        bus.emit('cubeVisualize', imageData, gridData, { mode: 'single' })
+        bus.emit('cubeVisualize', imageData, gridInfo, 'single')
 
     } else {
 
         const rgbImageData: MultiImageInfoType[] = []
 
-        const filteredScene = props.gridData.scenes.filter(scene => {
+        const filteredScene = gridData.value.scenes.filter(scene => {
             return scene.resolution === selectedResolution.value && scene.sensorName === selectedSensor.value
         })
 
@@ -263,7 +263,7 @@ const handleVisualize = () => {
             let bluePath = ''
 
             scene.images.forEach((bandImg: Image) => {
-                if (bandImg.band === selectedBBand.value) {
+                if (bandImg.band === selectedRBand .value) {
                     redPath = bandImg.bucket + '/' + bandImg.tifPath
                 }
                 else if (bandImg.band === selectedGBand.value) {
@@ -284,17 +284,21 @@ const handleVisualize = () => {
 
         }
 
-        bus.emit('cubeVisualize', rgbImageData, gridData, { mode: 'rgb' })
+        bus.emit('cubeVisualize', rgbImageData, gridInfo, 'rgb')
     }
 
     bus.emit('openTimeline')
 }
 
 const handleRemove = () => {
-    const { rowId, columnId, resolution } = props.gridData;
+    const { rowId, columnId, resolution } = gridData.value;
     const prefix = rowId + '' + columnId
     map_removeGridPreviewLayer(prefix)
 }
+
+bus.on('update:gridPopupData', (info) => {
+    gridData.value = info
+})
 
 onMounted(() => {
     bus.on('closeTimeline', () => {

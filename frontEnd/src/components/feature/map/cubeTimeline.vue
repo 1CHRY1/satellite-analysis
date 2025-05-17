@@ -58,14 +58,17 @@ const showingImages = computed(() => {
 
 const handleClick = async (index: number) => {
 
+
     if (index < 0) return
     if (visualMode.value === 'single' && index > singleImages.value.length - 1) return
     if (visualMode.value === 'rgb' && index > multiImages.value.length - 1) return
 
+
     activeIndex.value = index
 
+
     if (visualMode.value === 'single') {
-        const img: ImageInfoType = showingImages[index]
+        const img = showingImages.value[index] as ImageInfoType
 
         const imgB64Path = await getGridImage({
             rowId: grid.value.rowId,
@@ -73,14 +76,13 @@ const handleClick = async (index: number) => {
             resolution: grid.value.resolution,
             tifFullPath: img.tifFullPath
         })
-
         const gridCoords = grid2Coordinates(grid.value.columnId, grid.value.rowId, grid.value.resolution)
         const prefix = grid.value.rowId + '' + grid.value.columnId
         MapOperation.map_addGridPreviewLayer(imgB64Path, gridCoords, prefix)
     }
     else if (visualMode.value === 'rgb') {
 
-        const img: MultiImageInfoType = showingImages[index]
+        const img = showingImages.value[index] as MultiImageInfoType
 
         const mergeGridBandParam = {
             rowId: grid.value.rowId,
@@ -90,7 +92,6 @@ const handleClick = async (index: number) => {
             greenPath: img.greenPath,
             bluePath: img.bluePath
         }
-
         bandMergeHelper.mergeGrid(mergeGridBandParam, (mergedImgUrl: string) => {
             const gridCoords = grid2Coordinates(grid.value.columnId, grid.value.rowId, grid.value.resolution)
             const prefix = grid.value.rowId + '' + grid.value.columnId
@@ -100,7 +101,7 @@ const handleClick = async (index: number) => {
 }
 
 const updateHandler = (_data: ImageInfoType[] | MultiImageInfoType[], _grid: GridInfoType, mode: 'single' | 'rgb') => {
-
+    activeIndex.value = -1
     grid.value = _grid
     visualMode.value = mode
     if (mode === 'single') {
@@ -136,6 +137,8 @@ onMounted(() => {
     background-color: rgba(164, 213, 197, 0.5);
     backdrop-filter: blur(10px);
     border-radius: 10px;
+    max-width: 500px;
+    overflow-x: scroll;
 }
 
 .timeline-item {
