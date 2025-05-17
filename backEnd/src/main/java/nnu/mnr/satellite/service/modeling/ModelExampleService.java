@@ -2,10 +2,7 @@ package nnu.mnr.satellite.service.modeling;
 
 import com.alibaba.fastjson2.JSONObject;
 import nnu.mnr.satellite.jobs.QuartzSchedulerManager;
-import nnu.mnr.satellite.model.dto.modeling.ModelServerImageDTO;
-import nnu.mnr.satellite.model.dto.modeling.ModelServerSceneDTO;
-import nnu.mnr.satellite.model.dto.modeling.NdviFetchDTO;
-import nnu.mnr.satellite.model.dto.modeling.NoCloudFetchDTO;
+import nnu.mnr.satellite.model.dto.modeling.*;
 import nnu.mnr.satellite.model.po.resources.SceneSP;
 import nnu.mnr.satellite.model.pojo.modeling.ModelServerProperties;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
@@ -138,6 +135,26 @@ public class ModelExampleService {
         // 请求modelServer
         JSONObject ndviParam = JSONObject.of("point",point, "scenes", modelServerSceneDTOs);
         String ndviUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("ndvi");
+        long expirationTime = 60 * 10;
+        return runModelServerModel(ndviUrl, ndviParam, expirationTime);
+    }
+
+    // 光谱分析计算
+    public CommonResultVO getSpectrumByPoint(SpectrumFetchDTO spectrumFetchDTO) {
+        Double[] point = spectrumFetchDTO.getPoint();
+        String sceneId = spectrumFetchDTO.getSceneId();
+
+        // 构成影像景参数信息
+        Geometry geomPoint = GeometryUtil.parse4326Point(point);
+        SceneSP scene = sceneDataService.getSceneByIdWithProductAndSensor(sceneId);
+        if (!scene.getBbox().contains(geomPoint)) {
+            return CommonResultVO.builder().status(-1).message("Point is not contained in Scene" + sceneId).build();
+        }
+        List<ModelServerImageDTO> images = imageDataService.getModelServerImageDTOBySceneId(sceneId);
+
+        // 请求modelServer
+        JSONObject ndviParam = JSONObject.of("point",point, "images", images);
+        String ndviUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("spectrum");
         long expirationTime = 60 * 10;
         return runModelServerModel(ndviUrl, ndviParam, expirationTime);
     }
