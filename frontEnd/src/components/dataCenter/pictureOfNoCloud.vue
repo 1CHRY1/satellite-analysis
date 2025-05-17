@@ -94,7 +94,8 @@
                                             </div>
                                             <div class="result-info-content">
                                                 <div class="result-info-label">亚米级国产影像覆盖率</div>
-                                                <div class="result-info-value">{{ coverageRate.demotic1m }}</div>
+                                                <div class="result-info-value">{{ coverageRate.demotic1m != 'NaN%'
+                                                    ? coverageRate.demotic1m : '待计算' }}</div>
                                             </div>
                                         </div>
                                         <div class="result-info-item">
@@ -112,7 +113,8 @@
                                             </div>
                                             <div class="result-info-content">
                                                 <div class="result-info-label">影像覆盖率（2m超分后）</div>
-                                                <div class="result-info-value">{{ coverageRate.demotic2m }}</div>
+                                                <div class="result-info-value">{{ coverageRate.demotic2m != 'NaN%'
+                                                    ? coverageRate.demotic2m : '待计算' }}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -163,7 +165,8 @@
                                             </div>
                                             <div class="result-info-content">
                                                 <div class="result-info-label">累积影像覆盖率</div>
-                                                <div class="result-info-value">{{ coverageRate.international || '待计算' }}
+                                                <div class="result-info-value">{{ coverageRate.international != 'NaN%' ?
+                                                    coverageRate.international : '待计算' }}
                                                 </div>
                                             </div>
                                         </div>
@@ -215,7 +218,8 @@
                                             </div>
                                             <div class="result-info-content">
                                                 <div class="result-info-label">累积影像覆盖率</div>
-                                                <div class="result-info-value">{{ coverageRate.addRadar || '待计算' }}
+                                                <div class="result-info-value">{{ coverageRate.addRadar != 'NaN%'
+                                                    ?coverageRate.addRadar : '待计算' }}
                                                 </div>
                                             </div>
                                         </div>
