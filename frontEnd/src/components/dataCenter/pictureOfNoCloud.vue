@@ -263,7 +263,6 @@
             </div>
         </dv-border-box12>
     </div>
-
 </template>
 
 <script setup lang="ts">
@@ -275,6 +274,9 @@ import { getSceneGrids, getNoCloud, getCaseStatus, getCaseResult } from '@/api/h
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import * as MapOperation from '@/util/map/operation'
 import { ElMessage } from 'element-plus'
+import ezStore from '@/store/ezStore'
+import { getGridImage, getGridPreviewUrl } from '@/api/http/satellite-data/visualize.api'
+import { grid2Coordinates } from '@/util/map/gridMaker'
 
 import {
     DatabaseIcon,
@@ -296,6 +298,7 @@ import {
     MapIcon,
 } from 'lucide-vue-next'
 import { FastBackwardFilled } from '@ant-design/icons-vue'
+import bandMergeHelper from '@/util/image/util'
 
 const props = defineProps({
     regionConfig: {
@@ -568,18 +571,21 @@ const calNoClouds = async () => {
         return new Promise<void>((resolve, reject) => {
             const timer = setInterval(async () => {
                 try {
-                    const res = await getCaseStatus(taskId)
-                    console.log('轮询结果:', res)
+                    const res = await getCaseStatus(taskId)!
+                    console.log('状态:', res.data)
 
-                    if (res?.data === 'COMPLETE') {
+                    if (res.data === 'COMPLETE') {
                         clearInterval(timer)
                         resolve()
-                    } else if (res?.data === 'FAILED' || 'ERROR') {
+                    }
+                    if (res.data === 'FAILED' || res.data === 'ERROR') {
+                        console.log(res, res.data);
                         clearInterval(timer)
                         reject(new Error('任务失败'))
                     }
                 } catch (err) {
                     clearInterval(timer)
+                    console.log('错误', err);
                     reject(err)
                 }
             }, interval)
@@ -592,9 +598,13 @@ const calNoClouds = async () => {
         console.log('成功，开始拿结果');
 
         let res = await getCaseResult(calTask.value.taskId)
-        console.log(res, '结果');
+        console.log(res, '结果')
+
         // 1、先预览无云一版图影像
         let data = res.data.noCloud.tiles
+        previewNoCloud(data)
+
+
 
         // 2、补充数据
         let calResult = {
@@ -615,20 +625,37 @@ const calNoClouds = async () => {
 
         ElMessage.success('无云一版图计算完成')
     } catch (error) {
+        console.log(error)
         calTask.value.calState = 'failed'
         ElMessage.error('无云一版图计算失败，请重试')
     }
 }
 // 预览无云一版图
-const previewNoCloud = async (imageUrl: string) => {
-    console.log(imageUrl);
+const previewNoCloud = async (data: any) => {
 
-    const res = await fetch('/app.conf.json')
-    let conf = await res.json()
-    let minioIpAndPort = conf.minioIpAndPort
-    let requestUrl = conf.titiler +
-        console.log(conf.minioIpAndPort, props.regionConfig.boundary);
+    // 清除旧图层
+    MapOperation.map_removeNocloudGridPreviewLayer()
 
+    const gridResolution = props.regionConfig.space
+
+    for (let i = 0; i < data.length; i++) {
+        const gridInfo = {
+            columnId: data[i].colId,// 注意这里返回的是colID，其他接口都是columnId
+            rowId: data[i].rowId,
+            resolution: gridResolution,
+            redPath: data[i].bucket + '/' + data[i].redPath,
+            greenPath: data[i].bucket + '/' + data[i].greenPath,
+            bluePath: data[i].bucket + '/' + data[i].bluePath,
+        }
+        // console.log('gridInfo', gridInfo)
+        bandMergeHelper.mergeGrid(gridInfo, (url) => {
+            const imgUrl = url
+            const gridCoords = grid2Coordinates(data[i].colId, data[i].rowId, gridResolution)
+            MapOperation.map_addGridPreviewLayer(imgUrl, gridCoords, 'nocloud')
+        })
+    }
+
+    console.log('一下加几十个图层，等着吃好果子')
 }
 // 假操作进度条统一时间
 const mockProgressTime = 500
