@@ -13,6 +13,7 @@ API_TIF_calc_qa                                 =       API_VERSION + '/tif/calc
 API_TIF_calc_qa_simple                          =       API_VERSION + '/tif/calc_qa_simple'
 API_TIF_calc_qa_middle                          =       API_VERSION + '/tif/calc_qa_middle'
 API_TIF_calc_NDVI                               =       API_VERSION + '/tif/calc_NDVI'
+API_TIF_get_spectral_profile                               =       API_VERSION + '/tif/get_spectral_profile'
 
 # API for Task
 API_TASK_STATUS                                 =       API_VERSION + '/task/status'

@@ -16,6 +16,7 @@ from dataProcessing.model.calc_qa import calc_qa
 from dataProcessing.model.calc_qa_simple import calc_qa_simple
 from dataProcessing.model.calc_qa_middle import calc_qa_middle
 from dataProcessing.model.calc_NDVI import calc_NDVI
+from dataProcessing.model.get_spectral_profile import get_spectral_profile
 
 
 class TaskScheduler:
@@ -106,6 +107,7 @@ class TaskScheduler:
             'calc_qa_simple': calc_qa_simple,
             'calc_qa_middle': calc_qa_middle,
             'calc_NDVI': calc_NDVI,
+            'get_spectral_profile': get_spectral_profile
             # 可以在这里扩展其他类型的任务
         }
         return task_classes.get(task_type)
