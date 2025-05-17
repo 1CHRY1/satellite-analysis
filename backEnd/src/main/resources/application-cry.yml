@@ -55,7 +55,6 @@ minio:
 #  url: http://223.2.34.7:9000
   url: http://223.2.43.228:30900
 
-
 docker:
   defaultServer:
 #    port: 2376
@@ -85,3 +84,6 @@ modelServer:
 
 tiler:
   end-point: http://223.2.32.242:8079
+
+satelliteConfig:
+  path: D:/1study/Work/2025_03_05_satellite/band_config.json
