@@ -8,7 +8,7 @@ import { CN_Bounds } from './constant'
 import type { polygonGeometry } from '../share.type'
 import { ezStore, useGridStore } from '@/store'
 
-import { createApp, type ComponentInstance, ref, type Ref } from 'vue'
+import { createApp, type ComponentInstance, ref, type Ref, reactive } from 'vue'
 import PopoverContent, { type GridData } from '@/components/feature/map/popoverContent.vue'
 import bus from '@/store/bus'
 
@@ -177,17 +177,8 @@ function createPopoverContent() {
     div.id = 'popover-content'
     document.body.appendChild(div)
 
-    const gridDataRef = ref<GridData>({
-        rowId: 0,
-        columnId: 0,
-        resolution: 0,
-        scenes: [],
-    })
-
-    ezStore.set('gridPopupDataRef', gridDataRef)
-
     const app = createApp(PopoverContent, {
-        gridData: gridDataRef,
+        // gridData: gridDataRef,
     })
     app.mount('#popover-content') as ComponentInstance<typeof PopoverContent>
     return div
@@ -463,9 +454,7 @@ function grid_fill_click_handler(e: MapMouseEvent): void {
                 item.columnId === features[0].properties?.columnId
             )
         })
-
-        const gridPopupDataRef = ezStore.get('gridPopupDataRef')
-        gridPopupDataRef.value = gridInfo
+        bus.emit('update:gridPopupData', gridInfo)
 
         const popup = ezStore.get('gridPopup') as Popup
         popup.setLngLat(e.lngLat).addTo(ezStore.get('map'))
@@ -582,14 +571,6 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
         //         m.setFilter(highlightId, ['in', 'id', ...selectedGrids])
         //     },
         // )
-
-        m.on('click', fillId, (e) => {
-            console.log(e)
-
-            const features = m.queryRenderedFeatures(e.point, {
-                layers: [fillId],
-            })
-        })
 
         // ezStore.set('grid-layer-cancel-watch', cancelWatch)
         ezStore.set('grid-layer-fill-id', fillId)
