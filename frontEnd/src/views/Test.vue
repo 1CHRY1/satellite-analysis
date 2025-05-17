@@ -9,114 +9,72 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from 'vue';
-import WorkerPool from '@/util/worker/workerPool';
+import bandMergeHelper from '@/util/image/util'
 
-const workerPool = WorkerPool;
-// const imageUrlLists = ref<[string, string, string][]>([]); // 你的四五十个图片 URL 分组
+
 let combinedImageUrls = ref<string[]>([]);
-let imageUrlLists: [string, string, string][] = ([]);
-
-watch(combinedImageUrls, () => {
-    console.timeEnd('Combining images...')
-});
-function makeUrl(url: string) {
-    const titler = 'http://localhost:8000/preview'
-    const params = new URLSearchParams()
-    params.append('format', 'png')
-    params.append('url', url)
-    params.append('max_size', '512')
-    return `${titler}?${params.toString()}`
-}
-const handleTaskCompleted = (result: { id: number | string; combinedPngBuffer: ArrayBuffer | null }) => {
-    if (result.combinedPngBuffer) {
-        const blob = new Blob([result.combinedPngBuffer], { type: 'image/png' });
-        combinedImageUrls.value.push(URL.createObjectURL(blob));
-    } else {
-        console.error(`Task ${result.id} failed to combine images.`);
-    }
-}
-
-const handleError = (error: Error | string) => {
-    console.error('Worker Pool Error:', error);
-}
 
 const startProcessing = () => {
     console.time('Combining images...')
     combinedImageUrls.value = [];
-    workerPool.setTaskCompletedCallback(handleTaskCompleted);
-    workerPool.setErrorCallback(handleError);
 
-    // 假设你的四五十个 URL 已经分组为若干个 [string, string, string][]
-    imageUrlLists.forEach(urls => {
-        workerPool.enqueueTask(urls);
-    });
+    const testUrls = allImageUrls
 
+    const oneMergeParams = {
+        redPath: testUrls[0],
+        greenPath: testUrls[1],
+        bluePath: testUrls[2],
+    }
+    bandMergeHelper.mergeOne(oneMergeParams, (url) => {
+        console.timeEnd('Combining images...')
+        combinedImageUrls.value.push(url)
+    })
 };
 
+let allImageUrls: string[] = []
 
-onMounted(() => {
-    const allImageUrls: string[] = [
-        'D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B4.TIF',
-        "D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B3.TIF",
-        "D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B2.TIF",
+onMounted(async () => {
+    allImageUrls = [
+        // "http://223.2.32.166:30900/test-images/GF-1_PMS/Level_1A/tif/GF1C_PMS_E117.3_N36.9_20250419_L1A1022430485_beauty/Band_3.tif",
+        // "http://223.2.32.166:30900/test-images/GF-1_PMS/Level_1A/tif/GF1C_PMS_E117.3_N36.9_20250419_L1A1022430485_beauty/Band_2.tif",
+        // "http://223.2.32.166:30900/test-images/GF-1_PMS/Level_1A/tif/GF1C_PMS_E117.3_N36.9_20250419_L1A1022430485_beauty/Band_1.tif",
 
-        'D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B3.TIF',
-        "D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B1.TIF",
-        "D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B2.TIF",
+        "http://223.2.32.166:30900/test-images/Sentinel-1A_SAR/GRDH/tif/s1a-iw-grd-20250104-cog/Band_2.tif",
+        "http://223.2.32.166:30900/test-images/Sentinel-1A_SAR/GRDH/tif/s1a-iw-grd-20250104-cog/Band_1.tif",
+        "http://223.2.32.166:30900/test-images/Sentinel-1A_SAR/GRDH/tif/s1a-iw-grd-20250104-cog/Band_0.tif",
 
-        'D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B4.TIF',
-        "D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B2.TIF",
-        "D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B1.TIF",
+        // "http://223.2.32.166:30900/test-images/Landsat8_OLI/L2SP/tif/LC08_L2SP_120035_20250321_20250327_02_T1/Band_3.tif",
+        // "http://223.2.32.166:30900/test-images/Landsat8_OLI/L2SP/tif/LC08_L2SP_120035_20250321_20250327_02_T1/Band_2.tif",
+        // "http://223.2.32.166:30900/test-images/Landsat8_OLI/L2SP/tif/LC08_L2SP_120035_20250321_20250327_02_T1/Band_1.tif",
 
-        'D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B1.TIF',
-        "D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B3.TIF",
-        "D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B4.TIF",
+        // "http://223.2.32.166:30900/test-images/Landsat8_OLI/L2SP/tif/LC08_L2SP_120035_20250321_20250327_02_T1/Band_1.tif",
+        // "http://223.2.32.166:30900/test-images/Landsat8_OLI/L2SP/tif/LC08_L2SP_120035_20250321_20250327_02_T1/Band_2.tif",
+        // "http://223.2.32.166:30900/test-images/Landsat8_OLI/L2SP/tif/LC08_L2SP_120035_20250321_20250327_02_T1/Band_1.tif",
 
-        'D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B1.TIF',
-        "D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B3.TIF",
-        "D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B4.TIF",
-
-        'D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B1.TIF',
-        "D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B3.TIF",
-        "D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B4.TIF",
-
-        'D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B5.TIF',
-        "D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B3.TIF",
-        "D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B1.TIF",
-
-        'D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B2.TIF',
-        "D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B3.TIF",
-        "D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B4.TIF",
-
-
-        'D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B3.TIF',
-        "D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B3.TIF",
-        "D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B4.TIF",
-
-
-        'D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B2.TIF',
-        "D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B3.TIF",
-        "D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B3.TIF",
-
-
-        'D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B1.TIF',
-        "D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B4.TIF",
-        "D:/edgedownload/LC08_L2SP_121038_20200922_20201006_02_T2/LC08_L2SP_121038_20200922_20201006_02_T2_SR_B2.TIF",
+        // "http://223.2.32.166:30900/test-images/Landsat8_OLI/L2SP/tif/LC08_L2SP_120035_20250321_20250327_02_T1/Band_4.tif",
+        // "http://223.2.32.166:30900/test-images/Landsat8_OLI/L2SP/tif/LC08_L2SP_120035_20250321_20250327_02_T1/Band_3.tif",
+        // "http://223.2.32.166:30900/test-images/Landsat8_OLI/L2SP/tif/LC08_L2SP_120035_20250321_20250327_02_T1/Band_2.tif",
     ]
 
-    allImageUrls.forEach((url, index) => {
-        allImageUrls[index] = makeUrl(url)
-    })
+    // const promises = allImageUrls.map(async (url, index) => {
+    //     const url1 = await makeUrl(url)
+    //     allImageUrls[index] = url1
+    // });
 
-    for (let i = 0; i < allImageUrls.length; i += 3) {
-        const group = allImageUrls.slice(i, i + 3) as [string, string, string];
-        if (group.length === 3) {
-            imageUrlLists.push(group);
-        }
-    }
+    // await Promise.all(promises)
+
+    // for (let i = 0; i < allImageUrls.length; i += 3) {
+    //     const group = allImageUrls.slice(i, i + 3) as [string, string, string];
+    //     if (group.length === 3) {
+    //         imageUrlLists.push(group);
+    //     }
+    // }
+    // console.log(imageUrlLists[0], 'imageUrlLists')
+
+
 });
 
 onUnmounted(() => {
-    workerPool.terminateAll(); // 在组件卸载时终止所有 worker
+    // workerPool.terminateAll(); // 在组件卸载时终止所有 worker
 });
 </script>

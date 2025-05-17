@@ -14,7 +14,7 @@ class WorkerPool {
     private taskQueue: WorkerPoolTask[] = [];
     private activeTasks: Partial<Record<number | string, Worker>> = {};
     private workers: Worker[] = [];
-    private taskIdCounter: number = 0;
+
     private onTaskCompletedCallback: ((result: WorkerPoolResult) => void) | null = null;
     private onErrorCallback: ((error: Error | string) => void) | null = null;
 
@@ -59,8 +59,8 @@ class WorkerPool {
         }
     }
 
-    enqueueTask(urls: [string, string, string]): number | string {
-        const taskId = this.taskIdCounter++;
+    enqueueTask(urls: [string, string, string], taskId: number): number | string {
+
         this.taskQueue.push({ id: taskId, urls });
         this.processQueue();
         return taskId;
