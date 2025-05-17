@@ -2,6 +2,7 @@ package nnu.mnr.satelliteresource.controller;
 import nnu.mnr.satelliteresource.model.dto.modeling.ModelServerImageDTO;
 import nnu.mnr.satelliteresource.model.po.Region;
 import nnu.mnr.satelliteresource.model.po.Scene;
+import nnu.mnr.satelliteresource.model.po.SceneSP;
 import nnu.mnr.satelliteresource.service.ImageDataService;
 import nnu.mnr.satelliteresource.service.RegionDataService;
 import nnu.mnr.satelliteresource.service.SceneDataServiceV2;
@@ -43,8 +44,8 @@ public class InternalResourceController {
     }
 
     @GetMapping("/scene/id/{sceneId}")
-    public ResponseEntity<Scene> getSceneById(@PathVariable String sceneId) {
-        return ResponseEntity.ok(sceneDataServiceV2.getSceneById(sceneId));
+    public ResponseEntity<SceneSP> getSceneByIdWithProductAndSensor(@PathVariable String sceneId) {
+        return ResponseEntity.ok(sceneDataServiceV2.getSceneByIdWithProductAndSensor(sceneId));
     }
 
 }

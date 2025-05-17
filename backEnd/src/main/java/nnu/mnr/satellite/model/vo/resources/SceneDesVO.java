@@ -42,6 +42,7 @@ public class SceneDesVO {
     // 外键
     private String sensorName;
     private String productName;
+    private String resolution;
 //    @TableField(typeHandler = JSONArrayTypeHandler.class)
 //    private JSONArray imageList;
 

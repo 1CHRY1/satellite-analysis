@@ -1,136 +1,80 @@
 <template>
-    <div class="absolute top-0 left-0 h-screen w-screen">
-        <div class="h-[92vh]" id="map"></div>
-        <!-- <div class="absolute top-10 right-10 z-10 flex flex-col gap-y-4">
-            
-        </div> -->
-        <!-- <PopoverContent class="absolute top-10 left-10" :scenes="mockScenes" :grid="mockGrid"></PopoverContent> -->
+    <div>
+        <button @click="startProcessing" class="bg-amber-400 px-3 py-2">开始处理图片</button>
+        <div v-for="imageUrl in combinedImageUrls" :key="imageUrl">
+            <img :src="imageUrl" alt="Combined Image">
+        </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, createApp, type ComponentInstance, ref } from 'vue'
-import { mapManager } from '@/util/map/mapManager'
-import * as Operations from '@/util/map/operation'
-import PopoverContent from '@/components/feature/map/popoverContent.vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue';
+import bandMergeHelper from '@/util/image/util'
 
-type Scene = {
-    sceneId: string;
-    sceneName: string;
-    bands: string[];
-    [key: string]: any;
-}
-type Grid = {
-    rowId: number
-    columnId: number
-    resolution: number
-}
-const mockScenes: Scene[] = [
-    {
-        sceneId: '1',
-        sceneName: 'scene1',
-        bands: ['B1', 'B2', 'B3'],
-    },
-    {
-        sceneId: '2',
-        sceneName: 'scene2',
-        bands: ['B1', 'B2', 'B3'],
-    },
-    {
-        sceneId: '3',
-        sceneName: 'scene3',
-        bands: ['B1', 'B2', 'B3'],
-    },
-    {
-        sceneId: '4',
-        sceneName: 'scene4',
-        bands: ['B1', 'B2', 'B3'],
+
+let combinedImageUrls = ref<string[]>([]);
+
+const startProcessing = () => {
+    console.time('Combining images...')
+    combinedImageUrls.value = [];
+
+    const testUrls = allImageUrls
+
+    const oneMergeParams = {
+        redPath: testUrls[0],
+        greenPath: testUrls[1],
+        bluePath: testUrls[2],
     }
-]
-const mockScenes2: Scene[] = [
-    {
-        sceneId: '1',
-        sceneName: 'scene1',
-        bands: ['b1', 'b2'],
-    },
-    {
-        sceneId: '2',
-        sceneName: 'scene2',
-        bands: ['b1', 'b2'],
-    }
-]
-
-const mockGrid: Grid = {
-    rowId: 1,
-    columnId: 1,
-    resolution: 30
-}
-
-const mockGrid2: Grid = {
-    rowId: 1,
-    columnId: 1,
-    resolution: 10
-}
-
-const scenesRef = ref<Scene[]>(mockScenes)
-const gridRef = ref<Grid>(mockGrid)
-
-
-let popoverContentIns: null | ComponentInstance<typeof PopoverContent> = null
-function createPopoverContent() {
-    const div = document.createElement('div')
-    div.id = 'popover-content'
-    document.body.appendChild(div)
-
-    const app = createApp(PopoverContent, {
-        scenes: scenesRef,
-        grid: gridRef
+    bandMergeHelper.mergeOne(oneMergeParams, (url) => {
+        console.timeEnd('Combining images...')
+        combinedImageUrls.value.push(url)
     })
-    popoverContentIns = app.mount('#popover-content') as ComponentInstance<typeof PopoverContent>
-    console.log(popoverContentIns)
+};
 
-}
+let allImageUrls: string[] = []
 
-function updatePopoverContent(scenes: Scene[], grid: Grid) {
-    scenesRef.value = scenes
-    gridRef.value = grid
-}
+onMounted(async () => {
+    allImageUrls = [
+        // "http://223.2.32.166:30900/test-images/GF-1_PMS/Level_1A/tif/GF1C_PMS_E117.3_N36.9_20250419_L1A1022430485_beauty/Band_3.tif",
+        // "http://223.2.32.166:30900/test-images/GF-1_PMS/Level_1A/tif/GF1C_PMS_E117.3_N36.9_20250419_L1A1022430485_beauty/Band_2.tif",
+        // "http://223.2.32.166:30900/test-images/GF-1_PMS/Level_1A/tif/GF1C_PMS_E117.3_N36.9_20250419_L1A1022430485_beauty/Band_1.tif",
 
-onMounted(() => {
+        "http://223.2.32.166:30900/test-images/Sentinel-1A_SAR/GRDH/tif/s1a-iw-grd-20250104-cog/Band_2.tif",
+        "http://223.2.32.166:30900/test-images/Sentinel-1A_SAR/GRDH/tif/s1a-iw-grd-20250104-cog/Band_1.tif",
+        "http://223.2.32.166:30900/test-images/Sentinel-1A_SAR/GRDH/tif/s1a-iw-grd-20250104-cog/Band_0.tif",
 
-    createPopoverContent()
+        // "http://223.2.32.166:30900/test-images/Landsat8_OLI/L2SP/tif/LC08_L2SP_120035_20250321_20250327_02_T1/Band_3.tif",
+        // "http://223.2.32.166:30900/test-images/Landsat8_OLI/L2SP/tif/LC08_L2SP_120035_20250321_20250327_02_T1/Band_2.tif",
+        // "http://223.2.32.166:30900/test-images/Landsat8_OLI/L2SP/tif/LC08_L2SP_120035_20250321_20250327_02_T1/Band_1.tif",
 
-    window.addEventListener('keydown', e => {
-        if (e.key === '1') {
-            updatePopoverContent(mockScenes2, mockGrid2)
-        }else if (e.key === '2') {
-            updatePopoverContent(mockScenes, mockGrid)
-        }
-    })
+        // "http://223.2.32.166:30900/test-images/Landsat8_OLI/L2SP/tif/LC08_L2SP_120035_20250321_20250327_02_T1/Band_1.tif",
+        // "http://223.2.32.166:30900/test-images/Landsat8_OLI/L2SP/tif/LC08_L2SP_120035_20250321_20250327_02_T1/Band_2.tif",
+        // "http://223.2.32.166:30900/test-images/Landsat8_OLI/L2SP/tif/LC08_L2SP_120035_20250321_20250327_02_T1/Band_1.tif",
 
-    mapManager.init('map', 'vector', 'mercator').then((map) => {
-        // map.zoomTo(10)
+        // "http://223.2.32.166:30900/test-images/Landsat8_OLI/L2SP/tif/LC08_L2SP_120035_20250321_20250327_02_T1/Band_4.tif",
+        // "http://223.2.32.166:30900/test-images/Landsat8_OLI/L2SP/tif/LC08_L2SP_120035_20250321_20250327_02_T1/Band_3.tif",
+        // "http://223.2.32.166:30900/test-images/Landsat8_OLI/L2SP/tif/LC08_L2SP_120035_20250321_20250327_02_T1/Band_2.tif",
+    ]
 
-        // map.showTileBoundaries = true
-        ///// rio-tiler-test /////////////////////////
-        // if (true) {
-        //     map.addSource('src', {
-        //         type: 'raster',
-        //         tiles: [
-        //             // /tiles/WebMercatorQuad/9/428/208?scale=1&format=tif&url=http%3A%2F%2F223.2.43.228%3A30900%2Ftest-images%2Flandset8_test%252Flandset8_L2SP_test%252Ftif%252FLC08_L2SP_118038_20241201_20241203_02_T1%252FLC08_L2SP_118038_20241201_20241203_02_T1_SR_B6.TIF&bidx=1&unscale=false&resampling=nearest&reproject=nearest&return_mask=true
-        //             // no cog
-        //             // "http://223.2.32.242:8079/{z}/{x}/{y}.png?object=/test-images/landsat/landset7/tif/LE07_L1TP_122039_20210212_20210212_01_RT/LE07_L1TP_122039_20210212_20210212_01_RT_B1.TIF"
-        //             'http://localhost:8000/tiles/WebMercatorQuad/{z}/{x}/{y}?scale=1&format=png&url=http://223.2.43.228:30900/test-images/qa/LC08_L2SP_120035_20250116_20250127_02_T1_SR_B1.TIF&bidx=1&unscale=false&resampling=nearest&reproject=nearest&return_mask=true',
-        //             // "http://223.2.32.242:8079/{z}/{x}/{y}.png?object=/test-images/landset8_test/landset8_L2SP_test/tif/LC08_L2SP_118038_20241217_20241227_02_T1/LC08_L2SP_118038_20241217_20241227_02_T1_SR_B4.TIF"
-        //         ],
-        //     })
-        //     map.addLayer({
-        //         id: 'layer',
-        //         type: 'raster',
-        //         source: 'src',
-        //         minzoom: 0,
-        //     })
-        // }
-    })
-})
+    // const promises = allImageUrls.map(async (url, index) => {
+    //     const url1 = await makeUrl(url)
+    //     allImageUrls[index] = url1
+    // });
+
+    // await Promise.all(promises)
+
+    // for (let i = 0; i < allImageUrls.length; i += 3) {
+    //     const group = allImageUrls.slice(i, i + 3) as [string, string, string];
+    //     if (group.length === 3) {
+    //         imageUrlLists.push(group);
+    //     }
+    // }
+    // console.log(imageUrlLists[0], 'imageUrlLists')
+
+
+});
+
+onUnmounted(() => {
+    // workerPool.terminateAll(); // 在组件卸载时终止所有 worker
+});
 </script>

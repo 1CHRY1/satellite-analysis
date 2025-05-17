@@ -6,14 +6,14 @@ import nnu.mnr.satellite.model.dto.modeling.ModelServerImageDTO;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerSceneDTO;
 import nnu.mnr.satellite.model.dto.modeling.NdviFetchDTO;
 import nnu.mnr.satellite.model.dto.modeling.NoCloudFetchDTO;
-import nnu.mnr.satellite.model.dto.resources.ScenesFetchDTOV2;
-import nnu.mnr.satellite.model.po.resources.Scene;
+import nnu.mnr.satellite.model.po.resources.SceneSP;
 import nnu.mnr.satellite.model.pojo.modeling.ModelServerProperties;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.service.resources.ImageDataService;
 import nnu.mnr.satellite.service.resources.RegionDataService;
 import nnu.mnr.satellite.service.resources.SceneDataServiceV2;
 import nnu.mnr.satellite.utils.common.ProcessUtil;
+import nnu.mnr.satellite.service.common.BandMapperGenerator;
 import nnu.mnr.satellite.utils.data.RedisUtil;
 import nnu.mnr.satellite.utils.geom.GeometryUtil;
 import nnu.mnr.satellite.utils.geom.TileCalculateUtil;
@@ -21,7 +21,6 @@ import org.locationtech.jts.geom.Geometry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -55,6 +54,9 @@ public class ModelExampleService {
     @Autowired
     RegionDataService regionDataService;
 
+    @Autowired
+    BandMapperGenerator bandMapperGenerator;
+
     private CommonResultVO runModelServerModel(String url, JSONObject param, long expirationTime) {
         try {
             JSONObject modelCaseResponse = JSONObject.parseObject(ProcessUtil.runModelCase(url, param));
@@ -78,13 +80,15 @@ public class ModelExampleService {
 
         // 构成影像景参数信息
         for (String sceneId : sceneIds) {
-            Scene scene = sceneDataService.getSceneById(sceneId);
+            SceneSP scene = sceneDataService.getSceneByIdWithProductAndSensor(sceneId);
              if (scene.getCloudPath() == null) {
                 continue;
             }
             List<ModelServerImageDTO> imageDTO = imageDataService.getModelServerImageDTOBySceneId(sceneId);
             ModelServerSceneDTO modelServerSceneDTO = ModelServerSceneDTO.builder()
                     .sceneId(sceneId).images(imageDTO).sceneTime(scene.getSceneTime())
+                    .sensorName(scene.getSensorName()).productName(scene.getProductName())
+                    .bandMapper(bandMapperGenerator.getSatelliteConfigBySensorName(scene.getSensorName()))
                     .cloudPath(scene.getCloudPath()).bucket(scene.getBucket()).build();
             modelServerSceneDTOs.add(modelServerSceneDTO);
         }
@@ -111,7 +115,7 @@ public class ModelExampleService {
         // 构成影像景参数信息
         for (String sceneId : sceneIds) {
             Geometry geomPoint = GeometryUtil.parse4326Point(point);
-            Scene scene = sceneDataService.getSceneById(sceneId);
+            SceneSP scene = sceneDataService.getSceneByIdWithProductAndSensor(sceneId);
             if (scene.getBbox().contains(geomPoint)) {
                 List<ModelServerImageDTO> imageDTO = imageDataService.getModelServerImageDTOBySceneId(sceneId);
 
@@ -124,6 +128,8 @@ public class ModelExampleService {
 
                ModelServerSceneDTO modelServerSceneDTO = ModelServerSceneDTO.builder()
                         .sceneId(sceneId).images(imageDTO).sceneTime(scene.getSceneTime())
+                       .sensorName(scene.getSensorName()).productName(scene.getProductName())
+                       .bandMapper(bandMapperGenerator.getSatelliteConfigBySensorName(scene.getSensorName()))
                         .cloudPath(scene.getCloudPath()).bucket(scene.getBucket()).build();
                 modelServerSceneDTOs.add(modelServerSceneDTO);
             }

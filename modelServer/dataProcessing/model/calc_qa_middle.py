@@ -52,27 +52,38 @@ class calc_qa_middle(Task):
             min_index = qas.index(min_qa) # 获取云量列表中最小值索引
             print("最小云量的索引为：", min_index)
             images = self.scenes[min_index]['images']
-            # 挑选波段为1,3,4  适用MODIS
-            images = [image for image in images if image['band'] in ("1", "3", "4")]
-            sceneId = self.scenes[min_index]['sceneId']
-            print("需要融合波段图像：", images)
-            print("准备融合多波段影像")
-            output_name = 'mband_' + sceneId + '.tif'  # 融合景的多波段生成的文件名，上传后也叫这个名字
-            output_file = os.path.join(config.TEMP_OUTPUT_DIR, output_name)  # 组成文件存储路径
-            # if os.path.exists(output_file):
-            response = requests.head(MINIO_ENDPOINT + '/' + config.MINIO_TEMP_FILES_BUCKET + '/' + output_name, timeout=5)  # 判断该景是否已经融合
-            if response.status_code == 200:
-                print("已有融合后影像，直接调用")
-                object_name = output_name
-            else:
-                print("开始融合多波段影像")
-                mband_output_file = mband(images, config.TEMP_OUTPUT_DIR, output_name=output_name)
-                output_file_path = convert_tif2cog(mband_output_file)
-                object_name = output_name
-                print("多波段影像融合完成")
-                uploadLocalFile(output_file_path, config.MINIO_TEMP_FILES_BUCKET, object_name)
+            bandMapper = self.scenes[min_index]['bandMapper']
+            # # 挑选波段为1,3,4  适用MODIS
+            # images = [image for image in images if image['band'] in (bandMapper['Red'], bandMapper['Green'], bandMapper['Blue'])]
+            # sceneId = self.scenes[min_index]['sceneId']
+            # print("需要融合波段图像：", images)
+            # print("准备融合多波段影像")
+            # output_name = 'mband_' + sceneId + '.tif'  # 融合景的多波段生成的文件名，上传后也叫这个名字
+            # output_file = os.path.join(config.TEMP_OUTPUT_DIR, output_name)  # 组成文件存储路径
+            # # if os.path.exists(output_file):
+            # response = requests.head(MINIO_ENDPOINT + '/' + config.MINIO_TEMP_FILES_BUCKET + '/' + output_name, timeout=5)  # 判断该景是否已经融合
+            # if response.status_code == 200:
+            #     print("已有融合后影像，直接调用")
+            #     object_name = output_name
+            # else:
+            #     print("开始融合多波段影像")
+            #     mband_output_file = mband(images, config.TEMP_OUTPUT_DIR, output_name=output_name)
+            #     output_file_path = convert_tif2cog(mband_output_file)
+            #     object_name = output_name
+            #     print("多波段影像融合完成")
+            #     uploadLocalFile(output_file_path, config.MINIO_TEMP_FILES_BUCKET, object_name)
+            # tiles_list.append({'colId':tile[0], 'rowId':tile[1], 'tifPath':object_name, 'bucket':config.MINIO_TEMP_FILES_BUCKET})
 
-            tiles_list.append({'colId':tile[0], 'rowId':tile[1], 'tifPath':object_name, 'bucket':config.MINIO_TEMP_FILES_BUCKET})
+            # 不需要融合，返回RGB波段即可
+            red_path = [image["tifPath"] for image in images if image["band"] == bandMapper['Red']]
+            green_path = [image["tifPath"] for image in images if image["band"] == bandMapper['Green']]
+            blue_path = [image["tifPath"] for image in images if image["band"] == bandMapper['Blue']]
+            if len(images) < 3:
+                print(f"三原色波段缺失，只有{len(images)}个波段")
+                continue
+            print("三原色波段提取完成")
+            tiles_list.append({'colId': tile[0], 'rowId': tile[1], 'redPath': red_path, 'greenPath': green_path, 'bluePath': blue_path,
+                               'bucket': images[0]['bucket']})
         result = json.dumps({'noCloud':{'tiles':tiles_list}})
         print(result)
         print(datetime.now())
