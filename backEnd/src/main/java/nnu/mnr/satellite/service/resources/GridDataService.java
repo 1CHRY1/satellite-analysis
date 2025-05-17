@@ -6,17 +6,14 @@ import nnu.mnr.satellite.model.dto.resources.GridBasicDTO;
 import nnu.mnr.satellite.model.po.resources.SceneSP;
 import nnu.mnr.satellite.model.vo.resources.GridSceneVO;
 import nnu.mnr.satellite.model.dto.resources.GridSceneFetchDTO;
-import nnu.mnr.satellite.model.po.resources.Scene;
-import nnu.mnr.satellite.utils.geom.GeometryUtil;
+import nnu.mnr.satellite.service.common.BandMapperGenerator;
 import nnu.mnr.satellite.utils.geom.TileCalculateUtil;
 import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.Polygon;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created with IntelliJ IDEA.
@@ -34,6 +31,9 @@ public class GridDataService {
 
     @Autowired
     private ImageDataService imageDataService;
+
+    @Autowired
+    private BandMapperGenerator bandMapperGenerator;
 
     // 获取每个网格中的影像
     public List<GridSceneVO> getScenesFromGrids(GridSceneFetchDTO gridSceneFetchDTO) {
@@ -53,6 +53,7 @@ public class GridDataService {
                         .sceneId(sceneId).cloudPath(scene.getCloudPath())
                         .sensorName(scene.getSensorName()).productName(scene.getProductName())
                         .resolution(scene.getResolution()).sceneTime(scene.getSceneTime())
+                        .bandMapper(bandMapperGenerator.getSatelliteConfigBySensorName(scene.getSensorName()))
                         .bucket(scene.getBucket()).images(imageDTOS).build();
                 sceneDtos.add(sceneDto);
             }

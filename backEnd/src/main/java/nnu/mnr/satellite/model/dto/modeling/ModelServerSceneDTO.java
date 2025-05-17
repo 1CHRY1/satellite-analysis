@@ -1,6 +1,7 @@
 package nnu.mnr.satellite.model.dto.modeling;
 
 import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import lombok.Builder;
 import lombok.Data;
 
@@ -29,5 +30,8 @@ public class ModelServerSceneDTO {
     // 关联表字段
     private String sensorName;
     private String productName;
+
+    // 波段配置
+    private JSONObject bandMapper;
 
 }
