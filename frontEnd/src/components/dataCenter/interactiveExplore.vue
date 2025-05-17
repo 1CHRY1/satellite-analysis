@@ -95,9 +95,15 @@
                                     </div>
                                 </div>
                             </div>
-                            <button @click="filterByCloudAndDate"
-                                class="bg-[#0d1526] cursor-pointer text-white border border-[#2c3e50] rounded-lg px-4 py-2 hover:bg-[#1a2b4c] hover:border-[#2bb2ff] transition-all duration-200 active:scale-95">
-                                影像筛选
+                            <button @click="filterByCloudAndDate" :disabled="filterByCloudAndDateLoading"
+                                class="flex justify-center bg-[#0d1526]  text-white border border-[#2c3e50] rounded-lg px-4 py-2 hover:bg-[#1a2b4c] hover:border-[#2bb2ff] transition-all duration-200 active:scale-95"
+                                :class="{
+                                    'cursor-not-allowed': filterByCloudAndDateLoading,
+                                    'cursor-pointer': !filterByCloudAndDateLoading
+                                }">
+                                <span>影像筛选
+                                </span>
+                                <Loader v-if="filterByCloudAndDateLoading" class="ml-2" />
                             </button>
                             <div class="config-item">
                                 <div class="config-label relative">
@@ -146,7 +152,7 @@
                                                 <div class="result-info-value date-range">
                                                     <div class="date-item">{{ formatTime(tileMergeConfig.dateRange[0],
                                                         'day')
-                                                    }}~
+                                                        }}~
                                                         {{ formatTime(tileMergeConfig.dateRange[1], 'day')
                                                         }}</div>
                                                 </div>
@@ -405,6 +411,7 @@ import {
     MapIcon,
     Cloud,
     Images,
+    Loader
 } from 'lucide-vue-next'
 import { ElMessage } from 'element-plus'
 import mapboxgl from 'mapbox-gl'
@@ -496,12 +503,18 @@ const getAllGrid = async () => {
  */
 const allScenes = ref<any>([])
 const allSensorsItems = ref<any>([])
+const filterByCloudAndDateLoading = ref(false)
 // const allFilteredImages = ref<any>([])
 const filterByCloudAndDate = async () => {
     if (displayLabel.value === '未选择') {
         ElMessage.warning('请先选择行政区并获取格网')
         return
+    } else if (allGrids.value.length === 0) {
+        ElMessage.warning('请先获取格网')
+        return
     }
+    // 先禁止按钮，渲染loading状态
+    filterByCloudAndDateLoading.value = true
     let filterData = {
         startTime: tileMergeConfig.value.dateRange[0].format('YYYY-MM-DD'),
         endTime: tileMergeConfig.value.dateRange[1].format('YYYY-MM-DD'),
@@ -531,6 +544,9 @@ const filterByCloudAndDate = async () => {
     allSensorsItems.value = countSensorsCoverage(allSensorsItems.value, ezStore.get('sceneGridsRes'))
     // 刚拿到的时候根据默认tags先分类一次
     filterByTags()
+
+    // 恢复状态
+    filterByCloudAndDateLoading.value = false
 }
 
 // 数各种传感器分别覆盖了多少格网 
