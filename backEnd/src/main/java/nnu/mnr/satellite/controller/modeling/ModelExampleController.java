@@ -2,6 +2,7 @@ package nnu.mnr.satellite.controller.modeling;
 
 import nnu.mnr.satellite.model.dto.modeling.NdviFetchDTO;
 import nnu.mnr.satellite.model.dto.modeling.NoCloudFetchDTO;
+import nnu.mnr.satellite.model.dto.modeling.SpectrumFetchDTO;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.service.modeling.ModelExampleService;
 import org.springframework.http.ResponseEntity;
@@ -38,6 +39,11 @@ public class ModelExampleController {
     @PostMapping("/ndvi/point")
     public ResponseEntity<CommonResultVO> getNdviByRegion(@RequestBody NdviFetchDTO ndviFetchDTO) {
         return ResponseEntity.ok(modelExampleService.getNDVIByPoint(ndviFetchDTO));
+    }
+
+    @PostMapping("/spectrum/point")
+    public ResponseEntity<CommonResultVO> getSpectrumByPoint(@RequestBody SpectrumFetchDTO spectrumFetchDTO) {
+        return ResponseEntity.ok(modelExampleService.getSpectrumByPoint(spectrumFetchDTO));
     }
 
 }
