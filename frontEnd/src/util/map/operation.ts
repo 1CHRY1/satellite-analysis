@@ -426,6 +426,19 @@ export function map_addGridPreviewLayer(img: string, coords: number[][], prefix:
     })
 }
 
+export function map_removeNocloudGridPreviewLayer() {
+    const grid_preview_layer_map = ezStore.get('grid-preview-layer-map') as Map<string, any>
+    const map = ezStore.get('map')
+
+    if (!grid_preview_layer_map) return
+
+    for (let key of grid_preview_layer_map.keys()) {
+        if (key.indexOf('nocloud') != -1 && map.getLayer(key)) {
+            map.removeLayer(grid_preview_layer_map.get(key).id)
+        }
+    }
+}
+
 export function map_removeGridPreviewLayer(pre: string) {
     const grid_preview_layer_map = ezStore.get('grid-preview-layer-map') as Map<string, any>
     const map = ezStore.get('map') as mapboxgl.Map
