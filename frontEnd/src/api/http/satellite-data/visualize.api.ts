@@ -28,52 +28,13 @@ export async function getGridImage(params: GridImageParams): Promise<string> {
     const requestParams = new URLSearchParams()
     requestParams.append('url', minioEndPoint + params.tifFullPath)
     requestParams.append('rescale', percentile_2 + ',' + percentile_98)
+    requestParams.append('max_size', '512')
+    requestParams.append('return_mask', 'true')
     url += '?' + requestParams.toString()
 
     return url
-
-    // const response = await fetch(url)
-    // const blob = await response.blob()
-
-    // return URL.createObjectURL(blob)
 }
 
-const a = {
-    "type": "FeatureCollection",
-    "features": [
-        {
-            "type": "Feature",
-            "properties": {},
-            "geometry": {
-                "coordinates": [
-                    [
-                        [
-                            121.11627935820417,
-                            31.87272629441364
-                        ],
-                        [
-                            121.07374073491752,
-                            31.379215343685047
-                        ],
-                        [
-                            121.83234618352827,
-                            31.501704907155386
-                        ],
-                        [
-                            121.82702885561855,
-                            31.844123070575307
-                        ],
-                        [
-                            121.11627935820417,
-                            31.87272629441364
-                        ]
-                    ]
-                ],
-                "type": "Polygon"
-            }
-        }
-    ]
-}
 export async function getImgStatistics(tifFullPath: string): Promise<any> {
 
     let url = `${titilerEndPoint}/statistics`
@@ -88,75 +49,48 @@ export async function getImgStatistics(tifFullPath: string): Promise<any> {
     return json
 }
 
-function makeBBox2Geojson(bbox: number[]) {
-    // return {
-    //     "type": "FeatureCollection",
-    //     "features": [
-    //         {
-    //             "type": "Feature",
-    //             "properties": {},
-    //             "geometry": {
-    //                 "coordinates": [
-    //                     [
-    //                         [
-    //                             bbox[0],
-    //                             bbox[1]
-    //                         ],
-    //                         [
-    //                             bbox[2],
-    //                             bbox[1]
-    //                         ],
-    //                         [
-    //                             bbox[2],
-    //                             bbox[3]
-    //                         ],
-    //                         [
-    //                             bbox[0],
-    //                             bbox[3]
-    //                         ],
-    //                         [
-    //                             bbox[0],
-    //                             bbox[1]
-    //                         ]
-    //                     ]
-    //                 ],
-    //                 "type": "Polygon"
-    //             }
-    //         }
-    //     ]
-    // }
-    return {
-        "type": "Feature",
-        "properties": {},
-        "geometry": {
-            "coordinates": [
-                [
-                    [
-                        bbox[0],
-                        bbox[1]
-                    ],
-                    [
-                        bbox[2],
-                        bbox[1]
-                    ],
-                    [
-                        bbox[2],
-                        bbox[3]
-                    ],
-                    [
-                        bbox[0],
-                        bbox[3]
-                    ],
-                    [
-                        bbox[0],
-                        bbox[1]
-                    ]
-                ]
-            ],
-            "type": "Polygon"
-        }
-    }
+
+
+// 获取一张tif的统计信息
+async function getTifStatistic(tifFullPath: string) {
+    let url = `${titilerEndPoint}/statistics`
+
+    const requestParams = new URLSearchParams()
+    requestParams.append('url', tifFullPath)
+    url += '?' + requestParams.toString()
+
+    const response = await fetch(url)
+    const json = await response.json()
+
+    return json
 }
 
+// 获取一张tif的拉伸参数(基于统计信息)
+async function getTifScaleParam(tifFullPath: string) {
+    const statisticsJson = await getTifStatistic(tifFullPath)
+    const percentile_2 = statisticsJson.b1 ? statisticsJson.b1.percentile_2 : 0
+    const percentile_98 = statisticsJson.b1 ? statisticsJson.b1.percentile_98 : 20000
+    return percentile_2 + ',' + percentile_98
+}
 
+// 获取一张tif的预览图路径(已加入拉伸参数)
+export async function getTifPreviewUrl(tifFullPath: string) {
 
+    const rescale = await getTifScaleParam(tifFullPath)
+
+    let url = `${titilerEndPoint}/preview`
+    const requestParams = new URLSearchParams()
+    requestParams.append('url', tifFullPath)
+    requestParams.append('format', 'png')
+    requestParams.append('max_size', '512')
+    requestParams.append('rescale', rescale)
+    requestParams.append('return_mask', 'true')
+    url += '?' + requestParams.toString()
+
+    return url
+}
+
+// 获取一个格网的tif的预览图路径(已加入拉伸参数)
+export async function getGridPreviewUrl(params: GridImageParams) {
+    return getGridImage(params)
+}
