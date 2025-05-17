@@ -64,7 +64,7 @@
                                                 <div class="result-info-value date-range">
                                                     <div class="date-item">{{
                                                         formatTime(props.regionConfig.dataRange[0], 'day')
-                                                        }}~
+                                                    }}~
                                                         {{ formatTime(props.regionConfig.dataRange[1], 'day')
                                                         }}</div>
                                                 </div>
@@ -219,7 +219,7 @@
                                             <div class="result-info-content">
                                                 <div class="result-info-label">累积影像覆盖率</div>
                                                 <div class="result-info-value">{{ coverageRate.addRadar != 'NaN%'
-                                                    ?coverageRate.addRadar : '待计算' }}
+                                                    ? coverageRate.addRadar : '待计算' }}
                                                 </div>
                                             </div>
                                         </div>
