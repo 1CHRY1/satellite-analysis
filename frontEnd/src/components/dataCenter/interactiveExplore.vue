@@ -688,72 +688,72 @@ const makeFullSceneGrid = async () => {
  * 覆盖度可视化
  */
 
-const coverageVisualActive = ref('0')
-const handleCoverageVisualClick = (value: string) => {
-    coverageVisualActive.value = value
+// const coverageVisualActive = ref('0')
+// const handleCoverageVisualClick = (value: string) => {
+//     coverageVisualActive.value = value
 
-    const gridLayerId = ezStore.get('grid-layer-fill-id')
-    const m = ezStore.get('map') as mapboxgl.Map
+//     const gridLayerId = ezStore.get('grid-layer-fill-id')
+//     const m = ezStore.get('map') as mapboxgl.Map
 
-    const newV = coverageVisualActive.value
-    if (newV === '0') { // 清除filter
-        console.log('清除filter')
-        m.setPaintProperty(gridLayerId, 'fill-color', '#00FFFF')
-    } else { //添加filter
-        console.log('添加filter')
-        if (newV === '1') { // international or national
+//     const newV = coverageVisualActive.value
+//     if (newV === '0') { // 清除filter
+//         console.log('清除filter')
+//         m.setPaintProperty(gridLayerId, 'fill-color', '#00FFFF')
+//     } else { //添加filter
+//         console.log('添加filter')
+//         if (newV === '1') { // international or national
 
-            const baseExp: any[] = ['case']
-            console.log(activeImgTags.value)
-            if (activeImgTags.value.has(rTagMap['international'])) {
-                baseExp.push(['>', ['get', 'international'], 0], '#ff7700')
-            }
-            if (activeImgTags.value.has(rTagMap['national'])) {
-                baseExp.push(['>', ['get', 'national'], 0], '#ff7700')
-            }
-            if (baseExp.length > 1) {
-                baseExp.push('#00FFFF')
-                m.setPaintProperty(gridLayerId, 'fill-color', baseExp as any)
-            } else {
-                m.setPaintProperty(gridLayerId, 'fill-color', '#00FFFF')
-            }
-        }
-        else if (newV === '2') {
+//             const baseExp: any[] = ['case']
+//             console.log(activeImgTags.value)
+//             if (activeImgTags.value.has(rTagMap['international'])) {
+//                 baseExp.push(['>', ['get', 'international'], 0], '#ff7700')
+//             }
+//             if (activeImgTags.value.has(rTagMap['national'])) {
+//                 baseExp.push(['>', ['get', 'national'], 0], '#ff7700')
+//             }
+//             if (baseExp.length > 1) {
+//                 baseExp.push('#00FFFF')
+//                 m.setPaintProperty(gridLayerId, 'fill-color', baseExp as any)
+//             } else {
+//                 m.setPaintProperty(gridLayerId, 'fill-color', '#00FFFF')
+//             }
+//         }
+//         else if (newV === '2') {
 
-            const baseExp: any[] = ['case']
+//             const baseExp: any[] = ['case']
 
-            if (activeImgTags.value.has(rTagMap['radar'])) {
-                baseExp.push(['>', ['get', 'radar'], 0], '#ff7700')
-            }
-            if (activeImgTags.value.has(rTagMap['light'])) {
-                baseExp.push(['>', ['get', 'light'], 0], '#ff7700')
-            }
-            if (baseExp.length > 1) {
-                baseExp.push('#00FFFF')
-                m.setPaintProperty(gridLayerId, 'fill-color', baseExp as any)
-            } else {
-                m.setPaintProperty(gridLayerId, 'fill-color', '#00FFFF')
-            }
-        }
-        else if (newV === '3') {
+//             if (activeImgTags.value.has(rTagMap['radar'])) {
+//                 baseExp.push(['>', ['get', 'radar'], 0], '#ff7700')
+//             }
+//             if (activeImgTags.value.has(rTagMap['light'])) {
+//                 baseExp.push(['>', ['get', 'light'], 0], '#ff7700')
+//             }
+//             if (baseExp.length > 1) {
+//                 baseExp.push('#00FFFF')
+//                 m.setPaintProperty(gridLayerId, 'fill-color', baseExp as any)
+//             } else {
+//                 m.setPaintProperty(gridLayerId, 'fill-color', '#00FFFF')
+//             }
+//         }
+//         else if (newV === '3') {
 
-            const baseExp: any[] = ['case']
-            if (activeImgTags.value.has(rTagMap['traditional'])) {
-                baseExp.push(['>', ['get', 'traditional'], 0], '#ff7700')
-            }
-            if (activeImgTags.value.has(rTagMap['ard'])) {
-                baseExp.push(['>', ['get', 'ard'], 0], '#ff7700')
-            }
-            if (baseExp.length > 1) {
-                baseExp.push('#00FFFF')
-                m.setPaintProperty(gridLayerId, 'fill-color', baseExp as any)
-            } else {
-                m.setPaintProperty(gridLayerId, 'fill-color', '#00FFFF')
-            }
-        }
+//             const baseExp: any[] = ['case']
+//             if (activeImgTags.value.has(rTagMap['traditional'])) {
+//                 baseExp.push(['>', ['get', 'traditional'], 0], '#ff7700')
+//             }
+//             if (activeImgTags.value.has(rTagMap['ard'])) {
+//                 baseExp.push(['>', ['get', 'ard'], 0], '#ff7700')
+//             }
+//             if (baseExp.length > 1) {
+//                 baseExp.push('#00FFFF')
+//                 m.setPaintProperty(gridLayerId, 'fill-color', baseExp as any)
+//             } else {
+//                 m.setPaintProperty(gridLayerId, 'fill-color', '#00FFFF')
+//             }
+//         }
 
-    }
-}
+//     }
+// }
 
 
 

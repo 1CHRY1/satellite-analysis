@@ -655,7 +655,7 @@ const previewNoCloud = async (data: any) => {
         })
     }
 
-    console.log('几十个图层分开加，等着吃好果子')
+    console.log('一下加几十个图层，等着吃好果子')
 }
 // 假操作进度条统一时间
 const mockProgressTime = 500
