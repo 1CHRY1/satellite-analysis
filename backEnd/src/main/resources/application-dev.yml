@@ -84,3 +84,6 @@ modelServer:
 
 tiler:
   end-point: http://223.2.32.242:8079
+
+satelliteConfig:
+  path: D:/1study/Work/2025_03_05_satellite/band_config.json
