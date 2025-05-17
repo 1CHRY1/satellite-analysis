@@ -1,12 +1,22 @@
 <template>
     <div class="popup-content">
         <div class="grid-id">
-            <p>Grid: {{ gridID }}</p>
+            <p>时空立方体编号: {{ gridID }}</p>
         </div>
 
         <div class="band-selection">
-            <label for="band-select">传感器:</label>
-            <select id="band-select" v-model="selectedSensor" class="band-select">
+            <label for="resolution-select">分辨率:</label>
+            <select id="resolution-select" v-model="selectedResolution" class="band-select">
+                <option disabled value="">请选择</option>
+                <option v-for="reso in resolutions" :key="reso" :value="reso">
+                    {{ reso }}
+                </option>
+            </select>
+        </div>
+
+        <div class="band-selection">
+            <label for="sensor-select">传感器:</label>
+            <select id="sensor-select" v-model="selectedSensor" class="band-select">
                 <option disabled value="">请选择</option>
                 <option v-for="sensor in sensors" :key="sensor" :value="sensor">
                     {{ sensor }}
@@ -14,18 +24,74 @@
             </select>
         </div>
 
-        <div class="band-selection">
-            <label for="band-select">波段:</label>
-            <select id="band-select" v-model="selectedBand" class="band-select">
-                <option disabled value="">请选择</option>
-                <option v-for="band in bands" :key="band" :value="band">
-                    {{ band }}
-                </option>
-            </select>
+        <!-- Tab selection -->
+        <div class="tabs">
+            <button 
+                class="tab-btn" 
+                :class="{ active: activeTab === 'single' }" 
+                @click="activeTab = 'single'"
+            >
+                单波段
+            </button>
+            <button 
+                class="tab-btn" 
+                :class="{ active: activeTab === 'rgb' }" 
+                @click="activeTab = 'rgb'"
+            >
+                三波段合成
+            </button>
+        </div>
+
+        <!-- Single band tab content -->
+        <div v-if="activeTab === 'single'" class="tab-content">
+            <div class="band-selection">
+                <label for="band-select">波段:</label>
+                <select id="band-select" v-model="selectedBand" class="band-select">
+                    <option disabled value="">请选择</option>
+                    <option v-for="band in bands" :key="band" :value="band">
+                        {{ band }}
+                    </option>
+                </select>
+            </div>
+        </div>
+
+        <!-- RGB band tab content -->
+        <div v-if="activeTab === 'rgb'" class="tab-content">
+            <div class="band-selection">
+                <label for="r-band-select">R波段:</label>
+                <select id="r-band-select" v-model="selectedRBand" class="band-select">
+                    <option disabled value="">请选择</option>
+                    <option v-for="band in bands" :key="band" :value="band">
+                        {{ band }}
+                    </option>
+                </select>
+            </div>
+            <div class="band-selection">
+                <label for="g-band-select">G波段:</label>
+                <select id="g-band-select" v-model="selectedGBand" class="band-select">
+                    <option disabled value="">请选择</option>
+                    <option v-for="band in bands" :key="band" :value="band">
+                        {{ band }}
+                    </option>
+                </select>
+            </div>
+            <div class="band-selection">
+                <label for="b-band-select">B波段:</label>
+                <select id="b-band-select" v-model="selectedBBand" class="band-select">
+                    <option disabled value="">请选择</option>
+                    <option v-for="band in bands" :key="band" :value="band">
+                        {{ band }}
+                    </option>
+                </select>
+            </div>
         </div>
 
         <div class="btns">
-            <button class="visualize-btn" @click="handleVisualize" :disabled="!selectedBand">
+            <button 
+                class="visualize-btn" 
+                @click="handleVisualize" 
+                :disabled="!canVisualize"
+            >
                 <span class="btn-icon">
                     <GalleryHorizontalIcon :size="18" />
                 </span>
@@ -45,6 +111,8 @@ import { ref, computed, onMounted, type Ref } from 'vue';
 import { GalleryHorizontalIcon, Trash2Icon } from 'lucide-vue-next'
 import bus from '@/store/bus';
 import { map_removeGridPreviewLayer } from '@/util/map/operation'
+import ezStore from '@/store/ezStore';
+
 type Image = {
     bucket: string
     tifPath: string
@@ -58,6 +126,7 @@ type Scene = {
     sceneTime: string
     sensorName: string
     productName: string
+    resolution: string
     images: Image[]
 }
 
@@ -81,33 +150,42 @@ type GridInfoType = {
 }
 
 const props = defineProps<{
-    gridData: Ref<GridData>;
+    gridData: GridData;
 }>()
 
+// Tab state
+const activeTab = ref('single')
 
 const gridID = computed(() => {
-    const { rowId, columnId, resolution } = props.gridData.value;
+    const { rowId, columnId, resolution } = props.gridData;
     return `${rowId}-${columnId}-${resolution}`;
 })
 
-const sensors = computed(() => {
-    let result: string[] = []
+const resolutions = computed(() => {
+    const result = new Set<string>()
+    props.gridData.scenes.forEach((scene: Scene) => {
+        result.add(scene.resolution)
+    })
+    return Array.from(result)
+})
 
-    props.gridData.value.scenes.forEach((scene: Scene) => {
-        if (!result.includes(scene.sensorName)) {
-            result.push(scene.sensorName)
+const sensors = computed(() => {
+    let result = new Set<string>()
+    props.gridData.scenes.forEach((scene: Scene) => {
+        if (selectedResolution.value && scene.resolution == selectedResolution.value) {
+            result.add(scene.sensorName)
+        } else {
+            result.add(scene.sensorName)
         }
     })
-
-    return result
+    return Array.from(result)
 })
 
 const bands = computed(() => {
-
     let result: string[] = []
 
     if (selectedSensor.value != '') {
-        props.gridData.value.scenes.forEach((scene: Scene) => {
+        props.gridData.scenes.forEach((scene: Scene) => {
             if (scene.sensorName === selectedSensor.value) {
                 scene.images.forEach((bandImg: Image) => {
                     if (!result.includes(bandImg.band)) {
@@ -124,48 +202,108 @@ const bands = computed(() => {
     return result
 })
 
-
-
-const selectedBand = ref('')
+// Form state
+const selectedResolution = ref('')
 const selectedSensor = ref('')
+const selectedBand = ref('')
+const selectedRBand = ref('')
+const selectedGBand = ref('')
+const selectedBBand = ref('')
 
+// Check if visualization is possible based on active tab
+const canVisualize = computed(() => {
+    if (activeTab.value === 'single') {
+        return !!selectedBand.value
+    } else {
+        return !!selectedRBand.value && !!selectedGBand.value && !!selectedBBand.value
+    }
+})
 
 // Handle visualization button click
 const handleVisualize = () => {
-
-    const { rowId, columnId, resolution } = props.gridData.value;
+    const { rowId, columnId, resolution } = props.gridData;
     const gridData: GridInfoType = {
         rowId,
         columnId,
         resolution
     }
 
-    const imageData: ImageInfoType[] = []
-    for (let scene of props.gridData.value.scenes) {
-
-        if (scene.sensorName == selectedSensor.value) {
-
-            scene.images.forEach((bandImg: Image) => {
-
-                if (bandImg.band === selectedBand.value) {
-                    imageData.push({
-                        tifFullPath: bandImg.bucket + '/' + bandImg.tifPath,
-                        sceneId: scene.sceneId,
-                        time: scene.sceneTime,
-                    })
-                }
-            })
-
+    if (activeTab.value === 'single') {
+        // Single band visualization
+        const imageData: ImageInfoType[] = []
+        for (let scene of props.gridData.scenes) {
+            if (scene.sensorName == selectedSensor.value) {
+                scene.images.forEach((bandImg: Image) => {
+                    if (bandImg.band === selectedBand.value) {
+                        imageData.push({
+                            tifFullPath: bandImg.bucket + '/' + bandImg.tifPath,
+                            sceneId: scene.sceneId,
+                            time: scene.sceneTime,
+                        })
+                    }
+                })
+            }
         }
-
+        
+        bus.emit('cubeVisualize', imageData, gridData, { mode: 'single' })
+    } else {
+        // RGB band visualization
+        const rgbImageData: {
+            r: ImageInfoType[],
+            g: ImageInfoType[],
+            b: ImageInfoType[]
+        } = {
+            r: [],
+            g: [],
+            b: []
+        }
+        
+        // Process each band (R, G, B)
+        for (let scene of props.gridData.scenes) {
+            if (scene.sensorName == selectedSensor.value) {
+                // Process R band
+                scene.images.forEach((bandImg: Image) => {
+                    if (bandImg.band === selectedRBand.value) {
+                        rgbImageData.r.push({
+                            tifFullPath: bandImg.bucket + '/' + bandImg.tifPath,
+                            sceneId: scene.sceneId,
+                            time: scene.sceneTime,
+                        })
+                    }
+                })
+                
+                // Process G band
+                scene.images.forEach((bandImg: Image) => {
+                    if (bandImg.band === selectedGBand.value) {
+                        rgbImageData.g.push({
+                            tifFullPath: bandImg.bucket + '/' + bandImg.tifPath,
+                            sceneId: scene.sceneId,
+                            time: scene.sceneTime,
+                        })
+                    }
+                })
+                
+                // Process B band
+                scene.images.forEach((bandImg: Image) => {
+                    if (bandImg.band === selectedBBand.value) {
+                        rgbImageData.b.push({
+                            tifFullPath: bandImg.bucket + '/' + bandImg.tifPath,
+                            sceneId: scene.sceneId,
+                            time: scene.sceneTime,
+                        })
+                    }
+                })
+            }
+        }
+        
+        bus.emit('cubeVisualize', rgbImageData, gridData, { mode: 'rgb' })
     }
-
-    bus.emit('cubeVisualize', imageData, gridData)
+    
     bus.emit('openTimeline')
 }
 
 const handleRemove = () => {
-    const { rowId, columnId, resolution } = props.gridData.value;
+    const { rowId, columnId, resolution } = props.gridData;
     const prefix = rowId + '' + columnId
     map_removeGridPreviewLayer(prefix)
 }
@@ -173,10 +311,12 @@ const handleRemove = () => {
 onMounted(() => {
     bus.on('closeTimeline', () => {
         selectedBand.value = ''
+        selectedRBand.value = ''
+        selectedGBand.value = ''
+        selectedBBand.value = ''
         selectedSensor.value = ''
     })
 })
-
 </script>
 
 <style scoped>
@@ -186,7 +326,7 @@ onMounted(() => {
     padding: 0.75rem;
     border-radius: 0.5rem;
     width: 100%;
-    max-width: 200px;
+    max-width: 285px;
     user-select: none;
 }
 
@@ -198,7 +338,7 @@ onMounted(() => {
 }
 
 .grid-id p {
-    font-size: 1.125rem;
+    font-size: 0.875rem;
     font-weight: 600;
     margin: 0;
     color: #7eb3dd;
@@ -212,16 +352,14 @@ onMounted(() => {
 
 .band-selection label {
     display: inline-block;
-    margin-right: 1 rem;
+    margin-right: 1rem;
     height: 2.75rem;
     line-height: 2.75rem;
     font-size: 1rem;
     color: #a5d8ff;
 }
 
-
 .band-select {
-
     width: 100%;
     padding: 0.625rem;
     background-color: #132f4c;
@@ -242,8 +380,47 @@ onMounted(() => {
     box-shadow: 0 0 0 2px rgba(77, 171, 247, 0.25);
 }
 
+/* Tab styles */
+.tabs {
+    display: flex;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #1e3a5f;
+}
+
+.tab-btn {
+    flex: 1;
+    background: transparent;
+    color: #a5d8ff;
+    border: none;
+    padding: 0.75rem 0;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.tab-btn.active {
+    color: #4dabf7;
+    font-weight: 600;
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #4dabf7;
+}
+
+.tab-content {
+    margin-top: 1rem;
+}
+
 .btns {
     display: flex;
+    margin-top: 1rem;
 }
 
 .visualize-btn {
@@ -276,7 +453,6 @@ onMounted(() => {
 .delete-btn {
     width: 20%;
     color: #e6f1ff;
-    /* padding: 0.75rem 1rem; */
     padding-left: 0.75rem;
     border: none;
     border-radius: 0.25rem;
