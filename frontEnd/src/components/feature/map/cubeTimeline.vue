@@ -103,6 +103,7 @@ const filteredImages = computed(() => {
     } else {
         images = multiImages.value as MultiImageInfoType[]
     }
+    console.log('all image', images)
 
     if (startDateFilter.value) {
         images = images.filter(item => new Date(item.time) >= new Date(startDateFilter.value));
@@ -113,9 +114,8 @@ const filteredImages = computed(() => {
     }
 
     console.log('filteredImages', images);
-    const test = [...images, ...images, ...images]
 
-    return test;
+    return images;
 })
 
 // 监听筛选后的数据变化，重置活动索引
@@ -187,6 +187,7 @@ const handleClick = async (index: number) => {
         if (items[index]) {
             const itemWidth = items[index].clientWidth;
             const trackWidth = timelineTrack.value.clientWidth;
+            // @ts-ignore Property 'offsetLeft' does not exist on type 'Element'.ts(2339
             const scrollPosition = items[index].offsetLeft - (trackWidth / 2) + (itemWidth / 2);
 
             timelineTrack.value.scrollTo({
@@ -240,6 +241,8 @@ const updateHandler = (_data: ImageInfoType[] | MultiImageInfoType[], _grid: Gri
     } else {
         multiImages.value = _data as MultiImageInfoType[];
     }
+
+    console.log('updateHandler', singleImages.value, multiImages.value)
 
     startDateFilter.value = '';
     endDateFilter.value = '';
