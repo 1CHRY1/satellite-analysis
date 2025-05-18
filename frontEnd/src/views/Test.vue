@@ -1,109 +1,37 @@
 <template>
-    <div>
-        
+    <div class="bg-amber-400 flex">
+        <MapComp class="flex-1" :style="'image'" :proj="'globe'" />
     </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref, type Ref } from 'vue'
-import PopupContent, { type GridData } from '@/components/feature/map/popoverContent.vue'
+import MapComp from '@/components/feature/map/mapComp.vue'
+import { mapManager } from '@/util/map/mapManager'
 
-
-
-function test(position) {
-    console.log(position)
-}
-
-
-const mk = ref({
-    rowId: 0,
-    columnId: 0,
-    resolution: 0,
-    scenes: [
-        {
-            bucket: '',
-            cloudPath: '',
-            sceneId: '',
-            sceneTime: '',
-            sensorName: 'GF-1',
-            productName: 'GF-1',
-            resolution: '10m',
-            images: [
-                {
-                    'band': '1',
-                    'bucket': '1',
-                    'tifPath': '2'
-                },
-                {
-                    'band': '2',
-                    'bucket': '1',
-                    'tifPath': '2'
-                },
-                {
-                    'band': '3',
-                    'bucket': '1',
-                    'tifPath': '2'
-                }
-            ]
-        },
-        {
-            bucket: '',
-            cloudPath: '',
-            sceneId: '',
-            sceneTime: '',
-            sensorName: 'GF-2',
-            productName: 'GF-2',
-            resolution: '120m',
-            images: [
-                {
-                    'band': '1',
-                    'bucket': '1',
-                    'tifPath': '2'
-                },
-                {
-                    'band': '2',
-                    'bucket': '1',
-                    'tifPath': '2'
-                },
-                {
-                    'band': '3',
-                    'bucket': '1',
-                    'tifPath': '2'
-                }
-            ]
-        },
-        {
-            bucket: '',
-            cloudPath: '',
-            sceneId: '',
-            sceneTime: '',
-            sensorName: 'GF-1',
-            productName: 'GF-1',
-            resolution: '10m',
-            images: [
-                {
-                    'band': '1',
-                    'bucket': '1',
-                    'tifPath': '2'
-                },
-                {
-                    'band': '2',
-                    'bucket': '1',
-                    'tifPath': '2'
-                },
-                {
-                    'band': '3',
-                    'bucket': '1',
-                    'tifPath': '2'
-                }
-            ]
-        }
-    ]
-})
-const a = ref(1)
 
 onMounted(() => {
-    console.log(mk, a)
+
+    setTimeout(() => {
+        mapManager.withMap((m) => {
+
+            m.addSource('src', {
+                type: 'raster',
+                tiles: [
+                    'http://localhost:8000/rgb/tiles/{z}/{x}/{y}.png?url_r=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B4.TIF&url_g=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B3.TIF&url_b=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B2.TIF'
+                ]
+            })
+            m.addLayer({
+                id: 'raster-layer',
+                source: 'src',
+                type: 'raster',
+                minzoom: 0,
+                maxzoom: 22
+            })
+
+        })
+    }, 1);
+
 })
 
 
