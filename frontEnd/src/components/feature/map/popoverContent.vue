@@ -260,7 +260,10 @@ const handleVisualize = () => {
         const rgbImageData: MultiImageInfoType[] = []
 
         const filteredScene = gridData.value.scenes.filter(scene => {
-            return scene.resolution === selectedResolution.value && scene.sensorName === selectedSensor.value
+            if (selectedResolution.value != '全选')
+                return scene.resolution === selectedResolution.value && scene.sensorName === selectedSensor.value
+            else
+                return scene.sensorName === selectedSensor.value
         })
 
         // Process each band (R, G, B)
@@ -291,7 +294,6 @@ const handleVisualize = () => {
             })
 
         }
-
         bus.emit('cubeVisualize', rgbImageData, gridInfo, 'rgb')
     }
 

@@ -37,7 +37,8 @@ public interface ISceneRepo extends BaseMapper<Scene> {
             "AND sc.cloud < #{cloud} " +
             "AND ( ST_Intersects(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), sc.bounding_box) OR " +
             "ST_Contains(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), sc.bounding_box) OR " +
-            "ST_Within(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), sc.bounding_box) )")
+            "ST_Within(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), sc.bounding_box) )" +
+            "ORDER BY sc.scene_time ASC")
     @Results({
             @Result(property = "sceneId", column = "scene_id"),
             @Result(property = "sceneName", column = "scene_name"),
@@ -113,5 +114,36 @@ public interface ISceneRepo extends BaseMapper<Scene> {
             @Result(property = "bbox", column = "bounding_box", typeHandler = GeometryTypeHandler.class),
     })
     SceneSP getSceneByIdWithProductAndSensor(@Param("sceneId") String sceneId);
+
+    @Select("<script>" +
+            "SELECT sc.scene_id, sc.scene_name, sc.scene_time, sc.coordinate_system, " +
+            "sc.band_num, sc.bands, sc.cloud, sc.tags, sc.bounding_box, sc.bucket, sc.cloud_path, " +
+            "ss.sensor_name, pd.product_name, pd.resolution " +
+            "FROM scene_table sc " +
+            "LEFT JOIN sensor_table ss ON sc.sensor_id = ss.sensor_id " +
+            "LEFT JOIN product_table pd ON sc.product_id = pd.product_id " +
+            "WHERE sc.scene_id IN " +
+            "<foreach item='sceneId' collection='sceneIds' open='(' separator=',' close=')'>" +
+            "#{sceneId}" +
+            "</foreach>" +
+            "ORDER BY sc.scene_time ASC" +
+            "</script>")
+    @Results({
+            @Result(property = "sceneId", column = "scene_id"),
+            @Result(property = "sceneName", column = "scene_name"),
+            @Result(property = "sensorName", column = "sensor_name"),
+            @Result(property = "productName", column = "product_name"),
+            @Result(property = "resolution", column = "resolution"),
+            @Result(property = "sceneTime", column = "scene_time"),
+            @Result(property = "coordinateSystem", column = "coordinate_system"),
+            @Result(property = "bandNum", column = "band_num"),
+            @Result(property = "bands", column = "bands", typeHandler = SetTypeHandler.class),
+            @Result(property = "cloud", column = "cloud"),
+            @Result(property = "bucket", column = "bucket"),
+            @Result(property = "cloudPath", column = "cloud_path"),
+            @Result(property = "tags", column = "tags", typeHandler = FastJson2TypeHandler.class),
+            @Result(property = "bbox", column = "bounding_box", typeHandler = GeometryTypeHandler.class),
+    })
+    List<SceneSP> getScenesByIdsWithProductAndSensor(@Param("sceneIds") List<String> sceneIds);
 
 }
