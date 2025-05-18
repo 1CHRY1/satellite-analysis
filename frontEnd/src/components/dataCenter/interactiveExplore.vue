@@ -152,7 +152,7 @@
                                                 <div class="result-info-value date-range">
                                                     <div class="date-item">{{ formatTime(tileMergeConfig.dateRange[0],
                                                         'day')
-                                                    }}~
+                                                        }}~
                                                         {{ formatTime(tileMergeConfig.dateRange[1], 'day')
                                                         }}</div>
                                                 </div>
@@ -421,7 +421,7 @@ const emit = defineEmits(['submitConfig'])
  * 行政区划选取
  */
 
-const radiusOptions = [2, 5, 10, 15, 20, 25, 30, 40, 50]
+const radiusOptions = [2, 5, 10, 15, 20, 25, 30, 40, 50, 80, 100, 150]
 const selectedRadius = ref(20)
 const tileMergeConfig = ref({
     useLatestTime: false,

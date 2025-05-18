@@ -46,6 +46,8 @@ const handleZoomOut = () => {
 }
 
 onMounted(() => {
+    console.log(props, 1111);
+
     MapOperation.map_initiliaze('mapContainer', props.style, props.proj)
 
     bus.on('openTimeline', () => {
