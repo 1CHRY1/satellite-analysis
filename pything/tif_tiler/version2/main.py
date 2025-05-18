@@ -1,8 +1,9 @@
 from fastapi import FastAPI
-from titiler.core.factory import TilerFactory
+from titiler.core.factory import TilerFactory, MultiBandTilerFactory
 from titiler.extensions import cogValidateExtension
-
 from starlette.middleware.cors import CORSMiddleware
+
+from rgbReader import RGBReader, RGBPathParams
 
 app = FastAPI()
 
@@ -23,7 +24,16 @@ cog = TilerFactory(
     ]
 )
 
+# Create custom tiler plugin
+rgbTiler = MultiBandTilerFactory(
+    router_prefix="/rgb",
+    reader=RGBReader,
+    path_dependency=RGBPathParams,
+)
+
+
 # Register all the COG endpoints automatically
+app.include_router(rgbTiler.router, tags=["RGB Tiler"])
 app.include_router(cog.router, tags=["Cloud Optimized GeoTIFF"])
 
 

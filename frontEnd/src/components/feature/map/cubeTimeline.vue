@@ -103,6 +103,7 @@ const filteredImages = computed(() => {
     } else {
         images = multiImages.value as MultiImageInfoType[]
     }
+    console.log('all image', images)
 
     if (startDateFilter.value) {
         images = images.filter(item => new Date(item.time) >= new Date(startDateFilter.value));
@@ -116,7 +117,7 @@ const filteredImages = computed(() => {
     images.sort((a, b) => a.time.localeCompare(b.time))
     const test = [...images]
 
-    return test;
+    return images;
 })
 
 // 监听筛选后的数据变化，重置活动索引
@@ -247,6 +248,8 @@ const updateHandler = (_data: ImageInfoType[] | MultiImageInfoType[], _grid: Gri
     } else {
         multiImages.value = _data as MultiImageInfoType[];
     }
+
+    console.log('updateHandler', singleImages.value, multiImages.value)
 
     startDateFilter.value = '';
     endDateFilter.value = '';
