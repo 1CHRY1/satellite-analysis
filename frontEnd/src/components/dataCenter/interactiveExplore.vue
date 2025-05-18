@@ -95,9 +95,15 @@
                                     </div>
                                 </div>
                             </div>
-                            <button @click="filterByCloudAndDate"
-                                class="bg-[#0d1526] cursor-pointer text-white border border-[#2c3e50] rounded-lg px-4 py-2 hover:bg-[#1a2b4c] hover:border-[#2bb2ff] transition-all duration-200 active:scale-95">
-                                影像筛选
+                            <button @click="filterByCloudAndDate" :disabled="filterByCloudAndDateLoading"
+                                class="flex justify-center bg-[#0d1526]  text-white border border-[#2c3e50] rounded-lg px-4 py-2 hover:bg-[#1a2b4c] hover:border-[#2bb2ff] transition-all duration-200 active:scale-95"
+                                :class="{
+                                    'cursor-not-allowed': filterByCloudAndDateLoading,
+                                    'cursor-pointer': !filterByCloudAndDateLoading
+                                }">
+                                <span>影像筛选
+                                </span>
+                                <Loader v-if="filterByCloudAndDateLoading" class="ml-2" />
                             </button>
                             <div class="config-item">
                                 <div class="config-label relative">
@@ -146,7 +152,7 @@
                                                 <div class="result-info-value date-range">
                                                     <div class="date-item">{{ formatTime(tileMergeConfig.dateRange[0],
                                                         'day')
-                                                    }}~
+                                                        }}~
                                                         {{ formatTime(tileMergeConfig.dateRange[1], 'day')
                                                         }}</div>
                                                 </div>
@@ -384,7 +390,7 @@ import { formatTime } from '@/util/common'
 import { getGridByRegionAndResolution, getBoundary, getRegionPosition, getSceneByConfig, getSceneGrids } from '@/api/http/satellite-data'
 import * as MapOperation from '@/util/map/operation'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
-import { useGridStore, ezStore } from '@/store'
+import { ezStore } from '@/store'
 
 import {
     DatabaseIcon,
@@ -405,17 +411,17 @@ import {
     MapIcon,
     Cloud,
     Images,
+    Loader
 } from 'lucide-vue-next'
 import { ElMessage } from 'element-plus'
 import mapboxgl from 'mapbox-gl'
 const emit = defineEmits(['submitConfig'])
-const gridStore = useGridStore()
 
 /**
  * 行政区划选取
  */
 
-const radiusOptions = [2, 5, 10, 15, 20, 25, 30, 40, 50]
+const radiusOptions = [2, 5, 10, 15, 20, 25, 30, 40, 50, 80, 100, 150]
 const selectedRadius = ref(20)
 const tileMergeConfig = ref({
     useLatestTime: false,
@@ -446,7 +452,6 @@ const getAllGrid = async () => {
         return
     }
 
-    gridStore.cleadAllGrids()
     MapOperation.map_destroyImagePolygon()
     MapOperation.map_destroyImagePreviewLayer()
     MapOperation.map_destroyGridLayer()
@@ -496,12 +501,18 @@ const getAllGrid = async () => {
  */
 const allScenes = ref<any>([])
 const allSensorsItems = ref<any>([])
+const filterByCloudAndDateLoading = ref(false)
 // const allFilteredImages = ref<any>([])
 const filterByCloudAndDate = async () => {
     if (displayLabel.value === '未选择') {
         ElMessage.warning('请先选择行政区并获取格网')
         return
+    } else if (allGrids.value.length === 0) {
+        ElMessage.warning('请先获取格网')
+        return
     }
+    // 先禁止按钮，渲染loading状态
+    filterByCloudAndDateLoading.value = true
     let filterData = {
         startTime: tileMergeConfig.value.dateRange[0].format('YYYY-MM-DD'),
         endTime: tileMergeConfig.value.dateRange[1].format('YYYY-MM-DD'),
@@ -531,6 +542,9 @@ const filterByCloudAndDate = async () => {
     allSensorsItems.value = countSensorsCoverage(allSensorsItems.value, ezStore.get('sceneGridsRes'))
     // 刚拿到的时候根据默认tags先分类一次
     filterByTags()
+
+    // 恢复状态
+    filterByCloudAndDateLoading.value = false
 }
 
 // 数各种传感器分别覆盖了多少格网 
@@ -601,7 +615,6 @@ const makeFullSceneGrid = async () => {
     }
 
     // Destroy layer
-    gridStore.cleadAllGrids()
     MapOperation.map_destroyImagePolygon()
     MapOperation.map_destroyImagePreviewLayer()
     MapOperation.map_destroyGridLayer()
@@ -668,6 +681,7 @@ const makeFullSceneGrid = async () => {
             }
         })
     }
+    MapOperation.map_destroyGridLayer()
     MapOperation.map_addGridLayer(gridFeature)
     MapOperation.draw_deleteAll()
 
@@ -688,72 +702,72 @@ const makeFullSceneGrid = async () => {
  * 覆盖度可视化
  */
 
-const coverageVisualActive = ref('0')
-const handleCoverageVisualClick = (value: string) => {
-    coverageVisualActive.value = value
+// const coverageVisualActive = ref('0')
+// const handleCoverageVisualClick = (value: string) => {
+//     coverageVisualActive.value = value
 
-    const gridLayerId = ezStore.get('grid-layer-fill-id')
-    const m = ezStore.get('map') as mapboxgl.Map
+//     const gridLayerId = ezStore.get('grid-layer-fill-id')
+//     const m = ezStore.get('map') as mapboxgl.Map
 
-    const newV = coverageVisualActive.value
-    if (newV === '0') { // 清除filter
-        console.log('清除filter')
-        m.setPaintProperty(gridLayerId, 'fill-color', '#00FFFF')
-    } else { //添加filter
-        console.log('添加filter')
-        if (newV === '1') { // international or national
+//     const newV = coverageVisualActive.value
+//     if (newV === '0') { // 清除filter
+//         console.log('清除filter')
+//         m.setPaintProperty(gridLayerId, 'fill-color', '#00FFFF')
+//     } else { //添加filter
+//         console.log('添加filter')
+//         if (newV === '1') { // international or national
 
-            const baseExp: any[] = ['case']
-            console.log(activeImgTags.value)
-            if (activeImgTags.value.has(rTagMap['international'])) {
-                baseExp.push(['>', ['get', 'international'], 0], '#ff7700')
-            }
-            if (activeImgTags.value.has(rTagMap['national'])) {
-                baseExp.push(['>', ['get', 'national'], 0], '#ff7700')
-            }
-            if (baseExp.length > 1) {
-                baseExp.push('#00FFFF')
-                m.setPaintProperty(gridLayerId, 'fill-color', baseExp as any)
-            } else {
-                m.setPaintProperty(gridLayerId, 'fill-color', '#00FFFF')
-            }
-        }
-        else if (newV === '2') {
+//             const baseExp: any[] = ['case']
+//             console.log(activeImgTags.value)
+//             if (activeImgTags.value.has(rTagMap['international'])) {
+//                 baseExp.push(['>', ['get', 'international'], 0], '#ff7700')
+//             }
+//             if (activeImgTags.value.has(rTagMap['national'])) {
+//                 baseExp.push(['>', ['get', 'national'], 0], '#ff7700')
+//             }
+//             if (baseExp.length > 1) {
+//                 baseExp.push('#00FFFF')
+//                 m.setPaintProperty(gridLayerId, 'fill-color', baseExp as any)
+//             } else {
+//                 m.setPaintProperty(gridLayerId, 'fill-color', '#00FFFF')
+//             }
+//         }
+//         else if (newV === '2') {
 
-            const baseExp: any[] = ['case']
+//             const baseExp: any[] = ['case']
 
-            if (activeImgTags.value.has(rTagMap['radar'])) {
-                baseExp.push(['>', ['get', 'radar'], 0], '#ff7700')
-            }
-            if (activeImgTags.value.has(rTagMap['light'])) {
-                baseExp.push(['>', ['get', 'light'], 0], '#ff7700')
-            }
-            if (baseExp.length > 1) {
-                baseExp.push('#00FFFF')
-                m.setPaintProperty(gridLayerId, 'fill-color', baseExp as any)
-            } else {
-                m.setPaintProperty(gridLayerId, 'fill-color', '#00FFFF')
-            }
-        }
-        else if (newV === '3') {
+//             if (activeImgTags.value.has(rTagMap['radar'])) {
+//                 baseExp.push(['>', ['get', 'radar'], 0], '#ff7700')
+//             }
+//             if (activeImgTags.value.has(rTagMap['light'])) {
+//                 baseExp.push(['>', ['get', 'light'], 0], '#ff7700')
+//             }
+//             if (baseExp.length > 1) {
+//                 baseExp.push('#00FFFF')
+//                 m.setPaintProperty(gridLayerId, 'fill-color', baseExp as any)
+//             } else {
+//                 m.setPaintProperty(gridLayerId, 'fill-color', '#00FFFF')
+//             }
+//         }
+//         else if (newV === '3') {
 
-            const baseExp: any[] = ['case']
-            if (activeImgTags.value.has(rTagMap['traditional'])) {
-                baseExp.push(['>', ['get', 'traditional'], 0], '#ff7700')
-            }
-            if (activeImgTags.value.has(rTagMap['ard'])) {
-                baseExp.push(['>', ['get', 'ard'], 0], '#ff7700')
-            }
-            if (baseExp.length > 1) {
-                baseExp.push('#00FFFF')
-                m.setPaintProperty(gridLayerId, 'fill-color', baseExp as any)
-            } else {
-                m.setPaintProperty(gridLayerId, 'fill-color', '#00FFFF')
-            }
-        }
+//             const baseExp: any[] = ['case']
+//             if (activeImgTags.value.has(rTagMap['traditional'])) {
+//                 baseExp.push(['>', ['get', 'traditional'], 0], '#ff7700')
+//             }
+//             if (activeImgTags.value.has(rTagMap['ard'])) {
+//                 baseExp.push(['>', ['get', 'ard'], 0], '#ff7700')
+//             }
+//             if (baseExp.length > 1) {
+//                 baseExp.push('#00FFFF')
+//                 m.setPaintProperty(gridLayerId, 'fill-color', baseExp as any)
+//             } else {
+//                 m.setPaintProperty(gridLayerId, 'fill-color', '#00FFFF')
+//             }
+//         }
 
-    }
-}
+//     }
+// }
 
 
 

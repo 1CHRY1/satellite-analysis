@@ -72,9 +72,26 @@ class BandMergeHelper {
 
     async mergeGrid(params: GridPreviewParams, callback: (url: string) => void): Promise<void> {
 
-        const redPath = await getTifPreviewUrl(params.redPath)
-        const greenPath = await getTifPreviewUrl(params.greenPath)
-        const bluePath = await getTifPreviewUrl(params.bluePath)
+        // const redPath = await getTifPreviewUrl(params.redPath)
+        // const greenPath = await getTifPreviewUrl(params.greenPath)
+        // const bluePath = await getTifPreviewUrl(params.bluePath)
+        const gridParams = {
+            rowId: params.rowId,
+            columnId: params.columnId,
+            resolution: params.resolution
+        }
+        const redPath = await getGridPreviewUrl({
+            ...gridParams,
+            tifFullPath: params.redPath
+        })
+        const greenPath = await getGridPreviewUrl({
+            ...gridParams,
+            tifFullPath: params.greenPath
+        })
+        const bluePath = await getGridPreviewUrl({
+            ...gridParams,
+            tifFullPath: params.bluePath
+        })
 
         const taskId = this.nextTaskId++;
         this.taskCallbacks.set(taskId, callback);
