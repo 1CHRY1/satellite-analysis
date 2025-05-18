@@ -1,7 +1,0 @@
-{
-  "STATUS": "COMPLETE",
-  "RESULT": "{\"noCloud\": {\"tiles\": [{\"colId\": 1655, \"rowId\": 574, \"tifPath\": null, \"bucket\": null}, {\"colId\": 1656, \"rowId\": 574, \"tifPath\": null, \"bucket\": null}, {\"colId\": 1657, \"rowId\": 574, \"tifPath\": null, \"bucket\": null}, {\"colId\": 1658, \"rowId\": 574, \"tifPath\": null, \"bucket\": null}, {\"colId\": 1659, \"rowId\": 574, \"tifPath\": null, \"bucket\": null}]}}",
-  "TIME": "2025-05-15 17:22:28",
-  "ID": "42a5ded8-e399-48e3-b6bb-3cf709af7eb3",
-  "MD5": "33a00f09928aa846185fcfc09303cdac"
-}

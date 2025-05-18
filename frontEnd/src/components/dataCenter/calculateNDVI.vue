@@ -7,14 +7,19 @@
                         <div class="section-icon">
                             <ChartColumn :size="18" />
                         </div>
-                        <h2 class="section-title">动态计算领域：</h2>
+                        <h2 class="section-title">计算领域：</h2>
                         <select v-model="selectedTask"
                             class="bg-[#0d1526] text-white w-40 border border-[#2c3e50] rounded-lg px-4 py-2 pr-8 appearance-none transition-all duration-200 hover:border-[#206d93] focus:outline-none focus:border-[#3b82f6]">
-                            <option v-for="option in optionalTasks" :key="option" :value="option"
-                                class="bg-[#0d1526] text-[#e0f2fe]">
-                                {{ option }}
+                            <option v-for="option in optionalTasks" :key="option.value" :value="option.value"
+                                :disabled="option.disabled" class="bg-[#0d1526] "
+                                :class="option.disabled ? 'text-gray-500 italic' : 'text-[#e0f2fe]'">
+                                {{ option.label }}
                             </option>
                         </select>
+                        <router-link v-if="selectedTask === 'NDVI时序计算'" to="/project/PRJyxITmCVLn3PMoaeca"
+                            class="absolute right-6 bg-[#0d1526] cursor-pointer text-white border border-[#2c3e50] rounded-lg px-4 py-2 hover:bg-[#1a2b4c] hover:border-[#2bb2ff] transition-all duration-200 active:scale-95">
+                            自定义
+                        </router-link>
                     </div>
                     <div class="section-content">
                         <div class="config-container">
@@ -90,7 +95,7 @@
                                         <div class="result-info-label">涵盖时间范围</div>
                                         <div class="result-info-value date-range">
                                             <div class="date-item">{{ formatTime(props.regionConfig.dataRange[0], 'day')
-                                                }}~
+                                            }}~
                                                 {{ formatTime(props.regionConfig.dataRange[1], 'day')
                                                 }}</div>
                                         </div>
@@ -201,7 +206,12 @@ const calTask: Ref<any> = ref({
     taskId: ''
 })
 const selectedTask = ref('NDVI时序计算')
-const optionalTasks = ref(['NDVI时序计算', '滑坡概率计算', '洪水频发风险区域计算'])
+const optionalTasks = ref([
+    { label: 'NDVI时序计算', value: 'NDVI时序计算', disabled: false },
+    { label: '光谱分析', value: '光谱分析', disabled: false },
+    { label: '滑坡概率计算', value: '滑坡概率计算', disabled: true },
+    { label: '洪水频发风险区域计算', value: '洪水频发风险区域计算', disabled: true }
+])
 
 let progressTimer: ReturnType<typeof setInterval> | null = null
 

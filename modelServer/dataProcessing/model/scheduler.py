@@ -61,6 +61,11 @@ class TaskScheduler:
                     traceback.print_exc()
 
     def start_task(self, task_type, *args, **kwargs):
+        cur_md5 = self.generate_md5(json.dumps(args))
+        if cur_md5 in self.task_md5.values():
+            for key, value in self.task_md5.items():
+                if value == cur_md5:
+                    return key
         # --------- Start task -------------------------------------
         task_id = str(uuid.uuid4())  # 生成唯一任务 ID
         task_class = self._get_task_class(task_type)
@@ -71,24 +76,9 @@ class TaskScheduler:
             self.task_info[task_id] = task_instance
             self.task_md5[task_id] = self.generate_md5(json.dumps(args))
 
-            # 复用逻辑
-            reuse_id = None
-            for key, value in self.task_md5.items():
-                if key == task_id:
-                    continue
-                if value == self.task_md5[task_id]:
-                    reuse_id = key
-                    self.task_md5[task_id] = None # 置空，防止再次查询到
-                    break
-            if reuse_id:
-                self.task_status[task_id] = STATUS_COMPLETE
-                self.task_results[task_id] = self.task_results[reuse_id]
-                self.complete_queue.put((datetime.now(), task_id))
-                return task_id
-            else:
-                # 加入pending队列
-                self.pending_queue.put(task_id)
-                self.condition.notify_all()  # 通知调度线程
+            # 加入pending队列
+            self.pending_queue.put(task_id)
+            self.condition.notify_all()  # 通知调度线程
 
         return task_id
 
@@ -169,6 +159,7 @@ class TaskScheduler:
         except Exception as e:
             # --------- Handle Exceptions --------------------------------
             with self.condition:
+                del self.task_md5[task_id]
                 self.task_status[task_id] = STATUS_ERROR
                 self.task_results[task_id] = str(e)
 
