@@ -27,7 +27,7 @@ export async function getGridImage(params: GridImageParams): Promise<string> {
     const requestParams = new URLSearchParams()
     requestParams.append('url', minioEndPoint + '/' + params.tifFullPath)
     requestParams.append('rescale', percentile_2 + ',' + percentile_98)
-    requestParams.append('max_size', '512')
+    requestParams.append('max_size', '1024')
     requestParams.append('return_mask', 'true')
     url += '?' + requestParams.toString()
 
@@ -81,7 +81,7 @@ export async function getTifPreviewUrl(tifFullPath: string) {
     const requestParams = new URLSearchParams()
     requestParams.append('url', minioEndPoint + '/' + tifFullPath)
     requestParams.append('format', 'png')
-    requestParams.append('max_size', '512')
+    requestParams.append('max_size', '1024')
     requestParams.append('rescale', rescale)
     requestParams.append('return_mask', 'true')
     url += '?' + requestParams.toString()

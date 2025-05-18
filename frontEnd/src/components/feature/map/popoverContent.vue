@@ -166,16 +166,24 @@ const gridID = computed(() => {
 
 const resolutions = computed(() => {
     const result = new Set<string>()
+    // result.add('all')
     gridData.value.scenes.forEach((scene: Scene) => {
         result.add(scene.resolution)
     })
-    return Array.from(result)
+    const arr = Array.from(result)
+    arr.sort((a, b) => {
+        return Number(b) - Number(a)
+    })
+
+    return ['全选', ...arr]
 })
 
 const sensors = computed(() => {
     let result = new Set<string>()
     gridData.value.scenes.forEach((scene: Scene) => {
-        if (selectedResolution.value && scene.resolution == selectedResolution.value) {
+        if (selectedResolution.value != '全选' && scene.resolution == selectedResolution.value) {
+            result.add(scene.sensorName)
+        } else if (selectedResolution.value === '全选') {
             result.add(scene.sensorName)
         }
     })
@@ -187,7 +195,7 @@ const bands = computed(() => {
 
     if (selectedSensor.value != '') {
         gridData.value.scenes.forEach((scene: Scene) => {
-            if (scene.sensorName === selectedSensor.value) {
+            if (selectedSensor.value && scene.sensorName === selectedSensor.value) {
                 scene.images.forEach((bandImg: Image) => {
                     if (!result.includes(bandImg.band)) {
                         result.push(bandImg.band)
@@ -263,7 +271,7 @@ const handleVisualize = () => {
             let bluePath = ''
 
             scene.images.forEach((bandImg: Image) => {
-                if (bandImg.band === selectedRBand .value) {
+                if (bandImg.band === selectedRBand.value) {
                     redPath = bandImg.bucket + '/' + bandImg.tifPath
                 }
                 else if (bandImg.band === selectedGBand.value) {
