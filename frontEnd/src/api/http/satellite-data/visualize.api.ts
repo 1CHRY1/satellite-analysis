@@ -14,9 +14,8 @@ type GridImageParams = {
 // 返回可以作为layer source 的 url
 export async function getGridImage(params: GridImageParams): Promise<string> {
 
-
     const statisticsJson = await getImgStatistics(params.tifFullPath)
-    console.log(statisticsJson)
+    // console.log(statisticsJson)
 
     const percentile_2 = statisticsJson.b1 ? statisticsJson.b1.min : 0;
     const percentile_98 = statisticsJson.b1 ? statisticsJson.b1.max : 20000;
@@ -26,9 +25,9 @@ export async function getGridImage(params: GridImageParams): Promise<string> {
     let url = `${titilerEndPoint}/bbox/${bbox.join(',')}.png`
 
     const requestParams = new URLSearchParams()
-    requestParams.append('url', minioEndPoint + params.tifFullPath)
+    requestParams.append('url', minioEndPoint + '/' + params.tifFullPath)
     requestParams.append('rescale', percentile_2 + ',' + percentile_98)
-    requestParams.append('max_size', '512')
+    requestParams.append('max_size', '1024')
     requestParams.append('return_mask', 'true')
     url += '?' + requestParams.toString()
 
@@ -40,7 +39,7 @@ export async function getImgStatistics(tifFullPath: string): Promise<any> {
     let url = `${titilerEndPoint}/statistics`
 
     const requestParams = new URLSearchParams()
-    requestParams.append('url', minioEndPoint + tifFullPath)
+    requestParams.append('url', minioEndPoint + '/' + tifFullPath)
     url += '?' + requestParams.toString()
 
     const response = await fetch(url)
@@ -56,7 +55,7 @@ async function getTifStatistic(tifFullPath: string) {
     let url = `${titilerEndPoint}/statistics`
 
     const requestParams = new URLSearchParams()
-    requestParams.append('url', tifFullPath)
+    requestParams.append('url', minioEndPoint + '/' + tifFullPath)
     url += '?' + requestParams.toString()
 
     const response = await fetch(url)
@@ -80,9 +79,9 @@ export async function getTifPreviewUrl(tifFullPath: string) {
 
     let url = `${titilerEndPoint}/preview`
     const requestParams = new URLSearchParams()
-    requestParams.append('url', tifFullPath)
+    requestParams.append('url', minioEndPoint + '/' + tifFullPath)
     requestParams.append('format', 'png')
-    requestParams.append('max_size', '512')
+    requestParams.append('max_size', '1024')
     requestParams.append('rescale', rescale)
     requestParams.append('return_mask', 'true')
     url += '?' + requestParams.toString()
