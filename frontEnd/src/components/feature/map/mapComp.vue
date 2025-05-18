@@ -55,38 +55,9 @@ onMounted(() => {
     bus.on('closeTimeline', () => {
         cubeTimelineShow.value = false
     })
-
-
-    // window.addEventListener('keydown', e => {
-    //     if (e.key === '1') {
-    //         cubeTimelineShow.value = !cubeTimelineShow.value
-    //     }
-    //     if (e.key === '2') {
-
-    //         // debug
-    //         const mockImgs = [{
-    //             tifFullPath: '/a/b',
-    //             sceneId: '123',
-    //             time: '2022-01-01',
-    //         }, {
-    //             tifFullPath: '/a/b/c',
-    //             sceneId: '123',
-    //             time: '2022-05-01',
-    //         }, {
-    //             tifFullPath: '/a/b',
-    //             sceneId: '213',
-    //             time: '2023-01-01',
-    //         }]
-    //         const mockGrid = {
-    //             rowId: 0,
-    //             columnId: 0,
-    //             resolution: 0
-    //         }
-
-    //         bus.emit('cubeVisualize', mockImgs, mockGrid)
-
-    //     }
-    // })
+    bus.on('cleanAllGridPreviewLayer', () => {
+        MapOperation.map_removeGridPreviewLayer('all')
+    })
 
 })
 

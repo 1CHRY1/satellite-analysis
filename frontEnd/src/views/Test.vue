@@ -1,6 +1,6 @@
 <template>
     <div>
-        <PopupContent class="absolute" :gridData="mk"></PopupContent>
+        
     </div>
 </template>
 
