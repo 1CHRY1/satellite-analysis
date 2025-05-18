@@ -48,6 +48,10 @@ public class SceneDataServiceV2 {
         return sceneRepo.getSceneByIdWithProductAndSensor(sceneId);
     }
 
+    public List<SceneSP> getScenesByIdsWithProductAndSensor(List<String> sceneIds) {
+        return sceneRepo.getScenesByIdsWithProductAndSensor(sceneIds);
+    }
+
 //    public List<SceneDesVO> getScenesDesByTimeRegionAndTag(ScenesFetchDTOV2 scenesFetchDTO) {
 //        List<Scene> scenes = getScenesByTimeRegionAndCloud(scenesFetchDTO);
 //        return sceneModelMapper.map(scenes, new TypeToken<List<SceneDesVO>>() {}.getType());
