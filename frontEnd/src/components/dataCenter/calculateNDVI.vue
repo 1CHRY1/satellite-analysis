@@ -9,7 +9,7 @@
                         </div>
                         <h2 class="section-title">计算领域：</h2>
                         <select v-model="selectedTask"
-                            class="bg-[#0d1526] text-white w-40 border border-[#2c3e50] rounded-lg px-4 py-2 pr-8 appearance-none transition-all duration-200 hover:border-[#206d93] focus:outline-none focus:border-[#3b82f6]">
+                            class=" max-w-full truncate bg-[#0d1526] text-white w-40 border border-[#2c3e50] rounded-lg px-4 py-2 pr-8 appearance-none transition-all duration-200 hover:border-[#206d93] focus:outline-none focus:border-[#3b82f6]">
                             <option v-for="option in optionalTasks" :key="option.value" :value="option.value"
                                 :disabled="option.disabled" class="bg-[#0d1526] "
                                 :class="option.disabled ? 'text-gray-500 italic' : 'text-[#e0f2fe]'">
@@ -31,9 +31,19 @@
                                         开始选点
                                     </el-button>
                                 </div>
-                                <div class="config-control flex-col  gap-2">
-                                    请确定您要研究NDVI时序变化的区域：
-
+                                <div class="config-control flex-col  gap-2 w-full">
+                                    请确定您要研究{{ selectedTask }}的区域：
+                                    <div v-if="selectedTask === '光谱分析'" class="flex items-center gap-2 mt-2 w-full">
+                                        <label class="text-white">影像选择：</label>
+                                        <select v-model="selectedScene"
+                                            class="bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-3 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6] max-w-[calc(100%-90px)] truncate">
+                                            <option disabled selected value="">请选择影像</option>
+                                            <option v-for="image in props.regionConfig.images" :key="image.sceneName"
+                                                :value="image.sceneId" :title="image.sceneName" class="truncate">
+                                                {{ image.sceneName }}
+                                            </option>
+                                        </select>
+                                    </div>
                                     <div class="result-info-container">
                                         <div class="result-info-item">
                                             <div class="result-info-icon">
@@ -56,14 +66,7 @@
                                         </div>
 
                                     </div>
-                                    <!-- <div>
-                                        lat:
-                                        <input v-model="position[0]" class="input-box w-20 border-1 rounded-"
-                                            step="0.0001" />
-                                        lng:
-                                        <input v-model="position[1]" class="input-box w-20 border-1 rounded-xs"
-                                            step="0.0001" />
-                                    </div> -->
+
 
                                 </div>
 
@@ -83,8 +86,8 @@
                                         <ImageIcon :size="16" />
                                     </div>
                                     <div class="result-info-content">
-                                        <div class="result-info-label">数据源</div>
-                                        <div class="result-info-value">{{ 111 }} </div>
+                                        <div class="result-info-label">研究区影像</div>
+                                        <div class="result-info-value">{{ props.regionConfig.images.length }}景 </div>
                                     </div>
                                 </div>
                                 <div class="result-info-item">
@@ -111,7 +114,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <button @click="calNDVI"
+                            <button @click="selectCal"
                                 class="bg-[#0d1526] w-full  cursor-pointer text-white border border-[#2c3e50] rounded-lg px-4 py-2 hover:bg-[#1a2b4c] hover:border-[#2bb2ff] transition-all duration-200 active:scale-95">
                                 开始计算
                             </button>
@@ -159,7 +162,7 @@ import { ref, type PropType, computed, type Ref, nextTick, onUpdated, onMounted,
 import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'
 import { type interactiveExplore } from '@/components/dataCenter/type'
 import { formatTime } from '@/util/common'
-import { getNdviPoint, getCaseStatus, getCaseResult } from '@/api/http/satellite-data'
+import { getNdviPoint, getCaseStatus, getCaseResult, getSpectrum } from '@/api/http/satellite-data'
 import * as echarts from 'echarts'
 
 import * as MapOperation from '@/util/map/operation'
@@ -239,6 +242,88 @@ const startDraw = () => {
     MapOperation.draw_pointMode()
 }
 
+const selectCal = async () => {
+    if (selectedTask.value === optionalTasks.value[0].value) {
+        await calNDVI()
+    } else if (selectedTask.value === optionalTasks.value[1].value) {
+        await calSpectrum()
+    }
+}
+const selectedScene = ref('')
+const calSpectrum = async () => {
+    if (pickedPoint.value.length === 0) {
+        ElMessage.warning('请先选择您要计算的区域')
+        return
+    }
+    let spectrumParam = {
+        sceneId: selectedScene.value,
+        point: [pickedPoint.value[1], pickedPoint.value[0]]
+    }
+    let getSpectrumRes = await getSpectrum(spectrumParam)
+    if (getSpectrumRes.message !== 'success') {
+        ElMessage.error('计算失败，请重试')
+        console.error(getSpectrumRes)
+        return
+    }
+    calTask.value.taskId = getSpectrumRes.data
+
+
+    // 1、启动进度条
+    showProgress.value = true
+    progressControl()
+
+    // 2、轮询运行状态，直到运行完成
+    // ✅ 轮询函数，直到 data === 'COMPLETE'
+    const pollStatus = async (taskId: string) => {
+        const interval = 1000 // 每秒轮询一次
+        return new Promise<void>((resolve, reject) => {
+            const timer = setInterval(async () => {
+                try {
+                    const res = await getCaseStatus(taskId)
+                    console.log('轮询结果:', res)
+
+                    if (res?.data === 'COMPLETE') {
+                        clearInterval(timer)
+                        resolve()
+                    } else if (res?.data === 'ERROR') {
+                        console.log(res, res.data, 15616);
+
+                        clearInterval(timer)
+                        reject(new Error('任务失败'))
+                    }
+                } catch (err) {
+                    clearInterval(timer)
+                    reject(err)
+                }
+            }, interval)
+        })
+    }
+
+    try {
+        await pollStatus(calTask.value.taskId)
+        // ✅ 成功后设置状态
+        calTask.value.calState = 'success'
+        let res = await getCaseResult(calTask.value.taskId)
+        console.log(res, '结果');
+        let spectrum = res.data.spectrum
+        let xData = spectrum.map(data => data.band)
+        let yData = spectrum.map(data => data.value)
+
+        drawData.value.push({
+            yData,
+            xData,
+            type: 'line',
+            point: [...pickedPoint.value]
+        })
+        ElMessage.success('光谱分析计算完成')
+    } catch (error) {
+        calTask.value.calState = 'failed'
+        ElMessage.error('光谱分析计算失败，请重试')
+        console.error(error);
+    }
+}
+
+
 const calNDVI = async () => {
 
     if (pickedPoint.value.length === 0) {
@@ -259,7 +344,6 @@ const calNDVI = async () => {
     }
 
     calTask.value.taskId = getNdviRes.data
-    console.log(getNdviPointParam, getNdviRes, 1561);
 
     // 1、启动进度条
     showProgress.value = true
