@@ -35,23 +35,28 @@ class calc_NDVI(Task):
         for scene in scenes:
             epsg_code = get_tif_epsg(MINIO_ENDPOINT + "/" + scene['images'][0]['bucket'] + "/" + scene['images'][0]['tifPath'])
             x, y = latlon_to_utm(self.lng, self.lat, epsg_code)
-            # 以landsat8为例，波段4为红光，波段5为近红外
-            band_4_path = ''
-            band_5_path = ''
+
+            bandMapper = scene['bandMapper']
+            Red_path = ''
+            NIR_path = ''
             for image in scene["images"]:
-                if image["band"] == "4":
-                    band_4_path = MINIO_ENDPOINT + "/" + image['bucket'] + "/" + image["tifPath"]
+                if image["band"] == bandMapper['Red']:
+                    Red_path = MINIO_ENDPOINT + "/" + image['bucket'] + "/" + image["tifPath"]
                     break
             for image in scene["images"]:
-                if image["band"] == "5":
-                    band_5_path = MINIO_ENDPOINT + "/" + image['bucket'] + "/" + image["tifPath"]
+                if image["band"] == bandMapper['NIR']:
+                    NIR_path = MINIO_ENDPOINT + "/" + image['bucket'] + "/" + image["tifPath"]
                     break
-            Red = int(get_pixel_value_at_utm(x, y, band_4_path))
-            NIR = int(get_pixel_value_at_utm(x, y, band_5_path))
-            if NIR == 0 and Red == 0:
+            # 只要有1个路径不存在，NDVI被置为Nan
+            if not Red_path or not NIR_path:
                 NDVI = 'Nan'
             else:
-                NDVI = (NIR - Red) / (NIR + Red)
+                Red = int(get_pixel_value_at_utm(x, y, Red_path))
+                NIR = int(get_pixel_value_at_utm(x, y, NIR_path))
+                if NIR == 0 and Red == 0:
+                    NDVI = 'Nan'
+                else:
+                    NDVI = (NIR - Red) / (NIR + Red)
             sceneTime_list.append(scene['sceneTime'])
             NDVI_list.append(NDVI)
             data = [{"sceneTime": sceneTime, "value": value} for sceneTime, value in zip(sceneTime_list, NDVI_list)]
