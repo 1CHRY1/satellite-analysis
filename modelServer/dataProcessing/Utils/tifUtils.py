@@ -463,7 +463,8 @@ def bbox_to_geojsonFeatureGeometry(bbox):
                 ]
         }
 
-def calculate_cloud_coverage(image_path, bbox):
+def calculate_cloud_coverage(image_path, sensorName, bbox):
+
     with rasterio.open(image_path) as src:
         # TEMP 如果crs为空，则认为bbox为WGS84坐标系,不予转换
         if src.crs is None:
@@ -489,7 +490,12 @@ def calculate_cloud_coverage(image_path, bbox):
         "transform": out_transform
     })
 
-    cloud_mask = (out_image[0] & (1 << 3)) > 0  # 提取第3位
+    if sensorName[0:7] == 'Landsat':
+        cloud_mask = (out_image[0] & (1 << 3)) > 0  # 提取第3位
+    elif sensorName[0:5] == 'MODIS':
+        cloud_mask = ((out_image[0] & 1) > 0)  # 提取第0位
+    else:
+        cloud_mask = (out_image[0] & (1 << 3)) > 0  # 提取第3位
 
     cloud_pixels = cloud_mask.sum()
     total_pixels = out_image[0].size
@@ -635,3 +641,67 @@ def check_intersection(tif_path, bounding_box):
     # 检查相交
     print(tif_polygon.Intersects(bbox_polygon))
     return tif_polygon.Intersects(bbox_polygon)
+
+# 判断bbox是否被tif全覆盖
+def check_full_coverage(tif_path, bounding_box):
+    """
+    检查bbox是否被GeoTIFF完全覆盖
+
+    参数:
+        tif_path: GeoTIFF文件路径
+        bounding_box: 边界框坐标，格式为 [min_x, min_y, max_x, max_y]
+
+    返回:
+        bool: 如果bbox被GeoTIFF完全覆盖返回True，否则返回False
+    """
+    # 打开GeoTIFF文件
+    dataset = gdal.Open(tif_path)
+    if dataset is None:
+        raise ValueError("Could not open the GeoTIFF file.")
+
+    try:
+        geotransform = dataset.GetGeoTransform()
+    except Exception as e:
+        print(f"Caught an exception: {type(e).__name__}")
+        print(f"Exception details: {e}")
+        raise
+
+    originX = geotransform[0]
+    originY = geotransform[3]
+    pixelWidth = geotransform[1]
+    pixelHeight = geotransform[5]
+
+    # 获取GeoTIFF的宽度和高度
+    cols = dataset.RasterXSize
+    rows = dataset.RasterYSize
+
+    # 计算GeoTIFF的边界
+    tif_min_x = originX
+    tif_max_x = originX + cols * pixelWidth
+    tif_min_y = originY + rows * pixelHeight
+    tif_max_y = originY
+
+    # 创建GeoTIFF的边界多边形
+    tif_polygon = ogr.Geometry(ogr.wkbPolygon)
+    ring = ogr.Geometry(ogr.wkbLinearRing)
+    ring.AddPoint(tif_min_x, tif_min_y)
+    ring.AddPoint(tif_max_x, tif_min_y)
+    ring.AddPoint(tif_max_x, tif_max_y)
+    ring.AddPoint(tif_min_x, tif_max_y)
+    ring.AddPoint(tif_min_x, tif_min_y)  # 闭合多边形
+    tif_polygon.AddGeometry(ring)
+
+    # 从bounding_box创建多边形
+    bbox_polygon = ogr.Geometry(ogr.wkbPolygon)
+    ring = ogr.Geometry(ogr.wkbLinearRing)
+    ring.AddPoint(bounding_box[0], bounding_box[1])  # 左下角
+    ring.AddPoint(bounding_box[2], bounding_box[1])  # 右下角
+    ring.AddPoint(bounding_box[2], bounding_box[3])  # 右上角
+    ring.AddPoint(bounding_box[0], bounding_box[3])  # 左上角
+    ring.AddPoint(bounding_box[0], bounding_box[1])  # 闭合多边形
+    bbox_polygon.AddGeometry(ring)
+
+    # 检查bbox是否被GeoTIFF完全覆盖
+    # 使用Contains方法检查GeoTIFF多边形是否完全包含bbox多边形
+    # 注意：由于坐标系统可能不同，建议先确保两个几何图形在同一坐标系中
+    return tif_polygon.Contains(bbox_polygon)
