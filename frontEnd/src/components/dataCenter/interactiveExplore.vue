@@ -390,7 +390,7 @@ import { formatTime } from '@/util/common'
 import { getGridByRegionAndResolution, getBoundary, getRegionPosition, getSceneByConfig, getSceneGrids } from '@/api/http/satellite-data'
 import * as MapOperation from '@/util/map/operation'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
-import { useGridStore, ezStore } from '@/store'
+import { ezStore } from '@/store'
 
 import {
     DatabaseIcon,
@@ -416,7 +416,6 @@ import {
 import { ElMessage } from 'element-plus'
 import mapboxgl from 'mapbox-gl'
 const emit = defineEmits(['submitConfig'])
-const gridStore = useGridStore()
 
 /**
  * 行政区划选取
@@ -453,7 +452,6 @@ const getAllGrid = async () => {
         return
     }
 
-    gridStore.cleadAllGrids()
     MapOperation.map_destroyImagePolygon()
     MapOperation.map_destroyImagePreviewLayer()
     MapOperation.map_destroyGridLayer()
@@ -617,7 +615,6 @@ const makeFullSceneGrid = async () => {
     }
 
     // Destroy layer
-    gridStore.cleadAllGrids()
     MapOperation.map_destroyImagePolygon()
     MapOperation.map_destroyImagePreviewLayer()
     MapOperation.map_destroyGridLayer()

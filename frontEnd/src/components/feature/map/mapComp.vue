@@ -109,6 +109,7 @@ onUnmounted(() => {
 }
 
 :deep(.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip) {
-    border-top-color: rgb(1, 0, 51);
+    /* border-top-color: rgba(0, 0, 0, 0); */
+    border-color: transparent;
 }
 </style>
