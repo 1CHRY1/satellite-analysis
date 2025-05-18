@@ -1,7 +1,0 @@
-{
-  "STATUS": "COMPLETE",
-  "RESULT": "{\"noCloud\": {\"tiles\": [{\"colId\": 1655, \"rowId\": 574, \"tifPath\": \"MODIS_MOD02/Level_1B/tif/MOD02_MOD35_20250206/Band_1.tif\", \"bucket\": \"test-images\"}, {\"colId\": 1656, \"rowId\": 574, \"tifPath\": \"MODIS_MOD02/Level_1B/tif/MOD02_MOD35_20250106/Band_1.tif\", \"bucket\": \"test-images\"}, {\"colId\": 1657, \"rowId\": 574, \"tifPath\": \"MODIS_MOD02/Level_1B/tif/MOD02_MOD35_20250206/Band_1.tif\", \"bucket\": \"test-images\"}, {\"colId\": 1658, \"rowId\": 574, \"tifPath\": \"MODIS_MOD02/Level_1B/tif/MOD02_MOD35_20250206/Band_1.tif\", \"bucket\": \"test-images\"}, {\"colId\": 1659, \"rowId\": 574, \"tifPath\": \"MODIS_MOD02/Level_1B/tif/MOD02_MOD35_20250106/Band_1.tif\", \"bucket\": \"test-images\"}, {\"colId\": 1660, \"rowId\": 574, \"tifPath\": \"MODIS_MOD02/Level_1B/tif/MOD02_MOD35_20250206/Band_1.tif\", \"bucket\": \"test-images\"}]}}",
-  "TIME": "2025-05-15 17:33:44",
-  "ID": "9832b370-366a-4e21-a365-a72f4e038a4f",
-  "MD5": "da35805d9f01f178d3a20dfa6e084dc0"
-}
