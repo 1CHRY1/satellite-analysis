@@ -152,7 +152,7 @@
                                                 <div class="result-info-value date-range">
                                                     <div class="date-item">{{ formatTime(tileMergeConfig.dateRange[0],
                                                         'day')
-                                                        }}~
+                                                    }}~
                                                         {{ formatTime(tileMergeConfig.dateRange[1], 'day')
                                                         }}</div>
                                                 </div>
@@ -300,8 +300,18 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <button @click="showNewestImagesBySensor(image)"
-                                            class="!text-[#38bdf8] cursor-pointer">展示格网最新数据</button>
+                                        <div>
+                                            <label class="text-white mr-2">影像展示：</label>
+                                            <select
+                                                @change="(e) => showImageBySensorAndSelect(image, (e.target as HTMLSelectElement).value)"
+                                                class=" max-w-[calc(100%-90px)] truncate bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-3 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6]">
+                                                <option disabled selected value="">请选择影像</option>
+                                                <option v-for="sceneName in image.sceneNames" :key="sceneName"
+                                                    :value="sceneName" class="truncate">
+                                                    {{ sceneName }}
+                                                </option>
+                                            </select>
+                                        </div>
 
                                     </div>
                                     <!-- <div class="result-info-container">
@@ -582,16 +592,21 @@ const countSensorsCoverage = (
 
 // 给按标签分类用的方法，在获取allScene的时候就要按传感器和分辨率分类，先知道有哪些分类。
 const getSensorsAndResolutions = (scenes: any[]) => {
-    const map = new Map<string, { tags: string[]; sceneCount: number }>()
+    const map = new Map<string, { tags: string[]; sceneCount: number; sceneNames: string[], sceneIds: string[] }>()
+
     scenes.forEach(scene => {
         const key = `${scene.sensorName}-${scene.resolution}`
         if (!map.has(key)) {
             map.set(key, {
                 tags: scene.tags.slice(0, 2),
                 sceneCount: 1,
+                sceneNames: [scene.sceneName],
+                sceneIds: [scene.sceneId]
             })
         } else {
             map.get(key)!.sceneCount += 1
+            map.get(key)!.sceneNames.push(scene.sceneName)
+            map.get(key)!.sceneIds.push(scene.sceneId)
         }
     })
     // 转换为数组
@@ -599,6 +614,8 @@ const getSensorsAndResolutions = (scenes: any[]) => {
         key,
         tags: value.tags,
         sceneCount: value.sceneCount,
+        sceneNames: value.sceneNames,
+        sceneIds: value.sceneIds
     }))
 }
 
@@ -847,25 +864,36 @@ const imageType = (tags: string[]) => {
     return type
 }
 
-const showNewestImagesBySensor = (image: any) => {
+const showImageBySensorAndSelect = (image: any, imageName: string) => {
+    if (imageName === '') {
+        console.log('搞毛啊，能选出空值来？');
+        ElMessage.warning('该影像不存在，你真会选~')
+        return
+    }
     let allGridScene = ezStore.get('sceneGridsRes')
-    // console.log("准备好了吗，我要开始展示了", image, allGridScene);
-    const targetKey = image.key
+    const imageId = image.sceneIds[image.sceneNames.indexOf(imageName)]
 
-    const filteredGridScene = allGridScene
-        .map((grid: any) => {
-            const filteredScenes = (grid.scenes || []).filter((scene: any) => {
-                const sceneKey = `${scene.sensorName}-${scene.resolution}`
-                return sceneKey === targetKey
-            })
+    const sceneInfo = allGridScene.flatMap(grid => grid.scenes || []).find(scene => scene.sceneId === imageId);
 
-            // 返回一个新的 grid 对象，并更新 scenes
-            return {
-                ...grid,
-                scenes: filteredScenes
-            }
-        })
-    console.log("用来展示的格网数据为：", filteredGridScene)
+
+    // let allGridScene = ezStore.get('sceneGridsRes')
+    // // console.log("准备好了吗，我要开始展示了", image, allGridScene);
+    // const targetKey = image.key
+
+    // const filteredGridScene = allGridScene
+    //     .map((grid: any) => {
+    //         const filteredScenes = (grid.scenes || []).filter((scene: any) => {
+    //             const sceneKey = `${scene.sensorName}-${scene.resolution}`
+    //             return sceneKey === targetKey
+    //         })
+
+    //         // 返回一个新的 grid 对象，并更新 scenes
+    //         return {
+    //             ...grid,
+    //             scenes: filteredScenes
+    //         }
+    //     })
+    console.log("环宇哥请查收，用来展示的格网数据为：", sceneInfo, sceneInfo.images)
 }
 
 // 基于覆盖度返回opacity
