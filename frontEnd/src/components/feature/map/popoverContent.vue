@@ -263,7 +263,7 @@ const handleVisualize = () => {
             let bluePath = ''
 
             scene.images.forEach((bandImg: Image) => {
-                if (bandImg.band === selectedRBand .value) {
+                if (bandImg.band === selectedRBand.value) {
                     redPath = bandImg.bucket + '/' + bandImg.tifPath
                 }
                 else if (bandImg.band === selectedGBand.value) {
