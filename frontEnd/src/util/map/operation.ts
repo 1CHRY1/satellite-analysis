@@ -11,6 +11,7 @@ import { ezStore, useGridStore } from '@/store'
 import { createApp, type ComponentInstance, ref, type Ref, reactive } from 'vue'
 import PopoverContent, { type GridData } from '@/components/feature/map/popoverContent.vue'
 import bus from '@/store/bus'
+import { getSceneRGBCompositeTileUrl, getGridRGBCompositeUrl } from '@/api/http/satellite-data/visualize.api'
 
 ////////////////////////////////////////////////////////
 /////// Map Operation //////////////////////////////////
@@ -373,6 +374,48 @@ export function map_destroyImagePreviewLayer(): void {
     })
 }
 
+type RGBTileLayerParams = {
+    redPath: string
+    greenPath: string
+    bluePath: string
+    r_min: number
+    r_max: number
+    g_min: number
+    g_max: number
+    b_min: number
+    b_max: number
+}
+export function map_addRGBImageTileLayer(param: RGBTileLayerParams) {
+
+    const id = 'rgb-image-tile-layer'
+    const srcId = id + '-source'
+
+    mapManager.withMap((m) => {
+        if (m.getLayer(id) && m.getSource(srcId)) {
+            m.removeLayer(id)
+            m.removeSource(srcId)
+        }
+
+        const tileUrl = getSceneRGBCompositeTileUrl(param)
+        console.log(tileUrl)
+
+        m.addSource(srcId, {
+            type: 'raster',
+            tiles: [
+                tileUrl
+            ]
+        })
+        m.addLayer({
+            id: id,
+            type: 'raster',
+            source: srcId,
+        })
+
+    })
+
+}
+
+
 function uid() {
     return Math.random().toString(36).substring(2, 15)
 }
@@ -547,8 +590,8 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
                     '#FF0000',
                     /* default */ 'rgba(0,0,0,0)',
                 ],
-                'fill-opacity': 0.3,
-                // 'fill-opacity': ['coalesce', ['to-number', ['get', 'opacity']], 0.01],
+                // 'fill-opacity': 0.3,
+                'fill-opacity': ['coalesce', ['to-number', ['get', 'opacity']], 0.2],
             },
         })
 

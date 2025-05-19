@@ -87,8 +87,7 @@
                                     <div class="cloud-slider-container">
                                         <span class="cloud-value">{{ tileMergeConfig.cloudRange[0] }}%</span>
                                         <div class="slider-wrapper">
-                                            <a-slider class="custom-slider" range
-                                                v-model:value="tileMergeConfig.cloudRange"
+                                            <a-slider class="custom-slider" range v-model:value="tileMergeConfig.cloudRange"
                                                 :tipFormatter="(value: number) => value + '%'" />
                                         </div>
                                         <span class="cloud-value">{{ tileMergeConfig.cloudRange[1] }}%</span>
@@ -301,7 +300,7 @@
                                             </div>
                                         </div>
                                         <div>
-                                            <label class="text-white mr-2">影像展示：</label>
+                                            <label class="text-white mr-2">选择影像：</label>
                                             <select
                                                 @change="(e) => showImageBySensorAndSelect(image, (e.target as HTMLSelectElement).value)"
                                                 class=" max-w-[calc(100%-90px)] truncate bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-3 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6]">
@@ -312,6 +311,43 @@
                                                 </option>
                                             </select>
                                         </div>
+                                        <!-- Band Stretch Inputs -->
+                                        <div v-if="allScenes.length > 0 && showingScene" class="mt-4">
+                                            <div class="flex flex-col gap-2">
+                                                <label class="text-white">R 波段拉伸范围:</label>
+                                                <div class="flex flex-row gap-2 w-full justify-evenly">
+                                                    <input type="text" v-model="showingImageStrech.r_min"
+                                                        class="w-[100px] bg-[#0d1526] text-white border border-[#2c3e50] rounded-lg px-3 py-1 focus:outline-none focus:border-[#3b82f6]" />
+                                                    <input type="text" v-model="showingImageStrech.r_max"
+                                                        class="w-[100px] bg-[#0d1526] text-white border border-[#2c3e50] rounded-lg px-3 py-1 focus:outline-none focus:border-[#3b82f6]" />
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-2 mt-2">
+                                                <label class="text-white">G 波段拉伸范围:</label>
+                                                <div class="flex flex-row gap-2 w-full justify-evenly">
+                                                    <input type="text" v-model="showingImageStrech.g_min"
+                                                        class="w-[100px] bg-[#0d1526] text-white border border-[#2c3e50] rounded-lg px-3 py-1 focus:outline-none focus:border-[#3b82f6]" />
+                                                    <input type="text" v-model="showingImageStrech.g_max"
+                                                        class="w-[100px] bg-[#0d1526] text-white border border-[#2c3e50] rounded-lg px-3 py-1 focus:outline-none focus:border-[#3b82f6]" />
+                                                </div>
+                                            </div>
+                                            <div class="flex flex-col gap-2 mt-2">
+                                                <label class="text-white">B 波段拉伸范围:</label>
+                                                <div class="flex flex-row gap-2 w-full justify-evenly">
+                                                    <input type="text" v-model="showingImageStrech.b_min"
+                                                        class="w-[100px] bg-[#0d1526] text-white border border-[#2c3e50] rounded-lg px-3 py-1 focus:outline-none focus:border-[#3b82f6]" />
+                                                    <input type="text" v-model="showingImageStrech.b_max"
+                                                        class="w-[100px] bg-[#0d1526] text-white border border-[#2c3e50] rounded-lg px-3 py-1 focus:outline-none focus:border-[#3b82f6]" />
+                                                </div>
+                                            </div>
+                                            <div
+                                                class="bg-[#1b42528a] cursor-pointer text-white border border-[#2c3e50] rounded-lg px-4 py-1 hover:bg-[#1a2b4c] hover:border-[#2bb2ff] transition-all duration-200 active:scale-95 text-center mt-4"
+                                                @click="handleShowImage"
+                                                >
+                                                影像可视化</div>
+
+                                        </div>
+
 
                                     </div>
                                     <!-- <div class="result-info-container">
@@ -391,7 +427,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, type Ref, watch } from 'vue'
+import { ref, computed, type Ref, watch, reactive } from 'vue'
 import dayjs from 'dayjs'
 import { RegionSelects } from 'v-region'
 import type { RegionValues } from 'v-region'
@@ -424,7 +460,6 @@ import {
     Loader
 } from 'lucide-vue-next'
 import { ElMessage } from 'element-plus'
-import mapboxgl from 'mapbox-gl'
 const emit = defineEmits(['submitConfig'])
 
 /**
@@ -864,10 +899,19 @@ const imageType = (tags: string[]) => {
     return type
 }
 
+const showingScene = ref<any>()
+const showingImageStrech = reactive({
+    r_min: 0,
+    r_max: 50000,
+    g_min: 0,
+    g_max: 50000,
+    b_min: 0,
+    b_max: 50000,
+})
 const showImageBySensorAndSelect = (image: any, imageName: string) => {
     if (imageName === '') {
         console.log('搞毛啊，能选出空值来？');
-        ElMessage.warning('该影像不存在，你真会选~')
+        ElMessage.warning('请选择有效影像')
         return
     }
     let allGridScene = ezStore.get('sceneGridsRes')
@@ -875,25 +919,37 @@ const showImageBySensorAndSelect = (image: any, imageName: string) => {
 
     const sceneInfo = allGridScene.flatMap(grid => grid.scenes || []).find(scene => scene.sceneId === imageId);
 
+    showingScene.value = sceneInfo
+}
 
-    // let allGridScene = ezStore.get('sceneGridsRes')
-    // // console.log("准备好了吗，我要开始展示了", image, allGridScene);
-    // const targetKey = image.key
+const handleShowImage = ()=>{
+    const sceneInfo = showingScene.value
+    console.log(sceneInfo)
+    let redPath, greenPath, bluePath
+    for (let bandImg of sceneInfo.images) {
+        if (sceneInfo.bandMapper.Red === bandImg.band) {
+            redPath = bandImg.bucket + '/' + bandImg.tifPath
+        }
+        else if (sceneInfo.bandMapper.Green === bandImg.band) {
+            greenPath = bandImg.bucket + '/' + bandImg.tifPath
+        }
+        else if (sceneInfo.bandMapper.Blue === bandImg.band) {
+            bluePath = bandImg.bucket + '/' + bandImg.tifPath
+        }
+    }
 
-    // const filteredGridScene = allGridScene
-    //     .map((grid: any) => {
-    //         const filteredScenes = (grid.scenes || []).filter((scene: any) => {
-    //             const sceneKey = `${scene.sensorName}-${scene.resolution}`
-    //             return sceneKey === targetKey
-    //         })
-
-    //         // 返回一个新的 grid 对象，并更新 scenes
-    //         return {
-    //             ...grid,
-    //             scenes: filteredScenes
-    //         }
-    //     })
-    console.log("环宇哥请查收，用来展示的格网数据为：", sceneInfo, sceneInfo.images)
+    MapOperation.map_addRGBImageTileLayer({
+        redPath,
+        greenPath,
+        bluePath,
+        // r_min: showingImageStrech.r_min,
+        // r_max: 50000,
+        // g_min: 0,
+        // g_max: 50000,
+        // b_min: 0,
+        // b_max: 50000,
+        ...showingImageStrech
+    })
 }
 
 // 基于覆盖度返回opacity
