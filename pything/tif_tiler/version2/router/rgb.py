@@ -32,31 +32,39 @@ def rgb_tile(
     max_b: int = Query(5000, description="Maximum value of the blue band"),
 ):
 
-    # 读取三个波段
-    with COGReader(url_r) as cog_r:
-        if(cog_r.tile_exists(x, y, z)):
-            res = cog_r.tile(x, y, z)
-            tile_r, _ = res
-            mask = res.mask
-        else :
-            return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
-    with COGReader(url_g) as cog_g:
-        tile_g, _ = cog_g.tile(x, y, z)
+    try: 
+        # 读取三个波段
+        with COGReader(url_r) as cog_r:
+            if(cog_r.tile_exists(x, y, z)):
+                res = cog_r.tile(x, y, z)
+                tile_r, _ = res
+                mask = res.mask
+            else :
+                print("tile not exist", z, x, y)
+                return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
+        with COGReader(url_g) as cog_g:
+            tile_g, _ = cog_g.tile(x, y, z)
+            
+        with COGReader(url_b) as cog_b:
+            tile_b, _ = cog_b.tile(x, y, z)
+
+        print("cog readed！")
+        # 组合成 RGB (3, H, W)
+        r = normalize(tile_r.squeeze(),  min_r, max_r)
+        g = normalize(tile_g.squeeze(),  min_g, max_g)
+        b = normalize(tile_b.squeeze(),  min_b, max_b)
+        print("rgb normolized ")
         
-    with COGReader(url_b) as cog_b:
-        tile_b, _ = cog_b.tile(x, y, z)
+        rgb = np.stack([r,g,b])
 
-    # 组合成 RGB (3, H, W)
-    r = normalize(tile_r.squeeze(), min_r, max_r)
-    g = normalize(tile_g.squeeze(), min_g, max_g)
-    b = normalize(tile_b.squeeze(), min_b, max_b)
+        # 渲染为 PNG
+        content = render(rgb, mask=mask, img_format="png", **img_profiles.get("png"))
+
+        return Response(content, media_type="image/png")
     
-    rgb = np.stack([r,g,b])
-
-    # 渲染为 PNG
-    content = render(rgb, mask=mask, img_format="png", **img_profiles.get("png"))
-
-    return Response(content, media_type="image/png")
+    except Exception as e:
+        print(e)
+        return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
 
 
 @router.get("/rgb/preview")
@@ -67,26 +75,31 @@ def rgb_preview(
     width: int = Query(1024, description="Maximum width of the preview image"),
     height: int = Query(1024, description="Maximum height of the preview image"),
 ):
-    # 分别读取三个波段的 preview（自动缩放）
-    with COGReader(url_r) as cog_r:
-        img_r, _ = cog_r.preview(width=width, height=height)
-    with COGReader(url_g) as cog_g:
-        img_g, _ = cog_g.preview(width=width, height=height)
-    with COGReader(url_b) as cog_b:
-        img_b, _ = cog_b.preview(width=width, height=height)
+    try:
+        # 分别读取三个波段的 preview（自动缩放）
+        with COGReader(url_r) as cog_r:
+            img_r, _ = cog_r.preview(width=width, height=height)
+        with COGReader(url_g) as cog_g:
+            img_g, _ = cog_g.preview(width=width, height=height)
+        with COGReader(url_b) as cog_b:
+            img_b, _ = cog_b.preview(width=width, height=height)
+            
+        r = normalize(img_r.squeeze())
+        g = normalize(img_g.squeeze())
+        b = normalize(img_b.squeeze())
         
-    r = normalize(img_r.squeeze())
-    g = normalize(img_g.squeeze())
-    b = normalize(img_b.squeeze())
-    
-    rgb = np.stack([r,g,b])
+        rgb = np.stack([r,g,b])
 
-    print(rgb.shape)
+        print(rgb.shape)
 
-    # 渲染为 PNG
-    content = render(rgb, img_format="png", **img_profiles.get("png"))
+        # 渲染为 PNG
+        content = render(rgb, img_format="png", **img_profiles.get("png"))
+        
+        return Response(content, media_type="image/png")
     
-    return Response(content, media_type="image/png")
+    except Exception as e:
+        print(e)
+        return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
 
 
 
