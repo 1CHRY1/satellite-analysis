@@ -5,5 +5,7 @@
     "back_websocket": "",
     "basemap_server": "/basemap",
     "minioIpAndPort": "http://223.2.32.166:30900",
-    "titiler": "/tiler"
+    "titiler": "/tiler",
+    "ndviProjectId": "PRJyxITmCVLn3PMoaeca",
+    "spectrumProjectId": "PRJyxITmCVLn3PMoaeca"
 }
