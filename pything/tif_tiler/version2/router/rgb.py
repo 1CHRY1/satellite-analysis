@@ -88,7 +88,6 @@ def rgb_preview(
         
         rgb = np.stack([r,g,b])
 
-        print(rgb.shape)
 
         # 渲染为 PNG
         content = render(rgb, img_format="png", **img_profiles.get("png"))
@@ -148,10 +147,7 @@ def rgb_box_tile(
             
         with COGReader(url_b) as cog_b:
             tile_b, _ = cog_b.tile(x, y, z)
-        
-        print(bbox_minx, bbox_miny, bbox_maxx, bbox_maxy)
-        print(tile_wgs_bounds)
-        print(intersection_minx, intersection_miny, intersection_maxx, intersection_maxy)
+
         
 
         # 4. 生成 bbox 掩膜（像素级别）
@@ -165,10 +161,7 @@ def rgb_box_tile(
         # 5. 合并掩膜（COG 内部掩膜 & bbox 掩膜）
         final_mask = np.logical_and(mask == 255, bbox_mask)
         final_mask_uint8 = final_mask.astype("uint8") * 255
-        
-        print("COG mask 有效像素数量:", np.sum(mask == 255))
-        print("bbox_mask 有效像素数量:", np.sum(bbox_mask))
-        print("最终 final_mask 有效像素数量:", np.sum(final_mask))
+
 
         # 组合成 RGB (3, H, W)
         r = normalize(tile_r.squeeze(), min_r, max_r)
@@ -183,7 +176,6 @@ def rgb_box_tile(
         return Response(content, media_type="image/png")
     
     except Exception as e:
-        print("error")
         print(e)
         return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
 
