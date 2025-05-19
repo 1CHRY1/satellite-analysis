@@ -48,12 +48,10 @@ def rgb_tile(
         with COGReader(url_b) as cog_b:
             tile_b, _ = cog_b.tile(x, y, z)
 
-        print("cog readed！")
         # 组合成 RGB (3, H, W)
         r = normalize(tile_r.squeeze(),  min_r, max_r)
         g = normalize(tile_g.squeeze(),  min_g, max_g)
         b = normalize(tile_b.squeeze(),  min_b, max_b)
-        print("rgb normolized ")
         
         rgb = np.stack([r,g,b])
 
@@ -110,47 +108,67 @@ def rgb_box_tile(
     url_r: str = Query(...),
     url_g: str = Query(...),
     url_b: str = Query(...),
-    min_r: int = Query(0, description="Minimum value of the red band"),
-    min_g: int = Query(0, description="Minimum value of the green band"),
-    min_b: int = Query(0, description="Minimum value of the blue band"),
-    max_r: int = Query(5000, description="Maximum value of the red band"),
-    max_g: int = Query(5000, description="Maximum value of the green band"),
-    max_b: int = Query(5000, description="Maximum value of the blue band"),
+    min_r: int = Query(0),
+    min_g: int = Query(0),
+    min_b: int = Query(0),
+    max_r: int = Query(5000),
+    max_g: int = Query(5000),
+    max_b: int = Query(5000),
 ):
-    # 1. 解析 bbox 参数
-    try:
-        bbox_minx, bbox_miny, bbox_maxx, bbox_maxy = map(float, bbox.split(","))
-        bbox_extent = (bbox_minx, bbox_miny, bbox_maxx, bbox_maxy)
-    except Exception:
-        return Response(status_code=400, content=b"Invalid bbox")
+    try: 
 
-    # 2. 获取当前 tile 的地理边界 (WGS84)
-    tile_bounds_wgs84 = tile_bounds(x, y, z)
+        try:
+            bbox_minx, bbox_miny, bbox_maxx, bbox_maxy = map(float, bbox.split(","))
+        except Exception:
+            return Response(status_code=400, content=b"Invalid bbox format")
+        
+        tile_wgs_bounds: dict = tile_bounds(x, y, z)
 
-    # 3. 判断当前 tile 是否与 bbox 有交集
-    intersection_minx = max(tile_bounds_wgs84['west'], bbox_minx)
-    intersection_miny = max(tile_bounds_wgs84['south'], bbox_miny)
-    intersection_maxx = min(tile_bounds_wgs84['east'], bbox_maxx)
-    intersection_maxy = min(tile_bounds_wgs84['north'], bbox_maxy)
-
-
-    if intersection_minx >= intersection_maxx or intersection_miny >= intersection_maxy:
-        # 无交集，返回透明图
-        return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
-
-    bounds = (intersection_minx, intersection_miny, intersection_maxx, intersection_maxy)
-    
-
-    try:
-        # 4. 读取三个波段中 bbox 与 tile 区域的交集部分
+        # 2. 计算 tile 与 bbox 的空间交集
+        intersection_minx = max(tile_wgs_bounds["west"], bbox_minx)
+        intersection_miny = max(tile_wgs_bounds["south"], bbox_miny)
+        intersection_maxx = min(tile_wgs_bounds["east"], bbox_maxx)
+        intersection_maxy = min(tile_wgs_bounds["north"], bbox_maxy)
+        
+        if intersection_minx >= intersection_maxx or intersection_miny >= intersection_maxy:
+            # 没有交集，返回透明瓦片
+            return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
+            
+        # 读取三个波段
         with COGReader(url_r) as cog_r:
-            imgData = cog_r.part(bounds, width=512, height=512)
-            mask = imgData.mask
-            tile_r, _ = imgData        
+            if(cog_r.tile_exists(x, y, z)):
+                res = cog_r.tile(x, y, z)
+                tile_r, _ = res
+                mask = res.mask
+            else :
+                print("tile not exist", z, x, y)
+                return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
         with COGReader(url_g) as cog_g:
-            tile_g, _ = cog_g.part(bounds, width=512, height=512)
+            tile_g, _ = cog_g.tile(x, y, z)
+            
         with COGReader(url_b) as cog_b:
-            tile_b, _ = cog_b.part(bounds, width=512, height=512)
+            tile_b, _ = cog_b.tile(x, y, z)
+        
+        print(bbox_minx, bbox_miny, bbox_maxx, bbox_maxy)
+        print(tile_wgs_bounds)
+        print(intersection_minx, intersection_miny, intersection_maxx, intersection_maxy)
+        
+
+        # 4. 生成 bbox 掩膜（像素级别）
+        H, W = tile_r.squeeze().shape
+        xs = np.linspace(tile_wgs_bounds['west'], tile_wgs_bounds['east'], W)
+        ys = np.linspace(tile_wgs_bounds['north'], tile_wgs_bounds['south'], H)
+        lon, lat = np.meshgrid(xs, ys)  # 每个像素的 WGS84 坐标
+        bbox_mask = (lon >= bbox_minx) & (lon <= bbox_maxx) & \
+                    (lat >= bbox_miny) & (lat <= bbox_maxy)
+
+        # 5. 合并掩膜（COG 内部掩膜 & bbox 掩膜）
+        final_mask = np.logical_and(mask == 255, bbox_mask)
+        final_mask_uint8 = final_mask.astype("uint8") * 255
+        
+        print("COG mask 有效像素数量:", np.sum(mask == 255))
+        print("bbox_mask 有效像素数量:", np.sum(bbox_mask))
+        print("最终 final_mask 有效像素数量:", np.sum(final_mask))
 
         # 组合成 RGB (3, H, W)
         r = normalize(tile_r.squeeze(), min_r, max_r)
@@ -159,13 +177,15 @@ def rgb_box_tile(
         
         rgb = np.stack([r,g,b])
 
-        content = render(rgb, mask=mask, img_format="png", **img_profiles.get("png"))
+        # 渲染为 PNG
+        content = render(rgb, mask=final_mask_uint8, img_format="png", **img_profiles.get("png"))
+
         return Response(content, media_type="image/png")
     
     except Exception as e:
+        print("error")
         print(e)
         return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
- 
 
 def tile_bounds(x, y, z):
 
