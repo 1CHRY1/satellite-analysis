@@ -2,9 +2,9 @@ from fastapi import APIRouter, Query, Response
 from rio_tiler.io import COGReader
 from rio_tiler.utils import render
 from rio_tiler.profiles import img_profiles
-from mercantile import bounds as tile_bounds
 import numpy as np
 import os
+import math
 
 router = APIRouter()
 
@@ -90,10 +90,10 @@ def rgb_box_tile(
     tile_bounds_wgs84 = tile_bounds(x, y, z)
 
     # 3. 判断当前 tile 是否与 bbox 有交集
-    intersection_minx = max(tile_bounds_wgs84.west, bbox_minx)
-    intersection_miny = max(tile_bounds_wgs84.south, bbox_miny)
-    intersection_maxx = min(tile_bounds_wgs84.east, bbox_maxx)
-    intersection_maxy = min(tile_bounds_wgs84.north, bbox_maxy)
+    intersection_minx = max(tile_bounds_wgs84['west'], bbox_minx)
+    intersection_miny = max(tile_bounds_wgs84['south'], bbox_miny)
+    intersection_maxx = min(tile_bounds_wgs84['east'], bbox_maxx)
+    intersection_maxy = min(tile_bounds_wgs84['north'], bbox_maxy)
 
 
     if intersection_minx >= intersection_maxx or intersection_miny >= intersection_maxy:
@@ -123,3 +123,24 @@ def rgb_box_tile(
         print(e)
         return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
  
+
+def tile_bounds(x, y, z):
+
+    Z2 = math.pow(2, z)
+
+    ul_lon_deg = x / Z2 * 360.0 - 180.0
+    ul_lat_rad = math.atan(math.sinh(math.pi * (1 - 2 * y / Z2)))
+    ul_lat_deg = math.degrees(ul_lat_rad)
+
+    lr_lon_deg = (x + 1) / Z2 * 360.0 - 180.0
+    lr_lat_rad = math.atan(math.sinh(math.pi * (1 - 2 * (y + 1) / Z2)))
+    lr_lat_deg = math.degrees(lr_lat_rad)
+
+    result = {
+        "west": ul_lon_deg,
+        "east": lr_lon_deg,
+        "south": lr_lat_deg,
+        "north": ul_lat_deg,
+    }
+    
+    return result
