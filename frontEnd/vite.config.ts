@@ -45,6 +45,11 @@ export default defineConfig({
                 target: 'http://223.2.32.166:31800',
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/tiler/, ''),
+            },
+            '/hytemp':{
+                target: 'http://localhost:8000',
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/hytemp/, ''),
             }
         },
     },
