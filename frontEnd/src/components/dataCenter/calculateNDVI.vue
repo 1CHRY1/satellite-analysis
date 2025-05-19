@@ -16,7 +16,11 @@
                                 {{ option.label }}
                             </option>
                         </select>
-                        <router-link v-if="selectedTask === 'NDVI时序计算'" to="/project/PRJyxITmCVLn3PMoaeca"
+                        <router-link v-if="selectedTask === 'NDVI时序计算'" :to="`/project/${ndviProjectId}`"
+                            class="absolute right-6 bg-[#0d1526] cursor-pointer text-white border border-[#2c3e50] rounded-lg px-4 py-2 hover:bg-[#1a2b4c] hover:border-[#2bb2ff] transition-all duration-200 active:scale-95">
+                            自定义
+                        </router-link>
+                        <router-link v-if="selectedTask === '光谱分析'" :to="`/project/${spectrumProjectId}`"
                             class="absolute right-6 bg-[#0d1526] cursor-pointer text-white border border-[#2c3e50] rounded-lg px-4 py-2 hover:bg-[#1a2b4c] hover:border-[#2bb2ff] transition-all duration-200 active:scale-95">
                             自定义
                         </router-link>
@@ -137,7 +141,8 @@
                     <div class="section-content">
                         <div class="config-container">
                             <div class="config-item" v-for="(item, index) in drawData" :key="index">
-                                <div>第{{ index + 1 }}次计算结果为：</div>
+                                <div>第{{ index + 1 }}次计算：{{ item.analysis }}</div>
+                                <div v-if="item.imageName">所选影像为：{{ item.imageName }}</div>
                                 <!-- <div>NDVI计算结果为：xxx</div> -->
                                 <!-- <div>统计数据-统计数据-统计数据-统计数据</div> -->
                                 <div>经纬度：（{{ item.point[0] }},{{ item.point[1] }}）</div>
@@ -194,6 +199,7 @@ const props = defineProps({
     }
 })
 
+
 const gridStore = useGridStore()
 const pickedPoint = computed(() => {
     return [
@@ -249,10 +255,15 @@ const selectCal = async () => {
         await calSpectrum()
     }
 }
+
 const selectedScene = ref('')
 const calSpectrum = async () => {
     if (pickedPoint.value.length === 0) {
         ElMessage.warning('请先选择您要计算的区域')
+        return
+    }
+    if (selectedScene.value === '') {
+        ElMessage.warning('请先选择您要计算的影像')
         return
     }
     let spectrumParam = {
@@ -299,20 +310,28 @@ const calSpectrum = async () => {
         })
     }
 
+    // 找到影像名称
+    const selectedImage = props.regionConfig.images.find(image => image.sceneId = selectedScene.value)
+    console.log(selectedImage);
+
+
     try {
         await pollStatus(calTask.value.taskId)
         // ✅ 成功后设置状态
         calTask.value.calState = 'success'
         let res = await getCaseResult(calTask.value.taskId)
         console.log(res, '结果');
-        let spectrum = res.data.spectrum
-        let xData = spectrum.map(data => data.band)
+        let spectrum = res.data.spectral_profile
+
+        let xData = spectrum.map(data => data.band + '波段')
         let yData = spectrum.map(data => data.value)
 
         drawData.value.push({
             yData,
             xData,
             type: 'line',
+            analysis: "定点光谱分析",
+            imageName: selectedImage.sceneName,
             point: [...pickedPoint.value]
         })
         ElMessage.success('光谱分析计算完成')
@@ -391,6 +410,7 @@ const calNDVI = async () => {
             yData,
             xData,
             type: 'line',
+            analysis: "定点NDVI时序计算",
             point: [...pickedPoint.value]
         })
         ElMessage.success('NDVI计算完成')
@@ -486,7 +506,12 @@ watch(drawData, (newData) => {
     })
 }, { deep: true })
 
+const ndviProjectId = ref('')
+const spectrumProjectId = ref('')
 onMounted(() => {
+
+    ndviProjectId.value = ezStore.get('conf').ndviProjectId
+    spectrumProjectId.value = ezStore.get('conf').spectrumProjectId
     nextTick(() => {
         drawData.value.forEach((item, index) => {
             const el = document.getElementById(`chart-${index}`)

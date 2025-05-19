@@ -11,12 +11,25 @@ router = APIRouter()
 TRANSPARENT_PNG = os.path.join(os.path.dirname(__file__), "transparent.png")
 with open(TRANSPARENT_PNG, "rb") as f:
     TRANSPARENT_CONTENT = f.read()
+
+def normalize(arr, min_val = 0 , max_val = 5000):
+    arr = np.nan_to_num(arr)
+    arr = np.clip((arr - min_val) / (max_val - min_val), 0, 1)
+    return (arr * 255).astype("uint8")
+    
+    
 @router.get("/rgb/tiles/{z}/{x}/{y}.png")
 def rgb_tile(
     z: int, x: int, y: int,
     url_r: str = Query(...),
     url_g: str = Query(...),
     url_b: str = Query(...),
+    min_r: int = Query(0, description="Minimum value of the red band"),
+    min_g: int = Query(0, description="Minimum value of the green band"),
+    min_b: int = Query(0, description="Minimum value of the blue band"),
+    max_r: int = Query(5000, description="Maximum value of the red band"),
+    max_g: int = Query(5000, description="Maximum value of the green band"),
+    max_b: int = Query(5000, description="Maximum value of the blue band"),
 ):
 
     # 读取三个波段
@@ -34,7 +47,11 @@ def rgb_tile(
         tile_b, _ = cog_b.tile(x, y, z)
 
     # 组合成 RGB (3, H, W)
-    rgb = np.stack([tile_r.squeeze(), tile_g.squeeze(), tile_b.squeeze()])
+    r = normalize(tile_r.squeeze(),  min_r, max_r)
+    g = normalize(tile_g.squeeze(),  min_g, max_g)
+    b = normalize(tile_b.squeeze(),  min_b, max_b)
+    
+    rgb = np.stack([r,g,b])
 
     # 渲染为 PNG
     content = render(rgb, img_format="png", **img_profiles.get("png"))
@@ -57,12 +74,14 @@ def rgb_preview(
         img_g, _ = cog_g.preview(width=width, height=height)
     with COGReader(url_b) as cog_b:
         img_b, _ = cog_b.preview(width=width, height=height)
-
-
-    # 合成 RGB 图像
-    rgb = np.stack([img_r.squeeze(), img_g.squeeze(), img_b.squeeze()]) #(1, 1024, 1024)
+        
+    r = normalize(img_r.squeeze())
+    g = normalize(img_g.squeeze())
+    b = normalize(img_b.squeeze())
     
-    print(rgb.shape) # (3, 1, 1024, 1024)
+    rgb = np.stack([r,g,b])
+
+    print(rgb.shape)
 
     # 渲染为 PNG
     content = render(rgb, img_format="png", **img_profiles.get("png"))
@@ -78,6 +97,12 @@ def rgb_box_tile(
     url_r: str = Query(...),
     url_g: str = Query(...),
     url_b: str = Query(...),
+    min_r: int = Query(0, description="Minimum value of the red band"),
+    min_g: int = Query(0, description="Minimum value of the green band"),
+    min_b: int = Query(0, description="Minimum value of the blue band"),
+    max_r: int = Query(5000, description="Maximum value of the red band"),
+    max_g: int = Query(5000, description="Maximum value of the green band"),
+    max_b: int = Query(5000, description="Maximum value of the blue band"),
 ):
     # 1. 解析 bbox 参数
     try:
@@ -114,7 +139,12 @@ def rgb_box_tile(
         with COGReader(url_b) as cog_b:
             tile_b, _ = cog_b.part(bounds, width=512, height=512)
 
-        rgb = np.ma.stack([tile_r.squeeze(), tile_g.squeeze(), tile_b.squeeze()])
+        # 组合成 RGB (3, H, W)
+        r = normalize(tile_r.squeeze(), min_r, max_r)
+        g = normalize(tile_g.squeeze(), min_g, max_g)
+        b = normalize(tile_b.squeeze(), min_b, max_b)
+        
+        rgb = np.stack([r,g,b])
 
         content = render(rgb, mask=mask, img_format="png", **img_profiles.get("png"))
         return Response(content, media_type="image/png")
