@@ -37,7 +37,7 @@ def rgb_tile(
         if(cog_r.tile_exists(x, y, z)):
             res = cog_r.tile(x, y, z)
             tile_r, _ = res
-            # mask = res.mask
+            mask = res.mask
         else :
             return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
     with COGReader(url_g) as cog_g:
@@ -47,14 +47,14 @@ def rgb_tile(
         tile_b, _ = cog_b.tile(x, y, z)
 
     # 组合成 RGB (3, H, W)
-    r = normalize(tile_r.squeeze(),  min_r, max_r)
-    g = normalize(tile_g.squeeze(),  min_g, max_g)
-    b = normalize(tile_b.squeeze(),  min_b, max_b)
+    r = normalize(tile_r.squeeze(), min_r, max_r)
+    g = normalize(tile_g.squeeze(), min_g, max_g)
+    b = normalize(tile_b.squeeze(), min_b, max_b)
     
     rgb = np.stack([r,g,b])
 
     # 渲染为 PNG
-    content = render(rgb, img_format="png", **img_profiles.get("png"))
+    content = render(rgb, mask=mask, img_format="png", **img_profiles.get("png"))
 
     return Response(content, media_type="image/png")
 
