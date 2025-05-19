@@ -302,7 +302,17 @@ const handleVisualize = () => {
     if (showBandSelector.value === false) {
         const rgbImageData: MultiImageInfoType[] = []
 
-        const gridAllScenes = gridData.value.scenes
+        const gridAllScenes: Scene[] = []
+        // gridData.value.scenes
+        if (selectedResolution.value && selectedResolution.value !== '全选') {
+            for (const scene of gridData.value.scenes) {
+                if (scene.resolution === selectedResolution.value) {
+                    gridAllScenes.push(scene)
+                }
+            }
+        } else {
+            gridAllScenes.push(...gridData.value.scenes)
+        }
 
         // Process each band (R, G, B)
         for (let sceneInfo of gridAllScenes) {
@@ -351,7 +361,7 @@ const handleVisualize = () => {
                 }
             }
 
-            bus.emit('cubeVisualize', imageData, gridInfo, scaleRate, 'single')
+            bus.emit('cubeVisualize', imageData, gridInfo, scaleRate.value, 'single')
         } else {
             const rgbImageData: MultiImageInfoType[] = []
 
@@ -388,7 +398,7 @@ const handleVisualize = () => {
                     bluePath: bluePath,
                 })
             }
-            bus.emit('cubeVisualize', rgbImageData, gridInfo, scaleRate, 'rgb')
+            bus.emit('cubeVisualize', rgbImageData, gridInfo, scaleRate.value, 'rgb')
         }
     }
 
@@ -396,7 +406,6 @@ const handleVisualize = () => {
 }
 
 const handleRemove = () => {
-
     map_destroyGridRGBImageTileLayer(gridData.value)
 }
 
