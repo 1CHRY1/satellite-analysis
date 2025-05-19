@@ -1,9 +1,9 @@
 from fastapi import FastAPI
-from titiler.core.factory import TilerFactory, MultiBandTilerFactory
-from titiler.extensions import cogValidateExtension
+from titiler.core.factory import TilerFactory
+
 from starlette.middleware.cors import CORSMiddleware
 
-from rgbReader import RGBReader, RGBPathParams
+from router import rgb
 
 app = FastAPI()
 
@@ -17,30 +17,14 @@ app.add_middleware(
 )
 
 # Create a TilerFactory for Cloud-Optimized GeoTIFFs
-cog = TilerFactory(
-    router_prefix="/cog",
-    extensions=[
-        cogValidateExtension()  # the cogeoExtension will add a rio-cogeo /validate endpoint
-    ]
-)
-
-# Create custom tiler plugin
-rgbTiler = MultiBandTilerFactory(
-    router_prefix="/rgb",
-    reader=RGBReader,
-    path_dependency=RGBPathParams,
-)
-
+cog = TilerFactory()
 
 # Register all the COG endpoints automatically
-app.include_router(rgbTiler.router, tags=["RGB Tiler"])
 app.include_router(cog.router, tags=["Cloud Optimized GeoTIFF"])
+app.include_router(rgb.router, tags=["RGB Composite"])
 
 
 # Optional: Add a welcome message for the root endpoint
 @app.get("/")
 def read_index():
     return {"message": "Welcome to TiTiler"}
-
-# Start Server
-# cd "D:\myProject\2025\satellite-analysis\pything\tif_tiler\version2" && uvicorn main:app --reload
