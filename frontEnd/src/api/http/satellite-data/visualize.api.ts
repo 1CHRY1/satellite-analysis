@@ -152,12 +152,12 @@ export function getGridRGBCompositeUrl(grid: GridInfoType, param: RGBTileLayerPa
     requestParams.append('url_r', minioEndPoint + '/' + param.redPath)
     requestParams.append('url_g', minioEndPoint + '/' + param.greenPath)
     requestParams.append('url_b', minioEndPoint + '/' + param.bluePath)
-    requestParams.append('r_min', param.r_min.toString())
-    requestParams.append('r_max', param.r_max.toString())
-    requestParams.append('g_min', param.g_min.toString())
-    requestParams.append('g_max', param.g_max.toString())
-    requestParams.append('b_min', param.b_min.toString())
-    requestParams.append('b_max', param.b_max.toString())
+    requestParams.append('min_r', param.r_min.toString())
+    requestParams.append('max_r', param.r_max.toString())
+    requestParams.append('min_g', param.g_min.toString())
+    requestParams.append('max_g', param.g_max.toString())
+    requestParams.append('min_b', param.b_min.toString())
+    requestParams.append('max_b', param.b_max.toString())
 
     return baseUrl + '?' + requestParams.toString()
 }
