@@ -477,13 +477,13 @@ export function map_removeGridPreviewLayer(pre: string) {
     const grid_preview_layer_map = ezStore.get('grid-preview-layer-map') as Map<string, any>
     const map = ezStore.get('map') as mapboxgl.Map
 
-    for (let [key, value] of grid_preview_layer_map) {
+    if (!grid_preview_layer_map) return
 
+    for (let [key, value] of grid_preview_layer_map) {
         if (key === 'all') {
             if (map.getLayer(value.id)) map.removeLayer(value.id)
             if (map.getSource(value.id)) map.removeSource(value.id)
-        }
-        else if (key.indexOf(pre) != -1) {
+        } else if (key.indexOf(pre) != -1) {
             if (map.getLayer(value.id)) map.removeLayer(value.id)
             if (map.getSource(value.id)) map.removeSource(value.id)
         }
