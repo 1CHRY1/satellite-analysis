@@ -92,34 +92,5 @@ public class GridDataService {
         }
     }
 
-//    public List<GridSceneVO> getScenesFromGrids(GridSceneFetchDTO gridSceneFetchDTO) {
-//        List<GridSceneVO> gridRess = new ArrayList<>();
-//        List<GridBasicDTO> grids = gridSceneFetchDTO.getGrids();
-//        List<String> sceneIds = gridSceneFetchDTO.getSceneIds();
-//        List<SceneSP> sceneSps = sceneDataService.getScenesByIdsWithProductAndSensor(sceneIds);
-//        for (GridBasicDTO grid : grids) {
-//            List<ModelServerSceneDTO> sceneDtos = new ArrayList<>();
-//            Geometry gridPoly = TileCalculateUtil.getTileGeomByIdsAndResolution(grid.getRowId(), grid.getColumnId(), grid.getResolution());
-//            for (SceneSP scene : sceneSps) {
-//                if (!scene.getBbox().contains(gridPoly) ) {
-////                if (scene.getBbox().disjoint(gridPoly) ) {
-//                    continue;
-//                }
-//                List<ModelServerImageDTO> imageDTOS = imageDataService.getModelServerImageDTOBySceneId(scene.getSceneId());
-//                ModelServerSceneDTO sceneDto = ModelServerSceneDTO.builder()
-//                        .sceneId(scene.getSceneId()).cloudPath(scene.getCloudPath())
-//                        .sensorName(scene.getSensorName()).productName(scene.getProductName())
-//                        .resolution(scene.getResolution()).sceneTime(scene.getSceneTime())
-//                        .bandMapper(bandMapperGenerator.getSatelliteConfigBySensorName(scene.getSensorName()))
-//                        .bucket(scene.getBucket()).images(imageDTOS).build();
-//                sceneDtos.add(sceneDto);
-//            }
-//            GridSceneVO gridRes = GridSceneVO.builder()
-//                    .scenes(sceneDtos).rowId(grid.getRowId()).columnId(grid.getColumnId())
-//                    .resolution(grid.getResolution()).build();
-//            gridRess.add(gridRes);
-//        }
-//        return gridRess;
-//    }
-
+    
 }

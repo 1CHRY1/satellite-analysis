@@ -12,7 +12,7 @@ from pyproj import CRS, Transformer
 # 计算云量新增包
 from rasterio.warp import transform_bounds
 from rasterio.mask import mask
-from shapely.geometry import shape
+from shapely.geometry import shape, box
 from shapely.ops import unary_union
 from osgeo import osr
 import dataProcessing.config as config
@@ -490,10 +490,12 @@ def calculate_cloud_coverage(image_path, sensorName, bbox):
         "transform": out_transform
     })
 
-    if sensorName[0:7] == 'Landsat':
+    if 'Landsat' in sensorName:
         cloud_mask = (out_image[0] & (1 << 3)) > 0  # 提取第3位
-    elif sensorName[0:5] == 'MODIS':
+    elif 'MODIS' in sensorName:
         cloud_mask = ((out_image[0] & 1) > 0)  # 提取第0位
+    elif "GF" in sensorName:
+        cloud_mask = (out_image[0] == 2)
     else:
         cloud_mask = (out_image[0] & (1 << 3)) > 0  # 提取第3位
 
@@ -589,6 +591,21 @@ def parse_time_in_scene(scene):
     return datetime.strptime(scene["sceneTime"], "%Y-%m-%d %H:%M:%S")
 
 # 判断bbox与tif是否相交
+def check_intersection_v2(geojson, bounding_box):
+    try:
+        # 将 GeoJSON 数据转换为 Shapely 几何对象
+        geojson_polygon = shape(geojson)
+        
+        # 创建边界框的多边形
+        bbox_polygon = box(bounding_box[0], bounding_box[1], bounding_box[2], bounding_box[3])
+        
+        # 检查边界框是否被 GeoJSON 多边形完全覆盖
+        return geojson_polygon.Intersects(bbox_polygon)
+    except Exception as e:
+        print(f"Caught an exception: {type(e).__name__}")
+        print(f"Exception details: {e}")
+        return False
+
 def check_intersection(tif_path, bounding_box):
     # 打开GeoTIFF文件
     dataset = gdal.Open(tif_path)
@@ -643,7 +660,22 @@ def check_intersection(tif_path, bounding_box):
     return tif_polygon.Intersects(bbox_polygon)
 
 # 判断bbox是否被tif全覆盖
-def check_full_coverage(tif_path, bounding_box):
+def check_full_coverage_v2(geojson, bounding_box):
+    try:
+        # 将 GeoJSON 数据转换为 Shapely 几何对象
+        geojson_polygon = shape(geojson)
+        
+        # 创建边界框的多边形
+        bbox_polygon = box(bounding_box[0], bounding_box[1], bounding_box[2], bounding_box[3])
+        
+        # 检查边界框是否被 GeoJSON 多边形完全覆盖
+        return geojson_polygon.contains(bbox_polygon)
+    except Exception as e:
+        print(f"Caught an exception: {type(e).__name__}")
+        print(f"Exception details: {e}")
+        return False
+
+def check_full_coverage(dataset, bounding_box):
     """
     检查bbox是否被GeoTIFF完全覆盖
 
@@ -654,8 +686,8 @@ def check_full_coverage(tif_path, bounding_box):
     返回:
         bool: 如果bbox被GeoTIFF完全覆盖返回True，否则返回False
     """
-    # 打开GeoTIFF文件
-    dataset = gdal.Open(tif_path)
+    # # 打开GeoTIFF文件
+    # dataset = gdal.Open(tif_path)
     if dataset is None:
         raise ValueError("Could not open the GeoTIFF file.")
 
