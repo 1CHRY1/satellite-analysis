@@ -56,6 +56,15 @@
                         </option>
                     </select>
                 </div>
+                <div class="flex flex-row gap-2 justify-start items-center my-2">
+                    <label class="text-[#7eb3dd] w-2/5">拉伸范围:</label>
+                    <div class="flex flex-row gap-2 w-3/5 justify-evenly">
+                        <input type="text" v-model="showingImageStrech.r_min"
+                            class="w-[55px] bg-[#0d1526] text-white border border-[#2c3e50] rounded-lg px-1 py-1 focus:outline-none focus:border-[#3b82f6]" />
+                        <input type="text" v-model="showingImageStrech.r_max"
+                            class="w-[55px] bg-[#0d1526] text-white border border-[#2c3e50] rounded-lg px-1 py-1 focus:outline-none focus:border-[#3b82f6]" />
+                    </div>
+                </div>
                 <div class="band-selection">
                     <label for="g-band-select">G波段:</label>
                     <select id="g-band-select" v-model="selectedGBand" class="band-select">
@@ -65,6 +74,15 @@
                         </option>
                     </select>
                 </div>
+                <div class="flex flex-row gap-2 justify-start items-center my-2">
+                    <label class="text-[#7eb3dd] w-2/5">拉伸范围:</label>
+                    <div class="flex flex-row gap-2 w-3/5 justify-evenly">
+                        <input type="text" v-model="showingImageStrech.g_min"
+                            class="w-[55px] bg-[#0d1526] text-white border border-[#2c3e50] rounded-lg px-1 py-1 focus:outline-none focus:border-[#3b82f6]" />
+                        <input type="text" v-model="showingImageStrech.g_max"
+                            class="w-[55px] bg-[#0d1526] text-white border border-[#2c3e50] rounded-lg px-1 py-1 focus:outline-none focus:border-[#3b82f6]" />
+                    </div>
+                </div>
                 <div class="band-selection">
                     <label for="b-band-select">B波段:</label>
                     <select id="b-band-select" v-model="selectedBBand" class="band-select">
@@ -73,6 +91,16 @@
                             {{ band }}
                         </option>
                     </select>
+                </div>
+                <div class="flex flex-row gap-2 justify-start items-center my-2">
+                    <label class="text-[#7eb3dd] w-2/5">拉伸范围:</label>
+
+                    <div class="flex flex-row gap-2 w-3/5 justify-evenly">
+                        <input type="text" v-model="showingImageStrech.b_min"
+                            class="w-[55px] bg-[#0d1526] text-white border border-[#2c3e50] rounded-lg px-1 py-1 focus:outline-none focus:border-[#3b82f6]" />
+                        <input type="text" v-model="showingImageStrech.b_max"
+                            class="w-[55px] bg-[#0d1526] text-white border border-[#2c3e50] rounded-lg px-1 py-1 focus:outline-none focus:border-[#3b82f6]" />
+                    </div>
                 </div>
             </div>
 
@@ -94,7 +122,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, type Ref } from 'vue';
+import { ref, computed, onMounted, type Ref, reactive } from 'vue';
 import { GalleryHorizontalIcon, Trash2Icon } from 'lucide-vue-next'
 import bus from '@/store/bus';
 import { map_removeGridPreviewLayer } from '@/util/map/operation'
@@ -157,6 +185,15 @@ const gridData = ref<GridData>({
 })
 
 const activeTab = ref('single')
+
+const showingImageStrech = reactive({
+    r_min: 0,
+    r_max: 5000,
+    g_min: 0,
+    g_max: 5000,
+    b_min: 0,
+    b_max: 5000,
+})
 
 // Select options
 const gridID = computed(() => {
