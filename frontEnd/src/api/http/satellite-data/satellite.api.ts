@@ -154,6 +154,10 @@ export async function getNdviPoint(param: any): Promise<any> {
     return http.post<any>(`modeling/example/ndvi/point`, param)
 }
 
+export async function getSpectrum(param: any): Promise<any> {
+    return http.post<any>(`modeling/example/spectrum/point`, param)
+}
+
 export async function getCaseStatus(taskId: string): Promise<any> {
     return http.get<any>(`modeling/case/status/caseId/${taskId}`)
 }

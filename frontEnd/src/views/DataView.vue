@@ -3,7 +3,7 @@
         <div class=" w-[28vw] p-4 text-gray-200">
             <!-- 自定义选项切换按钮 -->
             <div class="flex justify-between bg-[#2a2a2a] rounded-xl p-1 mb-2 shadow-md mx-2">
-                <button v-for="item in pages" :key="item.value" @click="showPage = item.value" :disabled="unlockTab"
+                <button v-for="item in pages" :key="item.value" @click="pageCheckout(item.value)" :disabled="unlockTab"
                     :class="[
                         'flex-1 px-2 py-2 text-sm font-medium text-center rounded-lg transition-all duration-200 ',
                         showPage === item.value
@@ -37,12 +37,20 @@ import pictureOfNoCloud from '@/components/dataCenter/pictureOfNoCloud.vue'
 import calculateNDVI from '@/components/dataCenter/calculateNDVI.vue'
 import { type interactiveExplore } from '@/components/dataCenter/type'
 import * as MapOperation from '@/util/map/operation'
+import bus from '@/store/bus'
 
 
 const showPage = ref('explore')
 const regionConfig: Ref<interactiveExplore | null> = ref(null)
 const unlockTab = ref(true)
 const isPicking = ref(false)
+
+const pageCheckout = (tab: string) => {
+    if (tab != 'explore')
+        bus.emit('cleanAllGridPreviewLayer')
+
+    showPage.value = tab
+}
 
 const submitConfig = (config: interactiveExplore) => {
     unlockTab.value = false

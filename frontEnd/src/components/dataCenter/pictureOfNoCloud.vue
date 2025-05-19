@@ -64,7 +64,7 @@
                                                 <div class="result-info-value date-range">
                                                     <div class="date-item">{{
                                                         formatTime(props.regionConfig.dataRange[0], 'day')
-                                                    }}~
+                                                        }}~
                                                         {{ formatTime(props.regionConfig.dataRange[1], 'day')
                                                         }}</div>
                                                 </div>

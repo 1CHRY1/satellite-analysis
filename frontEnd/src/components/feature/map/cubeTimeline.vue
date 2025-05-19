@@ -10,7 +10,7 @@
                 </div>
             </div>
 
-            <div class="timeline-wrapper">
+            <div class="timeline-wrapper" @click="console.log(filteredImages)">
                 <button class="nav-button" @click="handleClick(activeIndex - 1)" :disabled="activeIndex <= 0">
                     <ChevronLeftIcon :size="24" />
                 </button>
@@ -43,7 +43,7 @@
         </div>
     </div>
 </template>
-  
+
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-vue-next'
@@ -103,6 +103,7 @@ const filteredImages = computed(() => {
     } else {
         images = multiImages.value as MultiImageInfoType[]
     }
+    console.log('all image', images)
 
     if (startDateFilter.value) {
         images = images.filter(item => new Date(item.time) >= new Date(startDateFilter.value));
@@ -112,10 +113,11 @@ const filteredImages = computed(() => {
         images = images.filter(item => new Date(item.time) <= new Date(endDateFilter.value));
     }
 
-    console.log('filteredImages', images);
-    const test = [...images, ...images, ...images]
+    console.log('filteredImages', images, images[0].time);
+    images.sort((a, b) => a.time.localeCompare(b.time))
+    const test = [...images]
 
-    return test;
+    return images;
 })
 
 // 监听筛选后的数据变化，重置活动索引
@@ -162,8 +164,13 @@ const setDateRange = () => {
             const firstDate = dates[0];
             const lastDate = dates[dates.length - 1];
 
+            const nextDay = new Date(lastDate);
+            nextDay.setDate(nextDay.getDate() + 1);
+
             minDate.value = firstDate.toISOString().split('T')[0];
-            maxDate.value = lastDate.toISOString().split('T')[0];
+            maxDate.value = nextDay.toISOString().split('T')[0];
+
+            console.log(firstDate, lastDate, minDate.value, maxDate.value, 157);
 
             // 只在初始化时设置筛选器的默认值
             if (!startDateFilter.value) {
@@ -187,6 +194,7 @@ const handleClick = async (index: number) => {
         if (items[index]) {
             const itemWidth = items[index].clientWidth;
             const trackWidth = timelineTrack.value.clientWidth;
+            // @ts-ignore
             const scrollPosition = items[index].offsetLeft - (trackWidth / 2) + (itemWidth / 2);
 
             timelineTrack.value.scrollTo({
@@ -241,6 +249,8 @@ const updateHandler = (_data: ImageInfoType[] | MultiImageInfoType[], _grid: Gri
         multiImages.value = _data as MultiImageInfoType[];
     }
 
+    console.log('updateHandler', singleImages.value, multiImages.value)
+
     startDateFilter.value = '';
     endDateFilter.value = '';
 
@@ -254,7 +264,7 @@ onMounted(() => {
     });
 })
 </script>
-  
+
 <style scoped>
 .timeline-container {
     display: flex;
@@ -473,4 +483,3 @@ onMounted(() => {
     }
 }
 </style>
-  
