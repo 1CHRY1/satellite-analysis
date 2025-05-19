@@ -1,5 +1,5 @@
 <template>
-    <Vue3DraggableResizable :draggable="true" :resizable="false" :initW="250">
+    <Vue3DraggableResizable :draggable="enableDraggable" :resizable="false" :initW="250">
         <div class="popup-content">
             <div class="grid-id">
                 <p>时空立方体编号: {{ gridID }}</p>
@@ -17,7 +17,8 @@
 
             <div class="band-selection">
                 <label for="sensor-select">传感器:</label>
-                <select id="sensor-select" v-model="selectedSensor" class="band-select">
+                <select id="sensor-select" v-model="selectedSensor" class="band-select"
+                    @change="handleSensorChange(selectedSensor)">
                     <option disabled value="">请选择</option>
                     <option v-for="sensor in sensors" :key="sensor" :value="sensor">
                         {{ sensor }}
@@ -25,7 +26,7 @@
                 </select>
             </div>
 
-            <div class="tabs">
+            <div class="tabs" v-show="showBandSelector">
                 <button class="tab-btn" :class="{ active: activeTab === 'single' }" @click="activeTab = 'single'">
                     单波段
                 </button>
@@ -34,7 +35,7 @@
                 </button>
             </div>
 
-            <div v-if="activeTab === 'single'" class="tab-content">
+            <div v-show="showBandSelector && activeTab === 'single'" class="tab-content">
                 <div class="band-selection">
                     <label for="band-select">波段:</label>
                     <select id="band-select" v-model="selectedBand" class="band-select">
@@ -46,7 +47,7 @@
                 </div>
             </div>
 
-            <div v-if="activeTab === 'rgb'" class="tab-content">
+            <div v-show="showBandSelector && activeTab === 'rgb'" class="tab-content">
                 <div class="band-selection">
                     <label for="r-band-select">R波段:</label>
                     <select id="r-band-select" v-model="selectedRBand" class="band-select">
@@ -55,15 +56,6 @@
                             {{ band }}
                         </option>
                     </select>
-                </div>
-                <div class="flex flex-row gap-2 justify-start items-center my-2">
-                    <label class="text-[#7eb3dd] w-2/5">拉伸范围:</label>
-                    <div class="flex flex-row gap-2 w-3/5 justify-evenly">
-                        <input type="text" v-model="showingImageStrech.r_min"
-                            class="w-[55px] bg-[#0d1526] text-white border border-[#2c3e50] rounded-lg px-1 py-1 focus:outline-none focus:border-[#3b82f6]" />
-                        <input type="text" v-model="showingImageStrech.r_max"
-                            class="w-[55px] bg-[#0d1526] text-white border border-[#2c3e50] rounded-lg px-1 py-1 focus:outline-none focus:border-[#3b82f6]" />
-                    </div>
                 </div>
                 <div class="band-selection">
                     <label for="g-band-select">G波段:</label>
@@ -74,15 +66,6 @@
                         </option>
                     </select>
                 </div>
-                <div class="flex flex-row gap-2 justify-start items-center my-2">
-                    <label class="text-[#7eb3dd] w-2/5">拉伸范围:</label>
-                    <div class="flex flex-row gap-2 w-3/5 justify-evenly">
-                        <input type="text" v-model="showingImageStrech.g_min"
-                            class="w-[55px] bg-[#0d1526] text-white border border-[#2c3e50] rounded-lg px-1 py-1 focus:outline-none focus:border-[#3b82f6]" />
-                        <input type="text" v-model="showingImageStrech.g_max"
-                            class="w-[55px] bg-[#0d1526] text-white border border-[#2c3e50] rounded-lg px-1 py-1 focus:outline-none focus:border-[#3b82f6]" />
-                    </div>
-                </div>
                 <div class="band-selection">
                     <label for="b-band-select">B波段:</label>
                     <select id="b-band-select" v-model="selectedBBand" class="band-select">
@@ -92,16 +75,11 @@
                         </option>
                     </select>
                 </div>
-                <div class="flex flex-row gap-2 justify-start items-center my-2">
-                    <label class="text-[#7eb3dd] w-2/5">拉伸范围:</label>
-
-                    <div class="flex flex-row gap-2 w-3/5 justify-evenly">
-                        <input type="text" v-model="showingImageStrech.b_min"
-                            class="w-[55px] bg-[#0d1526] text-white border border-[#2c3e50] rounded-lg px-1 py-1 focus:outline-none focus:border-[#3b82f6]" />
-                        <input type="text" v-model="showingImageStrech.b_max"
-                            class="w-[55px] bg-[#0d1526] text-white border border-[#2c3e50] rounded-lg px-1 py-1 focus:outline-none focus:border-[#3b82f6]" />
-                    </div>
-                </div>
+            </div>
+            <div class="grid grid-cols-[2fr_3fr] mr-1" @mousedown="handleMouseDown" @mouseup="handleMouseUp">
+                <span class="text-white sp">亮度拉伸:</span>
+                <a-slider :tip-formatter="scaleRateFormatter" v-model:value="scaleRate"
+                    @afterChange="onAfterScaleRateChange" />
             </div>
 
             <div class="btns">
@@ -128,6 +106,7 @@ import bus from '@/store/bus';
 import { map_removeGridPreviewLayer } from '@/util/map/operation'
 import Vue3DraggableResizable from 'vue3-draggable-resizable'
 import 'vue3-draggable-resizable/dist/Vue3DraggableResizable.css'
+import { ezStore } from '@/store';
 
 
 /////// Types //////////////////////////////////
@@ -185,7 +164,12 @@ const gridData = ref<GridData>({
 })
 
 const activeTab = ref('single')
-
+const showBandSelector = ref(true)
+const enableDraggable = ref(true)
+const scaleRate = ref(50)
+const scaleRateFormatter = (value: number) => {
+    return `${value}%`;
+}
 const showingImageStrech = reactive({
     r_min: 0,
     r_max: 5000,
@@ -194,6 +178,15 @@ const showingImageStrech = reactive({
     b_min: 0,
     b_max: 5000,
 })
+
+const handleMouseUp = () => enableDraggable.value = true
+
+const handleMouseDown = () => enableDraggable.value = false
+
+
+const onAfterScaleRateChange = (scale_rate: number) => {
+    console.log(scale_rate)
+}
 
 // Select options
 const gridID = computed(() => {
@@ -215,8 +208,17 @@ const resolutions = computed(() => {
     return ['全选', ...arr]
 })
 
+const handleSensorChange = (value) => {
+    if (value === '全选') {
+        showBandSelector.value = false
+    } else {
+        showBandSelector.value = true
+    }
+}
+
 const sensors = computed(() => {
     let result = new Set<string>()
+    result.add('全选')
     gridData.value.scenes.forEach((scene: Scene) => {
         if (selectedResolution.value != '全选' && scene.resolution == selectedResolution.value) {
             result.add(scene.sensorName)
@@ -249,9 +251,10 @@ const bands = computed(() => {
 })
 
 const canVisualize = computed(() => {
+    if (showBandSelector.value === false) return true
     if (activeTab.value === 'single') {
         return !!selectedBand.value
-    } else {
+    } else if (activeTab.value === 'rgb') {
         return !!selectedRBand.value && !!selectedGBand.value && !!selectedBBand.value
     }
 })
@@ -348,6 +351,11 @@ bus.on('update:gridPopupData', (info) => {
 })
 
 onMounted(() => {
+
+    if (!ezStore.get('statisticCache')) {
+        ezStore.set('statisticCache', new Map())
+        console.log('cache init')
+    }
     bus.on('closeTimeline', () => {
         selectedBand.value = ''
         selectedRBand.value = ''
@@ -374,6 +382,7 @@ onMounted(() => {
     padding-bottom: 0.75rem;
     border-bottom: 1px solid #1e3a5f;
     text-align: center;
+    cursor: move;
 }
 
 .grid-id p {
@@ -456,6 +465,13 @@ onMounted(() => {
 
 .tab-content {
     margin-top: 1rem;
+}
+
+.sp {
+    height: 2.5rem;
+    line-height: 2.5rem;
+    font-size: 1rem;
+    color: #a5d8ff;
 }
 
 .btns {
