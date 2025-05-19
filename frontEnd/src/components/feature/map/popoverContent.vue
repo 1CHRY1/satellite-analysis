@@ -17,8 +17,12 @@
 
             <div class="band-selection">
                 <label for="sensor-select">传感器:</label>
-                <select id="sensor-select" v-model="selectedSensor" class="band-select"
-                    @change="handleSensorChange(selectedSensor)">
+                <select
+                    id="sensor-select"
+                    v-model="selectedSensor"
+                    class="band-select"
+                    @change="handleSensorChange(selectedSensor)"
+                >
                     <option disabled value="">请选择</option>
                     <option v-for="sensor in sensors" :key="sensor" :value="sensor">
                         {{ sensor }}
@@ -27,10 +31,18 @@
             </div>
 
             <div class="tabs" v-show="showBandSelector">
-                <button class="tab-btn" :class="{ active: activeTab === 'single' }" @click="activeTab = 'single'">
+                <button
+                    class="tab-btn"
+                    :class="{ active: activeTab === 'single' }"
+                    @click="activeTab = 'single'"
+                >
                     单波段
                 </button>
-                <button class="tab-btn" :class="{ active: activeTab === 'rgb' }" @click="activeTab = 'rgb'">
+                <button
+                    class="tab-btn"
+                    :class="{ active: activeTab === 'rgb' }"
+                    @click="activeTab = 'rgb'"
+                >
                     三波段合成
                 </button>
             </div>
@@ -76,10 +88,17 @@
                     </select>
                 </div>
             </div>
-            <div class="grid grid-cols-[2fr_3fr] mr-1" @mousedown="handleMouseDown" @mouseup="handleMouseUp">
-                <span class="text-white sp">亮度拉伸:</span>
-                <a-slider :tip-formatter="scaleRateFormatter" v-model:value="scaleRate"
-                    @afterChange="onAfterScaleRateChange" />
+            <div
+                class="mr-1 grid grid-cols-[2fr_3fr]"
+                @mousedown="handleMouseDown"
+                @mouseup="handleMouseUp"
+            >
+                <span class="sp text-white">亮度拉伸:</span>
+                <a-slider
+                    :tip-formatter="scaleRateFormatter"
+                    v-model:value="scaleRate"
+                    @afterChange="onAfterScaleRateChange"
+                />
             </div>
 
             <div class="btns">
@@ -100,14 +119,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, type Ref, reactive } from 'vue';
+import { ref, computed, onMounted, type Ref, reactive } from 'vue'
 import { GalleryHorizontalIcon, Trash2Icon } from 'lucide-vue-next'
-import bus from '@/store/bus';
-import { map_removeGridPreviewLayer } from '@/util/map/operation'
+import bus from '@/store/bus'
+import { map_destroyGridRGBImageTileLayer } from '@/util/map/operation'
 import Vue3DraggableResizable from 'vue3-draggable-resizable'
 import 'vue3-draggable-resizable/dist/Vue3DraggableResizable.css'
-import { ezStore } from '@/store';
-
+import { ezStore } from '@/store'
 
 /////// Types //////////////////////////////////
 type Image = {
@@ -124,6 +142,12 @@ type Scene = {
     sensorName: string
     productName: string
     resolution: string
+    bandMapper: {
+        Red: string
+        Green: string
+        Blue: string
+        NIR: string
+    }
     images: Image[]
 }
 
@@ -168,7 +192,7 @@ const showBandSelector = ref(true)
 const enableDraggable = ref(true)
 const scaleRate = ref(50)
 const scaleRateFormatter = (value: number) => {
-    return `${value}%`;
+    return `${value}%`
 }
 const showingImageStrech = reactive({
     r_min: 0,
@@ -179,10 +203,9 @@ const showingImageStrech = reactive({
     b_max: 5000,
 })
 
-const handleMouseUp = () => enableDraggable.value = true
+const handleMouseUp = () => (enableDraggable.value = true)
 
-const handleMouseDown = () => enableDraggable.value = false
-
+const handleMouseDown = () => (enableDraggable.value = false)
 
 const onAfterScaleRateChange = (scale_rate: number) => {
     console.log(scale_rate)
@@ -190,8 +213,8 @@ const onAfterScaleRateChange = (scale_rate: number) => {
 
 // Select options
 const gridID = computed(() => {
-    const { rowId, columnId, resolution } = gridData.value;
-    return `${rowId}-${columnId}-${resolution}`;
+    const { rowId, columnId, resolution } = gridData.value
+    return `${rowId}-${columnId}-${resolution}`
 })
 
 const resolutions = computed(() => {
@@ -269,81 +292,112 @@ const selectedBBand = ref('')
 
 // Handle visualization
 const handleVisualize = () => {
-    const { rowId, columnId, resolution } = gridData.value;
+    const { rowId, columnId, resolution } = gridData.value
     const gridInfo: GridInfoType = {
         rowId,
         columnId,
-        resolution
+        resolution,
     }
-
-    if (activeTab.value === 'single') {
-        // Single band visualization
-        const imageData: ImageInfoType[] = []
-        for (let scene of gridData.value.scenes) {
-            if (scene.sensorName == selectedSensor.value) {
-                scene.images.forEach((bandImg: Image) => {
-                    if (bandImg.band === selectedBand.value) {
-                        imageData.push({
-                            tifFullPath: bandImg.bucket + '/' + bandImg.tifPath,
-                            sceneId: scene.sceneId,
-                            time: scene.sceneTime,
-                        })
-                    }
-                })
-            }
-        }
-
-        bus.emit('cubeVisualize', imageData, gridInfo, 'single')
-
-    } else {
-
+    // 所有的它都想看
+    if (showBandSelector.value === false) {
         const rgbImageData: MultiImageInfoType[] = []
 
-        const filteredScene = gridData.value.scenes.filter(scene => {
-            if (selectedResolution.value != '全选')
-                return scene.resolution === selectedResolution.value && scene.sensorName === selectedSensor.value
-            else
-                return scene.sensorName === selectedSensor.value
-        })
+        const gridAllScenes = gridData.value.scenes
 
         // Process each band (R, G, B)
-        for (let scene of filteredScene) {
-
+        for (let sceneInfo of gridAllScenes) {
             let redPath = ''
             let greenPath = ''
             let bluePath = ''
 
-            scene.images.forEach((bandImg: Image) => {
-                if (bandImg.band === selectedRBand.value) {
+            // console.log(sceneInfo.bandMapper)
+            for (let bandImg of sceneInfo.images) {
+                // 后端返回的BandMapper如果是单波段的话，Red Green 和 Blue相同
+                if (sceneInfo.bandMapper.Red === bandImg.band) {
                     redPath = bandImg.bucket + '/' + bandImg.tifPath
                 }
-                else if (bandImg.band === selectedGBand.value) {
+                if (sceneInfo.bandMapper.Green === bandImg.band) {
                     greenPath = bandImg.bucket + '/' + bandImg.tifPath
                 }
-                else if (bandImg.band === selectedBBand.value) {
+                if (sceneInfo.bandMapper.Blue === bandImg.band) {
                     bluePath = bandImg.bucket + '/' + bandImg.tifPath
                 }
-            })
+            }
 
             rgbImageData.push({
-                sceneId: scene.sceneId,
-                time: scene.sceneTime,
+                sceneId: sceneInfo.sceneId,
+                time: sceneInfo.sceneTime,
                 redPath: redPath,
                 greenPath: greenPath,
-                bluePath: bluePath
+                bluePath: bluePath,
+            })
+        }
+        bus.emit('cubeVisualize', rgbImageData, gridInfo, scaleRate.value, 'rgb')
+    } else {
+        if (activeTab.value === 'single') {
+            // Single band visualization
+            const imageData: ImageInfoType[] = []
+            for (let scene of gridData.value.scenes) {
+                if (scene.sensorName == selectedSensor.value) {
+                    scene.images.forEach((bandImg: Image) => {
+                        if (bandImg.band === selectedBand.value) {
+                            imageData.push({
+                                tifFullPath: bandImg.bucket + '/' + bandImg.tifPath,
+                                sceneId: scene.sceneId,
+                                time: scene.sceneTime,
+                            })
+                        }
+                    })
+                }
+            }
+
+            bus.emit('cubeVisualize', imageData, gridInfo, scaleRate, 'single')
+        } else {
+            const rgbImageData: MultiImageInfoType[] = []
+
+            const filteredScene = gridData.value.scenes.filter((scene) => {
+                if (selectedResolution.value != '全选')
+                    return (
+                        scene.resolution === selectedResolution.value &&
+                        scene.sensorName === selectedSensor.value
+                    )
+                else return scene.sensorName === selectedSensor.value
             })
 
+            // Process each band (R, G, B)
+            for (let scene of filteredScene) {
+                let redPath = ''
+                let greenPath = ''
+                let bluePath = ''
+
+                scene.images.forEach((bandImg: Image) => {
+                    if (bandImg.band === selectedRBand.value) {
+                        redPath = bandImg.bucket + '/' + bandImg.tifPath
+                    } else if (bandImg.band === selectedGBand.value) {
+                        greenPath = bandImg.bucket + '/' + bandImg.tifPath
+                    } else if (bandImg.band === selectedBBand.value) {
+                        bluePath = bandImg.bucket + '/' + bandImg.tifPath
+                    }
+                })
+
+                rgbImageData.push({
+                    sceneId: scene.sceneId,
+                    time: scene.sceneTime,
+                    redPath: redPath,
+                    greenPath: greenPath,
+                    bluePath: bluePath,
+                })
+            }
+            bus.emit('cubeVisualize', rgbImageData, gridInfo, scaleRate, 'rgb')
         }
-        bus.emit('cubeVisualize', rgbImageData, gridInfo, 'rgb')
     }
 
     bus.emit('openTimeline')
 }
 
 const handleRemove = () => {
-    const { rowId, columnId, resolution } = gridData.value;
-    const prefix = rowId + '' + columnId
-    map_removeGridPreviewLayer(prefix)
+
+    map_destroyGridRGBImageTileLayer(gridData.value)
 }
 
 bus.on('update:gridPopupData', (info) => {
@@ -351,7 +405,6 @@ bus.on('update:gridPopupData', (info) => {
 })
 
 onMounted(() => {
-
     if (!ezStore.get('statisticCache')) {
         ezStore.set('statisticCache', new Map())
         console.log('cache init')

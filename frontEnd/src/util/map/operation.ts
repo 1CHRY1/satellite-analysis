@@ -376,7 +376,11 @@ export function map_destroyImagePreviewLayer(): void {
         ezStore.delete('image-preview-source')
     })
 }
-
+type GridInfoType = {
+    rowId: number
+    columnId: number
+    resolution: number
+}
 type RGBTileLayerParams = {
     redPath: string
     greenPath: string
@@ -425,6 +429,67 @@ export function map_destroyRGBImageTileLayer() {
             m.removeSource(srcId)
         }
     })
+}
+export function map_addGridRGBImageTileLayer(gridInfo: GridInfoType, param: RGBTileLayerParams) {
+    const prefix = '' + gridInfo.rowId + gridInfo.columnId
+    const id = prefix + uid()
+    const srcId = id + '-source'
+
+    if (!ezStore.get('grid-image-layer-map')) {
+        ezStore.set('grid-image-layer-map', new window.Map())
+    }
+
+    mapManager.withMap((m) => {
+
+        const gridImageLayerMap = ezStore.get('grid-image-layer-map')
+        for (let key of gridImageLayerMap.keys()) {
+            if (key.startsWith(prefix)) {
+                const oldId = key
+                const oldSrcId = oldId + '-source'
+                if (m.getLayer(id) && m.getSource(oldSrcId)) {
+                    m.removeLayer(oldId)
+                    m.removeSource(oldSrcId)
+                }
+            }
+        }
+
+        const tileUrl = getGridRGBCompositeUrl(gridInfo, param)
+
+        m.addSource(srcId, {
+            type: 'raster',
+            tiles: [
+                tileUrl
+            ]
+        })
+        m.addLayer({
+            id: id,
+            type: 'raster',
+            source: srcId,
+        })
+
+    })
+
+}
+export function map_destroyGridRGBImageTileLayer(gridInfo: GridInfoType) {
+    const prefix = '' + gridInfo.rowId + gridInfo.columnId
+    const gridImageLayerMap = ezStore.get('grid-image-layer-map')
+
+    mapManager.withMap((m) => {
+
+        for (let key of gridImageLayerMap.keys()) {
+            if (key.startsWith(prefix)) {
+                const oldId = key
+                const oldSrcId = oldId + '-source'
+                if (m.getLayer(oldId) && m.getSource(oldSrcId)) {
+                    m.removeLayer(oldId)
+                    m.removeSource(oldSrcId)
+                }
+            }
+        }
+
+    })
+
+
 }
 
 
