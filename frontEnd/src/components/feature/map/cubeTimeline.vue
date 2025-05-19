@@ -165,7 +165,7 @@ const setDateRange = () => {
             const lastDate = dates[dates.length - 1];
 
             const nextDay = new Date(lastDate);
-            nextDay.setDate(nextDay.getDate() + 1);
+            nextDay.setDate(nextDay.getDate() + 2);
 
             minDate.value = firstDate.toISOString().split('T')[0];
             maxDate.value = nextDay.toISOString().split('T')[0];

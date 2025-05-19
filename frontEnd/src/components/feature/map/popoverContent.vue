@@ -374,6 +374,7 @@ onMounted(() => {
     background-repeat: no-repeat;
     background-position: right 0.625rem center;
     padding-right: 2rem;
+    max-height: 350px;
 }
 
 .band-select:focus {
