@@ -57,10 +57,17 @@ onMounted(() => {
     bus.on('closeTimeline', () => {
         cubeTimelineShow.value = false
     })
-    bus.on('cleanAllGridPreviewLayer', () => {
-        MapOperation.map_removeGridPreviewLayer('all')
-    })
+    // bus.on('cleanAllGridPreviewLayer', () => {
+    //     MapOperation.map_removeGridPreviewLayer('all')
+    // })
 
+    bus.on('cleanAllLayer', ()=>{
+        MapOperation.map_destroyGridLayer()
+        MapOperation.map_destroyRGBImageTileLayer()
+        MapOperation.map_destroyImagePreviewLayer()
+        MapOperation.map_destroySceneBoxLayer()
+        MapOperation.map_destroyImagePolygon()
+    })
 })
 
 onUnmounted(() => {
@@ -85,4 +92,15 @@ onUnmounted(() => {
     /* border-top-color: rgba(0, 0, 0, 0); */
     border-color: transparent;
 }
+
+:deep(.mapboxgl-popup-close-button){
+    font-size: 20px;
+    margin-top: 12px;
+}
+
+
+:deep(.vdr-container.active){
+    border: none;
+}
+
 </style>

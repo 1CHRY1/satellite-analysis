@@ -392,7 +392,7 @@ type RGBTileLayerParams = {
     b_min: number
     b_max: number
 }
-export function map_addRGBImageTileLayer(param: RGBTileLayerParams) {
+export function map_addRGBImageTileLayer(param: RGBTileLayerParams, cb?: () => void) {
 
     const id = 'rgb-image-tile-layer'
     const srcId = id + '-source'
@@ -417,6 +417,10 @@ export function map_addRGBImageTileLayer(param: RGBTileLayerParams) {
             source: srcId,
         })
 
+        setTimeout(() => {
+            cb && cb()
+        }, 1000);
+
     })
 
 }
@@ -430,10 +434,11 @@ export function map_destroyRGBImageTileLayer() {
         }
     })
 }
-export function map_addGridRGBImageTileLayer(gridInfo: GridInfoType, param: RGBTileLayerParams) {
+export function map_addGridRGBImageTileLayer(gridInfo: GridInfoType, param: RGBTileLayerParams, cb?: () => void) {
     const prefix = '' + gridInfo.rowId + gridInfo.columnId
     const id = prefix + uid()
     const srcId = id + '-source'
+    console.log(prefix)
 
     if (!ezStore.get('grid-image-layer-map')) {
         ezStore.set('grid-image-layer-map', new window.Map())
@@ -443,10 +448,10 @@ export function map_addGridRGBImageTileLayer(gridInfo: GridInfoType, param: RGBT
 
         const gridImageLayerMap = ezStore.get('grid-image-layer-map')
         for (let key of gridImageLayerMap.keys()) {
-            if (key.startsWith(prefix)) {
+            if (key.includes(prefix)) {
                 const oldId = key
                 const oldSrcId = oldId + '-source'
-                if (m.getLayer(id) && m.getSource(oldSrcId)) {
+                if (m.getLayer(oldId) && m.getSource(oldSrcId)) {
                     m.removeLayer(oldId)
                     m.removeSource(oldSrcId)
                 }
@@ -466,6 +471,15 @@ export function map_addGridRGBImageTileLayer(gridInfo: GridInfoType, param: RGBT
             type: 'raster',
             source: srcId,
         })
+
+        gridImageLayerMap.set(id, {
+            id: id,
+            source: srcId
+        })
+
+        setTimeout(() => {
+            cb && cb()
+        }, 1000);
 
     })
 
@@ -805,7 +819,7 @@ export function map_addSceneBoxLayer(sceneBoxGeojson): void {
             type: 'line',
             source: source,
             paint: {
-                'line-color': '#f08800',
+                'line-color': '#ff6506',
                 'line-width': 3
             },
         })

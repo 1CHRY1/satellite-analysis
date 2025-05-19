@@ -75,6 +75,7 @@ import { grid2Coordinates } from '@/util/map/gridMaker'
 import bus from '@/store/bus'
 import { ezStore } from '@/store'
 import * as MapOperation from '@/util/map/operation'
+import { message } from 'ant-design-vue'
 // import bandMergeHelper from '@/util/image/util'
 
 type ImageInfoType = {
@@ -147,7 +148,7 @@ const filteredImages = computed(() => {
         images = images.filter((item) => new Date(item.time) <= new Date(endDateFilter.value))
     }
 
-    console.log('filteredImages', images, images[0].time)
+    // console.log('filteredImages', images, images[0].time)
     images.sort((a, b) => a.time.localeCompare(b.time))
 
     return images
@@ -183,7 +184,8 @@ const timeFormat = (timeString: string) => {
 const applyDateFilter = () => {
     // 如果活动索引超出了筛选后的范围，重置为第一个
     if (activeIndex.value >= filteredImages.value.length || activeIndex.value < 0) {
-        activeIndex.value = filteredImages.value.length > 0 ? 0 : -1
+        // activeIndex.value = filteredImages.value.length > 0 ? 0 : -1
+        activeIndex.value = -1
 
         // 如果有有效的活动索引，触发点击事件以显示对应的图像
         if (activeIndex.value >= 0) {
@@ -225,6 +227,8 @@ const setDateRange = () => {
 const handleClick = async (index: number) => {
     if (index < 0 || index >= filteredImages.value.length) return
 
+    const stopLoading = message.loading('正在加载影像...')
+
     activeIndex.value = index
 
     // 确保选中的点在视图中居中
@@ -246,22 +250,6 @@ const handleClick = async (index: number) => {
     const currentImage = filteredImages.value[index]
 
     if (visualMode.value === 'single') {
-        // const img = currentImage as ImageInfoType
-
-        // const imgB64Path = await getGridImage({
-        //     rowId: grid.value.rowId,
-        //     columnId: grid.value.columnId,
-        //     resolution: grid.value.resolution,
-        //     tifFullPath: img.tifFullPath,
-        // })
-        // const gridCoords = grid2Coordinates(
-        //     grid.value.columnId,
-        //     grid.value.rowId,
-        //     grid.value.resolution,
-        // )
-        // const prefix = grid.value.rowId + '' + grid.value.columnId
-        // MapOperation.map_addGridPreviewLayer(imgB64Path, gridCoords, prefix)
-
         const img = currentImage as ImageInfoType
 
         let redPath = img.tifFullPath
@@ -298,7 +286,7 @@ const handleClick = async (index: number) => {
         }
 
         console.log(min_r, max_r, min_g, max_g, min_b, max_b)
-
+        console.log(scaleRate.value)
         const scale = 1.0 - scaleRate.value / 100
         // 基于 scale rate 进行拉伸
         showingImageStrech.r_min = Math.round(min_r)
@@ -362,14 +350,18 @@ const handleClick = async (index: number) => {
         showingImageStrech.b_min = Math.round(min_b)
         showingImageStrech.b_max = Math.round(min_b + (max_b - min_b) * scale)
         console.log(showingImageStrech)
-        MapOperation.map_addGridRGBImageTileLayer(grid.value, {
-            redPath,
-            greenPath,
-            bluePath,
-            ...showingImageStrech,
-        })
-
+        MapOperation.map_addGridRGBImageTileLayer(
+            grid.value,
+            {
+                redPath,
+                greenPath,
+                bluePath,
+                ...showingImageStrech,
+            },
+            stopLoading,
+        )
     }
+
 }
 
 const updateHandler = (
