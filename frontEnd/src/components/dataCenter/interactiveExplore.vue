@@ -895,12 +895,12 @@ const showImageBySensorAndSelect = async (image: any, imageName: string) => {
     }
     console.log('传入的', image)
     let allGridScene = ezStore.get('sceneGridsRes')
+    console.log('所有格子的景', allGridScene)
     const imageId = image.sceneIds[image.sceneNames.indexOf(imageName)]
-
     const sceneInfo = allGridScene
         .flatMap((grid) => grid.scenes || [])
         .find((scene) => scene.sceneId === imageId)
-
+    console.log('selectedSceneInfo ', sceneInfo)
     image.selectedSceneInfo = sceneInfo
 
     let geojson = await getSceneGeojson(sceneInfo)
