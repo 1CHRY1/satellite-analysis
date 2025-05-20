@@ -39,7 +39,7 @@
                                     请确定您要研究{{ selectedTask }}的区域：
                                     <div v-if="selectedTask === '光谱分析'" class="flex items-center gap-2 mt-2 w-full">
                                         <label class="text-white">影像选择：</label>
-                                        <select v-model="selectedScene"
+                                        <select v-model="selectedSceneId" @change="showImageBBox"
                                             class="bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-3 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6] max-w-[calc(100%-90px)] truncate">
                                             <option disabled selected value="">请选择影像</option>
                                             <option v-for="image in props.regionConfig.images" :key="image.sceneName"
@@ -167,9 +167,9 @@ import { ref, type PropType, computed, type Ref, nextTick, onUpdated, onMounted,
 import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'
 import { type interactiveExplore } from '@/components/dataCenter/type'
 import { formatTime } from '@/util/common'
-import { getNdviPoint, getCaseStatus, getCaseResult, getSpectrum } from '@/api/http/satellite-data'
+import { getNdviPoint, getCaseStatus, getCaseResult, getSpectrum, getBoundaryBySceneId } from '@/api/http/satellite-data'
 import * as echarts from 'echarts'
-
+import { getSceneGeojson } from '@/api/http/satellite-data/visualize.api'
 import * as MapOperation from '@/util/map/operation'
 import { useGridStore, ezStore } from '@/store'
 import {
@@ -256,18 +256,41 @@ const selectCal = async () => {
     }
 }
 
-const selectedScene = ref('')
+const showImageBBox = async () => {
+    let getDescriptionRes = await getBoundaryBySceneId(selectedSceneId.value)
+    const FeatureCollectionBoundary: GeoJSON.FeatureCollection = {
+        type: "FeatureCollection",
+        features: [getDescriptionRes]
+    }
+    try {
+        MapOperation.map_addPolygonLayer({
+            geoJson: FeatureCollectionBoundary,
+            id: 'UniqueSceneLayer',
+            lineColor: '#8fffff',
+            fillColor: '#a4ffff',
+            fillOpacity: 0.2,
+        })
+        ElMessage.success('已加影像边界，请在影像与行政区的交集内选点。')
+    } catch (e) {
+        console.error("有错误找后端", e)
+        ElMessage.error('加载影像边界失败。')
+    }
+
+}
+
+const selectedSceneId = ref('')
+
 const calSpectrum = async () => {
     if (pickedPoint.value.length === 0) {
         ElMessage.warning('请先选择您要计算的区域')
         return
     }
-    if (selectedScene.value === '') {
+    if (selectedSceneId.value === '') {
         ElMessage.warning('请先选择您要计算的影像')
         return
     }
     let spectrumParam = {
-        sceneId: selectedScene.value,
+        sceneId: selectedSceneId.value,
         point: [pickedPoint.value[1], pickedPoint.value[0]]
     }
     let getSpectrumRes = await getSpectrum(spectrumParam)
@@ -311,7 +334,7 @@ const calSpectrum = async () => {
     }
 
     // 找到影像名称
-    const selectedImage = props.regionConfig.images.find(image => image.sceneId = selectedScene.value)
+    const selectedImage = props.regionConfig.images.find(image => image.sceneId = selectedSceneId.value)
     console.log(selectedImage);
 
 
@@ -404,7 +427,6 @@ const calNDVI = async () => {
         let NDVIData = res.data.NDVI
         let xData = NDVIData.map(data => data.sceneTime)
         let yData = NDVIData.map(data => data.value)
-        console.log(pickedPoint.value, 1111);
 
         drawData.value.push({
             yData,
@@ -521,6 +543,19 @@ onMounted(() => {
         })
     })
 })
+onBeforeUnmount(() => {
+    const map = ezStore.get('map')
+
+    const id = 'UniqueSceneLayer'
+    const fillId = `${id}-fill`
+    const lineId = `${id}-line`
+    const sourceId = `${id}-source`
+
+    if (map.getLayer(fillId)) map.removeLayer(fillId)
+    if (map.getLayer(lineId)) map.removeLayer(lineId)
+    if (map.getSource(sourceId)) map.removeSource(sourceId)
+})
+
 </script>
 
 <style scoped src="./tabStyle.css">
