@@ -7,7 +7,7 @@ import { CN_Bounds } from './constant'
 // import { watch } from 'vue'
 import type { polygonGeometry } from '../share.type'
 import { ezStore, useGridStore } from '@/store'
-
+import Antd from 'ant-design-vue'
 import { createApp, type ComponentInstance, ref, type Ref, reactive } from 'vue'
 import PopoverContent, { type GridData } from '@/components/feature/map/popoverContent.vue'
 import bus from '@/store/bus'
@@ -180,7 +180,7 @@ function createPopoverContent() {
 
     const app = createApp(PopoverContent, {
         // gridData: gridDataRef,
-    })
+    }).use(Antd)
     app.mount('#popover-content') as ComponentInstance<typeof PopoverContent>
     return div
 }
@@ -192,17 +192,19 @@ function createPopoverContent() {
 export function map_addPolygonLayer(options: {
     geoJson: GeoJSON.FeatureCollection
     id: string
+    showFill?: boolean
     lineColor?: string
     fillColor?: string
     fillOpacity?: number
     onClick?: (feature: GeoJSON.Feature) => void
+
 }) {
     const {
         geoJson,
         id,
         lineColor = '#00FFFF',
         fillColor = '#00FFFF',
-        fillOpacity = 0.2,
+        fillOpacity = 0.05,
         onClick,
     } = options
 
@@ -222,6 +224,7 @@ export function map_addPolygonLayer(options: {
             data: geoJson,
         })
 
+        // if (options.showFill)
         // 添加填充层
         map.addLayer({
             id: fillId,
@@ -240,7 +243,7 @@ export function map_addPolygonLayer(options: {
             source: sourceId,
             paint: {
                 'line-color': lineColor,
-                'line-width': 1,
+                'line-width': 4,
             },
         })
 
@@ -373,7 +376,11 @@ export function map_destroyImagePreviewLayer(): void {
         ezStore.delete('image-preview-source')
     })
 }
-
+type GridInfoType = {
+    rowId: number
+    columnId: number
+    resolution: number
+}
 type RGBTileLayerParams = {
     redPath: string
     greenPath: string
@@ -385,7 +392,7 @@ type RGBTileLayerParams = {
     b_min: number
     b_max: number
 }
-export function map_addRGBImageTileLayer(param: RGBTileLayerParams) {
+export function map_addRGBImageTileLayer(param: RGBTileLayerParams, cb?: () => void) {
 
     const id = 'rgb-image-tile-layer'
     const srcId = id + '-source'
@@ -397,7 +404,6 @@ export function map_addRGBImageTileLayer(param: RGBTileLayerParams) {
         }
 
         const tileUrl = getSceneRGBCompositeTileUrl(param)
-        console.log(tileUrl)
 
         m.addSource(srcId, {
             type: 'raster',
@@ -411,7 +417,92 @@ export function map_addRGBImageTileLayer(param: RGBTileLayerParams) {
             source: srcId,
         })
 
+        setTimeout(() => {
+            cb && cb()
+        }, 1000);
+
     })
+
+}
+export function map_destroyRGBImageTileLayer() {
+    const id = 'rgb-image-tile-layer'
+    const srcId = id + '-source'
+    mapManager.withMap((m) => {
+        if (m.getLayer(id) && m.getSource(srcId)) {
+            m.removeLayer(id)
+            m.removeSource(srcId)
+        }
+    })
+}
+export function map_addGridRGBImageTileLayer(gridInfo: GridInfoType, param: RGBTileLayerParams, cb?: () => void) {
+    const prefix = '' + gridInfo.rowId + gridInfo.columnId
+    const id = prefix + uid()
+    const srcId = id + '-source'
+    console.log(prefix)
+
+    if (!ezStore.get('grid-image-layer-map')) {
+        ezStore.set('grid-image-layer-map', new window.Map())
+    }
+
+    mapManager.withMap((m) => {
+
+        const gridImageLayerMap = ezStore.get('grid-image-layer-map')
+        for (let key of gridImageLayerMap.keys()) {
+            if (key.includes(prefix)) {
+                const oldId = key
+                const oldSrcId = oldId + '-source'
+                if (m.getLayer(oldId) && m.getSource(oldSrcId)) {
+                    m.removeLayer(oldId)
+                    m.removeSource(oldSrcId)
+                }
+            }
+        }
+
+        const tileUrl = getGridRGBCompositeUrl(gridInfo, param)
+
+        m.addSource(srcId, {
+            type: 'raster',
+            tiles: [
+                tileUrl
+            ]
+        })
+        m.addLayer({
+            id: id,
+            type: 'raster',
+            source: srcId,
+        })
+
+        gridImageLayerMap.set(id, {
+            id: id,
+            source: srcId
+        })
+
+        setTimeout(() => {
+            cb && cb()
+        }, 1000);
+
+    })
+
+}
+export function map_destroyGridRGBImageTileLayer(gridInfo: GridInfoType) {
+    const prefix = '' + gridInfo.rowId + gridInfo.columnId
+    const gridImageLayerMap = ezStore.get('grid-image-layer-map')
+
+    mapManager.withMap((m) => {
+
+        for (let key of gridImageLayerMap.keys()) {
+            if (key.startsWith(prefix)) {
+                const oldId = key
+                const oldSrcId = oldId + '-source'
+                if (m.getLayer(oldId) && m.getSource(oldSrcId)) {
+                    m.removeLayer(oldId)
+                    m.removeSource(oldSrcId)
+                }
+            }
+        }
+
+    })
+
 
 }
 
@@ -590,8 +681,7 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
                     '#FF0000',
                     /* default */ 'rgba(0,0,0,0)',
                 ],
-                // 'fill-opacity': 0.3,
-                'fill-opacity': ['coalesce', ['to-number', ['get', 'opacity']], 0.2],
+                'fill-opacity': 0.3,
             },
         })
 
@@ -628,6 +718,250 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
         ezStore.set('grid-layer-source-id', srcId)
     })
 }
+export function map_addGridLayer_coverOpacity(gridGeoJson: GeoJSON.FeatureCollection): void {
+    const id = 'grid-layer'
+    const fillId = id + '-fill'
+    const lineId = id + '-line'
+    const highlightId = id + '-highlight'
+    const srcId = id + '-source'
+
+    mapManager.withMap((m) => {
+        ezStore.set('map', m)
+        // Add a popup to show grid info
+        if (!ezStore.get('gridPopup')) {
+            const popup = new Popup({
+                closeButton: false,
+                closeOnMove: false,
+                closeOnClick: true,
+            })
+            popup.on('close', () => {
+                bus.emit('closeTimeline')
+                const id = 'grid-layer'
+                const highlightId = id + '-highlight'
+                ezStore.get('map').setFilter(highlightId, ['in', 'id', ''])
+            })
+            const dom = createPopoverContent()
+            popup.setDOMContent(dom).addTo(m)
+
+            ezStore.set('gridPopup', popup)
+        }
+
+        // Add a geojson source
+        m.addSource(srcId, {
+            type: 'geojson',
+            data: gridGeoJson,
+        })
+        // Add a line layer for **grid line visualization**
+        m.addLayer({
+            id: lineId,
+            type: 'line',
+            source: srcId,
+            paint: {
+                'line-color': '#F00000',
+                'line-width': 1,
+                'line-opacity': 0.3,
+            },
+        })
+        // Add a invisible fill layer for **grid picking**
+        m.addLayer({
+            id: fillId,
+            type: 'fill',
+            source: srcId,
+            paint: {
+                'fill-color': '#00FFFF',
+                'fill-opacity': ['coalesce', ['to-number', ['get', 'opacity']], 0.01],
+            },
+        })
+
+        // Add a filterable fill layer for **grid highlighting**
+        // const nowSelectedGrids = Array.from(gridStore.selectedGrids) || ['']
+        m.addLayer({
+            id: highlightId,
+            type: 'fill',
+            source: srcId,
+            paint: {
+                // 'fill-color': '#FF9900',
+                'fill-color': '#0000FF',
+                'fill-opacity': 0.3,
+            },
+            // filter: ['in', 'id', ...nowSelectedGrids],
+            filter: ['in', 'id', ''],
+        })
+
+        // Add a click event listener to the invisible fill layer
+        m.on('contextmenu', fillId, grid_fill_click_handler)
+
+        // ezStore.set('grid-layer-cancel-watch', cancelWatch)
+        ezStore.set('grid-layer-fill-id', fillId)
+        ezStore.set('grid-layer-line-id', lineId)
+        ezStore.set('grid-layer-highlight-id', highlightId)
+        ezStore.set('grid-layer-source-id', srcId)
+    })
+}
+
+export function map_addSceneBoxLayer(sceneBoxGeojson): void {
+
+    const id = 'scene-box-layer'
+    const source = id + '-source'
+
+    const bbox = sceneBoxGeojson.bbox
+    mapManager.withMap((m) => {
+
+        m.getLayer(id) && m.removeLayer(id)
+        m.getSource(source) && m.removeSource(source)
+
+        m.addSource(source, {
+            type: 'geojson',
+            data: sceneBoxGeojson,
+        })
+        m.addLayer({
+            id: id,
+            type: 'line',
+            source: source,
+            paint: {
+                'line-color': '#ff6506',
+                'line-width': 3
+            },
+        })
+
+        if (bbox) {
+            m.fitBounds([
+                [bbox[0], bbox[1]],
+                [bbox[2], bbox[3]],
+            ], {
+                padding: 50,
+                duration: 1000,
+            })
+        }
+    })
+}
+
+export function map_destroySceneBoxLayer(): void {
+
+    const id = 'scene-box-layer'
+    const source = id + '-source'
+    mapManager.withMap((m) => {
+
+        m.getLayer(id) && m.removeLayer(id)
+        m.getSource(source) && m.removeSource(source)
+
+    })
+}
+
+// export function map_addGridCoverLayer(gridGeoJson: GeoJSON.FeatureCollection){
+//     const id = 'grid-layer'
+//     const fillId = id + '-fill'
+//     const lineId = id + '-line'
+//     const highlightId = id + '-highlight'
+//     const srcId = id + '-source'
+
+//     mapManager.withMap((m) => {
+//         ezStore.set('map', m)
+//         // Add a popup to show grid info
+//         if (!ezStore.get('gridPopup')) {
+//             const popup = new Popup({
+//                 closeButton: false,
+//                 closeOnMove: false,
+//                 closeOnClick: true,
+//             })
+//             popup.on('close', () => {
+//                 bus.emit('closeTimeline')
+//                 const id = 'grid-layer'
+//                 const highlightId = id + '-highlight'
+//                 ezStore.get('map').setFilter(highlightId, ['in', 'id', ''])
+//             })
+//             const dom = createPopoverContent()
+//             popup.setDOMContent(dom).addTo(m)
+
+//             ezStore.set('gridPopup', popup)
+//         }
+
+//         // Add a geojson source
+//         m.addSource(srcId, {
+//             type: 'geojson',
+//             data: gridGeoJson,
+//         })
+//         // Add a line layer for **grid line visualization**
+//         m.addLayer({
+//             id: lineId,
+//             type: 'line',
+//             source: srcId,
+//             paint: {
+//                 'line-color': '#F00000',
+//                 'line-width': 1,
+//                 'line-opacity': 0.3,
+//             },
+//         })
+//         // Add a invisible fill layer for **grid picking**
+//         // 这是之前的绘制方案，我先注释，确定没问题就可以删除了
+//         // 绘制的效果是有数据就半透明，没数据就透明
+//         // m.addLayer({
+//         //     id: fillId,
+//         //     type: 'fill',
+//         //     source: srcId,
+//         //     paint: {
+//         //         'fill-color': '#00FFFF',
+//         //         'fill-opacity': ['coalesce', ['to-number', ['get', 'opacity']], 0.01],
+//         //     },
+//         // })
+//         m.addLayer({
+//             id: fillId,
+//             type: 'fill',
+//             source: srcId,
+//             paint: {
+//                 'fill-color': [
+//                     'match',
+//                     ['get', 'source'],
+//                     'demotic1m',
+//                     '#00FFFF',
+//                     'demotic2m',
+//                     // '#FFFF00',黄色
+//                     '#00FF00',
+//                     'international',
+//                     '#FFA500',
+//                     'radar',
+//                     '#FF0000',
+//                     /* default */ 'rgba(0,0,0,0)',
+//                 ],
+//                 // 'fill-opacity': 0.3,
+//                 'fill-opacity': ['coalesce', ['to-number', ['get', 'opacity']], 0.01],
+//             },
+//         })
+
+//         // Add a filterable fill layer for **grid highlighting**
+//         // const nowSelectedGrids = Array.from(gridStore.selectedGrids) || ['']
+//         m.addLayer({
+//             id: highlightId,
+//             type: 'fill',
+//             source: srcId,
+//             paint: {
+//                 // 'fill-color': '#FF9900',
+//                 'fill-color': '#0000FF',
+//                 'fill-opacity': 0.3,
+//             },
+//             // filter: ['in', 'id', ...nowSelectedGrids],
+//             filter: ['in', 'id', ''],
+//         })
+
+//         // // Add a click event listener to the invisible fill layer
+//         m.on('contextmenu', fillId, grid_fill_click_handler)
+//         // // Keep Watching gridStore.selectedGrids and update the highlight layer
+//         // const cancelWatch = watch(
+//         //     () => gridStore.selectedGrids,
+//         //     () => {
+//         //         const selectedGrids = Array.from(gridStore.selectedGrids) || ['']
+//         //         m.setFilter(highlightId, ['in', 'id', ...selectedGrids])
+//         //     },
+//         // )
+
+//         // ezStore.set('grid-layer-cancel-watch', cancelWatch)
+//         ezStore.set('grid-layer-fill-id', fillId)
+//         ezStore.set('grid-layer-line-id', lineId)
+//         ezStore.set('grid-layer-highlight-id', highlightId)
+//         ezStore.set('grid-layer-source-id', srcId)
+//     })
+
+// }
 
 // Data-View:: grid-layer
 export function map_destroyGridLayer(): void {

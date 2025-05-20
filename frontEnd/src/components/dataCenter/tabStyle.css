@@ -213,10 +213,11 @@
 
 .custom-button {
     display: flex;
+    justify-content: center;
     align-items: center;
     gap: 0.25rem;
     border-color: rgba(56, 189, 248, 0.3);
-    color: #38bdf8;
+    color: #ffffff;
     transition: all 0.2s ease;
     background-color: rgba(14, 165, 233, 0.05);
     padding-left: 1.5rem;
@@ -226,7 +227,7 @@
 
 .custom-button:hover {
     background-color: rgba(14, 165, 233, 0.15);
-    border-color: #38bdf8;
+    border-color: #ffffff;
 }
 
 .button-icon {

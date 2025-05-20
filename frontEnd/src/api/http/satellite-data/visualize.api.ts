@@ -80,6 +80,13 @@ async function getTifScaleParam(tifFullPath: string) {
     return percentile_2 + ',' + percentile_98
 }
 
+export async function getTifbandMinMax(tifFullPath: string) {
+    const statisticsJson = await getTifStatistic(tifFullPath)
+    const min = statisticsJson.b1 ? statisticsJson.b1.min : 0
+    const max = statisticsJson.b1 ? statisticsJson.b1.max : 20000
+    return [min, max]
+}
+
 // 获取一张tif的预览图路径(已加入拉伸参数)
 export async function getTifPreviewUrl(tifFullPath: string, resolution: number = 10, gridSize = 20000) {
 
@@ -136,7 +143,7 @@ export function getSceneRGBCompositeTileUrl(param: RGBTileLayerParams) {
 }
 
 export function getGridRGBCompositeUrl(grid: GridInfoType, param: RGBTileLayerParams) {
-    let baseUrl = `${titilerEndPoint}/rgb/tiles/{z}/{x}/{y}.png`
+    let baseUrl = `${titilerEndPoint}/rgb/box/{z}/{x}/{y}.png`
 
     const bbox = grid2bbox(grid.columnId, grid.rowId, grid.resolution)
 
@@ -145,12 +152,41 @@ export function getGridRGBCompositeUrl(grid: GridInfoType, param: RGBTileLayerPa
     requestParams.append('url_r', minioEndPoint + '/' + param.redPath)
     requestParams.append('url_g', minioEndPoint + '/' + param.greenPath)
     requestParams.append('url_b', minioEndPoint + '/' + param.bluePath)
-    requestParams.append('r_min', param.r_min.toString())
-    requestParams.append('r_max', param.r_max.toString())
-    requestParams.append('g_min', param.g_min.toString())
-    requestParams.append('g_max', param.g_max.toString())
-    requestParams.append('b_min', param.b_min.toString())
-    requestParams.append('b_max', param.b_max.toString())
+    requestParams.append('min_r', param.r_min.toString())
+    requestParams.append('max_r', param.r_max.toString())
+    requestParams.append('min_g', param.g_min.toString())
+    requestParams.append('max_g', param.g_max.toString())
+    requestParams.append('min_b', param.b_min.toString())
+    requestParams.append('max_b', param.b_max.toString())
 
     return baseUrl + '?' + requestParams.toString()
+}
+
+
+// 获取一个tif的geojson
+type BaseImageType = {
+    bucket: string
+    tifPath: string
+    [key: string]: any
+}
+
+type BaseSceneType = {
+    images: BaseImageType[]
+    [key: string]: any
+}
+export async function getSceneGeojson(scene: BaseSceneType) {
+    // const oneImgUrl = minioEndPoint + '/' + scene.images[0]
+    const oneBandImage = scene.images[0]
+    const oneImgFullPath = minioEndPoint + '/' + oneBandImage.bucket + '/' + oneBandImage.tifPath
+
+    let baseUrl = `${titilerEndPoint}/info.geojson`
+    const requestParams = new URLSearchParams()
+    requestParams.append('url', oneImgFullPath)
+    
+    const httpUrl = baseUrl + '?' + requestParams.toString()
+    
+    const response = await fetch(httpUrl)
+    const json = await response.json()
+
+    return json
 }
