@@ -38,7 +38,9 @@ def get_geojson():
 def get_status():
     scheduler = init_scheduler()
     task_id = request.args.get('id', type=str)
+    print(f"当前任务的id是{task_id}")
     status = scheduler.get_status(task_id)
+    print(scheduler.task_status)
     print(f"等待中的任务数：{scheduler.pending_queue.qsize()}")
     print(f"正在执行的任务数：{scheduler.running_queue.qsize()}")
     print(f"错误的任务数：{scheduler.error_queue.qsize()}")

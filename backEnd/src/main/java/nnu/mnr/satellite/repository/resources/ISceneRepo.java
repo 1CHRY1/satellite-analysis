@@ -1,11 +1,13 @@
 package nnu.mnr.satellite.repository.resources;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import nnu.mnr.satellite.model.dto.resources.SceneImageDTO;
 import nnu.mnr.satellite.model.po.resources.Scene;
 import nnu.mnr.satellite.model.po.resources.SceneSP;
 import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
 import nnu.mnr.satellite.utils.typeHandler.FastJson2TypeHandler;
 import nnu.mnr.satellite.utils.typeHandler.GeometryTypeHandler;
+import nnu.mnr.satellite.utils.typeHandler.JSONArrayTypeHandler;
 import nnu.mnr.satellite.utils.typeHandler.SetTypeHandler;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
@@ -27,9 +29,9 @@ public interface ISceneRepo extends BaseMapper<Scene> {
 
     @Select("SELECT sc.scene_id, sc.scene_name, sc.scene_time, sc.tile_level_num, sc.tile_levels, sc.coordinate_system, " +
             "sc.description, sc.band_num, sc.bands, sc.cloud, sc.tags, " +
-            "ss.sensor_name, pd.product_name, pd.resolution, " +
-            "(SELECT CONCAT('[', GROUP_CONCAT(JSON_OBJECT('path', im.tif_path, 'band', im.band)), ']') " +
-            "FROM image_table im WHERE im.scene_id = sc.scene_id) AS image_list " +
+            "ss.sensor_name, pd.product_name, pd.resolution " +
+//            "(SELECT CONCAT('[', GROUP_CONCAT(JSON_OBJECT('path', im.tif_path, 'band', im.band)), ']') " +
+//            "FROM image_table im WHERE im.scene_id = sc.scene_id) AS images " +
             "FROM scene_table sc " +
             "LEFT JOIN sensor_table ss ON sc.sensor_id = ss.sensor_id " +
             "LEFT JOIN product_table pd ON sc.product_id = pd.product_id " +
@@ -54,7 +56,7 @@ public interface ISceneRepo extends BaseMapper<Scene> {
             @Result(property = "sensorName", column = "sensor_name"),
             @Result(property = "productName", column = "product_name"),
             @Result(property = "resolution", column = "resolution"),
-//            @Result(property = "imageList", column = "image_list", typeHandler = JSONArrayTypeHandler.class)
+//            @Result(property = "images", column = "images", typeHandler = JSONArrayTypeHandler.class)
     })
     List<SceneDesVO> getScenesDesByTimeCloudAndGeometry(
             @Param("startTime") String startTime,
@@ -65,8 +67,8 @@ public interface ISceneRepo extends BaseMapper<Scene> {
     @Select("SELECT sc.scene_id, sc.scene_name, sc.scene_time, sc.tile_level_num, sc.tile_levels, sc.coordinate_system, " +
             "sc.description, sc.band_num, sc.bands, sc.cloud, sc.tags, " +
             "ss.sensor_name, pd.product_name, pd.resolution, " +
-            "(SELECT CONCAT('[', GROUP_CONCAT(JSON_OBJECT('path', im.tif_path, 'band', im.band)), ']') " +
-            "FROM image_table im WHERE im.scene_id = sc.scene_id) AS image_list " +
+//            "(SELECT CONCAT('[', GROUP_CONCAT(JSON_OBJECT('path', im.tif_path, 'band', im.band)), ']') " +
+//            "FROM image_table im WHERE im.scene_id = sc.scene_id) AS images " +
             "FROM scene_table sc " +
             "LEFT JOIN sensor_table ss ON sc.sensor_id = ss.sensor_id " +
             "LEFT JOIN product_table pd ON sc.product_id = pd.product_id " +
@@ -86,7 +88,7 @@ public interface ISceneRepo extends BaseMapper<Scene> {
             @Result(property = "sensorName", column = "sensor_name"),
             @Result(property = "productName", column = "product_name"),
             @Result(property = "resolution", column = "resolution"),
-//            @Result(property = "imageList", column = "image_list", typeHandler = JSONArrayTypeHandler.class)
+//            @Result(property = "images", column = "images", typeHandler = JSONArrayTypeHandler.class)
     })
     SceneDesVO getScenesDesById(@Param("sceneId") String sceneId);
 
@@ -122,10 +124,18 @@ public interface ISceneRepo extends BaseMapper<Scene> {
             "FROM scene_table sc " +
             "LEFT JOIN sensor_table ss ON sc.sensor_id = ss.sensor_id " +
             "LEFT JOIN product_table pd ON sc.product_id = pd.product_id " +
-            "WHERE sc.scene_id IN " +
-            "<foreach item='sceneId' collection='sceneIds' open='(' separator=',' close=')'>" +
-            "#{sceneId}" +
-            "</foreach>" +
+            "WHERE " +
+            "<choose>" +
+            "    <when test='sceneIds != null and !sceneIds.isEmpty()'>" +
+            "        sc.scene_id IN " +
+            "        <foreach item='sceneId' collection='sceneIds' open='(' separator=',' close=')'>" +
+            "            #{sceneId}" +
+            "        </foreach>" +
+            "    </when>" +
+            "    <otherwise>" +
+            "        1=0" +
+            "    </otherwise>" +
+            "</choose>" +
             "ORDER BY sc.scene_time ASC" +
             "</script>")
     @Results({
@@ -145,5 +155,31 @@ public interface ISceneRepo extends BaseMapper<Scene> {
             @Result(property = "bbox", column = "bounding_box", typeHandler = GeometryTypeHandler.class),
     })
     List<SceneSP> getScenesByIdsWithProductAndSensor(@Param("sceneIds") List<String> sceneIds);
+
+    @Select("SELECT sc.scene_id, sc.scene_name, sc.scene_time, " +
+            "sc.band_num, sc.bands, sc.cloud, sc.tags, sc.bucket, sc.cloud_path, " +
+            "ss.sensor_name, pd.product_name, pd.resolution, " +
+            "(SELECT CONCAT('[', GROUP_CONCAT(JSON_OBJECT('path', im.tif_path, 'band', im.band)), ']') " +
+            "FROM image_table im WHERE im.scene_id = sc.scene_id) AS images " +
+            "FROM scene_table sc " +
+            "LEFT JOIN sensor_table ss ON sc.sensor_id = ss.sensor_id " +
+            "LEFT JOIN product_table pd ON sc.product_id = pd.product_id " +
+            "WHERE sc.scene_id = #{sceneId} ")
+    @Results({
+            @Result(property = "sceneId", column = "scene_id"),
+            @Result(property = "sceneName", column = "scene_name"),
+            @Result(property = "sensorName", column = "sensor_name"),
+            @Result(property = "productName", column = "product_name"),
+            @Result(property = "resolution", column = "resolution"),
+            @Result(property = "sceneTime", column = "scene_time"),
+            @Result(property = "bandNum", column = "band_num"),
+            @Result(property = "bands", column = "bands", typeHandler = SetTypeHandler.class),
+            @Result(property = "cloud", column = "cloud"),
+            @Result(property = "bucket", column = "bucket"),
+            @Result(property = "cloudPath", column = "cloud_path"),
+            @Result(property = "tags", column = "tags", typeHandler = FastJson2TypeHandler.class),
+            @Result(property = "images", column = "images", typeHandler = JSONArrayTypeHandler.class)
+    })
+    SceneImageDTO getSceneWithImages(@Param("sceneId") String sceneId);
 
 }

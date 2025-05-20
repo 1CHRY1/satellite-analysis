@@ -1,6 +1,6 @@
 import math
 
-APP_PORT                                        =       5000
+APP_PORT                                        =       5001
 APP_DEBUG                                       =       True
 
 # API Version
