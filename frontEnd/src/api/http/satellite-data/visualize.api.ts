@@ -143,7 +143,7 @@ export function getSceneRGBCompositeTileUrl(param: RGBTileLayerParams) {
 }
 
 export function getGridRGBCompositeUrl(grid: GridInfoType, param: RGBTileLayerParams) {
-    let baseUrl = `${titilerEndPoint}/rgb/tiles/{z}/{x}/{y}.png`
+    let baseUrl = `${titilerEndPoint}/rgb/box/{z}/{x}/{y}.png`
 
     const bbox = grid2bbox(grid.columnId, grid.rowId, grid.resolution)
 
