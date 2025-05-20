@@ -1,4 +1,5 @@
 import os
+import json
 import tempfile
 from rio_cogeo.cogeo import cog_validate, cog_translate, cog_info
 from rio_cogeo.profiles import cog_profiles
@@ -12,7 +13,7 @@ from pyproj import CRS, Transformer
 # 计算云量新增包
 from rasterio.warp import transform_bounds
 from rasterio.mask import mask
-from shapely.geometry import shape
+from shapely.geometry import shape, box
 from shapely.ops import unary_union
 from osgeo import osr
 import dataProcessing.config as config
@@ -463,46 +464,73 @@ def bbox_to_geojsonFeatureGeometry(bbox):
                 ]
         }
 
-def calculate_cloud_coverage(image_path, sensorName, bbox):
+def calculate_cloud_coverage(src, sensorName, bbox):
+    try:
+        # 获取投影信息
+        proj_wkt = src.GetProjection()
+        if not proj_wkt:
+            src_crs = CRS.from_epsg(4326)
+        else:
+            src_crs = CRS.from_wkt(proj_wkt)
 
-    with rasterio.open(image_path) as src:
-        # TEMP 如果crs为空，则认为bbox为WGS84坐标系,不予转换
-        if src.crs is None:
+        # 如果投影为空，则认为 bbox 为 WGS84 坐标系，不予转换
+        if src_crs.is_geographic:
             bbox_proj = bbox
         else:
+            # 将 bbox 从 WGS84 转换为图像的投影
             bbox_proj = transform_bounds(
                 'EPSG:4326',  # WGS84
-                src.crs,  # 图像的投影
+                src_crs.to_wkt(),  # 图像的投影
                 *bbox  # 解包 bbox: minx, miny, maxx, maxy
             )
-        try:
-            out_image, out_transform = mask(src, [bbox_to_geojsonFeatureGeometry(bbox_proj)], crop=True)
-        except Exception as e:
-            print(f"裁剪失败：{e}")
-            return 0
-        out_meta = src.meta.copy()
 
-    # 更新元数据
-    out_meta.update({
-        "driver": "GTiff",
-        "height": out_image.shape[1],
-        "width": out_image.shape[2],
-        "transform": out_transform
-    })
+        # 将 bbox 转换为 GeoJSON 格式的几何对象
+        bbox_geojson = json.dumps({
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [bbox_proj[0], bbox_proj[1]],
+                    [bbox_proj[2], bbox_proj[1]],
+                    [bbox_proj[2], bbox_proj[3]],
+                    [bbox_proj[0], bbox_proj[3]],
+                    [bbox_proj[0], bbox_proj[1]]
+                ]
+            ]
+        })
 
-    if sensorName[0:7] == 'Landsat':
-        cloud_mask = (out_image[0] & (1 << 3)) > 0  # 提取第3位
-    elif sensorName[0:5] == 'MODIS':
-        cloud_mask = ((out_image[0] & 1) > 0)  # 提取第0位
-    else:
-        cloud_mask = (out_image[0] & (1 << 3)) > 0  # 提取第3位
+        # 将 gdal.Dataset 转换为 rasterio.io.DatasetReader
+        with rasterio.open(src.GetDescription()) as rio_src:
+            out_image, out_transform = mask(rio_src, [json.loads(bbox_geojson)], crop=True)
 
-    cloud_pixels = cloud_mask.sum()
-    total_pixels = out_image[0].size
-    cloud_coverage = cloud_pixels / total_pixels
+        out_meta = rio_src.meta.copy()
 
-    # print(f"云量百分比：{cloud_coverage * 100}%")
-    return cloud_coverage
+        # 更新元数据
+        out_meta.update({
+            "driver": "GTiff",
+            "height": out_image.shape[1],
+            "width": out_image.shape[2],
+            "transform": out_transform
+        })
+
+        # 计算云量覆盖
+        if 'Landsat' in sensorName:
+            cloud_mask = (out_image[0] & (1 << 3)) > 0  # 提取第3位
+        elif 'MODIS' in sensorName:
+            cloud_mask = ((out_image[0] & 1) > 0)  # 提取第0位
+        elif "GF" in sensorName:
+            cloud_mask = (out_image[0] == 2)
+        else:
+            cloud_mask = (out_image[0] & (1 << 3)) > 0  # 默认提取第3位
+
+        cloud_pixels = cloud_mask.sum()
+        total_pixels = out_image[0].size
+        cloud_coverage = cloud_pixels / total_pixels
+
+        return cloud_coverage
+
+    except Exception as e:
+        print(f"裁剪失败：{e}")
+        return 9999
 
 
 def get_epsg_from_wkt(wkt_string):
@@ -589,6 +617,21 @@ def parse_time_in_scene(scene):
     return datetime.strptime(scene["sceneTime"], "%Y-%m-%d %H:%M:%S")
 
 # 判断bbox与tif是否相交
+def check_intersection_v2(geojson, bounding_box):
+    try:
+        # 将 GeoJSON 数据转换为 Shapely 几何对象
+        geojson_polygon = shape(geojson)
+        
+        # 创建边界框的多边形
+        bbox_polygon = box(bounding_box[0], bounding_box[1], bounding_box[2], bounding_box[3])
+        
+        # 检查边界框是否被 GeoJSON 多边形完全覆盖
+        return geojson_polygon.Intersects(bbox_polygon)
+    except Exception as e:
+        print(f"Caught an exception: {type(e).__name__}")
+        print(f"Exception details: {e}")
+        return False
+
 def check_intersection(tif_path, bounding_box):
     # 打开GeoTIFF文件
     dataset = gdal.Open(tif_path)
@@ -643,7 +686,22 @@ def check_intersection(tif_path, bounding_box):
     return tif_polygon.Intersects(bbox_polygon)
 
 # 判断bbox是否被tif全覆盖
-def check_full_coverage(tif_path, bounding_box):
+def check_full_coverage_v2(geojson, bounding_box):
+    try:
+        # 将 GeoJSON 数据转换为 Shapely 几何对象
+        geojson_polygon = shape(geojson)
+        
+        # 创建边界框的多边形
+        bbox_polygon = box(bounding_box[0], bounding_box[1], bounding_box[2], bounding_box[3])
+        
+        # 检查边界框是否被 GeoJSON 多边形完全覆盖
+        return geojson_polygon.contains(bbox_polygon)
+    except Exception as e:
+        print(f"Caught an exception: {type(e).__name__}")
+        print(f"Exception details: {e}")
+        return False
+
+def check_full_coverage(dataset, bounding_box):
     """
     检查bbox是否被GeoTIFF完全覆盖
 
@@ -654,8 +712,8 @@ def check_full_coverage(tif_path, bounding_box):
     返回:
         bool: 如果bbox被GeoTIFF完全覆盖返回True，否则返回False
     """
-    # 打开GeoTIFF文件
-    dataset = gdal.Open(tif_path)
+    # # 打开GeoTIFF文件
+    # dataset = gdal.Open(tif_path)
     if dataset is None:
         raise ValueError("Could not open the GeoTIFF file.")
 

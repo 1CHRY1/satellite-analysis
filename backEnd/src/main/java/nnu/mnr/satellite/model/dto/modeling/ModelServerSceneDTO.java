@@ -27,6 +27,7 @@ public class ModelServerSceneDTO {
     private LocalDateTime sceneTime;
     private String resolution;
     private List<ModelServerImageDTO> images;
+    private JSONObject bbox;
 
     // 关联表字段
     private String sensorName;

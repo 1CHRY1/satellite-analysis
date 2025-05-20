@@ -187,6 +187,7 @@ class TaskScheduler:
             self.save_to_history(task_id)
 
     def get_status(self, task_id):
+        
         # --------- Get the status of the task ---------------------------
         current_status = self.task_status.get(task_id)
         if current_status is None:
