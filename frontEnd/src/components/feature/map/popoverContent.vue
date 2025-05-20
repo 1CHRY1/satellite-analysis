@@ -376,19 +376,36 @@ const handleVisualize = () => {
 
             // Process each band (R, G, B)
             for (let scene of filteredScene) {
+                // let redPath = ''
+                // let greenPath = ''
+                // let bluePath = ''
+
+                // scene.images.forEach((bandImg: Image) => {
+                //     if (bandImg.band === selectedRBand.value) {
+                //         redPath = bandImg.bucket + '/' + bandImg.tifPath
+                //     } else if (bandImg.band === selectedGBand.value) {
+                //         greenPath = bandImg.bucket + '/' + bandImg.tifPath
+                //     } else if (bandImg.band === selectedBBand.value) {
+                //         bluePath = bandImg.bucket + '/' + bandImg.tifPath
+                //     }
+                // })
                 let redPath = ''
                 let greenPath = ''
                 let bluePath = ''
 
-                scene.images.forEach((bandImg: Image) => {
-                    if (bandImg.band === selectedRBand.value) {
+                // console.log(sceneInfo.bandMapper)
+                for (let bandImg of scene.images) {
+                    // 后端返回的BandMapper如果是单波段的话，Red Green 和 Blue相同
+                    if (scene.bandMapper.Red === bandImg.band) {
                         redPath = bandImg.bucket + '/' + bandImg.tifPath
-                    } else if (bandImg.band === selectedGBand.value) {
+                    }
+                    if (scene.bandMapper.Green === bandImg.band) {
                         greenPath = bandImg.bucket + '/' + bandImg.tifPath
-                    } else if (bandImg.band === selectedBBand.value) {
+                    }
+                    if (scene.bandMapper.Blue === bandImg.band) {
                         bluePath = bandImg.bucket + '/' + bandImg.tifPath
                     }
-                })
+                }
 
                 rgbImageData.push({
                     sceneId: scene.sceneId,
