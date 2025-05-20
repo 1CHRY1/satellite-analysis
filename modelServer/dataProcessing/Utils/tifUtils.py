@@ -686,6 +686,22 @@ def check_intersection(tif_path, bounding_box):
     return tif_polygon.Intersects(bbox_polygon)
 
 # 判断bbox是否被tif全覆盖
+def check_full_coverage_v3(tif_path, bounding_box):
+    try:
+        # 将 GeoJSON 数据转换为 Shapely 几何对象
+        geojson_polygon = shape(geojson)
+        
+        # 创建边界框的多边形
+        bbox_polygon = box(bounding_box[0], bounding_box[1], bounding_box[2], bounding_box[3])
+        
+        # 检查边界框是否被 GeoJSON 多边形完全覆盖
+        return geojson_polygon.contains(bbox_polygon)
+    except Exception as e:
+        print(f"Caught an exception: {type(e).__name__}")
+        print(f"Exception details: {e}")
+        return False
+
+# 判断bbox是否被tif全覆盖
 def check_full_coverage_v2(geojson, bounding_box):
     try:
         # 将 GeoJSON 数据转换为 Shapely 几何对象
@@ -701,7 +717,7 @@ def check_full_coverage_v2(geojson, bounding_box):
         print(f"Exception details: {e}")
         return False
 
-def check_full_coverage(dataset, bounding_box):
+def check_full_coverage(tif_path, bounding_box):
     """
     检查bbox是否被GeoTIFF完全覆盖
 
@@ -713,7 +729,7 @@ def check_full_coverage(dataset, bounding_box):
         bool: 如果bbox被GeoTIFF完全覆盖返回True，否则返回False
     """
     # # 打开GeoTIFF文件
-    # dataset = gdal.Open(tif_path)
+    dataset = gdal.Open(tif_path)
     if dataset is None:
         raise ValueError("Could not open the GeoTIFF file.")
 
