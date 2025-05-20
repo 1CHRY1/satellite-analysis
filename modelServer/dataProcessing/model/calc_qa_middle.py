@@ -78,10 +78,12 @@ class calc_qa_middle(Task):
         tiles_list = [None] * len(self.tiles)  # 初始化 tiles_list，确保长度与 tiles 一致
 
         preloaded_cloud_data = self.get_cloud_dataSets(self.scenes)
-        preloaded_bound_data = self.get_bound_dataSets(self.scenes)
+        # preloaded_bound_data = self.get_bound_dataSets(self.scenes)
 
         def process_scene(scene, bbox):
-            if check_full_coverage(preloaded_bound_data[scene['sceneId']], bbox) == False:
+            image = scene['images'][0]
+            tif_path = MINIO_ENDPOINT + "/" + image['bucket'] + "/" + image['tifPath']
+            if check_full_coverage(tif_path, bbox) == False:
             # if check_full_coverage_v2(scene['bbox'], bbox) == False:
                 qa = 9999
             if 'cloudPath' not in scene:
