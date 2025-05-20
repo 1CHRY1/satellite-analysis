@@ -17,9 +17,12 @@
                                     <span>行政区</span>
                                 </div>
                                 <div class="config-control justify-center">
-                                    <RegionSelects v-model="region" :placeholder="['选择省份', '选择城市', '选择区县']"
+                                    <RegionSelects
+                                        v-model="region"
+                                        :placeholder="['选择省份', '选择城市', '选择区县']"
                                         class="flex gap-2"
-                                        select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
+                                        select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none"
+                                    />
                                 </div>
                             </div>
                             <div class="config-item">
@@ -30,24 +33,32 @@
                                 <div class="config-control flex-col !items-start">
                                     <div>
                                         格网分辨率选择：
-                                        <select v-model="selectedRadius"
-                                            class="bg-[#0d1526] text-white w-40 border border-[#2c3e50] rounded-lg px-4 py-2 pr-8 appearance-none transition-all duration-200 hover:border-[#206d93] focus:outline-none focus:border-[#3b82f6]">
-                                            <option v-for="option in radiusOptions" :key="option" :value="option"
-                                                class="bg-[#0d1526] text-white">
+                                        <select
+                                            v-model="selectedRadius"
+                                            class="w-40 appearance-none rounded-lg border border-[#2c3e50] bg-[#0d1526] px-4 py-2 pr-8 text-white transition-all duration-200 hover:border-[#206d93] focus:border-[#3b82f6] focus:outline-none"
+                                        >
+                                            <option
+                                                v-for="option in radiusOptions"
+                                                :key="option"
+                                                :value="option"
+                                                class="bg-[#0d1526] text-white"
+                                            >
                                                 {{ option }}km
                                             </option>
                                         </select>
                                     </div>
                                     <div class="flex flex-row">
-                                        <div class="text-red-500">*</div>建议省级行政单位格网分辨率不小于20km
+                                        <div class="text-red-500">*</div>
+                                        建议省级行政单位格网分辨率不小于20km
                                     </div>
                                 </div>
                             </div>
-                            <button @click="getAllGrid"
-                                class="bg-[#0d1526] cursor-pointer text-white border border-[#2c3e50] rounded-lg px-4 py-2 hover:bg-[#1a2b4c] hover:border-[#2bb2ff] transition-all duration-200 active:scale-95">
+                            <button
+                                @click="getAllGrid"
+                                class="cursor-pointer rounded-lg border border-[#2c3e50] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
+                            >
                                 获取格网
                             </button>
-
                         </div>
                     </div>
                 </section>
@@ -64,44 +75,63 @@
                                 <div class="config-label relative">
                                     <CalendarIcon :size="16" class="config-icon" />
                                     <span>时间范围</span>
-                                    <a-checkbox v-model:checked="tileMergeConfig.useLatestTime"
-                                        class="absolute right-1 !text-sky-300">
+                                    <a-checkbox
+                                        v-model:checked="tileMergeConfig.useLatestTime"
+                                        class="absolute right-1 !text-sky-300"
+                                    >
                                         时间最近优先
                                     </a-checkbox>
                                 </div>
                                 <div class="config-control">
-                                    <a-range-picker class="custom-date-picker" v-model:value="tileMergeConfig.dateRange"
-                                        picker="day" :allow-clear="false" :placeholder="['开始日期', '结束日期']" />
+                                    <a-range-picker
+                                        class="custom-date-picker"
+                                        v-model:value="tileMergeConfig.dateRange"
+                                        picker="day"
+                                        :allow-clear="false"
+                                        :placeholder="['开始日期', '结束日期']"
+                                    />
                                 </div>
                             </div>
                             <div class="config-item">
                                 <div class="config-label relative">
                                     <CloudIcon :size="16" class="config-icon" />
                                     <span>最大云量限度</span>
-                                    <a-checkbox v-model:checked="tileMergeConfig.useMinCloud"
-                                        class="absolute right-1 !text-sky-300">
+                                    <a-checkbox
+                                        v-model:checked="tileMergeConfig.useMinCloud"
+                                        class="absolute right-1 !text-sky-300"
+                                    >
                                         云量最小优先
                                     </a-checkbox>
                                 </div>
                                 <div class="config-control">
                                     <div class="cloud-slider-container">
-                                        <span class="cloud-value">{{ tileMergeConfig.cloudRange[0] }}%</span>
+                                        <span class="cloud-value"
+                                            >{{ tileMergeConfig.cloudRange[0] }}%</span
+                                        >
                                         <div class="slider-wrapper">
-                                            <a-slider class="custom-slider" range v-model:value="tileMergeConfig.cloudRange"
-                                                :tipFormatter="(value: number) => value + '%'" />
+                                            <a-slider
+                                                class="custom-slider"
+                                                range
+                                                v-model:value="tileMergeConfig.cloudRange"
+                                                :tipFormatter="(value: number) => value + '%'"
+                                            />
                                         </div>
-                                        <span class="cloud-value">{{ tileMergeConfig.cloudRange[1] }}%</span>
+                                        <span class="cloud-value"
+                                            >{{ tileMergeConfig.cloudRange[1] }}%</span
+                                        >
                                     </div>
                                 </div>
                             </div>
-                            <button @click="filterByCloudAndDate" :disabled="filterByCloudAndDateLoading"
-                                class="flex justify-center bg-[#0d1526]  text-white border border-[#2c3e50] rounded-lg px-4 py-2 hover:bg-[#1a2b4c] hover:border-[#2bb2ff] transition-all duration-200 active:scale-95"
+                            <button
+                                @click="filterByCloudAndDate"
+                                :disabled="filterByCloudAndDateLoading"
+                                class="flex justify-center rounded-lg border border-[#2c3e50] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
                                 :class="{
                                     'cursor-not-allowed': filterByCloudAndDateLoading,
-                                    'cursor-pointer': !filterByCloudAndDateLoading
-                                }">
-                                <span>影像筛选
-                                </span>
+                                    'cursor-pointer': !filterByCloudAndDateLoading,
+                                }"
+                            >
+                                <span>影像筛选 </span>
                                 <Loader v-if="filterByCloudAndDateLoading" class="ml-2" />
                             </button>
                             <div class="config-item">
@@ -117,7 +147,8 @@
                                             </div>
                                             <div class="result-info-content">
                                                 <div class="result-info-label">行政区划编码</div>
-                                                <div class="result-info-value">{{ displayLabel }}
+                                                <div class="result-info-value">
+                                                    {{ displayLabel }}
                                                 </div>
                                             </div>
                                         </div>
@@ -127,7 +158,8 @@
                                             </div>
                                             <div class="result-info-content">
                                                 <div class="result-info-label">格网分辨率</div>
-                                                <div class="result-info-value">{{ selectedRadius }}km
+                                                <div class="result-info-value">
+                                                    {{ selectedRadius }}km
                                                 </div>
                                             </div>
                                         </div>
@@ -137,7 +169,8 @@
                                             </div>
                                             <div class="result-info-content">
                                                 <div class="result-info-label">云量</div>
-                                                <div class="result-info-value"> {{ tileMergeConfig.cloudRange[0] }}% ~
+                                                <div class="result-info-value">
+                                                    {{ tileMergeConfig.cloudRange[0] }}% ~
                                                     {{ tileMergeConfig.cloudRange[1] }}%
                                                 </div>
                                             </div>
@@ -149,11 +182,20 @@
                                             <div class="result-info-content">
                                                 <div class="result-info-label">涵盖时间范围</div>
                                                 <div class="result-info-value date-range">
-                                                    <div class="date-item">{{ formatTime(tileMergeConfig.dateRange[0],
-                                                        'day')
-                                                    }}~
-                                                        {{ formatTime(tileMergeConfig.dateRange[1], 'day')
-                                                        }}</div>
+                                                    <div class="date-item">
+                                                        {{
+                                                            formatTime(
+                                                                tileMergeConfig.dateRange[0],
+                                                                'day',
+                                                            )
+                                                        }}~
+                                                        {{
+                                                            formatTime(
+                                                                tileMergeConfig.dateRange[1],
+                                                                'day',
+                                                            )
+                                                        }}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -163,7 +205,9 @@
                                             </div>
                                             <div class="result-info-content">
                                                 <div class="result-info-label">当前已检索到</div>
-                                                <div class="result-info-value">{{ allScenes.length }}景影像</div>
+                                                <div class="result-info-value">
+                                                    {{ allScenes.length }}景影像
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="result-info-item">
@@ -172,9 +216,13 @@
                                             </div>
                                             <div class="result-info-content">
                                                 <div class="result-info-label">影像覆盖率</div>
-                                                <div class="result-info-value">{{ coverageRate != 'NaN%' ? coverageRate
-                                                    :
-                                                    '待计算' }}</div>
+                                                <div class="result-info-value">
+                                                    {{
+                                                        coverageRate != 'NaN%'
+                                                            ? coverageRate
+                                                            : '待计算'
+                                                    }}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -182,8 +230,6 @@
                             </div>
                         </div>
                     </div>
-
-
                 </section>
                 <section class="panel-section">
                     <div class="section-header">
@@ -191,6 +237,12 @@
                             <DatabaseIcon :size="18" />
                         </div>
                         <h2 class="section-title">交互探索</h2>
+                        <div class="section-icon absolute right-0" @click="clearAllShowingSensor">
+                            <a-tooltip>
+                                <template #title>清空影像图层</template>
+                                <Trash2Icon :size="18" />
+                            </a-tooltip>
+                        </div>
                     </div>
                     <div class="section-content">
                         <div class="config-container">
@@ -199,19 +251,19 @@
                                 <div class="config-label relative">
                                     <BoltIcon :size="16" class="config-icon" />
                                     <span>数据来源</span>
-                                    <!-- <button class="cov-btn" @click="handleCoverageVisualClick('1')">
-                                        覆盖度对比
-                                    </button> -->
                                 </div>
                                 <div class="config-control gap-6">
-                                    <button v-for="label in buttonGroups[0]" :key="label"
-                                        @click="toggleButton(label), filterByTags()"
-                                        class="cursor-pointer border rounded-lg px-4 py-1 transition-all duration-200 active:scale-90"
+                                    <button
+                                        v-for="label in buttonGroups[0]"
+                                        :key="label"
+                                        @click="(toggleButton(label), filterByTags())"
+                                        class="cursor-pointer rounded-lg border px-4 py-1 transition-all duration-200 active:scale-90"
                                         :class="[
                                             isActive(label)
-                                                ? 'bg-[#0d2e4b] text-white border-[#2bb2ff]'
-                                                : 'bg-transparent text-[#94a3b8] border-[#475569] hover:bg-[#1e293b] hover:border-[#2bb2ff]',
-                                        ]">
+                                                ? 'border-[#2bb2ff] bg-[#0d2e4b] text-white'
+                                                : 'border-[#475569] bg-transparent text-[#94a3b8] hover:border-[#2bb2ff] hover:bg-[#1e293b]',
+                                        ]"
+                                    >
                                         {{ label }}
                                     </button>
                                 </div>
@@ -220,48 +272,23 @@
                                 <div class="config-label relative">
                                     <BoltIcon :size="16" class="config-icon" />
                                     <span>传感器类型</span>
-                                    <!-- <button class="cov-btn" @click="handleCoverageVisualClick('2')">
-                                        覆盖度对比
-                                    </button> -->
                                 </div>
                                 <div class="config-control gap-4">
-                                    <button v-for="label in buttonGroups[1]" :key="label"
-                                        @click="toggleButton(label), filterByTags()"
-                                        class="cursor-pointer border rounded-lg px-4 py-1 transition-all duration-200 active:scale-90"
+                                    <button
+                                        v-for="label in buttonGroups[1]"
+                                        :key="label"
+                                        @click="(toggleButton(label), filterByTags())"
+                                        class="cursor-pointer rounded-lg border px-4 py-1 transition-all duration-200 active:scale-90"
                                         :class="[
                                             isActive(label)
-                                                ? 'bg-[#0d2e4b] text-white border-[#2bb2ff]'
-                                                : 'bg-transparent text-[#94a3b8] border-[#475569] hover:bg-[#1e293b] hover:border-[#2bb2ff]',
-                                        ]">
+                                                ? 'border-[#2bb2ff] bg-[#0d2e4b] text-white'
+                                                : 'border-[#475569] bg-transparent text-[#94a3b8] hover:border-[#2bb2ff] hover:bg-[#1e293b]',
+                                        ]"
+                                    >
                                         {{ label }}
                                     </button>
                                 </div>
                             </div>
-                            <!-- <div class="config-item">
-                                <div class="config-label relative">
-                                    <BoltIcon :size="16" class="config-icon" />
-                                    <span>数据级别</span>
-
-                                    <button class="cov-btn" @click="handleCoverageVisualClick('3')">
-                                        覆盖度对比
-                                    </button>
-                                </div>
-                                <div class="config-control gap-4">
-                                    <button v-for="label in buttonGroups[2]" :key="label" @click="toggleButton(label)"
-                                        class="cursor-pointer border rounded-lg px-4 py-1 transition-all duration-200 active:scale-90"
-                                        :class="[
-                                            isActive(label)
-                                                ? 'bg-[#0d2e4b] text-white border-[#2bb2ff]'
-                                                : 'bg-transparent text-[#94a3b8] border-[#475569] hover:bg-[#1e293b] hover:border-[#2bb2ff]',
-                                        ]">
-                                        {{ label }}
-                                    </button>
-                                </div>
-                            </div> -->
-                            <!-- <button @click="filterByTags"
-                                class="bg-[#0d1526] cursor-pointer text-white border border-[#2c3e50] rounded-lg px-4 py-2 hover:bg-[#1a2b4c] hover:border-[#2bb2ff] transition-all duration-200 active:scale-95">
-                                检索影像
-                            </button> -->
                             <!-- 检索后的统计信息 -->
                             <div class="config-item">
                                 <div class="config-label relative">
@@ -269,13 +296,12 @@
                                     <span>统计信息</span>
                                 </div>
                                 <div class="config-control flex-col gap-4">
-                                    <div v-for="(image, index) in filteredSensorsItems" class="config-item w-full">
-                                        <div>
-                                            传感器名称及分辨率：{{ image.key }}
-                                        </div>
-                                        <div>
-                                            类型：{{ imageType(image.tags) }}
-                                        </div>
+                                    <div
+                                        v-for="(sensorItem, index) in filteredSensorsItems"
+                                        class="config-item w-full"
+                                    >
+                                        <div>传感器名称及分辨率：{{ sensorItem.key }}</div>
+                                        <div>类型：{{ imageType(sensorItem.tags) }}</div>
                                         <div class="result-info-container">
                                             <div class="result-info-item">
                                                 <div class="result-info-icon">
@@ -283,7 +309,9 @@
                                                 </div>
                                                 <div class="result-info-content">
                                                     <div class="result-info-label">包含</div>
-                                                    <div class="result-info-value">{{ image.sceneCount }}景影像</div>
+                                                    <div class="result-info-value">
+                                                        {{ sensorItem.sceneCount }}景影像
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div class="result-info-item">
@@ -292,63 +320,68 @@
                                                 </div>
                                                 <div class="result-info-content">
                                                     <div class="result-info-label">影像覆盖率</div>
-                                                    <div class="result-info-value">{{ image.coveredCount != 'NaN%'
-                                                        ? (image.coveredCount * 100 / allGridCount).toFixed(2) + '%' :
-                                                        '待计算' }}
+                                                    <div class="result-info-value">
+                                                        {{
+                                                            sensorItem.coveredCount != 'NaN%'
+                                                                ? (
+                                                                      (sensorItem.coveredCount *
+                                                                          100) /
+                                                                      allGridCount
+                                                                  ).toFixed(2) + '%'
+                                                                : '待计算'
+                                                        }}
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                         <div>
-                                            <label class="text-white mr-2">选择影像：</label>
+                                            <label class="mr-2 text-white">选择影像：</label>
                                             <select
-                                                @change="(e) => showImageBySensorAndSelect(image, (e.target as HTMLSelectElement).value)"
-                                                class=" max-w-[calc(100%-90px)] truncate bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-3 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6]">
-                                                <option disabled selected value="">请选择影像</option>
-                                                <option v-for="sceneName in image.sceneNames" :key="sceneName"
-                                                    :value="sceneName" class="truncate">
+                                                @change="
+                                                    (e) =>
+                                                        showImageBySensorAndSelect(
+                                                            sensorItem,
+                                                            (e.target as HTMLSelectElement).value,
+                                                        )
+                                                "
+                                                class="max-h-[600px] max-w-[calc(100%-90px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
+                                            >
+                                                <option disabled selected value="">
+                                                    请选择影像
+                                                </option>
+                                                <option
+                                                    v-for="sceneName in sensorItem.sceneNames"
+                                                    :key="sceneName"
+                                                    :value="sceneName"
+                                                    class="truncate"
+                                                >
                                                     {{ sceneName }}
                                                 </option>
                                             </select>
                                         </div>
                                         <!-- Band Stretch Inputs -->
-                                        <div v-if="allScenes.length > 0 && showingScene" class="mt-4">
-                                            <div class="flex flex-col gap-2">
-                                                <label class="text-white">R 波段拉伸范围:</label>
-                                                <div class="flex flex-row gap-2 w-full justify-evenly">
-                                                    <input type="text" v-model="showingImageStrech.r_min"
-                                                        class="w-[100px] bg-[#0d1526] text-white border border-[#2c3e50] rounded-lg px-3 py-1 focus:outline-none focus:border-[#3b82f6]" />
-                                                    <input type="text" v-model="showingImageStrech.r_max"
-                                                        class="w-[100px] bg-[#0d1526] text-white border border-[#2c3e50] rounded-lg px-3 py-1 focus:outline-none focus:border-[#3b82f6]" />
-                                                </div>
+                                        <div v-show="sensorItem.selectedSceneInfo" class="mt-4">
+                                            <div class="mr-1 grid grid-cols-[1fr_2fr]">
+                                                <span class="text-white">亮度拉伸:</span>
+                                                <a-slider
+                                                    :tip-formatter="scaleRateFormatter"
+                                                    v-model:value="sensorItem.scaleRate"
+                                                    @afterChange="onAfterScaleRateChange"
+                                                />
                                             </div>
-                                            <div class="flex flex-col gap-2 mt-2">
-                                                <label class="text-white">G 波段拉伸范围:</label>
-                                                <div class="flex flex-row gap-2 w-full justify-evenly">
-                                                    <input type="text" v-model="showingImageStrech.g_min"
-                                                        class="w-[100px] bg-[#0d1526] text-white border border-[#2c3e50] rounded-lg px-3 py-1 focus:outline-none focus:border-[#3b82f6]" />
-                                                    <input type="text" v-model="showingImageStrech.g_max"
-                                                        class="w-[100px] bg-[#0d1526] text-white border border-[#2c3e50] rounded-lg px-3 py-1 focus:outline-none focus:border-[#3b82f6]" />
-                                                </div>
-                                            </div>
-                                            <div class="flex flex-col gap-2 mt-2">
-                                                <label class="text-white">B 波段拉伸范围:</label>
-                                                <div class="flex flex-row gap-2 w-full justify-evenly">
-                                                    <input type="text" v-model="showingImageStrech.b_min"
-                                                        class="w-[100px] bg-[#0d1526] text-white border border-[#2c3e50] rounded-lg px-3 py-1 focus:outline-none focus:border-[#3b82f6]" />
-                                                    <input type="text" v-model="showingImageStrech.b_max"
-                                                        class="w-[100px] bg-[#0d1526] text-white border border-[#2c3e50] rounded-lg px-3 py-1 focus:outline-none focus:border-[#3b82f6]" />
-                                                </div>
-                                            </div>
-                                            <div
-                                                class="bg-[#1b42528a] cursor-pointer text-white border border-[#2c3e50] rounded-lg px-4 py-1 hover:bg-[#1a2b4c] hover:border-[#2bb2ff] transition-all duration-200 active:scale-95 text-center mt-4"
-                                                @click="handleShowImage"
+                                            <div>
+                                                <!-- <div class="bg-[#1b42528a] cursor-pointer text-white border border-[#2c3e50] rounded-lg px-4 py-1 hover:bg-[#1a2b4c] hover:border-[#2bb2ff] transition-all duration-200 active:scale-95 text-center mt-4"
+                                                    @click="handleShowImage(sensorItem)">
+                                                    影像可视化</div> -->
+                                                <a-button
+                                                    class="custom-button w-full!"
+                                                    :loading="sensorItem.loading"
+                                                    @click="handleShowImage(sensorItem)"
                                                 >
-                                                影像可视化</div>
-
+                                                    影像可视化
+                                                </a-button>
+                                            </div>
                                         </div>
-
-
                                     </div>
                                     <!-- <div class="result-info-container">
                                         <div class="result-info-item">
@@ -427,16 +460,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, type Ref, watch, reactive } from 'vue'
+import { ref, computed, type Ref, watch, reactive, onMounted } from 'vue'
 import dayjs from 'dayjs'
 import { RegionSelects } from 'v-region'
 import type { RegionValues } from 'v-region'
 import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'
 import { formatTime } from '@/util/common'
-import { getGridByRegionAndResolution, getBoundary, getRegionPosition, getSceneByConfig, getSceneGrids } from '@/api/http/satellite-data'
+import {
+    getGridByRegionAndResolution,
+    getBoundary,
+    getRegionPosition,
+    getSceneByConfig,
+    getSceneGrids,
+} from '@/api/http/satellite-data'
 import * as MapOperation from '@/util/map/operation'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import { ezStore } from '@/store'
+import { getSceneGeojson, getTifbandMinMax } from '@/api/http/satellite-data/visualize.api'
 
 import {
     DatabaseIcon,
@@ -457,9 +497,11 @@ import {
     MapIcon,
     Cloud,
     Images,
-    Loader
+    Loader,
+    Trash2Icon,
 } from 'lucide-vue-next'
 import { ElMessage } from 'element-plus'
+import { message } from 'ant-design-vue'
 const emit = defineEmits(['submitConfig'])
 
 /**
@@ -515,9 +557,6 @@ const getAllGrid = async () => {
         lineColor: '#8fffff',
         fillColor: '#a4ffff',
         fillOpacity: 0.2,
-        // onClick: (f) => {
-        //     console.log('点击的边界要素:', f)
-        // },
     })
     // 渲染网格数据
     let gridFeature: FeatureCollection = {
@@ -528,18 +567,20 @@ const getAllGrid = async () => {
                 geometry: item.boundary.geometry as Geometry,
                 properties: {
                     ...(item.properties || {}),
-                    id: item.properties?.id ?? index  // 确保每个都有 id
-                }
+                    id: item.properties?.id ?? index, // 确保每个都有 id
+                },
             }
-        })
+        }),
     }
 
     MapOperation.map_addGridLayer(gridFeature)
     MapOperation.draw_deleteAll()
-    // fly to 
-    MapOperation.map_fitView([[window.bounds[0], window.bounds[1]], [window.bounds[2], window.bounds[3]]])
+    // fly to
+    MapOperation.map_fitView([
+        [window.bounds[0], window.bounds[1]],
+        [window.bounds[2], window.bounds[3]],
+    ])
 }
-
 
 /**
  * 用云量和日期初步获取影像数据
@@ -562,13 +603,13 @@ const filterByCloudAndDate = async () => {
         startTime: tileMergeConfig.value.dateRange[0].format('YYYY-MM-DD'),
         endTime: tileMergeConfig.value.dateRange[1].format('YYYY-MM-DD'),
         cloud: tileMergeConfig.value.cloudRange[1],
-        regionId: displayLabel.value
+        regionId: displayLabel.value,
     }
     // allFilteredImages.value = await getSceneByConfig(filterData)
     allScenes.value = (await getSceneByConfig(filterData)).map((image) => {
         return {
             ...image,
-            tags: [image.tags.source, image.tags.production, image.tags.category]
+            tags: [image.tags.source, image.tags.production, image.tags.category],
         }
     })
 
@@ -584,7 +625,10 @@ const filterByCloudAndDate = async () => {
     }
 
     // 根据所有的传感器+分辨率，找出每个格网上，在特定传感器+分辨率情况下，有多少景影像
-    allSensorsItems.value = countSensorsCoverage(allSensorsItems.value, ezStore.get('sceneGridsRes'))
+    allSensorsItems.value = countSensorsCoverage(
+        allSensorsItems.value,
+        ezStore.get('sceneGridsRes'),
+    )
     // 刚拿到的时候根据默认tags先分类一次
     filterByTags()
 
@@ -592,10 +636,10 @@ const filterByCloudAndDate = async () => {
     filterByCloudAndDateLoading.value = false
 }
 
-// 数各种传感器分别覆盖了多少格网 
+// 数各种传感器分别覆盖了多少格网
 const countSensorsCoverage = (
     allSensorsItems: { key: string; tags: string[] }[],
-    allGridScene: any[]
+    allGridScene: any[],
 ) => {
     // 初始化统计对象
     const coverageMap: Record<string, number> = {}
@@ -617,9 +661,9 @@ const countSensorsCoverage = (
     }
 
     // 将 coveredCount 添加到 allSensorsItems 中
-    const updatedSensors = allSensorsItems.map(item => ({
+    const updatedSensors = allSensorsItems.map((item) => ({
         ...item,
-        coveredCount: coverageMap[item.key] || 0
+        coveredCount: coverageMap[item.key] || 0,
     }))
 
     return updatedSensors
@@ -627,16 +671,19 @@ const countSensorsCoverage = (
 
 // 给按标签分类用的方法，在获取allScene的时候就要按传感器和分辨率分类，先知道有哪些分类。
 const getSensorsAndResolutions = (scenes: any[]) => {
-    const map = new Map<string, { tags: string[]; sceneCount: number; sceneNames: string[], sceneIds: string[] }>()
+    const map = new Map<
+        string,
+        { tags: string[]; sceneCount: number; sceneNames: string[]; sceneIds: string[] }
+    >()
 
-    scenes.forEach(scene => {
+    scenes.forEach((scene) => {
         const key = `${scene.sensorName}-${scene.resolution}`
         if (!map.has(key)) {
             map.set(key, {
                 tags: scene.tags.slice(0, 2),
                 sceneCount: 1,
                 sceneNames: [scene.sceneName],
-                sceneIds: [scene.sceneId]
+                sceneIds: [scene.sceneId],
             })
         } else {
             map.get(key)!.sceneCount += 1
@@ -650,7 +697,7 @@ const getSensorsAndResolutions = (scenes: any[]) => {
         tags: value.tags,
         sceneCount: value.sceneCount,
         sceneNames: value.sceneNames,
-        sceneIds: value.sceneIds
+        sceneIds: value.sceneIds,
     }))
 }
 
@@ -660,10 +707,10 @@ const makeFullSceneGrid = async () => {
             return {
                 rowId: item.rowId,
                 columnId: item.columnId,
-                resolution: item.resolution
+                resolution: item.resolution,
             }
         }),
-        sceneIds: allScenes.value.map((image: any) => image.sceneId)
+        sceneIds: allScenes.value.map((image: any) => image.sceneId),
     }
 
     // Destroy layer
@@ -685,7 +732,6 @@ const makeFullSceneGrid = async () => {
 
     // Plus sceneGridsRes
     for (let i = 0; i < sceneGridsRes.length; i++) {
-
         let grid = sceneGridsRes[i]
         grid.international = 0
         grid.national = 0
@@ -698,7 +744,7 @@ const makeFullSceneGrid = async () => {
         for (let scene of scenes) {
             const scTag = sceneTagMap.get(scene.sceneId) as string[]
             for (let tag of scTag) {
-                if (grid[tag] === undefined) console.log("未知tag: ", tag)
+                if (grid[tag] === undefined) console.log('未知tag: ', tag)
                 grid[tag] = grid[tag] + 1
             }
         }
@@ -706,8 +752,8 @@ const makeFullSceneGrid = async () => {
     ezStore.set('sceneGridsRes', sceneGridsRes)
 
     // 算覆盖率
-    const nonEmptyScenesCount = sceneGridsRes.filter(item => item.scenes.length > 0).length
-    coverageRate.value = (nonEmptyScenesCount * 100 / sceneGridsRes.length).toFixed(2) + '%';
+    const nonEmptyScenesCount = sceneGridsRes.filter((item) => item.scenes.length > 0).length
+    coverageRate.value = ((nonEmptyScenesCount * 100) / sceneGridsRes.length).toFixed(2) + '%'
 
     let gridFeature: FeatureCollection = {
         type: 'FeatureCollection',
@@ -728,13 +774,13 @@ const makeFullSceneGrid = async () => {
                     light: sceneGridsRes[index].light,
                     radar: sceneGridsRes[index].radar,
                     traditional: sceneGridsRes[index].traditional,
-                    ard: sceneGridsRes[index].ard
-                }
+                    ard: sceneGridsRes[index].ard,
+                },
             }
-        })
+        }),
     }
     MapOperation.map_destroyGridLayer()
-    MapOperation.map_addGridLayer(gridFeature)
+    MapOperation.map_addGridLayer_coverOpacity(gridFeature)
     MapOperation.draw_deleteAll()
 
     emit('submitConfig', {
@@ -745,83 +791,9 @@ const makeFullSceneGrid = async () => {
         coverage: coverageRate.value,
         images: allScenes.value,
         grids: allGrids.value,
-        boundary: currentCityBounds.value
+        boundary: currentCityBounds.value,
     })
-
 }
-
-/**
- * 覆盖度可视化
- */
-
-// const coverageVisualActive = ref('0')
-// const handleCoverageVisualClick = (value: string) => {
-//     coverageVisualActive.value = value
-
-//     const gridLayerId = ezStore.get('grid-layer-fill-id')
-//     const m = ezStore.get('map') as mapboxgl.Map
-
-//     const newV = coverageVisualActive.value
-//     if (newV === '0') { // 清除filter
-//         console.log('清除filter')
-//         m.setPaintProperty(gridLayerId, 'fill-color', '#00FFFF')
-//     } else { //添加filter
-//         console.log('添加filter')
-//         if (newV === '1') { // international or national
-
-//             const baseExp: any[] = ['case']
-//             console.log(activeImgTags.value)
-//             if (activeImgTags.value.has(rTagMap['international'])) {
-//                 baseExp.push(['>', ['get', 'international'], 0], '#ff7700')
-//             }
-//             if (activeImgTags.value.has(rTagMap['national'])) {
-//                 baseExp.push(['>', ['get', 'national'], 0], '#ff7700')
-//             }
-//             if (baseExp.length > 1) {
-//                 baseExp.push('#00FFFF')
-//                 m.setPaintProperty(gridLayerId, 'fill-color', baseExp as any)
-//             } else {
-//                 m.setPaintProperty(gridLayerId, 'fill-color', '#00FFFF')
-//             }
-//         }
-//         else if (newV === '2') {
-
-//             const baseExp: any[] = ['case']
-
-//             if (activeImgTags.value.has(rTagMap['radar'])) {
-//                 baseExp.push(['>', ['get', 'radar'], 0], '#ff7700')
-//             }
-//             if (activeImgTags.value.has(rTagMap['light'])) {
-//                 baseExp.push(['>', ['get', 'light'], 0], '#ff7700')
-//             }
-//             if (baseExp.length > 1) {
-//                 baseExp.push('#00FFFF')
-//                 m.setPaintProperty(gridLayerId, 'fill-color', baseExp as any)
-//             } else {
-//                 m.setPaintProperty(gridLayerId, 'fill-color', '#00FFFF')
-//             }
-//         }
-//         else if (newV === '3') {
-
-//             const baseExp: any[] = ['case']
-//             if (activeImgTags.value.has(rTagMap['traditional'])) {
-//                 baseExp.push(['>', ['get', 'traditional'], 0], '#ff7700')
-//             }
-//             if (activeImgTags.value.has(rTagMap['ard'])) {
-//                 baseExp.push(['>', ['get', 'ard'], 0], '#ff7700')
-//             }
-//             if (baseExp.length > 1) {
-//                 baseExp.push('#00FFFF')
-//                 m.setPaintProperty(gridLayerId, 'fill-color', baseExp as any)
-//             } else {
-//                 m.setPaintProperty(gridLayerId, 'fill-color', '#00FFFF')
-//             }
-//         }
-
-//     }
-// }
-
-
 
 /**
  * 标签筛选
@@ -830,7 +802,7 @@ const makeFullSceneGrid = async () => {
 const buttonGroups = [
     ['国产影像', '国外影像'],
     ['光学影像', 'SAR影像'],
-    ['原始影像', 'ARD影像']
+    ['原始影像', 'ARD影像'],
 ]
 // 存储已激活的按钮标签
 const activeImgTags = ref<Set<string>>(new Set(['国产影像', '光学影像']))
@@ -847,36 +819,34 @@ const toggleButton = (label: string) => {
 const isActive = (label: string) => activeImgTags.value.has(label)
 
 const tagMap: Record<string, string> = {
-    '国产影像': 'national',
-    '国外影像': 'international',
-    '光学影像': 'light',
-    'SAR影像': 'radar',
-    '原始影像': 'traditional',
-    'ARD影像': 'ard',
-}
-const rTagMap: Record<string, string> = {
-    'national': '国产影像',
-    'international': '国外影像',
-    'light': '光学影像',
-    'radar': 'SAR影像',
-    'traditional': '原始影像',
-    'ard': 'ARD影像'
+    国产影像: 'national',
+    国外影像: 'international',
+    光学影像: 'light',
+    SAR影像: 'radar',
+    原始影像: 'traditional',
+    ARD影像: 'ard',
 }
 
-const filteredImages: Ref<any[]> = ref([])
+// const filteredImages: Ref<any[]> = ref([])
 const coverageRate = ref('0.00%')
 const filteredSensorsItems = ref<any>([])
 
 // 点击标签自动分类
 const filterByTags = async () => {
     // 1. 将 activeImgTags 映射成英文 tag Set
-    const mappedTags = new Set(
-        [...activeImgTags.value].map(tag => tagMap[tag]).filter(Boolean)
-    )
-    // 2. 筛选：每个 item 的 tags 都在 mappedTags 中
-    filteredSensorsItems.value = allSensorsItems.value.filter((item: any) =>
-        item.tags.every((tag: string) => mappedTags.has(tag))
-    )
+    const mappedTags = new Set([...activeImgTags.value].map((tag) => tagMap[tag]).filter(Boolean))
+
+    let res: any = []
+    // 2.筛选：每个 item 的 tags 都在 mappedTags 中, 并且给每个加个初始scaleRate，不改结构只能这么做了
+    allSensorsItems.value.forEach((item: any) => {
+        if (item.tags.every((tag: string) => mappedTags.has(tag))) {
+            res.push({
+                ...item,
+                scaleRate: 50,
+            })
+        }
+    })
+    filteredSensorsItems.value = res
 
     // if (!verifyFilterByTags()) {
     //     return
@@ -899,64 +869,128 @@ const imageType = (tags: string[]) => {
     return type
 }
 
-const showingScene = ref<any>()
+/**
+ * 左下的影像可视化
+ */
+
+const scaleRateFormatter = (value: number) => {
+    return `${value}%`
+}
 const showingImageStrech = reactive({
     r_min: 0,
-    r_max: 50000,
+    r_max: 5000,
     g_min: 0,
-    g_max: 50000,
+    g_max: 5000,
     b_min: 0,
-    b_max: 50000,
+    b_max: 5000,
 })
-const showImageBySensorAndSelect = (image: any, imageName: string) => {
+const onAfterScaleRateChange = (scale_rate: number) => {
+    console.log(scale_rate)
+}
+const showImageBySensorAndSelect = async (image: any, imageName: string) => {
     if (imageName === '') {
-        console.log('搞毛啊，能选出空值来？');
+        console.log('搞毛啊，能选出空值来？')
         ElMessage.warning('请选择有效影像')
         return
     }
+    console.log('传入的', image)
     let allGridScene = ezStore.get('sceneGridsRes')
+    console.log('所有格子的景', allGridScene)
     const imageId = image.sceneIds[image.sceneNames.indexOf(imageName)]
+    const sceneInfo = allGridScene
+        .flatMap((grid) => grid.scenes || [])
+        .find((scene) => scene.sceneId === imageId)
+    console.log('selectedSceneInfo ', sceneInfo)
+    image.selectedSceneInfo = sceneInfo
 
-    const sceneInfo = allGridScene.flatMap(grid => grid.scenes || []).find(scene => scene.sceneId === imageId);
-
-    showingScene.value = sceneInfo
+    let geojson = await getSceneGeojson(sceneInfo)
+    MapOperation.map_addSceneBoxLayer(geojson)
 }
-
-const handleShowImage = ()=>{
-    const sceneInfo = showingScene.value
-    console.log(sceneInfo)
+const clearAllShowingSensor = () => {
+    MapOperation.map_destroyRGBImageTileLayer()
+    MapOperation.map_destroySceneBoxLayer()
+}
+const handleShowImage = async (sensorItem) => {
+    const stopLoading = message.loading('正在加载影像')
     let redPath, greenPath, bluePath
+    const sceneInfo = sensorItem.selectedSceneInfo
+    console.log(sceneInfo.bandMapper)
+    sensorItem.loading = true
     for (let bandImg of sceneInfo.images) {
+        // 后端返回的BandMapper如果是单波段的话，Red Green 和 Blue相同
         if (sceneInfo.bandMapper.Red === bandImg.band) {
             redPath = bandImg.bucket + '/' + bandImg.tifPath
         }
-        else if (sceneInfo.bandMapper.Green === bandImg.band) {
+        if (sceneInfo.bandMapper.Green === bandImg.band) {
             greenPath = bandImg.bucket + '/' + bandImg.tifPath
         }
-        else if (sceneInfo.bandMapper.Blue === bandImg.band) {
+        if (sceneInfo.bandMapper.Blue === bandImg.band) {
             bluePath = bandImg.bucket + '/' + bandImg.tifPath
         }
     }
 
-    MapOperation.map_addRGBImageTileLayer({
-        redPath,
-        greenPath,
-        bluePath,
-        // r_min: showingImageStrech.r_min,
-        // r_max: 50000,
-        // g_min: 0,
-        // g_max: 50000,
-        // b_min: 0,
-        // b_max: 50000,
-        ...showingImageStrech
-    })
+    const cache = ezStore.get('statisticCache')
+    const promises: any = []
+    let [min_r, max_r, min_g, max_g, min_b, max_b] = [0, 0, 0, 0, 0, 0]
+
+    if (cache.get(redPath) && cache.get(greenPath) && cache.get(bluePath)) {
+        console.log('cache hit!')
+        ;[min_r, max_r] = cache.get(redPath)
+        ;[min_g, max_g] = cache.get(greenPath)
+        ;[min_b, max_b] = cache.get(bluePath)
+    } else {
+        promises.push(
+            getTifbandMinMax(redPath),
+            getTifbandMinMax(greenPath),
+            getTifbandMinMax(bluePath),
+        )
+        await Promise.all(promises).then((values) => {
+            min_r = values[0][0]
+            max_r = values[0][1]
+            min_g = values[1][0]
+            max_g = values[1][1]
+            min_b = values[2][0]
+            max_b = values[2][1]
+        })
+
+        cache.set(redPath, [min_r, max_r])
+        cache.set(greenPath, [min_g, max_g])
+        cache.set(bluePath, [min_b, max_b])
+    }
+
+    console.log(min_r, max_r, min_g, max_g, min_b, max_b)
+    console.log(sensorItem.scaleRate)
+
+    const scaleRate = 1.0 - sensorItem.scaleRate / 100
+    // 基于 scale rate 进行拉伸
+    showingImageStrech.r_min = Math.round(min_r)
+    showingImageStrech.r_max = Math.round(min_r + (max_r - min_r) * scaleRate)
+    showingImageStrech.g_min = Math.round(min_g)
+    showingImageStrech.g_max = Math.round(min_g + (max_g - min_g) * scaleRate)
+    showingImageStrech.b_min = Math.round(min_b)
+    showingImageStrech.b_max = Math.round(min_b + (max_b - min_b) * scaleRate)
+
+    // 添加图层, 如果存在会先删除再添加
+    MapOperation.map_addRGBImageTileLayer(
+        {
+            redPath,
+            greenPath,
+            bluePath,
+            ...showingImageStrech,
+        },
+        stopLoading,
+    )
+
+    setTimeout(() => {
+        sensorItem.loading = false
+    }, 1000)
 }
 
 // 基于覆盖度返回opacity
 const judgeGridOpacity = (index: number, sceneGridsRes: any) => {
     let opacity = 0.01
     const totalImgLenght = allScenes.value.length
-    opacity = sceneGridsRes[index].scenes.length / totalImgLenght * 0.7
+    opacity = (sceneGridsRes[index].scenes.length / totalImgLenght) * 0.3
     return opacity
 }
 // 卫语句
@@ -985,8 +1019,9 @@ const verifyFilterByTags = () => {
     return true
 }
 
-
-
+onMounted(() => {
+    if (!ezStore.get('statisticCache')) ezStore.set('statisticCache', new Map())
+})
 </script>
 
 <style scoped src="./tabStyle.css"></style>
