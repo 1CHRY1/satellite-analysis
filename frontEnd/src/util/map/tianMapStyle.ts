@@ -858,12 +858,102 @@ const LocalVectorBaseMapStyle = {
     ],
 }
 
+// 我们自己的矢量瓦片底图
+const OurVectorBaseMapStyle = {
+    version: 8,
+    sources: {
+        offlineMapTiles: {
+            type: 'vector',
+            tiles:[
+                ezStore.get('conf').basemap_server2 + '/{z}/{x}/{y}',
+            ],
+            minzoom: 0,
+            maxzoom: 22, 
+        },
+    },
+    layers: [
+        {
+            id: 'park_polygon',
+            type: 'fill',
+            source: 'offlineMapTiles',
+            minzoom: 0,
+            maxzoom: 22,
+            'source-layer': 'park',
+            layout: {
+                visibility: 'visible',
+            },
+            paint: {
+                'fill-color': 'hsl(204, 0%, 100%)',
+                'fill-opacity': 1.0,
+            },
+            filter: ['==', '$type', 'Polygon'],
+        },
+        {
+            id: 'transportation_line',
+            type: 'line',
+            source: 'offlineMapTiles',
+            minzoom: 0,
+            maxzoom: 22,
+            'source-layer': 'transportation',
+            layout: {
+                visibility: 'visible',
+            },
+            paint: {
+                'line-color': 'hsl(207, 84%, 73%)',
+                'line-width': 1,
+                'line-opacity': 1.0,
+            },
+            filter: [
+                'all',
+                ['==', ['geometry-type'], 'LineString'],
+                [
+                    'all',
+                    ['!', ['has', 'access']],
+                    [
+                        'match',
+                        ['get', 'class'],
+                        [
+                            'primary',
+                            'primary_construction',
+                            'secondary',
+                            'secondary_construction',
+                            'tertiary',
+                        ],
+                        true,
+                        false,
+                    ],
+                ],
+            ],
+        },
+        {
+            id: 'water_polygon',
+            type: 'fill',
+            source: 'offlineMapTiles',
+            'source-layer': 'water',
+            minzoom: 0,
+            maxzoom: 22,
+            layout: {
+                visibility: 'visible',
+            },
+            paint: {
+                'fill-color': 'hsl(208, 79%, 62%)',
+                'fill-opacity': 1,
+            },
+            filter: ['==', '$type', 'Polygon'],
+        },
+    ],
+    glyphs: '/glyphs/mapbox/{fontstack}/{range}.pbf',
+}
+
+
+
+
 export type Style = 'image' | 'vector' | 'local'
 
 export const StyleMap = {
     image: TianImageStyle as unknown as StyleSpecification,
     vector: TianVectorStyle as unknown as StyleSpecification,
     // local: TianImageStyle as unknown as StyleSpecification,
-    local: LocalVectorBaseMapStyle as unknown as StyleSpecification,
+    local: OurVectorBaseMapStyle as unknown as StyleSpecification,
     // local: LocalImageBaseMapStyle as unknown as StyleSpecification,
 }

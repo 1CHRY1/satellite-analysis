@@ -4,6 +4,7 @@
     "back_app2": "/api2",
     "back_websocket": "",
     "basemap_server": "/basemap",
+    "basemap_server2": "/basemap2",
     "minioIpAndPort": "http://223.2.32.166:30900",
     "titiler": "/tiler",
     "ndviProjectId": "PRJyxITmCVLn3PMoaeca",
