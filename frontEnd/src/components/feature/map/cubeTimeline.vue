@@ -5,33 +5,20 @@
             <div class="date-filter start-filter">
                 <div class="filter-label">起始日期</div>
                 <div class="date-selector">
-                    <input
-                        type="date"
-                        v-model="startDateFilter"
-                        :min="minDate"
-                        :max="endDateFilter || maxDate"
-                        @change="applyDateFilter"
-                    />
+                    <input type="date" v-model="startDateFilter" :min="minDate" :max="endDateFilter || maxDate"
+                        @change="applyDateFilter" />
                 </div>
             </div>
 
             <div class="timeline-wrapper" @click="console.log(filteredImages)">
-                <button
-                    class="nav-button"
-                    @click="handleClick(activeIndex - 1)"
-                    :disabled="activeIndex <= 0"
-                >
+                <button class="nav-button" @click="handleClick(activeIndex - 1)" :disabled="activeIndex <= 0">
                     <ChevronLeftIcon :size="24" />
                 </button>
 
                 <div class="timeline-track" ref="timelineTrack">
-                    <div
-                        v-for="(item, index) in filteredImages"
-                        :key="index"
-                        class="timeline-item"
-                        :class="{ active: index === activeIndex }"
-                        @click="handleClick(index)"
-                    >
+                    <div v-for="(item, index) in filteredImages" :key="index" class="timeline-item"
+                        :class="{ active: index === activeIndex }" @click="handleClick(index)">
+                        <div class="label mb-1" @click="console.log(item, 1221)">{{ item.productName }}</div>
                         <div class="dot-container">
                             <div class="dot"></div>
                             <div class="connector" v-if="index < filteredImages.length - 1"></div>
@@ -40,11 +27,8 @@
                     </div>
                 </div>
 
-                <button
-                    class="nav-button"
-                    @click="handleClick(activeIndex + 1)"
-                    :disabled="activeIndex >= filteredImages.length - 1"
-                >
+                <button class="nav-button" @click="handleClick(activeIndex + 1)"
+                    :disabled="activeIndex >= filteredImages.length - 1">
                     <ChevronRightIcon :size="24" />
                 </button>
             </div>
@@ -53,13 +37,8 @@
             <div class="date-filter end-filter">
                 <div class="filter-label">结束日期</div>
                 <div class="date-selector">
-                    <input
-                        type="date"
-                        v-model="endDateFilter"
-                        :min="startDateFilter || minDate"
-                        :max="maxDate"
-                        @change="applyDateFilter"
-                    />
+                    <input type="date" v-model="endDateFilter" :min="startDateFilter || minDate" :max="maxDate"
+                        @change="applyDateFilter" />
                 </div>
             </div>
         </div>
@@ -138,7 +117,7 @@ const filteredImages = computed(() => {
     } else {
         images = multiImages.value as MultiImageInfoType[]
     }
-    console.log('all image', images)
+    // console.log('all image', images)
 
     if (startDateFilter.value) {
         images = images.filter((item) => new Date(item.time) >= new Date(startDateFilter.value))
@@ -262,9 +241,9 @@ const handleClick = async (index: number) => {
 
         if (cache.get(redPath) && cache.get(greenPath) && cache.get(bluePath)) {
             console.log('cache hit!')
-            ;[min_r, max_r] = cache.get(redPath)
-            ;[min_g, max_g] = cache.get(greenPath)
-            ;[min_b, max_b] = cache.get(bluePath)
+                ;[min_r, max_r] = cache.get(redPath)
+                ;[min_g, max_g] = cache.get(greenPath)
+                ;[min_b, max_b] = cache.get(bluePath)
         } else {
             promises.push(
                 getTifbandMinMax(redPath),
@@ -315,9 +294,9 @@ const handleClick = async (index: number) => {
 
         if (cache.get(redPath) && cache.get(greenPath) && cache.get(bluePath)) {
             console.log('cache hit!')
-            ;[min_r, max_r] = cache.get(redPath)
-            ;[min_g, max_g] = cache.get(greenPath)
-            ;[min_b, max_b] = cache.get(bluePath)
+                ;[min_r, max_r] = cache.get(redPath)
+                ;[min_g, max_g] = cache.get(greenPath)
+                ;[min_b, max_b] = cache.get(bluePath)
         } else {
             promises.push(
                 getTifbandMinMax(redPath),
@@ -461,7 +440,7 @@ onMounted(() => {
 .timeline-item {
     cursor: pointer;
     text-align: center;
-    height: 60px;
+    height: 90px;
     min-width: 80px;
     /* 确保每个项目有足够的宽度 */
     display: flex;

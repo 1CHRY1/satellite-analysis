@@ -73,6 +73,8 @@ modelServer:
     merge: /v0/tif/merge_v2
     noCloud: /v0/tif/calc_qa_middle
     spectrum: /v0/tif/get_spectral_profile
+    rasterPoint: /v0/tif/raster_point
+    rasterLine: /v0/tif/raster_line
     #    noCloud: /v0/tif/calc_qa_simple
     #    noCloud: /v0/tif/calc_qa
     ndvi: /v0/tif/calc_NDVI

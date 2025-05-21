@@ -38,10 +38,12 @@ public class SceneDesVO {
 
     @TableField(typeHandler = FastJson2TypeHandler.class)
     private JSONObject tags;
+    private Double noData;
 
     // 外键
     private String sensorName;
     private String productName;
+    private String platformName;
     private String resolution;
 //    @TableField(typeHandler = JSONArrayTypeHandler.class)
 //    private JSONArray images;
