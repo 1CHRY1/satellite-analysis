@@ -116,20 +116,13 @@ def merge_tiles(input_files, output_path):
 
 
 #### Main ########################################################################
-## Input : 网格分辨率 + 行政区GeojsonURL
-geojsonPath = "D:\\IdeaProjects\\test\\胶州市.json"
-grid_resolution_in_kilometer = 25
-maxCloudThreshold = 0.2 # 可接受的最大云量 20%
+## Input Args
+tiles = []
+resolution = 1
+cloud = 10
+scenes = []
 
-## Step 1 : 行政区范围 ————> 覆盖格网 ————> 检索影像
-f = open(geojsonPath, 'r', encoding='utf-8')
-geojson_input = json.load(f)
-f.close()
-
-bbox = get_geojson_bbox(geojson_input)
-gridHelper = GridHelper(grid_resolution_in_kilometer)
-grid_cells = gridHelper.get_grid_cells_by_bbox(bbox)
-print("共",len(grid_cells),"个格网")
+grid_cells = tiles
 
 # 影像检索, 数据问题，现在先写死上传的山东landsat三景
 scenes = [
