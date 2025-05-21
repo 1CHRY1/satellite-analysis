@@ -32,7 +32,7 @@ public class ModelExampleController {
     }
 
     @PostMapping("/noCloud")
-    public ResponseEntity<CommonResultVO> getNoCloudByRegion(@RequestBody NoCloudFetchDTO noCloudFetchDTO) {
+    public ResponseEntity<CommonResultVO> getNoCloudByRegion(@RequestBody NoCloudFetchDTO noCloudFetchDTO) throws IOException {
         return ResponseEntity.ok(modelExampleService.getNoCloudByRegion(noCloudFetchDTO));
     }
 
