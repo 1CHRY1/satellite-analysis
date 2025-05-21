@@ -2,6 +2,8 @@ package nnu.mnr.satellite.model.dto.modeling;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * Created with IntelliJ IDEA.
  *
@@ -11,9 +13,9 @@ import lombok.Data;
  */
 
 @Data
-public class SpectrumFetchDTO {
+public class PointRasterFetchDTO {
 
     private Double[] point;
-    private String sceneId;
+    private List<String> sceneIds;
 
 }

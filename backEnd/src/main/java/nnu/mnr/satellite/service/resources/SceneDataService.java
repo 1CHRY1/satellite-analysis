@@ -48,6 +48,12 @@ public class SceneDataService {
         return sceneRepo.getScenesDesById(sceneId);
     }
 
+    public List<Scene> getScenesByIds(List<String> sceneIds) {
+        QueryWrapper<Scene> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in("scene_id", sceneIds);
+        return sceneRepo.selectList(queryWrapper);
+    }
+
     public List<Scene> getScenesByProductId(String productId) {
         QueryWrapper<Scene> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("product_id", productId);
