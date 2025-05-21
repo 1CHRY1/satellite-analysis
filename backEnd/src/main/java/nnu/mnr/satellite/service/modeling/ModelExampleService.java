@@ -196,7 +196,7 @@ public class ModelExampleService {
             List<ModelServerImageDTO> sceneImages = imageDataService.getModelServerImageDTOBySceneId(scene.getSceneId());
             images.add(sceneImages.get(0));
         }
-        JSONObject pointRasterParam = JSONObject.of("points",points, "raster", images);
+        JSONObject pointRasterParam = JSONObject.of("points",points, "rasters", images);
         String pointRasterUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("rasterLine");
         long expirationTime = 60 * 10;
         return runModelServerModel(pointRasterUrl, pointRasterParam, expirationTime);
