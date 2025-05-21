@@ -17,12 +17,9 @@
                                     <span>行政区</span>
                                 </div>
                                 <div class="config-control justify-center">
-                                    <RegionSelects
-                                        v-model="region"
-                                        :placeholder="['选择省份', '选择城市', '选择区县']"
+                                    <RegionSelects v-model="region" :placeholder="['选择省份', '选择城市', '选择区县']"
                                         class="flex gap-2"
-                                        select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none"
-                                    />
+                                        select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
                                 </div>
                             </div>
                             <div class="config-item">
@@ -33,16 +30,10 @@
                                 <div class="config-control flex-col !items-start">
                                     <div>
                                         格网分辨率选择：
-                                        <select
-                                            v-model="selectedRadius"
-                                            class="w-40 appearance-none rounded-lg border border-[#2c3e50] bg-[#0d1526] px-4 py-2 pr-8 text-white transition-all duration-200 hover:border-[#206d93] focus:border-[#3b82f6] focus:outline-none"
-                                        >
-                                            <option
-                                                v-for="option in radiusOptions"
-                                                :key="option"
-                                                :value="option"
-                                                class="bg-[#0d1526] text-white"
-                                            >
+                                        <select v-model="selectedRadius"
+                                            class="w-40 appearance-none rounded-lg border border-[#2c3e50] bg-[#0d1526] px-4 py-2 pr-8 text-white transition-all duration-200 hover:border-[#206d93] focus:border-[#3b82f6] focus:outline-none">
+                                            <option v-for="option in radiusOptions" :key="option" :value="option"
+                                                class="bg-[#0d1526] text-white">
                                                 {{ option }}km
                                             </option>
                                         </select>
@@ -53,10 +44,8 @@
                                     </div>
                                 </div>
                             </div>
-                            <button
-                                @click="getAllGrid"
-                                class="cursor-pointer rounded-lg border border-[#2c3e50] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
-                            >
+                            <button @click="getAllGrid"
+                                class="cursor-pointer rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95">
                                 获取格网
                             </button>
                         </div>
@@ -67,7 +56,7 @@
                         <div class="section-icon">
                             <MapPinIcon :size="18" />
                         </div>
-                        <h2 class="section-title">时间与最大云量</h2>
+                        <h2 class="section-title">按时间筛选</h2>
                     </div>
                     <div class="section-content">
                         <div class="config-container">
@@ -75,62 +64,39 @@
                                 <div class="config-label relative">
                                     <CalendarIcon :size="16" class="config-icon" />
                                     <span>时间范围</span>
-                                    <a-checkbox
-                                        v-model:checked="tileMergeConfig.useLatestTime"
-                                        class="absolute right-1 !text-sky-300"
-                                    >
-                                        时间最近优先
-                                    </a-checkbox>
                                 </div>
                                 <div class="config-control">
-                                    <a-range-picker
-                                        class="custom-date-picker"
-                                        v-model:value="tileMergeConfig.dateRange"
-                                        picker="day"
-                                        :allow-clear="false"
-                                        :placeholder="['开始日期', '结束日期']"
-                                    />
+                                    <a-range-picker class="custom-date-picker" v-model:value="tileMergeConfig.dateRange"
+                                        picker="day" :allow-clear="false" :placeholder="['开始日期', '结束日期']" />
                                 </div>
                             </div>
-                            <div class="config-item">
+                            <!-- <div class="config-item">
                                 <div class="config-label relative">
                                     <CloudIcon :size="16" class="config-icon" />
                                     <span>最大云量限度</span>
-                                    <a-checkbox
-                                        v-model:checked="tileMergeConfig.useMinCloud"
-                                        class="absolute right-1 !text-sky-300"
-                                    >
+                                    <a-checkbox v-model:checked="tileMergeConfig.useMinCloud"
+                                        class="absolute right-1 !text-sky-300">
                                         云量最小优先
                                     </a-checkbox>
                                 </div>
                                 <div class="config-control">
                                     <div class="cloud-slider-container">
-                                        <span class="cloud-value"
-                                            >{{ tileMergeConfig.cloudRange[0] }}%</span
-                                        >
+                                        <span class="cloud-value">{{ tileMergeConfig.cloudRange[0] }}%</span>
                                         <div class="slider-wrapper">
-                                            <a-slider
-                                                class="custom-slider"
-                                                range
+                                            <a-slider class="custom-slider" range
                                                 v-model:value="tileMergeConfig.cloudRange"
-                                                :tipFormatter="(value: number) => value + '%'"
-                                            />
+                                                :tipFormatter="(value: number) => value + '%'" />
                                         </div>
-                                        <span class="cloud-value"
-                                            >{{ tileMergeConfig.cloudRange[1] }}%</span
-                                        >
+                                        <span class="cloud-value">{{ tileMergeConfig.cloudRange[1] }}%</span>
                                     </div>
                                 </div>
-                            </div>
-                            <button
-                                @click="filterByCloudAndDate"
-                                :disabled="filterByCloudAndDateLoading"
-                                class="flex justify-center rounded-lg border border-[#2c3e50] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
+                            </div> -->
+                            <button @click="filterByCloudAndDate" :disabled="filterByCloudAndDateLoading"
+                                class="flex justify-center rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
                                 :class="{
                                     'cursor-not-allowed': filterByCloudAndDateLoading,
                                     'cursor-pointer': !filterByCloudAndDateLoading,
-                                }"
-                            >
+                                }">
                                 <span>影像筛选 </span>
                                 <Loader v-if="filterByCloudAndDateLoading" class="ml-2" />
                             </button>
@@ -146,32 +112,9 @@
                                                 <MapIcon :size="16" />
                                             </div>
                                             <div class="result-info-content">
-                                                <div class="result-info-label">行政区划编码</div>
-                                                <div class="result-info-value">
-                                                    {{ displayLabel }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="result-info-item">
-                                            <div class="result-info-icon">
-                                                <MapIcon :size="16" />
-                                            </div>
-                                            <div class="result-info-content">
                                                 <div class="result-info-label">格网分辨率</div>
                                                 <div class="result-info-value">
                                                     {{ selectedRadius }}km
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="result-info-item">
-                                            <div class="result-info-icon">
-                                                <ImageIcon :size="16" />
-                                            </div>
-                                            <div class="result-info-content">
-                                                <div class="result-info-label">云量</div>
-                                                <div class="result-info-value">
-                                                    {{ tileMergeConfig.cloudRange[0] }}% ~
-                                                    {{ tileMergeConfig.cloudRange[1] }}%
                                                 </div>
                                             </div>
                                         </div>
@@ -237,7 +180,7 @@
                             <DatabaseIcon :size="18" />
                         </div>
                         <h2 class="section-title">交互探索</h2>
-                        <div class="section-icon absolute right-0" @click="clearAllShowingSensor">
+                        <div class="section-icon absolute right-0 cursor-pointer" @click="clearAllShowingSensor">
                             <a-tooltip>
                                 <template #title>清空影像图层</template>
                                 <Trash2Icon :size="18" />
@@ -253,17 +196,14 @@
                                     <span>数据来源</span>
                                 </div>
                                 <div class="config-control gap-6">
-                                    <button
-                                        v-for="label in buttonGroups[0]"
-                                        :key="label"
+                                    <button v-for="label in buttonGroups[0]" :key="label"
                                         @click="(toggleButton(label), filterByTags())"
                                         class="cursor-pointer rounded-lg border px-4 py-1 transition-all duration-200 active:scale-90"
                                         :class="[
                                             isActive(label)
                                                 ? 'border-[#2bb2ff] bg-[#0d2e4b] text-white'
                                                 : 'border-[#475569] bg-transparent text-[#94a3b8] hover:border-[#2bb2ff] hover:bg-[#1e293b]',
-                                        ]"
-                                    >
+                                        ]">
                                         {{ label }}
                                     </button>
                                 </div>
@@ -274,17 +214,14 @@
                                     <span>传感器类型</span>
                                 </div>
                                 <div class="config-control gap-4">
-                                    <button
-                                        v-for="label in buttonGroups[1]"
-                                        :key="label"
+                                    <button v-for="label in buttonGroups[1]" :key="label"
                                         @click="(toggleButton(label), filterByTags())"
                                         class="cursor-pointer rounded-lg border px-4 py-1 transition-all duration-200 active:scale-90"
                                         :class="[
                                             isActive(label)
                                                 ? 'border-[#2bb2ff] bg-[#0d2e4b] text-white'
                                                 : 'border-[#475569] bg-transparent text-[#94a3b8] hover:border-[#2bb2ff] hover:bg-[#1e293b]',
-                                        ]"
-                                    >
+                                        ]">
                                         {{ label }}
                                     </button>
                                 </div>
@@ -296,10 +233,7 @@
                                     <span>统计信息</span>
                                 </div>
                                 <div class="config-control flex-col gap-4">
-                                    <div
-                                        v-for="(sensorItem, index) in filteredSensorsItems"
-                                        class="config-item w-full"
-                                    >
+                                    <div v-for="(sensorItem, index) in filteredSensorsItems" class="config-item w-full">
                                         <div>传感器名称及分辨率：{{ sensorItem.key }}</div>
                                         <div>类型：{{ imageType(sensorItem.tags) }}</div>
                                         <div class="result-info-container">
@@ -324,10 +258,10 @@
                                                         {{
                                                             sensorItem.coveredCount != 'NaN%'
                                                                 ? (
-                                                                      (sensorItem.coveredCount *
-                                                                          100) /
-                                                                      allGridCount
-                                                                  ).toFixed(2) + '%'
+                                                                    (sensorItem.coveredCount *
+                                                                        100) /
+                                                                    allGridCount
+                                                                ).toFixed(2) + '%'
                                                                 : '待计算'
                                                         }}
                                                     </div>
@@ -336,25 +270,19 @@
                                         </div>
                                         <div>
                                             <label class="mr-2 text-white">选择影像：</label>
-                                            <select
-                                                @change="
-                                                    (e) =>
-                                                        showImageBySensorAndSelect(
-                                                            sensorItem,
-                                                            (e.target as HTMLSelectElement).value,
-                                                        )
-                                                "
-                                                class="max-h-[600px] max-w-[calc(100%-90px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
-                                            >
+                                            <select @change="
+                                                (e) =>
+                                                    showImageBySensorAndSelect(
+                                                        sensorItem,
+                                                        (e.target as HTMLSelectElement).value,
+                                                    )
+                                            "
+                                                class="max-h-[600px] max-w-[calc(100%-90px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none">
                                                 <option disabled selected value="">
                                                     请选择影像
                                                 </option>
-                                                <option
-                                                    v-for="sceneName in sensorItem.sceneNames"
-                                                    :key="sceneName"
-                                                    :value="sceneName"
-                                                    class="truncate"
-                                                >
+                                                <option v-for="sceneName in sensorItem.sceneNames" :key="sceneName"
+                                                    :value="sceneName" class="truncate">
                                                     {{ sceneName }}
                                                 </option>
                                             </select>
@@ -363,21 +291,16 @@
                                         <div v-show="sensorItem.selectedSceneInfo" class="mt-4">
                                             <div class="mr-1 grid grid-cols-[1fr_2fr]">
                                                 <span class="text-white">亮度拉伸:</span>
-                                                <a-slider
-                                                    :tip-formatter="scaleRateFormatter"
+                                                <a-slider :tip-formatter="scaleRateFormatter"
                                                     v-model:value="sensorItem.scaleRate"
-                                                    @afterChange="onAfterScaleRateChange"
-                                                />
+                                                    @afterChange="onAfterScaleRateChange" />
                                             </div>
                                             <div>
                                                 <!-- <div class="bg-[#1b42528a] cursor-pointer text-white border border-[#2c3e50] rounded-lg px-4 py-1 hover:bg-[#1a2b4c] hover:border-[#2bb2ff] transition-all duration-200 active:scale-95 text-center mt-4"
                                                     @click="handleShowImage(sensorItem)">
                                                     影像可视化</div> -->
-                                                <a-button
-                                                    class="custom-button w-full!"
-                                                    :loading="sensorItem.loading"
-                                                    @click="handleShowImage(sensorItem)"
-                                                >
+                                                <a-button class="custom-button w-full!" :loading="sensorItem.loading"
+                                                    @click="handleShowImage(sensorItem)">
                                                     影像可视化
                                                 </a-button>
                                             </div>
@@ -513,12 +436,12 @@ const selectedRadius = ref(20)
 const tileMergeConfig = ref({
     useLatestTime: false,
     useMinCloud: false,
-    dateRange: [dayjs('2010-10'), dayjs('2025-05')],
+    dateRange: [dayjs('2024-01'), dayjs('2025-05')],
     cloudRange: [0, 100],
 })
 const region = ref<RegionValues>({
-    province: '110000',
-    city: '',
+    province: '370000',
+    city: '370100',
     area: '',
 })
 const allGrids = ref([])
@@ -889,7 +812,7 @@ const onAfterScaleRateChange = (scale_rate: number) => {
 }
 const showImageBySensorAndSelect = async (image: any, imageName: string) => {
     if (imageName === '') {
-        console.log('搞毛啊，能选出空值来？')
+        console.error('搞毛啊，能选出空值来？')
         ElMessage.warning('请选择有效影像')
         return
     }
@@ -935,9 +858,9 @@ const handleShowImage = async (sensorItem) => {
 
     if (cache.get(redPath) && cache.get(greenPath) && cache.get(bluePath)) {
         console.log('cache hit!')
-        ;[min_r, max_r] = cache.get(redPath)
-        ;[min_g, max_g] = cache.get(greenPath)
-        ;[min_b, max_b] = cache.get(bluePath)
+            ;[min_r, max_r] = cache.get(redPath)
+            ;[min_g, max_g] = cache.get(greenPath)
+            ;[min_b, max_b] = cache.get(bluePath)
     } else {
         promises.push(
             getTifbandMinMax(redPath),

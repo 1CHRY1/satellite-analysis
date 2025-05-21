@@ -17,12 +17,8 @@
 
             <div class="band-selection">
                 <label for="sensor-select">传感器:</label>
-                <select
-                    id="sensor-select"
-                    v-model="selectedSensor"
-                    class="band-select"
-                    @change="handleSensorChange(selectedSensor)"
-                >
+                <select id="sensor-select" v-model="selectedSensor" class="band-select"
+                    @change="handleSensorChange(selectedSensor)">
                     <option disabled value="">请选择</option>
                     <option v-for="sensor in sensors" :key="sensor" :value="sensor">
                         {{ sensor }}
@@ -31,18 +27,10 @@
             </div>
 
             <div class="tabs" v-show="showBandSelector">
-                <button
-                    class="tab-btn"
-                    :class="{ active: activeTab === 'single' }"
-                    @click="activeTab = 'single'"
-                >
+                <button class="tab-btn" :class="{ active: activeTab === 'single' }" @click="activeTab = 'single'">
                     单波段
                 </button>
-                <button
-                    class="tab-btn"
-                    :class="{ active: activeTab === 'rgb' }"
-                    @click="activeTab = 'rgb'"
-                >
+                <button class="tab-btn" :class="{ active: activeTab === 'rgb' }" @click="activeTab = 'rgb'">
                     三波段合成
                 </button>
             </div>
@@ -88,17 +76,10 @@
                     </select>
                 </div>
             </div>
-            <div
-                class="mr-1 grid grid-cols-[2fr_3fr]"
-                @mousedown="handleMouseDown"
-                @mouseup="handleMouseUp"
-            >
+            <div class="mr-1 grid grid-cols-[2fr_3fr]" @mousedown="handleMouseDown" @mouseup="handleMouseUp">
                 <span class="sp text-white">亮度拉伸:</span>
-                <a-slider
-                    :tip-formatter="scaleRateFormatter"
-                    v-model:value="scaleRate"
-                    @afterChange="onAfterScaleRateChange"
-                />
+                <a-slider :tip-formatter="scaleRateFormatter" v-model:value="scaleRate"
+                    @afterChange="onAfterScaleRateChange" />
             </div>
 
             <div class="btns">
@@ -167,9 +148,11 @@ type ImageInfoType = {
 type MultiImageInfoType = {
     sceneId: string
     time: string
+    productName: string
     redPath: string
     greenPath: string
     bluePath: string
+
 }
 
 type GridInfoType = {
@@ -292,6 +275,7 @@ const selectedBBand = ref('')
 
 // Handle visualization
 const handleVisualize = () => {
+
     const { rowId, columnId, resolution } = gridData.value
     const gridInfo: GridInfoType = {
         rowId,
@@ -333,13 +317,14 @@ const handleVisualize = () => {
                     bluePath = bandImg.bucket + '/' + bandImg.tifPath
                 }
             }
-
             rgbImageData.push({
                 sceneId: sceneInfo.sceneId,
+                productName: sceneInfo.productName + '-' + sceneInfo.resolution,
                 time: sceneInfo.sceneTime,
                 redPath: redPath,
                 greenPath: greenPath,
                 bluePath: bluePath,
+
             })
         }
         bus.emit('cubeVisualize', rgbImageData, gridInfo, scaleRate.value, 'rgb')
@@ -410,6 +395,7 @@ const handleVisualize = () => {
                 rgbImageData.push({
                     sceneId: scene.sceneId,
                     time: scene.sceneTime,
+                    productName: scene.productName + '-' + scene.resolution,
                     redPath: redPath,
                     greenPath: greenPath,
                     bluePath: bluePath,

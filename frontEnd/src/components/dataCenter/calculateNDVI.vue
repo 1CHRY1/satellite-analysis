@@ -78,13 +78,28 @@
                             <div class="result-info-container">
                                 <div class="result-info-item">
                                     <div class="result-info-icon">
-                                        <MapIcon :size="16" />
+                                        <CloudIcon :size="16" />
                                     </div>
                                     <div class="result-info-content">
-                                        <div class="result-info-label">研究区行政区划编码</div>
-                                        <div class="result-info-value">{{ props.regionConfig.regionCode }} </div>
+                                        <div class="result-info-label">格网分辨率</div>
+                                        <div class="result-info-value">{{ props.regionConfig.space }}km</div>
                                     </div>
                                 </div>
+                                <div class="result-info-item">
+                                    <div class="result-info-icon">
+                                        <CalendarIcon :size="16" />
+                                    </div>
+                                    <div class="result-info-content">
+                                        <div class="result-info-label">涵盖时间范围</div>
+                                        <div class="result-info-value date-range">
+                                            <div class="date-item">{{ formatTime(props.regionConfig.dataRange[0], 'day')
+                                                }}~
+                                                {{ formatTime(props.regionConfig.dataRange[1], 'day')
+                                                }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="result-info-item">
                                     <div class="result-info-icon">
                                         <ImageIcon :size="16" />
@@ -96,30 +111,20 @@
                                 </div>
                                 <div class="result-info-item">
                                     <div class="result-info-icon">
-                                        <CalendarIcon :size="16" />
+                                        <MapIcon :size="16" />
                                     </div>
                                     <div class="result-info-content">
-                                        <div class="result-info-label">涵盖时间范围</div>
-                                        <div class="result-info-value date-range">
-                                            <div class="date-item">{{ formatTime(props.regionConfig.dataRange[0], 'day')
-                                            }}~
-                                                {{ formatTime(props.regionConfig.dataRange[1], 'day')
-                                                }}</div>
-                                        </div>
+                                        <div class="result-info-label">影像覆盖率</div>
+                                        <div class="result-info-value">{{ props.regionConfig.coverage != 'NaN%'
+                                            ? props.regionConfig.coverage
+                                            : '待计算' }} </div>
                                     </div>
                                 </div>
-                                <div class="result-info-item">
-                                    <div class="result-info-icon">
-                                        <CloudIcon :size="16" />
-                                    </div>
-                                    <div class="result-info-content">
-                                        <div class="result-info-label">云量范围</div>
-                                        <div class="result-info-value">0 ~ {{ props.regionConfig.cloud }}%</div>
-                                    </div>
-                                </div>
+
+
                             </div>
                             <button @click="selectCal"
-                                class="bg-[#0d1526] w-full  cursor-pointer text-white border border-[#2c3e50] rounded-lg px-4 py-2 hover:bg-[#1a2b4c] hover:border-[#2bb2ff] transition-all duration-200 active:scale-95">
+                                class="bg-[#0d1526] w-full  cursor-pointer text-white border border-[#247699] rounded-lg px-4 py-2 hover:bg-[#1a2b4c] hover:border-[#2bb2ff] transition-all duration-200 active:scale-95">
                                 开始计算
                             </button>
                             <div v-if="showProgress"
