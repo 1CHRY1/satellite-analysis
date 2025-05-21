@@ -7,5 +7,7 @@
     "minioIpAndPort": "http://223.2.32.166:30900",
     "titiler": "/tiler",
     "ndviProjectId": "PRJyxITmCVLn3PMoaeca",
-    "spectrumProjectId": "PRJyxITmCVLn3PMoaeca"
+    "spectrumProjectId": "PRJyxITmCVLn3PMoaeca",
+    "test_basemap_url":"http://172.16.4.53/cva_w_2000/L{z}/R{x}/C{y}.png",
+    "test_basemap_text_url":"http://172.16.4.53/vec_w_2000/L{z}/R{x}/C{y}.png"
 }
