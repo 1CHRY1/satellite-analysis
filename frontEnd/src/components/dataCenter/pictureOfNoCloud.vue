@@ -11,28 +11,39 @@
                     </div>
                     <div class="section-content">
                         <div class="config-container">
-
                             <div class="config-item">
                                 <div class="config-label relative">
                                     <BoltIcon :size="16" class="config-icon" />
                                     <span>国产光学影像</span>
                                 </div>
                                 <div class="config-control flex-col !items-start">
-                                    <div class="flex flex-col gap-2 w-full">
+                                    <div class="flex w-full flex-col gap-2">
                                         <label class="flex items-center gap-2">
-                                            <input type="checkbox" v-model="additionalData[0]" disabled
-                                                class="w-4 h-4 rounded">
+                                            <input
+                                                type="checkbox"
+                                                v-model="additionalData[0]"
+                                                disabled
+                                                class="h-4 w-4 rounded"
+                                            />
                                             国产亚米级影像
                                         </label>
                                         <label class="flex items-center gap-2">
-                                            <input type="checkbox" v-model="dataReconstruction[0]"
-                                                @click="add2mDemoticImages" class="w-4 h-4 rounded">
+                                            <input
+                                                type="checkbox"
+                                                v-model="dataReconstruction[0]"
+                                                @click="add2mDemoticImages"
+                                                class="h-4 w-4 rounded"
+                                            />
                                             使用国产2m级影像超分重建亚米级数据
                                         </label>
-                                        <div v-if="showProgress[0]"
-                                            class="w-full  bg-[#1e293b] rounded-lg overflow-hidden border border-[#2c3e50]">
-                                            <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
-                                                :style="{ width: `${progress[0]}%` }"></div>
+                                        <div
+                                            v-if="showProgress[0]"
+                                            class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]"
+                                        >
+                                            <div
+                                                class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
+                                                :style="{ width: `${progress[0]}%` }"
+                                            ></div>
                                         </div>
                                     </div>
                                     <div class="result-info-container">
@@ -42,7 +53,8 @@
                                             </div>
                                             <div class="result-info-content">
                                                 <div class="result-info-label">行政区划编码</div>
-                                                <div class="result-info-value">{{ props.regionConfig.regionCode }}
+                                                <div class="result-info-value">
+                                                    {{ props.regionConfig.regionCode }}
                                                 </div>
                                             </div>
                                         </div>
@@ -52,7 +64,9 @@
                                             </div>
                                             <div class="result-info-content">
                                                 <div class="result-info-label">格网分辨率</div>
-                                                <div class="result-info-value">{{ props.regionConfig.space }}km </div>
+                                                <div class="result-info-value">
+                                                    {{ props.regionConfig.space }}km
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="result-info-item">
@@ -62,11 +76,20 @@
                                             <div class="result-info-content">
                                                 <div class="result-info-label">涵盖时间范围</div>
                                                 <div class="result-info-value date-range">
-                                                    <div class="date-item">{{
-                                                        formatTime(props.regionConfig.dataRange[0], 'day')
+                                                    <div class="date-item">
+                                                        {{
+                                                            formatTime(
+                                                                props.regionConfig.dataRange[0],
+                                                                'day',
+                                                            )
                                                         }}~
-                                                        {{ formatTime(props.regionConfig.dataRange[1], 'day')
-                                                        }}</div>
+                                                        {{
+                                                            formatTime(
+                                                                props.regionConfig.dataRange[1],
+                                                                'day',
+                                                            )
+                                                        }}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -76,7 +99,9 @@
                                             </div>
                                             <div class="result-info-content">
                                                 <div class="result-info-label">云量范围</div>
-                                                <div class="result-info-value">0 ~ {{ props.regionConfig.cloud }}%</div>
+                                                <div class="result-info-value">
+                                                    0 ~ {{ props.regionConfig.cloud }}%
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="result-info-item">
@@ -84,8 +109,12 @@
                                                 <CloudIcon :size="16" />
                                             </div>
                                             <div class="result-info-content">
-                                                <div class="result-info-label">研究区亚米级国产影像</div>
-                                                <div class="result-info-value">{{ demotic }}景影像</div>
+                                                <div class="result-info-label">
+                                                    研究区亚米级国产影像
+                                                </div>
+                                                <div class="result-info-value">
+                                                    {{ demotic }}景影像
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="result-info-item">
@@ -93,9 +122,16 @@
                                                 <CloudIcon :size="16" />
                                             </div>
                                             <div class="result-info-content">
-                                                <div class="result-info-label">亚米级国产影像覆盖率</div>
-                                                <div class="result-info-value">{{ coverageRate.demotic1m != 'NaN%'
-                                                    ? coverageRate.demotic1m : '待计算' }}</div>
+                                                <div class="result-info-label">
+                                                    亚米级国产影像覆盖率
+                                                </div>
+                                                <div class="result-info-value">
+                                                    {{
+                                                        coverageRate.demotic1m != 'NaN%'
+                                                            ? coverageRate.demotic1m
+                                                            : '待计算'
+                                                    }}
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="result-info-item">
@@ -103,8 +139,12 @@
                                                 <CloudIcon :size="16" />
                                             </div>
                                             <div class="result-info-content">
-                                                <div class="result-info-label">研究区国产影像（2m超分后）</div>
-                                                <div class="result-info-value">{{ demotic2mImages.length }}景影像</div>
+                                                <div class="result-info-label">
+                                                    研究区国产影像（2m超分后）
+                                                </div>
+                                                <div class="result-info-value">
+                                                    {{ demotic2mImages.length }}景影像
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="result-info-item">
@@ -112,41 +152,63 @@
                                                 <CloudIcon :size="16" />
                                             </div>
                                             <div class="result-info-content">
-                                                <div class="result-info-label">影像覆盖率（2m超分后）</div>
-                                                <div class="result-info-value">{{ coverageRate.demotic2m != 'NaN%'
-                                                    ? coverageRate.demotic2m : '待计算' }}</div>
+                                                <div class="result-info-label">
+                                                    影像覆盖率（2m超分后）
+                                                </div>
+                                                <div class="result-info-value">
+                                                    {{
+                                                        coverageRate.demotic2m != 'NaN%'
+                                                            ? coverageRate.demotic2m
+                                                            : '待计算'
+                                                    }}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-
                             </div>
                             <div class="config-item">
                                 <div class="config-label relative">
                                     <CalendarIcon :size="16" class="config-icon" />
                                     <span>融合国外光学影像</span>
-                                    <el-tooltip content="对于缺失数据的格网，采用国外光学影像进行填补，填补过程中基于AI算法进行超分辨率重建" placement="top"
-                                        effect="dark">
+                                    <el-tooltip
+                                        content="对于缺失数据的格网，采用国外光学影像进行填补，填补过程中基于AI算法进行超分辨率重建"
+                                        placement="top"
+                                        effect="dark"
+                                    >
                                         <CircleHelp :size="14" />
                                     </el-tooltip>
                                 </div>
                                 <div class="config-control flex-col !items-start">
                                     <div class="flex flex-col gap-2">
                                         <label class="flex items-center gap-2">
-                                            <input type="checkbox" v-model="additionalData[1]" @click="addAbroadImages"
-                                                :disabled="!dataReconstruction[0]" class="w-4 h-4 rounded">
+                                            <input
+                                                type="checkbox"
+                                                v-model="additionalData[1]"
+                                                @click="addAbroadImages"
+                                                :disabled="!dataReconstruction[0]"
+                                                class="h-4 w-4 rounded"
+                                            />
                                             国外影像填补缺失格网
                                         </label>
                                         <label class="flex items-center gap-2">
-                                            <input type="checkbox" v-model="dataReconstruction[1]"
-                                                @click="controlProgress(1)" :disabled="!dataReconstruction[0]"
-                                                class="w-4 h-4 rounded">
+                                            <input
+                                                type="checkbox"
+                                                v-model="dataReconstruction[1]"
+                                                @click="controlProgress(1)"
+                                                :disabled="!dataReconstruction[0]"
+                                                class="h-4 w-4 rounded"
+                                            />
                                             使用国外影像超分重建数据
                                         </label>
-                                        <div v-if="showProgress[1]"
-                                            class="w-full  bg-[#1e293b] rounded-lg overflow-hidden border border-[#2c3e50]">
-                                            <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
-                                                :style="{ width: `${progress[1]}%` }"></div>
+                                        <div
+                                            v-if="showProgress[1]"
+                                            class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]"
+                                        >
+                                            <div
+                                                class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
+                                                :style="{ width: `${progress[1]}%` }"
+                                            ></div>
                                         </div>
                                     </div>
                                     <div class="result-info-container w-full">
@@ -156,7 +218,9 @@
                                             </div>
                                             <div class="result-info-content">
                                                 <div class="result-info-label">研究区国外影像</div>
-                                                <div class="result-info-value">{{ internationalImages.length }}景影像</div>
+                                                <div class="result-info-value">
+                                                    {{ internationalImages.length }}景影像
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="result-info-item">
@@ -165,8 +229,12 @@
                                             </div>
                                             <div class="result-info-content">
                                                 <div class="result-info-label">累积影像覆盖率</div>
-                                                <div class="result-info-value">{{ coverageRate.international != 'NaN%' ?
-                                                    coverageRate.international : '待计算' }}
+                                                <div class="result-info-value">
+                                                    {{
+                                                        coverageRate.international != 'NaN%'
+                                                            ? coverageRate.international
+                                                            : '待计算'
+                                                    }}
                                                 </div>
                                             </div>
                                         </div>
@@ -177,29 +245,48 @@
                                 <div class="config-label relative">
                                     <CalendarIcon :size="16" class="config-icon" />
                                     <span>融合SAR影像</span>
-                                    <el-tooltip content="勾选将使用雷达数据进行色彩变换，与光学数据配准，并补充重构。" placement="top" effect="dark">
+                                    <el-tooltip
+                                        content="勾选将使用雷达数据进行色彩变换，与光学数据配准，并补充重构。"
+                                        placement="top"
+                                        effect="dark"
+                                    >
                                         <CircleHelp :size="14" />
                                     </el-tooltip>
                                 </div>
                                 <div class="config-control flex-col !items-start">
                                     <div class="flex flex-col gap-2">
                                         <label class="flex items-center gap-2">
-                                            <input type="checkbox" v-model="additionalData[2]" @click="addRadarImages"
-                                                :disabled="!additionalData[1] || !dataReconstruction[1]"
-                                                class="w-4 h-4 rounded">
+                                            <input
+                                                type="checkbox"
+                                                v-model="additionalData[2]"
+                                                @click="addRadarImages"
+                                                :disabled="
+                                                    !additionalData[1] || !dataReconstruction[1]
+                                                "
+                                                class="h-4 w-4 rounded"
+                                            />
                                             SAR影像填补缺失格网
                                         </label>
                                         <label class="flex items-center gap-2">
-                                            <input type="checkbox" v-model="dataReconstruction[2]"
+                                            <input
+                                                type="checkbox"
+                                                v-model="dataReconstruction[2]"
                                                 @click="controlProgress(2)"
-                                                :disabled="!additionalData[1] || !dataReconstruction[1]"
-                                                class="w-4 h-4 rounded">
+                                                :disabled="
+                                                    !additionalData[1] || !dataReconstruction[1]
+                                                "
+                                                class="h-4 w-4 rounded"
+                                            />
                                             使用SAR影像色彩变换重建数据
                                         </label>
-                                        <div v-if="showProgress[2]"
-                                            class="w-full  bg-[#1e293b] rounded-lg overflow-hidden border border-[#2c3e50]">
-                                            <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
-                                                :style="{ width: `${progress[2]}%` }"></div>
+                                        <div
+                                            v-if="showProgress[2]"
+                                            class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]"
+                                        >
+                                            <div
+                                                class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
+                                                :style="{ width: `${progress[2]}%` }"
+                                            ></div>
                                         </div>
                                     </div>
                                     <div class="result-info-container w-full">
@@ -209,7 +296,9 @@
                                             </div>
                                             <div class="result-info-content">
                                                 <div class="result-info-label">研究区SAR影像</div>
-                                                <div class="result-info-value">{{ radarImages.length }}景影像</div>
+                                                <div class="result-info-value">
+                                                    {{ radarImages.length }}景影像
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="result-info-item">
@@ -218,8 +307,12 @@
                                             </div>
                                             <div class="result-info-content">
                                                 <div class="result-info-label">累积影像覆盖率</div>
-                                                <div class="result-info-value">{{ coverageRate.addRadar != 'NaN%'
-                                                    ? coverageRate.addRadar : '待计算' }}
+                                                <div class="result-info-value">
+                                                    {{
+                                                        coverageRate.addRadar != 'NaN%'
+                                                            ? coverageRate.addRadar
+                                                            : '待计算'
+                                                    }}
                                                 </div>
                                             </div>
                                         </div>
@@ -227,21 +320,26 @@
                                 </div>
                             </div>
 
-                            <div class="w-full flex flex-col">
-                                <button @click="calNoClouds"
-                                    class="bg-[#0d1526] w-full  cursor-pointer text-white border border-[#2c3e50] rounded-lg px-4 py-2 hover:bg-[#1a2b4c] hover:border-[#2bb2ff] transition-all duration-200 active:scale-95">
+                            <div class="flex w-full flex-col">
+                                <button
+                                    @click="calNoClouds"
+                                    class="w-full cursor-pointer rounded-lg border border-[#2c3e50] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
+                                >
                                     一版图重构
                                 </button>
-                                <div v-if="showProgress[3]"
-                                    class="w-full  bg-[#1e293b] rounded-lg overflow-hidden border border-[#2c3e50]">
-                                    <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
-                                        :style="{ width: `${progress[3]}%` }"></div>
+                                <div
+                                    v-if="showProgress[3]"
+                                    class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]"
+                                >
+                                    <div
+                                        class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
+                                        :style="{ width: `${progress[3]}%` }"
+                                    ></div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </section>
-
 
                 <section class="panel-section" v-if="calImage.length > 0">
                     <div class="section-header">
@@ -259,14 +357,13 @@
                         </div>
                     </div>
                 </section>
-
             </div>
         </dv-border-box12>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, type PropType, type Ref } from 'vue'
+import { computed, onMounted, ref, type PropType, type Ref, reactive } from 'vue'
 import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'
 import { type interactiveExplore } from '@/components/dataCenter/type'
 import { formatTime } from '@/util/common'
@@ -275,7 +372,11 @@ import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import * as MapOperation from '@/util/map/operation'
 import { ElMessage } from 'element-plus'
 import ezStore from '@/store/ezStore'
-import { getGridImage, getGridPreviewUrl } from '@/api/http/satellite-data/visualize.api'
+import {
+    getGridImage,
+    getGridPreviewUrl,
+    getTifbandMinMax,
+} from '@/api/http/satellite-data/visualize.api'
 import { grid2Coordinates } from '@/util/map/gridMaker'
 
 import {
@@ -299,12 +400,13 @@ import {
 } from 'lucide-vue-next'
 import { FastBackwardFilled } from '@ant-design/icons-vue'
 import bandMergeHelper from '@/util/image/util'
+import { message } from 'ant-design-vue'
 
 const props = defineProps({
     regionConfig: {
         type: Object as PropType<interactiveExplore>,
-        required: true
-    }
+        required: true,
+    },
 })
 
 /**
@@ -329,16 +431,16 @@ const interGridFeature: Ref<FeatureCollection | null> = ref(null)
 const radarGridFeature: Ref<FeatureCollection | null> = ref(null)
 
 interface CoverageRate {
-    demotic1m: string | null;
-    demotic2m: string | null;
-    international: string | null;
-    addRadar: string | null;
+    demotic1m: string | null
+    demotic2m: string | null
+    international: string | null
+    addRadar: string | null
 }
 const coverageRate: Ref<CoverageRate> = ref({
     demotic1m: null,
     demotic2m: null,
     international: null,
-    addRadar: null
+    addRadar: null,
 })
 
 // 看起来是计算属性，其实已经影像分类初始化了
@@ -364,7 +466,9 @@ const add2mDemoticImages = () => {
     cancelCheckbox('grid', 0)
 
     // 逻辑与addRadarImages中的一样，可以参考
-    let operateData = dataReconstruction.value[0] ? demotic1mGridImages.value : demotic2mGridImages.value
+    let operateData = dataReconstruction.value[0]
+        ? demotic1mGridImages.value
+        : demotic2mGridImages.value
 
     // 清除格网图层，得放到一个请求上面，不然添加图层的时候还没销毁
     // gridStore.cleadAllGrids()
@@ -376,27 +480,36 @@ const add2mDemoticImages = () => {
     controlProgress(0)
 
     // 进度条加载完毕才能进行渲染图层，但是取消勾选不需要等待，而是立刻加载上一级的图层
-    setTimeout(() => {
-        let gridFeature: FeatureCollection = {
-            type: 'FeatureCollection',
-            features: props.regionConfig.grids.map((item: any, index) => {
-                return {
-                    type: 'Feature',
-                    geometry: item.boundary.geometry as Geometry,
-                    properties: {
-                        ...(item.properties || {}),
-                        id: item.properties?.id ?? index, // 确保每个都有 id
-                        opacity: judgeGridOpacity(index, operateData),
-                        source: classifyGridSource(index, operateData, demotic1mGridFeature.value, 'demotic2m') || null
+    setTimeout(
+        () => {
+            let gridFeature: FeatureCollection = {
+                type: 'FeatureCollection',
+                features: props.regionConfig.grids.map((item: any, index) => {
+                    return {
+                        type: 'Feature',
+                        geometry: item.boundary.geometry as Geometry,
+                        properties: {
+                            ...(item.properties || {}),
+                            id: item.properties?.id ?? index, // 确保每个都有 id
+                            opacity: judgeGridOpacity(index, operateData),
+                            source:
+                                classifyGridSource(
+                                    index,
+                                    operateData,
+                                    demotic1mGridFeature.value,
+                                    'demotic2m',
+                                ) || null,
+                        },
                     }
-                }
-            })
-        }
-        demotic2mGridFeature.value = gridFeature
+                }),
+            }
+            demotic2mGridFeature.value = gridFeature
 
-        MapOperation.map_addGridLayer(gridFeature)
-        MapOperation.draw_deleteAll()
-    }, dataReconstruction.value[0] ? 100 : mockProgressTime)
+            MapOperation.map_addGridLayer(gridFeature)
+            MapOperation.draw_deleteAll()
+        },
+        dataReconstruction.value[0] ? 100 : mockProgressTime,
+    )
 }
 
 /**
@@ -418,28 +531,36 @@ const addAbroadImages = () => {
     // controlProgress(1)
 
     // 进度条加载完毕才能进行渲染图层，但是取消勾选不需要等待，而是立刻加载上一级的图层
-    setTimeout(() => {
-        let gridFeature: FeatureCollection = {
-            type: 'FeatureCollection',
-            features: props.regionConfig.grids.map((item: any, index) => {
-                return {
-                    type: 'Feature',
-                    geometry: item.boundary.geometry as Geometry,
-                    properties: {
-                        ...(item.properties || {}),
-                        id: item.properties?.id ?? index, // 确保每个都有 id
-                        opacity: judgeGridOpacity(index, operateData),
-                        source: classifyGridSource(index, operateData, demotic2mGridFeature.value, 'international') || null
+    setTimeout(
+        () => {
+            let gridFeature: FeatureCollection = {
+                type: 'FeatureCollection',
+                features: props.regionConfig.grids.map((item: any, index) => {
+                    return {
+                        type: 'Feature',
+                        geometry: item.boundary.geometry as Geometry,
+                        properties: {
+                            ...(item.properties || {}),
+                            id: item.properties?.id ?? index, // 确保每个都有 id
+                            opacity: judgeGridOpacity(index, operateData),
+                            source:
+                                classifyGridSource(
+                                    index,
+                                    operateData,
+                                    demotic2mGridFeature.value,
+                                    'international',
+                                ) || null,
+                        },
                     }
-                }
-            })
-        }
+                }),
+            }
 
-        interGridFeature.value = gridFeature
-        MapOperation.map_addGridLayer(gridFeature)
-        MapOperation.draw_deleteAll()
-    }, dataReconstruction.value[1] ? 100 : mockProgressTime)
-
+            interGridFeature.value = gridFeature
+            MapOperation.map_addGridLayer(gridFeature)
+            MapOperation.draw_deleteAll()
+        },
+        dataReconstruction.value[1] ? 100 : mockProgressTime,
+    )
 }
 
 const addRadarImages = () => {
@@ -457,28 +578,36 @@ const addRadarImages = () => {
     // controlProgress(2)
 
     // 进度条加载完毕才能进行渲染图层，但是取消勾选不需要等待，而是立刻加载上一级的图层
-    setTimeout(() => {
-        let gridFeature: FeatureCollection = {
-            type: 'FeatureCollection',
-            features: props.regionConfig.grids.map((item: any, index) => {
-                return {
-                    type: 'Feature',
-                    geometry: item.boundary.geometry as Geometry,
-                    properties: {
-                        ...(item.properties || {}),
-                        id: item.properties?.id ?? index, // 确保每个都有 id
-                        opacity: judgeGridOpacity(index, operateData),
-                        source: classifyGridSource(index, operateData, interGridFeature.value, 'radar') || null
+    setTimeout(
+        () => {
+            let gridFeature: FeatureCollection = {
+                type: 'FeatureCollection',
+                features: props.regionConfig.grids.map((item: any, index) => {
+                    return {
+                        type: 'Feature',
+                        geometry: item.boundary.geometry as Geometry,
+                        properties: {
+                            ...(item.properties || {}),
+                            id: item.properties?.id ?? index, // 确保每个都有 id
+                            opacity: judgeGridOpacity(index, operateData),
+                            source:
+                                classifyGridSource(
+                                    index,
+                                    operateData,
+                                    interGridFeature.value,
+                                    'radar',
+                                ) || null,
+                        },
                     }
-                }
-            })
-        }
-        radarGridFeature.value = gridFeature
-        MapOperation.map_addGridLayer(gridFeature)
-        MapOperation.draw_deleteAll()
-    }, dataReconstruction.value[2] ? 100 : mockProgressTime)
+                }),
+            }
+            radarGridFeature.value = gridFeature
+            MapOperation.map_addGridLayer(gridFeature)
+            MapOperation.draw_deleteAll()
+        },
+        dataReconstruction.value[2] ? 100 : mockProgressTime,
+    )
 }
-
 
 /**
  * 快进进度条
@@ -487,13 +616,11 @@ const addRadarImages = () => {
 // 四个进度条的进度值
 const progress = ref([0, 0, 0, 0])
 // 四个进度条的显示状态
-const showProgress = ref([
-    false, false, false, false
-])
+const showProgress = ref([false, false, false, false])
 // const showCalResult = ref(false)
 const calTask: Ref<any> = ref({
     calState: 'start',
-    taskId: ''
+    taskId: '',
 })
 
 // 填补勾选框
@@ -501,13 +628,11 @@ const additionalData = ref([true, false, false])
 // 数据重构勾选框
 const dataReconstruction = ref([false, false, false])
 
-
 const calImage: Ref<any[]> = ref([])
 let progressTimer: ReturnType<typeof setInterval> | null = null
 
 // 控制进度条
 const progressControl = (index: number) => {
-
     if (calTask.value.calState === 'pending') return
     progress.value[index] = 0
     calTask.value.calState = 'pending'
@@ -543,20 +668,19 @@ const calNoClouds = async () => {
         addedImages = addedImages.concat(radarImages.value)
     }
 
-
     let getNoCloudParam = {
         regionId: props.regionConfig.regionCode,
         cloud: props.regionConfig.cloud,
         resolution: props.regionConfig.space,
-        sceneIds: addedImages.map(image => image.sceneId)
+        sceneIds: addedImages.map((image) => image.sceneId),
     }
 
-    console.log(getNoCloudParam, '发起请求');
+    console.log(getNoCloudParam, '发起请求')
 
     let startCalcRes = await getNoCloud(getNoCloudParam)
     if (startCalcRes.message !== 'success') {
         ElMessage.error('计算失败，请重试')
-        console.error(startCalcRes);
+        console.error(startCalcRes)
         return
     }
 
@@ -579,13 +703,13 @@ const calNoClouds = async () => {
                         resolve()
                     }
                     if (res.data === 'FAILED' || res.data === 'ERROR') {
-                        console.log(res, res.data);
+                        console.log(res, res.data)
                         clearInterval(timer)
                         reject(new Error('任务失败'))
                     }
                 } catch (err) {
                     clearInterval(timer)
-                    console.log('错误', err);
+                    console.log('错误', err)
                     reject(err)
                 }
             }, interval)
@@ -595,7 +719,7 @@ const calNoClouds = async () => {
         await pollStatus(calTask.value.taskId)
         // ✅ 成功后设置状态
         calTask.value.calState = 'success'
-        console.log('成功，开始拿结果');
+        console.log('成功，开始拿结果')
 
         let res = await getCaseResult(calTask.value.taskId)
         console.log(res, '结果')
@@ -603,8 +727,6 @@ const calNoClouds = async () => {
         // 1、先预览无云一版图影像
         let data = res.data.noCloud.tiles
         previewNoCloud(data)
-
-
 
         // 2、补充数据
         let calResult = {
@@ -617,9 +739,11 @@ const calNoClouds = async () => {
                 dataReconstruction.value[0] ? '国产2m超分影像' : null,
                 dataReconstruction.value[1] ? '国外影像超分数据' : null,
                 dataReconstruction.value[2] ? 'SAR色彩转换数据' : null,
-            ].filter(Boolean).join('、')
+            ]
+                .filter(Boolean)
+                .join('、'),
         }
-        console.log(dataReconstruction.value, calResult);
+        console.log(dataReconstruction.value, calResult)
 
         calImage.value.push(calResult)
 
@@ -630,9 +754,19 @@ const calNoClouds = async () => {
         ElMessage.error('无云一版图计算失败，请重试')
     }
 }
+
+const showingImageStrech = reactive({
+    r_min: 0,
+    r_max: 5000,
+    g_min: 0,
+    g_max: 5000,
+    b_min: 0,
+    b_max: 5000,
+})
 // 预览无云一版图
 const previewNoCloud = async (data: any) => {
 
+    const stopLoading = message.loading('正在加载无云一版图，请稍后...')
     // 清除旧图层
     MapOperation.map_removeNocloudGridPreviewLayer()
 
@@ -640,21 +774,75 @@ const previewNoCloud = async (data: any) => {
 
     for (let i = 0; i < data.length; i++) {
         const gridInfo = {
-            columnId: data[i].colId,// 注意这里返回的是colID，其他接口都是columnId
+            columnId: data[i].colId, // 注意这里返回的是colID，其他接口都是columnId
             rowId: data[i].rowId,
             resolution: gridResolution,
             redPath: data[i].bucket + '/' + data[i].redPath,
             greenPath: data[i].bucket + '/' + data[i].greenPath,
             bluePath: data[i].bucket + '/' + data[i].bluePath,
         }
-        // console.log('gridInfo', gridInfo)
-        bandMergeHelper.mergeGrid(gridInfo, (url) => {
-            const imgUrl = url
-            const gridCoords = grid2Coordinates(data[i].colId, data[i].rowId, gridResolution)
-            MapOperation.map_addGridPreviewLayer(imgUrl, gridCoords, 'nocloud')
+        // // console.log('gridInfo', gridInfo)
+        // bandMergeHelper.mergeGrid(gridInfo, (url) => {
+        //     const imgUrl = url
+        //     const gridCoords = grid2Coordinates(data[i].colId, data[i].rowId, gridResolution)
+        //     MapOperation.map_addGridPreviewLayer(imgUrl, gridCoords, 'nocloud')
+        // })
+        let redPath = gridInfo.redPath
+        let greenPath = gridInfo.greenPath
+        let bluePath = gridInfo.bluePath
+
+        const cache = ezStore.get('statisticCache')
+        const promises: any = []
+        let [min_r, max_r, min_g, max_g, min_b, max_b] = [0, 0, 0, 0, 0, 0]
+
+        if (cache.get(redPath) && cache.get(greenPath) && cache.get(bluePath)) {
+            console.log('cache hit!')
+            ;[min_r, max_r] = cache.get(redPath)
+            ;[min_g, max_g] = cache.get(greenPath)
+            ;[min_b, max_b] = cache.get(bluePath)
+        } else {
+            promises.push(
+                getTifbandMinMax(redPath),
+                getTifbandMinMax(greenPath),
+                getTifbandMinMax(bluePath),
+            )
+            await Promise.all(promises).then((values) => {
+                min_r = values[0][0]
+                max_r = values[0][1]
+                min_g = values[1][0]
+                max_g = values[1][1]
+                min_b = values[2][0]
+                max_b = values[2][1]
+            })
+
+            cache.set(redPath, [min_r, max_r])
+            cache.set(greenPath, [min_g, max_g])
+            cache.set(bluePath, [min_b, max_b])
+        }
+
+        console.log(min_r, max_r, min_g, max_g, min_b, max_b)
+
+        const defaultScaleRate = 50
+        const scale = 1.0 - defaultScaleRate / 100
+        // 基于 scale rate 进行拉伸
+        showingImageStrech.r_min = Math.round(min_r)
+        showingImageStrech.r_max = Math.round(min_r + (max_r - min_r) * scale)
+        showingImageStrech.g_min = Math.round(min_g)
+        showingImageStrech.g_max = Math.round(min_g + (max_g - min_g) * scale)
+        showingImageStrech.b_min = Math.round(min_b)
+        showingImageStrech.b_max = Math.round(min_b + (max_b - min_b) * scale)
+        MapOperation.map_addGridRGBImageTileLayer({
+            ...gridInfo,
+        }, {
+            redPath,
+            greenPath,
+            bluePath,
+            ...showingImageStrech,
         })
     }
-
+    setTimeout(() => {
+        stopLoading()
+    }, 5000);
     console.log('一下加几十个图层，等着吃好果子')
 }
 // 假操作进度条统一时间
@@ -687,7 +875,6 @@ const cancelCheckbox = (type: string, index: number) => {
 }
 // 操控进度条
 const controlProgress = (index: number) => {
-
     // 1、取消勾选要把后面的选项全部取消勾选。2、取消勾选隐藏进度条
     // 这里要注意，additionalData值变化是延后的，所以是变化前的值
     let overTask = cancelCheckbox('dataReconstruction', index)
@@ -706,7 +893,6 @@ const controlProgress = (index: number) => {
     }, mockProgressTime)
 }
 
-
 onMounted(async () => {
     // 清除格网图层，得放到一个请求上面，不然添加图层的时候还没销毁
     // gridStore.cleadAllGrids()
@@ -720,36 +906,35 @@ onMounted(async () => {
         return {
             rowId: item.rowId,
             columnId: item.columnId,
-            resolution: item.resolution
+            resolution: item.resolution,
         }
     })
-
 
     // 计算四种情况的格网分布情况
     demotic1mGridImages.value = await getSceneGrids({
         grids: allGrids,
-        sceneIds: demotic1mImages.value.map(images => images.sceneId)
+        sceneIds: demotic1mImages.value.map((images) => images.sceneId),
     })
     coverageRate.value.demotic1m = getCoverage(demotic1mGridImages.value, gridCount)
 
     let addDemotic1mImages = demotic1mImages.value.concat(demotic2mImages.value)
     demotic2mGridImages.value = await getSceneGrids({
         grids: allGrids,
-        sceneIds: addDemotic1mImages.map(images => images.sceneId)
+        sceneIds: addDemotic1mImages.map((images) => images.sceneId),
     })
     coverageRate.value.demotic2m = getCoverage(demotic2mGridImages.value, gridCount)
 
     let addInternationalImages = addDemotic1mImages.concat(internationalImages.value)
     interGridImages.value = await getSceneGrids({
         grids: allGrids,
-        sceneIds: addInternationalImages.map(images => images.sceneId)
+        sceneIds: addInternationalImages.map((images) => images.sceneId),
     })
     coverageRate.value.international = getCoverage(interGridImages.value, gridCount)
 
     let addRadarImages = addInternationalImages.concat(radarImages.value)
     radarGridImages.value = await getSceneGrids({
         grids: allGrids,
-        sceneIds: addRadarImages.map(images => images.sceneId)
+        sceneIds: addRadarImages.map((images) => images.sceneId),
     })
     coverageRate.value.addRadar = getCoverage(radarGridImages.value, gridCount)
 
@@ -765,12 +950,12 @@ onMounted(async () => {
                     ...(item.properties || {}),
                     id: item.properties?.id ?? index, // 确保每个都有 id
                     opacity: judgeGridOpacity(index, demotic1mGridImages.value),
-                    source: classifyGridSource(index, demotic1mGridImages.value, null) || null
-                }
+                    source: classifyGridSource(index, demotic1mGridImages.value, null) || null,
+                },
             }
-        })
+        }),
     }
-    console.log(props.regionConfig.grids, 111);
+    console.log(props.regionConfig.grids, 111)
 
     demotic1mGridFeature.value = gridFeature
     MapOperation.map_addGridLayer(gridFeature)
@@ -781,15 +966,24 @@ onMounted(async () => {
 
 // 算格网的颜色,接收的数据分别为：要上色的格网本身，累积影像分布到格网的结果，格网数量，所属层级
 // 取消勾选，即回到上一级数据格网的结果也没问题，第三个传输就传递上一级（和第二个参数相同）即可
-const classifyGridSource = (index: any, sceneGridsRes: any, lastGridFeature?: any, type?: string) => {
+const classifyGridSource = (
+    index: any,
+    sceneGridsRes: any,
+    lastGridFeature?: any,
+    type?: string,
+) => {
     if (lastGridFeature === null) {
         let source: string | null
-        sceneGridsRes[index]?.scenes.length > 0 ? source = 'demotic1m' : source = null;
+        sceneGridsRes[index]?.scenes.length > 0 ? (source = 'demotic1m') : (source = null)
         return source
     } else if (type !== undefined) {
         let source: string | null
         let lastSource = lastGridFeature.features[index].properties.source
-        lastSource ? source = lastSource : sceneGridsRes[index]?.scenes.length > 0 ? source = type : source = null;
+        lastSource
+            ? (source = lastSource)
+            : sceneGridsRes[index]?.scenes.length > 0
+              ? (source = type)
+              : (source = null)
         return source
     }
     return null
@@ -798,14 +992,14 @@ const classifyGridSource = (index: any, sceneGridsRes: any, lastGridFeature?: an
 // 判断格网到底有没有数据，有就返回0.3
 const judgeGridOpacity = (index: number, sceneGridsRes: any) => {
     let opacity = 0.01
-    sceneGridsRes[index]?.scenes.length > 0 ? opacity = 0.3 : opacity = 0.01;
+    sceneGridsRes[index]?.scenes.length > 0 ? (opacity = 0.3) : (opacity = 0.01)
     return opacity
 }
 
 // 算覆盖率
 const getCoverage = (gridImages: any, gridCount: number) => {
-    const nonEmptyScenesCount = gridImages.filter(item => item.scenes.length > 0).length
-    let coverage = (nonEmptyScenesCount * 100 / gridCount).toFixed(2) + '%';
+    const nonEmptyScenesCount = gridImages.filter((item) => item.scenes.length > 0).length
+    let coverage = ((nonEmptyScenesCount * 100) / gridCount).toFixed(2) + '%'
     return coverage
 }
 </script>

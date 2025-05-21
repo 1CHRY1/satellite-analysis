@@ -578,5 +578,6 @@ export type Style = 'image' | 'vector' | 'local'
 export const StyleMap = {
     image: TianImageStyle as unknown as StyleSpecification,
     vector: TianVectorStyle as unknown as StyleSpecification,
-    local: LocalImageBaseMapStyle as unknown as StyleSpecification,
+    local: TianImageStyle as unknown as StyleSpecification,
+    // local: LocalImageBaseMapStyle as unknown as StyleSpecification,
 }

@@ -1,49 +1,50 @@
-package nnu.mnr.satellite.model.vo.resources;
+package nnu.mnr.satellite.model.dto.resources;
 
-import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerImageDTO;
-import nnu.mnr.satellite.model.dto.modeling.ModelServerSceneDTO;
 import nnu.mnr.satellite.utils.typeHandler.FastJson2TypeHandler;
-import nnu.mnr.satellite.utils.typeHandler.JSONArrayTypeHandler;
+import nnu.mnr.satellite.utils.typeHandler.GeometryTypeHandler;
+import nnu.mnr.satellite.utils.typeHandler.SetTypeHandler;
+import org.locationtech.jts.geom.Geometry;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created with IntelliJ IDEA.
  *
  * @Author: Chry
- * @Date: 2025/3/14 21:38
+ * @Date: 2025/5/19 11:18
  * @Description:
  */
 
 @Data
-public class SceneDesVO {
+public class SceneImageDTO {
 
+    @TableId
     private String sceneId;
+    private String productName;
+    private String sensorName;
     private String sceneName;
     private LocalDateTime sceneTime;
-    private Integer tileLevelNum;
-    private HashSet<String> tileLevels;
-    private String coordinateSystem;
-    private String description;
+
     private Integer bandNum;
+
+    @TableField(value = "bands", typeHandler = SetTypeHandler.class)
     private HashSet<String> bands;
+
     private Integer cloud;
+    private String cloudPath;
+    private String bucket;
+    private String resolution;
 
     @TableField(typeHandler = FastJson2TypeHandler.class)
     private JSONObject tags;
 
-    // 外键
-    private String sensorName;
-    private String productName;
-    private String resolution;
-//    @TableField(typeHandler = JSONArrayTypeHandler.class)
-//    private JSONArray images;
+    private List<ModelServerImageDTO> images;
 
 }
