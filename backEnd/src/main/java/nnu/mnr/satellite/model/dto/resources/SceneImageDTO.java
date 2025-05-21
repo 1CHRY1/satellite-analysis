@@ -29,6 +29,7 @@ public class SceneImageDTO {
     private String sceneId;
     private String productName;
     private String sensorName;
+    private String platformName;
     private String sceneName;
     private LocalDateTime sceneTime;
 
@@ -44,6 +45,7 @@ public class SceneImageDTO {
 
     @TableField(typeHandler = FastJson2TypeHandler.class)
     private JSONObject tags;
+    private Double noData;
 
     private List<ModelServerImageDTO> images;
 

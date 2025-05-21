@@ -3,19 +3,14 @@
         <div class="w-[28vw] p-4 text-gray-200">
             <!-- 自定义选项切换按钮 -->
             <div class="mx-2 mb-2 flex justify-between rounded-xl bg-[#2a2a2a] p-1 shadow-md">
-                <button
-                    v-for="item in pages"
-                    :key="item.value"
-                    @click="pageCheckout(item.value)"
-                    :disabled="unlockTab"
+                <button v-for="item in pages" :key="item.value" @click="pageCheckout(item.value)" :disabled="unlockTab"
                     :class="[
                         'flex-1 rounded-lg px-2 py-2 text-center text-sm font-medium transition-all duration-200',
                         showPage === item.value
                             ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-inner'
                             : 'text-gray-300 hover:bg-[#3a3a3a]',
                         unlockTab ? 'cursor-not-allowed' : 'cursor-pointer',
-                    ]"
-                >
+                    ]">
                     {{ item.label }}
                 </button>
             </div>
@@ -29,7 +24,7 @@
             </div>
         </div>
         <!-- <ImageSearcher class="h-full w-[28vw] mt-10" /> -->
-        <MapComp class="flex-1" :style="'local'" :proj="'globe'" :isPicking="isPicking" />
+        <MapComp class="flex-1" :style="'image'" :proj="'globe'" :isPicking="isPicking" />
     </div>
 </template>
 

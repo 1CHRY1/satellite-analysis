@@ -1,13 +1,16 @@
 package nnu.mnr.satellite.service.modeling;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.jobs.QuartzSchedulerManager;
 import nnu.mnr.satellite.model.dto.modeling.*;
+import nnu.mnr.satellite.model.po.resources.Scene;
 import nnu.mnr.satellite.model.po.resources.SceneSP;
 import nnu.mnr.satellite.model.pojo.modeling.ModelServerProperties;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.service.resources.ImageDataService;
 import nnu.mnr.satellite.service.resources.RegionDataService;
+import nnu.mnr.satellite.service.resources.SceneDataService;
 import nnu.mnr.satellite.service.resources.SceneDataServiceV2;
 import nnu.mnr.satellite.utils.common.ProcessUtil;
 import nnu.mnr.satellite.service.common.BandMapperGenerator;
@@ -44,7 +47,10 @@ public class ModelExampleService {
     RedisUtil redisUtil;
 
     @Autowired
-    SceneDataServiceV2 sceneDataService;
+    SceneDataServiceV2 sceneDataServiceV2;
+
+    @Autowired
+    SceneDataService sceneDataServiceV1;
 
     @Autowired
     ImageDataService imageDataService;
@@ -78,7 +84,7 @@ public class ModelExampleService {
 
         // 构成影像景参数信息
         for (String sceneId : sceneIds) {
-            SceneSP scene = sceneDataService.getSceneByIdWithProductAndSensor(sceneId);
+            SceneSP scene = sceneDataServiceV2.getSceneByIdWithProductAndSensor(sceneId);
             List<ModelServerImageDTO> imageDTO = imageDataService.getModelServerImageDTOBySceneId(sceneId);
             ModelServerSceneDTO modelServerSceneDTO = ModelServerSceneDTO.builder()
                     .sceneId(sceneId).images(imageDTO).sceneTime(scene.getSceneTime())
@@ -111,7 +117,7 @@ public class ModelExampleService {
         // 构成影像景参数信息
         for (String sceneId : sceneIds) {
             Geometry geomPoint = GeometryUtil.parse4326Point(point);
-            SceneSP scene = sceneDataService.getSceneByIdWithProductAndSensor(sceneId);
+            SceneSP scene = sceneDataServiceV2.getSceneByIdWithProductAndSensor(sceneId);
             if (scene.getBbox().contains(geomPoint)) {
                 List<ModelServerImageDTO> imageDTO = imageDataService.getModelServerImageDTOBySceneId(sceneId);
 
@@ -139,13 +145,13 @@ public class ModelExampleService {
     }
 
     // 光谱分析计算
-    public CommonResultVO getSpectrumByPoint(SpectrumFetchDTO spectrumFetchDTO) {
-        Double[] point = spectrumFetchDTO.getPoint();
-        String sceneId = spectrumFetchDTO.getSceneId();
+    public CommonResultVO getSpectrumByPoint(SpectrumDTO spectrumDTO) {
+        Double[] point = spectrumDTO.getPoint();
+        String sceneId = spectrumDTO.getSceneId();
 
         // 构成影像景参数信息
         Geometry geomPoint = GeometryUtil.parse4326Point(point);
-        SceneSP scene = sceneDataService.getSceneByIdWithProductAndSensor(sceneId);
+        SceneSP scene = sceneDataServiceV2.getSceneByIdWithProductAndSensor(sceneId);
         if (!scene.getBbox().contains(geomPoint)) {
             return CommonResultVO.builder().status(-1).message("Point is not contained in Scene" + sceneId).build();
         }
@@ -156,6 +162,44 @@ public class ModelExampleService {
         String ndviUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("spectrum");
         long expirationTime = 60 * 10;
         return runModelServerModel(ndviUrl, ndviParam, expirationTime);
+    }
+
+    // 根据点和数据计算栅格值
+    public CommonResultVO getRasterResultByPoint(PointRasterFetchDTO pointRasterFetchDTO) {
+        Double[] point = pointRasterFetchDTO.getPoint();
+        List<String> sceneIds = pointRasterFetchDTO.getSceneIds();
+
+        // 构成影像景参数信息
+        Geometry geomPoint = GeometryUtil.parse4326Point(point);
+        List<Scene> scenes = sceneDataServiceV1.getScenesByIds(sceneIds);
+        for (Scene scene : scenes) {
+            if (scene.getBbox().contains(geomPoint)) {
+                List<ModelServerImageDTO> images = imageDataService.getModelServerImageDTOBySceneId(scene.getSceneId());
+                // 请求modelServer
+                JSONObject pointRasterParam = JSONObject.of("point",point, "raster", images.get(0));
+                String pointRasterUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("rasterPoint");
+                long expirationTime = 60 * 10;
+                return runModelServerModel(pointRasterUrl, pointRasterParam, expirationTime);
+            }
+        }
+        return CommonResultVO.builder().status(-1).message("Point is not contained in Scenes").build();
+    }
+
+    // 根据线和一组栅格数据计算栅格list值
+    public CommonResultVO getRasterResultByLine(LineRasterFetchDTO lineRasterFetchDTO) {
+        List<Double[]> points = lineRasterFetchDTO.getPoint();
+        List<String> sceneIds = lineRasterFetchDTO.getSceneIds();
+        // 构成影像景参数信息a
+        List<Scene> scenes = sceneDataServiceV1.getScenesByIds(sceneIds);
+        List<ModelServerImageDTO> images = new ArrayList<>();
+        for (Scene scene : scenes) {
+            List<ModelServerImageDTO> sceneImages = imageDataService.getModelServerImageDTOBySceneId(scene.getSceneId());
+            images.add(sceneImages.get(0));
+        }
+        JSONObject pointRasterParam = JSONObject.of("points",points, "raster", images);
+        String pointRasterUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("rasterLine");
+        long expirationTime = 60 * 10;
+        return runModelServerModel(pointRasterUrl, pointRasterParam, expirationTime);
     }
 
 }
