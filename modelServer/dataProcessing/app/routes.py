@@ -102,6 +102,13 @@ def get_spectral_profile():
     task_id = scheduler.start_task('get_spectral_profile', data)
     return api_response(data={'taskId': task_id})
 
+@bp.route(config.API_CALC_RASTER_POINT, methods=['POST'])
+def calc_raster_point():
+    scheduler = init_scheduler()
+    data = request.json
+    task_id = scheduler.start_task('calc_raster_point', data)
+    return api_response(data={'taskId': task_id})
+
 
 @bp.route(config.API_TASK_RESULT, methods=['GET'])
 def get_result():
