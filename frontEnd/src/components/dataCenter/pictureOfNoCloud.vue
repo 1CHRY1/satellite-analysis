@@ -19,45 +19,23 @@
                                 <div class="config-control flex-col !items-start">
                                     <div class="flex w-full flex-col gap-2">
                                         <label class="flex items-center gap-2">
-                                            <input
-                                                type="checkbox"
-                                                v-model="additionalData[0]"
-                                                disabled
-                                                class="h-4 w-4 rounded"
-                                            />
+                                            <input type="checkbox" v-model="additionalData[0]" disabled
+                                                class="h-4 w-4 rounded" />
                                             国产亚米级影像
                                         </label>
                                         <label class="flex items-center gap-2">
-                                            <input
-                                                type="checkbox"
-                                                v-model="dataReconstruction[0]"
-                                                @click="add2mDemoticImages"
-                                                class="h-4 w-4 rounded"
-                                            />
+                                            <input type="checkbox" v-model="dataReconstruction[0]"
+                                                @click="add2mDemoticImages" class="h-4 w-4 rounded" />
                                             使用国产2m级影像超分重建亚米级数据
                                         </label>
-                                        <div
-                                            v-if="showProgress[0]"
-                                            class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]"
-                                        >
-                                            <div
-                                                class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
-                                                :style="{ width: `${progress[0]}%` }"
-                                            ></div>
+                                        <div v-if="showProgress[0]"
+                                            class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
+                                            <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
+                                                :style="{ width: `${progress[0]}%` }"></div>
                                         </div>
                                     </div>
                                     <div class="result-info-container">
-                                        <div class="result-info-item">
-                                            <div class="result-info-icon">
-                                                <MapIcon :size="16" />
-                                            </div>
-                                            <div class="result-info-content">
-                                                <div class="result-info-label">行政区划编码</div>
-                                                <div class="result-info-value">
-                                                    {{ props.regionConfig.regionCode }}
-                                                </div>
-                                            </div>
-                                        </div>
+
                                         <div class="result-info-item">
                                             <div class="result-info-icon">
                                                 <ImageIcon :size="16" />
@@ -90,17 +68,6 @@
                                                             )
                                                         }}
                                                     </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="result-info-item">
-                                            <div class="result-info-icon">
-                                                <CloudIcon :size="16" />
-                                            </div>
-                                            <div class="result-info-content">
-                                                <div class="result-info-label">云量范围</div>
-                                                <div class="result-info-value">
-                                                    0 ~ {{ props.regionConfig.cloud }}%
                                                 </div>
                                             </div>
                                         </div>
@@ -171,44 +138,28 @@
                                 <div class="config-label relative">
                                     <CalendarIcon :size="16" class="config-icon" />
                                     <span>融合国外光学影像</span>
-                                    <el-tooltip
-                                        content="对于缺失数据的格网，采用国外光学影像进行填补，填补过程中基于AI算法进行超分辨率重建"
-                                        placement="top"
-                                        effect="dark"
-                                    >
+                                    <el-tooltip content="对于缺失数据的格网，采用国外光学影像进行填补，填补过程中基于AI算法进行超分辨率重建" placement="top"
+                                        effect="dark">
                                         <CircleHelp :size="14" />
                                     </el-tooltip>
                                 </div>
                                 <div class="config-control flex-col !items-start">
                                     <div class="flex flex-col gap-2">
                                         <label class="flex items-center gap-2">
-                                            <input
-                                                type="checkbox"
-                                                v-model="additionalData[1]"
-                                                @click="addAbroadImages"
-                                                :disabled="!dataReconstruction[0]"
-                                                class="h-4 w-4 rounded"
-                                            />
+                                            <input type="checkbox" v-model="additionalData[1]" @click="addAbroadImages"
+                                                :disabled="!dataReconstruction[0]" class="h-4 w-4 rounded" />
                                             国外影像填补缺失格网
                                         </label>
                                         <label class="flex items-center gap-2">
-                                            <input
-                                                type="checkbox"
-                                                v-model="dataReconstruction[1]"
-                                                @click="controlProgress(1)"
-                                                :disabled="!dataReconstruction[0]"
-                                                class="h-4 w-4 rounded"
-                                            />
+                                            <input type="checkbox" v-model="dataReconstruction[1]"
+                                                @click="controlProgress(1)" :disabled="!dataReconstruction[0]"
+                                                class="h-4 w-4 rounded" />
                                             使用国外影像超分重建数据
                                         </label>
-                                        <div
-                                            v-if="showProgress[1]"
-                                            class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]"
-                                        >
-                                            <div
-                                                class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
-                                                :style="{ width: `${progress[1]}%` }"
-                                            ></div>
+                                        <div v-if="showProgress[1]"
+                                            class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
+                                            <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
+                                                :style="{ width: `${progress[1]}%` }"></div>
                                         </div>
                                     </div>
                                     <div class="result-info-container w-full">
@@ -245,48 +196,28 @@
                                 <div class="config-label relative">
                                     <CalendarIcon :size="16" class="config-icon" />
                                     <span>融合SAR影像</span>
-                                    <el-tooltip
-                                        content="勾选将使用雷达数据进行色彩变换，与光学数据配准，并补充重构。"
-                                        placement="top"
-                                        effect="dark"
-                                    >
+                                    <el-tooltip content="勾选将使用雷达数据进行色彩变换，与光学数据配准，并补充重构。" placement="top" effect="dark">
                                         <CircleHelp :size="14" />
                                     </el-tooltip>
                                 </div>
                                 <div class="config-control flex-col !items-start">
                                     <div class="flex flex-col gap-2">
                                         <label class="flex items-center gap-2">
-                                            <input
-                                                type="checkbox"
-                                                v-model="additionalData[2]"
-                                                @click="addRadarImages"
-                                                :disabled="
-                                                    !additionalData[1] || !dataReconstruction[1]
-                                                "
-                                                class="h-4 w-4 rounded"
-                                            />
+                                            <input type="checkbox" v-model="additionalData[2]" @click="addRadarImages"
+                                                :disabled="!additionalData[1] || !dataReconstruction[1]
+                                                    " class="h-4 w-4 rounded" />
                                             SAR影像填补缺失格网
                                         </label>
                                         <label class="flex items-center gap-2">
-                                            <input
-                                                type="checkbox"
-                                                v-model="dataReconstruction[2]"
-                                                @click="controlProgress(2)"
-                                                :disabled="
-                                                    !additionalData[1] || !dataReconstruction[1]
-                                                "
-                                                class="h-4 w-4 rounded"
-                                            />
+                                            <input type="checkbox" v-model="dataReconstruction[2]"
+                                                @click="controlProgress(2)" :disabled="!additionalData[1] || !dataReconstruction[1]
+                                                    " class="h-4 w-4 rounded" />
                                             使用SAR影像色彩变换重建数据
                                         </label>
-                                        <div
-                                            v-if="showProgress[2]"
-                                            class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]"
-                                        >
-                                            <div
-                                                class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
-                                                :style="{ width: `${progress[2]}%` }"
-                                            ></div>
+                                        <div v-if="showProgress[2]"
+                                            class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
+                                            <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
+                                                :style="{ width: `${progress[2]}%` }"></div>
                                         </div>
                                     </div>
                                     <div class="result-info-container w-full">
@@ -321,20 +252,19 @@
                             </div>
 
                             <div class="flex w-full flex-col">
-                                <button
-                                    @click="calNoClouds"
-                                    class="w-full cursor-pointer rounded-lg border border-[#2c3e50] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
-                                >
-                                    一版图重构
+                                <button @click="calNoClouds" :disabled="noCloudLoading"
+                                    class="flex justify-center w-full rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
+                                    :class="{
+                                        'cursor-not-allowed': noCloudLoading,
+                                        'cursor-pointer': !noCloudLoading,
+                                    }">
+                                    <span>一版图重构 </span>
+                                    <Loader v-if="noCloudLoading" class="ml-2" />
                                 </button>
-                                <div
-                                    v-if="showProgress[3]"
-                                    class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]"
-                                >
-                                    <div
-                                        class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
-                                        :style="{ width: `${progress[3]}%` }"
-                                    ></div>
+                                <div v-if="showProgress[3]"
+                                    class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
+                                    <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
+                                        :style="{ width: `${progress[3]}%` }"></div>
                                 </div>
                             </div>
                         </div>
@@ -380,6 +310,7 @@ import {
 import { grid2Coordinates } from '@/util/map/gridMaker'
 
 import {
+    Loader,
     DatabaseIcon,
     MapPinIcon,
     CircleHelp,
@@ -442,6 +373,8 @@ const coverageRate: Ref<CoverageRate> = ref({
     international: null,
     addRadar: null,
 })
+
+const noCloudLoading = ref(false)
 
 // 看起来是计算属性，其实已经影像分类初始化了
 const demotic = computed(() => {
@@ -652,6 +585,7 @@ const progressControl = (index: number) => {
 
 // 开始计算
 const calNoClouds = async () => {
+    noCloudLoading.value = true
     // 发送请求，计算无云一版图
 
     // 根据勾选情况合并影像
@@ -746,11 +680,13 @@ const calNoClouds = async () => {
         console.log(dataReconstruction.value, calResult)
 
         calImage.value.push(calResult)
+        noCloudLoading.value = false
 
         ElMessage.success('无云一版图计算完成')
     } catch (error) {
         console.log(error)
         calTask.value.calState = 'failed'
+        noCloudLoading.value = false
         ElMessage.error('无云一版图计算失败，请重试')
     }
 }
@@ -797,9 +733,9 @@ const previewNoCloud = async (data: any) => {
 
         if (cache.get(redPath) && cache.get(greenPath) && cache.get(bluePath)) {
             console.log('cache hit!')
-            ;[min_r, max_r] = cache.get(redPath)
-            ;[min_g, max_g] = cache.get(greenPath)
-            ;[min_b, max_b] = cache.get(bluePath)
+                ;[min_r, max_r] = cache.get(redPath)
+                ;[min_g, max_g] = cache.get(greenPath)
+                ;[min_b, max_b] = cache.get(bluePath)
         } else {
             promises.push(
                 getTifbandMinMax(redPath),
@@ -982,8 +918,8 @@ const classifyGridSource = (
         lastSource
             ? (source = lastSource)
             : sceneGridsRes[index]?.scenes.length > 0
-              ? (source = type)
-              : (source = null)
+                ? (source = type)
+                : (source = null)
         return source
     }
     return null
