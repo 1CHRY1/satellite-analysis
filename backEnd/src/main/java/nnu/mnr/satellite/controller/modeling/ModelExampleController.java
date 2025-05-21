@@ -1,8 +1,6 @@
 package nnu.mnr.satellite.controller.modeling;
 
-import nnu.mnr.satellite.model.dto.modeling.NdviFetchDTO;
-import nnu.mnr.satellite.model.dto.modeling.NoCloudFetchDTO;
-import nnu.mnr.satellite.model.dto.modeling.SpectrumFetchDTO;
+import nnu.mnr.satellite.model.dto.modeling.*;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.service.modeling.ModelExampleService;
 import org.springframework.http.ResponseEntity;
@@ -42,8 +40,18 @@ public class ModelExampleController {
     }
 
     @PostMapping("/spectrum/point")
-    public ResponseEntity<CommonResultVO> getSpectrumByPoint(@RequestBody SpectrumFetchDTO spectrumFetchDTO) {
-        return ResponseEntity.ok(modelExampleService.getSpectrumByPoint(spectrumFetchDTO));
+    public ResponseEntity<CommonResultVO> getSpectrumByPoint(@RequestBody SpectrumDTO spectrumDTO) {
+        return ResponseEntity.ok(modelExampleService.getSpectrumByPoint(spectrumDTO));
+    }
+
+    @PostMapping("/raster/point")
+    public ResponseEntity<CommonResultVO> getRasterResultByPoint(@RequestBody PointRasterFetchDTO pointRasterFetchDTO) {
+        return ResponseEntity.ok(modelExampleService.getRasterResultByPoint(pointRasterFetchDTO));
+    }
+
+    @PostMapping("/raster/line")
+    public ResponseEntity<CommonResultVO> getRasterResultByLine(@RequestBody LineRasterFetchDTO lineRasterFetchDTO) {
+        return ResponseEntity.ok(modelExampleService.getRasterResultByLine(lineRasterFetchDTO));
     }
 
 }
