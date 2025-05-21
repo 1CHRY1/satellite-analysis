@@ -2,6 +2,7 @@ package nnu.mnr.satellite.service.resources;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import nnu.mnr.satellite.model.dto.resources.SceneImageDTO;
 import nnu.mnr.satellite.model.dto.resources.ScenesFetchDTOV2;
 import nnu.mnr.satellite.model.po.resources.Region;
 import nnu.mnr.satellite.model.po.resources.Scene;
@@ -44,6 +45,10 @@ public class SceneDataServiceV2 {
         return sceneRepo.selectById(sceneId);
     }
 
+    public SceneImageDTO getSceneByIdWithImage(String sceneId) {
+        return sceneRepo.getSceneWithImages(sceneId);
+    }
+
     public SceneSP getSceneByIdWithProductAndSensor(String sceneId) {
         return sceneRepo.getSceneByIdWithProductAndSensor(sceneId);
     }
@@ -52,17 +57,13 @@ public class SceneDataServiceV2 {
         return sceneRepo.getScenesByIdsWithProductAndSensor(sceneIds);
     }
 
-//    public List<SceneDesVO> getScenesDesByTimeRegionAndTag(ScenesFetchDTOV2 scenesFetchDTO) {
-//        List<Scene> scenes = getScenesByTimeRegionAndCloud(scenesFetchDTO);
-//        return sceneModelMapper.map(scenes, new TypeToken<List<SceneDesVO>>() {}.getType());
-//    }
-public List<SceneDesVO> getScenesDesByTimeRegionAndTag(ScenesFetchDTOV2 scenesFetchDTO) {
-    String startTime = scenesFetchDTO.getStartTime(); String endTime = scenesFetchDTO.getEndTime();
-    Integer regionId = scenesFetchDTO.getRegionId(); Integer cloud = scenesFetchDTO.getCloud();
-    Region region = regionDataService.getRegionById(regionId);
-    String wkt = region.getBoundary().toText();
-    return sceneRepo.getScenesDesByTimeCloudAndGeometry(startTime, endTime, cloud, wkt);
-}
+    public List<SceneDesVO> getScenesDesByTimeRegionAndCloud(ScenesFetchDTOV2 scenesFetchDTO) {
+        String startTime = scenesFetchDTO.getStartTime(); String endTime = scenesFetchDTO.getEndTime();
+        Integer regionId = scenesFetchDTO.getRegionId(); Integer cloud = scenesFetchDTO.getCloud();
+        Region region = regionDataService.getRegionById(regionId);
+        String wkt = region.getBoundary().toText();
+        return sceneRepo.getScenesDesByTimeCloudAndGeometry(startTime, endTime, cloud, wkt);
+    }
 
     public List<Scene> getScenesByTimeRegionAndCloud(ScenesFetchDTOV2 scenesFetchDTO) {
         String startTime = scenesFetchDTO.getStartTime(); String endTime = scenesFetchDTO.getEndTime();
