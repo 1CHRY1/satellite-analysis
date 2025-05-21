@@ -6,7 +6,7 @@ import numpy as np
 import os
 import math
 
-router = APIRouter()
+####### Helper ########################################################################################
 
 TRANSPARENT_PNG = os.path.join(os.path.dirname(__file__), "transparent.png")
 with open(TRANSPARENT_PNG, "rb") as f:
@@ -17,6 +17,31 @@ def normalize(arr, min_val = 0 , max_val = 5000):
     arr = np.clip((arr - min_val) / (max_val - min_val), 0, 1)
     return (arr * 255).astype("uint8")
     
+def tile_bounds(x, y, z):
+
+    Z2 = math.pow(2, z)
+
+    ul_lon_deg = x / Z2 * 360.0 - 180.0
+    ul_lat_rad = math.atan(math.sinh(math.pi * (1 - 2 * y / Z2)))
+    ul_lat_deg = math.degrees(ul_lat_rad)
+
+    lr_lon_deg = (x + 1) / Z2 * 360.0 - 180.0
+    lr_lat_rad = math.atan(math.sinh(math.pi * (1 - 2 * (y + 1) / Z2)))
+    lr_lat_deg = math.degrees(lr_lat_rad)
+
+    result = {
+        "west": ul_lon_deg,
+        "east": lr_lon_deg,
+        "south": lr_lat_deg,
+        "north": ul_lat_deg,
+    }
+    
+    return result
+
+
+####### Router ########################################################################################
+
+router = APIRouter()
     
 @router.get("/rgb/tiles/{z}/{x}/{y}.png")
 def rgb_tile(
@@ -30,11 +55,12 @@ def rgb_tile(
     max_r: int = Query(5000, description="Maximum value of the red band"),
     max_g: int = Query(5000, description="Maximum value of the green band"),
     max_b: int = Query(5000, description="Maximum value of the blue band"),
+    nodata: float = Query(0.0, description="No data value"),
 ):
 
     try: 
         # 读取三个波段
-        with COGReader(url_r) as cog_r:
+        with COGReader(url_r, nodata=nodata) as cog_r:
             if(cog_r.tile_exists(x, y, z)):
                 res = cog_r.tile(x, y, z)
                 tile_r, _ = res
@@ -65,40 +91,6 @@ def rgb_tile(
         return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
 
 
-@router.get("/rgb/preview")
-def rgb_preview(
-    url_r: str = Query(...),
-    url_g: str = Query(...),
-    url_b: str = Query(...),
-    width: int = Query(1024, description="Maximum width of the preview image"),
-    height: int = Query(1024, description="Maximum height of the preview image"),
-):
-    try:
-        # 分别读取三个波段的 preview（自动缩放）
-        with COGReader(url_r) as cog_r:
-            img_r, _ = cog_r.preview(width=width, height=height)
-        with COGReader(url_g) as cog_g:
-            img_g, _ = cog_g.preview(width=width, height=height)
-        with COGReader(url_b) as cog_b:
-            img_b, _ = cog_b.preview(width=width, height=height)
-            
-        r = normalize(img_r.squeeze())
-        g = normalize(img_g.squeeze())
-        b = normalize(img_b.squeeze())
-        
-        rgb = np.stack([r,g,b])
-
-
-        # 渲染为 PNG
-        content = render(rgb, img_format="png", **img_profiles.get("png"))
-        
-        return Response(content, media_type="image/png")
-    
-    except Exception as e:
-        print(e)
-        return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
-
-
 
 @router.get("/rgb/box/{z}/{x}/{y}.png")
 def rgb_box_tile(
@@ -113,6 +105,7 @@ def rgb_box_tile(
     max_r: int = Query(5000),
     max_g: int = Query(5000),
     max_b: int = Query(5000),
+    nodata: float = Query(0.0, description="No data value"),
 ):
     try: 
 
@@ -134,7 +127,7 @@ def rgb_box_tile(
             return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
             
         # 读取三个波段
-        with COGReader(url_r) as cog_r:
+        with COGReader(url_r, nodata=nodata) as cog_r:
             if(cog_r.tile_exists(x, y, z)):
                 res = cog_r.tile(x, y, z)
                 tile_r, _ = res
@@ -149,7 +142,6 @@ def rgb_box_tile(
             tile_b, _ = cog_b.tile(x, y, z)
 
         
-
         # 4. 生成 bbox 掩膜（像素级别）
         H, W = tile_r.squeeze().shape
         xs = np.linspace(tile_wgs_bounds['west'], tile_wgs_bounds['east'], W)
@@ -179,23 +171,41 @@ def rgb_box_tile(
         print(e)
         return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
 
-def tile_bounds(x, y, z):
 
-    Z2 = math.pow(2, z)
 
-    ul_lon_deg = x / Z2 * 360.0 - 180.0
-    ul_lat_rad = math.atan(math.sinh(math.pi * (1 - 2 * y / Z2)))
-    ul_lat_deg = math.degrees(ul_lat_rad)
 
-    lr_lon_deg = (x + 1) / Z2 * 360.0 - 180.0
-    lr_lat_rad = math.atan(math.sinh(math.pi * (1 - 2 * (y + 1) / Z2)))
-    lr_lat_deg = math.degrees(lr_lat_rad)
 
-    result = {
-        "west": ul_lon_deg,
-        "east": lr_lon_deg,
-        "south": lr_lat_deg,
-        "north": ul_lat_deg,
-    }
+############### Deprecated Temporarily ###############################################################
+# @router.get("/rgb/preview")
+# def rgb_preview(
+#     url_r: str = Query(...),
+#     url_g: str = Query(...),
+#     url_b: str = Query(...),
+#     width: int = Query(1024, description="Maximum width of the preview image"),
+#     height: int = Query(1024, description="Maximum height of the preview image"),
+#     nodata=nodata
+# ):
+#     try:
+#         # 分别读取三个波段的 preview（自动缩放）
+#         with COGReader(url_r, nodata=nodata) as cog_r:
+#             img_r, _ = cog_r.preview(width=width, height=height)
+#         with COGReader(url_g) as cog_g:
+#             img_g, _ = cog_g.preview(width=width, height=height)
+#         with COGReader(url_b) as cog_b:
+#             img_b, _ = cog_b.preview(width=width, height=height)
+            
+#         r = normalize(img_r.squeeze())
+#         g = normalize(img_g.squeeze())
+#         b = normalize(img_b.squeeze())
+        
+#         rgb = np.stack([r,g,b])
+
+
+#         # 渲染为 PNG
+#         content = render(rgb, img_format="png", **img_profiles.get("png"))
+        
+#         return Response(content, media_type="image/png")
     
-    return result
+#     except Exception as e:
+#         print(e)
+#         return Response(content=TRANSPARENT_CONTENT, media_type="image/png")

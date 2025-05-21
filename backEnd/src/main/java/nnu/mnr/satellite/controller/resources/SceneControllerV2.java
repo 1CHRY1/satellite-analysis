@@ -2,7 +2,9 @@ package nnu.mnr.satellite.controller.resources;
 
 import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import nnu.mnr.satellite.model.dto.resources.SceneImageDTO;
 import nnu.mnr.satellite.model.dto.resources.ScenesFetchDTOV2;
+import nnu.mnr.satellite.model.po.resources.SceneSP;
 import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
 import nnu.mnr.satellite.service.resources.SceneDataServiceV2;
 import org.springframework.http.ResponseEntity;
@@ -32,12 +34,17 @@ public class SceneControllerV2 {
 
     @PostMapping("/time/cloud/region")
     public ResponseEntity<List<SceneDesVO>> getScenesByTimeAndRegion(@RequestBody ScenesFetchDTOV2 scenesFetchDTO) throws IOException {
-        return ResponseEntity.ok(sceneDataService.getScenesDesByTimeRegionAndTag(scenesFetchDTO));
+        return ResponseEntity.ok(sceneDataService.getScenesDesByTimeRegionAndCloud(scenesFetchDTO));
     }
 
     @GetMapping("/boundary/sceneId/{sceneId}")
     public ResponseEntity<JSONObject> getSceneBoundaryById(@PathVariable String sceneId) throws IOException {
         return ResponseEntity.ok(sceneDataService.getSceneBoundaryById(sceneId));
+    }
+
+    @GetMapping("/sceneId/{sceneId}")
+    public ResponseEntity<SceneImageDTO> getSceneByIdWithProductAndSensor(@PathVariable String sceneId) {
+        return ResponseEntity.ok(sceneDataService.getSceneByIdWithImage(sceneId));
     }
 
 }

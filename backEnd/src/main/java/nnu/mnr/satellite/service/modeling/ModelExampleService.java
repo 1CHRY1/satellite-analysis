@@ -18,6 +18,7 @@ import org.locationtech.jts.geom.Geometry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -68,7 +69,7 @@ public class ModelExampleService {
     }
 
     // 无云一版图计算
-    public CommonResultVO getNoCloudByRegion(NoCloudFetchDTO noCloudFetchDTO) {
+    public CommonResultVO getNoCloudByRegion(NoCloudFetchDTO noCloudFetchDTO) throws IOException {
         Integer regionId = noCloudFetchDTO.getRegionId(); Integer resolution = noCloudFetchDTO.getResolution();
         List<String> sceneIds = noCloudFetchDTO.getSceneIds();
 
@@ -81,6 +82,7 @@ public class ModelExampleService {
             List<ModelServerImageDTO> imageDTO = imageDataService.getModelServerImageDTOBySceneId(sceneId);
             ModelServerSceneDTO modelServerSceneDTO = ModelServerSceneDTO.builder()
                     .sceneId(sceneId).images(imageDTO).sceneTime(scene.getSceneTime())
+                    .bbox(GeometryUtil.geometry2Geojson(scene.getBbox()))
                     .sensorName(scene.getSensorName()).productName(scene.getProductName()).cloud(scene.getCloud())
                     .bandMapper(bandMapperGenerator.getSatelliteConfigBySensorName(scene.getSensorName()))
                     .cloudPath(scene.getCloudPath()).bucket(scene.getBucket()).build();
