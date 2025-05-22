@@ -55,6 +55,11 @@ export default defineConfig({
                 target: 'http://localhost:8000',
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/hytemp/, ''),
+            },
+            '/proxymap':{
+                target: 'http://localhost:5003',
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/proxymap/, ''),
             }
         },
     },
