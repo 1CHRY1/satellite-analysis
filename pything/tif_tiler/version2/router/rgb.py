@@ -43,7 +43,7 @@ def tile_bounds(x, y, z):
 
 router = APIRouter()
     
-@router.get("/rgb/tiles/{z}/{x}/{y}.png")
+@router.get("/tiles/{z}/{x}/{y}.png")
 def rgb_tile(
     z: int, x: int, y: int,
     url_r: str = Query(...),
@@ -92,7 +92,7 @@ def rgb_tile(
 
 
 
-@router.get("/rgb/box/{z}/{x}/{y}.png")
+@router.get("/box/{z}/{x}/{y}.png")
 def rgb_box_tile(
     z: int, x: int, y: int,
     bbox: str = Query(..., description="Bounding box (WGS84): minx,miny,maxx,maxy"),
