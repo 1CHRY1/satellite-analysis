@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Query, Response
 from rio_tiler.io import COGReader
 from rio_tiler.utils import render
+from rio_tiler.colormap import cmap
 from rio_tiler.profiles import img_profiles
 import numpy as np
 import os
@@ -32,25 +33,29 @@ async def get_tile(
     url: str = Query(...),
     min: float = Query(-1.0, description="Minimum value of the color band"),
     max: float = Query(1.0, description="Maximum value of the color band"),
-    cmap: str = Query("rdylgn", description="Color map"),
+    color: str = Query("rdylgn", description="Color map"),
     nodata: float = Query(9999.0, description="No data value"),
 ):
 
     try:
         cog_path = url
-        
+        cm = cmap.get(color)
         with COGReader(cog_path, options={"nodata": nodata}) as cog:
             if(cog.tile_exists(x, y, z)):
-                res = cog.tile(x, y, z)
-                img, _ = res
-                mask = res.mask
+
+                tile_data = cog.tile(x, y, z)
+                img = tile_data.data
+                mask = tile_data.mask
             else :
                 print("tile not exist", z, x, y)
                 return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
             
-            normed = normalize(img.squeeze(), min, max)
+            # normed = normalize(img.squeeze(), min, max)
+            print("img shape", img.shape)
             
-            content = render(normed, mask=mask, img_format="png", colormap=cmap, **img_profiles.get("png"))
+            normed = normalize(img[0], min, max)
+            
+            content = render(normed, mask=mask, img_format="png", colormap=cm, **img_profiles.get("png"))
             
         return Response(content=content, media_type="image/png")
 

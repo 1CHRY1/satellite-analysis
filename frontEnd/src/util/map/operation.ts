@@ -11,7 +11,7 @@ import Antd from 'ant-design-vue'
 import { createApp, type ComponentInstance, ref, type Ref, reactive } from 'vue'
 import PopoverContent, { type GridData } from '@/components/feature/map/popoverContent.vue'
 import bus from '@/store/bus'
-import { getSceneRGBCompositeTileUrl, getGridRGBCompositeUrl } from '@/api/http/satellite-data/visualize.api'
+import { getSceneRGBCompositeTileUrl, getGridRGBCompositeUrl, getTerrainRGBUrl, getOneBandColorUrl } from '@/api/http/satellite-data/visualize.api'
 
 ////////////////////////////////////////////////////////
 /////// Map Operation //////////////////////////////////
@@ -781,6 +781,7 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
         ezStore.set('grid-layer-source-id', srcId)
     })
 }
+
 export function map_addGridLayer_coverOpacity(gridGeoJson: GeoJSON.FeatureCollection): void {
     const id = 'grid-layer'
     const fillId = id + '-fill'
@@ -910,6 +911,64 @@ export function map_destroySceneBoxLayer(): void {
 
     })
 }
+
+type TerrainLayerParam = {
+    fullTifPath: string
+}
+export function map_addTerrain(param: TerrainLayerParam): void {
+    const terrainSourceUrl = getTerrainRGBUrl(param.fullTifPath)
+    console.log(terrainSourceUrl)
+    const onlySourceId = 'terrain-source'
+    mapManager.withMap((map) => {
+
+        map.setTerrain(null)
+        map.getSource(onlySourceId) && map.removeSource(onlySourceId)
+
+        map.addSource(onlySourceId, {
+            'type': 'raster-dem',
+            'tiles': [
+                terrainSourceUrl,
+            ],
+            'tileSize': 256,
+            // 'maxzoom': 14
+        });
+        map.setTerrain({ 'source': onlySourceId, 'exaggeration': 4.0 });
+    })
+}
+export function map_destroyTerrain() {
+    mapManager.withMap(async (map) => {
+        map.setTerrain(null)
+        map.removeSource('terrain-rgb')
+    })
+}
+
+type OneBandColorLayerParam = {
+    fullTifPath: string
+}
+export function map_addOneBandColorLayer(param: OneBandColorLayerParam): void {
+    const sourceUrl = getOneBandColorUrl(param.fullTifPath)
+    const onlyId = 'one-band-color-layer'
+    const onlySrcId = onlyId + '-source'
+
+    mapManager.withMap((map) => {
+
+        map.getLayer(onlyId) && map.removeLayer(onlyId)
+        map.getSource(onlySrcId) && map.removeSource(onlySrcId)
+
+        map.addSource(onlySrcId, {
+            type: 'raster',
+            tiles: [sourceUrl],
+        })
+
+        map.addLayer({
+            id: onlyId,
+            type: 'raster',
+            source: onlySrcId,
+        })
+    })
+
+}
+
 
 // export function map_addGridCoverLayer(gridGeoJson: GeoJSON.FeatureCollection){
 //     const id = 'grid-layer'

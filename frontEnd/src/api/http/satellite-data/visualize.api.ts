@@ -195,3 +195,31 @@ export async function getSceneGeojson(scene: BaseSceneType) {
 
     return json
 }
+
+
+// 地形瓦片，实时构建的terrainRGB
+/**
+ * 
+ * @param terrainTifPath bucket + '/' + tifPath
+ */
+export function getTerrainRGBUrl(terrainTifPath: string) {
+    // demo: /tiler/terrain/terrainRGB/{z}/{x}/{y}.png 
+    let baseUrl = `${titilerEndPoint}/terrain/terrainRGB/{z}/{x}/{y}.png`
+    const requestParams = new URLSearchParams()
+    requestParams.append('url', minioEndPoint + '/' + terrainTifPath)
+
+    const fullUrl = baseUrl + '?' + requestParams.toString()
+    return fullUrl
+}
+
+// 单波段彩色产品
+
+export function getOneBandColorUrl(oneBandColorTifPath: string){
+    
+    let baseUrl = `${titilerEndPoint}/oneband/colorband/{z}/{x}/{y}.png`
+    const requestParams = new URLSearchParams()
+    requestParams.append('url', minioEndPoint + '/' + oneBandColorTifPath)
+
+    const fullUrl = baseUrl + '?' + requestParams.toString()
+    return fullUrl
+}
