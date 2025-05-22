@@ -321,6 +321,17 @@ const TianVectorStyle = {
     ],
 }
 
+
+
+
+
+
+
+
+
+//################################################################
+
+
 // 内网影像风格底图
 const LocalImageBaseMapStyle = {
     version: 8,
@@ -557,9 +568,8 @@ const LocalImageBaseMapStyle = {
     sources: {
         'Local-Imagelayer-Source': {
             type: 'raster',
-            // schema: 'tms',
             tiles: [
-                ezStore.get('conf').basemap_server + '/{z}/{x}/{y}',
+                ezStore.get('conf')['intranet_img_url']
             ],
             tileSize: 256,
         },
@@ -807,36 +817,32 @@ const LocalVectorBaseMapStyle = {
         ],
     },
     sources: {
-        'Tian-Vectorlayer-Source': {
+        'Intralnet-Vectorlayer-Source': {
             type: 'raster',
-            schema: 'tms',
             tiles: [
-                // `http://t0.tianditu.gov.cn/vec_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=img&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${TianMapkey}`,
-                ezStore.get('conf').test_basemap_url
+                ezStore.get('conf')['intranet_vec_url']
 
             ],
             tileSize: 256,
         },
-        'Tian-Vectorlable-Source': {
+        'Intralnet-Vectorlable-Source': {
             type: 'raster',
-            schema: 'tms',
             tiles: [
-                // `http://t0.tianditu.gov.cn/cva_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=cva&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${TianMapkey}`,
-                ezStore.get('conf').test_basemap_text_url
+                ezStore.get('conf')['intranet_cva_url']
             ],
             tileSize: 256,
         },
     },
     layers: [
         {
-            id: 'Tian-Vector-Layer',
+            id: 'Intralnet-Vector-Layer',
             type: 'raster',
-            source: 'Tian-Vectorlayer-Source',
+            source: 'Intralnet-Vectorlayer-Source',
         },
         {
-            id: 'Tian-Vector-Label',
+            id: 'Intralnet-Vector-Label',
             type: 'raster',
-            source: 'Tian-Vectorlable-Source',
+            source: 'Intralnet-Vectorlable-Source',
             paint: {
                 'raster-opacity': 0.8,
             },
@@ -864,6 +870,7 @@ const LocalVectorBaseMapStyle = {
     glyphs: '/glyphs/mapbox/{fontstack}/{range}.pbf',
 }
 
+
 // 我们自己的矢量瓦片底图
 const OurVectorBaseMapStyle = {
     version: 8,
@@ -871,7 +878,7 @@ const OurVectorBaseMapStyle = {
         offlineMapTiles: {
             type: 'vector',
             tiles: [
-                ezStore.get('conf').basemap_server2 + '/{z}/{x}/{y}',
+                ezStore.get('conf')['intranet_mvt_url'],
             ],
             minzoom: 0,
             maxzoom: 22,
@@ -942,7 +949,7 @@ const OurVectorBaseMapStyle = {
                 visibility: 'visible',
             },
             paint: {
-                'fill-color': 'hsl(208, 79%, 62%)',
+                'fill-color': 'rgb(174,197,238)',
                 'fill-opacity': 1,
             },
             filter: ['==', '$type', 'Polygon'],
@@ -959,10 +966,9 @@ export type Style = 'image' | 'vector' | 'local'
 export const StyleMap = {
     image: TianImageStyle as unknown as StyleSpecification,
     vector: TianVectorStyle as unknown as StyleSpecification,
-    // local: TianImageStyle as unknown as StyleSpecification,
-    local: OurVectorBaseMapStyle as unknown as StyleSpecification,
-    // local: LocalImageBaseMapStyle as unknown as StyleSpecification,
+    local: LocalImageBaseMapStyle as unknown as StyleSpecification,
 
     localVec: LocalVectorBaseMapStyle as unknown as StyleSpecification,
     localImg: LocalImageBaseMapStyle as unknown as StyleSpecification,
+    localMvt: OurVectorBaseMapStyle as unknown as StyleSpecification,
 }
