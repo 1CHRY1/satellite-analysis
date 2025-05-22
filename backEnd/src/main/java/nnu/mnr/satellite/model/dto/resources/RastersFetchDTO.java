@@ -17,7 +17,6 @@ public class RastersFetchDTO {
     private String startTime;
     private String endTime;
     private Integer regionId;
-    private Integer cloud;
     private String dataType;
 
 }

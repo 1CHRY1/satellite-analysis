@@ -116,6 +116,13 @@ def calc_raster_point():
     task_id = scheduler.start_task('calc_raster_point', data)
     return api_response(data={'taskId': task_id})
 
+@bp.route(config.API_TIF_calc_raster_line, methods=['POST'])
+def calc_raster_line():
+    scheduler = init_scheduler()
+    data = request.json
+    task_id = scheduler.start_task('calc_raster_line', data)
+    return api_response(data={'taskId': task_id})
+
 
 @bp.route(config.API_TASK_RESULT, methods=['GET'])
 def get_result():
