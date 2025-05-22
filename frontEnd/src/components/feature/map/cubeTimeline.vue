@@ -5,20 +5,36 @@
             <div class="date-filter start-filter">
                 <div class="filter-label">起始日期</div>
                 <div class="date-selector">
-                    <input type="date" v-model="startDateFilter" :min="minDate" :max="endDateFilter || maxDate"
-                        @change="applyDateFilter" />
+                    <input
+                        type="date"
+                        v-model="startDateFilter"
+                        :min="minDate"
+                        :max="endDateFilter || maxDate"
+                        @change="applyDateFilter"
+                    />
                 </div>
             </div>
 
             <div class="timeline-wrapper" @click="console.log(filteredImages)">
-                <button class="nav-button" @click="handleClick(activeIndex - 1)" :disabled="activeIndex <= 0">
+                <button
+                    class="nav-button"
+                    @click="handleClick(activeIndex - 1)"
+                    :disabled="activeIndex <= 0"
+                >
                     <ChevronLeftIcon :size="24" />
                 </button>
 
                 <div class="timeline-track" ref="timelineTrack">
-                    <div v-for="(item, index) in filteredImages" :key="index" class="timeline-item"
-                        :class="{ active: index === activeIndex }" @click="handleClick(index)">
-                        <div class="label mb-1" @click="console.log(item, 1221)">{{ item.productName }}</div>
+                    <div
+                        v-for="(item, index) in filteredImages"
+                        :key="index"
+                        class="timeline-item"
+                        :class="{ active: index === activeIndex }"
+                        @click="handleClick(index)"
+                    >
+                        <div class="label mb-1" @click="console.log(item, 1221)">
+                            {{ item.productName }}
+                        </div>
                         <div class="dot-container">
                             <div class="dot"></div>
                             <div class="connector" v-if="index < filteredImages.length - 1"></div>
@@ -27,8 +43,11 @@
                     </div>
                 </div>
 
-                <button class="nav-button" @click="handleClick(activeIndex + 1)"
-                    :disabled="activeIndex >= filteredImages.length - 1">
+                <button
+                    class="nav-button"
+                    @click="handleClick(activeIndex + 1)"
+                    :disabled="activeIndex >= filteredImages.length - 1"
+                >
                     <ChevronRightIcon :size="24" />
                 </button>
             </div>
@@ -37,8 +56,13 @@
             <div class="date-filter end-filter">
                 <div class="filter-label">结束日期</div>
                 <div class="date-selector">
-                    <input type="date" v-model="endDateFilter" :min="startDateFilter || minDate" :max="maxDate"
-                        @change="applyDateFilter" />
+                    <input
+                        type="date"
+                        v-model="endDateFilter"
+                        :min="startDateFilter || minDate"
+                        :max="maxDate"
+                        @change="applyDateFilter"
+                    />
                 </div>
             </div>
         </div>
@@ -61,13 +85,17 @@ type ImageInfoType = {
     sceneId: string
     time: string
     tifFullPath: string
+    nodata: number
 }
+
 type MultiImageInfoType = {
     sceneId: string
     time: string
+    productName: string
     redPath: string
     greenPath: string
     bluePath: string
+    nodata: number
 }
 type GridInfoType = {
     rowId: number
@@ -76,10 +104,12 @@ type GridInfoType = {
 }
 
 const show = defineModel<boolean>()
-const singleImages = ref<ImageInfoType[]>([{ sceneId: '', time: '', tifFullPath: '' }])
-const multiImages = ref<MultiImageInfoType[]>([
-    { sceneId: '', time: '', redPath: '', greenPath: '', bluePath: '' },
-])
+// const singleImages = ref<ImageInfoType[]>([{ sceneId: '', time: '', tifFullPath: '' }])
+// const multiImages = ref<MultiImageInfoType[]>([
+//     { sceneId: '', time: '', redPath: '', greenPath: '', bluePath: '' },
+// ])
+const singleImages = ref<ImageInfoType[]>([])
+const multiImages = ref<MultiImageInfoType[]>([])
 const scaleRate = ref(50)
 const grid = ref<GridInfoType>({ rowId: 0, columnId: 0, resolution: 0 })
 const activeIndex = ref(-1)
@@ -206,7 +236,7 @@ const setDateRange = () => {
 const handleClick = async (index: number) => {
     if (index < 0 || index >= filteredImages.value.length) return
 
-    const stopLoading = message.loading('正在加载影像...')
+    const stopLoading = message.loading('正在加载影像...', 0)
 
     activeIndex.value = index
 
@@ -241,9 +271,9 @@ const handleClick = async (index: number) => {
 
         if (cache.get(redPath) && cache.get(greenPath) && cache.get(bluePath)) {
             console.log('cache hit!')
-                ;[min_r, max_r] = cache.get(redPath)
-                ;[min_g, max_g] = cache.get(greenPath)
-                ;[min_b, max_b] = cache.get(bluePath)
+            ;[min_r, max_r] = cache.get(redPath)
+            ;[min_g, max_g] = cache.get(greenPath)
+            ;[min_b, max_b] = cache.get(bluePath)
         } else {
             promises.push(
                 getTifbandMinMax(redPath),
@@ -280,6 +310,7 @@ const handleClick = async (index: number) => {
             greenPath,
             bluePath,
             ...showingImageStrech,
+            nodata: img.nodata
         })
     } else if (visualMode.value === 'rgb') {
         const img = currentImage as MultiImageInfoType
@@ -294,9 +325,9 @@ const handleClick = async (index: number) => {
 
         if (cache.get(redPath) && cache.get(greenPath) && cache.get(bluePath)) {
             console.log('cache hit!')
-                ;[min_r, max_r] = cache.get(redPath)
-                ;[min_g, max_g] = cache.get(greenPath)
-                ;[min_b, max_b] = cache.get(bluePath)
+            ;[min_r, max_r] = cache.get(redPath)
+            ;[min_g, max_g] = cache.get(greenPath)
+            ;[min_b, max_b] = cache.get(bluePath)
         } else {
             promises.push(
                 getTifbandMinMax(redPath),
@@ -336,11 +367,11 @@ const handleClick = async (index: number) => {
                 greenPath,
                 bluePath,
                 ...showingImageStrech,
+                nodata: img.nodata
             },
             stopLoading,
         )
     }
-
 }
 
 const updateHandler = (

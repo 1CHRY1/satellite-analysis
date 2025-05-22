@@ -259,12 +259,10 @@
                                         <label class="mr-2 text-white">选择影像产品：</label>
                                         <select
                                             class="max-h-[600px] w-[calc(100%-130px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
-                                            v-model="resolutionSelectedSensor[label]"
+                                            v-model="resolutionPlatformSensor[label]"
                                         >
-                                            <option disabled selected value="">
-                                                请选择影像产品
-                                            </option>
-                                            <option :value="'all'" class="truncate">全选</option>
+                                            <option disabled selected value="">请选择</option>
+                                            <!-- <option :value="'all'" class="truncate">全选</option> -->
                                             <option
                                                 v-for="platformName in classifiedScenes[
                                                     value + 'm'
@@ -276,13 +274,19 @@
                                                 {{ platformName }}
                                             </option>
                                         </select>
-                                        <a-button
-                                            class="custom-button mt-4! w-[calc(100%-10px)]!"
-                                            :loading="false"
-                                            @click="handleShowResolutionSensorImage(label)"
-                                        >
-                                            影像可视化
-                                        </a-button>
+                                        <div class="flex flex-row items-center">
+                                            <a-button
+                                                class="custom-button mt-4! w-[calc(100%-50px)]!"
+                                                @click="handleShowResolutionSensorImage(label)"
+                                                :disabled="!resolutionPlatformSensor[label]"
+                                            >
+                                                影像可视化
+                                            </a-button>
+                                            <a-tooltip>
+                                                <template #title>清空影像图层</template>
+                                                <Trash2Icon :size="18" class="mt-4! ml-4! cursor-pointer" @click="clearAllShowingSensor"/>
+                                            </a-tooltip>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -387,12 +391,13 @@ import {
     getRegionPosition,
     getSceneByConfig,
     getSceneGrids,
+    getCoverRegionSensorScenes,
 } from '@/api/http/satellite-data'
 import * as MapOperation from '@/util/map/operation'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import { ezStore } from '@/store'
-import { getSceneGeojson, getTifbandMinMax } from '@/api/http/satellite-data/visualize.api'
-
+import { getSceneGeojson } from '@/api/http/satellite-data/visualize.api'
+import { getRGBTileLayerParamFromSceneObject } from '@/util/visualizeHelper/index'
 import {
     DatabaseIcon,
     MapPinIcon,
@@ -435,14 +440,13 @@ const resolutionType: ResolutionItem[] = [
     ['其他', 500],
 ]
 // 绑定每个select的选中项
-const resolutionSelectedSensor = reactive<any>({
-    '亚米': 'all',
-    '2米': 'all',
-    '10米': 'all',
-    '30米': 'all',
-    '其他': 'all',
+const resolutionPlatformSensor = reactive<any>({
+    亚米: '',
+    '2米': '',
+    '10米': '',
+    '30米': '',
+    其他: '',
 })
-
 
 const selectedRadius = ref(20)
 const tileMergeConfig = ref({
@@ -582,16 +586,16 @@ const filterByCloudAndDate = async () => {
 
 // 数各种分辨率分别覆盖了多少格网
 const countResolutionCoverage = (allGridScene: any[]) => {
-    console.log(allGridScene);
+    console.log(allGridScene)
     const result = {
-        '亚米': 0,
+        亚米: 0,
         '2米': 0,
         '10米': 0,
         '30米': 0,
-        '其他': 0,
+        其他: 0,
     }
 
-    allGridScene.forEach(grid => {
+    allGridScene.forEach((grid) => {
         const seen = new Set<string>() // 记录当前 grid 中已统计过的 resolution 分类
 
         grid.scenes?.forEach((scene: any) => {
@@ -659,9 +663,7 @@ const classifyScenesByResolution = () => {
         }
     }
     classifiedScenes.value = result
-
 }
-
 
 const countSensorsCoverage = (
     allSensorsItems: { key: string; tags: string[] }[],
@@ -875,7 +877,6 @@ const filterByTags = async () => {
         }
     })
     filteredSensorsItems.value = res
-
 }
 
 // 根据分辨率获得影像总数的方法
@@ -907,7 +908,6 @@ const getSceneCountByResolution = (resolution: number) => {
         return count
     }
 }
-
 
 // 根据tags返回类型
 const imageType = (tags: string[]) => {
@@ -965,16 +965,70 @@ const showImageBySensorAndSelect = async (image: any, imageName: string) => {
 const clearAllShowingSensor = () => {
     MapOperation.map_destroyRGBImageTileLayer()
     MapOperation.map_destroySceneBoxLayer()
+    MapOperation.map_destroyMultiRGBImageTileLayer()
 }
+
+// 工具函数： 获取platformName名对应的所有景
+const getSceneIdsByPlatformName = (platformName: string) => {
+    console.log('所有景', allScenes.value)
+    console.log('选中的平台名', platformName)
+
+    if (platformName === 'all') return allScenes.value.map((item) => item.sceneId)
+
+    const res: any[] = []
+    allScenes.value.forEach((item) => {
+        if (item.platformName == platformName) {
+            res.push(item.sceneId)
+        }
+    })
+    return res
+}
+
+// 工具函数： platformName -> sensorName, 接口需要sensorName
+const getSensorNamebyPlatformName = (platformName: string) => {
+    // if (platformName === 'all') return 'all'
+    // return platformName.split('_')[1]
+    // 先把全选去了，接口没留全选逻辑
+    let sensorName = ''
+    for (let item of allScenes.value) {
+        if (item.platformName === platformName) {
+            sensorName = item.sensorName
+            break
+        }
+    }
+    return sensorName
+}
+
 const handleShowResolutionSensorImage = async (label: string) => {
+    const selectPlatformName = resolutionPlatformSensor[label]
+    const sceneIds = getSceneIdsByPlatformName(selectPlatformName)
+    console.log('选中的景ids', sceneIds)
+    const sensorName = getSensorNamebyPlatformName(selectPlatformName)
 
-    console.log(label)
-    const selectSensor = resolutionSelectedSensor[label]
-    console.log(selectSensor)
-    
-    console.log(classifiedScenes.value)
+    const params = {
+        sensorName,
+        sceneIds,
+        regionId: displayLabel.value,
+    }
 
-    // const stopLoading = message.loading('正在加载影像')
+    const stopLoading = message.loading('正在加载影像...', 0)
+
+    const coverScenes = await getCoverRegionSensorScenes(params)
+
+    console.log('覆盖的景', coverScenes)
+
+    const promises: Promise<any>[] = []
+
+    for (let scene of coverScenes) {
+        promises.push(getRGBTileLayerParamFromSceneObject(scene))
+    }
+
+    const rgbTileLayerParamList = await Promise.all(promises)
+
+    console.log(rgbTileLayerParamList)
+
+    MapOperation.map_addMultiRGBImageTileLayer(rgbTileLayerParamList, stopLoading)
+
     // let redPath, greenPath, bluePath
     // const sceneInfo = sensorItem.selectedSceneInfo
     // console.log(sceneInfo.bandMapper)

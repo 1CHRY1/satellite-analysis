@@ -124,6 +124,7 @@ type RGBTileLayerParams = {
     g_max: number
     b_min: number
     b_max: number
+    nodata?: number
 }
 export function getSceneRGBCompositeTileUrl(param: RGBTileLayerParams) {
     let baseUrl = `${titilerEndPoint}/rgb/tiles/{z}/{x}/{y}.png`
@@ -138,7 +139,8 @@ export function getSceneRGBCompositeTileUrl(param: RGBTileLayerParams) {
     requestParams.append('max_g', param.g_max.toString())
     requestParams.append('min_b', param.b_min.toString())
     requestParams.append('max_b', param.b_max.toString())
-    // requestParams.append('nodata', 11)
+    if (param.nodata)
+        requestParams.append('nodata', param.nodata.toString())
 
     return baseUrl + '?' + requestParams.toString()
 }
@@ -159,6 +161,8 @@ export function getGridRGBCompositeUrl(grid: GridInfoType, param: RGBTileLayerPa
     requestParams.append('max_g', param.g_max.toString())
     requestParams.append('min_b', param.b_min.toString())
     requestParams.append('max_b', param.b_max.toString())
+    if (param.nodata)
+        requestParams.append('nodata', param.nodata.toString())
 
     return baseUrl + '?' + requestParams.toString()
 }
@@ -183,9 +187,9 @@ export async function getSceneGeojson(scene: BaseSceneType) {
     let baseUrl = `${titilerEndPoint}/info.geojson`
     const requestParams = new URLSearchParams()
     requestParams.append('url', oneImgFullPath)
-    
+
     const httpUrl = baseUrl + '?' + requestParams.toString()
-    
+
     const response = await fetch(httpUrl)
     const json = await response.json()
 
