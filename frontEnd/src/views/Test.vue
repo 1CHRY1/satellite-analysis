@@ -1,6 +1,6 @@
 <template>
     <div class="bg-amber-50 flex">
-        <MapComp class="flex-1" :style="'image'" :proj="'globe'" />
+        <MapComp class="flex-1" :style="'empty'" :proj="'globe'" />
 
         <div class="absolute right-10 top-10 flex flex-col w-fit h-fit gap-5">
             <button class="p-5  bg-amber-300" @click="localMvt">本地MVT</button>
@@ -24,7 +24,7 @@ const localMvt = () => {
     mapManager.withMap((m) => {
         console.log('设置本地mvt样式')
         console.log(StyleMap.local.sources)
-        m.setStyle(StyleMap.local)
+        m.setStyle(StyleMap.localMvt)
     })
 }
 

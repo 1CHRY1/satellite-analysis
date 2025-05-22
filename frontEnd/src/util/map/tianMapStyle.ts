@@ -1,5 +1,6 @@
 import { type StyleSpecification } from 'mapbox-gl'
 import { ezStore } from '@/store'
+import { version } from 'vue'
 
 const TianMapkey = '51d72ac2491e6e4228bdc5dd2e0a61b2'
 const TianImageStyle = {
@@ -870,7 +871,6 @@ const LocalVectorBaseMapStyle = {
     glyphs: '/glyphs/mapbox/{fontstack}/{range}.pbf',
 }
 
-
 // 我们自己的矢量瓦片底图
 const OurVectorBaseMapStyle = {
     version: 8,
@@ -958,10 +958,16 @@ const OurVectorBaseMapStyle = {
     glyphs: '/glyphs/mapbox/{fontstack}/{range}.pbf',
 }
 
+const empty = {
+    version: 8,
+    sources: {},
+    layers: [],
+    glyphs: '/glyphs/mapbox/{fontstack}/{range}.pbf',
+}
 
 
 
-export type Style = 'image' | 'vector' | 'local'
+export type Style = 'image' | 'vector' | 'local' | 'empty'
 
 export const StyleMap = {
     image: TianImageStyle as unknown as StyleSpecification,
@@ -971,4 +977,5 @@ export const StyleMap = {
     localVec: LocalVectorBaseMapStyle as unknown as StyleSpecification,
     localImg: LocalImageBaseMapStyle as unknown as StyleSpecification,
     localMvt: OurVectorBaseMapStyle as unknown as StyleSpecification,
+    empty: empty as unknown as StyleSpecification,
 }
