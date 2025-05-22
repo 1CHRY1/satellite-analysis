@@ -20,7 +20,7 @@ import bus from '@/store/bus'
 
 const props = defineProps({
     style: {
-        type: String as PropType<'vector' | 'image' | 'local'>,
+        type: String as PropType<'vector' | 'image' | 'local' | 'empty'>,
         default: 'local',
     },
     proj: {
