@@ -2,6 +2,9 @@ package nnu.mnr.satellite.controller.resources;
 
 import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import nnu.mnr.satellite.model.dto.modeling.ModelServerSceneDTO;
+import nnu.mnr.satellite.model.dto.resources.CoverFetchSceneDTO;
+import nnu.mnr.satellite.model.dto.resources.RastersFetchDTO;
 import nnu.mnr.satellite.model.dto.resources.SceneImageDTO;
 import nnu.mnr.satellite.model.dto.resources.ScenesFetchDTOV2;
 import nnu.mnr.satellite.model.po.resources.SceneSP;
@@ -35,6 +38,16 @@ public class SceneControllerV2 {
     @PostMapping("/time/cloud/region")
     public ResponseEntity<List<SceneDesVO>> getScenesByTimeAndRegion(@RequestBody ScenesFetchDTOV2 scenesFetchDTO) throws IOException {
         return ResponseEntity.ok(sceneDataService.getScenesDesByTimeRegionAndCloud(scenesFetchDTO));
+    }
+
+    @PostMapping("/raster/time/region")
+    public ResponseEntity<List<SceneDesVO>> getRasterScenesDesByRegionAndDataType(@RequestBody RastersFetchDTO rastersFetchDTO) throws IOException {
+        return ResponseEntity.ok(sceneDataService.getRasterScenesDesByRegionAndDataType(rastersFetchDTO));
+    }
+
+   @PostMapping("/cover/region/sceneIds")
+    public ResponseEntity<List<ModelServerSceneDTO>> getCoveredSceneByRegionResolutionAndSensor(@RequestBody CoverFetchSceneDTO coverFetchSceneDTO) {
+        return ResponseEntity.ok(sceneDataService.getCoveredSceneByRegionResolutionAndSensor(coverFetchSceneDTO));
     }
 
     @GetMapping("/boundary/sceneId/{sceneId}")

@@ -253,6 +253,15 @@ const bands = computed(() => {
         return a.localeCompare(b)
     })
 
+    if(result.length > 0){
+        selectedBand.value = result[0]
+    }
+    if(result.length > 2){
+        selectedBBand.value = result[2]
+        selectedGBand.value = result[1]
+        selectedRBand.value = result[0]
+    }
+
     return result
 })
 
@@ -304,6 +313,7 @@ const handleVisualize = () => {
             let greenPath = ''
             let bluePath = ''
 
+            // 这里用bandmapper
             // console.log(sceneInfo.bandMapper)
             for (let bandImg of sceneInfo.images) {
                 // 后端返回的BandMapper如果是单波段的话，Red Green 和 Blue相同
@@ -365,32 +375,24 @@ const handleVisualize = () => {
                 // let greenPath = ''
                 // let bluePath = ''
 
-                // scene.images.forEach((bandImg: Image) => {
-                //     if (bandImg.band === selectedRBand.value) {
-                //         redPath = bandImg.bucket + '/' + bandImg.tifPath
-                //     } else if (bandImg.band === selectedGBand.value) {
-                //         greenPath = bandImg.bucket + '/' + bandImg.tifPath
-                //     } else if (bandImg.band === selectedBBand.value) {
-                //         bluePath = bandImg.bucket + '/' + bandImg.tifPath
-                //     }
-                // })
+
                 let redPath = ''
                 let greenPath = ''
                 let bluePath = ''
 
-                // console.log(sceneInfo.bandMapper)
-                for (let bandImg of scene.images) {
-                    // 后端返回的BandMapper如果是单波段的话，Red Green 和 Blue相同
-                    if (scene.bandMapper.Red === bandImg.band) {
+                
+                // 这里用用户选的
+                scene.images.forEach((bandImg: Image) => {
+                    if (bandImg.band === selectedRBand.value) {
                         redPath = bandImg.bucket + '/' + bandImg.tifPath
-                    }
-                    if (scene.bandMapper.Green === bandImg.band) {
+                    } 
+                    if (bandImg.band === selectedGBand.value) {
                         greenPath = bandImg.bucket + '/' + bandImg.tifPath
-                    }
-                    if (scene.bandMapper.Blue === bandImg.band) {
+                    } 
+                    if (bandImg.band === selectedBBand.value) {
                         bluePath = bandImg.bucket + '/' + bandImg.tifPath
                     }
-                }
+                })
 
                 rgbImageData.push({
                     sceneId: scene.sceneId,

@@ -33,6 +33,7 @@ public class SceneSP {
     private String sceneId;
     private String productName;
     private String sensorName;
+    private String platformName;
     private String sceneName;
     private LocalDateTime sceneTime;
     private String coordinateSystem;
@@ -52,4 +53,5 @@ public class SceneSP {
 
     @TableField(typeHandler = FastJson2TypeHandler.class)
     private JSONObject tags;
+    private Double noData;
 }
