@@ -67,6 +67,9 @@ onMounted(() => {
         MapOperation.map_destroyImagePreviewLayer()
         MapOperation.map_destroySceneBoxLayer()
         MapOperation.map_destroyImagePolygon()
+        MapOperation.map_destroyMultiRGBImageTileLayer()
+        MapOperation.map_destroyNoCloudLayer()
+        MapOperation.map_destroyTerrain()
     })
 })
 
