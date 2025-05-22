@@ -76,7 +76,26 @@ const getRGBTileLayerParamFromSceneObject = async (scene): Promise<RGBTileLayerP
 }
 
 
+const getTerrainParamFromSceneObject = async (scene) => { 
+    const terrainImg = scene.images[0]
+    const terrainTifPath = terrainImg.bucket + '/' + terrainImg.tifPath
+    return {
+        terrainTifPath
+    }
+}
+
+const getOneBandColorParamFromSceneObject = async (scene) => { 
+    const oneBandImage = scene.images[0]
+    const fullTifPath = oneBandImage.bucket + '/' + oneBandImage.tifPath
+    return {
+        fullTifPath
+    }
+}
+
+
 
 export {
     getRGBTileLayerParamFromSceneObject,
+    getTerrainParamFromSceneObject,
+    getOneBandColorParamFromSceneObject
 }
