@@ -14,6 +14,8 @@
                 单波段彩色产品(形变速率， NDVI)
             </button>
             <button class="bg-amber-600 p-5" @click="locate(120.6141, 36.6215)">定位</button>
+
+            <button class="bg-amber-600 p-5" @click="addNocloud">无云一版图</button>
         </div>
     </div>
 </template>
@@ -24,6 +26,8 @@ import MapComp from '@/components/feature/map/mapComp.vue'
 import { mapManager } from '@/util/map/mapManager'
 import { StyleMap } from '@/util/map/tianMapStyle'
 import * as MapOperation from '@/util/map/operation'
+import mapboxgl from 'mapbox-gl'
+import { getNoCloudScaleParam, getNoCloudUrl } from '@/api/http/satellite-data/visualize.api'
 const addterrain = () => {
     MapOperation.map_addTerrain({
         fullTifPath: 'test-images/DEM/ChannelIslands_Topobathy_DEM_v1_47.TIF',
@@ -31,9 +35,26 @@ const addterrain = () => {
     })
 }
 
-const addColorBand = () => {    
+const addNocloud = async () => {
+    const tifpath = 'temp-files/aa0594b6-f6a1-4c08-a148-21dfb5ed193e/noCloud_merge.tif'
+
+    const band123Scale: any = await getNoCloudScaleParam(tifpath)
+    console.log(band123Scale)
+
+
+    const url = getNoCloudUrl({
+        fullTifPath: tifpath,
+        ...band123Scale
+    })
+
+    MapOperation.map_addNoCloudLayer(url)
+
+    // MapOperation.map_addNoCloudLayer(tifpath)
+}
+
+const addColorBand = () => {
     MapOperation.map_addOneBandColorLayer({
-        fullTifPath: 'test-images/DEM/ASTGTMV003_N36E120_dem.tif'
+        fullTifPath: 'test-images/DEM/ASTGTMV003_N36E120_dem.tif',
     })
 }
 
@@ -75,8 +96,8 @@ const locate = (lng, lat) => {
 
 onMounted(() => {
     setTimeout(() => {
-        mapManager.withMap((m) => {
-            console.log(m)
+        mapManager.withMap((m: mapboxgl.Map) => {
+            // console.log(m)
             // m.addSource('src', {
             //     type: 'raster',
             //     tiles: [
