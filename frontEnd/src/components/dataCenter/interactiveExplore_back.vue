@@ -189,67 +189,45 @@
                     </div>
                     <div class="section-content">
                         <div class="config-container">
-
-                            <div class="config-item" v-for="([label, value], index) in resolutionType" :key="value">
+                            <!-- 三级筛选 -->
+                            <div class="config-item">
                                 <div class="config-label relative">
                                     <BoltIcon :size="16" class="config-icon" />
-                                    <span>{{ label }}分辨率影像集</span>
+                                    <span>数据来源</span>
                                 </div>
-                                <div class="config-control gap-4 flex flex-col w-full">
-                                    <div class="result-info-container w-full">
-                                        <div class="result-info-item">
-                                            <div class="result-info-icon">
-                                                <CloudIcon :size="16" />
-                                            </div>
-                                            <div class="result-info-content">
-                                                <div class="result-info-label">包含</div>
-                                                <div class="result-info-value">
-                                                    {{ getSceneCountByResolution(value) }}景影像
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="result-info-item">
-                                            <div class="result-info-icon">
-                                                <CloudIcon :size="16" />
-                                            </div>
-                                            <div class="result-info-content">
-                                                <div class="result-info-label">影像覆盖率</div>
-                                                <div class="result-info-value">
-                                                    {{
-                                                        allSensorsItems[label]
-                                                            ? ((allSensorsItems[label] * 100) /
-                                                                allGridCount).toFixed(2) + '%'
-                                                            : '待计算'
-                                                    }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div v-if="Object.keys(classifiedScenes).length > 0" class="!w-full">
-                                        <label class="mr-2 text-white">选择影像产品：</label>
-                                        <select class="max-h-[600px] w-[calc(100%-130px)] appearance-none truncate
-                                            rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8]
-                                            hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none">
-                                            <option disabled selected value="">
-                                                请选择影像产品
-                                            </option>
-                                            <option :value="'all'" class="truncate">
-                                                全选
-                                            </option>
-                                            <option v-for="platformName in classifiedScenes[value + 'm']"
-                                                :value="platformName" :key="platformName" class="truncate">
-                                                {{ platformName }}
-                                            </option>
-                                        </select>
-                                        <a-button class="custom-button w-[calc(100%-10px)]! mt-4!" :loading="false"
-                                            @click="handleShowImage('aa')">
-                                            影像可视化
-                                        </a-button>
-                                    </div>
+                                <div class="config-control gap-6">
+                                    <button v-for="label in buttonGroups[0]" :key="label"
+                                        @click="(toggleButton(label), filterByTags())"
+                                        class="cursor-pointer rounded-lg border px-4 py-1 transition-all duration-200 active:scale-90"
+                                        :class="[
+                                            isActive(label)
+                                                ? 'border-[#2bb2ff] bg-[#0d2e4b] text-white'
+                                                : 'border-[#475569] bg-transparent text-[#94a3b8] hover:border-[#2bb2ff] hover:bg-[#1e293b]',
+                                        ]">
+                                        {{ label }}
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="config-item">
+                                <div class="config-label relative">
+                                    <BoltIcon :size="16" class="config-icon" />
+                                    <span>传感器类型</span>
+                                </div>
+                                <div class="config-control gap-4">
+                                    <button v-for="label in buttonGroups[1]" :key="label"
+                                        @click="(toggleButton(label), filterByTags())"
+                                        class="cursor-pointer rounded-lg border px-4 py-1 transition-all duration-200 active:scale-90"
+                                        :class="[
+                                            isActive(label)
+                                                ? 'border-[#2bb2ff] bg-[#0d2e4b] text-white'
+                                                : 'border-[#475569] bg-transparent text-[#94a3b8] hover:border-[#2bb2ff] hover:bg-[#1e293b]',
+                                        ]">
+                                        {{ label }}
+                                    </button>
                                 </div>
                             </div>
                             <!-- 检索后的统计信息 -->
-                            <!-- <div class="config-item">
+                            <div class="config-item">
                                 <div class="config-label relative">
                                     <BoltIcon :size="16" class="config-icon" />
                                     <span>统计信息</span>
@@ -309,6 +287,7 @@
                                                 </option>
                                             </select>
                                         </div>
+                                        <!-- Band Stretch Inputs -->
                                         <div v-show="sensorItem.selectedSceneInfo" class="mt-4">
                                             <div class="mr-1 grid grid-cols-[1fr_2fr]">
                                                 <span class="text-white">亮度拉伸:</span>
@@ -317,7 +296,9 @@
                                                     @afterChange="onAfterScaleRateChange" />
                                             </div>
                                             <div>
-                                        
+                                                <!-- <div class="bg-[#1b42528a] cursor-pointer text-white border border-[#2c3e50] rounded-lg px-4 py-1 hover:bg-[#1a2b4c] hover:border-[#2bb2ff] transition-all duration-200 active:scale-95 text-center mt-4"
+                                                    @click="handleShowImage(sensorItem)">
+                                                    影像可视化</div> -->
                                                 <a-button class="custom-button w-full!" :loading="sensorItem.loading"
                                                     @click="handleShowImage(sensorItem)">
                                                     影像可视化
@@ -325,10 +306,74 @@
                                             </div>
                                         </div>
                                     </div>
-                             
+                                    <!-- <div class="result-info-container">
+                                        <div class="result-info-item">
+                                            <div class="result-info-icon">
+                                                <MapIcon :size="16" />
+                                            </div>
+                                            <div class="result-info-content">
+                                                <div class="result-info-label">行政区划编码</div>
+                                                <div class="result-info-value">{{ displayLabel }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="result-info-item">
+                                            <div class="result-info-icon">
+                                                <MapIcon :size="16" />
+                                            </div>
+                                            <div class="result-info-content">
+                                                <div class="result-info-label">格网分辨率</div>
+                                                <div class="result-info-value">{{ selectedRadius }}km
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="result-info-item">
+                                            <div class="result-info-icon">
+                                                <ImageIcon :size="16" />
+                                            </div>
+                                            <div class="result-info-content">
+                                                <div class="result-info-label">云量</div>
+                                                <div class="result-info-value"> {{ tileMergeConfig.cloudRange[0] }}% ~
+                                                    {{ tileMergeConfig.cloudRange[1] }}%
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="result-info-item">
+                                            <div class="result-info-icon">
+                                                <CalendarIcon :size="16" />
+                                            </div>
+                                            <div class="result-info-content">
+                                                <div class="result-info-label">涵盖时间范围</div>
+                                                <div class="result-info-value date-range">
+                                                    <div class="date-item">{{ formatTime(tileMergeConfig.dateRange[0],
+                                                        'day')
+                                                        }}~
+                                                        {{ formatTime(tileMergeConfig.dateRange[1], 'day')
+                                                        }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="result-info-item">
+                                            <div class="result-info-icon">
+                                                <CloudIcon :size="16" />
+                                            </div>
+                                            <div class="result-info-content">
+                                                <div class="result-info-label">当前已检索到</div>
+                                                <div class="result-info-value">{{ filteredImages.length }}景影像</div>
+                                            </div>
+                                        </div>
+                                        <div class="result-info-item">
+                                            <div class="result-info-icon">
+                                                <CloudIcon :size="16" />
+                                            </div>
+                                            <div class="result-info-content">
+                                                <div class="result-info-label">影像覆盖率</div>
+                                                <div class="result-info-value">{{ coverageRate }}</div>
+                                            </div>
+                                        </div>
+                                    </div> -->
                                 </div>
-                            </div> -->
-
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -387,16 +432,6 @@ const emit = defineEmits(['submitConfig'])
  */
 
 const radiusOptions = [2, 5, 10, 15, 20, 25, 30, 40, 50, 80, 100, 150]
-
-type ResolutionItem = [label: string, value: number]
-
-const resolutionType: ResolutionItem[] = [
-    ['亚米', 1],
-    ['2米', 2],
-    ['10米', 10],
-    ['30米', 30],
-    ['其他', 500],
-]
 const selectedRadius = ref(20)
 const tileMergeConfig = ref({
     useLatestTime: false,
@@ -502,7 +537,7 @@ const filterByCloudAndDate = async () => {
     })
 
     // 记录所有景中含有的“传感器+分辨率字段”
-    // allSensorsItems.value = getSensorsAndResolutions(allScenes.value)
+    allSensorsItems.value = getSensorsAndResolutions(allScenes.value)
 
     await makeFullSceneGrid()
 
@@ -513,16 +548,10 @@ const filterByCloudAndDate = async () => {
     }
 
     // 根据所有的传感器+分辨率，找出每个格网上，在特定传感器+分辨率情况下，有多少景影像
-    // allSensorsItems.value = countSensorsCoverage(
-    //     allSensorsItems.value,
-    //     ezStore.get('sceneGridsRes'),
-    // )
-
-    // 计算各种分辨率下的格网覆盖情况
-    allSensorsItems.value = countResolutionCoverage(ezStore.get('sceneGridsRes'))
-
-    // 获取各分辨率拥有多少种传感器，用来渲染下拉框
-    classifyScenesByResolution()
+    allSensorsItems.value = countSensorsCoverage(
+        allSensorsItems.value,
+        ezStore.get('sceneGridsRes'),
+    )
     // 刚拿到的时候根据默认tags先分类一次
     filterByTags()
 
@@ -530,89 +559,7 @@ const filterByCloudAndDate = async () => {
     filterByCloudAndDateLoading.value = false
 }
 
-// 数各种分辨率分别覆盖了多少格网
-const countResolutionCoverage = (allGridScene: any[]) => {
-    console.log(allGridScene);
-    const result = {
-        '亚米': 0,
-        '2米': 0,
-        '10米': 0,
-        '30米': 0,
-        '其他': 0,
-    }
-
-    allGridScene.forEach(grid => {
-        const seen = new Set<string>() // 记录当前 grid 中已统计过的 resolution 分类
-
-        grid.scenes?.forEach((scene: any) => {
-            const resStr = scene.resolution?.toString().replace('m', '')
-            const res = parseFloat(resStr)
-
-            let key
-
-            if (res <= 1) {
-                key = '亚米'
-            } else if (res === 2) {
-                key = '2米'
-            } else if (res === 10) {
-                key = '10米'
-            } else if (res === 30) {
-                key = '30米'
-            } else {
-                key = '其他'
-            }
-
-            if (!seen.has(key)) {
-                seen.add(key)
-                result[key] += 1
-            }
-        })
-    })
-
-    return result
-}
-
 // 数各种传感器分别覆盖了多少格网
-const classifiedScenes = ref({})
-const classifyScenesByResolution = () => {
-    const result = {
-        '1m': [],
-        '2m': [],
-        '10m': [],
-        '30m': [],
-        '500m': [],
-    }
-
-    const addToCategory = (key: string, platform: string) => {
-        if (!result[key].includes(platform)) {
-            result[key].push(platform)
-        }
-    }
-
-    for (const scene of allScenes.value) {
-        const resStr = scene.resolution?.toString().replace('m', '')
-        const res = parseFloat(resStr)
-        const platform = scene.platformName
-
-        if (!platform || isNaN(res)) continue
-
-        if (res <= 1) {
-            addToCategory('1m', platform)
-        } else if (res === 2) {
-            addToCategory('2m', platform)
-        } else if (res === 10) {
-            addToCategory('10m', platform)
-        } else if (res === 30) {
-            addToCategory('30m', platform)
-        } else {
-            addToCategory('500m', platform)
-        }
-    }
-    classifiedScenes.value = result
-
-}
-
-
 const countSensorsCoverage = (
     allSensorsItems: { key: string; tags: string[] }[],
     allGridScene: any[],
@@ -824,38 +771,10 @@ const filterByTags = async () => {
     })
     filteredSensorsItems.value = res
 
+    // if (!verifyFilterByTags()) {
+    //     return
+    // }
 }
-
-// 根据分辨率获得影像总数的方法
-const getSceneCountByResolution = (resolution: number) => {
-    let count = 0
-    if (resolution === 1) {
-        allScenes.value.forEach((scene: any) => {
-            let data = parseFloat(scene.resolution)
-            if (data <= 1) {
-                count++
-            }
-        })
-        return count
-    } else if (resolution === 500) {
-        allScenes.value.forEach((scene: any) => {
-            let data = parseFloat(scene.resolution)
-            if (data > 1 && data != 2 && data != 10 && data != 30) {
-                count++
-            }
-        })
-        return count
-    } else {
-        allScenes.value.forEach((scene: any) => {
-            let data = parseFloat(scene.resolution)
-            if (data === resolution) {
-                count++
-            }
-        })
-        return count
-    }
-}
-
 
 // 根据tags返回类型
 const imageType = (tags: string[]) => {
