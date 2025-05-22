@@ -80,6 +80,8 @@ modelServer:
     spectrum: /v0/tif/get_spectral_profile
     #    noCloud: /v0/tif/calc_qa_simple
     #    noCloud: /v0/tif/calc_qa
+    rasterPoint: /v0/tif/calc_raster_point
+    rasterLine: /v0/tif/calc_raster_line
     ndvi: /v0/tif/calc_NDVI
   interval:
     status: 2

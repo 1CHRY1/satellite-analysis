@@ -97,7 +97,8 @@ class TaskScheduler:
             'calc_qa_simple': calc_qa_simple,
             'calc_qa_middle': calc_qa_middle,
             'calc_NDVI': calc_NDVI,
-            'get_spectral_profile': get_spectral_profile
+            'get_spectral_profile': get_spectral_profile,
+            # 'test': 
             # 可以在这里扩展其他类型的任务
         }
         return task_classes.get(task_type)

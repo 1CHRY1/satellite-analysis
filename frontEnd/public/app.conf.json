@@ -3,12 +3,14 @@
     "back_app": "/api",
     "back_app2": "/api2",
     "back_websocket": "",
-    "basemap_server": "/basemap",
-    "basemap_server2": "/basemap2",
     "minioIpAndPort": "http://223.2.32.166:30900",
     "titiler": "/tiler",
+
     "ndviProjectId": "PRJyxITmCVLn3PMoaeca",
     "spectrumProjectId": "PRJyxITmCVLn3PMoaeca",
-    "test_basemap_url":"http://172.16.4.53/cva_w_2000/L{z}/R{x}/C{y}.png",
-    "test_basemap_text_url":"http://172.16.4.53/vec_w_2000/L{z}/R{x}/C{y}.png"
+
+    "intranet_mvt_url": "/mvtbasemap/{z}/{x}/{y}",
+    "intranet_img_url":"/basemap/{z}/{x}/{y}",
+    "intranet_vec_url":"/proxymap/vec_w_2000/{z}/{x}/{y}.png",
+    "intranet_cva_url":"/proxymap/cva_w_2000/{z}/{x}/{y}.png"
 }
