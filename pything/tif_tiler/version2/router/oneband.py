@@ -39,7 +39,7 @@ async def get_tile(
     try:
         cog_path = url
         
-        with COGReader(cog_path, {'nodata': nodata}) as cog:
+        with COGReader(cog_path, options={"nodata": nodata}) as cog:
             if(cog.tile_exists(x, y, z)):
                 res = cog.tile(x, y, z)
                 img, _ = res

@@ -586,6 +586,8 @@ const progressControl = (index: number) => {
 // 开始计算
 const calNoClouds = async () => {
     noCloudLoading.value = true
+    const stopLoading = message.loading("正在重构无云一版图...", 0)
+
     // 发送请求，计算无云一版图
 
     // 根据勾选情况合并影像
@@ -659,7 +661,7 @@ const calNoClouds = async () => {
         console.log(res, '结果')
 
         // 1、先预览无云一版图影像
-        let data = res.data.noCloud.tiles
+        let data = res.data
         previewNoCloud(data)
 
         // 2、补充数据
@@ -681,12 +683,13 @@ const calNoClouds = async () => {
 
         calImage.value.push(calResult)
         noCloudLoading.value = false
-
+        stopLoading()
         ElMessage.success('无云一版图计算完成')
     } catch (error) {
         console.log(error)
         calTask.value.calState = 'failed'
         noCloudLoading.value = false
+        stopLoading()
         ElMessage.error('无云一版图计算失败，请重试')
     }
 }
@@ -702,9 +705,9 @@ const showingImageStrech = reactive({
 // 预览无云一版图
 const previewNoCloud = async (data: any) => {
 
-    const stopLoading = message.loading('正在加载无云一版图，请稍后...')
+    const stopLoading = message.loading('正在加载无云一版图，请稍后...', 0)
     // 清除旧图层
-    MapOperation.map_removeNocloudGridPreviewLayer()
+    // MapOperation.map_removeNocloudGridPreviewLayer()
 
     const gridResolution = props.regionConfig.space
 
@@ -776,6 +779,7 @@ const previewNoCloud = async (data: any) => {
             ...showingImageStrech,
         })
     }
+
     setTimeout(() => {
         stopLoading()
     }, 5000);

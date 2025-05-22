@@ -391,6 +391,7 @@ type RGBTileLayerParams = {
     g_max: number
     b_min: number
     b_max: number
+    nodata?: number
 }
 export function map_addRGBImageTileLayer(param: RGBTileLayerParams, cb?: () => void) {
 
@@ -434,6 +435,68 @@ export function map_destroyRGBImageTileLayer() {
         }
     })
 }
+
+export function map_addMultiRGBImageTileLayer(params: RGBTileLayerParams[], cb?: () => void) {
+    const prefix = 'MultiRGB'
+    let layeridStore: any = null
+    if (!ezStore.get('MultiRGBLayerIds'))
+        ezStore.set('MultiRGBLayerIds', [])
+
+    layeridStore = ezStore.get('MultiRGBLayerIds')
+
+    map_destroyMultiRGBImageTileLayer()
+
+    mapManager.withMap((m) => {
+
+        for (let i = 0; i < params.length; i++) {
+
+            const id = prefix + uid()
+            const srcId = id + '-source'
+            if (m.getLayer(id) && m.getSource(srcId)) {
+                m.removeLayer(id)
+                m.removeSource(srcId)
+            }
+
+            layeridStore.push(id)
+
+            const tileUrl = getSceneRGBCompositeTileUrl(params[i])
+
+            m.addSource(srcId, {
+                type: 'raster',
+                tiles: [
+                    tileUrl
+                ]
+            })
+            m.addLayer({
+                id: id,
+                type: 'raster',
+                source: srcId,
+            })
+        }
+
+
+        setTimeout(() => {
+            cb && cb()
+        }, 3000);
+
+    })
+}
+export function map_destroyMultiRGBImageTileLayer() {
+    if (!ezStore.get('MultiRGBLayerIds')) return
+
+    const layeridStore = ezStore.get('MultiRGBLayerIds')
+
+    mapManager.withMap((m) => {
+        for (let i = 0; i < layeridStore.length; i++) {
+            const id = layeridStore[i]
+            m.getLayer(id) && m.removeLayer(id)
+            m.getSource(id + '-source') && m.removeSource(id + '-source')
+        }
+    })
+}
+
+
+
 export function map_addGridRGBImageTileLayer(gridInfo: GridInfoType, param: RGBTileLayerParams, cb?: () => void) {
     const prefix = '' + gridInfo.rowId + gridInfo.columnId
     const id = prefix + uid()
@@ -479,7 +542,7 @@ export function map_addGridRGBImageTileLayer(gridInfo: GridInfoType, param: RGBT
 
         setTimeout(() => {
             cb && cb()
-        }, 1000);
+        }, 2000);
 
     })
 
