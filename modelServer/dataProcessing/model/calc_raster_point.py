@@ -13,7 +13,7 @@ import dataProcessing.config as config
 
 MINIO_ENDPOINT = f"http://{config.MINIO_IP}:{config.MINIO_PORT}"
 
-class CalRasterPointTask(Task):
+class calc_raster_point(Task):
     
     def __init__(self, task_id, *args, **kwargs):
         super().__init__(task_id, *args, **kwargs)

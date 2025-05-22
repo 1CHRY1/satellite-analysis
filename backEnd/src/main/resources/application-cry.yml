@@ -77,8 +77,9 @@ modelServer:
     status: /v0/task/status
     result: /v0/task/result
     merge: /v0/tif/merge_v2
-    noCloud: /v0/tif/calc_qa_middle
     spectrum: /v0/tif/get_spectral_profile
+    noCloud: /v0/tif/calc_no_cloud
+#    noCloud: /v0/tif/calc_qa_middle
 #    noCloud: /v0/tif/calc_qa_simple
 #    noCloud: /v0/tif/calc_qa
     rasterPoint: /v0/tif/calc_raster_point

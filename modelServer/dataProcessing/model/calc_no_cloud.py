@@ -10,6 +10,7 @@ import rasterio
 
 from dataProcessing.model.task import Task
 import dataProcessing.config as config
+# from dataProcessing.Utils.gridUtil import GridHelper, GridCell
 
 MINIO_ENDPOINT = f"http://{config.MINIO_IP}:{config.MINIO_PORT}"
 #### Helper functions #################################################
@@ -53,7 +54,7 @@ class GridHelper:
 #### Main #############################################################
 #######################################################################
 
-class MinCloudGraphTask(Task):
+class calc_no_cloud(Task):
     
     def __init__(self, task_id, *args, **kwargs):
         super().__init__(task_id, *args, **kwargs)
@@ -181,9 +182,9 @@ class MinCloudGraphTask(Task):
             for img in scene['images']:
                 if img['band'] == mapper['Red']:
                     bands['red'] = img['tifPath']
-                elif img['band'] == mapper['Green']:
+                if img['band'] == mapper['Green']:
                     bands['green'] = img['tifPath']
-                elif img['band'] == mapper['Blue']:
+                if img['band'] == mapper['Blue']:
                     bands['blue'] = img['tifPath']
             scene_band_paths[scene['sceneId']] = bands
 
@@ -328,5 +329,10 @@ class MinCloudGraphTask(Task):
             transform=transform
         ) as dst:
             dst.write(final_image)
+
+        return {
+            "bucket": "no",
+            "tifPath": "MERGE_COG.tif"
+        }
             
 

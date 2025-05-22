@@ -88,6 +88,13 @@ def calc_qa_middle():
     task_id = scheduler.start_task('calc_qa_middle', data)
     return api_response(data={'taskId': task_id})
 
+@bp.route(config.API_TIF_calc_no_cloud, methods=['POST'])
+def calc_no_cloud():
+    scheduler = init_scheduler()
+    data = request.json
+    task_id = scheduler.start_task('calc_no_cloud', data)
+    return api_response(data={'taskId': task_id})
+
 @bp.route(config.API_TIF_calc_NDVI, methods=['POST'])
 def calc_NDVI():
     scheduler = init_scheduler()
@@ -102,7 +109,7 @@ def get_spectral_profile():
     task_id = scheduler.start_task('get_spectral_profile', data)
     return api_response(data={'taskId': task_id})
 
-@bp.route(config.API_CALC_RASTER_POINT, methods=['POST'])
+@bp.route(config.API_TIF_calc_raster_point, methods=['POST'])
 def calc_raster_point():
     scheduler = init_scheduler()
     data = request.json
