@@ -11,7 +11,7 @@ import Antd from 'ant-design-vue'
 import { createApp, type ComponentInstance, ref, type Ref, reactive } from 'vue'
 import PopoverContent, { type GridData } from '@/components/feature/map/popoverContent.vue'
 import bus from '@/store/bus'
-import { getSceneRGBCompositeTileUrl, getGridRGBCompositeUrl, getTerrainRGBUrl, getOneBandColorUrl } from '@/api/http/satellite-data/visualize.api'
+import { getSceneRGBCompositeTileUrl, getGridRGBCompositeUrl, getTerrainRGBUrl, getOneBandColorUrl, getNoCloudUrl } from '@/api/http/satellite-data/visualize.api'
 
 ////////////////////////////////////////////////////////
 /////// Map Operation //////////////////////////////////
@@ -912,6 +912,48 @@ export function map_destroySceneBoxLayer(): void {
     })
 }
 
+//////////// 无云一版图
+export function map_addNoCloudLayer(url: string) {
+
+    const id = 'no-cloud-layer'
+    const source = id + '-source'
+
+    mapManager.withMap((m) => {
+
+        m.getLayer(id) && m.removeLayer(id)
+        m.getSource(source) && m.removeSource(source)
+
+        m.addSource(source, {
+            type: 'raster',
+            tiles: [url],
+            tileSize: 256,
+            minzoom: 0,
+            maxzoom: 22,
+        })
+
+        m.addLayer({
+            id,
+            type: 'raster',
+            source: source,
+            paint: {}
+        })
+
+    })
+}
+export function map_destroyNoCloudLayer() {
+    const id = 'no-cloud-layer'
+    const source = id + '-source'
+    mapManager.withMap((m) => {
+
+        m.getLayer(id) && m.removeLayer(id)
+        m.getSource(source) && m.removeSource(source)
+
+    })
+
+}
+
+
+//////////// 地形
 type TerrainLayerParam = {
     fullTifPath: string
 }
@@ -942,6 +984,7 @@ export function map_destroyTerrain() {
     })
 }
 
+//////////// 单波段彩色产品 （形变速率）
 type OneBandColorLayerParam = {
     fullTifPath: string
 }

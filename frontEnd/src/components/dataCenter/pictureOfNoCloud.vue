@@ -308,6 +308,7 @@ import {
     getTifbandMinMax,
 } from '@/api/http/satellite-data/visualize.api'
 import { grid2Coordinates } from '@/util/map/gridMaker'
+import { getNoCloudScaleParam, getNoCloudUrl } from '@/api/http/satellite-data/visualize.api'
 
 import {
     Loader,
@@ -708,82 +709,96 @@ const previewNoCloud = async (data: any) => {
     const stopLoading = message.loading('正在加载无云一版图，请稍后...', 0)
     // 清除旧图层
     // MapOperation.map_removeNocloudGridPreviewLayer()
+    MapOperation.map_destroyNoCloudLayer()
 
-    const gridResolution = props.regionConfig.space
+    const nocloudTifPath = data.bucket + '/' + data.tifPath
 
-    for (let i = 0; i < data.length; i++) {
-        const gridInfo = {
-            columnId: data[i].colId, // 注意这里返回的是colID，其他接口都是columnId
-            rowId: data[i].rowId,
-            resolution: gridResolution,
-            redPath: data[i].bucket + '/' + data[i].redPath,
-            greenPath: data[i].bucket + '/' + data[i].greenPath,
-            bluePath: data[i].bucket + '/' + data[i].bluePath,
-        }
-        // // console.log('gridInfo', gridInfo)
-        // bandMergeHelper.mergeGrid(gridInfo, (url) => {
-        //     const imgUrl = url
-        //     const gridCoords = grid2Coordinates(data[i].colId, data[i].rowId, gridResolution)
-        //     MapOperation.map_addGridPreviewLayer(imgUrl, gridCoords, 'nocloud')
-        // })
-        let redPath = gridInfo.redPath
-        let greenPath = gridInfo.greenPath
-        let bluePath = gridInfo.bluePath
+    const band123Scale = await getNoCloudScaleParam(nocloudTifPath)
 
-        const cache = ezStore.get('statisticCache')
-        const promises: any = []
-        let [min_r, max_r, min_g, max_g, min_b, max_b] = [0, 0, 0, 0, 0, 0]
+    const url = getNoCloudUrl({
+        fullTifPath: nocloudTifPath,
+        ...band123Scale
+    })
 
-        if (cache.get(redPath) && cache.get(greenPath) && cache.get(bluePath)) {
-            console.log('cache hit!')
-                ;[min_r, max_r] = cache.get(redPath)
-                ;[min_g, max_g] = cache.get(greenPath)
-                ;[min_b, max_b] = cache.get(bluePath)
-        } else {
-            promises.push(
-                getTifbandMinMax(redPath),
-                getTifbandMinMax(greenPath),
-                getTifbandMinMax(bluePath),
-            )
-            await Promise.all(promises).then((values) => {
-                min_r = values[0][0]
-                max_r = values[0][1]
-                min_g = values[1][0]
-                max_g = values[1][1]
-                min_b = values[2][0]
-                max_b = values[2][1]
-            })
+    MapOperation.map_addNoCloudLayer(url)
 
-            cache.set(redPath, [min_r, max_r])
-            cache.set(greenPath, [min_g, max_g])
-            cache.set(bluePath, [min_b, max_b])
-        }
 
-        console.log(min_r, max_r, min_g, max_g, min_b, max_b)
 
-        const defaultScaleRate = 50
-        const scale = 1.0 - defaultScaleRate / 100
-        // 基于 scale rate 进行拉伸
-        showingImageStrech.r_min = Math.round(min_r)
-        showingImageStrech.r_max = Math.round(min_r + (max_r - min_r) * scale)
-        showingImageStrech.g_min = Math.round(min_g)
-        showingImageStrech.g_max = Math.round(min_g + (max_g - min_g) * scale)
-        showingImageStrech.b_min = Math.round(min_b)
-        showingImageStrech.b_max = Math.round(min_b + (max_b - min_b) * scale)
-        MapOperation.map_addGridRGBImageTileLayer({
-            ...gridInfo,
-        }, {
-            redPath,
-            greenPath,
-            bluePath,
-            ...showingImageStrech,
-        })
-    }
+    // const gridResolution = props.regionConfig.space
+
+    // for (let i = 0; i < data.length; i++) {
+    //     const gridInfo = {
+    //         columnId: data[i].colId, // 注意这里返回的是colID，其他接口都是columnId
+    //         rowId: data[i].rowId,
+    //         resolution: gridResolution,
+    //         redPath: data[i].bucket + '/' + data[i].redPath,
+    //         greenPath: data[i].bucket + '/' + data[i].greenPath,
+    //         bluePath: data[i].bucket + '/' + data[i].bluePath,
+    //     }
+    //     // // console.log('gridInfo', gridInfo)
+    //     // bandMergeHelper.mergeGrid(gridInfo, (url) => {
+    //     //     const imgUrl = url
+    //     //     const gridCoords = grid2Coordinates(data[i].colId, data[i].rowId, gridResolution)
+    //     //     MapOperation.map_addGridPreviewLayer(imgUrl, gridCoords, 'nocloud')
+    //     // })
+    //     let redPath = gridInfo.redPath
+    //     let greenPath = gridInfo.greenPath
+    //     let bluePath = gridInfo.bluePath
+
+    //     const cache = ezStore.get('statisticCache')
+    //     const promises: any = []
+    //     let [min_r, max_r, min_g, max_g, min_b, max_b] = [0, 0, 0, 0, 0, 0]
+
+    //     if (cache.get(redPath) && cache.get(greenPath) && cache.get(bluePath)) {
+    //         console.log('cache hit!')
+    //             ;[min_r, max_r] = cache.get(redPath)
+    //             ;[min_g, max_g] = cache.get(greenPath)
+    //             ;[min_b, max_b] = cache.get(bluePath)
+    //     } else {
+    //         promises.push(
+    //             getTifbandMinMax(redPath),
+    //             getTifbandMinMax(greenPath),
+    //             getTifbandMinMax(bluePath),
+    //         )
+    //         await Promise.all(promises).then((values) => {
+    //             min_r = values[0][0]
+    //             max_r = values[0][1]
+    //             min_g = values[1][0]
+    //             max_g = values[1][1]
+    //             min_b = values[2][0]
+    //             max_b = values[2][1]
+    //         })
+
+    //         cache.set(redPath, [min_r, max_r])
+    //         cache.set(greenPath, [min_g, max_g])
+    //         cache.set(bluePath, [min_b, max_b])
+    //     }
+
+    //     console.log(min_r, max_r, min_g, max_g, min_b, max_b)
+
+    //     const defaultScaleRate = 50
+    //     const scale = 1.0 - defaultScaleRate / 100
+    //     // 基于 scale rate 进行拉伸
+    //     showingImageStrech.r_min = Math.round(min_r)
+    //     showingImageStrech.r_max = Math.round(min_r + (max_r - min_r) * scale)
+    //     showingImageStrech.g_min = Math.round(min_g)
+    //     showingImageStrech.g_max = Math.round(min_g + (max_g - min_g) * scale)
+    //     showingImageStrech.b_min = Math.round(min_b)
+    //     showingImageStrech.b_max = Math.round(min_b + (max_b - min_b) * scale)
+    //     MapOperation.map_addGridRGBImageTileLayer({
+    //         ...gridInfo,
+    //     }, {
+    //         redPath,
+    //         greenPath,
+    //         bluePath,
+    //         ...showingImageStrech,
+    //     })
+    // }
 
     setTimeout(() => {
         stopLoading()
     }, 5000);
-    console.log('一下加几十个图层，等着吃好果子')
+    // console.log('一下加几十个图层，等着吃好果子')
 }
 // 假操作进度条统一时间
 const mockProgressTime = 500
