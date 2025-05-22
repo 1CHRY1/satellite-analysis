@@ -87,7 +87,7 @@
                     <span class="btn-icon">
                         <GalleryHorizontalIcon :size="18" />
                     </span>
-                    网格影像可视化
+                    立方体可视化
                 </button>
                 <button class="delete-btn" @click="handleRemove">
                     <span class="btn-icon">
