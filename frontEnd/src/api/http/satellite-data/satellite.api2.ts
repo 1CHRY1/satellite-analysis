@@ -11,3 +11,7 @@ export async function getDescriptionBySceneId(sceneId: string): Promise<any> {
 export async function getBoundaryBySceneId(sceneId: string): Promise<any> {
     return http.get<any>(`data/scene/boundary/sceneId/${sceneId}`)
 }
+
+export async function getRasterScenesDes(param: any): Promise<any> {
+    return http.post<any>(`data/scene/raster/time/region`, param)
+}

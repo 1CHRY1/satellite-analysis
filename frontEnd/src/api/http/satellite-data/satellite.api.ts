@@ -169,3 +169,7 @@ export async function getCaseTifResult(taskId: string): Promise<any> {
 export async function getCaseResult(taskId: string): Promise<any> {
     return http.get<any>(`modeling/case/result/caseId/${taskId}`)
 }
+
+export async function getRasterPoints(param: any): Promise<any> {
+    return http.post<any>(`modeling/example/raster/point`, param)
+}

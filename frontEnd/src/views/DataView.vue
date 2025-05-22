@@ -24,7 +24,7 @@
             </div>
         </div>
         <!-- <ImageSearcher class="h-full w-[28vw] mt-10" /> -->
-        <MapComp class="flex-1" :style="'local'" :proj="'globe'" :isPicking="isPicking" />
+        <MapComp class="flex-1" :style="'image'" :proj="'globe'" :isPicking="isPicking" />
     </div>
 </template>
 
@@ -55,8 +55,7 @@ const pageCheckout = (tab: string) => {
         // bus.emit('cleanAllSceneBoxLayer')
         bus.emit('cleanAllLayer')
     }
-
-    showPage.value = tab
+    showPage.value = tab as 'explore' | 'noClouds' | 'analysis'
 }
 
 const submitConfig = (config: interactiveExplore) => {
@@ -67,6 +66,6 @@ const submitConfig = (config: interactiveExplore) => {
 const pages = [
     { label: '交互式探索', value: 'explore' },
     { label: '无云一版图', value: 'noClouds' },
-    { label: '动态分析', value: 'analysis' },
+    { label: '动态展示分析', value: 'analysis' },
 ]
 </script>
