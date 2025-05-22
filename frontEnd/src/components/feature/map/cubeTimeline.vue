@@ -358,6 +358,8 @@ const updateHandler = (
     } else {
         multiImages.value = _data as MultiImageInfoType[]
     }
+    console.log('single', singleImages.value)
+    console.log('multi', multiImages.value)
     console.log('scalerate', _scaleRate)
     scaleRate.value = _scaleRate
 

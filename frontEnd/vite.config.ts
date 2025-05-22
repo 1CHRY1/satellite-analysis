@@ -41,6 +41,11 @@ export default defineConfig({
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/basemap/, ''),
             },
+            '/basemap2': {
+                target: 'http://172.31.13.21:5002/tiles',
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/basemap2/, ''),
+            },
             '/tiler':{
                 target: 'http://223.2.32.166:31800',
                 changeOrigin: true,
@@ -50,6 +55,11 @@ export default defineConfig({
                 target: 'http://localhost:8000',
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/hytemp/, ''),
+            },
+            '/proxymap':{
+                target: 'http://localhost:5003',
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/proxymap/, ''),
             }
         },
     },
