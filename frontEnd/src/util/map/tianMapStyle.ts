@@ -557,6 +557,7 @@ const LocalImageBaseMapStyle = {
     sources: {
         'Local-Imagelayer-Source': {
             type: 'raster',
+            // schema: 'tms',
             tiles: [
                 ezStore.get('conf').basemap_server + '/{z}/{x}/{y}',
             ],
@@ -570,6 +571,7 @@ const LocalImageBaseMapStyle = {
             source: 'Local-Imagelayer-Source',
         },
     ],
+    glyphs: '/glyphs/mapbox/{fontstack}/{range}.pbf',
 }
 // 内网矢量风格底图
 const LocalVectorBaseMapStyle = {
@@ -807,14 +809,17 @@ const LocalVectorBaseMapStyle = {
     sources: {
         'Tian-Vectorlayer-Source': {
             type: 'raster',
+            schema: 'tms',
             tiles: [
                 // `http://t0.tianditu.gov.cn/vec_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=img&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${TianMapkey}`,
                 ezStore.get('conf').test_basemap_url
+
             ],
             tileSize: 256,
         },
         'Tian-Vectorlable-Source': {
             type: 'raster',
+            schema: 'tms',
             tiles: [
                 // `http://t0.tianditu.gov.cn/cva_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=cva&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${TianMapkey}`,
                 ezStore.get('conf').test_basemap_text_url
@@ -856,6 +861,7 @@ const LocalVectorBaseMapStyle = {
             },
         },
     ],
+    glyphs: '/glyphs/mapbox/{fontstack}/{range}.pbf',
 }
 
 // 我们自己的矢量瓦片底图
@@ -864,11 +870,11 @@ const OurVectorBaseMapStyle = {
     sources: {
         offlineMapTiles: {
             type: 'vector',
-            tiles:[
+            tiles: [
                 ezStore.get('conf').basemap_server2 + '/{z}/{x}/{y}',
             ],
             minzoom: 0,
-            maxzoom: 22, 
+            maxzoom: 22,
         },
     },
     layers: [
@@ -956,4 +962,7 @@ export const StyleMap = {
     // local: TianImageStyle as unknown as StyleSpecification,
     local: OurVectorBaseMapStyle as unknown as StyleSpecification,
     // local: LocalImageBaseMapStyle as unknown as StyleSpecification,
+
+    localVec: LocalVectorBaseMapStyle as unknown as StyleSpecification,
+    localImg: LocalImageBaseMapStyle as unknown as StyleSpecification,
 }
