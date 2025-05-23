@@ -322,16 +322,7 @@ const TianVectorStyle = {
     ],
 }
 
-
-
-
-
-
-
-
-
 //################################################################
-
 
 // 内网影像风格底图
 const LocalImageBaseMapStyle = {
@@ -569,9 +560,7 @@ const LocalImageBaseMapStyle = {
     sources: {
         'Local-Imagelayer-Source': {
             type: 'raster',
-            tiles: [
-                ezStore.get('conf')['intranet_img_url']
-            ],
+            tiles: [ezStore.get('conf')['intranet_img_url']],
             tileSize: 256,
         },
     },
@@ -820,17 +809,12 @@ const LocalVectorBaseMapStyle = {
     sources: {
         'Intralnet-Vectorlayer-Source': {
             type: 'raster',
-            tiles: [
-                ezStore.get('conf')['intranet_vec_url']
-
-            ],
+            tiles: [ezStore.get('conf')['intranet_vec_url']],
             tileSize: 256,
         },
         'Intralnet-Vectorlable-Source': {
             type: 'raster',
-            tiles: [
-                ezStore.get('conf')['intranet_cva_url']
-            ],
+            tiles: [ezStore.get('conf')['intranet_cva_url']],
             tileSize: 256,
         },
     },
@@ -877,9 +861,7 @@ const OurVectorBaseMapStyle = {
     sources: {
         offlineMapTiles: {
             type: 'vector',
-            tiles: [
-                ezStore.get('conf')['intranet_mvt_url'],
-            ],
+            tiles: [ezStore.get('conf')['intranet_mvt_url']],
             minzoom: 0,
             maxzoom: 22,
         },
@@ -964,8 +946,6 @@ const empty = {
     layers: [],
     glyphs: '/glyphs/mapbox/{fontstack}/{range}.pbf',
 }
-
-
 
 export type Style = 'image' | 'vector' | 'local' | 'empty'
 

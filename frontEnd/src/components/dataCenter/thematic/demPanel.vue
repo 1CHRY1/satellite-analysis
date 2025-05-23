@@ -205,15 +205,18 @@ const calTask: Ref<any> = ref({
 })
 const analysisData = ref<any>([])
 
+// let boundary = await getBoundaryBySceneId(allDemImages.value[0].sceneId)
+// MapOperation.map_addPolygonLayer({
+//     geoJson: boundary,
+//     id: 'UniqueLayer',
+//     lineColor: '#8fffff',
+//     fillColor: '#a4ffff',
+//     fillOpacity: 0.2,
+// })
 const analysisDem = async () => {
-    // let boundary = await getBoundaryBySceneId(allDemImages.value[0].sceneId)
-    // MapOperation.map_addPolygonLayer({
-    //     geoJson: boundary,
-    //     id: 'UniqueLayer',
-    //     lineColor: '#8fffff',
-    //     fillColor: '#a4ffff',
-    //     fillOpacity: 0.2,
-    // })
+    if (verifyAnalysis()) {
+        return
+    }
 
     if (activeMode.value === 'point') {
         let pointParam = {
@@ -335,6 +338,20 @@ const analysisDem = async () => {
     }
 }
 
+// 卫语句
+const verifyAnalysis = () => {
+    if (activeMode.value != 'point' && activeMode.value != 'line') {
+        ElMessage.warning('请先完成空间选择')
+        return false
+    }
+    if (allDemImages.value.length === 0) {
+        ElMessage.warning('该区域未检出DEM数据，请更换研究区')
+        return false
+    }
+
+    return true
+}
+
 // 等距采样方法
 const samplePointsOnLine = (points: LatLng[], count: number): LatLng[] => {
     if (points.length < 2 || count < 2) return points
@@ -383,7 +400,9 @@ const samplePointsOnLine = (points: LatLng[], count: number): LatLng[] => {
     sampledPoints.push(points[points.length - 1])
     return sampledPoints
 }
-
+/**
+ * echarts渲染
+ */
 const chartInstances = ref<(echarts.ECharts | null)[]>([])
 
 // 初始化图表
