@@ -11,7 +11,13 @@ import Antd from 'ant-design-vue'
 import { createApp, type ComponentInstance, ref, type Ref, reactive } from 'vue'
 import PopoverContent, { type GridData } from '@/components/feature/map/popoverContent.vue'
 import bus from '@/store/bus'
-import { getSceneRGBCompositeTileUrl, getGridRGBCompositeUrl, getTerrainRGBUrl, getOneBandColorUrl, getNoCloudUrl } from '@/api/http/satellite-data/visualize.api'
+import {
+    getSceneRGBCompositeTileUrl,
+    getGridRGBCompositeUrl,
+    getTerrainRGBUrl,
+    getOneBandColorUrl,
+    getNoCloudUrl,
+} from '@/api/http/satellite-data/visualize.api'
 
 ////////////////////////////////////////////////////////
 /////// Map Operation //////////////////////////////////
@@ -152,6 +158,13 @@ export function draw_pointMode(): void {
     })
 }
 
+export function draw_lineMode(): void {
+    mapManager.withDraw((d) => {
+        d.deleteAll()
+        d.changeMode('draw_line_string')
+    })
+}
+
 export function getCurrentGeometry(): polygonGeometry {
     if (ezStore.get('polygonFeature')) {
         return ezStore.get('polygonFeature') as polygonGeometry
@@ -197,7 +210,6 @@ export function map_addPolygonLayer(options: {
     fillColor?: string
     fillOpacity?: number
     onClick?: (feature: GeoJSON.Feature) => void
-
 }) {
     const {
         geoJson,
@@ -394,7 +406,6 @@ type RGBTileLayerParams = {
     nodata?: number
 }
 export function map_addRGBImageTileLayer(param: RGBTileLayerParams, cb?: () => void) {
-
     const id = 'rgb-image-tile-layer'
     const srcId = id + '-source'
 
@@ -408,9 +419,7 @@ export function map_addRGBImageTileLayer(param: RGBTileLayerParams, cb?: () => v
 
         m.addSource(srcId, {
             type: 'raster',
-            tiles: [
-                tileUrl
-            ]
+            tiles: [tileUrl],
         })
         m.addLayer({
             id: id,
@@ -420,10 +429,8 @@ export function map_addRGBImageTileLayer(param: RGBTileLayerParams, cb?: () => v
 
         setTimeout(() => {
             cb && cb()
-        }, 1000);
-
+        }, 1000)
     })
-
 }
 export function map_destroyRGBImageTileLayer() {
     const id = 'rgb-image-tile-layer'
@@ -439,17 +446,14 @@ export function map_destroyRGBImageTileLayer() {
 export function map_addMultiRGBImageTileLayer(params: RGBTileLayerParams[], cb?: () => void) {
     const prefix = 'MultiRGB'
     let layeridStore: any = null
-    if (!ezStore.get('MultiRGBLayerIds'))
-        ezStore.set('MultiRGBLayerIds', [])
+    if (!ezStore.get('MultiRGBLayerIds')) ezStore.set('MultiRGBLayerIds', [])
 
     layeridStore = ezStore.get('MultiRGBLayerIds')
 
     map_destroyMultiRGBImageTileLayer()
 
     mapManager.withMap((m) => {
-
         for (let i = 0; i < params.length; i++) {
-
             const id = prefix + uid()
             const srcId = id + '-source'
             if (m.getLayer(id) && m.getSource(srcId)) {
@@ -463,9 +467,7 @@ export function map_addMultiRGBImageTileLayer(params: RGBTileLayerParams[], cb?:
 
             m.addSource(srcId, {
                 type: 'raster',
-                tiles: [
-                    tileUrl
-                ]
+                tiles: [tileUrl],
             })
             m.addLayer({
                 id: id,
@@ -474,11 +476,9 @@ export function map_addMultiRGBImageTileLayer(params: RGBTileLayerParams[], cb?:
             })
         }
 
-
         setTimeout(() => {
             cb && cb()
-        }, 3000);
-
+        }, 3000)
     })
 }
 export function map_destroyMultiRGBImageTileLayer() {
@@ -495,9 +495,11 @@ export function map_destroyMultiRGBImageTileLayer() {
     })
 }
 
-
-
-export function map_addGridRGBImageTileLayer(gridInfo: GridInfoType, param: RGBTileLayerParams, cb?: () => void) {
+export function map_addGridRGBImageTileLayer(
+    gridInfo: GridInfoType,
+    param: RGBTileLayerParams,
+    cb?: () => void,
+) {
     const prefix = '' + gridInfo.rowId + gridInfo.columnId
     const id = prefix + uid()
     const srcId = id + '-source'
@@ -508,7 +510,6 @@ export function map_addGridRGBImageTileLayer(gridInfo: GridInfoType, param: RGBT
     }
 
     mapManager.withMap((m) => {
-
         const gridImageLayerMap = ezStore.get('grid-image-layer-map')
         for (let key of gridImageLayerMap.keys()) {
             if (key.includes(prefix)) {
@@ -525,9 +526,7 @@ export function map_addGridRGBImageTileLayer(gridInfo: GridInfoType, param: RGBT
 
         m.addSource(srcId, {
             type: 'raster',
-            tiles: [
-                tileUrl
-            ]
+            tiles: [tileUrl],
         })
         m.addLayer({
             id: id,
@@ -537,22 +536,19 @@ export function map_addGridRGBImageTileLayer(gridInfo: GridInfoType, param: RGBT
 
         gridImageLayerMap.set(id, {
             id: id,
-            source: srcId
+            source: srcId,
         })
 
         setTimeout(() => {
             cb && cb()
-        }, 2000);
-
+        }, 2000)
     })
-
 }
 export function map_destroyGridRGBImageTileLayer(gridInfo: GridInfoType) {
     const prefix = '' + gridInfo.rowId + gridInfo.columnId
     const gridImageLayerMap = ezStore.get('grid-image-layer-map')
 
     mapManager.withMap((m) => {
-
         for (let key of gridImageLayerMap.keys()) {
             if (key.startsWith(prefix)) {
                 const oldId = key
@@ -563,12 +559,8 @@ export function map_destroyGridRGBImageTileLayer(gridInfo: GridInfoType) {
                 }
             }
         }
-
     })
-
-
 }
-
 
 function uid() {
     return Math.random().toString(36).substring(2, 15)
@@ -864,13 +856,11 @@ export function map_addGridLayer_coverOpacity(gridGeoJson: GeoJSON.FeatureCollec
 }
 
 export function map_addSceneBoxLayer(sceneBoxGeojson): void {
-
     const id = 'scene-box-layer'
     const source = id + '-source'
 
     const bbox = sceneBoxGeojson.bbox
     mapManager.withMap((m) => {
-
         m.getLayer(id) && m.removeLayer(id)
         m.getSource(source) && m.removeSource(source)
 
@@ -884,42 +874,40 @@ export function map_addSceneBoxLayer(sceneBoxGeojson): void {
             source: source,
             paint: {
                 'line-color': '#ff6506',
-                'line-width': 3
+                'line-width': 3,
             },
         })
 
         if (bbox) {
-            m.fitBounds([
-                [bbox[0], bbox[1]],
-                [bbox[2], bbox[3]],
-            ], {
-                padding: 50,
-                duration: 1000,
-            })
+            m.fitBounds(
+                [
+                    [bbox[0], bbox[1]],
+                    [bbox[2], bbox[3]],
+                ],
+                {
+                    padding: 50,
+                    duration: 1000,
+                },
+            )
         }
     })
 }
 
 export function map_destroySceneBoxLayer(): void {
-
     const id = 'scene-box-layer'
     const source = id + '-source'
     mapManager.withMap((m) => {
-
         m.getLayer(id) && m.removeLayer(id)
         m.getSource(source) && m.removeSource(source)
-
     })
 }
 
 //////////// 无云一版图
 export function map_addNoCloudLayer(url: string) {
-
     const id = 'no-cloud-layer'
     const source = id + '-source'
 
     mapManager.withMap((m) => {
-
         m.getLayer(id) && m.removeLayer(id)
         m.getSource(source) && m.removeSource(source)
 
@@ -935,23 +923,18 @@ export function map_addNoCloudLayer(url: string) {
             id,
             type: 'raster',
             source: source,
-            paint: {}
+            paint: {},
         })
-
     })
 }
 export function map_destroyNoCloudLayer() {
     const id = 'no-cloud-layer'
     const source = id + '-source'
     mapManager.withMap((m) => {
-
         m.getLayer(id) && m.removeLayer(id)
         m.getSource(source) && m.removeSource(source)
-
     })
-
 }
-
 
 //////////// 地形
 type TerrainLayerParam = {
@@ -962,19 +945,16 @@ export function map_addTerrain(param: TerrainLayerParam): void {
     console.log(terrainSourceUrl)
     const onlySourceId = 'terrain-source'
     mapManager.withMap((map) => {
-
         map.setTerrain(null)
         map.getSource(onlySourceId) && map.removeSource(onlySourceId)
 
         map.addSource(onlySourceId, {
-            'type': 'raster-dem',
-            'tiles': [
-                terrainSourceUrl,
-            ],
-            'tileSize': 256,
+            type: 'raster-dem',
+            tiles: [terrainSourceUrl],
+            tileSize: 256,
             // 'maxzoom': 14
-        });
-        map.setTerrain({ 'source': onlySourceId, 'exaggeration': 4.0 });
+        })
+        map.setTerrain({ source: onlySourceId, exaggeration: 4.0 })
     })
 }
 export function map_destroyTerrain() {
@@ -994,7 +974,6 @@ export function map_addOneBandColorLayer(param: OneBandColorLayerParam): void {
     const onlySrcId = onlyId + '-source'
 
     mapManager.withMap((map) => {
-
         map.getLayer(onlyId) && map.removeLayer(onlyId)
         map.getSource(onlySrcId) && map.removeSource(onlySrcId)
 
@@ -1009,9 +988,7 @@ export function map_addOneBandColorLayer(param: OneBandColorLayerParam): void {
             source: onlySrcId,
         })
     })
-
 }
-
 
 // export function map_addGridCoverLayer(gridGeoJson: GeoJSON.FeatureCollection){
 //     const id = 'grid-layer'
