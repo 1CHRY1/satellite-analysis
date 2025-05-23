@@ -30,13 +30,20 @@
                             <ChartColumn :size="18" />
                         </div>
                         <h2 class="section-title">专题选择：</h2>
-                        <select v-model="selectedTask" @change=""
+                        <select v-model="selectedTask" @change="handleThematicChange"
                             class="bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-3 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6] max-w-[calc(100%-90px)] truncate">
                             <option v-for="option in optionalTasks" :key="option.value" :value="option.value"
                                 :disabled="option.disabled">
                                 {{ option.label }}
                             </option>
                         </select>
+                        <div class="absolute right-6" @click="clearImages">
+                            <a-tooltip>
+                                <template #title>清空影像图层</template>
+                                <Trash2Icon :size="20" />
+                            </a-tooltip>
+                        </div>
+
                     </div>
                 </section>
 
@@ -51,7 +58,7 @@ import { ref, type PropType, computed, type Ref, nextTick, onUpdated, onMounted,
 import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'
 import { type interactiveExplore } from '@/components/dataCenter/type'
 import { formatTime } from '@/util/common'
-import { getNdviPoint, getCaseStatus, getCaseResult, getSpectrum, getBoundaryBySceneId, getRegionPosition } from '@/api/http/satellite-data'
+import { getNdviPoint, getCaseStatus, getCaseResult, getSpectrum, getBoundaryBySceneId, getRegionPosition, getRasterScenesDes } from '@/api/http/satellite-data'
 import * as echarts from 'echarts'
 import { getSceneGeojson } from '@/api/http/satellite-data/visualize.api'
 import * as MapOperation from '@/util/map/operation'
@@ -59,7 +66,7 @@ import { useGridStore, ezStore } from '@/store'
 import type { RegionValues } from 'v-region'
 import { RegionSelects } from 'v-region'
 import { getSceneByConfig, getBoundary } from '@/api/http/satellite-data'
-
+import { getRGBTileLayerParamFromSceneObject } from '@/util/visualizeHelper'
 import {
     ChartColumn,
     Earth,
@@ -78,6 +85,7 @@ import {
     BoltIcon,
     BanIcon,
     MapIcon,
+    Trash2Icon
 } from 'lucide-vue-next'
 import { ElMessage } from 'element-plus'
 
@@ -164,6 +172,30 @@ const getOriginImages = async (newRegion: number | '未选择') => {
     }
 }
 
+const handleThematicChange = async () => {
+    // if (selectedTask.value === '红绿立体') {
+    //     // const stopLoading = message.loading('正在加载影像', 0)
+    //     let rasterParam = {
+    //         startTime,
+    //         endTime,
+    //         regionId: displayLabel.value,
+    //         dataType: '3d'
+    //     }
+    //     const sceneObject = await getRasterScenesDes(rasterParam)
+    //     console.log(sceneObject, '红绿立体');
+    //     const rgbLayerParam = await getRGBTileLayerParamFromSceneObject(sceneObject)
+    //     MapOperation.map_addRGBImageTileLayer(rgbLayerParam)
+    // }
+
+
+
+}
+
+const clearImages = () => {
+    MapOperation.map_destroyTerrain()
+    MapOperation.map_destroyRGBImageTileLayer()
+    MapOperation.map_destroyOneBandColorLayer()
+}
 
 
 

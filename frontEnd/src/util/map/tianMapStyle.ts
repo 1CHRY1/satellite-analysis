@@ -563,12 +563,22 @@ const LocalImageBaseMapStyle = {
             tiles: [ezStore.get('conf')['intranet_img_url']],
             tileSize: 256,
         },
+        'Local-Interal-Source': {
+            type: 'raster',
+            tiles: [ezStore.get('conf')['fk_url']],
+            tileSize: 256,
+        },
     },
     layers: [
         {
             id: 'Local-Image-Layer',
             type: 'raster',
             source: 'Local-Imagelayer-Source',
+        },
+        {
+            id: 'Local-Interal-Layer',
+            type: 'raster',
+            source: 'Local-Interal-Source',
         },
     ],
     glyphs: '/glyphs/mapbox/{fontstack}/{range}.pbf',
