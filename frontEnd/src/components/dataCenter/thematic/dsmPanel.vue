@@ -16,7 +16,7 @@
                     </div>
                     <div class="config-control justify-center">
                         <div class="w-full space-y-2">
-                            <div v-for="(image, index) in allDsmImages" :key="index"
+                            <div v-for="(image, index) in allDsmImages" :key="index" @click="showTif(image)"
                                 class="flex flex-col border border-[#247699] bg-[#0d1526] text-white px-4 py-2 rounded-lg transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c]">
                                 <div class="font-semibold text-base">{{ image.sceneName }}</div>
                                 <div class="text-sm text-gray-400">{{ formatTime(image.sceneTime, 'minutes') }}</div>
@@ -105,7 +105,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch, watchEffect, type ComponentPublicInstance, type ComputedRef, type Ref } from 'vue';
-import { getRasterScenesDes, getRasterPoints, getBoundaryBySceneId, getCaseStatus, getCaseResult, getRasterLine } from '@/api/http/satellite-data';
+import { getRasterScenesDes, getRasterPoints, getBoundaryBySceneId, getCaseStatus, getCaseResult, getRasterLine, getDescriptionBySceneId } from '@/api/http/satellite-data';
 import * as MapOperation from '@/util/map/operation'
 import { useGridStore, ezStore } from '@/store'
 import { formatTime } from '@/util/common';
@@ -153,6 +153,7 @@ type LatLng = [number, number]
 
 
 const props = defineProps<{ thematicConfig: ThematicConfig }>()
+
 const allDsmImages = ref<any>([])
 const initDsmPanel = async () => {
     let thematicConfig = props.thematicConfig
@@ -192,6 +193,16 @@ const toggleMode = (mode: 'point' | 'line' | 'false') => {
         startDrawLine()
     }
 }
+
+const showTif = async (image) => {
+    let sceneId = image.sceneId
+    let res = await getDescriptionBySceneId(sceneId)
+    let url = res.images[0].bucket + '/' + res.images[0].tifPath
+    MapOperation.map_addTerrain({
+        fullTifPath: url
+    })
+
+}
 const startDrawPoint = () => {
     MapOperation.draw_pointMode()
 }
@@ -214,10 +225,10 @@ const analysisDsm = async () => {
     //     fillColor: '#a4ffff',
     //     fillOpacity: 0.2,
     // })
-    if (verifyAnalysis()) {
+
+    if (!verifyAnalysis()) {
         return
     }
-    console.log('开始分析');
 
     if (activeMode.value === 'point') {
         let pointParam = {

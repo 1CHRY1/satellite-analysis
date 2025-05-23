@@ -26,7 +26,7 @@
                                         <label class="flex items-center gap-2">
                                             <input type="checkbox" v-model="dataReconstruction[0]"
                                                 @click="add2mDemoticImages" class="h-4 w-4 rounded" />
-                                            使用国产2m级影像超分重建亚米级数据
+                                            使用国产2m级影像
                                         </label>
                                         <div v-if="showProgress[0]"
                                             class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
@@ -387,12 +387,16 @@ const demotic = computed(() => {
         } else if (image.tags.includes('international')) {
             // 国外非雷达数据
             internationalImages.value.push(image)
-        } else if (image.resolution === '2m') {
+        } else if (image.tags.includes('ard') && image.resolution === '2m') {
             demotic2mImages.value.push(image)
-        } else {
-            demotic1mImages.value.push(image)
+        } else if (image.tags.includes('ard')) {
+            let imageResolution = parseFloat(image.resolution)
+            if (imageResolution <= 1) {
+                demotic1mImages.value.push(image)
+            }
         }
     })
+
     return demotic1mImages.value.length
 })
 

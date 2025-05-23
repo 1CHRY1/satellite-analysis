@@ -17,12 +17,9 @@
                                     <span>行政区</span>
                                 </div>
                                 <div class="config-control justify-center">
-                                    <RegionSelects
-                                        v-model="region"
-                                        :placeholder="['选择省份', '选择城市', '选择区县']"
+                                    <RegionSelects v-model="region" :placeholder="['选择省份', '选择城市', '选择区县']"
                                         class="flex gap-2"
-                                        select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none"
-                                    />
+                                        select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
                                 </div>
                             </div>
                             <div class="config-item">
@@ -33,16 +30,10 @@
                                 <div class="config-control flex-col !items-start">
                                     <div>
                                         格网分辨率选择：
-                                        <select
-                                            v-model="selectedRadius"
-                                            class="w-40 appearance-none rounded-lg border border-[#2c3e50] bg-[#0d1526] px-4 py-2 pr-8 text-white transition-all duration-200 hover:border-[#206d93] focus:border-[#3b82f6] focus:outline-none"
-                                        >
-                                            <option
-                                                v-for="option in radiusOptions"
-                                                :key="option"
-                                                :value="option"
-                                                class="bg-[#0d1526] text-white"
-                                            >
+                                        <select v-model="selectedRadius"
+                                            class="w-40 appearance-none rounded-lg border border-[#2c3e50] bg-[#0d1526] px-4 py-2 pr-8 text-white transition-all duration-200 hover:border-[#206d93] focus:border-[#3b82f6] focus:outline-none">
+                                            <option v-for="option in radiusOptions" :key="option" :value="option"
+                                                class="bg-[#0d1526] text-white">
                                                 {{ option }}km
                                             </option>
                                         </select>
@@ -53,10 +44,8 @@
                                     </div>
                                 </div>
                             </div>
-                            <button
-                                @click="getAllGrid"
-                                class="cursor-pointer rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
-                            >
+                            <button @click="getAllGrid"
+                                class="cursor-pointer rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95">
                                 获取格网
                             </button>
                         </div>
@@ -77,13 +66,8 @@
                                     <span>时间范围</span>
                                 </div>
                                 <div class="config-control">
-                                    <a-range-picker
-                                        class="custom-date-picker"
-                                        v-model:value="tileMergeConfig.dateRange"
-                                        picker="day"
-                                        :allow-clear="false"
-                                        :placeholder="['开始日期', '结束日期']"
-                                    />
+                                    <a-range-picker class="custom-date-picker" v-model:value="tileMergeConfig.dateRange"
+                                        picker="day" :allow-clear="false" :placeholder="['开始日期', '结束日期']" />
                                 </div>
                             </div>
                             <!-- <div class="config-item">
@@ -107,15 +91,12 @@
                                     </div>
                                 </div>
                             </div> -->
-                            <button
-                                @click="filterByCloudAndDate"
-                                :disabled="filterByCloudAndDateLoading"
+                            <button @click="filterByCloudAndDate" :disabled="filterByCloudAndDateLoading"
                                 class="flex justify-center rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
                                 :class="{
                                     'cursor-not-allowed': filterByCloudAndDateLoading,
                                     'cursor-pointer': !filterByCloudAndDateLoading,
-                                }"
-                            >
+                                }">
                                 <span>影像筛选 </span>
                                 <Loader v-if="filterByCloudAndDateLoading" class="ml-2" />
                             </button>
@@ -199,10 +180,7 @@
                             <DatabaseIcon :size="18" />
                         </div>
                         <h2 class="section-title">交互探索</h2>
-                        <div
-                            class="section-icon absolute right-0 cursor-pointer"
-                            @click="clearAllShowingSensor"
-                        >
+                        <div class="section-icon absolute right-0 cursor-pointer" @click="clearAllShowingSensor">
                             <a-tooltip>
                                 <template #title>清空影像图层</template>
                                 <Trash2Icon :size="18" />
@@ -211,11 +189,7 @@
                     </div>
                     <div class="section-content">
                         <div class="config-container">
-                            <div
-                                class="config-item"
-                                v-for="([label, value], index) in resolutionType"
-                                :key="value"
-                            >
+                            <div class="config-item" v-for="([label, value], index) in resolutionType" :key="value">
                                 <div class="config-label relative">
                                     <BoltIcon :size="16" class="config-icon" />
                                     <span>{{ label }}分辨率影像集</span>
@@ -243,48 +217,38 @@
                                                     {{
                                                         allSensorsItems[label]
                                                             ? (
-                                                                  (allSensorsItems[label] * 100) /
-                                                                  allGridCount
-                                                              ).toFixed(2) + '%'
+                                                                (allSensorsItems[label] * 100) /
+                                                                allGridCount
+                                                            ).toFixed(2) + '%'
                                                             : '待计算'
                                                     }}
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div
-                                        v-if="Object.keys(classifiedScenes).length > 0"
-                                        class="!w-full"
-                                    >
+                                    <div v-if="Object.keys(classifiedScenes).length > 0" class="!w-full">
                                         <label class="mr-2 text-white">选择影像产品：</label>
                                         <select
                                             class="max-h-[600px] w-[calc(100%-130px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
-                                            v-model="resolutionPlatformSensor[label]"
-                                        >
+                                            v-model="resolutionPlatformSensor[label]">
                                             <option disabled selected value="">请选择</option>
                                             <!-- <option :value="'all'" class="truncate">全选</option> -->
-                                            <option
-                                                v-for="platformName in classifiedScenes[
-                                                    value + 'm'
-                                                ]"
-                                                :value="platformName"
-                                                :key="platformName"
-                                                class="truncate"
-                                            >
+                                            <option v-for="platformName in classifiedScenes[
+                                                value + 'm'
+                                            ]" :value="platformName" :key="platformName" class="truncate">
                                                 {{ platformName }}
                                             </option>
                                         </select>
                                         <div class="flex flex-row items-center">
-                                            <a-button
-                                                class="custom-button mt-4! w-[calc(100%-50px)]!"
+                                            <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
                                                 @click="handleShowResolutionSensorImage(label)"
-                                                :disabled="!resolutionPlatformSensor[label]"
-                                            >
+                                                :disabled="!resolutionPlatformSensor[label]">
                                                 影像可视化
                                             </a-button>
                                             <a-tooltip>
                                                 <template #title>清空影像图层</template>
-                                                <Trash2Icon :size="18" class="mt-4! ml-4! cursor-pointer" @click="clearAllShowingSensor"/>
+                                                <Trash2Icon :size="18" class="mt-4! ml-4! cursor-pointer"
+                                                    @click="clearAllShowingSensor" />
                                             </a-tooltip>
                                         </div>
                                     </div>
@@ -428,7 +392,7 @@ const emit = defineEmits(['submitConfig'])
  * 行政区划选取
  */
 
-const radiusOptions = [2, 5, 10, 15, 20, 25, 30, 40, 50, 80, 100, 150]
+const radiusOptions = [1, 2, 5, 10, 15, 20, 25, 30, 40, 50, 80, 100, 150]
 
 type ResolutionItem = [label: string, value: number]
 
@@ -969,18 +933,29 @@ const clearAllShowingSensor = () => {
 }
 
 // 工具函数： 获取platformName名对应的所有景
-const getSceneIdsByPlatformName = (platformName: string) => {
+const getSceneIdsByPlatformName = (platformName: string, label: string) => {
     console.log('所有景', allScenes.value)
     console.log('选中的平台名', platformName)
+    let scenes = allScenes.value
+    if (label === '亚米') {
+        scenes = allScenes.value.filter((scene) => {
+            if (scene.tags.includes('ard')) {
+                return scene
+            }
+        })
+    }
+    console.log(scenes, 'allImages');
 
-    if (platformName === 'all') return allScenes.value.map((item) => item.sceneId)
+    if (platformName === 'all') return scenes.map((item) => item.sceneId)
 
     const res: any[] = []
-    allScenes.value.forEach((item) => {
+    scenes.forEach((item) => {
         if (item.platformName == platformName) {
             res.push(item.sceneId)
         }
     })
+    console.log(res, 'images');
+
     return res
 }
 
@@ -1001,7 +976,7 @@ const getSensorNamebyPlatformName = (platformName: string) => {
 
 const handleShowResolutionSensorImage = async (label: string) => {
     const selectPlatformName = resolutionPlatformSensor[label]
-    const sceneIds = getSceneIdsByPlatformName(selectPlatformName)
+    const sceneIds = getSceneIdsByPlatformName(selectPlatformName, label)
     console.log('选中的景ids', sceneIds)
     const sensorName = getSensorNamebyPlatformName(selectPlatformName)
 
@@ -1142,4 +1117,14 @@ onMounted(() => {
 })
 </script>
 
-<style scoped src="./tabStyle.css"></style>
+<style scoped src="./tabStyle.css">
+:deep(button.ant-picker-year-btn) {
+    pointer-events: none;
+    color: #aaa;
+}
+
+:deep(button.ant-picker-month-btn) {
+    pointer-events: none;
+    color: #aaa;
+}
+</style>

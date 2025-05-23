@@ -990,6 +990,15 @@ export function map_addOneBandColorLayer(param: OneBandColorLayerParam): void {
     })
 }
 
+export function map_destroyOneBandColorLayer() {
+    const onlyId = 'one-band-color-layer'
+    const onlySrcId = onlyId + '-source'
+    mapManager.withMap((map) => {
+        map.getLayer(onlyId) && map.removeLayer(onlyId)
+        map.getSource(onlySrcId) && map.removeSource(onlySrcId)
+    })
+}
+
 // export function map_addGridCoverLayer(gridGeoJson: GeoJSON.FeatureCollection){
 //     const id = 'grid-layer'
 //     const fillId = id + '-fill'

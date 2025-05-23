@@ -36,13 +36,13 @@ export default defineConfig({
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/websocket/, ''),
             },
-            '/tiler':{
-                // target: 'http://223.2.32.166:31800',
-                target: 'http://localhost:8000',
+            '/tiler': {
+                target: 'http://223.2.32.166:31800',
+                // target: 'http://localhost:8000',
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/tiler/, ''),
             },
-            '/hytemp':{
+            '/hytemp': {
                 target: 'http://localhost:8000',
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/hytemp/, ''),
@@ -57,11 +57,11 @@ export default defineConfig({
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/mvtbasemap/, ''),
             },
-            '/proxymap':{
+            '/proxymap': {
                 target: 'http://localhost:5003',
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/proxymap/, ''),
-            }
+            },
         },
     },
 })

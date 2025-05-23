@@ -16,8 +16,8 @@
                     </div>
                     <div class="config-control justify-center">
                         <div class="w-full space-y-2">
-                            <div v-for="(image, index) in allDeforRateImages" :key="index"
-                                class="flex flex-col border border-[#247699] bg-[#0d1526] text-white px-4 py-2 rounded-lg transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c]">
+                            <div v-for="(image, index) in allDeforRateImages" :key="index" @click="showTif(image)"
+                                class="flex flex-col border cursor-pointer border-[#247699] bg-[#0d1526] text-white px-4 py-2 rounded-lg transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c]">
                                 <div class="font-semibold text-base">{{ image.sceneName }}</div>
                                 <div class="text-sm text-gray-400">{{ formatTime(image.sceneTime, 'minutes') }}</div>
                             </div>
@@ -105,7 +105,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch, watchEffect, type ComponentPublicInstance, type ComputedRef, type Ref } from 'vue';
-import { getRasterScenesDes, getRasterPoints, getBoundaryBySceneId, getCaseStatus, getCaseResult, getRasterLine } from '@/api/http/satellite-data';
+import { getRasterScenesDes, getRasterPoints, getBoundaryBySceneId, getCaseStatus, getCaseResult, getRasterLine, getDescriptionBySceneId } from '@/api/http/satellite-data';
 import * as MapOperation from '@/util/map/operation'
 import { useGridStore, ezStore } from '@/store'
 import { formatTime } from '@/util/common';
@@ -161,7 +161,7 @@ const initDeforRatePanel = async () => {
         startTime: thematicConfig.startTime,
         endTime: thematicConfig.endTime,
         regionId: thematicConfig.regionId,
-        dataType: 'deforRate'
+        dataType: 'svr'
     }
     allDeforRateImages.value = await getRasterScenesDes(rasterParam)
     console.log(allDeforRateImages.value, 57);
@@ -192,6 +192,16 @@ const toggleMode = (mode: 'point' | 'line' | 'false') => {
         startDrawLine()
     }
 }
+const showTif = async (image) => {
+    let sceneId = image.sceneId
+    let res = await getDescriptionBySceneId(sceneId)
+    console.log(res, sceneId, 7575);
+    let url = res.images[0].bucket + '/' + res.images[0].tifPath
+    MapOperation.map_addOneBandColorLayer({
+        fullTifPath: url
+    })
+
+}
 const startDrawPoint = () => {
     MapOperation.draw_pointMode()
 }
@@ -214,7 +224,7 @@ const analysisDeforRate = async () => {
     //     fillColor: '#a4ffff',
     //     fillOpacity: 0.2,
     // })
-    if (verifyAnalysis()) {
+    if (!verifyAnalysis()) {
         return
     }
     if (activeMode.value === 'point') {
