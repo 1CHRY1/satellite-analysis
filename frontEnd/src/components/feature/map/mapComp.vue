@@ -101,7 +101,6 @@ onMounted(() => {
     // })
 
     bus.on('cleanAllLayer', () => {
-    bus.on('cleanAllLayer', () => {
         MapOperation.map_destroyGridLayer()
         MapOperation.map_destroyRGBImageTileLayer()
         MapOperation.map_destroyImagePreviewLayer()
@@ -111,6 +110,7 @@ onMounted(() => {
         MapOperation.map_destroyNoCloudLayer()
         MapOperation.map_destroyTerrain()
     })
+ 
 })
 
 onUnmounted(() => {
@@ -140,7 +140,6 @@ onUnmounted(() => {
     font-size: 20px;
     margin-top: 12px;
 }
-
 
 :deep(.vdr-container.active) {
     border: none;
