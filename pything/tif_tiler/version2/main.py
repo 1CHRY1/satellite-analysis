@@ -1,8 +1,8 @@
 
 
 def createApp():
-    import os
-    os.environ['PROJ_DATA'] = r'D:\env\miniconda\envs\grid\Lib\site-packages\rasterio\proj_data'
+    # import os
+    # os.environ['PROJ_DATA'] = r'D:\env\miniconda\envs\grid\Lib\site-packages\rasterio\proj_data'
     
     from fastapi import FastAPI
     from titiler.core.factory import TilerFactory
