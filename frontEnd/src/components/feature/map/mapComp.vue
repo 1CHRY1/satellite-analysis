@@ -137,7 +137,6 @@ onUnmounted(() => {
 }
 
 :deep(.mapboxgl-popup-close-button) {
-:deep(.mapboxgl-popup-close-button) {
     font-size: 20px;
     margin-top: 12px;
 }
