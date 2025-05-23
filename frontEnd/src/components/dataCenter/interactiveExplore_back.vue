@@ -834,7 +834,7 @@ const clearAllShowingSensor = () => {
     MapOperation.map_destroySceneBoxLayer()
 }
 const handleShowImage = async (sensorItem) => {
-    const stopLoading = message.loading('正在加载影像')
+    const stopLoading = message.loading('正在加载影像', 0)
     let redPath, greenPath, bluePath
     const sceneInfo = sensorItem.selectedSceneInfo
     console.log(sceneInfo.bandMapper)

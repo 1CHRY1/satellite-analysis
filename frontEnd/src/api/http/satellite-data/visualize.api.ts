@@ -124,6 +124,7 @@ type RGBTileLayerParams = {
     g_max: number
     b_min: number
     b_max: number
+    nodata?: number
 }
 export function getSceneRGBCompositeTileUrl(param: RGBTileLayerParams) {
     let baseUrl = `${titilerEndPoint}/rgb/tiles/{z}/{x}/{y}.png`
@@ -138,7 +139,8 @@ export function getSceneRGBCompositeTileUrl(param: RGBTileLayerParams) {
     requestParams.append('max_g', param.g_max.toString())
     requestParams.append('min_b', param.b_min.toString())
     requestParams.append('max_b', param.b_max.toString())
-    // requestParams.append('nodata', 11)
+    if (param.nodata)
+        requestParams.append('nodata', param.nodata.toString())
 
     return baseUrl + '?' + requestParams.toString()
 }
@@ -159,6 +161,8 @@ export function getGridRGBCompositeUrl(grid: GridInfoType, param: RGBTileLayerPa
     requestParams.append('max_g', param.g_max.toString())
     requestParams.append('min_b', param.b_min.toString())
     requestParams.append('max_b', param.b_max.toString())
+    if (param.nodata)
+        requestParams.append('nodata', param.nodata.toString())
 
     return baseUrl + '?' + requestParams.toString()
 }
@@ -183,11 +187,89 @@ export async function getSceneGeojson(scene: BaseSceneType) {
     let baseUrl = `${titilerEndPoint}/info.geojson`
     const requestParams = new URLSearchParams()
     requestParams.append('url', oneImgFullPath)
-    
+
     const httpUrl = baseUrl + '?' + requestParams.toString()
-    
+
     const response = await fetch(httpUrl)
     const json = await response.json()
 
     return json
+}
+
+
+// 地形瓦片，实时构建的terrainRGB
+/**
+ * 
+ * @param terrainTifPath bucket + '/' + tifPath
+ */
+export function getTerrainRGBUrl(terrainTifPath: string) {
+    // demo: /tiler/terrain/terrainRGB/{z}/{x}/{y}.png 
+    let baseUrl = `${titilerEndPoint}/terrain/terrainRGB/{z}/{x}/{y}.png`
+    const requestParams = new URLSearchParams()
+    requestParams.append('url', minioEndPoint + '/' + terrainTifPath)
+
+    const fullUrl = baseUrl + '?' + requestParams.toString()
+    return fullUrl
+}
+
+// 单波段彩色产品
+
+export function getOneBandColorUrl(oneBandColorTifPath: string) {
+
+    let baseUrl = `${titilerEndPoint}/oneband/colorband/{z}/{x}/{y}.png`
+    const requestParams = new URLSearchParams()
+    requestParams.append('url', minioEndPoint + '/' + oneBandColorTifPath)
+
+    const fullUrl = baseUrl + '?' + requestParams.toString()
+    return fullUrl
+}
+
+// 三波段的无云一版图
+
+export async function getNoCloudScaleParam(noCloudTifPath: string) {
+    const statistice = await getTifStatistic(noCloudTifPath)
+    console.log(statistice)
+
+    const band1Scale = statistice.b1.percentile_2 + ',' + (statistice.b1.percentile_98 - statistice.b1.percentile_2) * 1.1
+    const band2Scale = statistice.b2.percentile_2 + ',' + (statistice.b2.percentile_98 - statistice.b2.percentile_2) * 1.1
+    const band3Scale = statistice.b3.percentile_2 + ',' + (statistice.b3.percentile_98 - statistice.b3.percentile_2) * 1.1
+
+    return {
+        band1Scale,
+        band2Scale,
+        band3Scale
+    }
+}
+
+type NoCloudInfoParam = {
+    fullTifPath: string,
+    band1Scale: string,
+    band2Scale: string,
+    band3Scale: string
+}
+export function getNoCloudUrl(param: NoCloudInfoParam) {
+
+    // http://localhost:8000/tiles/WebMercatorQuad/9/427/200?scale=1&format=png&url=http%3A%2F%2F223.2.32.166%3A30900%2Ftemp-files%2Faa0594b6-f6a1-4c08-a148-21dfb5ed193e%2FnoCloud_merge.tif&bidx=1&bidx=2&bidx=3&unscale=false&rescale=0%2C13000&rescale=0%2C13000&rescale=0%2C13000&return_mask=true
+
+
+    // /tiles/{tileMatrixSetId}/{z}/{x}/{y}
+    let baseUrl = `${titilerEndPoint}/tiles/WebMercatorQuad/{z}/{x}/{y}`
+
+    const requestParams = new URLSearchParams()
+    requestParams.append('url', minioEndPoint + '/' + param.fullTifPath)
+    requestParams.append('scale', '1')
+    requestParams.append('format', 'png')
+    requestParams.append('bidx', '1')
+    requestParams.append('bidx', '2')
+    requestParams.append('bidx', '3')
+    requestParams.append('unscale', 'false')
+    requestParams.append('rescale', param.band1Scale)
+    requestParams.append('rescale', param.band2Scale)
+    requestParams.append('rescale', param.band3Scale)
+    requestParams.append('return_mask', 'true')
+    requestParams.append('nodata', '0')
+
+    const fullUrl = baseUrl + '?' + requestParams.toString()
+
+    return fullUrl
 }

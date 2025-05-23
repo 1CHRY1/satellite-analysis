@@ -24,19 +24,19 @@
             </div>
         </div>
         <!-- <ImageSearcher class="h-full w-[28vw] mt-10" /> -->
-        <MapComp class="flex-1" :style="'local'" :proj="'globe'" :isPicking="isPicking" />
+        <MapComp class="flex-1" :style="'image'" :proj="'globe'" :isPicking="isPicking" />
     </div>
 </template>
 
 <script setup lang="ts">
 import { ref, type Ref } from 'vue'
 import MapComp from '@/components/feature/map/mapComp.vue'
-import ImageSearcher from '@/components/dataCenter/imageSearcher.vue'
+// import ImageSearcher from '@/components/dataCenter/imageSearcher.vue'
 import dataExplore from '@/components/dataCenter/interactiveExplore.vue'
 import pictureOfNoCloud from '@/components/dataCenter/pictureOfNoCloud.vue'
 import calculateNDVI from '@/components/dataCenter/dynamicAnalysis.vue'
 import { type interactiveExplore } from '@/components/dataCenter/type'
-import * as MapOperation from '@/util/map/operation'
+// import * as MapOperation from '@/util/map/operation'
 import bus from '@/store/bus'
 import { ElMessage } from 'element-plus'
 

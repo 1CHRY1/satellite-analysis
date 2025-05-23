@@ -43,7 +43,7 @@ def tile_bounds(x, y, z):
 
 router = APIRouter()
     
-@router.get("/rgb/tiles/{z}/{x}/{y}.png")
+@router.get("/tiles/{z}/{x}/{y}.png")
 def rgb_tile(
     z: int, x: int, y: int,
     url_r: str = Query(...),
@@ -60,7 +60,7 @@ def rgb_tile(
 
     try: 
         # 读取三个波段
-        with COGReader(url_r, nodata=nodata) as cog_r:
+        with COGReader(url_r, options={"nodata": nodata}) as cog_r:
             if(cog_r.tile_exists(x, y, z)):
                 res = cog_r.tile(x, y, z)
                 tile_r, _ = res
@@ -92,7 +92,7 @@ def rgb_tile(
 
 
 
-@router.get("/rgb/box/{z}/{x}/{y}.png")
+@router.get("/box/{z}/{x}/{y}.png")
 def rgb_box_tile(
     z: int, x: int, y: int,
     bbox: str = Query(..., description="Bounding box (WGS84): minx,miny,maxx,maxy"),
@@ -127,7 +127,7 @@ def rgb_box_tile(
             return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
             
         # 读取三个波段
-        with COGReader(url_r, nodata=nodata) as cog_r:
+        with COGReader(url_r, options={"nodata": nodata}) as cog_r:
             if(cog_r.tile_exists(x, y, z)):
                 res = cog_r.tile(x, y, z)
                 tile_r, _ = res
@@ -187,7 +187,7 @@ def rgb_box_tile(
 # ):
 #     try:
 #         # 分别读取三个波段的 preview（自动缩放）
-#         with COGReader(url_r, nodata=nodata) as cog_r:
+#         with COGReader(url_r, options={"nodata": nodata}) as cog_r:
 #             img_r, _ = cog_r.preview(width=width, height=height)
 #         with COGReader(url_g) as cog_g:
 #             img_g, _ = cog_g.preview(width=width, height=height)
