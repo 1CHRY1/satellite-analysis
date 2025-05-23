@@ -217,6 +217,7 @@ const analysisDsm = async () => {
     if (verifyAnalysis()) {
         return
     }
+    console.log('开始分析');
 
     if (activeMode.value === 'point') {
         let pointParam = {
