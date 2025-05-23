@@ -270,8 +270,9 @@ const bands = computed(() => {
             }
         })
     }
+
     result.sort((a, b) => {
-        return a.localeCompare(b)
+        return parseInt(a, 10) - parseInt(b, 10)
     })
 
     if (result.length > 0) {
@@ -354,7 +355,7 @@ const handleVisualize = () => {
                 redPath: redPath,
                 greenPath: greenPath,
                 bluePath: bluePath,
-                nodata: sceneInfo.noData
+                nodata: sceneInfo.noData,
             })
         }
         bus.emit('cubeVisualize', rgbImageData, gridInfo, scaleRate.value, 'rgb')

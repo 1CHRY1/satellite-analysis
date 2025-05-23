@@ -236,7 +236,7 @@ const setDateRange = () => {
 const handleClick = async (index: number) => {
     if (index < 0 || index >= filteredImages.value.length) return
 
-    const stopLoading = message.loading('正在加载影像...', 0)
+    const stopLoading = message.loading('正在加载影像...')
 
     activeIndex.value = index
 
@@ -264,6 +264,8 @@ const handleClick = async (index: number) => {
         let redPath = img.tifFullPath
         let greenPath = img.tifFullPath
         let bluePath = img.tifFullPath
+
+        console.log('red, green, blue', redPath, greenPath, bluePath)
 
         const cache = ezStore.get('statisticCache')
         const promises: any = []
@@ -318,6 +320,8 @@ const handleClick = async (index: number) => {
         let redPath = img.redPath
         let greenPath = img.greenPath
         let bluePath = img.bluePath
+        
+        console.log('red, green, blue', redPath, greenPath, bluePath)
 
         const cache = ezStore.get('statisticCache')
         const promises: any = []
