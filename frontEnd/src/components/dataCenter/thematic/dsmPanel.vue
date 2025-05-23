@@ -214,6 +214,9 @@ const analysisDsm = async () => {
     //     fillColor: '#a4ffff',
     //     fillOpacity: 0.2,
     // })
+    if (verifyAnalysis()) {
+        return
+    }
 
     if (activeMode.value === 'point') {
         let pointParam = {
@@ -333,6 +336,19 @@ const analysisDsm = async () => {
             console.error(error);
         }
     }
+}
+// 卫语句
+const verifyAnalysis = () => {
+    if (activeMode.value != 'point' && activeMode.value != 'line') {
+        ElMessage.warning('请先完成空间选择')
+        return false
+    }
+    if (allDsmImages.value.length === 0) {
+        ElMessage.warning('该区域未检出DSM数据，请更换研究区')
+        return false
+    }
+
+    return true
 }
 
 // 等距采样方法
