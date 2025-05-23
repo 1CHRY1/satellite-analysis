@@ -1011,7 +1011,7 @@ const handleShowResolutionSensorImage = async (label: string) => {
         regionId: displayLabel.value,
     }
 
-    const stopLoading = message.loading('正在加载影像...', 0)
+    const stopLoading = message.loading('正在加载影像...')
 
     const coverScenes = await getCoverRegionSensorScenes(params)
 
