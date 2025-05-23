@@ -105,7 +105,7 @@ const optionalTasks = [
     { value: '光谱分析', label: '光谱分析', disabled: true },
 ]
 
-const selectedTask = ref(optionalTasks[0].value)
+const selectedTask = ref(optionalTasks[1].value)
 
 // 专题组件映射
 const taskComponentMap = {
