@@ -106,6 +106,11 @@ class MapManager {
             } else if (feature.geometry.type === 'Polygon') {
                 ezStore.set('polygonFeature', feature.geometry)
                 useGridStore().setPolygon(feature.geometry as polygonGeometry)
+            } else if (feature.geometry.type === 'LineString') {
+                // 这里是新增的逻辑
+                // 坐标是 [lng, lat][] 格式，我们通常按 [lat, lng] 存
+                const latlngLine = feature.geometry.coordinates
+                useGridStore().setPickedLine(latlngLine)
             }
         })
     }

@@ -19,7 +19,7 @@
                     </div>
                     <div class="config-control flex-col  gap-2 w-full">
                         请确定您要研究的区域：
-                        <div class="flex items-center gap-2 mt-2 w-full">
+                        <!-- <div class="flex items-center gap-2 mt-2 w-full">
                             <label class="text-white">影像选择：</label>
                             <select v-model="selectedSceneId" @change="showImageBBox"
                                 class="bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-3 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6] max-w-[calc(100%-90px)] truncate">
@@ -29,7 +29,7 @@
                                     {{ image.sceneName }}
                                 </option>
                             </select>
-                        </div>
+                        </div> -->
                         <div class="result-info-container">
                             <div class="result-info-item">
                                 <div class="result-info-icon">
@@ -37,7 +37,7 @@
                                 </div>
                                 <div class="result-info-content">
                                     <div class="result-info-label">纬度</div>
-                                    <div class="result-info-value">{{ pickedPoint[0] }}
+                                    <div class="result-info-value">{{ 1 }}
                                     </div>
                                 </div>
                             </div>
@@ -47,7 +47,7 @@
                                 </div>
                                 <div class="result-info-content">
                                     <div class="result-info-label">经度</div>
-                                    <div class="result-info-value">{{ pickedPoint[1] }} </div>
+                                    <div class="result-info-value">{{ 1 }} </div>
                                 </div>
                             </div>
                         </div>

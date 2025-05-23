@@ -173,3 +173,7 @@ export async function getCaseResult(taskId: string): Promise<any> {
 export async function getRasterPoints(param: any): Promise<any> {
     return http.post<any>(`modeling/example/raster/point`, param)
 }
+
+export async function getRasterLine(param: any): Promise<any> {
+    return http.post<any>(`modeling/example/raster/line`, param)
+}
