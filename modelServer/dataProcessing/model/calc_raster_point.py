@@ -1,4 +1,4 @@
-from rio_tiler.io import COGReader
+from rio_tiler.io import COGReader, Reader
 from dataProcessing.model.task import Task
 import dataProcessing.config as config
 import dataProcessing.Utils.cogUtils as cogUtils
@@ -23,7 +23,7 @@ class calc_raster_point(Task):
         bounds = raster_context.dataset.bounds
         if cogUtils.ifPointContained(lon, lat, bounds):
             pointData = raster_context.point(lon, lat)
-            pointValue = pointData['data'][0] if pointData and 'data' in pointData else None
+            pointValue = pointData.data[0].tolist()
         else:
             pointValue = None
 

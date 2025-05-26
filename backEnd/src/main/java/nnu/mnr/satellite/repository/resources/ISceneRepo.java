@@ -170,13 +170,12 @@ public interface ISceneRepo extends BaseMapper<Scene> {
     @Select("SELECT sc.scene_id, sc.scene_name, sc.scene_time, " +
             "sc.band_num, sc.bands, sc.cloud, sc.tags, sc.no_data, sc.bucket, sc.cloud_path, " +
             "ss.sensor_name, ss.platform_name, pd.product_name, pd.resolution, " +
-            "(SELECT CONCAT('[', GROUP_CONCAT(JSON_OBJECT('path', im.tif_path, 'band', im.band)), ']') " +
+            "(SELECT CONCAT('[', GROUP_CONCAT(JSON_OBJECT('tifPath', im.tif_path, 'band', im.band, 'bucket', im.bucket)), ']') " +
             "FROM image_table im WHERE im.scene_id = sc.scene_id) AS images " +
             "FROM scene_table sc " +
             "LEFT JOIN sensor_table ss ON sc.sensor_id = ss.sensor_id " +
             "LEFT JOIN product_table pd ON sc.product_id = pd.product_id " +
-            "WHERE sc.scene_id = #{sceneId} " +
-            "AND ss.data_type = 'satellite' ")
+            "WHERE sc.scene_id = #{sceneId} ")
     @Results({
             @Result(property = "sceneId", column = "scene_id"),
             @Result(property = "sceneName", column = "scene_name"),

@@ -24,7 +24,7 @@ class calc_raster_line(Task):
                 bounds = raster_cog.dataset.bounds
                 if cogUtils.ifPointContained(lon, lat, bounds):
                     pointData = raster_cog.point(lon, lat)
-                    pointValue = pointData['values'][0] if pointData and 'values' in pointData else None
+                    pointValue = pointData.data[0].tolist()
                     return pointValue
             except Exception as e:
                 print(e)
@@ -47,9 +47,11 @@ class calc_raster_line(Task):
         tasks = [(lon, lat, raster_urls) for [lon, lat] in points]
 
         with Pool(processes=cpu_count()) as pool:
-            result = pool.map(self.process_point, tasks)
+            result = pool.starmap(calc_raster_line.process_point, tasks)
 
-        return result
+        return {
+            "values": result
+        }
 
         
             

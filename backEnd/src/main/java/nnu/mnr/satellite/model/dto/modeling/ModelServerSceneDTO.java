@@ -28,6 +28,7 @@ public class ModelServerSceneDTO {
     private String resolution;
     private List<ModelServerImageDTO> images;
     private JSONObject bbox;
+    private Double noData;
 
     // 关联表字段
     private String sensorName;

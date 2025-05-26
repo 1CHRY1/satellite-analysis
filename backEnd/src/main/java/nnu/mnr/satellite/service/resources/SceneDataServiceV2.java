@@ -17,6 +17,7 @@ import nnu.mnr.satellite.service.common.BandMapperGenerator;
 import nnu.mnr.satellite.utils.geom.GeometryUtil;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.MultiPolygon;
 import org.locationtech.jts.geom.Polygon;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,7 +63,10 @@ public class SceneDataServiceV2 {
     }
 
     public SceneImageDTO getSceneByIdWithImage(String sceneId) {
-        return sceneRepo.getSceneWithImages(sceneId);
+        SceneImageDTO sceneImageDTO = sceneRepo.getSceneWithImages(sceneId);
+        JSONObject bandMapper = bandMapperGenerator.getSatelliteConfigBySensorName(sceneImageDTO.getSensorName());
+        sceneImageDTO.setBandMapper(bandMapper);
+        return sceneImageDTO;
     }
 
     public SceneSP getSceneByIdWithProductAndSensor(String sceneId) {
@@ -77,13 +81,28 @@ public class SceneDataServiceV2 {
         queryWrapper.in("scene_id", coverFetchSceneDTO.getSceneIds()).orderByDesc("scene_time");
         List<Scene> scenes = sceneRepo.selectList(queryWrapper);
         GeometryFactory geometryFactory = new GeometryFactory();
-        Polygon scenesBoundary = geometryFactory.createPolygon();
+        MultiPolygon scenesBoundary = geometryFactory.createMultiPolygon(new Polygon[]{});
         for (Scene scene : scenes) {
-            scenesBoundary = (Polygon) scenesBoundary.union(scene.getBbox());
+            Geometry bbox = scene.getBbox();
+            if (scenesBoundary.contains(bbox)) {
+                continue;
+            }
+            if (bbox == null || bbox.isEmpty()) {
+                throw new IllegalArgumentException("Invalid scene bounding box");
+            }
+            Geometry unionResult = scenesBoundary.union(bbox);
+            if (unionResult instanceof MultiPolygon) {
+                scenesBoundary = (MultiPolygon) unionResult;
+            } else if (unionResult instanceof Polygon) {
+                scenesBoundary = geometryFactory.createMultiPolygon(new Polygon[]{(Polygon) unionResult});
+            } else {
+                throw new IllegalArgumentException("Unsupported geometry type: " + unionResult.getClass().getName());
+            }
             List<ModelServerImageDTO> imageDTOS = imageDataService.getModelServerImageDTOBySceneId(scene.getSceneId());
             ModelServerSceneDTO modelServerSceneDTO = ModelServerSceneDTO.builder()
                     .sceneId(scene.getSceneId())
                     .sceneTime(scene.getSceneTime())
+                    .noData(scene.getNoData())
                     .bandMapper(bandMapperGenerator.getSatelliteConfigBySensorName(coverFetchSceneDTO.getSensorName()))
                     .images(imageDTOS)
                     .build();
@@ -92,8 +111,6 @@ public class SceneDataServiceV2 {
                 break;
             }
         }
-//        Geometry interscet = regionBoundary.intersection(scenesBoundary);
-//        Double res = interscet.getArea() / regionBoundary.getArea();
         Collections.reverse(sceneDtos);
         return sceneDtos;
     }

@@ -53,7 +53,8 @@ public class ModelServerService {
     }
 
     public CommonResultVO getModelCaseResultById(String caseId) {
-        String[] removeFields = {"bucket", "path"};
+        String[] removeFields = {};
+//        String[] removeFields = {"bucket", "path"};
         Optional<String> oModelResult = Optional.ofNullable(redisUtil.getJsonData(caseId).getString("result"));
         if (oModelResult.isEmpty()) {
             return CommonResultVO.builder().status(-1).message("Wrong getting result by id").build();
