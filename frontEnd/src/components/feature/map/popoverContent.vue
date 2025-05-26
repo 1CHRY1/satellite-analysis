@@ -17,8 +17,12 @@
 
             <div class="band-selection">
                 <label for="sensor-select">传感器:</label>
-                <select id="sensor-select" v-model="selectedSensor" class="band-select"
-                    @change="handleSensorChange(selectedSensor)">
+                <select
+                    id="sensor-select"
+                    v-model="selectedSensor"
+                    class="band-select"
+                    @change="handleSensorChange(selectedSensor)"
+                >
                     <option disabled value="">请选择</option>
                     <option v-for="sensor in sensors" :key="sensor" :value="sensor">
                         {{ sensor }}
@@ -27,10 +31,18 @@
             </div>
 
             <div class="tabs" v-show="showBandSelector">
-                <button class="tab-btn" :class="{ active: activeTab === 'single' }" @click="activeTab = 'single'">
+                <button
+                    class="tab-btn"
+                    :class="{ active: activeTab === 'single' }"
+                    @click="activeTab = 'single'"
+                >
                     单波段
                 </button>
-                <button class="tab-btn" :class="{ active: activeTab === 'rgb' }" @click="activeTab = 'rgb'">
+                <button
+                    class="tab-btn"
+                    :class="{ active: activeTab === 'rgb' }"
+                    @click="activeTab = 'rgb'"
+                >
                     三波段合成
                 </button>
             </div>
@@ -76,10 +88,17 @@
                     </select>
                 </div>
             </div>
-            <div class="mr-1 grid grid-cols-[2fr_3fr]" @mousedown="handleMouseDown" @mouseup="handleMouseUp">
+            <div
+                class="mr-1 grid grid-cols-[2fr_3fr]"
+                @mousedown="handleMouseDown"
+                @mouseup="handleMouseUp"
+            >
                 <span class="sp text-white">亮度拉伸:</span>
-                <a-slider :tip-formatter="scaleRateFormatter" v-model:value="scaleRate"
-                    @afterChange="onAfterScaleRateChange" />
+                <a-slider
+                    :tip-formatter="scaleRateFormatter"
+                    v-model:value="scaleRate"
+                    @afterChange="onAfterScaleRateChange"
+                />
             </div>
 
             <div class="btns">
@@ -87,7 +106,7 @@
                     <span class="btn-icon">
                         <GalleryHorizontalIcon :size="18" />
                     </span>
-                    网格影像可视化
+                    立方体可视化
                 </button>
                 <button class="delete-btn" @click="handleRemove">
                     <span class="btn-icon">
@@ -130,6 +149,7 @@ type Scene = {
         NIR: string
     }
     images: Image[]
+    noData: number
 }
 
 export type GridData = {
@@ -143,6 +163,7 @@ type ImageInfoType = {
     sceneId: string
     time: string
     tifFullPath: string
+    nodata: number
 }
 
 type MultiImageInfoType = {
@@ -152,7 +173,7 @@ type MultiImageInfoType = {
     redPath: string
     greenPath: string
     bluePath: string
-
+    nodata: number
 }
 
 type GridInfoType = {
@@ -249,14 +270,15 @@ const bands = computed(() => {
             }
         })
     }
+
     result.sort((a, b) => {
-        return a.localeCompare(b)
+        return parseInt(a, 10) - parseInt(b, 10)
     })
 
-    if(result.length > 0){
+    if (result.length > 0) {
         selectedBand.value = result[0]
     }
-    if(result.length > 2){
+    if (result.length > 2) {
         selectedBBand.value = result[2]
         selectedGBand.value = result[1]
         selectedRBand.value = result[0]
@@ -284,7 +306,6 @@ const selectedBBand = ref('')
 
 // Handle visualization
 const handleVisualize = () => {
-
     const { rowId, columnId, resolution } = gridData.value
     const gridInfo: GridInfoType = {
         rowId,
@@ -334,7 +355,7 @@ const handleVisualize = () => {
                 redPath: redPath,
                 greenPath: greenPath,
                 bluePath: bluePath,
-
+                nodata: sceneInfo.noData,
             })
         }
         bus.emit('cubeVisualize', rgbImageData, gridInfo, scaleRate.value, 'rgb')
@@ -350,6 +371,7 @@ const handleVisualize = () => {
                                 tifFullPath: bandImg.bucket + '/' + bandImg.tifPath,
                                 sceneId: scene.sceneId,
                                 time: scene.sceneTime,
+                                nodata: scene.noData,
                             })
                         }
                     })
@@ -371,24 +393,18 @@ const handleVisualize = () => {
 
             // Process each band (R, G, B)
             for (let scene of filteredScene) {
-                // let redPath = ''
-                // let greenPath = ''
-                // let bluePath = ''
-
-
                 let redPath = ''
                 let greenPath = ''
                 let bluePath = ''
 
-                
                 // 这里用用户选的
                 scene.images.forEach((bandImg: Image) => {
                     if (bandImg.band === selectedRBand.value) {
                         redPath = bandImg.bucket + '/' + bandImg.tifPath
-                    } 
+                    }
                     if (bandImg.band === selectedGBand.value) {
                         greenPath = bandImg.bucket + '/' + bandImg.tifPath
-                    } 
+                    }
                     if (bandImg.band === selectedBBand.value) {
                         bluePath = bandImg.bucket + '/' + bandImg.tifPath
                     }
@@ -401,6 +417,7 @@ const handleVisualize = () => {
                     redPath: redPath,
                     greenPath: greenPath,
                     bluePath: bluePath,
+                    nodata: scene.noData,
                 })
             }
             bus.emit('cubeVisualize', rgbImageData, gridInfo, scaleRate.value, 'rgb')

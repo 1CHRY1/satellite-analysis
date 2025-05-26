@@ -1,12 +1,15 @@
 <template>
     <div class="bg-amber-50 flex">
-        <MapComp class="flex-1" :style="'image'" :proj="'globe'" />
+        <MapComp class="flex-1" :style="'empty'" :proj="'globe'" />
 
         <div class="absolute right-10 top-10 flex flex-col w-fit h-fit gap-5">
             <button class="p-5  bg-amber-300" @click="localMvt">本地MVT</button>
             <button class="p-5  bg-amber-300" @click="localImg"> 本地影像瓦片</button>
             <button class="p-5  bg-amber-300" @click="localTian">内网老版天地图</button>
             <button class="p-5  bg-amber-300" @click="locate">定位</button>
+
+            <button class="p-5  bg-amber-500" @click="addFK">定位</button>
+
         </div>
 
     </div>
@@ -17,6 +20,7 @@ import { onMounted, ref, type Ref } from 'vue'
 import MapComp from '@/components/feature/map/mapComp.vue'
 import { mapManager } from '@/util/map/mapManager'
 import { StyleMap } from '@/util/map/tianMapStyle'
+import { ezStore } from '@/store'
 
 
 const localMvt = () => {
@@ -24,7 +28,7 @@ const localMvt = () => {
     mapManager.withMap((m) => {
         console.log('设置本地mvt样式')
         console.log(StyleMap.local.sources)
-        m.setStyle(StyleMap.local)
+        m.setStyle(StyleMap.localMvt)
     })
 }
 
@@ -50,36 +54,65 @@ const locate = () => {
     mapManager.withMap((m) => {
         m.flyTo({
             center: [121.42859, 28.66138],
-            zoom:  8
+            zoom: 8
         })
     })
 }
 
+const addFK = () => {
+
+    const url = ezStore.get('conf')['fk_url']
+    console.log(url)
+
+    mapManager.withMap((map) => {
+
+        map.addSource('wms-test-source', {
+            'type': 'raster',
+            'tiles': [
+                url
+            ],
+            'tileSize': 256
+        });
+        map.addLayer(
+            {
+                'id': 'wms-test-layer',
+                'type': 'raster',
+                'source': 'wms-test-source',
+                'paint': {}
+            },
+        );
+
+    })
+
+
+}
 
 
 onMounted(() => {
 
     setTimeout(() => {
-        mapManager.withMap((m) => {
+        // mapManager.withMap((m) => {
 
 
-            console.log(m)
-            // m.addSource('src', {
-            //     type: 'raster',
-            //     tiles: [
-            //         // '/hytemp/rgb/tiles/{z}/{x}/{y}.png?url_r=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B4.TIF&url_g=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B3.TIF&url_b=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B2.TIF'
-            //         '/hytemp/rgb/box/{z}/{x}/{y}.png?url_r=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B4.TIF&url_g=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B3.TIF&url_b=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B2.TIF&bbox=117,31.5,118,32&max_r=50000&max_g=50000&max_b=50000&min_r=20000&min_g=20000&min_b=20000'
-            //     ]
-            // })
-            // m.addLayer({
-            //     id: 'raster-layer',
-            //     source: 'src',
-            //     type: 'raster',
-            //     minzoom: 5,
-            //     maxzoom: 22
-            // })
 
-        })
+        // m.addSource('src', {
+        //     type: 'raster',
+        //     tiles: [
+        //         // '/hytemp/rgb/tiles/{z}/{x}/{y}.png?url_r=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B4.TIF&url_g=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B3.TIF&url_b=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B2.TIF'
+        //         '/hytemp/rgb/box/{z}/{x}/{y}.png?url_r=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B4.TIF&url_g=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B3.TIF&url_b=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B2.TIF&bbox=117,31.5,118,32&max_r=50000&max_g=50000&max_b=50000&min_r=20000&min_g=20000&min_b=20000'
+        //     ]
+        // })
+        // m.addLayer({
+        //     id: 'raster-layer',
+        //     source: 'src',
+        //     type: 'raster',
+        //     minzoom: 5,
+        //     maxzoom: 22
+        // })
+
+
+
+        // })
     }, 1);
 
 })

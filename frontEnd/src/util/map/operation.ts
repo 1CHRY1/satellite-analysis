@@ -11,7 +11,13 @@ import Antd from 'ant-design-vue'
 import { createApp, type ComponentInstance, ref, type Ref, reactive } from 'vue'
 import PopoverContent, { type GridData } from '@/components/feature/map/popoverContent.vue'
 import bus from '@/store/bus'
-import { getSceneRGBCompositeTileUrl, getGridRGBCompositeUrl } from '@/api/http/satellite-data/visualize.api'
+import {
+    getSceneRGBCompositeTileUrl,
+    getGridRGBCompositeUrl,
+    getTerrainRGBUrl,
+    getOneBandColorUrl,
+    getNoCloudUrl,
+} from '@/api/http/satellite-data/visualize.api'
 
 ////////////////////////////////////////////////////////
 /////// Map Operation //////////////////////////////////
@@ -152,6 +158,13 @@ export function draw_pointMode(): void {
     })
 }
 
+export function draw_lineMode(): void {
+    mapManager.withDraw((d) => {
+        d.deleteAll()
+        d.changeMode('draw_line_string')
+    })
+}
+
 export function getCurrentGeometry(): polygonGeometry {
     if (ezStore.get('polygonFeature')) {
         return ezStore.get('polygonFeature') as polygonGeometry
@@ -197,7 +210,6 @@ export function map_addPolygonLayer(options: {
     fillColor?: string
     fillOpacity?: number
     onClick?: (feature: GeoJSON.Feature) => void
-
 }) {
     const {
         geoJson,
@@ -391,9 +403,9 @@ type RGBTileLayerParams = {
     g_max: number
     b_min: number
     b_max: number
+    nodata?: number
 }
 export function map_addRGBImageTileLayer(param: RGBTileLayerParams, cb?: () => void) {
-
     const id = 'rgb-image-tile-layer'
     const srcId = id + '-source'
 
@@ -407,9 +419,7 @@ export function map_addRGBImageTileLayer(param: RGBTileLayerParams, cb?: () => v
 
         m.addSource(srcId, {
             type: 'raster',
-            tiles: [
-                tileUrl
-            ]
+            tiles: [tileUrl],
         })
         m.addLayer({
             id: id,
@@ -419,10 +429,8 @@ export function map_addRGBImageTileLayer(param: RGBTileLayerParams, cb?: () => v
 
         setTimeout(() => {
             cb && cb()
-        }, 1000);
-
+        }, 1000)
     })
-
 }
 export function map_destroyRGBImageTileLayer() {
     const id = 'rgb-image-tile-layer'
@@ -434,7 +442,64 @@ export function map_destroyRGBImageTileLayer() {
         }
     })
 }
-export function map_addGridRGBImageTileLayer(gridInfo: GridInfoType, param: RGBTileLayerParams, cb?: () => void) {
+
+export function map_addMultiRGBImageTileLayer(params: RGBTileLayerParams[], cb?: () => void) {
+    const prefix = 'MultiRGB'
+    let layeridStore: any = null
+    if (!ezStore.get('MultiRGBLayerIds')) ezStore.set('MultiRGBLayerIds', [])
+
+    layeridStore = ezStore.get('MultiRGBLayerIds')
+
+    map_destroyMultiRGBImageTileLayer()
+
+    mapManager.withMap((m) => {
+        for (let i = 0; i < params.length; i++) {
+            const id = prefix + uid()
+            const srcId = id + '-source'
+            if (m.getLayer(id) && m.getSource(srcId)) {
+                m.removeLayer(id)
+                m.removeSource(srcId)
+            }
+
+            layeridStore.push(id)
+
+            const tileUrl = getSceneRGBCompositeTileUrl(params[i])
+
+            m.addSource(srcId, {
+                type: 'raster',
+                tiles: [tileUrl],
+            })
+            m.addLayer({
+                id: id,
+                type: 'raster',
+                source: srcId,
+            })
+        }
+
+        setTimeout(() => {
+            cb && cb()
+        }, 3000)
+    })
+}
+export function map_destroyMultiRGBImageTileLayer() {
+    if (!ezStore.get('MultiRGBLayerIds')) return
+
+    const layeridStore = ezStore.get('MultiRGBLayerIds')
+
+    mapManager.withMap((m) => {
+        for (let i = 0; i < layeridStore.length; i++) {
+            const id = layeridStore[i]
+            m.getLayer(id) && m.removeLayer(id)
+            m.getSource(id + '-source') && m.removeSource(id + '-source')
+        }
+    })
+}
+
+export function map_addGridRGBImageTileLayer(
+    gridInfo: GridInfoType,
+    param: RGBTileLayerParams,
+    cb?: () => void,
+) {
     const prefix = '' + gridInfo.rowId + gridInfo.columnId
     const id = prefix + uid()
     const srcId = id + '-source'
@@ -445,7 +510,6 @@ export function map_addGridRGBImageTileLayer(gridInfo: GridInfoType, param: RGBT
     }
 
     mapManager.withMap((m) => {
-
         const gridImageLayerMap = ezStore.get('grid-image-layer-map')
         for (let key of gridImageLayerMap.keys()) {
             if (key.includes(prefix)) {
@@ -462,9 +526,7 @@ export function map_addGridRGBImageTileLayer(gridInfo: GridInfoType, param: RGBT
 
         m.addSource(srcId, {
             type: 'raster',
-            tiles: [
-                tileUrl
-            ]
+            tiles: [tileUrl],
         })
         m.addLayer({
             id: id,
@@ -474,22 +536,19 @@ export function map_addGridRGBImageTileLayer(gridInfo: GridInfoType, param: RGBT
 
         gridImageLayerMap.set(id, {
             id: id,
-            source: srcId
+            source: srcId,
         })
 
         setTimeout(() => {
             cb && cb()
-        }, 1000);
-
+        }, 2000)
     })
-
 }
 export function map_destroyGridRGBImageTileLayer(gridInfo: GridInfoType) {
     const prefix = '' + gridInfo.rowId + gridInfo.columnId
     const gridImageLayerMap = ezStore.get('grid-image-layer-map')
 
     mapManager.withMap((m) => {
-
         for (let key of gridImageLayerMap.keys()) {
             if (key.startsWith(prefix)) {
                 const oldId = key
@@ -500,12 +559,8 @@ export function map_destroyGridRGBImageTileLayer(gridInfo: GridInfoType) {
                 }
             }
         }
-
     })
-
-
 }
-
 
 function uid() {
     return Math.random().toString(36).substring(2, 15)
@@ -718,6 +773,7 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
         ezStore.set('grid-layer-source-id', srcId)
     })
 }
+
 export function map_addGridLayer_coverOpacity(gridGeoJson: GeoJSON.FeatureCollection): void {
     const id = 'grid-layer'
     const fillId = id + '-fill'
@@ -800,13 +856,11 @@ export function map_addGridLayer_coverOpacity(gridGeoJson: GeoJSON.FeatureCollec
 }
 
 export function map_addSceneBoxLayer(sceneBoxGeojson): void {
-
     const id = 'scene-box-layer'
     const source = id + '-source'
 
     const bbox = sceneBoxGeojson.bbox
     mapManager.withMap((m) => {
-
         m.getLayer(id) && m.removeLayer(id)
         m.getSource(source) && m.removeSource(source)
 
@@ -820,31 +874,128 @@ export function map_addSceneBoxLayer(sceneBoxGeojson): void {
             source: source,
             paint: {
                 'line-color': '#ff6506',
-                'line-width': 3
+                'line-width': 3,
             },
         })
 
         if (bbox) {
-            m.fitBounds([
-                [bbox[0], bbox[1]],
-                [bbox[2], bbox[3]],
-            ], {
-                padding: 50,
-                duration: 1000,
-            })
+            m.fitBounds(
+                [
+                    [bbox[0], bbox[1]],
+                    [bbox[2], bbox[3]],
+                ],
+                {
+                    padding: 50,
+                    duration: 1000,
+                },
+            )
         }
     })
 }
 
 export function map_destroySceneBoxLayer(): void {
-
     const id = 'scene-box-layer'
     const source = id + '-source'
     mapManager.withMap((m) => {
+        m.getLayer(id) && m.removeLayer(id)
+        m.getSource(source) && m.removeSource(source)
+    })
+}
 
+//////////// 无云一版图
+export function map_addNoCloudLayer(url: string) {
+    const id = 'no-cloud-layer'
+    const source = id + '-source'
+
+    mapManager.withMap((m) => {
         m.getLayer(id) && m.removeLayer(id)
         m.getSource(source) && m.removeSource(source)
 
+        m.addSource(source, {
+            type: 'raster',
+            tiles: [url],
+            tileSize: 256,
+            minzoom: 0,
+            maxzoom: 22,
+        })
+
+        m.addLayer({
+            id,
+            type: 'raster',
+            source: source,
+            paint: {},
+        })
+    })
+}
+export function map_destroyNoCloudLayer() {
+    const id = 'no-cloud-layer'
+    const source = id + '-source'
+    mapManager.withMap((m) => {
+        m.getLayer(id) && m.removeLayer(id)
+        m.getSource(source) && m.removeSource(source)
+    })
+}
+
+//////////// 地形
+type TerrainLayerParam = {
+    fullTifPath: string
+}
+export function map_addTerrain(param: TerrainLayerParam): void {
+    const terrainSourceUrl = getTerrainRGBUrl(param.fullTifPath)
+    console.log(terrainSourceUrl)
+    const onlySourceId = 'terrain-source'
+    mapManager.withMap((map) => {
+        map.setTerrain(null)
+        map.getSource(onlySourceId) && map.removeSource(onlySourceId)
+
+        map.addSource(onlySourceId, {
+            type: 'raster-dem',
+            tiles: [terrainSourceUrl],
+            tileSize: 256,
+            // 'maxzoom': 14
+        })
+        map.setTerrain({ source: onlySourceId, exaggeration: 4.0 })
+    })
+}
+export function map_destroyTerrain() {
+    mapManager.withMap(async (map) => {
+        map.setTerrain(null)
+        map.removeSource('terrain-rgb')
+    })
+}
+
+//////////// 单波段彩色产品 （形变速率）
+type OneBandColorLayerParam = {
+    fullTifPath: string
+}
+export function map_addOneBandColorLayer(param: OneBandColorLayerParam): void {
+    const sourceUrl = getOneBandColorUrl(param.fullTifPath)
+    const onlyId = 'one-band-color-layer'
+    const onlySrcId = onlyId + '-source'
+
+    mapManager.withMap((map) => {
+        map.getLayer(onlyId) && map.removeLayer(onlyId)
+        map.getSource(onlySrcId) && map.removeSource(onlySrcId)
+
+        map.addSource(onlySrcId, {
+            type: 'raster',
+            tiles: [sourceUrl],
+        })
+
+        map.addLayer({
+            id: onlyId,
+            type: 'raster',
+            source: onlySrcId,
+        })
+    })
+}
+
+export function map_destroyOneBandColorLayer() {
+    const onlyId = 'one-band-color-layer'
+    const onlySrcId = onlyId + '-source'
+    mapManager.withMap((map) => {
+        map.getLayer(onlyId) && map.removeLayer(onlyId)
+        map.getSource(onlySrcId) && map.removeSource(onlySrcId)
     })
 }
 

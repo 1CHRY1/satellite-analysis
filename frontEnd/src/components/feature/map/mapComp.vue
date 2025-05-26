@@ -5,8 +5,15 @@
             <button @click="handleFitView" class="map-button">🌏</button>
             <button @click="handleZoomIn" class="map-button">➕</button>
             <button @click="handleZoomOut" class="map-button">➖</button>
+            <button @click="handleRightRotate" class="map-button">↩️</button>
+            <button @click="handleLeftRotate" class="map-button">↪️</button>
+            <button @click="localTian" class="map-button text-gray-900!">矢量底图</button>
+            <button @click="localImg" class="map-button text-gray-900!">影像底图</button>
         </div>
-        <CubeTimeline class="absolute bottom-10 right-1/2 flex gap-2 translate-x-1/2" v-model="cubeTimelineShow">
+        <CubeTimeline
+            class="absolute right-1/2 bottom-10 flex translate-x-1/2 gap-2"
+            v-model="cubeTimelineShow"
+        >
         </CubeTimeline>
     </div>
 </template>
@@ -14,13 +21,14 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, type PropType, ref } from 'vue'
 import * as MapOperation from '@/util/map/operation'
+import { mapManager } from '@/util/map/mapManager'
+import { StyleMap } from '@/util/map/tianMapStyle'
 import CubeTimeline from './cubeTimeline.vue'
 import bus from '@/store/bus'
 
-
 const props = defineProps({
     style: {
-        type: String as PropType<'vector' | 'image' | 'local'>,
+        type: String as PropType<'vector' | 'image' | 'local' | 'empty'>,
         default: 'local',
     },
     proj: {
@@ -29,8 +37,8 @@ const props = defineProps({
     },
     isPicking: {
         type: Boolean,
-        default: false
-    }
+        default: false,
+    },
 })
 
 const cubeTimelineShow = ref(false)
@@ -45,8 +53,39 @@ const handleZoomOut = () => {
     MapOperation.map_zoomOut()
 }
 
+const localTian = () => {
+    mapManager.withMap((m) => {
+        console.log('设置内网vec样式')
+        console.log(StyleMap.local.sources)
+        m.setStyle(StyleMap.localVec)
+    })
+}
+const localImg = () => {
+    mapManager.withMap((m) => {
+        console.log('设置本地img样式')
+        console.log(StyleMap.local.sources)
+        m.setStyle(StyleMap.localImg)
+    })
+}
+
+const handleLeftRotate = () => {
+    mapManager.withMap((m) => {
+        const bare = m.getBearing()
+        m.rotateTo(bare + 90, { duration: 2000 })
+    })
+}
+
+const handleRightRotate = () => {
+
+    mapManager.withMap((m) => {
+        // m.rotateTo(90, { duration: 5000 })
+        const bare = m.getBearing()
+        m.rotateTo(bare - 90, { duration: 2000 })
+    })
+}
+
 onMounted(() => {
-    console.log(props, 1111);
+    console.log(props, 1111)
 
     MapOperation.map_initiliaze('mapContainer', props.style, props.proj)
 
@@ -61,13 +100,17 @@ onMounted(() => {
     //     MapOperation.map_removeGridPreviewLayer('all')
     // })
 
-    bus.on('cleanAllLayer', ()=>{
+    bus.on('cleanAllLayer', () => {
         MapOperation.map_destroyGridLayer()
         MapOperation.map_destroyRGBImageTileLayer()
         MapOperation.map_destroyImagePreviewLayer()
         MapOperation.map_destroySceneBoxLayer()
         MapOperation.map_destroyImagePolygon()
+        MapOperation.map_destroyMultiRGBImageTileLayer()
+        MapOperation.map_destroyNoCloudLayer()
+        MapOperation.map_destroyTerrain()
     })
+ 
 })
 
 onUnmounted(() => {
@@ -93,14 +136,12 @@ onUnmounted(() => {
     border-color: transparent;
 }
 
-:deep(.mapboxgl-popup-close-button){
+:deep(.mapboxgl-popup-close-button) {
     font-size: 20px;
     margin-top: 12px;
 }
 
-
-:deep(.vdr-container.active){
+:deep(.vdr-container.active) {
     border: none;
 }
-
 </style>

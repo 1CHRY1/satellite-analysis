@@ -189,45 +189,73 @@
                     </div>
                     <div class="section-content">
                         <div class="config-container">
-                            <!-- 三级筛选 -->
-                            <div class="config-item">
+                            <div class="config-item" v-for="([label, value], index) in resolutionType" :key="value">
                                 <div class="config-label relative">
                                     <BoltIcon :size="16" class="config-icon" />
-                                    <span>数据来源</span>
+                                    <span>{{ label }}分辨率影像集</span>
                                 </div>
-                                <div class="config-control gap-6">
-                                    <button v-for="label in buttonGroups[0]" :key="label"
-                                        @click="(toggleButton(label), filterByTags())"
-                                        class="cursor-pointer rounded-lg border px-4 py-1 transition-all duration-200 active:scale-90"
-                                        :class="[
-                                            isActive(label)
-                                                ? 'border-[#2bb2ff] bg-[#0d2e4b] text-white'
-                                                : 'border-[#475569] bg-transparent text-[#94a3b8] hover:border-[#2bb2ff] hover:bg-[#1e293b]',
-                                        ]">
-                                        {{ label }}
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="config-item">
-                                <div class="config-label relative">
-                                    <BoltIcon :size="16" class="config-icon" />
-                                    <span>传感器类型</span>
-                                </div>
-                                <div class="config-control gap-4">
-                                    <button v-for="label in buttonGroups[1]" :key="label"
-                                        @click="(toggleButton(label), filterByTags())"
-                                        class="cursor-pointer rounded-lg border px-4 py-1 transition-all duration-200 active:scale-90"
-                                        :class="[
-                                            isActive(label)
-                                                ? 'border-[#2bb2ff] bg-[#0d2e4b] text-white'
-                                                : 'border-[#475569] bg-transparent text-[#94a3b8] hover:border-[#2bb2ff] hover:bg-[#1e293b]',
-                                        ]">
-                                        {{ label }}
-                                    </button>
+                                <div class="config-control flex w-full flex-col gap-4">
+                                    <div class="result-info-container w-full">
+                                        <div class="result-info-item">
+                                            <div class="result-info-icon">
+                                                <CloudIcon :size="16" />
+                                            </div>
+                                            <div class="result-info-content">
+                                                <div class="result-info-label">包含</div>
+                                                <div class="result-info-value">
+                                                    {{ getSceneCountByResolution(value) }}景影像
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="result-info-item">
+                                            <div class="result-info-icon">
+                                                <CloudIcon :size="16" />
+                                            </div>
+                                            <div class="result-info-content">
+                                                <div class="result-info-label">影像覆盖率</div>
+                                                <div class="result-info-value">
+                                                    {{
+                                                        allSensorsItems[label]
+                                                            ? (
+                                                                (allSensorsItems[label] * 100) /
+                                                                allGridCount
+                                                            ).toFixed(2) + '%'
+                                                            : '待计算'
+                                                    }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div v-if="Object.keys(classifiedScenes).length > 0" class="!w-full">
+                                        <label class="mr-2 text-white">选择影像产品：</label>
+                                        <select
+                                            class="max-h-[600px] w-[calc(100%-130px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
+                                            v-model="resolutionPlatformSensor[label]">
+                                            <option disabled selected value="">请选择</option>
+                                            <!-- <option :value="'all'" class="truncate">全选</option> -->
+                                            <option v-for="platformName in classifiedScenes[
+                                                value + 'm'
+                                            ]" :value="platformName" :key="platformName" class="truncate">
+                                                {{ platformName }}
+                                            </option>
+                                        </select>
+                                        <div class="flex flex-row items-center">
+                                            <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
+                                                @click="handleShowResolutionSensorImage(label)"
+                                                :disabled="!resolutionPlatformSensor[label]">
+                                                影像可视化
+                                            </a-button>
+                                            <a-tooltip>
+                                                <template #title>清空影像图层</template>
+                                                <Trash2Icon :size="18" class="mt-4! ml-4! cursor-pointer"
+                                                    @click="clearAllShowingSensor" />
+                                            </a-tooltip>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <!-- 检索后的统计信息 -->
-                            <div class="config-item">
+                            <!-- <div class="config-item">
                                 <div class="config-label relative">
                                     <BoltIcon :size="16" class="config-icon" />
                                     <span>统计信息</span>
@@ -287,7 +315,6 @@
                                                 </option>
                                             </select>
                                         </div>
-                                        <!-- Band Stretch Inputs -->
                                         <div v-show="sensorItem.selectedSceneInfo" class="mt-4">
                                             <div class="mr-1 grid grid-cols-[1fr_2fr]">
                                                 <span class="text-white">亮度拉伸:</span>
@@ -296,9 +323,7 @@
                                                     @afterChange="onAfterScaleRateChange" />
                                             </div>
                                             <div>
-                                                <!-- <div class="bg-[#1b42528a] cursor-pointer text-white border border-[#2c3e50] rounded-lg px-4 py-1 hover:bg-[#1a2b4c] hover:border-[#2bb2ff] transition-all duration-200 active:scale-95 text-center mt-4"
-                                                    @click="handleShowImage(sensorItem)">
-                                                    影像可视化</div> -->
+                                        
                                                 <a-button class="custom-button w-full!" :loading="sensorItem.loading"
                                                     @click="handleShowImage(sensorItem)">
                                                     影像可视化
@@ -306,74 +331,9 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <!-- <div class="result-info-container">
-                                        <div class="result-info-item">
-                                            <div class="result-info-icon">
-                                                <MapIcon :size="16" />
-                                            </div>
-                                            <div class="result-info-content">
-                                                <div class="result-info-label">行政区划编码</div>
-                                                <div class="result-info-value">{{ displayLabel }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="result-info-item">
-                                            <div class="result-info-icon">
-                                                <MapIcon :size="16" />
-                                            </div>
-                                            <div class="result-info-content">
-                                                <div class="result-info-label">格网分辨率</div>
-                                                <div class="result-info-value">{{ selectedRadius }}km
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="result-info-item">
-                                            <div class="result-info-icon">
-                                                <ImageIcon :size="16" />
-                                            </div>
-                                            <div class="result-info-content">
-                                                <div class="result-info-label">云量</div>
-                                                <div class="result-info-value"> {{ tileMergeConfig.cloudRange[0] }}% ~
-                                                    {{ tileMergeConfig.cloudRange[1] }}%
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="result-info-item">
-                                            <div class="result-info-icon">
-                                                <CalendarIcon :size="16" />
-                                            </div>
-                                            <div class="result-info-content">
-                                                <div class="result-info-label">涵盖时间范围</div>
-                                                <div class="result-info-value date-range">
-                                                    <div class="date-item">{{ formatTime(tileMergeConfig.dateRange[0],
-                                                        'day')
-                                                        }}~
-                                                        {{ formatTime(tileMergeConfig.dateRange[1], 'day')
-                                                        }}</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="result-info-item">
-                                            <div class="result-info-icon">
-                                                <CloudIcon :size="16" />
-                                            </div>
-                                            <div class="result-info-content">
-                                                <div class="result-info-label">当前已检索到</div>
-                                                <div class="result-info-value">{{ filteredImages.length }}景影像</div>
-                                            </div>
-                                        </div>
-                                        <div class="result-info-item">
-                                            <div class="result-info-icon">
-                                                <CloudIcon :size="16" />
-                                            </div>
-                                            <div class="result-info-content">
-                                                <div class="result-info-label">影像覆盖率</div>
-                                                <div class="result-info-value">{{ coverageRate }}</div>
-                                            </div>
-                                        </div>
-                                    </div> -->
+                             
                                 </div>
-                            </div>
+                            </div> -->
                         </div>
                     </div>
                 </section>
@@ -395,12 +355,13 @@ import {
     getRegionPosition,
     getSceneByConfig,
     getSceneGrids,
+    getCoverRegionSensorScenes,
 } from '@/api/http/satellite-data'
 import * as MapOperation from '@/util/map/operation'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import { ezStore } from '@/store'
-import { getSceneGeojson, getTifbandMinMax } from '@/api/http/satellite-data/visualize.api'
-
+import { getSceneGeojson } from '@/api/http/satellite-data/visualize.api'
+import { getRGBTileLayerParamFromSceneObject } from '@/util/visualizeHelper/index'
 import {
     DatabaseIcon,
     MapPinIcon,
@@ -431,7 +392,26 @@ const emit = defineEmits(['submitConfig'])
  * 行政区划选取
  */
 
-const radiusOptions = [2, 5, 10, 15, 20, 25, 30, 40, 50, 80, 100, 150]
+const radiusOptions = [1, 2, 5, 10, 15, 20, 25, 30, 40, 50, 80, 100, 150]
+
+type ResolutionItem = [label: string, value: number]
+
+const resolutionType: ResolutionItem[] = [
+    ['亚米', 1],
+    ['2米', 2],
+    ['10米', 10],
+    ['30米', 30],
+    ['其他', 500],
+]
+// 绑定每个select的选中项
+const resolutionPlatformSensor = reactive<any>({
+    亚米: '',
+    '2米': '',
+    '10米': '',
+    '30米': '',
+    其他: '',
+})
+
 const selectedRadius = ref(20)
 const tileMergeConfig = ref({
     useLatestTime: false,
@@ -535,10 +515,12 @@ const filterByCloudAndDate = async () => {
             tags: [image.tags.source, image.tags.production, image.tags.category],
         }
     })
+    console.log('allScenes', allScenes.value)
 
     // 记录所有景中含有的“传感器+分辨率字段”
-    allSensorsItems.value = getSensorsAndResolutions(allScenes.value)
+    // allSensorsItems.value = getSensorsAndResolutions(allScenes.value)
 
+    // 请求每个格子的景sceneGridsRes， 计算覆盖率，添加覆盖率格网图层，以及图层右键交互事件
     await makeFullSceneGrid()
 
     if (allScenes.value.length === 0) {
@@ -548,10 +530,17 @@ const filterByCloudAndDate = async () => {
     }
 
     // 根据所有的传感器+分辨率，找出每个格网上，在特定传感器+分辨率情况下，有多少景影像
-    allSensorsItems.value = countSensorsCoverage(
-        allSensorsItems.value,
-        ezStore.get('sceneGridsRes'),
-    )
+    // allSensorsItems.value = countSensorsCoverage(
+    //     allSensorsItems.value,
+    //     ezStore.get('sceneGridsRes'),
+    // )
+
+    // 计算各种分辨率下的格网覆盖情况
+    allSensorsItems.value = countResolutionCoverage(ezStore.get('sceneGridsRes'))
+
+    // 获取各分辨率拥有多少种传感器，用来渲染下拉框
+    classifyScenesByResolution()
+
     // 刚拿到的时候根据默认tags先分类一次
     filterByTags()
 
@@ -559,7 +548,87 @@ const filterByCloudAndDate = async () => {
     filterByCloudAndDateLoading.value = false
 }
 
-// 数各种传感器分别覆盖了多少格网
+// 数各种分辨率分别覆盖了多少格网
+const countResolutionCoverage = (allGridScene: any[]) => {
+    console.log(allGridScene)
+    const result = {
+        亚米: 0,
+        '2米': 0,
+        '10米': 0,
+        '30米': 0,
+        其他: 0,
+    }
+
+    allGridScene.forEach((grid) => {
+        const seen = new Set<string>() // 记录当前 grid 中已统计过的 resolution 分类
+
+        grid.scenes?.forEach((scene: any) => {
+            const resStr = scene.resolution?.toString().replace('m', '')
+            const res = parseFloat(resStr)
+
+            let key
+
+            if (res <= 1) {
+                key = '亚米'
+            } else if (res === 2) {
+                key = '2米'
+            } else if (res === 10) {
+                key = '10米'
+            } else if (res === 30) {
+                key = '30米'
+            } else {
+                key = '其他'
+            }
+
+            if (!seen.has(key)) {
+                seen.add(key)
+                result[key] += 1
+            }
+        })
+    })
+
+    return result
+}
+
+// 数各种分辨率的数据集分别覆盖了多少格网
+const classifiedScenes = ref({})
+const classifyScenesByResolution = () => {
+    const result = {
+        '1m': [],
+        '2m': [],
+        '10m': [],
+        '30m': [],
+        '500m': [],
+    }
+
+    const addToCategory = (key: string, platform: string) => {
+        if (!result[key].includes(platform)) {
+            result[key].push(platform)
+        }
+    }
+
+    for (const scene of allScenes.value) {
+        const resStr = scene.resolution?.toString().replace('m', '')
+        const res = parseFloat(resStr)
+        const platform = scene.platformName
+
+        if (!platform || isNaN(res)) continue
+
+        if (res <= 1) {
+            addToCategory('1m', platform)
+        } else if (res === 2) {
+            addToCategory('2m', platform)
+        } else if (res === 10) {
+            addToCategory('10m', platform)
+        } else if (res === 30) {
+            addToCategory('30m', platform)
+        } else {
+            addToCategory('500m', platform)
+        }
+    }
+    classifiedScenes.value = result
+}
+
 const countSensorsCoverage = (
     allSensorsItems: { key: string; tags: string[] }[],
     allGridScene: any[],
@@ -652,7 +721,7 @@ const makeFullSceneGrid = async () => {
     ezStore.set('sceneTagMap', sceneTagMap)
 
     console.log(scenes)
-
+    const sceneNodataMap = ezStore.get('sceneNodataMap') as Map<string, number>
     // Plus sceneGridsRes
     for (let i = 0; i < sceneGridsRes.length; i++) {
         let grid = sceneGridsRes[i]
@@ -670,6 +739,8 @@ const makeFullSceneGrid = async () => {
                 if (grid[tag] === undefined) console.log('未知tag: ', tag)
                 grid[tag] = grid[tag] + 1
             }
+            // 在这记录一下景的nodata
+            sceneNodataMap.set(scene.sceneId, scene.noData)
         }
     }
     ezStore.set('sceneGridsRes', sceneGridsRes)
@@ -770,10 +841,36 @@ const filterByTags = async () => {
         }
     })
     filteredSensorsItems.value = res
+}
 
-    // if (!verifyFilterByTags()) {
-    //     return
-    // }
+// 根据分辨率获得影像总数的方法
+const getSceneCountByResolution = (resolution: number) => {
+    let count = 0
+    if (resolution === 1) {
+        allScenes.value.forEach((scene: any) => {
+            let data = parseFloat(scene.resolution)
+            if (data <= 1) {
+                count++
+            }
+        })
+        return count
+    } else if (resolution === 500) {
+        allScenes.value.forEach((scene: any) => {
+            let data = parseFloat(scene.resolution)
+            if (data > 1 && data != 2 && data != 10 && data != 30) {
+                count++
+            }
+        })
+        return count
+    } else {
+        allScenes.value.forEach((scene: any) => {
+            let data = parseFloat(scene.resolution)
+            if (data === resolution) {
+                count++
+            }
+        })
+        return count
+    }
 }
 
 // 根据tags返回类型
@@ -832,81 +929,153 @@ const showImageBySensorAndSelect = async (image: any, imageName: string) => {
 const clearAllShowingSensor = () => {
     MapOperation.map_destroyRGBImageTileLayer()
     MapOperation.map_destroySceneBoxLayer()
+    MapOperation.map_destroyMultiRGBImageTileLayer()
 }
-const handleShowImage = async (sensorItem) => {
-    const stopLoading = message.loading('正在加载影像')
-    let redPath, greenPath, bluePath
-    const sceneInfo = sensorItem.selectedSceneInfo
-    console.log(sceneInfo.bandMapper)
-    sensorItem.loading = true
-    for (let bandImg of sceneInfo.images) {
-        // 后端返回的BandMapper如果是单波段的话，Red Green 和 Blue相同
-        if (sceneInfo.bandMapper.Red === bandImg.band) {
-            redPath = bandImg.bucket + '/' + bandImg.tifPath
-        }
-        if (sceneInfo.bandMapper.Green === bandImg.band) {
-            greenPath = bandImg.bucket + '/' + bandImg.tifPath
-        }
-        if (sceneInfo.bandMapper.Blue === bandImg.band) {
-            bluePath = bandImg.bucket + '/' + bandImg.tifPath
-        }
-    }
 
-    const cache = ezStore.get('statisticCache')
-    const promises: any = []
-    let [min_r, max_r, min_g, max_g, min_b, max_b] = [0, 0, 0, 0, 0, 0]
-
-    if (cache.get(redPath) && cache.get(greenPath) && cache.get(bluePath)) {
-        console.log('cache hit!')
-            ;[min_r, max_r] = cache.get(redPath)
-            ;[min_g, max_g] = cache.get(greenPath)
-            ;[min_b, max_b] = cache.get(bluePath)
-    } else {
-        promises.push(
-            getTifbandMinMax(redPath),
-            getTifbandMinMax(greenPath),
-            getTifbandMinMax(bluePath),
-        )
-        await Promise.all(promises).then((values) => {
-            min_r = values[0][0]
-            max_r = values[0][1]
-            min_g = values[1][0]
-            max_g = values[1][1]
-            min_b = values[2][0]
-            max_b = values[2][1]
+// 工具函数： 获取platformName名对应的所有景
+const getSceneIdsByPlatformName = (platformName: string, label: string) => {
+    console.log('所有景', allScenes.value)
+    console.log('选中的平台名', platformName)
+    let scenes = allScenes.value
+    if (label === '亚米') {
+        scenes = allScenes.value.filter((scene) => {
+            if (scene.tags.includes('ard')) {
+                return scene
+            }
         })
+    }
+    console.log(scenes, 'allImages');
 
-        cache.set(redPath, [min_r, max_r])
-        cache.set(greenPath, [min_g, max_g])
-        cache.set(bluePath, [min_b, max_b])
+    if (platformName === 'all') return scenes.map((item) => item.sceneId)
+
+    const res: any[] = []
+    scenes.forEach((item) => {
+        if (item.platformName == platformName) {
+            res.push(item.sceneId)
+        }
+    })
+    console.log(res, 'images');
+
+    return res
+}
+
+// 工具函数： platformName -> sensorName, 接口需要sensorName
+const getSensorNamebyPlatformName = (platformName: string) => {
+    // if (platformName === 'all') return 'all'
+    // return platformName.split('_')[1]
+    // 先把全选去了，接口没留全选逻辑
+    let sensorName = ''
+    for (let item of allScenes.value) {
+        if (item.platformName === platformName) {
+            sensorName = item.sensorName
+            break
+        }
+    }
+    return sensorName
+}
+
+const handleShowResolutionSensorImage = async (label: string) => {
+    const selectPlatformName = resolutionPlatformSensor[label]
+    const sceneIds = getSceneIdsByPlatformName(selectPlatformName, label)
+    console.log('选中的景ids', sceneIds)
+    const sensorName = getSensorNamebyPlatformName(selectPlatformName)
+
+    const params = {
+        sensorName,
+        sceneIds,
+        regionId: displayLabel.value,
     }
 
-    console.log(min_r, max_r, min_g, max_g, min_b, max_b)
-    console.log(sensorItem.scaleRate)
+    const stopLoading = message.loading('正在加载影像...')
 
-    const scaleRate = 1.0 - sensorItem.scaleRate / 100
-    // 基于 scale rate 进行拉伸
-    showingImageStrech.r_min = Math.round(min_r)
-    showingImageStrech.r_max = Math.round(min_r + (max_r - min_r) * scaleRate)
-    showingImageStrech.g_min = Math.round(min_g)
-    showingImageStrech.g_max = Math.round(min_g + (max_g - min_g) * scaleRate)
-    showingImageStrech.b_min = Math.round(min_b)
-    showingImageStrech.b_max = Math.round(min_b + (max_b - min_b) * scaleRate)
+    const coverScenes = await getCoverRegionSensorScenes(params)
 
-    // 添加图层, 如果存在会先删除再添加
-    MapOperation.map_addRGBImageTileLayer(
-        {
-            redPath,
-            greenPath,
-            bluePath,
-            ...showingImageStrech,
-        },
-        stopLoading,
-    )
+    console.log('覆盖的景', coverScenes)
 
-    setTimeout(() => {
-        sensorItem.loading = false
-    }, 1000)
+    const promises: Promise<any>[] = []
+
+    for (let scene of coverScenes) {
+        promises.push(getRGBTileLayerParamFromSceneObject(scene))
+    }
+
+    const rgbTileLayerParamList = await Promise.all(promises)
+
+    console.log(rgbTileLayerParamList)
+
+    MapOperation.map_addMultiRGBImageTileLayer(rgbTileLayerParamList, stopLoading)
+
+    // let redPath, greenPath, bluePath
+    // const sceneInfo = sensorItem.selectedSceneInfo
+    // console.log(sceneInfo.bandMapper)
+    // sensorItem.loading = true
+    // for (let bandImg of sceneInfo.images) {
+    //     // 后端返回的BandMapper如果是单波段的话，Red Green 和 Blue相同
+    //     if (sceneInfo.bandMapper.Red === bandImg.band) {
+    //         redPath = bandImg.bucket + '/' + bandImg.tifPath
+    //     }
+    //     if (sceneInfo.bandMapper.Green === bandImg.band) {
+    //         greenPath = bandImg.bucket + '/' + bandImg.tifPath
+    //     }
+    //     if (sceneInfo.bandMapper.Blue === bandImg.band) {
+    //         bluePath = bandImg.bucket + '/' + bandImg.tifPath
+    //     }
+    // }
+
+    // const cache = ezStore.get('statisticCache')
+    // const promises: any = []
+    // let [min_r, max_r, min_g, max_g, min_b, max_b] = [0, 0, 0, 0, 0, 0]
+
+    // if (cache.get(redPath) && cache.get(greenPath) && cache.get(bluePath)) {
+    //     console.log('cache hit!')
+    //         ;[min_r, max_r] = cache.get(redPath)
+    //         ;[min_g, max_g] = cache.get(greenPath)
+    //         ;[min_b, max_b] = cache.get(bluePath)
+    // } else {
+    //     promises.push(
+    //         getTifbandMinMax(redPath),
+    //         getTifbandMinMax(greenPath),
+    //         getTifbandMinMax(bluePath),
+    //     )
+    //     await Promise.all(promises).then((values) => {
+    //         min_r = values[0][0]
+    //         max_r = values[0][1]
+    //         min_g = values[1][0]
+    //         max_g = values[1][1]
+    //         min_b = values[2][0]
+    //         max_b = values[2][1]
+    //     })
+
+    //     cache.set(redPath, [min_r, max_r])
+    //     cache.set(greenPath, [min_g, max_g])
+    //     cache.set(bluePath, [min_b, max_b])
+    // }
+
+    // console.log(min_r, max_r, min_g, max_g, min_b, max_b)
+    // console.log(sensorItem.scaleRate)
+
+    // const scaleRate = 1.0 - sensorItem.scaleRate / 100
+    // // 基于 scale rate 进行拉伸
+    // showingImageStrech.r_min = Math.round(min_r)
+    // showingImageStrech.r_max = Math.round(min_r + (max_r - min_r) * scaleRate)
+    // showingImageStrech.g_min = Math.round(min_g)
+    // showingImageStrech.g_max = Math.round(min_g + (max_g - min_g) * scaleRate)
+    // showingImageStrech.b_min = Math.round(min_b)
+    // showingImageStrech.b_max = Math.round(min_b + (max_b - min_b) * scaleRate)
+
+    // // 添加图层, 如果存在会先删除再添加
+    // MapOperation.map_addRGBImageTileLayer(
+    //     {
+    //         redPath,
+    //         greenPath,
+    //         bluePath,
+    //         ...showingImageStrech,
+    //     },
+    //     stopLoading,
+    // )
+
+    // setTimeout(() => {
+    //     sensorItem.loading = false
+    // }, 1000)
 }
 
 // 基于覆盖度返回opacity
@@ -944,7 +1113,18 @@ const verifyFilterByTags = () => {
 
 onMounted(() => {
     if (!ezStore.get('statisticCache')) ezStore.set('statisticCache', new Map())
+    if (!ezStore.get('sceneNodataMap')) ezStore.set('sceneNodataMap', new Map())
 })
 </script>
 
-<style scoped src="./tabStyle.css"></style>
+<style scoped src="./tabStyle.css">
+:deep(button.ant-picker-year-btn) {
+    pointer-events: none;
+    color: #aaa;
+}
+
+:deep(button.ant-picker-month-btn) {
+    pointer-events: none;
+    color: #aaa;
+}
+</style>

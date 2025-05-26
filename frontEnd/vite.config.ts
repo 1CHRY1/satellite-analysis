@@ -36,31 +36,32 @@ export default defineConfig({
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/websocket/, ''),
             },
+            '/tiler': {
+                target: 'http://223.2.32.166:31800',
+                // target: 'http://localhost:8000',
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/tiler/, ''),
+            },
+            '/hytemp': {
+                target: 'http://localhost:8000',
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/hytemp/, ''),
+            },
             '/basemap': {
                 target: 'http://172.31.13.21:5001/tiles',
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/basemap/, ''),
             },
-            '/basemap2': {
+            '/mvtbasemap': {
                 target: 'http://172.31.13.21:5002/tiles',
                 changeOrigin: true,
-                rewrite: (path) => path.replace(/^\/basemap2/, ''),
+                rewrite: (path) => path.replace(/^\/mvtbasemap/, ''),
             },
-            '/tiler':{
-                target: 'http://223.2.32.166:31800',
-                changeOrigin: true,
-                rewrite: (path) => path.replace(/^\/tiler/, ''),
-            },
-            '/hytemp':{
-                target: 'http://localhost:8000',
-                changeOrigin: true,
-                rewrite: (path) => path.replace(/^\/hytemp/, ''),
-            },
-            '/proxymap':{
+            '/proxymap': {
                 target: 'http://localhost:5003',
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/proxymap/, ''),
-            }
+            },
         },
     },
 })

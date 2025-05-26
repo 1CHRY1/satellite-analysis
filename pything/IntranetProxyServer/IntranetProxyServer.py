@@ -1,9 +1,10 @@
 from flask import Flask, Response, abort
-import requests
+import urllib.request
+from urllib.error import HTTPError, URLError
 
 app = Flask(__name__)
 
-# 你的真实瓦片服务 URL
+# 真实瓦片服务 URL
 VEC_TILE_SERVER_URL = "http://172.16.4.53/vec_w_2000"
 TXT_TILE_SERVER_URL = "http://172.16.4.53/cva_w_2000"
 
@@ -20,14 +21,20 @@ def proxy_tile(z, x, y, base_url):
         custom_y = y - 2 ** (z - 2)
         real_url = f"{base_url}/L{z}/R{custom_y}/C{x}.png"
         print('Request::', real_url)
-        response = requests.get(real_url, timeout=10)
-        if response.status_code == 200:
-            return Response(response.content, content_type='image/png')
-        else:
-            abort(response.status_code)
+
+        with urllib.request.urlopen(real_url, timeout=10) as response:
+            content = response.read()
+            return Response(content, content_type='image/png')
+
+    except HTTPError as e:
+        print(f"HTTP Error: {e.code} - {e.reason}")
+        abort(e.code)
+    except URLError as e:
+        print(f"URL Error: {e.reason}")
+        abort(502)
     except Exception as e:
-        print(f"Error fetching tile: {e}")
+        print(f"Unexpected error: {e}")
         abort(500)
 
 if __name__ == '__main__':
-    app.run(port=5003)
+    app.run(host='0.0.0.0', port=5003)

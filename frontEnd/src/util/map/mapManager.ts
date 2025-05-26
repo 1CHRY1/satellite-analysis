@@ -47,6 +47,33 @@ class MapManager {
                             credentials: 'include',
                         }
                     }
+                    if (url.includes('bbox=') && url.includes('temporaryMap')) {
+                        const match = url.match(
+                            /bbox=([0-9\.\-]+),([0-9\.\-]+),([0-9\.\-]+),([0-9\.\-]+)/,
+                        )
+                        if (match) {
+                            const [, minX, minY, maxX, maxY] = match.map(Number)
+                            console.log(minX, minY, maxX, maxY, '3857')
+
+                            // Web Mercator to WGS84
+                            const project = (x, y) => {
+                                const lon = (x * 180) / 20037508.34
+                                const lat =
+                                    (Math.atan(Math.exp((y * Math.PI) / 20037508.34)) * 360) /
+                                        Math.PI -
+                                    90
+                                return [lon, lat]
+                            }
+
+                            const [lon1, lat1] = project(minX, minY)
+                            const [lon2, lat2] = project(maxX, maxY)
+
+                            const wgs84bbox = `${lon1},${lat1},${lon2},${lat2}`
+                            // url = url.replace(/{bbox-epsg-3857}/g, wgs84bbox)
+                            url = url.replace(/bbox=[^&]+/, `bbox=${wgs84bbox}`)
+                        }
+                    }
+
                     return {
                         url,
                     }
@@ -106,6 +133,11 @@ class MapManager {
             } else if (feature.geometry.type === 'Polygon') {
                 ezStore.set('polygonFeature', feature.geometry)
                 useGridStore().setPolygon(feature.geometry as polygonGeometry)
+            } else if (feature.geometry.type === 'LineString') {
+                // 这里是新增的逻辑
+                // 坐标是 [lng, lat][] 格式，我们通常按 [lat, lng] 存
+                const latlngLine = feature.geometry.coordinates
+                useGridStore().setPickedLine(latlngLine)
             }
         })
     }
@@ -144,6 +176,17 @@ class MapManager {
         this.initPromise = null
         this.map = null
     }
+}
+
+// 辅助函数：获取瓦片的 EPSG:3857 坐标范围
+function getTileBBox(x, y, z) {
+    const tileSize = 20037508.34
+    const res = tileSize / Math.pow(2, z)
+    const minx = x * tileSize - tileSize / 2
+    const miny = y * tileSize - tileSize / 2
+    const maxx = (x + 1) * tileSize - tileSize / 2
+    const maxy = (y + 1) * tileSize - tileSize / 2
+    return [minx, miny, maxx, maxy]
 }
 
 /////// 单例 //////////////////////////////////

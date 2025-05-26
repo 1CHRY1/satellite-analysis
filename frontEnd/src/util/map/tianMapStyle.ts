@@ -1,5 +1,6 @@
 import { type StyleSpecification } from 'mapbox-gl'
 import { ezStore } from '@/store'
+import { version } from 'vue'
 
 const TianMapkey = '51d72ac2491e6e4228bdc5dd2e0a61b2'
 const TianImageStyle = {
@@ -321,16 +322,7 @@ const TianVectorStyle = {
     ],
 }
 
-
-
-
-
-
-
-
-
 //################################################################
-
 
 // 内网影像风格底图
 const LocalImageBaseMapStyle = {
@@ -568,9 +560,12 @@ const LocalImageBaseMapStyle = {
     sources: {
         'Local-Imagelayer-Source': {
             type: 'raster',
-            tiles: [
-                ezStore.get('conf')['intranet_img_url']
-            ],
+            tiles: [ezStore.get('conf')['intranet_img_url']],
+            tileSize: 256,
+        },
+        'Local-Interal-Source': {
+            type: 'raster',
+            tiles: [ezStore.get('conf')['fk_url']],
             tileSize: 256,
         },
     },
@@ -579,6 +574,11 @@ const LocalImageBaseMapStyle = {
             id: 'Local-Image-Layer',
             type: 'raster',
             source: 'Local-Imagelayer-Source',
+        },
+        {
+            id: 'Local-Interal-Layer',
+            type: 'raster',
+            source: 'Local-Interal-Source',
         },
     ],
     glyphs: '/glyphs/mapbox/{fontstack}/{range}.pbf',
@@ -819,17 +819,12 @@ const LocalVectorBaseMapStyle = {
     sources: {
         'Intralnet-Vectorlayer-Source': {
             type: 'raster',
-            tiles: [
-                ezStore.get('conf')['intranet_vec_url']
-
-            ],
+            tiles: [ezStore.get('conf')['intranet_vec_url']],
             tileSize: 256,
         },
         'Intralnet-Vectorlable-Source': {
             type: 'raster',
-            tiles: [
-                ezStore.get('conf')['intranet_cva_url']
-            ],
+            tiles: [ezStore.get('conf')['intranet_cva_url']],
             tileSize: 256,
         },
     },
@@ -870,16 +865,13 @@ const LocalVectorBaseMapStyle = {
     glyphs: '/glyphs/mapbox/{fontstack}/{range}.pbf',
 }
 
-
 // 我们自己的矢量瓦片底图
 const OurVectorBaseMapStyle = {
     version: 8,
     sources: {
         offlineMapTiles: {
             type: 'vector',
-            tiles: [
-                ezStore.get('conf')['intranet_mvt_url'],
-            ],
+            tiles: [ezStore.get('conf')['intranet_mvt_url']],
             minzoom: 0,
             maxzoom: 22,
         },
@@ -958,10 +950,14 @@ const OurVectorBaseMapStyle = {
     glyphs: '/glyphs/mapbox/{fontstack}/{range}.pbf',
 }
 
+const empty = {
+    version: 8,
+    sources: {},
+    layers: [],
+    glyphs: '/glyphs/mapbox/{fontstack}/{range}.pbf',
+}
 
-
-
-export type Style = 'image' | 'vector' | 'local'
+export type Style = 'image' | 'vector' | 'local' | 'empty'
 
 export const StyleMap = {
     image: TianImageStyle as unknown as StyleSpecification,
@@ -971,4 +967,5 @@ export const StyleMap = {
     localVec: LocalVectorBaseMapStyle as unknown as StyleSpecification,
     localImg: LocalImageBaseMapStyle as unknown as StyleSpecification,
     localMvt: OurVectorBaseMapStyle as unknown as StyleSpecification,
+    empty: empty as unknown as StyleSpecification,
 }
