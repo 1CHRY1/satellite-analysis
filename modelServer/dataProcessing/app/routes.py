@@ -66,28 +66,6 @@ def merge_tifs_v2():
     task_id = scheduler.start_task('merge_tif_v2', data)
     return api_response(data={'taskId': task_id})
 
-
-@bp.route(config.API_TIF_calc_qa, methods=['POST'])
-def calc_qa():
-    scheduler = init_scheduler()
-    data = request.json
-    task_id = scheduler.start_task('calc_qa', data)
-    return api_response(data={'taskId': task_id})
-
-@bp.route(config.API_TIF_calc_qa_simple, methods=['POST'])
-def calc_qa_simple():
-    scheduler = init_scheduler()
-    data = request.json
-    task_id = scheduler.start_task('calc_qa_simple', data)
-    return api_response(data={'taskId': task_id})
-
-@bp.route(config.API_TIF_calc_qa_middle, methods=['POST'])
-def calc_qa_middle():
-    scheduler = init_scheduler()
-    data = request.json
-    task_id = scheduler.start_task('calc_qa_middle', data)
-    return api_response(data={'taskId': task_id})
-
 @bp.route(config.API_TIF_calc_no_cloud, methods=['POST'])
 def calc_no_cloud():
     scheduler = init_scheduler()
