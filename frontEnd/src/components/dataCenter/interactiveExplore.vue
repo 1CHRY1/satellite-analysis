@@ -17,9 +17,12 @@
                                     <span>行政区</span>
                                 </div>
                                 <div class="config-control justify-center">
-                                    <RegionSelects v-model="region" :placeholder="['选择省份', '选择城市', '选择区县']"
+                                    <RegionSelects
+                                        v-model="region"
+                                        :placeholder="['选择省份', '选择城市', '选择区县']"
                                         class="flex gap-2"
-                                        select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
+                                        select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none"
+                                    />
                                 </div>
                             </div>
                             <div class="config-item">
@@ -30,10 +33,16 @@
                                 <div class="config-control flex-col !items-start">
                                     <div>
                                         格网分辨率选择：
-                                        <select v-model="selectedRadius"
-                                            class="w-40 appearance-none rounded-lg border border-[#2c3e50] bg-[#0d1526] px-4 py-2 pr-8 text-white transition-all duration-200 hover:border-[#206d93] focus:border-[#3b82f6] focus:outline-none">
-                                            <option v-for="option in radiusOptions" :key="option" :value="option"
-                                                class="bg-[#0d1526] text-white">
+                                        <select
+                                            v-model="selectedRadius"
+                                            class="w-40 appearance-none rounded-lg border border-[#2c3e50] bg-[#0d1526] px-4 py-2 pr-8 text-white transition-all duration-200 hover:border-[#206d93] focus:border-[#3b82f6] focus:outline-none"
+                                        >
+                                            <option
+                                                v-for="option in radiusOptions"
+                                                :key="option"
+                                                :value="option"
+                                                class="bg-[#0d1526] text-white"
+                                            >
                                                 {{ option }}km
                                             </option>
                                         </select>
@@ -44,8 +53,10 @@
                                     </div>
                                 </div>
                             </div>
-                            <button @click="getAllGrid"
-                                class="cursor-pointer rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95">
+                            <button
+                                @click="getAllGrid"
+                                class="cursor-pointer rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
+                            >
                                 获取格网
                             </button>
                         </div>
@@ -66,8 +77,13 @@
                                     <span>时间范围</span>
                                 </div>
                                 <div class="config-control">
-                                    <a-range-picker class="custom-date-picker" v-model:value="tileMergeConfig.dateRange"
-                                        picker="day" :allow-clear="false" :placeholder="['开始日期', '结束日期']" />
+                                    <a-range-picker
+                                        class="custom-date-picker"
+                                        v-model:value="tileMergeConfig.dateRange"
+                                        picker="day"
+                                        :allow-clear="false"
+                                        :placeholder="['开始日期', '结束日期']"
+                                    />
                                 </div>
                             </div>
                             <!-- <div class="config-item">
@@ -91,12 +107,15 @@
                                     </div>
                                 </div>
                             </div> -->
-                            <button @click="filterByCloudAndDate" :disabled="filterByCloudAndDateLoading"
+                            <button
+                                @click="filterByCloudAndDate"
+                                :disabled="filterByCloudAndDateLoading"
                                 class="flex justify-center rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
                                 :class="{
                                     'cursor-not-allowed': filterByCloudAndDateLoading,
                                     'cursor-pointer': !filterByCloudAndDateLoading,
-                                }">
+                                }"
+                            >
                                 <span>影像筛选 </span>
                                 <Loader v-if="filterByCloudAndDateLoading" class="ml-2" />
                             </button>
@@ -180,7 +199,10 @@
                             <DatabaseIcon :size="18" />
                         </div>
                         <h2 class="section-title">交互探索</h2>
-                        <div class="section-icon absolute right-0 cursor-pointer" @click="clearAllShowingSensor">
+                        <div
+                            class="section-icon absolute right-0 cursor-pointer"
+                            @click="clearAllShowingSensor"
+                        >
                             <a-tooltip>
                                 <template #title>清空影像图层</template>
                                 <Trash2Icon :size="18" />
@@ -189,7 +211,11 @@
                     </div>
                     <div class="section-content">
                         <div class="config-container">
-                            <div class="config-item" v-for="([label, value], index) in resolutionType" :key="value">
+                            <div
+                                class="config-item"
+                                v-for="([label, value], index) in resolutionType"
+                                :key="value"
+                            >
                                 <div class="config-label relative">
                                     <BoltIcon :size="16" class="config-icon" />
                                     <span>{{ label }}分辨率影像集</span>
@@ -217,38 +243,52 @@
                                                     {{
                                                         allSensorsItems[label]
                                                             ? (
-                                                                (allSensorsItems[label] * 100) /
-                                                                allGridCount
-                                                            ).toFixed(2) + '%'
+                                                                  (allSensorsItems[label] * 100) /
+                                                                  allGridCount
+                                                              ).toFixed(2) + '%'
                                                             : '待计算'
                                                     }}
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div v-if="Object.keys(classifiedScenes).length > 0" class="!w-full">
+                                    <div
+                                        v-if="Object.keys(classifiedScenes).length > 0"
+                                        class="!w-full"
+                                    >
                                         <label class="mr-2 text-white">选择影像产品：</label>
                                         <select
                                             class="max-h-[600px] w-[calc(100%-130px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
-                                            v-model="resolutionPlatformSensor[label]">
+                                            v-model="resolutionPlatformSensor[label]"
+                                        >
                                             <option disabled selected value="">请选择</option>
                                             <!-- <option :value="'all'" class="truncate">全选</option> -->
-                                            <option v-for="platformName in classifiedScenes[
-                                                value + 'm'
-                                            ]" :value="platformName" :key="platformName" class="truncate">
+                                            <option
+                                                v-for="platformName in classifiedScenes[
+                                                    value + 'm'
+                                                ]"
+                                                :value="platformName"
+                                                :key="platformName"
+                                                class="truncate"
+                                            >
                                                 {{ platformName }}
                                             </option>
                                         </select>
                                         <div class="flex flex-row items-center">
-                                            <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
+                                            <a-button
+                                                class="custom-button mt-4! w-[calc(100%-50px)]!"
                                                 @click="handleShowResolutionSensorImage(label)"
-                                                :disabled="!resolutionPlatformSensor[label]">
+                                                :disabled="!resolutionPlatformSensor[label]"
+                                            >
                                                 影像可视化
                                             </a-button>
                                             <a-tooltip>
                                                 <template #title>清空影像图层</template>
-                                                <Trash2Icon :size="18" class="mt-4! ml-4! cursor-pointer"
-                                                    @click="clearAllShowingSensor" />
+                                                <Trash2Icon
+                                                    :size="18"
+                                                    class="mt-4! ml-4! cursor-pointer"
+                                                    @click="clearAllShowingSensor"
+                                                />
                                             </a-tooltip>
                                         </div>
                                     </div>
@@ -944,7 +984,7 @@ const getSceneIdsByPlatformName = (platformName: string, label: string) => {
             }
         })
     }
-    console.log(scenes, 'allImages');
+    console.log(scenes, 'allImages')
 
     if (platformName === 'all') return scenes.map((item) => item.sceneId)
 
@@ -954,7 +994,7 @@ const getSceneIdsByPlatformName = (platformName: string, label: string) => {
             res.push(item.sceneId)
         }
     })
-    console.log(res, 'images');
+    console.log(res, 'images')
 
     return res
 }
@@ -978,7 +1018,10 @@ const handleShowResolutionSensorImage = async (label: string) => {
     const selectPlatformName = resolutionPlatformSensor[label]
     const sceneIds = getSceneIdsByPlatformName(selectPlatformName, label)
     console.log('选中的景ids', sceneIds)
+    console.log('当前所有的景', allScenes.value)
     const sensorName = getSensorNamebyPlatformName(selectPlatformName)
+
+    console.log('匹配的sensorName', sensorName)
 
     const params = {
         sensorName,
@@ -990,7 +1033,7 @@ const handleShowResolutionSensorImage = async (label: string) => {
 
     const coverScenes = await getCoverRegionSensorScenes(params)
 
-    console.log('覆盖的景', coverScenes)
+    console.log('覆盖的景们', coverScenes)
 
     const promises: Promise<any>[] = []
 
@@ -1000,82 +1043,9 @@ const handleShowResolutionSensorImage = async (label: string) => {
 
     const rgbTileLayerParamList = await Promise.all(promises)
 
-    console.log(rgbTileLayerParamList)
+    console.log('可视化参数们', rgbTileLayerParamList)
 
     MapOperation.map_addMultiRGBImageTileLayer(rgbTileLayerParamList, stopLoading)
-
-    // let redPath, greenPath, bluePath
-    // const sceneInfo = sensorItem.selectedSceneInfo
-    // console.log(sceneInfo.bandMapper)
-    // sensorItem.loading = true
-    // for (let bandImg of sceneInfo.images) {
-    //     // 后端返回的BandMapper如果是单波段的话，Red Green 和 Blue相同
-    //     if (sceneInfo.bandMapper.Red === bandImg.band) {
-    //         redPath = bandImg.bucket + '/' + bandImg.tifPath
-    //     }
-    //     if (sceneInfo.bandMapper.Green === bandImg.band) {
-    //         greenPath = bandImg.bucket + '/' + bandImg.tifPath
-    //     }
-    //     if (sceneInfo.bandMapper.Blue === bandImg.band) {
-    //         bluePath = bandImg.bucket + '/' + bandImg.tifPath
-    //     }
-    // }
-
-    // const cache = ezStore.get('statisticCache')
-    // const promises: any = []
-    // let [min_r, max_r, min_g, max_g, min_b, max_b] = [0, 0, 0, 0, 0, 0]
-
-    // if (cache.get(redPath) && cache.get(greenPath) && cache.get(bluePath)) {
-    //     console.log('cache hit!')
-    //         ;[min_r, max_r] = cache.get(redPath)
-    //         ;[min_g, max_g] = cache.get(greenPath)
-    //         ;[min_b, max_b] = cache.get(bluePath)
-    // } else {
-    //     promises.push(
-    //         getTifbandMinMax(redPath),
-    //         getTifbandMinMax(greenPath),
-    //         getTifbandMinMax(bluePath),
-    //     )
-    //     await Promise.all(promises).then((values) => {
-    //         min_r = values[0][0]
-    //         max_r = values[0][1]
-    //         min_g = values[1][0]
-    //         max_g = values[1][1]
-    //         min_b = values[2][0]
-    //         max_b = values[2][1]
-    //     })
-
-    //     cache.set(redPath, [min_r, max_r])
-    //     cache.set(greenPath, [min_g, max_g])
-    //     cache.set(bluePath, [min_b, max_b])
-    // }
-
-    // console.log(min_r, max_r, min_g, max_g, min_b, max_b)
-    // console.log(sensorItem.scaleRate)
-
-    // const scaleRate = 1.0 - sensorItem.scaleRate / 100
-    // // 基于 scale rate 进行拉伸
-    // showingImageStrech.r_min = Math.round(min_r)
-    // showingImageStrech.r_max = Math.round(min_r + (max_r - min_r) * scaleRate)
-    // showingImageStrech.g_min = Math.round(min_g)
-    // showingImageStrech.g_max = Math.round(min_g + (max_g - min_g) * scaleRate)
-    // showingImageStrech.b_min = Math.round(min_b)
-    // showingImageStrech.b_max = Math.round(min_b + (max_b - min_b) * scaleRate)
-
-    // // 添加图层, 如果存在会先删除再添加
-    // MapOperation.map_addRGBImageTileLayer(
-    //     {
-    //         redPath,
-    //         greenPath,
-    //         bluePath,
-    //         ...showingImageStrech,
-    //     },
-    //     stopLoading,
-    // )
-
-    // setTimeout(() => {
-    //     sensorItem.loading = false
-    // }, 1000)
 }
 
 // 基于覆盖度返回opacity
