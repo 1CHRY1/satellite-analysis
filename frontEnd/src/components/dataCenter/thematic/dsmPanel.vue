@@ -16,6 +16,9 @@
                     </div>
                     <div class="config-control justify-center">
                         <div class="w-full space-y-2">
+                            <div v-if="allDsmImages.length === 0" class="flex justify-center my-6">
+                                <SquareDashedMousePointer class="mr-2" />该区域暂无DSM影像
+                            </div>
                             <div v-for="(image, index) in allDsmImages" :key="index" @click="showTif(image)"
                                 class="flex flex-col border border-[#247699] bg-[#0d1526] text-white px-4 py-2 rounded-lg transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c]">
                                 <div class="font-semibold text-base">{{ image.sceneName }}</div>
@@ -78,6 +81,9 @@
         </div>
         <div class="section-content">
             <div class="config-container">
+                <div v-if="analysisData.length === 0" class="flex justify-center my-6">
+                    <SquareDashedMousePointer class="mr-2" />暂无计算结果
+                </div>
                 <div v-for="(item, index) in analysisData" :key="index" class="config-item">
                     <div class="config-label relative">
                         <MapIcon :size="16" class="config-icon" />
@@ -117,6 +123,7 @@ import {
     Earth,
     MapPinIcon,
     CalendarIcon,
+    SquareDashedMousePointer,
     UploadCloudIcon,
     RefreshCwIcon,
     HexagonIcon,
