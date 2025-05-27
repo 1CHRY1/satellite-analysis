@@ -41,6 +41,9 @@ def process_grid(grid, scenes, grid_helper, scene_band_paths, minio_endpoint, te
     need_fill_mask = None
     first_shape_set = False
     for scene in scenes:
+
+        nodata = scene.get('noData')
+        
         print('处理景', scene.get('sceneId'))
         if not is_grid_covered(scene):
             continue
@@ -54,7 +57,7 @@ def process_grid(grid, scenes, grid_helper, scene_band_paths, minio_endpoint, te
             continue
 
         full_url = minio_endpoint + "/" + scene.get('bucket') + '/' + cloud_band_path
-        with COGReader(full_url) as ctx:
+        with COGReader(full_url, options={'nodata':int(nodata)}) as ctx:
             # img_data = ctx.part(bbox=bbox, indexes=[1])
             # image_data = img_data.data[0]
             # nodata_mask = img_data.mask
@@ -121,8 +124,8 @@ def process_grid(grid, scenes, grid_helper, scene_band_paths, minio_endpoint, te
 
                 def read_band(band_path):
                     full_path = minio_endpoint + "/" + scene['bucket'] + "/" + band_path
-                    with COGReader(full_path) as reader:
-                        return reader.part(bbox=bbox, indexes=[1]).data[0]
+                    with COGReader(full_path, options={'nodata': int(nodata)}) as reader:
+                        return reader.part(bbox=bbox, indexes=[1], height=target_H, width=target_W).data[0]
 
                 R = read_band(paths['red'])
                 G = read_band(paths['green'])
@@ -274,10 +277,10 @@ class calc_no_cloud(Task):
             temp_dir_path=temp_dir_path
         )
 
-        process_func(grids[1])
+        # process_func(grids[1])
         
         with Pool(processes=cpu_count()) as pool:
-            results = pool.map(process_func, [grids[1]])
+            results = pool.map(process_func, grids)
 
 
         ## Step 3 : Results Uploading and Statistic #######################
@@ -295,10 +298,11 @@ class calc_no_cloud(Task):
     
         upload_results.sort(key=lambda x: (x["grid"][0], x["grid"][1]))
         
-        print(upload_results)
+        # print(upload_results)
+        print('ok')
 
-        if os.path.exists(temp_dir_path):
-            shutil.rmtree(temp_dir_path) 
+        # if os.path.exists(temp_dir_path):
+        #     shutil.rmtree(temp_dir_path) 
 
         return {
             "grids": upload_results,
