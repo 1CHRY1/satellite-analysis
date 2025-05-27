@@ -2,6 +2,7 @@ package nnu.mnr.satellite.controller.geo;
 
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.service.geo.VectorTileService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,7 +20,8 @@ import java.io.IOException;
  */
 
 @RestController
-@RequestMapping("/api/v1/geo")
+@RequestMapping("/api/v1/geo/vector/tiles")
+@Slf4j
 public class VectorTileController {
 
     private final VectorTileService vectorTileService;
@@ -28,13 +30,14 @@ public class VectorTileController {
         this.vectorTileService = vectorTileService;
     }
 
-    @GetMapping("/vector/tiles/{layerName}/{z}/{x}/{y}")
+    @GetMapping("/{layerName}/{z}/{x}/{y}")
     public void getGeoVectorTiles(@PathVariable String layerName, @PathVariable int z, @PathVariable int x, @PathVariable int y, HttpServletResponse response) {
         byte[] tile = vectorTileService.getGeoVecterTiles(layerName, z, x, y);
+        log.info("responsed request" + "vector/tiles/" + layerName + "/" + z + "/" + x + "/" + y);
         sendVectorTileResponse(tile, response);
     }
 
-    @GetMapping("/vector/tiles/{layerName}/{param}/{value}/{z}/{x}/{y}")
+    @GetMapping("/{layerName}/{param}/{value}/{z}/{x}/{y}")
     public void getGeoVectorTilesByParam(@PathVariable String param, @PathVariable String value, @PathVariable String layerName, @PathVariable int z, @PathVariable int x, @PathVariable int y, HttpServletResponse response) {
         byte[] tile = vectorTileService.getGeoVecterTilesByParam(param, value, layerName, z, x, y);
         sendVectorTileResponse(tile, response);
