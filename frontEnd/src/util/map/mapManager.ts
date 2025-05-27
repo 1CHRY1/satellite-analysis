@@ -75,7 +75,6 @@ class MapManager {
                     }
 
                     const token = localStorage.getItem('token')
-                    console.log(token)
                     return {
                         url: url,
                         headers: { Authorization: `Bearer ${token}` },
