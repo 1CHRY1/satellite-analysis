@@ -105,12 +105,12 @@ const displayLabel = computed(() => {
 })
 
 const optionalTasks = [
-    { value: 'DEM分析', label: 'DEM分析', disabled: true },
+    { value: 'DEM分析', label: 'DEM分析', disabled: false },
     { value: 'DSM分析', label: 'DSM分析', disabled: false },
     { value: '红绿立体', label: '红绿立体', disabled: false },
     { value: '形变速率', label: '形变速率', disabled: false },
-    { value: 'NDVI时序计算', label: 'NDVI时序计算', disabled: true },
-    { value: '光谱分析', label: '光谱分析', disabled: true },
+    { value: 'NDVI时序计算', label: 'NDVI时序计算', disabled: false },
+    { value: '光谱分析', label: '光谱分析', disabled: false },
 ]
 
 const selectedTask = ref(optionalTasks[1].value)

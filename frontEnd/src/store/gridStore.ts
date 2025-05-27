@@ -54,5 +54,9 @@ export const useGridStore = defineStore('gridStore', {
         setPickedLine(line: number[][]) {
             this._line = line
         },
+        clearPicked() {
+            this._point = []
+            this._line = []
+        },
     },
 })

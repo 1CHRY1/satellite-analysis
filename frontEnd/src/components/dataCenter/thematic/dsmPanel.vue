@@ -12,7 +12,7 @@
                 <div class="config-item">
                     <div class="config-label relative">
                         <MapIcon :size="16" class="config-icon" />
-                        <span>DSM影像</span>
+                        <span>DSM影像集</span>
                     </div>
                     <div class="config-control justify-center">
                         <div class="w-full space-y-2">
@@ -77,7 +77,7 @@
             <div class="section-icon">
                 <ChartColumn :size="18" />
             </div>
-            <h2 class="section-title" @click="test">计算结果</h2>
+            <h2 class="section-title">计算结果</h2>
         </div>
         <div class="section-content">
             <div class="config-container">
@@ -110,7 +110,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch, watchEffect, type ComponentPublicInstance, type ComputedRef, type Ref } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch, watchEffect, type ComponentPublicInstance, type ComputedRef, type Ref } from 'vue';
 import { getRasterScenesDes, getRasterPoints, getBoundaryBySceneId, getCaseStatus, getCaseResult, getRasterLine, getDescriptionBySceneId } from '@/api/http/satellite-data';
 import * as MapOperation from '@/util/map/operation'
 import { useGridStore, ezStore } from '@/store'
@@ -142,10 +142,7 @@ import { ElMessage } from 'element-plus';
 
 
 
-const test = () => {
-    console.log(pickedLine.value);
 
-}
 
 /**
  * type
@@ -195,9 +192,11 @@ const toggleMode = (mode: 'point' | 'line' | 'false') => {
     // activeMode.value = activeMode.value === mode ? null : mode
     activeMode.value = mode
     if (mode === 'point') {
-        startDrawPoint()
+        MapOperation.draw_pointMode()
+        ElMessage.info('请在地图上绘制研究点')
     } else if (mode === 'line') {
-        startDrawLine()
+        MapOperation.draw_lineMode()
+        ElMessage.info('请在地图上绘制研究线')
     }
 }
 
@@ -210,13 +209,7 @@ const showTif = async (image) => {
     })
 
 }
-const startDrawPoint = () => {
-    MapOperation.draw_pointMode()
-}
 
-const startDrawLine = () => {
-    MapOperation.draw_lineMode()
-}
 const calTask: Ref<any> = ref({
     calState: 'start',
     taskId: ''
@@ -509,6 +502,9 @@ onMounted(async () => {
             }
         })
     })
+})
+onUnmounted(() => {
+    gridStore.clearPicked()
 })
 </script>
 
