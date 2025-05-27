@@ -32,15 +32,20 @@ def process_grid(grid, scenes, grid_helper, scene_band_paths, minio_endpoint, te
         return polygon.contains(bbox_polygon)
 
     bbox = grid_bbox()
+    target_H = None
+    target_W = None
+
     img_R = None
     img_G = None
     img_B = None
     need_fill_mask = None
     first_shape_set = False
     for scene in scenes:
+        print('处理景', scene.get('sceneId'))
         if not is_grid_covered(scene):
             continue
 
+        # Step 0.0 云量
         cloud_band_path = scene.get('cloudPath')
         
         if not cloud_band_path:
@@ -49,13 +54,34 @@ def process_grid(grid, scenes, grid_helper, scene_band_paths, minio_endpoint, te
             continue
 
         full_url = minio_endpoint + "/" + scene.get('bucket') + '/' + cloud_band_path
-
-        print('11')
-
         with COGReader(full_url) as ctx:
-            img_data = ctx.part(bbox=bbox, indexes=[1])
-            image_data = img_data.data[0]
-            nodata_mask = img_data.mask
+            # img_data = ctx.part(bbox=bbox, indexes=[1])
+            # image_data = img_data.data[0]
+            # nodata_mask = img_data.mask
+
+            # Step 0.9 首次读取时，确定目标尺寸， 不然part的结果会出现一个像素的偏差，导致后续的mask计算错误
+            if not first_shape_set:
+                # 尝试读取一次以获取默认的输出尺寸
+                temp_img_data = ctx.part(bbox=bbox, indexes=[1])
+                target_H, target_W = temp_img_data.data[0].shape
+                print(f"确定目标尺寸为: H={target_H}, W={target_W}")
+
+                img_R = np.full((target_H, target_W), 0, dtype=np.uint16)
+                img_G = np.full((target_H, target_W), 0, dtype=np.uint16)
+                img_B = np.full((target_H, target_W), 0, dtype=np.uint16)
+                need_fill_mask = np.ones((target_H, target_W), dtype=bool) # all true，全都待标记
+                first_shape_set = True
+            
+            # Step 1 基于Width Height读取云波段，获取云掩膜
+            try:
+                # 这里指定宽度高度，默认resampling_method Nearest，其实就做了重采样
+                img_data = ctx.part(bbox=bbox, indexes=[1], height=target_H, width=target_W)
+                image_data = img_data.data[0]
+                nodata_mask = img_data.mask # 这里，值为true的是有值，值为false的是无值， 这里是无效值掩膜
+                print(f"读取 {scene.get('sceneId')} 的grid区域成功")
+            except Exception as e:
+                print(f"读取 {scene.get('sceneId')} 云波段失败，尺寸不匹配或I/O错误: {e}")
+                continue # 跳过当前场景，继续下一个
 
             sensorName = scene.get('sensorName')
 
@@ -66,30 +92,25 @@ def process_grid(grid, scenes, grid_helper, scene_band_paths, minio_endpoint, te
             elif "GF" in sensorName:
                 cloud_mask = (image_data == 2)
             else:
-                print("不支持的传感器")
+                print("不支持的传感器：" , sensorName)
                 continue
 
             # !!! valid_mask <--> 无云 且 非nodata 
-            try:
-                valid_mask = (~cloud_mask) & (nodata_mask.astype(bool))
-            except Exception as e:
-                print("RUNNING ERROR 1 "+e)
-            print('22')
+            valid_mask = (~cloud_mask) & (nodata_mask.astype(bool))
+            print(f"读取 {scene.get('sceneId')} 的最终有效区域mask成功")
+            
+
             if not first_shape_set:
                 img_shape = image_data.shape
                 H, W = img_shape
-                img_R = np.full((H, W), 0, dtype=np.uint16)
-                img_G = np.full((H, W), 0, dtype=np.uint16)
-                img_B = np.full((H, W), 0, dtype=np.uint16)
+                img_R = np.full((H, W), 0, dtype=np.uint16) # 初始化 0
+                img_G = np.full((H, W), 0, dtype=np.uint16) # 初始化 0
+                img_B = np.full((H, W), 0, dtype=np.uint16) # 初始化 0
                 need_fill_mask = np.ones((H, W), dtype=bool) # all true，全都待标记
                 first_shape_set = True
 
-            # !!! fill_mask <--> 需要填充的区域 & 该景有效区域
-            try:
-                fill_mask = need_fill_mask & valid_mask
-            except Exception as e:
-                print("RUNNING ERROR 2 "+e)
-
+            # !!! fill_mask <--> 需要填充的区域 & 该景有效区域 <--> 该景可以填充格网的区域
+            fill_mask = need_fill_mask & valid_mask
 
             if np.any(fill_mask): # 只要有任意一个是1 ，那就可以填充
                 # 读取 RGB 波段
@@ -106,32 +127,34 @@ def process_grid(grid, scenes, grid_helper, scene_band_paths, minio_endpoint, te
                 R = read_band(paths['red'])
                 G = read_band(paths['green'])
                 B = read_band(paths['blue'])
-                print('33')
+                print(f"读取 {scene.get('sceneId')} 的原始RGB成功")
+                
 
-                try:
-                    img_R[fill_mask] = R[fill_mask]
-                    img_G[fill_mask] = G[fill_mask]
-                    img_B[fill_mask] = B[fill_mask]
-                except Exception as e:
-                    print("RUNNING ERROR 3 "+e)
-                # img_R[fill_mask] = R[fill_mask]
-                # img_G[fill_mask] = G[fill_mask]
-                # img_B[fill_mask] = B[fill_mask]
+                img_R[fill_mask] = R[fill_mask] # numpy的批量赋值填充
+                print(f" {scene.get('sceneId')}  R部分填充")
+
+                img_G[fill_mask] = G[fill_mask] 
+                print(f" {scene.get('sceneId')}  G部分填充")
+
+                img_B[fill_mask] = B[fill_mask]
+                print(f" {scene.get('sceneId')}  B部分填充")
 
                 need_fill_mask[fill_mask] = False # 填过了，标记False
 
             if not np.any(need_fill_mask):
                 print("填充完毕")
-                break  # 已经全填完了
+                break
+
+        print('ENDING ----- ', scene.get('sceneId'))
 
     # 检查是否有填充结果
     if not first_shape_set or np.all(need_fill_mask):
-        print("未被填满， 可能由于缺乏cloudPath,",grid_x,grid_y)
+        print("未被填满，可能空间上不包含，可能缺乏cloudpath，可能无云区域确实无法填满", grid_x, grid_y)
         return None  # 没有可用数据
         
     first_shape_set = False
     
-    # 读取RGB并保存为临时tif
+    # 读取RGB并保存tif
     img = np.stack([img_R, img_G, img_B])
     
     grid_statistic = {
@@ -250,31 +273,34 @@ class calc_no_cloud(Task):
             minio_endpoint=MINIO_ENDPOINT,
             temp_dir_path=temp_dir_path
         )
-        process_func(grids[2])
+
+        process_func(grids[1])
         
-        # with Pool(processes=cpu_count()) as pool:
-        #     results = pool.map(process_func, grids)
+        with Pool(processes=cpu_count()) as pool:
+            results = pool.map(process_func, [grids[1]])
 
 
-        # ## Step 3 : Results Uploading and Statistic #######################
-        # upload_results = []
-        # stats = do_statistic(results)
+        ## Step 3 : Results Uploading and Statistic #######################
+        upload_results = []
+        stats = do_statistic(results)
         
-        # with ThreadPoolExecutor(max_workers=8) as executor:
-        #     futures = [
-        #         executor.submit(upload_one, tif_path, grid_x, grid_y, self.task_id)
-        #         for result in results if result is not None
-        #         for tif_path, grid_x, grid_y, grid_statistic in [result]
-        #     ]
-        #     for future in as_completed(futures):
-        #         upload_results.append(future.result())
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            futures = [
+                executor.submit(upload_one, tif_path, grid_x, grid_y, self.task_id)
+                for result in results if result is not None
+                for tif_path, grid_x, grid_y, grid_statistic in [result]
+            ]
+            for future in as_completed(futures):
+                upload_results.append(future.result())
     
-        # upload_results.sort(key=lambda x: (x["grid"][0], x["grid"][1]))
+        upload_results.sort(key=lambda x: (x["grid"][0], x["grid"][1]))
+        
+        print(upload_results)
 
-        # if os.path.exists(temp_dir_path):
-        #     shutil.rmtree(temp_dir_path) 
+        if os.path.exists(temp_dir_path):
+            shutil.rmtree(temp_dir_path) 
 
-        # return {
-        #     "grids": upload_results,
-        #     "statistic": stats
-        # }
+        return {
+            "grids": upload_results,
+            "statistic": stats
+        }

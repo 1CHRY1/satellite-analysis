@@ -53,7 +53,7 @@ class MapManager {
                         )
                         if (match) {
                             const [, minX, minY, maxX, maxY] = match.map(Number)
-                            console.log(minX, minY, maxX, maxY, '3857')
+                            // console.log(minX, minY, maxX, maxY, '3857')
 
                             // Web Mercator to WGS84
                             const project = (x, y) => {
