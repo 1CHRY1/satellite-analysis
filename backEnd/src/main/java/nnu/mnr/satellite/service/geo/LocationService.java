@@ -23,4 +23,8 @@ public class LocationService {
     public List<GeoLocation> searchByNameContaining(String keyword) {
         return locationRepo.searchByName(keyword);
     }
+
+    public GeoLocation searchById(String id) {
+        return locationRepo.searchById(id);
+    }
 }

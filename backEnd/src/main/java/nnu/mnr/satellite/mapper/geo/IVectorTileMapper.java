@@ -23,4 +23,6 @@ public interface IVectorTileMapper extends BaseMapper<Object> {
 
     Object getVectorTile(TileBox tileBox);
 
+    Object getVectorTileByParam(TileBox tileBox, String param, String value);
+
 }

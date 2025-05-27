@@ -42,4 +42,9 @@ public class LocationRepoImpl implements LocationRepo{
         return hits.get().map(SearchHit::getContent).toList();
     }
 
+    @Override
+    public GeoLocation searchById(String id) {
+        return elasticsearchOperations.get(id, GeoLocation.class);
+    }
+
 }

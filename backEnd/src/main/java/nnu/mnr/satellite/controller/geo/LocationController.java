@@ -32,4 +32,9 @@ public class LocationController {
         return ResponseEntity.ok(locationService.searchByNameContaining(keyword));
     }
 
+    @GetMapping("/id/{id}")
+    public ResponseEntity<GeoLocation> searchById(@PathVariable String id) {
+        return ResponseEntity.ok(locationService.searchById(id));
+    }
+
 }

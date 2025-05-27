@@ -132,6 +132,46 @@ public class TileCalculateUtil {
         return grids;
     }
 
+    public static GridBoundaryVO getTileBoundaryByIdsAndResolution(Integer rowId, Integer columnId, Integer resolution) throws IOException {
+        // 参数校验
+        if (rowId == null || columnId == null || resolution == null || resolution <= 0) {
+            return null;
+        }
+
+        int[] gridNums = getGridNumFromTileResolution(resolution);
+        int gridNumX = gridNums[0];
+        int gridNumY = gridNums[1];
+
+        if (rowId < 0 || rowId >= gridNumX || columnId < 0 || columnId >= gridNumY) {
+            return null;
+        }
+
+        List<Double> topLeft = grid2lnglat(rowId, columnId, gridNumX, gridNumY);         // 左上角 (row, col)
+        List<Double> topRight = grid2lnglat(rowId, columnId + 1, gridNumX, gridNumY);     // 右上角 (row, col+1)
+        List<Double> bottomLeft = grid2lnglat(rowId + 1, columnId, gridNumX, gridNumY);   // 左下角 (row+1, col)
+
+        double minLng = topLeft.get(0);
+        double maxLat = topLeft.get(1);
+        double maxLng = topRight.get(0);
+        double minLat = bottomLeft.get(1);
+
+        GeometryFactory geometryFactory = new GeometryFactory();
+        Coordinate[] coordinates = new Coordinate[]{
+                new Coordinate(minLng, minLat),     // 左下
+                new Coordinate(minLng, maxLat),     // 左上
+                new Coordinate(maxLng, maxLat),     // 右上
+                new Coordinate(maxLng, minLat),     // 右下
+                new Coordinate(minLng, minLat)      // 闭合
+        };
+        Polygon tilePolygon = geometryFactory.createPolygon(coordinates);
+        return GridBoundaryVO.builder()
+                .rowId(rowId)
+                .columnId(columnId)
+                .resolution(resolution)
+                .boundary(GeometryUtil.geometry2Geojson(tilePolygon))
+                .build();
+    }
+
     public static Geometry getTileGeomByIdsAndResolution(Integer rowId, Integer columnId, Integer resolution) {
         int[] gridNums = getGridNumFromTileResolution(resolution);
         Integer gridNumX = gridNums[0];
@@ -213,5 +253,19 @@ public class TileCalculateUtil {
         int gridNumY = (int) Math.ceil(180.0 / degreePerGridY);
 
         return new int[]{gridNumX, gridNumY};
+    }
+
+    public static int[] getGridXYByLngLatAndResolution(double lng, double lat, int resolution) {
+        int[] gridNum = getGridNumFromTileResolution(resolution);
+        int gridNumX = gridNum[0];
+        int gridNumY = gridNum[1];
+
+        int gridX = (int) Math.floor((lng + 180.0) / 360.0 * gridNumX);
+        int gridY = (int) Math.floor((90.0 - lat) / 180.0 * gridNumY);
+
+        gridX = Math.max(0, Math.min(gridNumX - 1, gridX));
+        gridY = Math.max(0, Math.min(gridNumY - 1, gridY));
+
+        return new int[]{gridX, gridY};
     }
 }

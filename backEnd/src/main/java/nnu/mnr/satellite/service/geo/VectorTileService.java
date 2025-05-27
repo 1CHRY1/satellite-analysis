@@ -32,4 +32,11 @@ public class VectorTileService {
         return (byte[]) geoDataMapper.getVectorTile(tileBox);
     }
 
+    public byte[] getGeoVecterTilesByParam(String param, String value, String layerName, int z, int x, int y) {
+        TileBox tileBox = TileUtil.tile2boundingBox(
+                x, y, z, layerName
+        );
+        return (byte[]) geoDataMapper.getVectorTileByParam(tileBox, param, value);
+    }
+
 }

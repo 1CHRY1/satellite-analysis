@@ -15,4 +15,6 @@ public interface LocationRepo {
 
     List<GeoLocation> searchByName(String keyword);
 
+    public GeoLocation searchById(String id);
+
 }
