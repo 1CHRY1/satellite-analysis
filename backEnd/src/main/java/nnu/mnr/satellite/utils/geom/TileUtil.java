@@ -22,24 +22,8 @@ public class TileUtil {
      */
 
     private static final Map<String, List<String>> fieldListMap = new HashMap<>(Map.of(
-            "place_label_pt", List.of("width", "height", "label"),
-            "river_bg_vec", List.of("height"),
-            "river_land", List.of("height"),
-            "river_section_label", List.of("label"),
-            "river_name_label", List.of("label"),
-            "mzs_place_label", List.of("label"),
-            "mzs_place_line", List.of("id"),
-            "mzs_bank_label", List.of("id", "label", "warn"),
-            "mzs_section_line", List.of("id", "label"),
-            "mzs_bank_line", List.of("id", "warn")
+            "patch_table", List.of("area", "shandong_i")
     ));
-    static {
-        fieldListMap.put("mzs_section_line_label", List.of("id", "label"));
-        fieldListMap.put("mzs_bank_area_w", List.of("id", "warn"));
-        fieldListMap.put("mzs_bank_area_s", List.of("id", "stability", "stability_2019"));
-        fieldListMap.put("mzs_overwater_bound", List.of("id"));
-        fieldListMap.put("mzs_underwater_bound", List.of("id"));
-    }
 
     public static double tile2lon(int x, int z) {
         return x / Math.pow(2.0, z) * 360.0 - 180;
@@ -75,12 +59,14 @@ public class TileUtil {
      * @Author: Yiming
      * @Date: 2022/4/5
      */
-    public static TileBox tile2boundingBox(int x, int y, int zoom, String tableName) {
+    public static TileBox tile2boundingBox(int x, int y, int zoom, String layerName) {
         TileBox tileBox = new TileBox();
         tileBox.setXMin(tile2lon(x, zoom));
         tileBox.setXMax(tile2lon(x + 1, zoom));
         tileBox.setYMin(tile2lat(y + 1, zoom));
         tileBox.setYMax(tile2lat(y, zoom));
+        tileBox.setVisualId(layerName);
+        String tableName = layerName + "_table";
         tileBox.setName(tableName);
         tileBox.setProjection(4326);
         tileBox.setFieldList(fieldListMap.get(tableName));

@@ -26,9 +26,8 @@ public class VectorTileService {
     }
 
     public byte[] getGeoVecterTiles(String layerName, int z, int x, int y) {
-        String tableName = layerName + "_table";
         TileBox tileBox = TileUtil.tile2boundingBox(
-                x, y, z, tableName
+                x, y, z, layerName
         );
         return (byte[]) geoDataMapper.getVectorTile(tileBox);
     }

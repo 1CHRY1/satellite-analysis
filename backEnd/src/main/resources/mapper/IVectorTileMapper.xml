@@ -14,6 +14,9 @@
             ),
             4096, 0, true
             ) as geom
+        <foreach collection="fieldList" item="field" open=" " close=" ">
+            ,${field}
+        </foreach>
         from ${name}
         ) as result
     </select>
