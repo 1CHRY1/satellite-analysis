@@ -1,16 +1,6 @@
-import json, os, time, math, shutil
+import os, shutil
 from multiprocessing import Pool, cpu_count
-import numpy as np
-from shapely.geometry import shape, box
-from rio_cogeo.profiles import cog_profiles
-from rio_cogeo.cogeo import cog_translate, cog_info
-from rio_tiler.io import COGReader
-from rasterio.transform import from_bounds
-from rasterio.merge import merge
-import rasterio
-import glob
 from dataProcessing.Utils.osUtils import uploadLocalFile
-from osgeo import gdal
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataProcessing.model.task import Task
 import dataProcessing.config as config
@@ -41,65 +31,117 @@ def process_grid(grid, scenes, grid_helper, scene_band_paths, minio_endpoint, te
         bbox_polygon = box(*bbox_wgs84)
         return polygon.contains(bbox_polygon)
 
-    def calc_grid_cloud(scene):
+    bbox = grid_bbox()
+    img_R = None
+    img_G = None
+    img_B = None
+    need_fill_mask = None
+    first_shape_set = False
+    for scene in scenes:
         if not is_grid_covered(scene):
-            return {'cloud': INFINITY}
+            continue
 
         cloud_band_path = scene.get('cloudPath')
-        if cloud_band_path:
-            full_url = minio_endpoint + "/" + scene.get('bucket') + '/' + cloud_band_path
-            with COGReader(full_url) as ctx:
-                bbox = grid_bbox()
-                img_data = ctx.part(bbox=bbox, indexes=[1])
-                image_data = img_data.data[0]
-                nodata_mask = img_data.mask
-                sensorName = scene.get('sensorName')
+        
+        if not cloud_band_path:
+            # 这里是否要操作一下呢
+            print("缺乏Cloud_band")
+            continue
 
-                if "Landsat" in sensorName or "Landset" in sensorName:
-                    cloud_mask = (image_data & (1 << 3)) > 0
-                elif "MODIS" in sensorName:
-                    cloud_mask = (image_data & 1) > 0
-                elif "GF" in sensorName:
-                    cloud_mask = (image_data == 2)
-                else:
-                    return {'cloud': INFINITY}
+        full_url = minio_endpoint + "/" + scene.get('bucket') + '/' + cloud_band_path
 
-                nodata = nodata_mask.astype(bool)
-                cloud = cloud_mask.astype(bool)
-                valid_mask = (~nodata) & (~cloud)
-                cloud_percentage = np.sum(valid_mask) / np.sum(image_data) * 100 if np.sum(image_data) > 0 else INFINITY
-                return {'cloud': cloud_percentage}
-        else:
-            return {'cloud': scene.get('cloud', INFINITY)}
+        print('11')
 
-    # 找最优场景
-    min_cloud = INFINITY
-    best_scene = None
-    for scene in scenes:
-        cloud_result = calc_grid_cloud(scene)
-        if cloud_result['cloud'] < min_cloud:
-            min_cloud = cloud_result['cloud']
-            best_scene = scene
-            if min_cloud == 0:
-                break
+        with COGReader(full_url) as ctx:
+            img_data = ctx.part(bbox=bbox, indexes=[1])
+            image_data = img_data.data[0]
+            nodata_mask = img_data.mask
 
-    if best_scene is None:
-        return None
+            sensorName = scene.get('sensorName')
 
+            if "Landsat" in sensorName or "Landset" in sensorName:
+                cloud_mask = (image_data & (1 << 3)) > 0
+            elif "MODIS" in sensorName:
+                cloud_mask = (image_data & 1) > 0
+            elif "GF" in sensorName:
+                cloud_mask = (image_data == 2)
+            else:
+                print("不支持的传感器")
+                continue
+
+            # !!! valid_mask <--> 无云 且 非nodata 
+            try:
+                valid_mask = (~cloud_mask) & (nodata_mask.astype(bool))
+            except Exception as e:
+                print("RUNNING ERROR 1 "+e)
+            print('22')
+            if not first_shape_set:
+                img_shape = image_data.shape
+                H, W = img_shape
+                img_R = np.full((H, W), 0, dtype=np.uint16)
+                img_G = np.full((H, W), 0, dtype=np.uint16)
+                img_B = np.full((H, W), 0, dtype=np.uint16)
+                need_fill_mask = np.ones((H, W), dtype=bool) # all true，全都待标记
+                first_shape_set = True
+
+            # !!! fill_mask <--> 需要填充的区域 & 该景有效区域
+            try:
+                fill_mask = need_fill_mask & valid_mask
+            except Exception as e:
+                print("RUNNING ERROR 2 "+e)
+
+
+            if np.any(fill_mask): # 只要有任意一个是1 ，那就可以填充
+                # 读取 RGB 波段
+                scene_id = scene['sceneId']
+                paths = scene_band_paths.get(scene_id)
+                if not paths:
+                    continue
+
+                def read_band(band_path):
+                    full_path = minio_endpoint + "/" + scene['bucket'] + "/" + band_path
+                    with COGReader(full_path) as reader:
+                        return reader.part(bbox=bbox, indexes=[1]).data[0]
+
+                R = read_band(paths['red'])
+                G = read_band(paths['green'])
+                B = read_band(paths['blue'])
+                print('33')
+
+                try:
+                    img_R[fill_mask] = R[fill_mask]
+                    img_G[fill_mask] = G[fill_mask]
+                    img_B[fill_mask] = B[fill_mask]
+                except Exception as e:
+                    print("RUNNING ERROR 3 "+e)
+                # img_R[fill_mask] = R[fill_mask]
+                # img_G[fill_mask] = G[fill_mask]
+                # img_B[fill_mask] = B[fill_mask]
+
+                need_fill_mask[fill_mask] = False # 填过了，标记False
+
+            if not np.any(need_fill_mask):
+                print("填充完毕")
+                break  # 已经全填完了
+
+    # 检查是否有填充结果
+    if not first_shape_set or np.all(need_fill_mask):
+        print("未被填满， 可能由于缺乏cloudPath,",grid_x,grid_y)
+        return None  # 没有可用数据
+        
+    first_shape_set = False
+    
     # 读取RGB并保存为临时tif
-    bbox = grid_bbox()
-    scene_id = best_scene['sceneId']
-    paths = scene_band_paths[scene_id]
-
-    def read_band(band_path):
-        full_path = minio_endpoint + "/" + best_scene['bucket'] + "/" + band_path
-        with COGReader(full_path) as reader:
-            return reader.part(bbox=bbox, indexes=[1]).data[0]
-
-    R = read_band(paths['red'])
-    G = read_band(paths['green'])
-    B = read_band(paths['blue'])
-    img = np.stack([R, G, B])
+    img = np.stack([img_R, img_G, img_B])
+    
+    grid_statistic = {
+        "min_r": img_R.min(),
+        "max_r": img_R.max(),
+        "min_g": img_G.min(),
+        "max_g": img_G.max(),
+        "min_b": img_B.min(),
+        "max_b": img_B.max()
+    }
 
     tif_path = os.path.join(temp_dir_path, f"{grid_x}_{grid_y}.tif")
     transform = from_bounds(*bbox, img.shape[2], img.shape[1])
@@ -115,7 +157,7 @@ def process_grid(grid, scenes, grid_helper, scene_band_paths, minio_endpoint, te
     ) as dst:
         dst.write(img)
 
-    return tif_path, grid_x, grid_y
+    return tif_path, grid_x, grid_y, grid_statistic
 
 
 def upload_one(tif_path, grid_x, grid_y, task_id):
@@ -127,25 +169,42 @@ def upload_one(tif_path, grid_x, grid_y, task_id):
         "tifPath": minio_key
     }
 
-# def merge_tifs(temp_dir_path: str, task_id: str) -> str:
-#     # 获取所有 TIF 文件
-#     tif_files = glob.glob(os.path.join(temp_dir_path, "*.tif"))
-#     if not tif_files:
-#         raise ValueError("No .tif files found in the directory")
-    
-#     # 使用 GDAL 生成 VRT
-#     vrt_file = os.path.join(temp_dir_path, f"{task_id}.vrt")
-#     gdal.BuildVRT(vrt_file, tif_files, options=gdal.BuildVRTOptions(resolution="highest"))
 
-#     # 直接转为 COG 格式
-#     cog_file = os.path.join(temp_dir_path, f"{task_id}_merge_cog.tif")
-#     gdal.Translate(cog_file, vrt_file, creationOptions=[
-#         "TILED=YES", "COMPRESS=DEFLATE", "NUM_THREADS=ALL_CPUS", "BIGTIFF=YES"
-#     ])
-    
-#     # 删除 VRT 文件
-#     os.remove(vrt_file)
-#     return cog_file
+def do_statistic(results):
+    """统计了所有格子的最值的平均，拉伸友好"""
+    ave_statistic = {
+        "min_r": 0,
+        "max_r": 0,
+        "min_g": 0,
+        "max_g": 0,
+        "min_b": 0,
+        "max_b": 0
+    }
+    count = 0
+    for result in results:
+        if result is None:
+            continue
+        _, _, _, stats = result
+        count = count + 1
+        ave_statistic["min_r"] += stats["min_r"]
+        ave_statistic["max_r"] += stats["max_r"]
+        ave_statistic["min_g"] += stats["min_g"]
+        ave_statistic["max_g"] += stats["max_g"]
+        ave_statistic["min_b"] += stats["min_b"]
+        ave_statistic["max_b"] += stats["max_b"]
+
+    if count > 0:
+        ave_statistic["min_r"] /= count
+        ave_statistic["max_r"] /= count
+        ave_statistic["min_g"] /= count
+        ave_statistic["max_g"] /= count
+        ave_statistic["min_b"] /= count
+        ave_statistic["max_b"] /= count
+    else:
+        ave_statistic = None  # 或者填充默认值
+
+    return ave_statistic
+
 
 class calc_no_cloud(Task):
     def __init__(self, task_id, *args, **kwargs):
@@ -156,7 +215,7 @@ class calc_no_cloud(Task):
         self.scenes = self.args[0].get('scenes', [])
 
     def run(self):
-        print("MinCloudGraphTask run")
+        print("NoCloudGraphTask run")
 
         ## Step 1 : Input Args #################################################
         grids = self.tiles
@@ -164,7 +223,7 @@ class calc_no_cloud(Task):
         scenes = self.scenes
         # cloud = data.get('cloud') 没啥用
 
-        ## Step 2 : Grids  ##############################################
+        ## Step 2 : Multithread Processing 4 Grids ############################# 
         grid_helper = GridHelper(gridResolution)
 
         scene_band_paths = {} # as cache 
@@ -191,24 +250,31 @@ class calc_no_cloud(Task):
             minio_endpoint=MINIO_ENDPOINT,
             temp_dir_path=temp_dir_path
         )
+        process_func(grids[2])
         
-        with Pool(processes=cpu_count()) as pool:
-            results = pool.map(process_func, grids)
+        # with Pool(processes=cpu_count()) as pool:
+        #     results = pool.map(process_func, grids)
 
-        upload_results = []
-        with ThreadPoolExecutor(max_workers=8) as executor:
-            futures = [
-                executor.submit(upload_one, tif_path, grid_x, grid_y, self.task_id)
-                for result in results if result is not None
-                for tif_path, grid_x, grid_y in [result]
-            ]
-            for future in as_completed(futures):
-                upload_results.append(future.result())
-        upload_results.sort(key=lambda x: (x["grid"][0], x["grid"][1]))
 
-        if os.path.exists(temp_dir_path):
-            shutil.rmtree(temp_dir_path) 
+        # ## Step 3 : Results Uploading and Statistic #######################
+        # upload_results = []
+        # stats = do_statistic(results)
+        
+        # with ThreadPoolExecutor(max_workers=8) as executor:
+        #     futures = [
+        #         executor.submit(upload_one, tif_path, grid_x, grid_y, self.task_id)
+        #         for result in results if result is not None
+        #         for tif_path, grid_x, grid_y, grid_statistic in [result]
+        #     ]
+        #     for future in as_completed(futures):
+        #         upload_results.append(future.result())
+    
+        # upload_results.sort(key=lambda x: (x["grid"][0], x["grid"][1]))
 
-        return {
-            "grids": upload_results
-        }
+        # if os.path.exists(temp_dir_path):
+        #     shutil.rmtree(temp_dir_path) 
+
+        # return {
+        #     "grids": upload_results,
+        #     "statistic": stats
+        # }

@@ -10,7 +10,7 @@ import nnu.mnr.satellite.model.pojo.modeling.TilerProperties;
 import nnu.mnr.satellite.model.vo.modeling.JsonResultVO;
 import nnu.mnr.satellite.model.vo.modeling.ProjectResultVO;
 import nnu.mnr.satellite.model.vo.modeling.TilerResultVO;
-import nnu.mnr.satellite.repository.modeling.IProjectResultRepo;
+import nnu.mnr.satellite.mapper.modeling.IProjectResultRepo;
 import nnu.mnr.satellite.utils.data.MinioUtil;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;

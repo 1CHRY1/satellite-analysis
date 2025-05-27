@@ -3,15 +3,12 @@ package nnu.mnr.satellite.service.modeling;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.model.po.modeling.Project;
 import nnu.mnr.satellite.model.vo.modeling.ProjectVO;
-import nnu.mnr.satellite.model.vo.resources.SensorInfoVO;
-import nnu.mnr.satellite.repository.modeling.IProjectRepo;
-import nnu.mnr.satellite.repository.resources.IImageRepo;
+import nnu.mnr.satellite.mapper.modeling.IProjectRepo;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
 import java.util.List;
 
 /**
