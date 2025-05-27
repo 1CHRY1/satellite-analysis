@@ -63,7 +63,7 @@ export default defineConfig({
                 rewrite: (path) => path.replace(/^\/proxymap/, ''),
             },
             '/chry': {
-                target: 'http://localhost:8999/api/v1/geo/vector/tiles',
+                target: 'http://223.2.47.202:8999/api/v1/geo/vector/tiles',
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/chry/, ''),
             },
