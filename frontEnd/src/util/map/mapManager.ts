@@ -74,6 +74,12 @@ class MapManager {
                         }
                     }
 
+                    if (url.includes('tianditu')) {
+                        return {
+                            url,
+                        }
+                    }
+
                     const token = localStorage.getItem('token')
                     return {
                         url: url,

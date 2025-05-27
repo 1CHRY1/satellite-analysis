@@ -144,6 +144,9 @@ export async function getBoundary(region: number | string): Promise<any> {
 export async function getRegionPosition(region: number | string): Promise<any> {
     return http.get<any>(`data/region/window/region/${region}`)
 }
+export async function getPOIPosition(region: number | string, resolution: number): Promise<any> {
+    return http.get<any>(`geo/location/window/location/${region}/resolution/${resolution}`)
+}
 
 export async function getSceneGrids(param: any): Promise<any> {
     return http.post<any>(`data/grid/scene/grids`, param)

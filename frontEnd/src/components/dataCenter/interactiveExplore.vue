@@ -14,7 +14,7 @@
                             <div class="config-item w-full">
                                 <div class="config-label relative">
                                     <MapIcon :size="16" class="config-icon" />
-                                    <span>行政区</span>
+                                    <span>研究区选择</span>
                                 </div>
                                 <!-- <div class="config-control justify-center">
                                     <RegionSelects v-model="region" :placeholder="['选择省份', '选择城市', '选择区县']"
@@ -37,12 +37,12 @@
                                         select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
                                 </div>
                                 <div v-else-if="activeTab === 'poi'" class="config-control justify-center w-full">
-                                    <el-select v-model="selectedPOI" filterable remote reserve-keyword
+                                    <el-select v-model="selectedPOI" filterable remote reserve-keyword value-key="id"
                                         placeholder="请输入 POI 关键词" :remote-method="fetchPOIOptions"
                                         class="!w-[90%] bg-[#0d1526] text-white" popper-class="bg-[#0d1526] text-white">
                                         <el-option v-for="item in poiOptions" :key="item.id"
                                             :label="item.name + '(' + item.pname + item.cityname + item.adname + item.address + ')'"
-                                            :value="item.id" />
+                                            :value="item" />
                                     </el-select>
                                 </div>
                             </div>
@@ -382,8 +382,10 @@ import {
     getCoverRegionSensorScenes,
     getPoiInfo,
     getGridByPOIAndResolution,
+    getPOIPosition,
 } from '@/api/http/satellite-data'
 import * as MapOperation from '@/util/map/operation'
+import { mapManager } from '@/util/map/mapManager'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import { ezStore } from '@/store'
 import { getSceneGeojson } from '@/api/http/satellite-data/visualize.api'
@@ -412,6 +414,7 @@ import {
 } from 'lucide-vue-next'
 import { ElMessage } from 'element-plus'
 import { message } from 'ant-design-vue'
+import mapboxgl from 'mapbox-gl'
 const emit = defineEmits(['submitConfig'])
 
 /**
@@ -474,8 +477,8 @@ const currentCityBounds = ref([])
 const displayLabel = computed(() => {
     if (activeTab.value === 'poi') {
 
-        if (selectedPOI.value === '') return '未选择'
-        return selectedPOI.value
+        if (!selectedPOI.value) return '未选择'
+        return selectedPOI.value?.id
     }
     let info = region.value
     if (info.area) return `${info.area}`
@@ -483,9 +486,33 @@ const displayLabel = computed(() => {
     if (info.province) return `${info.province}`
     return '未选择'
 })
+
+const createGeoJSONFromBounds = (bounds: number[][]) => {
+    const [minLon, minLat, maxLon, maxLat] = bounds;
+
+    const polygon = [
+        [
+            [minLon, minLat],
+            [maxLon, minLat],
+            [maxLon, maxLat],
+            [minLon, maxLat],
+            [minLon, minLat] // 闭合
+        ]
+    ];
+
+    return {
+        type: "Feature",
+        geometry: {
+            type: "MultiPolygon",
+            coordinates: [polygon]
+        }
+    };
+}
+let marker
 // 获取格网数据
 const getAllGrid = async () => {
     let gridRes: any = []
+    let window: any = []
     if (displayLabel.value === '未选择') {
         ElMessage.warning('请选择行政区或POI')
         return
@@ -493,6 +520,7 @@ const getAllGrid = async () => {
     MapOperation.map_destroyImagePolygon()
     MapOperation.map_destroyImagePreviewLayer()
     MapOperation.map_destroyGridLayer()
+    if (marker) marker.remove()
 
     if (activeTab.value === 'region') {
         let boundaryRes = await getBoundary(displayLabel.value)
@@ -500,6 +528,8 @@ const getAllGrid = async () => {
         gridRes = await getGridByRegionAndResolution(displayLabel.value, selectedRadius.value)
         allGrids.value = gridRes
         allGridCount.value = gridRes.length
+        console.log(boundaryRes, 445);
+
         // 先清除现有的矢量边界，然后再添加新的
         MapOperation.map_addPolygonLayer({
             geoJson: boundaryRes,
@@ -508,15 +538,35 @@ const getAllGrid = async () => {
             fillColor: '#a4ffff',
             fillOpacity: 0.2,
         })
+        window = await getRegionPosition(displayLabel.value)
     } else if (activeTab.value === 'poi') {
         gridRes = await getGridByPOIAndResolution(displayLabel.value, selectedRadius.value)
+        mapManager.withMap((m) => {
+            if (m.getSource('UniqueLayer-source')) m.removeSource('UniqueLayer-source')
+            if (m.getLayer('UniqueLayer-line')) m.removeLayer('UniqueLayer-line')
+            if (m.getLayer('UniqueLayer-fill')) m.removeLayer('UniqueLayer-fill')
+        })
         // console.log(gridRes, 7474);
         allGrids.value = gridRes
         allGridCount.value = gridRes.length
+        window = await getPOIPosition(displayLabel.value, selectedRadius.value)
+        let geojson = createGeoJSONFromBounds(window.bounds)
+        console.log(geojson, 741);
+        MapOperation.map_addPolygonLayer({
+            geoJson: geojson,
+            id: 'UniqueLayer',
+            lineColor: '#8fffff',
+            fillColor: '#a4ffff',
+            fillOpacity: 0.2,
+        })
+        mapManager.withMap((m) => {
+            marker = new mapboxgl.Marker()
+                .setLngLat([Number(selectedPOI.value?.gcj02Lon), Number(selectedPOI.value?.gcj02Lat)])
+                .addTo(m);
+        })
+
+        // MapOperation.map_addPointLayer([Number(selectedPOI.value?.gcj02Lon), Number(selectedPOI.value?.gcj02Lat)])
     }
-
-    let window = await getRegionPosition(displayLabel.value)
-
 
     // 渲染网格数据
     let gridFeature: FeatureCollection = {
@@ -550,7 +600,7 @@ const tabs = [{
     value: 'poi',
     label: 'POI'
 }]
-const selectedPOI = ref('')
+const selectedPOI = ref<POIInfo>()
 const poiOptions = ref<POIInfo[]>([])
 
 // 根据输入内容远程获取
