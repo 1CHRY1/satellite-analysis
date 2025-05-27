@@ -51,7 +51,11 @@ MYSQL_PWD                                       =       "123456"
 # Gdal_Config
 GDAL_PROJ_LIB                                   =       r"F:\App\anaconda3\envs\bankModel\Library\share"
 
+<<<<<<< HEAD
 TEMP_OUTPUT_DIR                                 =       r"/usr/resource/temp"
+=======
+TEMP_OUTPUT_DIR                                 =       r"code\test"
+>>>>>>> 17106968cf404f12bb793679a04b202f512d2f43
 
 # Data General Config
 EARTH_RADIUS                                    =       6371008.8
