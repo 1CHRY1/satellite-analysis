@@ -12,11 +12,12 @@ import nnu.mnr.satellite.model.po.resources.Region;
 import nnu.mnr.satellite.model.po.resources.Scene;
 import nnu.mnr.satellite.model.po.resources.SceneSP;
 import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
-import nnu.mnr.satellite.repository.resources.ISceneRepo;
+import nnu.mnr.satellite.mapper.resources.ISceneRepo;
 import nnu.mnr.satellite.service.common.BandMapperGenerator;
 import nnu.mnr.satellite.utils.geom.GeometryUtil;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.MultiPolygon;
 import org.locationtech.jts.geom.Polygon;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -62,7 +62,14 @@ public class SceneDataServiceV2 {
     }
 
     public SceneImageDTO getSceneByIdWithImage(String sceneId) {
+<<<<<<< HEAD
+        SceneImageDTO sceneImageDTO = sceneRepo.getSceneWithImages(sceneId);
+        JSONObject bandMapper = bandMapperGenerator.getSatelliteConfigBySensorName(sceneImageDTO.getSensorName());
+        sceneImageDTO.setBandMapper(bandMapper);
+        return sceneImageDTO;
+=======
         return sceneRepo.getSceneWithImages(sceneId);
+>>>>>>> 17106968cf404f12bb793679a04b202f512d2f43
     }
 
     public SceneSP getSceneByIdWithProductAndSensor(String sceneId) {
@@ -77,13 +84,37 @@ public class SceneDataServiceV2 {
         queryWrapper.in("scene_id", coverFetchSceneDTO.getSceneIds()).orderByDesc("scene_time");
         List<Scene> scenes = sceneRepo.selectList(queryWrapper);
         GeometryFactory geometryFactory = new GeometryFactory();
+<<<<<<< HEAD
+        MultiPolygon scenesBoundary = geometryFactory.createMultiPolygon(new Polygon[]{});
+        for (Scene scene : scenes) {
+            Geometry bbox = scene.getBbox();
+            if (scenesBoundary.contains(bbox)) {
+                continue;
+            }
+            if (bbox == null || bbox.isEmpty()) {
+                throw new IllegalArgumentException("Invalid scene bounding box");
+            }
+            Geometry unionResult = scenesBoundary.union(bbox);
+            if (unionResult instanceof MultiPolygon) {
+                scenesBoundary = (MultiPolygon) unionResult;
+            } else if (unionResult instanceof Polygon) {
+                scenesBoundary = geometryFactory.createMultiPolygon(new Polygon[]{(Polygon) unionResult});
+            } else {
+                throw new IllegalArgumentException("Unsupported geometry type: " + unionResult.getClass().getName());
+            }
+=======
         Polygon scenesBoundary = geometryFactory.createPolygon();
         for (Scene scene : scenes) {
             scenesBoundary = (Polygon) scenesBoundary.union(scene.getBbox());
+>>>>>>> 17106968cf404f12bb793679a04b202f512d2f43
             List<ModelServerImageDTO> imageDTOS = imageDataService.getModelServerImageDTOBySceneId(scene.getSceneId());
             ModelServerSceneDTO modelServerSceneDTO = ModelServerSceneDTO.builder()
                     .sceneId(scene.getSceneId())
                     .sceneTime(scene.getSceneTime())
+<<<<<<< HEAD
+                    .noData(scene.getNoData())
+=======
+>>>>>>> 17106968cf404f12bb793679a04b202f512d2f43
                     .bandMapper(bandMapperGenerator.getSatelliteConfigBySensorName(coverFetchSceneDTO.getSensorName()))
                     .images(imageDTOS)
                     .build();
@@ -92,8 +123,11 @@ public class SceneDataServiceV2 {
                 break;
             }
         }
+<<<<<<< HEAD
+=======
 //        Geometry interscet = regionBoundary.intersection(scenesBoundary);
 //        Double res = interscet.getArea() / regionBoundary.getArea();
+>>>>>>> 17106968cf404f12bb793679a04b202f512d2f43
         Collections.reverse(sceneDtos);
         return sceneDtos;
     }

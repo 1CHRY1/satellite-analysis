@@ -7,14 +7,13 @@ import nnu.mnr.satellite.model.dto.resources.ScenesFetchDTO;
 import nnu.mnr.satellite.model.vo.common.GeoJsonVO;
 import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
 import nnu.mnr.satellite.model.po.resources.Scene;
-import nnu.mnr.satellite.repository.resources.ISceneRepo;
+import nnu.mnr.satellite.mapper.resources.ISceneRepo;
 import nnu.mnr.satellite.utils.geom.GeometryUtil;
 import nnu.mnr.satellite.utils.data.MinioUtil;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.modelmapper.ModelMapper;
-import org.opengis.referencing.FactoryException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

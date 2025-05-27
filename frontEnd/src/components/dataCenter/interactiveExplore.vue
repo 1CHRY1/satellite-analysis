@@ -1058,6 +1058,7 @@ const handleShowResolutionSensorImage = async (label: string) => {
     const selectPlatformName = resolutionPlatformSensor[label]
     const sceneIds = getSceneIdsByPlatformName(selectPlatformName, label)
     console.log('选中的景ids', sceneIds)
+    console.log('当前所有的景', allScenes.value)
     const sensorName = getSensorNamebyPlatformName(selectPlatformName)
 
     console.log('匹配的sensorName', sensorName)

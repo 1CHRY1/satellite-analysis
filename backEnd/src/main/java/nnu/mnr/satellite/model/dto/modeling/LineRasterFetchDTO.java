@@ -15,7 +15,7 @@ import java.util.List;
 @Data
 public class LineRasterFetchDTO {
 
-    private List<Double[]> point;
+    private List<Double[]> points;
     private List<String> sceneIds;
 
 }

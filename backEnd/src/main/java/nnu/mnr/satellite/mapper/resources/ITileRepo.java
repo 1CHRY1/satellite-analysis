@@ -1,15 +1,13 @@
-package nnu.mnr.satellite.repository.resources;
+package nnu.mnr.satellite.mapper.resources;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import nnu.mnr.satellite.model.dto.resources.TileBasicDTO;
 import nnu.mnr.satellite.model.po.resources.Tile;
 import nnu.mnr.satellite.utils.typeHandler.GeometryTypeHandler;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
-import org.locationtech.jts.geom.Geometry;
 
 import java.util.List;
 

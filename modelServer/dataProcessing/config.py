@@ -9,13 +9,11 @@ API_VERSION                                     =       '/v0'
 # API for TIF
 API_TIF_MERGE                                   =       API_VERSION + '/tif/merge'
 API_TIF_MERGE_V2                                =       API_VERSION + '/tif/merge_v2'
-API_TIF_calc_qa                                 =       API_VERSION + '/tif/calc_qa'
-API_TIF_calc_qa_simple                          =       API_VERSION + '/tif/calc_qa_simple'
-API_TIF_calc_qa_middle                          =       API_VERSION + '/tif/calc_qa_middle'
+API_TIF_calc_no_cloud                           =       API_VERSION + '/tif/calc_no_cloud'
 API_TIF_calc_NDVI                               =       API_VERSION + '/tif/calc_NDVI'
 API_TIF_get_spectral_profile                    =       API_VERSION + '/tif/get_spectral_profile'
-API_CALC_RASTER_POINT                           =       API_VERSION + '/tif/calc_raster_point'
-API_CALC_RASTER_LINE                            =       API_VERSION + '/tif/calc_raster_line'
+API_TIF_calc_raster_point                       =       API_VERSION + '/tif/calc_raster_point'
+API_TIF_calc_raster_line                        =       API_VERSION + '/tif/calc_raster_line'
 
 # API for Task
 API_TASK_STATUS                                 =       API_VERSION + '/task/status'
@@ -53,7 +51,7 @@ MYSQL_PWD                                       =       "123456"
 # Gdal_Config
 GDAL_PROJ_LIB                                   =       r"F:\App\anaconda3\envs\bankModel\Library\share"
 
-TEMP_OUTPUT_DIR                                 =       r"code\test"
+TEMP_OUTPUT_DIR                                 =       r"/usr/resource/temp"
 
 # Data General Config
 EARTH_RADIUS                                    =       6371008.8

@@ -13,7 +13,7 @@ import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.model.vo.common.GeoJsonVO;
 import nnu.mnr.satellite.model.vo.resources.TileDesVO;
 import nnu.mnr.satellite.model.vo.resources.TilesFetchResultVO;
-import nnu.mnr.satellite.repository.resources.ITileRepo;
+import nnu.mnr.satellite.mapper.resources.ITileRepo;
 import nnu.mnr.satellite.utils.common.ProcessUtil;
 import nnu.mnr.satellite.utils.data.MinioUtil;
 import nnu.mnr.satellite.utils.data.RedisUtil;

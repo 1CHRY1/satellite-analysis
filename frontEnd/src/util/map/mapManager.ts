@@ -39,21 +39,21 @@ class MapManager {
                 maxZoom: 22,
                 style: StyleMap[style],
                 transformRequest: (url) => {
-                    if (url.indexOf(conf['back_app']) > -1) {
-                        const token = localStorage.getItem('token')
-                        return {
-                            url: url,
-                            headers: { Authorization: `Bearer ${token}` },
-                            credentials: 'include',
-                        }
-                    }
+                    // if (url.indexOf(conf['back_app']) > -1) {
+                    //     const token = localStorage.getItem('token')
+                    //     return {
+                    //         url: url,
+                    //         headers: { Authorization: `Bearer ${token}` },
+                    //         credentials: 'include',
+                    //     }
+                    // }
                     if (url.includes('bbox=') && url.includes('temporaryMap')) {
                         const match = url.match(
                             /bbox=([0-9\.\-]+),([0-9\.\-]+),([0-9\.\-]+),([0-9\.\-]+)/,
                         )
                         if (match) {
                             const [, minX, minY, maxX, maxY] = match.map(Number)
-                            console.log(minX, minY, maxX, maxY, '3857')
+                            // console.log(minX, minY, maxX, maxY, '3857')
 
                             // Web Mercator to WGS84
                             const project = (x, y) => {
@@ -74,8 +74,11 @@ class MapManager {
                         }
                     }
 
+                    const token = localStorage.getItem('token')
                     return {
-                        url,
+                        url: url,
+                        headers: { Authorization: `Bearer ${token}` },
+                        // credentials: 'include',
                     }
                 },
             })

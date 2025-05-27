@@ -27,6 +27,11 @@ spring:
 #          password: root
           password: 123456
           driver-class-name: com.mysql.cj.jdbc.Driver
+        pg_space:
+          url: jdbc:postgresql://223.2.43.228:31543/gis_db
+          username: postgres
+          password: 123456
+          driver-class-name: org.postgresql.Driver
   servlet:
     multipart:
       max-file-size: 1GB
@@ -38,6 +43,8 @@ spring:
       database: 0
     mongodb:
       uri: mongodb://OGMSROOT:ogms1qaz2wsx@172.21.252.208:23266/opengmp
+  elasticsearch:
+    uris: http://223.2.43.228:30920
 
 mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
@@ -77,8 +84,9 @@ modelServer:
     status: /v0/task/status
     result: /v0/task/result
     merge: /v0/tif/merge_v2
-    noCloud: /v0/tif/calc_qa_middle
     spectrum: /v0/tif/get_spectral_profile
+    noCloud: /v0/tif/calc_no_cloud
+#    noCloud: /v0/tif/calc_qa_middle
 #    noCloud: /v0/tif/calc_qa_simple
 #    noCloud: /v0/tif/calc_qa
     rasterPoint: /v0/tif/calc_raster_point

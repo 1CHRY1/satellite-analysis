@@ -1,4 +1,4 @@
-package nnu.mnr.satellite.repository.resources;
+package nnu.mnr.satellite.mapper.resources;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import nnu.mnr.satellite.model.po.resources.Region;

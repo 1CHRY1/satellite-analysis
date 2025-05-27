@@ -1,13 +1,9 @@
 package nnu.mnr.satellite.service.websocket;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import nnu.mnr.satellite.model.po.modeling.Project;
 import nnu.mnr.satellite.nettywebsocket.annotations.PathParam;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.nettywebsocket.annotations.*;
 import nnu.mnr.satellite.nettywebsocket.socket.Session;
-import nnu.mnr.satellite.repository.modeling.IProjectRepo;
-import nnu.mnr.satellite.service.modeling.ModelCodingService;
 import nnu.mnr.satellite.service.modeling.ProjectDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

@@ -1,17 +1,17 @@
 <template>
-    <div class="bg-amber-50 flex">
-        <MapComp class="flex-1" :style="'empty'" :proj="'globe'" />
+    <div class="flex bg-amber-50">
+        <MapComp class="flex-1" :style="'image'" :proj="'globe'" />
 
-        <div class="absolute right-10 top-10 flex flex-col w-fit h-fit gap-5">
-            <button class="p-5  bg-amber-300" @click="localMvt">本地MVT</button>
-            <button class="p-5  bg-amber-300" @click="localImg"> 本地影像瓦片</button>
-            <button class="p-5  bg-amber-300" @click="localTian">内网老版天地图</button>
-            <button class="p-5  bg-amber-300" @click="locate">定位</button>
+        <div class="absolute top-10 right-10 flex h-fit w-fit flex-col gap-5">
+            <button class="bg-amber-300 p-5" @click="localMvt">本地MVT</button>
+            <button class="bg-amber-300 p-5" @click="localImg">本地影像瓦片</button>
+            <button class="bg-amber-300 p-5" @click="localTian">内网老版天地图</button>
+            <button class="bg-amber-300 p-5" @click="locate">定位</button>
 
-            <button class="p-5  bg-amber-500" @click="addFK">定位</button>
+            <button class="bg-amber-500 p-5" @click="addFK">加他们的影像底图</button>
 
+            <button class="bg-red-500 p-5" @click="addMVTLayer">矢量瓦片测试</button>
         </div>
-
     </div>
 </template>
 
@@ -22,6 +22,30 @@ import { mapManager } from '@/util/map/mapManager'
 import { StyleMap } from '@/util/map/tianMapStyle'
 import { ezStore } from '@/store'
 
+const addMVTLayer = () => {
+    // const baseUrl = '/chry'
+    // const url = baseUrl + '/patch/{z}/{x}/{y}'
+
+    const url = 'http://223.2.47.202:8999/api/v1/geo/vector/tiles/patch/{z}/{x}/{y}'
+
+    mapManager.withMap((map) => {
+        console.log('add layer')
+        map.addSource('t-source', {
+            type: 'vector',
+            tiles: [url],
+        })
+        map.addLayer({
+            id: 'test-layer',
+            type: 'fill',
+            source: 't-source',
+            'source-layer': 'default', //这个地方要注意,
+            paint: {
+                'fill-color': '#FF0000',
+                'fill-outline-color': '#0000ff',
+            },
+        })
+    })
+}
 
 const localMvt = () => {
     console.log('1')
@@ -54,47 +78,33 @@ const locate = () => {
     mapManager.withMap((m) => {
         m.flyTo({
             center: [121.42859, 28.66138],
-            zoom: 8
+            zoom: 8,
         })
     })
 }
 
 const addFK = () => {
-
     const url = ezStore.get('conf')['fk_url']
     console.log(url)
 
     mapManager.withMap((map) => {
-
         map.addSource('wms-test-source', {
-            'type': 'raster',
-            'tiles': [
-                url
-            ],
-            'tileSize': 256
-        });
-        map.addLayer(
-            {
-                'id': 'wms-test-layer',
-                'type': 'raster',
-                'source': 'wms-test-source',
-                'paint': {}
-            },
-        );
-
+            type: 'raster',
+            tiles: [url],
+            tileSize: 256,
+        })
+        map.addLayer({
+            id: 'wms-test-layer',
+            type: 'raster',
+            source: 'wms-test-source',
+            paint: {},
+        })
     })
-
-
 }
 
-
 onMounted(() => {
-
     setTimeout(() => {
         // mapManager.withMap((m) => {
-
-
-
         // m.addSource('src', {
         //     type: 'raster',
         //     tiles: [
@@ -109,15 +119,9 @@ onMounted(() => {
         //     minzoom: 5,
         //     maxzoom: 22
         // })
-
-
-
         // })
-    }, 1);
-
+    }, 1)
 })
-
-
 </script>
 
 <style scoped></style>

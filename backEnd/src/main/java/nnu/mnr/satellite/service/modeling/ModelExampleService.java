@@ -187,7 +187,7 @@ public class ModelExampleService {
 
     // 根据线和一组栅格数据计算栅格list值
     public CommonResultVO getRasterResultByLine(LineRasterFetchDTO lineRasterFetchDTO) {
-        List<Double[]> points = lineRasterFetchDTO.getPoint();
+        List<Double[]> points = lineRasterFetchDTO.getPoints();
         List<String> sceneIds = lineRasterFetchDTO.getSceneIds();
         // 构成影像景参数信息a
         List<Scene> scenes = sceneDataServiceV1.getScenesByIds(sceneIds);

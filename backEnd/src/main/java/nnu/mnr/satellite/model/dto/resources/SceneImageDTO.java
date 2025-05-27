@@ -48,5 +48,6 @@ public class SceneImageDTO {
     private Double noData;
 
     private List<ModelServerImageDTO> images;
+    private JSONObject bandMapper;
 
 }
