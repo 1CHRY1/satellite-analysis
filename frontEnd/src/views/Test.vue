@@ -23,8 +23,10 @@ import { StyleMap } from '@/util/map/tianMapStyle'
 import { ezStore } from '@/store'
 
 const addMVTLayer = () => {
-    const baseUrl = '/chry'
-    const url = baseUrl + '/xxx/{z}/{x}/{y}'
+    // const baseUrl = '/chry'
+    // const url = baseUrl + '/patch/{z}/{x}/{y}'
+
+    const url = 'http://223.2.47.202:9888/api/v1/geo/vector/tiles/patch/{z}/{x}/{y}'
 
     mapManager.withMap((map) => {
         console.log('add layer')

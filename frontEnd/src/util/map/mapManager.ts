@@ -39,14 +39,14 @@ class MapManager {
                 maxZoom: 22,
                 style: StyleMap[style],
                 transformRequest: (url) => {
-                    if (url.indexOf(conf['back_app']) > -1) {
-                        const token = localStorage.getItem('token')
-                        return {
-                            url: url,
-                            headers: { Authorization: `Bearer ${token}` },
-                            credentials: 'include',
-                        }
-                    }
+                    // if (url.indexOf(conf['back_app']) > -1) {
+                    //     const token = localStorage.getItem('token')
+                    //     return {
+                    //         url: url,
+                    //         headers: { Authorization: `Bearer ${token}` },
+                    //         credentials: 'include',
+                    //     }
+                    // }
                     if (url.includes('bbox=') && url.includes('temporaryMap')) {
                         const match = url.match(
                             /bbox=([0-9\.\-]+),([0-9\.\-]+),([0-9\.\-]+),([0-9\.\-]+)/,
@@ -74,8 +74,12 @@ class MapManager {
                         }
                     }
 
+                    const token = localStorage.getItem('token')
+                    console.log(token)
                     return {
-                        url,
+                        url: url,
+                        headers: { Authorization: `Bearer ${token}` },
+                        // credentials: 'include',
                     }
                 },
             })
