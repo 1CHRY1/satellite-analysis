@@ -203,7 +203,7 @@ function createPopoverContent() {
 
 // 添加一个矢量图层，用来显示选中的行政区
 export function map_addPolygonLayer(options: {
-    geoJson: GeoJSON.FeatureCollection
+    geoJson: GeoJSON.FeatureCollection | any
     id: string
     showFill?: boolean
     lineColor?: string
@@ -273,6 +273,102 @@ export function map_addPolygonLayer(options: {
     })
 }
 
+export function map_addPointLayer(
+    coord: [number, number], // [lon, lat]
+) {
+    const sourceId = 'uniquePOI-source'
+    const layerId = 'uniquePOI-layer'
+    const geoJson = {
+        type: 'FeatureCollection',
+        features: [
+            {
+                type: 'Feature',
+                geometry: {
+                    type: 'Point',
+                    coordinates: coord,
+                },
+                properties: {},
+            },
+        ],
+    }
+
+    mapManager.withMap((map) => {
+        // 👉 清理旧图层和数据源
+        if (map.getLayer(layerId)) map.removeLayer(layerId)
+        if (map.getSource(sourceId)) map.removeSource(sourceId)
+
+        addPOIPoint(map, 120.123456, 36.123456)
+
+        // 👉 添加数据源
+        map.addSource(sourceId, {
+            type: 'geojson',
+            data: geoJson,
+        })
+
+        // 👉 添加图层：五角星样式（symbol layer）
+        map.addLayer({
+            id: layerId,
+            type: 'symbol',
+            source: sourceId,
+            layout: {
+                'icon-image': 'satellite-icon', // 使用 mapbox 内置五角星图标
+                'icon-size': 1.5,
+                'icon-allow-overlap': true,
+            },
+            paint: {
+                'icon-color': '#FF0000',
+            },
+        })
+    })
+}
+export function addPOIPoint(map: mapboxgl.Map, lng: number, lat: number) {
+    const iconId = 'satellite-icon'
+
+    // 1. 加载 SVG 图像
+    const img = new Image(30, 30)
+    img.onload = () => {
+        if (!map.hasImage(iconId)) {
+            map.addImage(iconId, img)
+        }
+
+        // 2. 添加数据源
+        if (!map.getSource('poi-source')) {
+            map.addSource('poi-source', {
+                type: 'geojson',
+                data: {
+                    type: 'FeatureCollection',
+                    features: [
+                        {
+                            type: 'Feature',
+                            geometry: {
+                                type: 'Point',
+                                coordinates: [lng, lat],
+                            },
+                            properties: {},
+                        },
+                    ],
+                },
+            })
+        }
+
+        // 3. 添加图层（点图标）
+        if (!map.getLayer('uniquePOI')) {
+            map.addLayer({
+                id: 'uniquePOI',
+                type: 'symbol',
+                source: 'poi-source',
+                layout: {
+                    'icon-image': iconId,
+                    'icon-size': 1,
+                    'icon-anchor': 'bottom',
+                },
+            })
+        }
+    }
+
+    // 4. 设置 SVG 图标路径（来自 public 目录）
+    img.src = '/satelite.svg' // ⚠️ 路径以 / 开头
+}
 export function addRasterLayerFromUrl(url: string, layerId: string = 'raster-layer'): void {
     mapManager.withMap((m) => {
         // 检查是否已经存在同名图层，避免重复添加

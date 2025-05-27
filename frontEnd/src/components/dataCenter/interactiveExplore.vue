@@ -11,18 +11,39 @@
                     </div>
                     <div class="section-content">
                         <div class="config-container">
-                            <div class="config-item">
+                            <div class="config-item w-full">
                                 <div class="config-label relative">
                                     <MapIcon :size="16" class="config-icon" />
-                                    <span>行政区</span>
+                                    <span>研究区选择</span>
                                 </div>
-                                <div class="config-control justify-center">
-                                    <RegionSelects
-                                        v-model="region"
-                                        :placeholder="['选择省份', '选择城市', '选择区县']"
+                                <!-- <div class="config-control justify-center">
+                                    <RegionSelects v-model="region" :placeholder="['选择省份', '选择城市', '选择区县']"
                                         class="flex gap-2"
-                                        select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none"
-                                    />
+                                        select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
+                                </div> -->
+                                <div class="flex border-b border-[#2c3e50] mb-4">
+                                    <button v-for="tab in tabs" :key="tab.value" @click="activeTab = tab.value" :class="[
+                                        'flex-1 text-center px-4 py-2 text-sm font-medium ',
+                                        activeTab === tab.value
+                                            ? 'border-b-2 border-[#38bdf8] text-[#38bdf8]'
+                                            : 'text-gray-400 hover:text-[#38bdf8]'
+                                    ]">
+                                        {{ tab.label }}
+                                    </button>
+                                </div>
+                                <div v-if="activeTab === 'region'" class="config-control justify-center">
+                                    <RegionSelects v-model="region" :placeholder="['选择省份', '选择城市', '选择区县']"
+                                        class="flex gap-2"
+                                        select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
+                                </div>
+                                <div v-else-if="activeTab === 'poi'" class="config-control justify-center w-full">
+                                    <el-select v-model="selectedPOI" filterable remote reserve-keyword value-key="id"
+                                        placeholder="请输入 POI 关键词" :remote-method="fetchPOIOptions"
+                                        class="!w-[90%] bg-[#0d1526] text-white" popper-class="bg-[#0d1526] text-white">
+                                        <el-option v-for="item in poiOptions" :key="item.id"
+                                            :label="item.name + '(' + item.pname + item.cityname + item.adname + item.address + ')'"
+                                            :value="item" />
+                                    </el-select>
                                 </div>
                             </div>
                             <div class="config-item">
@@ -33,16 +54,10 @@
                                 <div class="config-control flex-col !items-start">
                                     <div>
                                         格网分辨率选择：
-                                        <select
-                                            v-model="selectedRadius"
-                                            class="w-40 appearance-none rounded-lg border border-[#2c3e50] bg-[#0d1526] px-4 py-2 pr-8 text-white transition-all duration-200 hover:border-[#206d93] focus:border-[#3b82f6] focus:outline-none"
-                                        >
-                                            <option
-                                                v-for="option in radiusOptions"
-                                                :key="option"
-                                                :value="option"
-                                                class="bg-[#0d1526] text-white"
-                                            >
+                                        <select v-model="selectedRadius"
+                                            class="w-40 appearance-none rounded-lg border border-[#2c3e50] bg-[#0d1526] px-4 py-2 pr-8 text-white transition-all duration-200 hover:border-[#206d93] focus:border-[#3b82f6] focus:outline-none">
+                                            <option v-for="option in radiusOptions" :key="option" :value="option"
+                                                class="bg-[#0d1526] text-white">
                                                 {{ option }}km
                                             </option>
                                         </select>
@@ -53,10 +68,8 @@
                                     </div>
                                 </div>
                             </div>
-                            <button
-                                @click="getAllGrid"
-                                class="cursor-pointer rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
-                            >
+                            <button @click="getAllGrid"
+                                class="cursor-pointer rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95">
                                 获取格网
                             </button>
                         </div>
@@ -77,13 +90,8 @@
                                     <span>时间范围</span>
                                 </div>
                                 <div class="config-control">
-                                    <a-range-picker
-                                        class="custom-date-picker"
-                                        v-model:value="tileMergeConfig.dateRange"
-                                        picker="day"
-                                        :allow-clear="false"
-                                        :placeholder="['开始日期', '结束日期']"
-                                    />
+                                    <a-range-picker class="custom-date-picker" v-model:value="tileMergeConfig.dateRange"
+                                        picker="day" :allow-clear="false" :placeholder="['开始日期', '结束日期']" />
                                 </div>
                             </div>
                             <!-- <div class="config-item">
@@ -107,15 +115,12 @@
                                     </div>
                                 </div>
                             </div> -->
-                            <button
-                                @click="filterByCloudAndDate"
-                                :disabled="filterByCloudAndDateLoading"
+                            <button @click="filterByCloudAndDate" :disabled="filterByCloudAndDateLoading"
                                 class="flex justify-center rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
                                 :class="{
                                     'cursor-not-allowed': filterByCloudAndDateLoading,
                                     'cursor-pointer': !filterByCloudAndDateLoading,
-                                }"
-                            >
+                                }">
                                 <span>影像筛选 </span>
                                 <Loader v-if="filterByCloudAndDateLoading" class="ml-2" />
                             </button>
@@ -199,10 +204,7 @@
                             <DatabaseIcon :size="18" />
                         </div>
                         <h2 class="section-title">交互探索</h2>
-                        <div
-                            class="section-icon absolute right-0 cursor-pointer"
-                            @click="clearAllShowingSensor"
-                        >
+                        <div class="section-icon absolute right-0 cursor-pointer" @click="clearAllShowingSensor">
                             <a-tooltip>
                                 <template #title>清空影像图层</template>
                                 <Trash2Icon :size="18" />
@@ -211,11 +213,7 @@
                     </div>
                     <div class="section-content">
                         <div class="config-container">
-                            <div
-                                class="config-item"
-                                v-for="([label, value], index) in resolutionType"
-                                :key="value"
-                            >
+                            <div class="config-item" v-for="([label, value], index) in resolutionType" :key="value">
                                 <div class="config-label relative">
                                     <BoltIcon :size="16" class="config-icon" />
                                     <span>{{ label }}分辨率影像集</span>
@@ -243,52 +241,38 @@
                                                     {{
                                                         allSensorsItems[label]
                                                             ? (
-                                                                  (allSensorsItems[label] * 100) /
-                                                                  allGridCount
-                                                              ).toFixed(2) + '%'
+                                                                (allSensorsItems[label] * 100) /
+                                                                allGridCount
+                                                            ).toFixed(2) + '%'
                                                             : '待计算'
                                                     }}
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div
-                                        v-if="Object.keys(classifiedScenes).length > 0"
-                                        class="!w-full"
-                                    >
-                                        <label class="mr-2 text-white">选择影像产品：</label>
+                                    <div v-if="Object.keys(classifiedScenes).length > 0" class="!w-full">
+                                        <label class="mr-2 text-white">选择传感器：</label>
                                         <select
-                                            class="max-h-[600px] w-[calc(100%-130px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
-                                            v-model="resolutionPlatformSensor[label]"
-                                        >
+                                            class="max-h-[600px] w-[calc(100%-113px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
+                                            v-model="resolutionPlatformSensor[label]">
                                             <option disabled selected value="">请选择</option>
                                             <!-- <option :value="'all'" class="truncate">全选</option> -->
-                                            <option
-                                                v-for="platformName in classifiedScenes[
-                                                    value + 'm'
-                                                ]"
-                                                :value="platformName"
-                                                :key="platformName"
-                                                class="truncate"
-                                            >
+                                            <option v-for="platformName in classifiedScenes[
+                                                value + 'm'
+                                            ]" :value="platformName" :key="platformName" class="truncate">
                                                 {{ platformName }}
                                             </option>
                                         </select>
                                         <div class="flex flex-row items-center">
-                                            <a-button
-                                                class="custom-button mt-4! w-[calc(100%-50px)]!"
+                                            <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
                                                 @click="handleShowResolutionSensorImage(label)"
-                                                :disabled="!resolutionPlatformSensor[label]"
-                                            >
+                                                :disabled="!resolutionPlatformSensor[label]">
                                                 影像可视化
                                             </a-button>
                                             <a-tooltip>
                                                 <template #title>清空影像图层</template>
-                                                <Trash2Icon
-                                                    :size="18"
-                                                    class="mt-4! ml-4! cursor-pointer"
-                                                    @click="clearAllShowingSensor"
-                                                />
+                                                <Trash2Icon :size="18" class="mt-4! ml-4! cursor-pointer"
+                                                    @click="clearAllShowingSensor" />
                                             </a-tooltip>
                                         </div>
                                     </div>
@@ -396,8 +380,12 @@ import {
     getSceneByConfig,
     getSceneGrids,
     getCoverRegionSensorScenes,
+    getPoiInfo,
+    getGridByPOIAndResolution,
+    getPOIPosition,
 } from '@/api/http/satellite-data'
 import * as MapOperation from '@/util/map/operation'
+import { mapManager } from '@/util/map/mapManager'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import { ezStore } from '@/store'
 import { getSceneGeojson } from '@/api/http/satellite-data/visualize.api'
@@ -426,6 +414,7 @@ import {
 } from 'lucide-vue-next'
 import { ElMessage } from 'element-plus'
 import { message } from 'ant-design-vue'
+import mapboxgl from 'mapbox-gl'
 const emit = defineEmits(['submitConfig'])
 
 /**
@@ -435,6 +424,23 @@ const emit = defineEmits(['submitConfig'])
 const radiusOptions = [1, 2, 5, 10, 15, 20, 25, 30, 40, 50, 80, 100, 150]
 
 type ResolutionItem = [label: string, value: number]
+type Label = {
+    label: string,
+    value: string,
+}
+type POIInfo = {
+    // adcode: string,
+    // adname: string,
+    gcj02Lat: string,
+    gcj02Lon: string,
+    geometry: any,
+    id: string,
+    name: string,
+    address: string
+    pname: string
+    cityname: string
+    adname: string
+}
 
 const resolutionType: ResolutionItem[] = [
     ['亚米', 1],
@@ -469,38 +475,99 @@ const allGridCount = ref(0)
 const currentCityBounds = ref([])
 // 计算到了哪一级行政单位
 const displayLabel = computed(() => {
+    if (activeTab.value === 'poi') {
+
+        if (!selectedPOI.value) return '未选择'
+        return selectedPOI.value?.id
+    }
     let info = region.value
-    if (info.area) return Number(`${info.area}`)
-    if (info.city) return Number(`${info.city}`)
-    if (info.province) return Number(`${info.province}`)
+    if (info.area) return `${info.area}`
+    if (info.city) return `${info.city}`
+    if (info.province) return `${info.province}`
     return '未选择'
 })
+
+const createGeoJSONFromBounds = (bounds: number[][]) => {
+    const [minLon, minLat, maxLon, maxLat] = bounds;
+
+    const polygon = [
+        [
+            [minLon, minLat],
+            [maxLon, minLat],
+            [maxLon, maxLat],
+            [minLon, maxLat],
+            [minLon, minLat] // 闭合
+        ]
+    ];
+
+    return {
+        type: "Feature",
+        geometry: {
+            type: "MultiPolygon",
+            coordinates: [polygon]
+        }
+    };
+}
+let marker
 // 获取格网数据
 const getAllGrid = async () => {
+    let gridRes: any = []
+    let window: any = []
     if (displayLabel.value === '未选择') {
-        ElMessage.warning('请选择行政区')
+        ElMessage.warning('请选择行政区或POI')
         return
     }
-
     MapOperation.map_destroyImagePolygon()
     MapOperation.map_destroyImagePreviewLayer()
     MapOperation.map_destroyGridLayer()
+    if (marker) marker.remove()
 
-    let boundaryRes = await getBoundary(displayLabel.value)
-    let gridRes = await getGridByRegionAndResolution(displayLabel.value, selectedRadius.value)
-    allGrids.value = gridRes
-    allGridCount.value = gridRes.length
+    if (activeTab.value === 'region') {
+        let boundaryRes = await getBoundary(displayLabel.value)
+        currentCityBounds.value = boundaryRes
+        gridRes = await getGridByRegionAndResolution(displayLabel.value, selectedRadius.value)
+        allGrids.value = gridRes
+        allGridCount.value = gridRes.length
+        console.log(boundaryRes, 445);
 
-    let window = await getRegionPosition(displayLabel.value)
-    currentCityBounds.value = boundaryRes
-    // 先清除现有的矢量边界，然后再添加新的
-    MapOperation.map_addPolygonLayer({
-        geoJson: boundaryRes,
-        id: 'UniqueLayer',
-        lineColor: '#8fffff',
-        fillColor: '#a4ffff',
-        fillOpacity: 0.2,
-    })
+        // 先清除现有的矢量边界，然后再添加新的
+        MapOperation.map_addPolygonLayer({
+            geoJson: boundaryRes,
+            id: 'UniqueLayer',
+            lineColor: '#8fffff',
+            fillColor: '#a4ffff',
+            fillOpacity: 0.2,
+        })
+        window = await getRegionPosition(displayLabel.value)
+    } else if (activeTab.value === 'poi') {
+        gridRes = await getGridByPOIAndResolution(displayLabel.value, selectedRadius.value)
+        mapManager.withMap((m) => {
+            if (m.getSource('UniqueLayer-source')) m.removeSource('UniqueLayer-source')
+            if (m.getLayer('UniqueLayer-line')) m.removeLayer('UniqueLayer-line')
+            if (m.getLayer('UniqueLayer-fill')) m.removeLayer('UniqueLayer-fill')
+        })
+        // console.log(gridRes, 7474);
+        allGrids.value = gridRes
+        allGridCount.value = gridRes.length
+        window = await getPOIPosition(displayLabel.value, selectedRadius.value)
+        let geojson = createGeoJSONFromBounds(window.bounds)
+        console.log(geojson, 741);
+        MapOperation.map_addPolygonLayer({
+            geoJson: geojson,
+            id: 'UniqueLayer',
+            lineColor: '#8fffff',
+            fillColor: '#a4ffff',
+            fillOpacity: 0.2,
+        })
+        mapManager.withMap((m) => {
+            marker = new mapboxgl.Marker()
+                .setLngLat([Number(selectedPOI.value?.gcj02Lon), Number(selectedPOI.value?.gcj02Lat)])
+                .addTo(m);
+        })
+
+        // MapOperation.map_addPointLayer([Number(selectedPOI.value?.gcj02Lon), Number(selectedPOI.value?.gcj02Lat)])
+    }
+
     // 渲染网格数据
     let gridFeature: FeatureCollection = {
         type: 'FeatureCollection',
@@ -525,6 +592,29 @@ const getAllGrid = async () => {
     ])
 }
 
+const activeTab = ref('region')
+const tabs = [{
+    value: 'region',
+    label: '行政区'
+}, {
+    value: 'poi',
+    label: 'POI'
+}]
+const selectedPOI = ref<POIInfo>()
+const poiOptions = ref<POIInfo[]>([])
+
+// 根据输入内容远程获取
+const fetchPOIOptions = async (query: string) => {
+    let res: POIInfo[] = await getPoiInfo(query)
+    poiOptions.value = res.map(item => {
+        return {
+            ...item,
+            address: item.address === '[]' ? '' : item.address,
+        }
+    })
+    console.log(res, 7774);
+
+}
 /**
  * 用云量和日期初步获取影像数据
  */
