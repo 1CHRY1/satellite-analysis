@@ -26,7 +26,11 @@ const addMVTLayer = () => {
     // const baseUrl = '/chry'
     // const url = baseUrl + '/patch/{z}/{x}/{y}'
 
+    // const url = `http://${window.location.host}/chry/patch/{z}/{x}/{y}`
     const url = 'http://223.2.47.202:8999/api/v1/geo/vector/tiles/patch/{z}/{x}/{y}'
+    // const url = 'http://127.0.0.1:8000/tiles/{z}/{x}/{y}'
+
+    console.log(import.meta.env.VITE)
 
     mapManager.withMap((map) => {
         console.log('add layer')
@@ -34,15 +38,21 @@ const addMVTLayer = () => {
             type: 'vector',
             tiles: [url],
         })
+        setTimeout(() => {
+            const source = map.getSource('t-source')
+            console.log(source)
+        }, 1000)
         map.addLayer({
             id: 'test-layer',
             type: 'fill',
             source: 't-source',
-            'source-layer': 'default', //这个地方要注意,
+            'source-layer': 'patches', //这个地方要注意,
             paint: {
-                'fill-color': '#FF0000',
-                'fill-outline-color': '#0000ff',
+                'fill-color': '#ffffff',
             },
+        })
+        map.on('click','test-layer',(e)=>{
+            console.log(e.features[0])
         })
     })
 }
