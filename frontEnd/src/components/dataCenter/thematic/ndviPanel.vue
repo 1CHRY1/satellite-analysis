@@ -324,7 +324,7 @@ const analysisNDVI = async () => {
         return
     }
     let getNdviPointParam = {
-        sceneIds: props.thematicConfig.allImages.map(image => image.sceneId),
+        sceneIds: allNdviRateImages.value.map(image => image.sceneId),
         point: [pickedPoint.value[1], pickedPoint.value[0]]
     }
     ElMessage.success('开始ndvi时序分析。')

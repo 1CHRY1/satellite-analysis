@@ -48,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { getDescriptionBySceneId, getRasterScenesDes } from '@/api/http/satellite-data';
+import { getDescriptionBySceneId, getRasterScenesDes, getWindow } from '@/api/http/satellite-data';
 import {
     ChartColumn,
     Earth,
@@ -98,6 +98,11 @@ const showTif = async (image) => {
 
     const rgbLayerParam = await getRGBTileLayerParamFromSceneObject(res)
     MapOperation.map_addRGBImageTileLayer(rgbLayerParam)
+    let window = await getWindow(sceneId)
+    MapOperation.map_fitView([
+        [window.bounds[0], window.bounds[1]],
+        [window.bounds[2], window.bounds[3]],
+    ])
 }
 
 const RGImages: Ref<any> = ref([])

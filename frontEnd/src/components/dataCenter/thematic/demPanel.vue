@@ -111,7 +111,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch, watchEffect, type ComponentPublicInstance, type ComputedRef, type Ref } from 'vue';
-import { getRasterScenesDes, getRasterPoints, getBoundaryBySceneId, getCaseStatus, getCaseResult, getRasterLine, getDescriptionBySceneId } from '@/api/http/satellite-data';
+import { getRasterScenesDes, getRasterPoints, getBoundaryBySceneId, getCaseStatus, getCaseResult, getRasterLine, getDescriptionBySceneId, getWindow } from '@/api/http/satellite-data';
 import * as MapOperation from '@/util/map/operation'
 import { useGridStore, ezStore } from '@/store'
 import { formatTime } from '@/util/common';
@@ -210,7 +210,20 @@ const showTif = async (image) => {
     MapOperation.map_addTerrain({
         fullTifPath: url
     })
-
+    let window = await getWindow(sceneId)
+    MapOperation.map_fitView([
+        [window.bounds[0], window.bounds[1]],
+        [window.bounds[2], window.bounds[3]],
+    ])
+    mapManager.withMap((map) => {
+        map.once('moveend', () => {
+            map.easeTo({
+                pitch: 85,
+                bearing: 0,
+                duration: 2000,
+            })
+        })
+    })
 }
 
 const calTask: Ref<any> = ref({

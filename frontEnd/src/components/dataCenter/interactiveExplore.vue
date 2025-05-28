@@ -89,9 +89,13 @@
                                     <CalendarIcon :size="16" class="config-icon" />
                                     <span>时间范围</span>
                                 </div>
+                                <!-- <div class="config-control">
+                                    <a-range-picker class="custom-date-picker" v-model:value="tileMergeConfig.dateRange"
+                                        format='YYYY/MM/DD' :allow-clear="false" :placeholder="['开始日期', '结束日期']" />
+                                </div> -->
                                 <div class="config-control">
                                     <a-range-picker class="custom-date-picker" v-model:value="tileMergeConfig.dateRange"
-                                        picker="day" :allow-clear="false" :placeholder="['开始日期', '结束日期']" />
+                                        :allow-clear="false" :placeholder="['开始日期', '结束日期']" />
                                 </div>
                             </div>
                             <!-- <div class="config-item">
