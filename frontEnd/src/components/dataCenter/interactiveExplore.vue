@@ -474,9 +474,20 @@ const allGrids = ref([])
 const allGridCount = ref(0)
 const currentCityBounds = ref([])
 // 计算到了哪一级行政单位
+// 现在displayLabel不再需要用来display，它其实是获取region/poi的id的计算属性
 const displayLabel = computed(() => {
-    if (activeTab.value === 'poi') {
+    let switchTab
+    if (searchedTab.value === 'poi') {
+        switchTab = activeTab.value
+    } else if (searchedTab.value === 'region') {
+        switchTab = 'region'
+    } else if (activeTab.value === 'poi') {
+        switchTab = 'poi'
+    } else {
+        switchTab = 'region'
+    }
 
+    if (switchTab === 'poi') {
         if (!selectedPOI.value) return '未选择'
         return selectedPOI.value?.id
     }
@@ -509,6 +520,7 @@ const createGeoJSONFromBounds = (bounds: number[][]) => {
     };
 }
 let marker
+const searchedTab = ref<string>('')
 // 获取格网数据
 const getAllGrid = async () => {
     let gridRes: any = []
@@ -590,6 +602,8 @@ const getAllGrid = async () => {
         [window.bounds[0], window.bounds[1]],
         [window.bounds[2], window.bounds[3]],
     ])
+    // 将tab的选择固定下来
+    searchedTab.value = activeTab.value
 }
 
 const activeTab = ref('region')
@@ -605,6 +619,7 @@ const poiOptions = ref<POIInfo[]>([])
 
 // 根据输入内容远程获取
 const fetchPOIOptions = async (query: string) => {
+    if (query === '') return
     let res: POIInfo[] = await getPoiInfo(query)
     poiOptions.value = res.map(item => {
         return {
