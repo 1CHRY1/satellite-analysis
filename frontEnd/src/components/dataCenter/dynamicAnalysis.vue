@@ -88,6 +88,7 @@ import {
     Trash2Icon
 } from 'lucide-vue-next'
 import { ElMessage } from 'element-plus'
+import { mapManager } from '@/util/map/mapManager'
 
 const startTime = '2001-01-01'
 const endTime = '2030-01-01'
@@ -195,6 +196,11 @@ const clearImages = () => {
     MapOperation.map_destroyTerrain()
     MapOperation.map_destroyRGBImageTileLayer()
     MapOperation.map_destroyOneBandColorLayer()
+    mapManager.withMap((map) => {
+        if (map.getLayer('UniqueSceneLayer-fill')) map.removeLayer('UniqueSceneLayer-fill')
+        if (map.getLayer('UniqueSceneLayer-line')) map.removeLayer('UniqueSceneLayer-line')
+        if (map.getSource('UniqueSceneLayer-source')) map.removeSource('UniqueSceneLayer-source')
+    })
 }
 
 

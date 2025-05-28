@@ -424,6 +424,21 @@ import mapboxgl from 'mapbox-gl'
 const emit = defineEmits(['submitConfig'])
 
 /**
+ * !!!!!!!!!
+ * !!@!!!!!!!
+ * !!!!!!E!@#@#@##!@\
+ * 应特别需要，亚米数据的非ard数据从传感器到可视化全部被筛除掉了
+ * 小心这个坑
+ * 这样会导致亚米传统数据不属于任何一个分类
+ * 小心
+ * 小心
+ * 小心
+ * 
+ * 
+ */
+
+
+/**
  * 行政区划选取
  */
 
@@ -800,7 +815,9 @@ const classifyScenesByResolution = () => {
         if (!platform || isNaN(res)) continue
 
         if (res <= 1) {
-            addToCategory('1m', platform)
+            if (scene.tags.includes('ard')) {
+                addToCategory('1m', platform)
+            }
         } else if (res === 2) {
             addToCategory('2m', platform)
         } else if (res === 10) {

@@ -48,7 +48,7 @@
                             </div>
 
                             <!-- 划线采点块 -->
-                            <div @click="toggleMode('line')"
+                            <!-- <div @click="toggleMode('line')"
                                 class="w-24 h-24  flex flex-col items-center justify-center rounded-lg border cursor-pointer transition-all duration-200 text-white"
                                 :class="[
                                     activeMode === 'false'
@@ -58,6 +58,24 @@
                                 ]">
                                 <LayersIcon class="mb-2" />
                                 划线采点
+                            </div> -->
+                            <div @click="!true && toggleMode('line')"
+                                class="w-24 h-24 flex flex-col items-center justify-center rounded-lg border cursor-pointer transition-all duration-200 text-white relative"
+                                :class="[
+                                    activeMode === 'false'
+                                        ? 'border-[#2bb2ff] bg-[#1a2b4c]'
+                                        : 'border-[#247699] bg-[#0d1526]',
+                                    true
+                                        ? 'opacity-50 cursor-not-allowed pointer-events-none'
+                                        : 'hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95'
+                                ]">
+                                <LayersIcon class="mb-2" />
+                                划线采点
+                                <div v-if="true"
+                                    class="absolute inset-0 bg-black bg-opacity-40 rounded-lg flex flex-col items-center justify-center text-xs text-white cursor-not-allowed">
+                                    <LayersIcon class="mb-2" />
+                                    划线采点
+                                </div>
                             </div>
                         </div>
 
