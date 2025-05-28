@@ -128,18 +128,24 @@ export async function queryTileByXY(
 
 //----------------------------- v2版本 API -----------------------------//
 export async function getGridByRegionAndResolution(
-    region: number,
+    region: number | string,
     resolution: number,
 ): Promise<any> {
-    return http.get<any>(`data/region/grids/region/${region}/resolution/${resolution}`)
+    return http.get<any>(`data/grid/grids/region/${region}/resolution/${resolution}`)
+}
+export async function getGridByPOIAndResolution(poiId: string, resolution: number): Promise<any> {
+    return http.get<any>(`data/grid/grids/location/${poiId}/resolution/${resolution}`)
 }
 
-export async function getBoundary(region: number): Promise<any> {
+export async function getBoundary(region: number | string): Promise<any> {
     return http.get<any>(`data/region/boundary/${region}`)
 }
 
-export async function getRegionPosition(region: number): Promise<any> {
+export async function getRegionPosition(region: number | string): Promise<any> {
     return http.get<any>(`data/region/window/region/${region}`)
+}
+export async function getPOIPosition(region: number | string, resolution: number): Promise<any> {
+    return http.get<any>(`data/location/window/location/${region}/resolution/${resolution}`)
 }
 
 export async function getSceneGrids(param: any): Promise<any> {
@@ -176,4 +182,8 @@ export async function getRasterPoints(param: any): Promise<any> {
 
 export async function getRasterLine(param: any): Promise<any> {
     return http.post<any>(`modeling/example/raster/line`, param)
+}
+
+export async function getPoiInfo(query: string): Promise<any> {
+    return http.get<any>(`data/location/name/${query}`)
 }

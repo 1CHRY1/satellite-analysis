@@ -16,6 +16,9 @@
                     </div>
                     <div class="config-control justify-center">
                         <div class="w-full space-y-2 max-h-[500px] overflow-auto">
+                            <div v-if="RGImages.length === 0" class="flex justify-center my-6">
+                                <SquareDashedMousePointer class="mr-2" />该区域暂无红绿立体影像
+                            </div>
                             <div v-for="(image, index) in RGImages" :key="index" @click="showTif(image)"
                                 class="flex flex-col border cursor-pointer border-[#247699] bg-[#0d1526] text-white px-4 py-2 rounded-lg transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c]">
                                 <div class="truncate font-semibold text-base" :title="image.sceneName">{{
@@ -64,6 +67,7 @@ import {
     BoltIcon,
     BanIcon,
     MapIcon,
+    SquareDashedMousePointer
 } from 'lucide-vue-next'
 import { onMounted, ref, type Ref } from 'vue';
 import { getRGBTileLayerParamFromSceneObject } from '@/util/visualizeHelper'
@@ -94,7 +98,7 @@ const showTif = async (image) => {
     MapOperation.map_addRGBImageTileLayer(rgbLayerParam)
 }
 
-const RGImages: Ref<any> = ref({})
+const RGImages: Ref<any> = ref([])
 onMounted(async () => {
     // const stopLoading = message.loading('正在加载影像', 0)
     let thematicConfig = props.thematicConfig;

@@ -2,7 +2,7 @@
     <div class="timeline-container" v-if="show">
         <div class="timeline">
             <!-- 左侧日期筛选 -->
-            <div class="date-filter start-filter">
+            <!-- <div class="date-filter start-filter">
                 <div class="filter-label">起始日期</div>
                 <div class="date-selector">
                     <input
@@ -12,6 +12,19 @@
                         :max="endDateFilter || maxDate"
                         @change="applyDateFilter"
                     />
+                </div>
+            </div> -->
+            <div class="date-filter start-filter flex flex-col items-center justify-center text-center">
+                <div class="filter-label mb-1">年份</div>
+                <div class="date-selector">
+                    <select
+                    v-model="selectedYear"
+                    @change="applyDateFilter"
+                    class="bg-transparent border border-gray-300 rounded px-2 py-1 text-center"
+                    >
+                    <option disabled value="" class="!bg-[#1f282f]">请选择年份</option>
+                    <option v-for="year in yearOptions" :key="year" :value="year" class="!bg-[#1f282f]">{{ year }}</option>
+                    </select>
                 </div>
             </div>
 
@@ -53,7 +66,7 @@
             </div>
 
             <!-- 右侧日期筛选 -->
-            <div class="date-filter end-filter">
+            <!-- <div class="date-filter end-filter">
                 <div class="filter-label">结束日期</div>
                 <div class="date-selector">
                     <input
@@ -64,13 +77,27 @@
                         @change="applyDateFilter"
                     />
                 </div>
+            </div> -->
+            <div class="date-filter end-filter flex flex-col items-center justify-center text-center">
+                <div class="filter-label mb-1">月份</div>
+                <div class="date-selector">
+                    <select
+                    v-model="selectedMonth"
+                    :disabled="!selectedYear"
+                    @change="applyDateFilter"
+                    class="bg-transparent border border-gray-300 rounded px-2 py-1 text-center"
+                    >
+                        <option value="" class="!bg-[#1f282f]">全部月份</option>
+                        <option v-for="month in 12" :key="month" :value="month" class="!bg-[#1f282f]">{{ month }} 月</option>
+                    </select>
+                </div>
             </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch, reactive } from 'vue'
+import { ref, onMounted, computed, watch, reactive, type ComputedRef } from 'vue'
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-vue-next'
 import { getSceneGeojson, getTifbandMinMax } from '@/api/http/satellite-data/visualize.api'
 import { getGridImage, getGridRGBCompositeUrl } from '@/api/http/satellite-data/visualize.api'
@@ -130,6 +157,19 @@ const startDateFilter = ref('')
 const endDateFilter = ref('')
 const minDate = ref('')
 const maxDate = ref('')
+const selectedYear = ref('')
+const selectedMonth = ref('')
+
+const yearOptions:ComputedRef<string[]> = computed(() => {
+    const years = new Set<string>()
+    // 假设你有 minDate 和 maxDate 形式为 'YYYY-MM-DD'
+    const minYear = new Date(minDate.value).getFullYear()
+    const maxYear = new Date(maxDate.value).getFullYear()
+    for (let y = minYear; y <= maxYear; y++) {
+        years.add(String(y))
+    }
+    return Array.from(years)
+})
 
 const showingImages = computed(() => {
     if (visualMode.value === 'single') {
@@ -163,6 +203,25 @@ const filteredImages = computed(() => {
     return images
 })
 
+const handleDataRange = () => {
+    if (selectedYear.value && !selectedMonth.value) {
+    // 年份已选，月份未选：整年
+    startDateFilter.value = `${selectedYear.value}-01-01`
+    endDateFilter.value = `${selectedYear.value}-12-31`
+  } else if (selectedYear.value && selectedMonth.value) {
+    // 年份和月份都选了：该月
+    const year = selectedYear.value
+    const month = String(selectedMonth.value).padStart(2, '0')
+    const lastDay = new Date(Number(year), Number(selectedMonth.value), 0).getDate()
+    startDateFilter.value = `${year}-${month}-01`
+    endDateFilter.value = `${year}-${month}-${lastDay}`
+  } else {
+    // 都未选，那就全选吧
+    startDateFilter.value = '2001-01-01'
+    endDateFilter.value = '2030-12-31'
+  } 
+}
+
 // 监听筛选后的数据变化，重置活动索引
 watch(
     filteredImages,
@@ -191,6 +250,7 @@ const timeFormat = (timeString: string) => {
 
 // 应用日期筛选
 const applyDateFilter = () => {
+    handleDataRange()
     // 如果活动索引超出了筛选后的范围，重置为第一个
     if (activeIndex.value >= filteredImages.value.length || activeIndex.value < 0) {
         // activeIndex.value = filteredImages.value.length > 0 ? 0 : -1
@@ -219,7 +279,7 @@ const setDateRange = () => {
 
             minDate.value = firstDate.toISOString().split('T')[0]
             maxDate.value = nextDay.toISOString().split('T')[0]
-
+        
             console.log(firstDate, lastDate, minDate.value, maxDate.value, 157)
 
             // 只在初始化时设置筛选器的默认值
