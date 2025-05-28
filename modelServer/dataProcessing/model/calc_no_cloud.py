@@ -283,6 +283,120 @@ def do_statistic(results):
     return ave_statistic
 
 
+import os, time
+import glob
+import rasterio
+from rasterio.merge import merge
+from rio_cogeo.profiles import cog_profiles
+from rio_cogeo.cogeo import cog_translate, cog_info
+from contextlib import ExitStack
+
+def merge_tifs(temp_dir_path: str, task_id: str) -> str:
+    os.environ["GDAL_NUM_THREADS"] = "ALL_CPUS"
+    os.environ["GDAL_CACHEMAX"] = "20480" # mb
+
+    # 获取所有 tif 文件
+    tif_files = glob.glob(os.path.join(temp_dir_path, "*.tif"))
+    if not tif_files:
+        raise ValueError("No .tif files found in the directory")
+
+    # 安全管理多个文件句柄
+    with ExitStack() as stack:
+        src_files_to_mosaic = [stack.enter_context(rasterio.open(fp)) for fp in tif_files]
+
+        # 合并影像
+        mosaic, out_trans = merge(src_files_to_mosaic, mem_limit=20480, use_highest_res=False)
+
+        # 基于第一个影像获取元信息
+        out_meta = src_files_to_mosaic[0].meta.copy()
+        out_meta.update({
+            "driver": "GTiff",
+            "height": mosaic.shape[1],
+            "width": mosaic.shape[2],
+            "transform": out_trans,
+            "count": out_meta.get("count", 1),
+            "crs": src_files_to_mosaic[0].crs,
+            "tiled": True,
+            "blockxsize": 512,
+            "blockysize": 512   
+        })
+
+    profile = cog_profiles.get("zstd")  # 更快的压缩格式
+    config = {
+        "GDAL_NUM_THREADS": "ALL_CPUS",
+        "GDAL_TIFF_OVR_BLOCKSIZE": "512"
+    }
+
+
+    # 路径设置
+    temp_merge_path = os.path.join(temp_dir_path, f"{task_id}_temp_merge.tif")
+    final_merge_path = os.path.join(temp_dir_path, f"{task_id}_merge_cog.tif")
+
+    # 写入临时 GeoTIFF
+    with rasterio.open(temp_merge_path, "w", **out_meta) as dest:
+        dest.write(mosaic)
+
+    # 转为 COG
+    if cog_info(temp_merge_path)["COG"]:
+        return temp_merge_path
+    else:
+        with rasterio.open(temp_merge_path) as src:
+            cog_translate(
+                src, final_merge_path, profile,
+                in_memory=False,  # 改为磁盘处理
+                overview_resampling="nearest",
+                resampling="nearest",
+                allow_intermediate_compression=True,
+                config=config
+            )
+        print('合并结果：',temp_merge_path)
+        # os.remove(temp_merge_path)
+        return final_merge_path
+
+
+# def merge_tifs(temp_dir_path: str, task_id: str) -> str:
+#     # 获取所有 tif 文件
+#     tif_files = glob.glob(os.path.join(temp_dir_path, "*.tif"))
+#     if not tif_files:
+#         raise ValueError("No .tif files found in the directory")
+
+#     # 打开所有影像
+#     src_files_to_mosaic = [rasterio.open(fp) for fp in tif_files]
+
+#     # 合并影像
+#     mosaic, out_trans = merge(src_files_to_mosaic, mem_limit= 20480, use_highest_res=True)
+
+#     # 基于第一个影像获取元信息
+#     out_meta = src_files_to_mosaic[0].meta.copy()
+#     out_meta.update({
+#         "driver": "GTiff",  # 中间文件是标准 GeoTIFF，后续再转为 COG
+#         "height": mosaic.shape[1],
+#         "width": mosaic.shape[2],
+#         "transform": out_trans,
+#         "count": out_meta.get("count", 1),  # 确保波段数正确
+#         "crs": src_files_to_mosaic[0].crs  # 保证空间参考一致
+#     })
+
+#     # 路径设置
+#     temp_merge_path = os.path.join(temp_dir_path, f"{task_id}_temp_merge.tif")
+#     final_merge_path = os.path.join(temp_dir_path, f"{task_id}_merge_cog.tif")
+
+#     # 写入临时 GeoTIFF
+#     with rasterio.open(temp_merge_path, "w", **out_meta) as dest:
+#         dest.write(mosaic)
+
+#     # 转为 COG    
+#     if cog_info(temp_merge_path)["COG"]:
+#         return temp_merge_path
+#     else:
+#         with rasterio.open(temp_merge_path) as src:
+#             profile = cog_profiles.get("deflate")
+#             cog_translate(src, final_merge_path, profile, in_memory=True, overview_resampling="nearest", resampling="nearest", allow_intermediate_compression=False, temporary_compression="LZW", config={"GDAL_NUM_THREADS": "ALL_CPUS"})
+#             os.remove(temp_merge_path)
+#         return final_merge_path
+
+
+
 class calc_no_cloud(Task):
     def __init__(self, task_id, *args, **kwargs):
         super().__init__(task_id, *args, **kwargs)
@@ -318,6 +432,8 @@ class calc_no_cloud(Task):
 
         temp_dir_path = os.path.join(config.TEMP_OUTPUT_DIR, self.task_id)
         os.makedirs(temp_dir_path, exist_ok=True)
+        
+        print('start time ', time.time())
 
         process_func = partial(
             process_grid,
@@ -335,27 +451,40 @@ class calc_no_cloud(Task):
 
 
         ## Step 3 : Results Uploading and Statistic #######################
-        upload_results = []
-        stats = do_statistic(results)
+        # upload_results = []
+        # stats = do_statistic(results)
         
-        with ThreadPoolExecutor(max_workers=8) as executor:
-            futures = [
-                executor.submit(upload_one, tif_path, grid_x, grid_y, self.task_id)
-                for result in results if result is not None
-                for tif_path, grid_x, grid_y, grid_statistic in [result]
-            ]
-            for future in as_completed(futures):
-                upload_results.append(future.result())
+        print('end time ', time.time())
+        
+        # with ThreadPoolExecutor(max_workers=8) as executor:
+        #     futures = [
+        #         executor.submit(upload_one, tif_path, grid_x, grid_y, self.task_id)
+        #         for result in results if result is not None
+        #         for tif_path, grid_x, grid_y, grid_statistic in [result]
+        #     ]
+        #     for future in as_completed(futures):
+        #         upload_results.append(future.result())
     
-        upload_results.sort(key=lambda x: (x["grid"][0], x["grid"][1]))
+        # upload_results.sort(key=lambda x: (x["grid"][0], x["grid"][1]))
         
-        # print(upload_results)
+        print('start merge ',time.time())
+        result_path = merge_tifs(temp_dir_path, task_id=self.task_id)
+        print('end merge ',time.time())
+        minio_path = f"{self.task_id}/noCloud_merge.tif"
+        uploadLocalFile(result_path, config.MINIO_TEMP_FILES_BUCKET, minio_path)
+        print('end upload ',time.time())
+        
+        # # print(upload_results)
         print('=============ok=================')
 
         # if os.path.exists(temp_dir_path):
         #     shutil.rmtree(temp_dir_path) 
 
+        # return {
+        #     "grids": upload_results,
+        #     "statistic": stats
+        # }
         return {
-            "grids": upload_results,
-            "statistic": stats
+            "bucket": config.MINIO_TEMP_FILES_BUCKET,
+            "tifPath": minio_path
         }
