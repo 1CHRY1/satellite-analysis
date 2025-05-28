@@ -559,12 +559,16 @@ const LocalImageBaseMapStyle = {
     sources: {
         'Local-Imagelayer-Source': {
             type: 'raster',
-            tiles: [ezStore.get('conf')['intranet_img_url']],
+            tiles: [
+                `http://${window.location.host}` + ezStore.get('conf')['intranet_img_url']
+            ],
             tileSize: 256,
         },
         'Local-Interal-Source': {
             type: 'raster',
-            tiles: [ezStore.get('conf')['fk_url']],
+            tiles: [
+                `http://${window.location.host}` + ezStore.get('conf')['fk_url']
+            ],
             tileSize: 256,
         },
     },
@@ -1632,7 +1636,7 @@ const OurVectorBaseMapStyle = {
     sources: {
         offlineMapTiles: {
             type: 'vector',
-            tiles: [ezStore.get('conf')['intranet_mvt_url']],
+            tiles: [ `http://${window.location.host}` + ezStore.get('conf')['intranet_mvt_url']],
             minzoom: 0,
             maxzoom: 22,
         },
