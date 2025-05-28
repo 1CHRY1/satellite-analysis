@@ -41,21 +41,27 @@ def process_grid(grid, scenes, grid_helper, scene_band_paths, minio_endpoint, te
     need_fill_mask = None
     first_shape_set = False
     
+    ############### 预处理 ########################
     # 按分辨率排序，后续是以第一个景读到的像素为网格分辨率，所以先按分辨率排序
-    # sorted_scene = sorted(scenes, key=lambda obj: float(obj["resolution"].replace("m", "")))
-    sorted_scene = sorted(
-        scenes,
-        key=lambda obj: (
-            0 if obj.get("cloudPath") else 1,  # 有 cloudPath 的排前面（0 < 1）
-            float(obj["resolution"].replace("m", ""))  # 分辨率小的排前面（高分辨率）
-        )
-    )
-
+    sorted_scene = sorted(scenes, key=lambda obj: float(obj["resolution"].replace("m", "")))
+    # sorted_scene = sorted(
+    #     scenes,
+    #     key=lambda obj: (
+    #         0 if obj.get("cloudPath") else 1,  # 有 cloudPath 的排前面（0 < 1）
+    #         float(obj["resolution"].replace("m", ""))  # 分辨率小的排前面（高分辨率）
+    #     )
+    # )
     
+    
+    
+    
+    ############### 景遍历 ######################## 
     for scene in sorted_scene:
 
         nodata = scene.get('noData')
         scene_label = scene.get('sensorName') + scene.get('sceneId')
+        
+        # Step 0 检验： 云波段检验
         if not is_grid_covered(scene):
             print(scene_label, ':: not cover, jump')
             continue
@@ -67,12 +73,34 @@ def process_grid(grid, scenes, grid_helper, scene_band_paths, minio_endpoint, te
             print(scene_label, ':: no cloud_band, 默认无云')
 
             if not first_shape_set:
-                print(f"{scene_label} 没有云波段，也没有first_shape，跳过")
-                continue
+                # print(f"{scene_label} 没有云波段，R通道推断 shape")
 
-            # 没有云波段时默认全是无云区域， 只考虑nodata
+                scene_id = scene['sceneId']
+                paths = scene_band_paths.get(scene_id)
+                if not paths or not all(paths.values()):
+                    print(f"{scene_label} 缺失 RGB 波段路径，跳过")
+                    continue
+
+                try:
+                    full_path = minio_endpoint + "/" + scene['bucket'] + "/" + paths['red']
+                    with COGReader(full_path, options={'nodata': int(nodata)}) as reader:
+                        temp_img_data = reader.part(bbox=bbox, indexes=[1])
+                        target_H, target_W = temp_img_data.data[0].shape
+                        print(f"[fallback] 通过红波段确定目标尺寸为: H={target_H}, W={target_W}")
+
+                        img_R = np.full((target_H, target_W), 0, dtype=np.uint16)
+                        img_G = np.full((target_H, target_W), 0, dtype=np.uint16)
+                        img_B = np.full((target_H, target_W), 0, dtype=np.uint16)
+                        need_fill_mask = np.ones((target_H, target_W), dtype=bool)
+                        first_shape_set = True
+
+                except Exception as e:
+                    print(f"[fallback] 读取红波段失败，跳过：{e}")
+                    continue
+
+            # 默认认为全部有效（无云），只受 nodata 控制
             valid_mask = np.ones((target_H, target_W), dtype=bool)
-                
+                    
         else:
 
             full_url = minio_endpoint + "/" + scene.get('bucket') + '/' + cloud_band_path
@@ -322,7 +350,7 @@ class calc_no_cloud(Task):
         upload_results.sort(key=lambda x: (x["grid"][0], x["grid"][1]))
         
         # print(upload_results)
-        print('ok')
+        print('=============ok=================')
 
         # if os.path.exists(temp_dir_path):
         #     shutil.rmtree(temp_dir_path) 

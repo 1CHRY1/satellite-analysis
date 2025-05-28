@@ -5,6 +5,7 @@ import json
 import requests
 from osgeo import gdal
 import concurrent.futures
+from rio_tiler.io import COGReader, Reader
 
 from dataProcessing.Utils.mySqlUtils import select_tile_by_column_and_row, select_tile_by_column_and_row_v2
 from dataProcessing.Utils.osUtils import uploadLocalFile
@@ -12,6 +13,7 @@ from dataProcessing.Utils.tifUtils import latlon_to_utm, get_pixel_value_at_utm
 from dataProcessing.Utils.tifUtils import calculate_cloud_coverage, get_tif_epsg, convert_bbox_to_utm, parse_time_in_scene
 from dataProcessing.Utils.gridUtil import GridHelper, GridCell
 from dataProcessing.model.task import Task
+import dataProcessing.Utils.cogUtils as cogUtils
 import dataProcessing.config as config
 
 MINIO_ENDPOINT = f"http://{config.MINIO_IP}:{config.MINIO_PORT}"
@@ -71,49 +73,62 @@ class calc_NDVI(Task):
 
         def process_scene(scene, lng, lat, MINIO_ENDPOINT): 
             try:
-                epsg_code = get_tif_epsg(MINIO_ENDPOINT + "/" + scene['images'][0]['bucket'] + "/" + scene['images'][0]['tifPath'])
-                x, y = latlon_to_utm(lng, lat, epsg_code)
+                # epsg_code = get_tif_epsg(MINIO_ENDPOINT + "/" + scene['images'][0]['bucket'] + "/" + scene['images'][0]['tifPath'])
+                # x, y = latlon_to_utm(lng, lat, epsg_code)
 
-                bandMapper = scene['bandMapper']
-                Red_path = None
-                NIR_path = None
+                # bandMapper = scene['bandMapper']
+                # Red_path = None
+                # NIR_path = None
 
                 NDVI = 0.0
 
                 # 查找Red和NIR波段的路径
-                for image in scene["images"]:
-                    if image["band"] == bandMapper['Red']:
-                        Red_path = MINIO_ENDPOINT + "/" + image['bucket'] + "/" + image["tifPath"]
-                    elif image["band"] == bandMapper['NIR']:
-                        NIR_path = MINIO_ENDPOINT + "/" + image['bucket'] + "/" + image["tifPath"]
+                # for image in scene["images"]:
+                #     if image["band"] == bandMapper['Red']:
+                #         Red_path = MINIO_ENDPOINT + "/" + image['bucket'] + "/" + image["tifPath"]
+                #     elif image["band"] == bandMapper['NIR']:
+                #         NIR_path = MINIO_ENDPOINT + "/" + image['bucket'] + "/" + image["tifPath"]
 
-                # 如果缺少Red或NIR路径，返回None
-                if not Red_path or not NIR_path:
-                    print(f"Skipping scene {scene['sceneTime']} due to missing Red or NIR path.")
-                    return {"sceneTime": scene['sceneTime'], "value": NDVI}
+                ndvi_image = scene["images"][0]
+                url = MINIO_ENDPOINT + "/" + ndvi_image['bucket'] + "/" + ndvi_image["tifPath"]
+                
+                raster_context = COGReader(url)
+                bounds = raster_context.dataset.bounds
+                if cogUtils.ifPointContained(lng, lat, bounds):
+                    pointData = raster_context.point(lng, lat)
+                    NDVI = pointData.data[0].tolist()
+                    print('NDVI : ', NDVI)
 
-                # 获取像素值
-                Red = get_pixel_value_at_utm(x, y, Red_path)
-                NIR = get_pixel_value_at_utm(x, y, NIR_path)
+                raster_context.close()
+                return  {"sceneTime": scene['sceneTime'], "value": NDVI}
 
-                # 确保Red和NIR都是有效值
-                if Red is None or NIR is None or Red == 0 and NIR == 0:
-                    print(f"Skipping scene {scene['sceneTime']} due to invalid Red or NIR values.")
-                    return {"sceneTime": scene['sceneTime'], "value": NDVI}
+                # # 如果缺少Red或NIR路径，返回None
+                # if not Red_path or not NIR_path:
+                #     print(f"Skipping scene {scene['sceneTime']} due to missing Red or NIR path.")
+                #     return {"sceneTime": scene['sceneTime'], "value": NDVI}
 
-                # 计算NDVI
-                try:
-                    NDVI = (NIR - Red) / (NIR + Red)
-                except ZeroDivisionError:
-                    print(f"Skipping scene {scene['sceneTime']} due to division by zero.")
-                    return {"sceneTime": scene['sceneTime'], "value": NDVI}
+                # # 获取像素值
+                # Red = get_pixel_value_at_utm(x, y, Red_path)
+                # NIR = get_pixel_value_at_utm(x, y, NIR_path)
 
-                # 返回有效结果
-                return {"sceneTime": scene['sceneTime'], "value": NDVI}
+                # # 确保Red和NIR都是有效值
+                # if Red is None or NIR is None or Red == 0 and NIR == 0:
+                #     print(f"Skipping scene {scene['sceneTime']} due to invalid Red or NIR values.")
+                #     return {"sceneTime": scene['sceneTime'], "value": NDVI}
+
+                # # 计算NDVI
+                # try:
+                #     NDVI = (NIR - Red) / (NIR + Red)
+                # except ZeroDivisionError:
+                #     print(f"Skipping scene {scene['sceneTime']} due to division by zero.")
+                #     return {"sceneTime": scene['sceneTime'], "value": NDVI}
+
+                ## 返回有效结果
+                # return {"sceneTime": scene['sceneTime'], "value": NDVI}
 
             except Exception as e:
                 print(f"Error processing scene {scene['sceneTime']}: {e}")
-                return 0.0
+                return {"sceneTime": scene['sceneTime'], "value": NDVI}
 
         print("calc_NDVI run")
         # 按sceneTime排序
@@ -138,7 +153,7 @@ class calc_NDVI(Task):
 
         # 构建最终结果
         NDVI_result = json.dumps({"NDVI": results}, indent=4)
-        print(NDVI_result)
+        # print(NDVI_result)
         return NDVI_result
 
 
