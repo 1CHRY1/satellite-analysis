@@ -249,7 +249,7 @@ const initMVTLayers = (options: { type: string; color: string }[]) => {
 
             const sourceId = `${type}-source`;
             const layerId = `${type}-layer`;
-            const tileUrl = `http://223.2.47.202:9888/api/v1/geo/vector/tiles/patch/region/${regionId}/type/${type}/{z}/{x}/{y}`;
+            const tileUrl = `http://${window.location.host}/api/geo/vector/tiles/patch/region/${regionId}/type/${type}/{z}/{x}/{y}`;
             // 添加 Source
             if (!map.getSource(sourceId)) {
                 map.addSource(sourceId, {
@@ -266,7 +266,7 @@ const initMVTLayers = (options: { type: string; color: string }[]) => {
                     'source-layer': 'patch',
                     paint: {
                         'fill-color': color,
-                        'fill-opacity': 0.2,
+                        'fill-opacity': 0.5,
                     },
                     layout: {
                         visibility: 'none', // 初始隐藏
