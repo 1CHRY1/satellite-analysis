@@ -145,7 +145,7 @@ export async function getRegionPosition(region: number | string): Promise<any> {
     return http.get<any>(`data/region/window/region/${region}`)
 }
 export async function getPOIPosition(region: number | string, resolution: number): Promise<any> {
-    return http.get<any>(`geo/location/window/location/${region}/resolution/${resolution}`)
+    return http.get<any>(`data/location/window/location/${region}/resolution/${resolution}`)
 }
 
 export async function getSceneGrids(param: any): Promise<any> {
@@ -185,5 +185,5 @@ export async function getRasterLine(param: any): Promise<any> {
 }
 
 export async function getPoiInfo(query: string): Promise<any> {
-    return http.get<any>(`geo/location/name/${query}`)
+    return http.get<any>(`data/location/name/${query}`)
 }

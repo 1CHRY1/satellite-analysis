@@ -3,6 +3,9 @@ import http from '../clientHttp2'
 export async function getSceneByConfig(param: any): Promise<any> {
     return http.post<any>(`data/scene/time/cloud/region`, param)
 }
+export async function getSceneByPOIConfig(param: any): Promise<any> {
+    return http.post<any>(`data/scene/time/cloud/resolution/location`, param)
+}
 
 export async function getDescriptionBySceneId(sceneId: string): Promise<any> {
     return http.get<any>(`data/scene/sceneId/${sceneId}`)

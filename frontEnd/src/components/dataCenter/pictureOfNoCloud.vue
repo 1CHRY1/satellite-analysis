@@ -148,13 +148,13 @@
                                         <label class="flex items-center gap-2">
                                             <input type="checkbox" v-model="additionalData[1]" @click="addAbroadImages"
                                                 :disabled="!dataReconstruction[0]" class="h-4 w-4 rounded" />
-                                            国外影像填补缺失格网
+                                            国外影像填补格网效果预览
                                         </label>
                                         <label class="flex items-center gap-2">
                                             <input type="checkbox" v-model="dataReconstruction[1]"
                                                 @click="controlProgress(1)" :disabled="!dataReconstruction[0]"
                                                 class="h-4 w-4 rounded" />
-                                            使用国外影像超分重建数据
+                                            使用国外影像数据参与重构
                                         </label>
                                         <div v-if="showProgress[1]"
                                             class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
@@ -206,13 +206,13 @@
                                             <input type="checkbox" v-model="additionalData[2]" @click="addRadarImages"
                                                 :disabled="!additionalData[1] || !dataReconstruction[1]
                                                     " class="h-4 w-4 rounded" />
-                                            SAR影像填补缺失格网
+                                            SAR影像填补格网效果预览
                                         </label>
                                         <label class="flex items-center gap-2">
                                             <input type="checkbox" v-model="dataReconstruction[2]"
                                                 @click="controlProgress(2)" :disabled="!additionalData[1] || !dataReconstruction[1]
                                                     " class="h-4 w-4 rounded" />
-                                            使用SAR影像色彩变换重建数据
+                                            使用SAR影像色彩变换参与重构
                                         </label>
                                         <div v-if="showProgress[2]"
                                             class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
@@ -251,7 +251,19 @@
                                 </div>
                             </div>
 
-                            <div class="flex w-full flex-col">
+                            <div class="flex w-full flex-col justify-center">
+                                <div class="flex flex-row gap-2 my-4 ml-[13px] items-center">
+                                    <label class="flex items-center gap-2">
+                                        <input type="checkbox" v-model="isMerging" class="h-4 w-4 rounded" />
+                                        合并一版图
+                                    </label>
+                                    <div>
+                                        <el-tooltip content="需要输出时勾选，会大幅增加计算时间。" placement="top" effect="dark">
+                                            <CircleHelp :size="14" />
+                                        </el-tooltip>
+                                    </div>
+                                </div>
+
                                 <button @click="calNoClouds" :disabled="noCloudLoading"
                                     class="flex justify-center w-full rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
                                     :class="{
@@ -565,6 +577,8 @@ const calTask: Ref<any> = ref({
 const additionalData = ref([true, false, false])
 // 数据重构勾选框
 const dataReconstruction = ref([false, false, false])
+// 是否合并
+const isMerging = ref(false)
 
 const calImage: Ref<any[]> = ref([])
 let progressTimer: ReturnType<typeof setInterval> | null = null
