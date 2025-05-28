@@ -383,6 +383,7 @@ import {
     getPoiInfo,
     getGridByPOIAndResolution,
     getPOIPosition,
+    getSceneByPOIConfig,
 } from '@/api/http/satellite-data'
 import * as MapOperation from '@/util/map/operation'
 import { mapManager } from '@/util/map/mapManager'
@@ -654,12 +655,24 @@ const filterByCloudAndDate = async () => {
         regionId: displayLabel.value,
     }
     // allFilteredImages.value = await getSceneByConfig(filterData)
-    allScenes.value = (await getSceneByConfig(filterData)).map((image) => {
-        return {
-            ...image,
-            tags: [image.tags.source, image.tags.production, image.tags.category],
-        }
-    })
+    if (searchedTab.value === 'region') {
+        allScenes.value = (await getSceneByConfig(filterData)).map((image) => {
+            return {
+                ...image,
+                tags: [image.tags.source, image.tags.production, image.tags.category],
+            }
+        })
+    } else if (searchedTab.value === 'poi') {
+        const poiFilter = { ...filterData, resolution: selectedRadius.value }
+        allScenes.value = (await getSceneByPOIConfig(poiFilter)).map((image) => {
+            return {
+                ...image,
+                tags: [image.tags.source, image.tags.production, image.tags.category]
+            }
+        })
+    }
+
+
     console.log('allScenes', allScenes.value)
 
     // 记录所有景中含有的“传感器+分辨率字段”
