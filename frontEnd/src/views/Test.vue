@@ -27,7 +27,7 @@ const addMVTLayer = () => {
     // const url = baseUrl + '/patch/{z}/{x}/{y}'
 
     // const url = `http://${window.location.host}/chry/patch/{z}/{x}/{y}`
-    const url = 'http://223.2.47.202:8999/api/v1/geo/vector/tiles/patch/{z}/{x}/{y}'
+    const url = 'http://223.2.47.202:9888/api/v1/geo/vector/tiles/patch/{z}/{x}/{y}'
     // const url = 'http://127.0.0.1:8000/tiles/{z}/{x}/{y}'
 
     console.log(import.meta.env.VITE)

@@ -384,6 +384,7 @@ import {
     getGridByPOIAndResolution,
     getPOIPosition,
     getSceneByPOIConfig,
+    getCoverPOISensorScenes,
 } from '@/api/http/satellite-data'
 import * as MapOperation from '@/util/map/operation'
 import { mapManager } from '@/util/map/mapManager'
@@ -475,8 +476,8 @@ const allGrids = ref([])
 const allGridCount = ref(0)
 const currentCityBounds = ref([])
 // 计算到了哪一级行政单位
-// 现在displayLabel不再需要用来display，它其实是获取region/poi的id的计算属性
-const displayLabel = computed(() => {
+// 现在landId不再需要用来display，它其实是获取region/poi的id的计算属性
+const landId = computed(() => {
     let switchTab
     if (searchedTab.value === 'poi') {
         switchTab = activeTab.value
@@ -489,6 +490,18 @@ const displayLabel = computed(() => {
     }
 
     if (switchTab === 'poi') {
+        if (!selectedPOI.value) return '未选择'
+        return selectedPOI.value?.id
+    }
+    let info = region.value
+    if (info.area) return `${info.area}`
+    if (info.city) return `${info.city}`
+    if (info.province) return `${info.province}`
+    return '未选择'
+})
+// 获取格网阶段所用的地物iD
+const gridUsedId = computed(() => {
+    if (activeTab.value === 'poi') {
         if (!selectedPOI.value) return '未选择'
         return selectedPOI.value?.id
     }
@@ -521,12 +534,12 @@ const createGeoJSONFromBounds = (bounds: number[][]) => {
     };
 }
 let marker
-const searchedTab = ref<string>('')
+const searchedTab = ref<'' | 'poi' | 'region'>('')
 // 获取格网数据
 const getAllGrid = async () => {
     let gridRes: any = []
     let window: any = []
-    if (displayLabel.value === '未选择') {
+    if (gridUsedId.value === '未选择') {
         ElMessage.warning('请选择行政区或POI')
         return
     }
@@ -536,9 +549,9 @@ const getAllGrid = async () => {
     if (marker) marker.remove()
 
     if (activeTab.value === 'region') {
-        let boundaryRes = await getBoundary(displayLabel.value)
+        let boundaryRes = await getBoundary(gridUsedId.value)
         currentCityBounds.value = boundaryRes
-        gridRes = await getGridByRegionAndResolution(displayLabel.value, selectedRadius.value)
+        gridRes = await getGridByRegionAndResolution(gridUsedId.value, selectedRadius.value)
         allGrids.value = gridRes
         allGridCount.value = gridRes.length
         console.log(boundaryRes, 445);
@@ -551,9 +564,9 @@ const getAllGrid = async () => {
             fillColor: '#a4ffff',
             fillOpacity: 0.2,
         })
-        window = await getRegionPosition(displayLabel.value)
+        window = await getRegionPosition(gridUsedId.value)
     } else if (activeTab.value === 'poi') {
-        gridRes = await getGridByPOIAndResolution(displayLabel.value, selectedRadius.value)
+        gridRes = await getGridByPOIAndResolution(gridUsedId.value, selectedRadius.value)
         mapManager.withMap((m) => {
             if (m.getSource('UniqueLayer-source')) m.removeSource('UniqueLayer-source')
             if (m.getLayer('UniqueLayer-line')) m.removeLayer('UniqueLayer-line')
@@ -562,7 +575,7 @@ const getAllGrid = async () => {
         // console.log(gridRes, 7474);
         allGrids.value = gridRes
         allGridCount.value = gridRes.length
-        window = await getPOIPosition(displayLabel.value, selectedRadius.value)
+        window = await getPOIPosition(gridUsedId.value, selectedRadius.value)
         let geojson = createGeoJSONFromBounds(window.bounds)
         console.log(geojson, 741);
         MapOperation.map_addPolygonLayer({
@@ -607,8 +620,14 @@ const getAllGrid = async () => {
     searchedTab.value = activeTab.value
 }
 
-const activeTab = ref('region')
-const tabs = [{
+const activeTab = ref<'region' | 'poi'>('region')
+
+type TabValue = 'region' | 'poi'
+interface Tab {
+    value: TabValue
+    label: string
+}
+const tabs: Tab[] = [{
     value: 'region',
     label: '行政区'
 }, {
@@ -639,7 +658,7 @@ const allSensorsItems = ref<any>([])
 const filterByCloudAndDateLoading = ref(false)
 // const allFilteredImages = ref<any>([])
 const filterByCloudAndDate = async () => {
-    if (displayLabel.value === '未选择') {
+    if (landId.value === '未选择') {
         ElMessage.warning('请先选择行政区并获取格网')
         return
     } else if (allGrids.value.length === 0) {
@@ -652,7 +671,7 @@ const filterByCloudAndDate = async () => {
         startTime: tileMergeConfig.value.dateRange[0].format('YYYY-MM-DD'),
         endTime: tileMergeConfig.value.dateRange[1].format('YYYY-MM-DD'),
         cloud: tileMergeConfig.value.cloudRange[1],
-        regionId: displayLabel.value,
+        regionId: landId.value,
     }
     // allFilteredImages.value = await getSceneByConfig(filterData)
     if (searchedTab.value === 'region') {
@@ -663,7 +682,13 @@ const filterByCloudAndDate = async () => {
             }
         })
     } else if (searchedTab.value === 'poi') {
-        const poiFilter = { ...filterData, resolution: selectedRadius.value }
+        const poiFilter = {
+            startTime: tileMergeConfig.value.dateRange[0].format('YYYY-MM-DD'),
+            endTime: tileMergeConfig.value.dateRange[1].format('YYYY-MM-DD'),
+            cloud: tileMergeConfig.value.cloudRange[1],
+            locationId: landId.value,
+            resolution: selectedRadius.value
+        }
         allScenes.value = (await getSceneByPOIConfig(poiFilter)).map((image) => {
             return {
                 ...image,
@@ -671,8 +696,6 @@ const filterByCloudAndDate = async () => {
             }
         })
     }
-
-
     console.log('allScenes', allScenes.value)
 
     // 记录所有景中含有的“传感器+分辨率字段”
@@ -936,7 +959,7 @@ const makeFullSceneGrid = async () => {
     MapOperation.draw_deleteAll()
 
     emit('submitConfig', {
-        regionCode: displayLabel.value,
+        regionCode: landId.value,
         dataRange: [...tileMergeConfig.value.dateRange],
         cloud: tileMergeConfig.value.cloudRange[1],
         space: selectedRadius.value,
@@ -1141,15 +1164,29 @@ const handleShowResolutionSensorImage = async (label: string) => {
 
     console.log('匹配的sensorName', sensorName)
 
-    const params = {
-        sensorName,
-        sceneIds,
-        regionId: displayLabel.value,
-    }
+
 
     const stopLoading = message.loading('正在加载影像...')
 
-    const coverScenes = await getCoverRegionSensorScenes(params)
+    let coverScenes
+    if (searchedTab.value === 'region') {
+        const params = {
+            sensorName,
+            sceneIds,
+            regionId: landId.value,
+        }
+        coverScenes = await getCoverRegionSensorScenes(params)
+    } else if (searchedTab.value === 'poi') {
+        const params = {
+            sensorName,
+            sceneIds,
+            locationId: landId.value,
+            resolution: selectedRadius.value,
+        }
+        coverScenes = await getCoverPOISensorScenes(params)
+    }
+    console.log(coverScenes, 1476);
+
 
     console.log('接口返回：覆盖的景们', coverScenes)
 

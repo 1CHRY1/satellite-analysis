@@ -52,21 +52,20 @@
                         <div class="flex gap-4 my-4 items-center mb-4">
                             添加辅助图斑:
                             <div class="  relative">
-                                <el-select v-model="selectedDimension" multiple placeholder="Select" class="w-[190px] "
-                                    popper-class="ndviSelect">
-                                    <el-option v-for="item in dimensionColors" :key="item.value" :label="item.label"
-                                        :value="item.value" class="!bg-transparent">
+                                <el-select v-model="selectedDimension" multiple placeholder="Select" class="w-[190px]"
+                                    @change="showMVTLayers(selectedDimension)" popper-class="ndviSelect">
+                                    <el-option v-for="item in allOptions" :key="item.type" :label="item.label"
+                                        :value="item.type" class="!bg-transparent">
                                         <div class="flex items-center">
-                                            <el-tag :color="item.value" class="mr-2 aspect-square border-none"
+                                            <el-tag :color="item.color" class="mr-2 aspect-square border-none"
                                                 size="small" />
-                                            <span :style="{ color: item.value }">{{ item.label }}</span>
+                                            <span class="text-white">{{ item.label }}</span>
                                         </div>
                                     </el-option>
 
-                                    <!-- tag 插槽部分：用于显示已选择的标签 -->
                                     <template #tag>
-                                        <el-tag v-for="color in selectedDimension" :key="color" :color="color"
-                                            class="aspect-square border-none" />
+                                        <el-tag v-for="type in selectedDimension" :key="type"
+                                            :color="getColorByType(type)" class="aspect-square border-none" />
                                     </template>
                                 </el-select>
                             </div>
@@ -125,20 +124,33 @@
             <h2 class="section-title">计算结果</h2>
         </div>
         <div class="section-content">
-            <div v-if="1" class="flex justify-center my-6">
+            <div v-if="analysisData.length === 0" class="flex justify-center my-6">
                 <SquareDashedMousePointer class="mr-2" />暂无计算结果
+            </div>
+            <div class="config-item" v-for="(item, index) in analysisData" :key="index">
+                <div>第{{ index + 1 }}次计算：{{ item.analysis }}</div>
+                <!-- <div>NDVI计算结果为：xxx</div> -->
+                <!-- <div>统计数据-统计数据-统计数据-统计数据</div> -->
+                <div>经纬度：（{{ item.point[0] }},{{ item.point[1] }}）</div>
+
+                <div class="chart-wrapper flex flex-col items-end">
+                    <div class="chart" :ref="el => setChartRef(el, index)" :id="`chart-${index}`"
+                        style="width: 100%; height: 400px;"></div>
+                    <button class="!text-[#38bdf8] cursor-pointer" @click="fullscreenChart(index)">全屏查看</button>
+                </div>
             </div>
         </div>
     </section>
 </template>
 
 <script setup lang="ts">
-import { computed, onUnmounted, ref, type ComputedRef, type Ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch, type ComponentPublicInstance, type ComputedRef, type Ref } from 'vue'
 import * as MapOperation from '@/util/map/operation'
-import { getBoundaryBySceneId, getCaseResult, getCaseStatus, getNdviPoint } from '@/api/http/satellite-data'
+import { getBoundaryBySceneId, getCaseResult, getCaseStatus, getNdviPoint, getRasterScenesDes } from '@/api/http/satellite-data'
 import { ElMessage } from 'element-plus'
-
-
+import bus from '@/store/bus'
+import mapboxgl from 'mapbox-gl'
+import * as echarts from 'echarts'
 
 
 import {
@@ -159,9 +171,11 @@ import {
     BoltIcon,
     BanIcon,
     MapIcon,
-    SquareDashedMousePointer
+    SquareDashedMousePointer,
+    Bus
 } from 'lucide-vue-next'
 import { useGridStore } from '@/store'
+import { mapManager } from '@/util/map/mapManager'
 
 type ThematicConfig = {
     allImages: any,
@@ -177,37 +191,21 @@ type tag = {
 }
 
 const props = defineProps<{ thematicConfig: ThematicConfig }>()
+const allNdviRateImages = ref<any>([])
+const initNdviRatePanel = async () => {
+    let thematicConfig = props.thematicConfig
+    if (!thematicConfig.regionId) return
+    let rasterParam = {
+        startTime: thematicConfig.startTime,
+        endTime: thematicConfig.endTime,
+        regionId: thematicConfig.regionId,
+        dataType: 'ndvi'
+    }
+    allNdviRateImages.value = await getRasterScenesDes(rasterParam)
+    console.log(allNdviRateImages.value, 57);
+}
 
-const dimensionColors = ref<tag[]>([
-    {
-        value: "#fbe4d5",
-        label: "创新发展",
-    },
-    {
-        value: "#d9e2f3",
-        label: "协调发展",
-    },
-    {
-        value: "#c5e0b3",
-        label: "绿色发展",
-    },
-    {
-        value: "#ffe599",
-        label: "开放发展",
-    },
-    {
-        value: "#d9c8eb",
-        label: "共享发展",
-    },
-]);
 
-// 选中的维度
-const selectedDimension = ref<string[]>([]);
-
-// 将所有维度颜色添加到初始框中
-dimensionColors.value.forEach((color: tag) => {
-    selectedDimension.value.push(color.value);
-});
 
 
 const selectedSceneId = ref('')
@@ -225,6 +223,80 @@ const pickedLine: ComputedRef<LatLng[]> = computed(() => {
         Math.round(lng * 1000000) / 1000000
     ])
 })
+
+const allOptions = [
+    { label: '耕地', type: 'farm', color: '#FFA07A' },   // 浅橙红（salmon）- 农田温暖色
+    { label: '林地', type: 'forest', color: '#228B22' }, // 森林绿（forest green）- 森林直观
+    { label: '草地', type: 'grass', color: '#7CFC00' },  // 草绿色（lawn green）- 明亮活力
+    { label: '水体', type: 'water', color: '#1E90FF' },  // 道奇蓝（dodger blue）- 水体专属
+    { label: '城市', type: 'city', color: '#CD5C5C' },    // 印度红（更贴近城市建筑）
+    { label: '未利用', type: 'inuse', color: '#D3D3D3' },// 浅灰（light gray）- 表示未使用
+    { label: '海洋', type: 'ocean', color: '#20B2AA' },  // 浅海蓝（light sea green）- 海洋专属
+];
+const selectedDimension = ref<string[]>([]);
+// 选中的维度
+
+// 将所有维度颜色添加到初始框中
+// allOptions.forEach((option) => {
+//     selectedDimension.value.push(option.type);
+// });
+
+const initMVTLayers = (options: { type: string; color: string }[]) => {
+    const regionId = props.thematicConfig.regionId;
+
+    mapManager.withMap((map) => {
+        options.forEach(({ type, color }) => {
+
+            const sourceId = `${type}-source`;
+            const layerId = `${type}-layer`;
+            const tileUrl = `http://223.2.47.202:9888/api/v1/geo/vector/tiles/patch/region/${regionId}/type/${type}/{z}/{x}/{y}`;
+            // 添加 Source
+            if (!map.getSource(sourceId)) {
+                map.addSource(sourceId, {
+                    type: 'vector',
+                    tiles: [tileUrl],
+                });
+            }
+            // 添加 Layer（不可见）
+            if (!map.getLayer(layerId)) {
+                map.addLayer({
+                    id: layerId,
+                    type: 'fill',
+                    source: sourceId,
+                    'source-layer': 'patch',
+                    paint: {
+                        'fill-color': color,
+                        'fill-opacity': 0.2,
+                    },
+                    layout: {
+                        visibility: 'none', // 初始隐藏
+                    },
+                });
+            }
+        });
+    });
+};
+
+// 控制哪些图斑可见
+const showMVTLayers = (visibleOptions: string[]) => {
+
+    const visibleTypes = new Set(visibleOptions);
+
+    mapManager.withMap((map) => {
+        // 遍历所有当前图层
+        map.getStyle()?.layers.forEach((layer) => {
+            if (layer.id.endsWith('-layer')) {
+                const type = layer.id.replace('-layer', '');
+                const visibility = visibleTypes.has(type) ? 'visible' : 'none';
+                map.setLayoutProperty(layer.id, 'visibility', visibility);
+            }
+        });
+    });
+};
+const getColorByType = (type: string) => {
+    return allOptions.find(opt => opt.type === type)?.color || '#ccc';
+};
+
 
 const toggleMode = (mode: 'point' | 'line' | 'false') => {
     // activeMode.value = activeMode.value === mode ? null : mode
@@ -255,7 +327,7 @@ const analysisNDVI = async () => {
         sceneIds: props.thematicConfig.allImages.map(image => image.sceneId),
         point: [pickedPoint.value[1], pickedPoint.value[0]]
     }
-    console.log(getNdviPointParam, '开始计算ndvi');
+    ElMessage.success('开始ndvi时序分析。')
 
     let getNdviRes = await getNdviPoint(getNdviPointParam)
     if (getNdviRes.message !== 'success') {
@@ -314,6 +386,8 @@ const analysisNDVI = async () => {
             analysis: "定点NDVI时序计算",
             point: [...pickedPoint.value]
         })
+        console.log(analysisData.value, '结果');
+
         ElMessage.success('NDVI计算完成')
     } catch (error) {
         calTask.value.calState = 'failed'
@@ -322,6 +396,85 @@ const analysisNDVI = async () => {
     }
 
 }
+
+const chartInstances = ref<(echarts.ECharts | null)[]>([])
+
+// 初始化图表
+const initChart = (el: HTMLElement, data: any, index: number) => {
+    if (!el) return
+    const existingInstance = echarts.getInstanceByDom(el)
+    if (existingInstance) {
+        existingInstance.dispose()
+    }
+    let chart = echarts.init(el)
+    chart.setOption({
+        title: {
+            text: `图表 ${index + 1}`
+        },
+        xAxis: {
+            type: 'category',
+            data: data.xData
+        },
+        yAxis: {
+            type: 'value'
+        },
+        series: [
+            {
+                data: data.yData,
+                type: data.type
+            }
+        ],
+        tooltip: {
+            trigger: 'axis'
+        },
+        responsive: true
+    })
+    chart.resize()
+    chartInstances.value[index] = chart
+}
+
+// 设置 ref 并初始化图表
+const setChartRef = (el: Element | ComponentPublicInstance | null, index: number) => {
+    if (el instanceof HTMLElement) {
+        nextTick(() => {
+
+            initChart(el, analysisData.value[index], index)
+        })
+    }
+}
+
+// 全屏查看功能
+const fullscreenChart = (index: number) => {
+    const dom = document.getElementById(`chart-${index}`)
+    if (dom?.requestFullscreen) {
+        dom.requestFullscreen()
+    } else if ((dom as any).webkitRequestFullScreen) {
+        (dom as any).webkitRequestFullScreen()
+    } else if ((dom as any).mozRequestFullScreen) {
+        (dom as any).mozRequestFullScreen()
+    } else if ((dom as any).msRequestFullscreen) {
+        (dom as any).msRequestFullscreen()
+    }
+}
+
+// 图表自适应
+window.addEventListener('resize', () => {
+    chartInstances.value.forEach(chart => {
+        if (chart) chart.resize()
+    })
+})
+
+// 响应式监听 drawData 变化并重新渲染
+watch(analysisData, (newData) => {
+    nextTick(() => {
+        newData.forEach((item, index) => {
+            const el = document.getElementById(`chart-${index}`)
+            if (el) {
+                initChart(el, item, index)
+            }
+        })
+    })
+}, { deep: true })
 
 const showImageBBox = async () => {
     let getDescriptionRes = await getBoundaryBySceneId(selectedSceneId.value)
@@ -343,8 +496,44 @@ const showImageBBox = async () => {
         ElMessage.error('加载影像边界失败。')
     }
 }
+watch(() => props.thematicConfig.regionId, initNdviRatePanel)
+
+const markerRef = ref<mapboxgl.Marker | null>(null);
+const createMarker = ({ lng, lat }) => {
+
+    mapManager.withMap((map) => {
+        if (markerRef.value) {
+            markerRef.value.remove(); // 移除之前的标记
+        }
+        markerRef.value = new mapboxgl.Marker() // 创建一个新的标记
+            .setLngLat([lng, lat]) // 设置标记的位置
+            .addTo(map); // 将标记添加到地图上
+    })
+}
+onMounted(async () => {
+    await initNdviRatePanel()
+    initMVTLayers(allOptions);
+    bus.on('point-finished', createMarker);
+})
+
 onUnmounted(() => {
     gridStore.clearPicked()
+    bus.off('point-finished', createMarker);
+    if (markerRef.value) markerRef.value.remove()
+    mapManager.withMap((map) => {
+        allOptions.forEach(({ type }) => {
+            const layerId = `${type}-layer`;
+            const sourceId = `${type}-source`;
+
+            if (map.getLayer(layerId)) {
+                map.removeLayer(layerId);
+            }
+
+            if (map.getSource(sourceId)) {
+                map.removeSource(sourceId);
+            }
+        });
+    });
 })
 </script>
 <!-- src="../tabStyle.css" -->

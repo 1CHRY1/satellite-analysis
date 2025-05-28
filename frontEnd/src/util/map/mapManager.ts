@@ -6,6 +6,7 @@ import { StyleMap, type Style } from './tianMapStyle'
 import { ezStore } from '@/store'
 import { useGridStore } from '@/store/gridStore'
 import type { polygonGeometry } from '../share.type'
+import Bus from '@/store/bus'
 
 class MapManager {
     private static instance: MapManager | null
@@ -139,6 +140,10 @@ class MapManager {
             if (feature.geometry.type === 'Point') {
                 const [lng, lat] = feature.geometry.coordinates
                 useGridStore().setPickedPoint([lat, lng])
+                Bus.emit('point-finished', {
+                    lng,
+                    lat,
+                })
             } else if (feature.geometry.type === 'Polygon') {
                 ezStore.set('polygonFeature', feature.geometry)
                 useGridStore().setPolygon(feature.geometry as polygonGeometry)

@@ -73,6 +73,7 @@ import { onMounted, ref, type Ref } from 'vue';
 import { getRGBTileLayerParamFromSceneObject } from '@/util/visualizeHelper'
 import * as MapOperation from '@/util/map/operation'
 import { formatTime } from '@/util/common';
+import { ElMessage } from 'element-plus';
 
 /**
  * type
@@ -90,6 +91,7 @@ const props = defineProps<{
 }>()
 
 const showTif = async (image) => {
+    ElMessage.success('正在为您加载影像...')
     let sceneId = image.sceneId
     let res = await getDescriptionBySceneId(sceneId)
     console.log(res, '红绿立体');

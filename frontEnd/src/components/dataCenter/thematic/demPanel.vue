@@ -139,7 +139,9 @@ import {
     SquareDashedMousePointer
 } from 'lucide-vue-next'
 import { ElMessage } from 'element-plus';
-
+import bus from '@/store/bus'
+import mapboxgl from 'mapbox-gl'
+import { mapManager } from '@/util/map/mapManager';
 
 
 const test = () => {
@@ -171,7 +173,6 @@ const initDemPanel = async () => {
         dataType: 'dem'
     }
     allDemImages.value = await getRasterScenesDes(rasterParam)
-    console.log(allDemImages.value, 57);
 }
 
 
@@ -202,6 +203,7 @@ const toggleMode = (mode: 'point' | 'line' | 'false') => {
 }
 
 const showTif = async (image) => {
+    ElMessage.success('正在为您加载影像...')
     let sceneId = image.sceneId
     let res = await getDescriptionBySceneId(sceneId)
     let url = res.images[0].bucket + '/' + res.images[0].tifPath
@@ -229,7 +231,7 @@ const analysisDem = async () => {
     if (!verifyAnalysis()) {
         return
     }
-
+    ElMessage.success('开始DEM分析。')
     if (activeMode.value === 'point') {
         let pointParam = {
             point: [pickedPoint.value[1], pickedPoint.value[0]],
@@ -495,8 +497,22 @@ watch(analysisData, (newData) => {
 }, { deep: true })
 
 watch(() => props.thematicConfig.regionId, initDemPanel)
+
+let marker
+const createMarker = ({ lng, lat }) => {
+
+    mapManager.withMap((map) => {
+        if (marker) {
+            marker.remove(); // 移除之前的标记
+        }
+        marker = new mapboxgl.Marker() // 创建一个新的标记
+            .setLngLat([lng, lat]) // 设置标记的位置
+            .addTo(map); // 将标记添加到地图上
+    })
+}
 onMounted(async () => {
     await initDemPanel()
+    bus.on('point-finished', createMarker);
     nextTick(() => {
         analysisData.value.forEach((item, index) => {
             const el = document.getElementById(`chart-${index}`)
@@ -508,6 +524,8 @@ onMounted(async () => {
 })
 onUnmounted(() => {
     gridStore.clearPicked()
+    bus.off('point-finished', createMarker);
+    if (marker) marker.remove()
 })
 </script>
 
