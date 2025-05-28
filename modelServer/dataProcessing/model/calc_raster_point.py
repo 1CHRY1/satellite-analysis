@@ -26,7 +26,7 @@ class calc_raster_point(Task):
             pointValue = pointData.data[0].tolist()
         else:
             pointValue = None
-
+        raster_context.close()
         return {
             "value": pointValue
         }
