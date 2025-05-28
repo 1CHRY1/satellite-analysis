@@ -1031,6 +1031,68 @@ export function map_destroyNoCloudLayer() {
         m.getSource(source) && m.removeSource(source)
     })
 }
+///// 爱分开加是吧
+type OneNoCloudGrid = {
+    bucket: string
+    tifPath: string
+    grid: any
+}
+type AllStrechParam = {
+    min_r: number
+    max_r: number
+    min_g: number
+    max_g: number
+    min_b: number
+    max_b: number
+    nodata?: number
+}
+export function map_addMultiNoCloudLayer(gridsInfo: OneNoCloudGrid[], sparam: AllStrechParam) {
+    if (!ezStore.get('noCloudGridsLayerIdList')) ezStore.set('noCloudGridsLayerIdList', [])
+    const layerIdList = ezStore.get('noCloudGridsLayerIdList') as string[]
+    mapManager.withMap((m) => {
+        for (let i = 0; i < gridsInfo.length; i++) {
+            const gridInfo = gridsInfo[i]
+            const fullPath = gridInfo.bucket + '/' + gridInfo.tifPath
+            const url = getNoCloudUrl({
+                fullTifPath: gridInfo.bucket + '/' + gridInfo.tifPath,
+                band1Scale: sparam.min_r + ',' + sparam.max_r,
+                band2Scale: sparam.min_g + ',' + sparam.max_g,
+                band3Scale: sparam.min_b + ',' + sparam.max_b,
+            })
+
+            const id = uid()
+            layerIdList.push(id)
+            const source = id + '-source'
+
+            m.getLayer(id) && m.removeLayer(id)
+            m.getSource(source) && m.removeSource(source)
+
+            m.addSource(source, {
+                type: 'raster',
+                tiles: [url],
+                tileSize: 256,
+            })
+
+            m.addLayer({
+                id,
+                type: 'raster',
+                source: source,
+                paint: {},
+            })
+        }
+    })
+}
+export function map_destroyMultiNoCloudLayer() {
+    const layerIdList = ezStore.get('noCloudGridsLayerIdList') as string[]
+    mapManager.withMap((m) => {
+        for (let i = 0; i < layerIdList.length; i++) {
+            const id = layerIdList[i]
+            const source = id + '-source'
+            m.getLayer(id) && m.removeLayer(id)
+            m.getSource(source) && m.removeSource(source)
+        }
+    })
+}
 
 //////////// 地形
 type TerrainLayerParam = {

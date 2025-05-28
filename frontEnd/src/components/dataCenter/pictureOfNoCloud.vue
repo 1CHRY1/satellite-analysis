@@ -727,18 +727,24 @@ const previewNoCloud = async (data: any) => {
     const stopLoading = message.loading('正在加载无云一版图，请稍后...', 0)
     // 清除旧图层
     // MapOperation.map_removeNocloudGridPreviewLayer()
-    MapOperation.map_destroyNoCloudLayer()
+    // MapOperation.map_destroyNoCloudLayer()
 
-    const nocloudTifPath = data.bucket + '/' + data.tifPath
+    // const nocloudTifPath = data.bucket + '/' + data.tifPath
 
-    const band123Scale = await getNoCloudScaleParam(nocloudTifPath)
+    // const band123Scale = await getNoCloudScaleParam(nocloudTifPath)
 
-    const url = getNoCloudUrl({
-        fullTifPath: nocloudTifPath,
-        ...band123Scale
-    })
+    // const url = getNoCloudUrl({
+    //     fullTifPath: nocloudTifPath,
+    //     ...band123Scale
+    // })
 
-    MapOperation.map_addNoCloudLayer(url)
+    // MapOperation.map_addNoCloudLayer(url)
+
+    // 清除旧图层
+    MapOperation.map_destroyMultiNoCloudLayer()
+    console.log(data)
+
+    MapOperation.map_addMultiNoCloudLayer(data.grids, data.statistic)
 
 
 

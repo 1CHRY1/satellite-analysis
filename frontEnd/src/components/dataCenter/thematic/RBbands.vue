@@ -48,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { getDescriptionBySceneId, getRasterScenesDes } from '@/api/http/satellite-data';
+import { getDescriptionBySceneId, getRasterScenesDes, getWindow } from '@/api/http/satellite-data';
 import {
     ChartColumn,
     Earth,
@@ -73,6 +73,7 @@ import { onMounted, ref, type Ref } from 'vue';
 import { getRGBTileLayerParamFromSceneObject } from '@/util/visualizeHelper'
 import * as MapOperation from '@/util/map/operation'
 import { formatTime } from '@/util/common';
+import { ElMessage } from 'element-plus';
 
 /**
  * type
@@ -90,12 +91,18 @@ const props = defineProps<{
 }>()
 
 const showTif = async (image) => {
+    ElMessage.success('正在为您加载影像...')
     let sceneId = image.sceneId
     let res = await getDescriptionBySceneId(sceneId)
     console.log(res, '红绿立体');
 
     const rgbLayerParam = await getRGBTileLayerParamFromSceneObject(res)
     MapOperation.map_addRGBImageTileLayer(rgbLayerParam)
+    let window = await getWindow(sceneId)
+    MapOperation.map_fitView([
+        [window.bounds[0], window.bounds[1]],
+        [window.bounds[2], window.bounds[3]],
+    ])
 }
 
 const RGImages: Ref<any> = ref([])
