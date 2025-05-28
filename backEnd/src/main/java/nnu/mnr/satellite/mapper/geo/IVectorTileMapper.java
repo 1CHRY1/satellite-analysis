@@ -2,12 +2,7 @@ package nnu.mnr.satellite.mapper.geo;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import nnu.mnr.satellite.model.pojo.common.TileBox;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * Created with IntelliJ IDEA.
@@ -21,9 +16,9 @@ import java.util.Map;
 @DS("pg_space")
 public interface IVectorTileMapper extends BaseMapper<Object> {
 
-    Object getVectorTile(TileBox tileBox);
+    Object getVectorTile(String tablename, int x, int y, int z);
 
-    Object getVectorTileByParam(TileBox tileBox, String param, String value);
+//    Object getVectorTileByParam(int x, int y, int z, String param, String value);
 
 //    Object getVectorTileByParam(TileBox tileBox, String param, String value);
 

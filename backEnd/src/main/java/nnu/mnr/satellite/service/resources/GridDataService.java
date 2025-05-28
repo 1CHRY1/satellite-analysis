@@ -9,7 +9,6 @@ import nnu.mnr.satellite.model.vo.resources.GridBoundaryVO;
 import nnu.mnr.satellite.model.vo.resources.GridSceneVO;
 import nnu.mnr.satellite.model.dto.resources.GridSceneFetchDTO;
 import nnu.mnr.satellite.service.common.BandMapperGenerator;
-import nnu.mnr.satellite.service.geo.LocationService;
 import nnu.mnr.satellite.utils.common.ConcurrentUtil;
 import nnu.mnr.satellite.utils.geom.TileCalculateUtil;
 import org.locationtech.jts.geom.Geometry;
@@ -52,15 +51,15 @@ public class GridDataService {
         double lon = Double.parseDouble(location.getWgs84Lon());
         double lat = Double.parseDouble(location.getGcj02Lat());
         int[] grid = TileCalculateUtil.getGridXYByLngLatAndResolution(lon, lat, resolution);
-        grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(grid[0]-1, grid[1]-1, resolution));
-        grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(grid[0]-1, grid[1], resolution));
-        grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(grid[0]-1, grid[1]+1, resolution));
-        grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(grid[0], grid[1]-1, resolution));
-        grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(grid[0], grid[1], resolution));
-        grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(grid[0], grid[1]+1, resolution));
-        grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(grid[0]+1, grid[1]-1, resolution));
-        grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(grid[0]+1, grid[1], resolution));
-        grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(grid[0]+1, grid[1]+1, resolution));
+        grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(grid[1]-1, grid[0]-1, resolution));
+        grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(grid[1]-1, grid[0], resolution));
+        grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(grid[1]-1, grid[0]+1, resolution));
+        grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(grid[1], grid[0]-1, resolution));
+        grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(grid[1], grid[0], resolution));
+        grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(grid[1], grid[0]+1, resolution));
+        grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(grid[1]+1, grid[0]-1, resolution));
+        grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(grid[1]+1, grid[0], resolution));
+        grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(grid[1]+1, grid[0]+1, resolution));
         return grids;
     }
 

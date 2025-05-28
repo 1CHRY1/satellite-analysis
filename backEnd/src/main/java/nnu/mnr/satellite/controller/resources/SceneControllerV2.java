@@ -3,10 +3,7 @@ package nnu.mnr.satellite.controller.resources;
 import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerSceneDTO;
-import nnu.mnr.satellite.model.dto.resources.CoverFetchSceneDTO;
-import nnu.mnr.satellite.model.dto.resources.RastersFetchDTO;
-import nnu.mnr.satellite.model.dto.resources.SceneImageDTO;
-import nnu.mnr.satellite.model.dto.resources.ScenesFetchDTOV2;
+import nnu.mnr.satellite.model.dto.resources.*;
 import nnu.mnr.satellite.model.po.resources.SceneSP;
 import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
 import nnu.mnr.satellite.service.resources.SceneDataServiceV2;
@@ -40,14 +37,24 @@ public class SceneControllerV2 {
         return ResponseEntity.ok(sceneDataService.getScenesDesByTimeRegionAndCloud(scenesFetchDTO));
     }
 
+    @PostMapping("/time/cloud/resolution/location")
+    public ResponseEntity<List<SceneDesVO>> getScenesDesByTimeLocationAndCloud(@RequestBody ScenesLocationFetchDTO scenesFetchDTO) throws IOException {
+        return ResponseEntity.ok(sceneDataService.getScenesDesByTimeLocationAndCloud(scenesFetchDTO));
+    }
+
     @PostMapping("/raster/time/region")
     public ResponseEntity<List<SceneDesVO>> getRasterScenesDesByRegionAndDataType(@RequestBody RastersFetchDTO rastersFetchDTO) throws IOException {
         return ResponseEntity.ok(sceneDataService.getRasterScenesDesByRegionAndDataType(rastersFetchDTO));
     }
 
-   @PostMapping("/cover/region/sceneIds")
+    @PostMapping("/cover/region/sceneIds")
     public ResponseEntity<List<ModelServerSceneDTO>> getCoveredSceneByRegionResolutionAndSensor(@RequestBody CoverFetchSceneDTO coverFetchSceneDTO) {
         return ResponseEntity.ok(sceneDataService.getCoveredSceneByRegionResolutionAndSensor(coverFetchSceneDTO));
+    }
+
+    @PostMapping("/cover/location/resolution/sceneIds")
+    public ResponseEntity<List<ModelServerSceneDTO>> getCoveredSceneByLocationResolutionAndSensor(@RequestBody CoverLocationFetchSceneDTO coverFetchSceneDTO) {
+        return ResponseEntity.ok(sceneDataService.getCoveredSceneByLocationResolutionAndSensor(coverFetchSceneDTO));
     }
 
     @GetMapping("/boundary/sceneId/{sceneId}")

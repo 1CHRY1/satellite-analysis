@@ -1,4 +1,4 @@
-package nnu.mnr.satellite.repository.geo;
+package nnu.mnr.satellite.repository.resources;
 
 import nnu.mnr.satellite.model.po.geo.GeoLocation;
 

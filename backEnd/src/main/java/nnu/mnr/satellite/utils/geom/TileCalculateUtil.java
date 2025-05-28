@@ -137,31 +137,27 @@ public class TileCalculateUtil {
         if (rowId == null || columnId == null || resolution == null || resolution <= 0) {
             return null;
         }
-
         int[] gridNums = getGridNumFromTileResolution(resolution);
         int gridNumX = gridNums[0];
         int gridNumY = gridNums[1];
-
-        if (rowId < 0 || rowId >= gridNumX || columnId < 0 || columnId >= gridNumY) {
+        if (rowId < 0 || rowId >= gridNumY || columnId < 0 || columnId >= gridNumX) {
             return null;
         }
+        List<Double> rightLngBottomLat = grid2lnglat(rowId + 1, columnId + 1, gridNumX, gridNumY);
+        List<Double> leftLngTopLat = grid2lnglat(rowId, columnId, gridNumX, gridNumY);
 
-        List<Double> topLeft = grid2lnglat(rowId, columnId, gridNumX, gridNumY);         // 左上角 (row, col)
-        List<Double> topRight = grid2lnglat(rowId, columnId + 1, gridNumX, gridNumY);     // 右上角 (row, col+1)
-        List<Double> bottomLeft = grid2lnglat(rowId + 1, columnId, gridNumX, gridNumY);   // 左下角 (row+1, col)
-
-        double minLng = topLeft.get(0);
-        double maxLat = topLeft.get(1);
-        double maxLng = topRight.get(0);
-        double minLat = bottomLeft.get(1);
+        Double rightLng = rightLngBottomLat.get(0);
+        Double bottomLat = rightLngBottomLat.get(1);
+        Double leftLng = leftLngTopLat.get(0);
+        Double topLat = leftLngTopLat.get(1);
 
         GeometryFactory geometryFactory = new GeometryFactory();
         Coordinate[] coordinates = new Coordinate[]{
-                new Coordinate(minLng, minLat),     // 左下
-                new Coordinate(minLng, maxLat),     // 左上
-                new Coordinate(maxLng, maxLat),     // 右上
-                new Coordinate(maxLng, minLat),     // 右下
-                new Coordinate(minLng, minLat)      // 闭合
+                new Coordinate(leftLng, bottomLat),     // 左下
+                new Coordinate(leftLng, topLat),     // 左上
+                new Coordinate(rightLng, topLat),     // 右上
+                new Coordinate(rightLng, bottomLat),     // 右下
+                new Coordinate(leftLng, bottomLat)      // 闭合
         };
         Polygon tilePolygon = geometryFactory.createPolygon(coordinates);
         return GridBoundaryVO.builder()

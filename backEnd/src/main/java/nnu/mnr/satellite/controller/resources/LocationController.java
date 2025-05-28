@@ -1,11 +1,14 @@
-package nnu.mnr.satellite.controller.geo;
+package nnu.mnr.satellite.controller.resources;
 
+import com.alibaba.fastjson2.JSONObject;
 import nnu.mnr.satellite.model.po.geo.GeoLocation;
-import nnu.mnr.satellite.service.geo.LocationService;
+import nnu.mnr.satellite.model.vo.resources.RegionWindowVO;
+import nnu.mnr.satellite.service.resources.LocationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -17,7 +20,7 @@ import java.util.List;
  */
 
 @RestController
-@RequestMapping("/api/v1/geo/location")
+@RequestMapping("/api/v1/data/location")
 public class LocationController {
 
     @Autowired
@@ -35,6 +38,16 @@ public class LocationController {
     @GetMapping("/id/{id}")
     public ResponseEntity<GeoLocation> searchById(@PathVariable String id) {
         return ResponseEntity.ok(locationService.searchById(id));
+    }
+
+    @GetMapping("/window/location/{locationId}/resolution/{resolution}")
+    public ResponseEntity<RegionWindowVO> getRegionWindow(@PathVariable Integer resolution, @PathVariable String locationId) {
+        return ResponseEntity.ok(locationService.getLocationWindowById(resolution, locationId));
+    }
+
+    @GetMapping("/boundary/location/{locationId}/resolution/{resolution}")
+    public ResponseEntity<JSONObject> getLocationBoundary(@PathVariable Integer resolution, @PathVariable String locationId) throws IOException {
+        return ResponseEntity.ok(locationService.getLocationGeojsonBoundary(resolution, locationId));
     }
 
 }
