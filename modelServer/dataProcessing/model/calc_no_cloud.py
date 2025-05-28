@@ -40,113 +40,136 @@ def process_grid(grid, scenes, grid_helper, scene_band_paths, minio_endpoint, te
     img_B = None
     need_fill_mask = None
     first_shape_set = False
-    for scene in scenes:
+    
+    # 按分辨率排序，后续是以第一个景读到的像素为网格分辨率，所以先按分辨率排序
+    # sorted_scene = sorted(scenes, key=lambda obj: float(obj["resolution"].replace("m", "")))
+    sorted_scene = sorted(
+        scenes,
+        key=lambda obj: (
+            0 if obj.get("cloudPath") else 1,  # 有 cloudPath 的排前面（0 < 1）
+            float(obj["resolution"].replace("m", ""))  # 分辨率小的排前面（高分辨率）
+        )
+    )
+
+    
+    for scene in sorted_scene:
 
         nodata = scene.get('noData')
-        
-        print('处理景', scene.get('sceneId'))
+        scene_label = scene.get('sensorName') + scene.get('sceneId')
         if not is_grid_covered(scene):
+            print(scene_label, ':: not cover, jump')
             continue
 
         # Step 0.0 云量
         cloud_band_path = scene.get('cloudPath')
         
         if not cloud_band_path:
-            # 这里是否要操作一下呢
-            print("缺乏Cloud_band")
-            continue
+            print(scene_label, ':: no cloud_band, 默认无云')
 
-        full_url = minio_endpoint + "/" + scene.get('bucket') + '/' + cloud_band_path
-        with COGReader(full_url, options={'nodata':int(nodata)}) as ctx:
-            # img_data = ctx.part(bbox=bbox, indexes=[1])
-            # image_data = img_data.data[0]
-            # nodata_mask = img_data.mask
-
-            # Step 0.9 首次读取时，确定目标尺寸， 不然part的结果会出现一个像素的偏差，导致后续的mask计算错误
             if not first_shape_set:
-                # 尝试读取一次以获取默认的输出尺寸
-                temp_img_data = ctx.part(bbox=bbox, indexes=[1])
-                target_H, target_W = temp_img_data.data[0].shape
-                print(f"确定目标尺寸为: H={target_H}, W={target_W}")
+                print(f"{scene_label} 没有云波段，也没有first_shape，跳过")
+                continue
 
-                img_R = np.full((target_H, target_W), 0, dtype=np.uint16)
-                img_G = np.full((target_H, target_W), 0, dtype=np.uint16)
-                img_B = np.full((target_H, target_W), 0, dtype=np.uint16)
-                need_fill_mask = np.ones((target_H, target_W), dtype=bool) # all true，全都待标记
-                first_shape_set = True
-            
-            # Step 1 基于Width Height读取云波段，获取云掩膜
-            try:
-                # 这里指定宽度高度，默认resampling_method Nearest，其实就做了重采样
-                img_data = ctx.part(bbox=bbox, indexes=[1], height=target_H, width=target_W)
-                image_data = img_data.data[0]
-                nodata_mask = img_data.mask # 这里，值为true的是有值，值为false的是无值， 这里是无效值掩膜
-                print(f"读取 {scene.get('sceneId')} 的grid区域成功")
-            except Exception as e:
-                print(f"读取 {scene.get('sceneId')} 云波段失败，尺寸不匹配或I/O错误: {e}")
-                continue # 跳过当前场景，继续下一个
+            # 没有云波段时默认全是无云区域， 只考虑nodata
+            valid_mask = np.ones((target_H, target_W), dtype=bool)
+                
+        else:
+
+            full_url = minio_endpoint + "/" + scene.get('bucket') + '/' + cloud_band_path
+            with COGReader(full_url, options={'nodata':int(nodata)}) as ctx:
+                print('Process', scene_label)
+
+                # Step 0.9 首次读取时，确定目标尺寸， 不然part的结果会出现一个像素的偏差，导致后续的mask计算错误
+                if not first_shape_set:
+                    # 尝试读取一次以获取默认的输出尺寸
+                    temp_img_data = ctx.part(bbox=bbox, indexes=[1])
+                    target_H, target_W = temp_img_data.data[0].shape
+                    print(f"确定目标尺寸为: H={target_H}, W={target_W}")
+
+                    img_R = np.full((target_H, target_W), 0, dtype=np.uint16)
+                    img_G = np.full((target_H, target_W), 0, dtype=np.uint16)
+                    img_B = np.full((target_H, target_W), 0, dtype=np.uint16)
+                    need_fill_mask = np.ones((target_H, target_W), dtype=bool) # all true，全都待标记
+                    first_shape_set = True
+                
+                # Step 1 基于Width Height读取云波段，获取云掩膜
+                try:
+                    # 这里指定宽度高度，默认resampling_method Nearest，其实就做了重采样
+                    img_data = ctx.part(bbox=bbox, indexes=[1], height=target_H, width=target_W)
+                    image_data = img_data.data[0]
+                    nodata_mask = img_data.mask # 这里，值为true的是有值，值为false的是无值， 这里是无效值掩膜
+                except Exception as e:
+                    print(f"读取 {scene.get('sceneId')} 云波段失败，尺寸不匹配或I/O错误: {e}")
+                    continue # 跳过当前场景，继续下一个
 
             sensorName = scene.get('sensorName')
 
             if "Landsat" in sensorName or "Landset" in sensorName:
                 cloud_mask = (image_data & (1 << 3)) > 0
+                
             elif "MODIS" in sensorName:
-                cloud_mask = (image_data & 1) > 0
+                cloud_state = (image_data & 0b11)
+                cloud_mask = (cloud_state == 0) | (cloud_state == 1)
+                
             elif "GF" in sensorName:
                 cloud_mask = (image_data == 2)
+                
             else:
                 print("不支持的传感器：" , sensorName)
                 continue
+            
+            print(f"这一瓦片有云的像素数：",np.count_nonzero(cloud_mask))
+            print(f"这一瓦片的非Nodata像素数: ",np.count_nonzero(nodata_mask.astype(bool)))
 
             # !!! valid_mask <--> 无云 且 非nodata 
             valid_mask = (~cloud_mask) & (nodata_mask.astype(bool))
-            print(f"读取 {scene.get('sceneId')} 的最终有效区域mask成功")
+        
+
+        if not first_shape_set:
+            img_shape = image_data.shape
+            H, W = img_shape
+            img_R = np.full((H, W), 0, dtype=np.uint16) # 初始化 0
+            img_G = np.full((H, W), 0, dtype=np.uint16) # 初始化 0
+            img_B = np.full((H, W), 0, dtype=np.uint16) # 初始化 0
+            need_fill_mask = np.ones((H, W), dtype=bool) # all true，全都待标记
+            first_shape_set = True
+
+        # !!! fill_mask <--> 需要填充的区域 & 该景有效区域 <--> 该景可以填充格网的区域
+        fill_mask = need_fill_mask & valid_mask
+        print(f"这一瓦片可填充的像素数：",np.count_nonzero(fill_mask))
+
+        if np.any(fill_mask): # 只要有任意一个是1 ，那就可以填充
+            # 读取 RGB 波段
+            scene_id = scene['sceneId']
+            paths = scene_band_paths.get(scene_id)
+            if not paths:
+                continue
+
+            def read_band(band_path):
+                full_path = minio_endpoint + "/" + scene['bucket'] + "/" + band_path
+                with COGReader(full_path, options={'nodata': int(nodata)}) as reader:
+                    return reader.part(bbox=bbox, indexes=[1], height=target_H, width=target_W).data[0]
+
+            R = read_band(paths['red'])
+            G = read_band(paths['green'])
+            B = read_band(paths['blue'])
             
 
-            if not first_shape_set:
-                img_shape = image_data.shape
-                H, W = img_shape
-                img_R = np.full((H, W), 0, dtype=np.uint16) # 初始化 0
-                img_G = np.full((H, W), 0, dtype=np.uint16) # 初始化 0
-                img_B = np.full((H, W), 0, dtype=np.uint16) # 初始化 0
-                need_fill_mask = np.ones((H, W), dtype=bool) # all true，全都待标记
-                first_shape_set = True
+            img_R[fill_mask] = R[fill_mask] # numpy的批量赋值填充
 
-            # !!! fill_mask <--> 需要填充的区域 & 该景有效区域 <--> 该景可以填充格网的区域
-            fill_mask = need_fill_mask & valid_mask
+            img_G[fill_mask] = G[fill_mask] 
 
-            if np.any(fill_mask): # 只要有任意一个是1 ，那就可以填充
-                # 读取 RGB 波段
-                scene_id = scene['sceneId']
-                paths = scene_band_paths.get(scene_id)
-                if not paths:
-                    continue
+            img_B[fill_mask] = B[fill_mask]
 
-                def read_band(band_path):
-                    full_path = minio_endpoint + "/" + scene['bucket'] + "/" + band_path
-                    with COGReader(full_path, options={'nodata': int(nodata)}) as reader:
-                        return reader.part(bbox=bbox, indexes=[1], height=target_H, width=target_W).data[0]
+            need_fill_mask[fill_mask] = False # 填过了，标记False
 
-                R = read_band(paths['red'])
-                G = read_band(paths['green'])
-                B = read_band(paths['blue'])
-                print(f"读取 {scene.get('sceneId')} 的原始RGB成功")
-                
+                    
+            filled_ratio = 1.0 - (np.count_nonzero(need_fill_mask) / need_fill_mask.size)
+            print(f"当前grid填充进度：{filled_ratio * 100:.2f}%")
 
-                img_R[fill_mask] = R[fill_mask] # numpy的批量赋值填充
-                print(f" {scene.get('sceneId')}  R部分填充")
-
-                img_G[fill_mask] = G[fill_mask] 
-                print(f" {scene.get('sceneId')}  G部分填充")
-
-                img_B[fill_mask] = B[fill_mask]
-                print(f" {scene.get('sceneId')}  B部分填充")
-
-                need_fill_mask[fill_mask] = False # 填过了，标记False
-
-            if not np.any(need_fill_mask):
-                print("填充完毕")
-                break
+        if not np.any(need_fill_mask):
+            print("填充完毕")
+            break
 
         print('ENDING ----- ', scene.get('sceneId'))
 
