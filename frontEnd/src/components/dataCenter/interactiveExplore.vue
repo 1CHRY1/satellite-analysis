@@ -1138,7 +1138,7 @@ const handleShowResolutionSensorImage = async (label: string) => {
 
     const coverScenes = await getCoverRegionSensorScenes(params)
 
-    console.log('覆盖的景们', coverScenes)
+    console.log('接口返回：覆盖的景们', coverScenes)
 
     const promises: Promise<any>[] = []
 
