@@ -1,5 +1,5 @@
-import { ezStore } from "@/store";
-import { grid2bbox } from "@/util/map/gridMaker";
+import { ezStore } from '@/store'
+import { grid2bbox } from '@/util/map/gridMaker'
 
 const titilerEndPoint = ezStore.get('conf')['titiler']
 const minioEndPoint = ezStore.get('conf')['minioIpAndPort']
@@ -16,13 +16,15 @@ type GridImageParams = {
 } & GridInfoType
 
 // 返回可以作为layer source 的 url
-export async function getGridImage(params: GridImageParams, imgResolution: number = 1): Promise<string> {
-
+export async function getGridImage(
+    params: GridImageParams,
+    imgResolution: number = 1,
+): Promise<string> {
     const statisticsJson = await getImgStatistics(params.tifFullPath)
     // console.log(statisticsJson)
 
-    const percentile_2 = statisticsJson.b1 ? statisticsJson.b1.min : 0;
-    const percentile_98 = statisticsJson.b1 ? statisticsJson.b1.max : 20000;
+    const percentile_2 = statisticsJson.b1 ? statisticsJson.b1.min : 0
+    const percentile_98 = statisticsJson.b1 ? statisticsJson.b1.max : 20000
 
     // const size = '' + gridSize / resolution
     // const width = params.resolution * 1000 / imgResolution
@@ -43,7 +45,6 @@ export async function getGridImage(params: GridImageParams, imgResolution: numbe
 }
 
 export async function getImgStatistics(tifFullPath: string): Promise<any> {
-
     let url = `${titilerEndPoint}/statistics`
 
     const requestParams = new URLSearchParams()
@@ -55,8 +56,6 @@ export async function getImgStatistics(tifFullPath: string): Promise<any> {
 
     return json
 }
-
-
 
 // 获取一张tif的统计信息
 async function getTifStatistic(tifFullPath: string) {
@@ -88,8 +87,11 @@ export async function getTifbandMinMax(tifFullPath: string) {
 }
 
 // 获取一张tif的预览图路径(已加入拉伸参数)
-export async function getTifPreviewUrl(tifFullPath: string, resolution: number = 10, gridSize = 20000) {
-
+export async function getTifPreviewUrl(
+    tifFullPath: string,
+    resolution: number = 10,
+    gridSize = 20000,
+) {
     const rescale = await getTifScaleParam(tifFullPath)
 
     let url = `${titilerEndPoint}/preview`
@@ -110,7 +112,6 @@ export async function getTifPreviewUrl(tifFullPath: string, resolution: number =
 export async function getGridPreviewUrl(params: GridImageParams) {
     return getGridImage(params)
 }
-
 
 // 新的接口, RGB合成接口
 // 这里主要提供一些URL合成方法, 交给mapbox
@@ -139,8 +140,7 @@ export function getSceneRGBCompositeTileUrl(param: RGBTileLayerParams) {
     requestParams.append('max_g', param.g_max.toString())
     requestParams.append('min_b', param.b_min.toString())
     requestParams.append('max_b', param.b_max.toString())
-    if (param.nodata)
-        requestParams.append('nodata', param.nodata.toString())
+    if (param.nodata) requestParams.append('nodata', param.nodata.toString())
 
     return baseUrl + '?' + requestParams.toString()
 }
@@ -161,12 +161,10 @@ export function getGridRGBCompositeUrl(grid: GridInfoType, param: RGBTileLayerPa
     requestParams.append('max_g', param.g_max.toString())
     requestParams.append('min_b', param.b_min.toString())
     requestParams.append('max_b', param.b_max.toString())
-    if (param.nodata)
-        requestParams.append('nodata', param.nodata.toString())
+    if (param.nodata) requestParams.append('nodata', param.nodata.toString())
 
     return baseUrl + '?' + requestParams.toString()
 }
-
 
 // 获取一个tif的geojson
 type BaseImageType = {
@@ -196,14 +194,13 @@ export async function getSceneGeojson(scene: BaseSceneType) {
     return json
 }
 
-
 // 地形瓦片，实时构建的terrainRGB
 /**
- * 
+ *
  * @param terrainTifPath bucket + '/' + tifPath
  */
 export function getTerrainRGBUrl(terrainTifPath: string) {
-    // demo: /tiler/terrain/terrainRGB/{z}/{x}/{y}.png 
+    // demo: /tiler/terrain/terrainRGB/{z}/{x}/{y}.png
     let baseUrl = `${titilerEndPoint}/terrain/terrainRGB/{z}/{x}/{y}.png`
     const requestParams = new URLSearchParams()
     requestParams.append('url', minioEndPoint + '/' + terrainTifPath)
@@ -215,7 +212,6 @@ export function getTerrainRGBUrl(terrainTifPath: string) {
 // 单波段彩色产品
 
 export function getOneBandColorUrl(oneBandColorTifPath: string) {
-
     let baseUrl = `${titilerEndPoint}/oneband/colorband/{z}/{x}/{y}.png`
     const requestParams = new URLSearchParams()
     requestParams.append('url', minioEndPoint + '/' + oneBandColorTifPath)
@@ -230,27 +226,25 @@ export async function getNoCloudScaleParam(noCloudTifPath: string) {
     const statistice = await getTifStatistic(noCloudTifPath)
     console.log(statistice)
 
-    const band1Scale = statistice.b1.percentile_2 + ',' + (statistice.b1.percentile_98 - statistice.b1.percentile_2) * 1.1
-    const band2Scale = statistice.b2.percentile_2 + ',' + (statistice.b2.percentile_98 - statistice.b2.percentile_2) * 1.1
-    const band3Scale = statistice.b3.percentile_2 + ',' + (statistice.b3.percentile_98 - statistice.b3.percentile_2) * 1.1
+    const band1Scale = statistice.b1.percentile_2 + ',' + statistice.b1.percentile_98
+    const band2Scale = statistice.b2.percentile_2 + ',' + statistice.b2.percentile_98
+    const band3Scale = statistice.b3.percentile_2 + ',' + statistice.b3.percentile_98
 
     return {
         band1Scale,
         band2Scale,
-        band3Scale
+        band3Scale,
     }
 }
 
 type NoCloudInfoParam = {
-    fullTifPath: string,
-    band1Scale: string,
-    band2Scale: string,
+    fullTifPath: string
+    band1Scale: string
+    band2Scale: string
     band3Scale: string
 }
 export function getNoCloudUrl(param: NoCloudInfoParam) {
-
     // http://localhost:8000/tiles/WebMercatorQuad/9/427/200?scale=1&format=png&url=http%3A%2F%2F223.2.32.166%3A30900%2Ftemp-files%2Faa0594b6-f6a1-4c08-a148-21dfb5ed193e%2FnoCloud_merge.tif&bidx=1&bidx=2&bidx=3&unscale=false&rescale=0%2C13000&rescale=0%2C13000&rescale=0%2C13000&return_mask=true
-
 
     // /tiles/{tileMatrixSetId}/{z}/{x}/{y}
     let baseUrl = `${titilerEndPoint}/tiles/WebMercatorQuad/{z}/{x}/{y}`

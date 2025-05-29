@@ -434,7 +434,11 @@ onUnmounted(() => {
     gridStore.clearPicked()
     bus.off('point-finished', createMarker);
     if (markerRef.value) markerRef.value.remove()
-
+    mapManager.withMap((map) => {
+        if (map.getLayer('UniqueSceneLayer-fill')) map.removeLayer('UniqueSceneLayer-fill')
+        if (map.getLayer('UniqueSceneLayer-line')) map.removeLayer('UniqueSceneLayer-line')
+        if (map.getSource('UniqueSceneLayer-source')) map.removeSource('UniqueSceneLayer-source')
+    })
 })
 </script>
 
