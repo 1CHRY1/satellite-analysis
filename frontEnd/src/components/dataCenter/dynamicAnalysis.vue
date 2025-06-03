@@ -54,7 +54,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { ref, type PropType, computed, type Ref, nextTick, onUpdated, onMounted, reactive, onBeforeUnmount, watch, defineAsyncComponent, type ComponentPublicInstance } from 'vue'
+import { ref, type PropType, computed, type Ref, nextTick, onUpdated, onMounted, reactive, onBeforeUnmount, watch, defineAsyncComponent, type ComponentPublicInstance, onUnmounted } from 'vue'
 import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'
 import { type interactiveExplore } from '@/components/dataCenter/type'
 import { formatTime } from '@/util/common'
@@ -206,7 +206,52 @@ const clearImages = () => {
 
 
 watch(displayLabel, getOriginImages, { immediate: true })
+
+const addLocalInternalLayer = () => {
+    mapManager.withMap((map) => {
+        const sourceId = 'Local-Interal-Source'
+        const layerId = 'Local-Interal-Layer'
+
+        // 防止重复添加
+        if (map.getLayer(layerId)) {
+            map.removeLayer(layerId)
+        }
+        if (map.getSource(sourceId)) {
+            map.removeSource(sourceId)
+        }
+
+        // 添加 source
+        map.addSource(sourceId, {
+            type: 'raster',
+            tiles: [
+                `http://${window.location.host}${ezStore.get('conf')['fk_url']}`
+            ],
+            tileSize: 256,
+        })
+
+        // 添加 layer
+        map.addLayer({
+            id: layerId,
+            type: 'raster',
+            source: sourceId,
+        })
+    })
+}
 onMounted(async () => {
+    addLocalInternalLayer()
+})
+onUnmounted(() => {
+    mapManager.withMap((map) => {
+        const sourceId = 'Local-Interal-Source'
+        const layerId = 'Local-Interal-Layer'
+
+        if (map.getLayer(layerId)) {
+            map.removeLayer(layerId)
+        }
+        if (map.getSource(sourceId)) {
+            map.removeSource(sourceId)
+        }
+    })
 })
 </script>
 
