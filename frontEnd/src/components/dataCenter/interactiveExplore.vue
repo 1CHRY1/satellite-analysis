@@ -496,11 +496,11 @@ const allGrids = ref([])
 const allGridCount = ref(0)
 const currentCityBounds = ref([])
 // 计算到了哪一级行政单位
-// 现在landId不再需要用来display，它其实是获取region/poi的id的计算属性
+// 其实是获取region/poi的id的计算属性
 const landId = computed(() => {
     let switchTab
     if (searchedTab.value === 'poi') {
-        switchTab = activeTab.value
+        switchTab = 'poi'
     } else if (searchedTab.value === 'region') {
         switchTab = 'region'
     } else if (activeTab.value === 'poi') {
@@ -667,11 +667,10 @@ const fetchPOIOptions = async (query: string) => {
             address: item.address === '[]' ? '' : item.address,
         }
     })
-    console.log(res, 7774);
 
 }
 /**
- * 用云量和日期初步获取影像数据
+ * 用日期初步获取影像数据
  */
 const allScenes = ref<any>([])
 const allSensorsItems = ref<any>([])
@@ -752,11 +751,11 @@ const filterByCloudAndDate = async () => {
 // 数各种分辨率分别覆盖了多少格网
 const countResolutionCoverage = (allGridScene: any[]) => {
     const result = {
-        亚米: 0,
+        '亚米': 0,
         '2米': 0,
         '10米': 0,
         '30米': 0,
-        其他: 0,
+        '其他': 0,
     }
 
     allGridScene.forEach((grid) => {
@@ -766,7 +765,7 @@ const countResolutionCoverage = (allGridScene: any[]) => {
             const resStr = scene.resolution?.toString().replace('m', '')
             const res = parseFloat(resStr)
 
-            let key
+            let key: string
             if (res <= 1) {
                 key = '亚米'
             } else if (res === 2) {
@@ -1215,31 +1214,6 @@ const judgeGridOpacity = (index: number, sceneGridsRes: any) => {
     const totalImgLenght = allScenes.value.length
     opacity = (sceneGridsRes[index].scenes.length / totalImgLenght) * 0.3
     return opacity
-}
-// 卫语句
-const verifyFilterByTags = () => {
-    let buttons = activeImgTags.value
-    if (buttons.size === 0) {
-        ElMessage.warning('请设置筛选条件')
-        return false
-    }
-    if (allScenes.value.length === 0) {
-        ElMessage.warning('请先进行影像筛选')
-        return false
-    }
-    if (!buttons.has('国产影像') && !buttons.has('国外影像')) {
-        ElMessage.warning('请选择您需要的数据来源')
-        return false
-    }
-    if (!buttons.has('光学影像') && !buttons.has('SAR影像')) {
-        ElMessage.warning('请选择您需要的传感器类型')
-        return false
-    }
-    if (!buttons.has('原始影像') && !buttons.has('ARD影像')) {
-        ElMessage.warning('请选择您需要的数据级别')
-        return false
-    }
-    return true
 }
 
 onMounted(() => {

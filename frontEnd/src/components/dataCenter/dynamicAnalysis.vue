@@ -90,8 +90,8 @@ import {
 import { ElMessage } from 'element-plus'
 import { mapManager } from '@/util/map/mapManager'
 
-const startTime = '2001-01-01'
-const endTime = '2030-01-01'
+const startTime = '1900-01-01'
+const endTime = '2050-01-01'
 const region = ref<RegionValues>({
     province: '370000',
     city: '370100',
@@ -120,7 +120,7 @@ const selectedTask = ref(optionalTasks[0].value)
 const taskComponentMap = {
     'DSM分析': defineAsyncComponent(() => import('./thematic/dsmPanel.vue')),
     'DEM分析': defineAsyncComponent(() => import('./thematic/demPanel.vue')),
-    '红绿立体': defineAsyncComponent(() => import('./thematic/RBbands.vue')),
+    '红绿立体': defineAsyncComponent(() => import('./thematic/RBbandsPanel.vue')),
     '形变速率': defineAsyncComponent(() => import('./thematic/deformationRate.vue')),
     'NDVI时序计算': defineAsyncComponent(() => import('./thematic/ndviPanel.vue')),
     '光谱分析': defineAsyncComponent(() => import('./thematic/spectrumPanel.vue')),
