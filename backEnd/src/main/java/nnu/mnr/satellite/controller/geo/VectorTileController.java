@@ -2,11 +2,9 @@ package nnu.mnr.satellite.controller.geo;
 
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.service.geo.VectorTileService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
@@ -19,7 +17,8 @@ import java.io.IOException;
  */
 
 @RestController
-@RequestMapping("/api/v1/geo")
+@RequestMapping("/api/v1/geo/vector/tiles")
+@Slf4j
 public class VectorTileController {
 
     private final VectorTileService vectorTileService;
@@ -28,9 +27,16 @@ public class VectorTileController {
         this.vectorTileService = vectorTileService;
     }
 
-    @GetMapping("/vector/tiles/{layerName}/{z}/{x}/{y}")
+    @GetMapping("/{layerName}/{z}/{x}/{y}")
+    @CrossOrigin
     public void getGeoVectorTiles(@PathVariable String layerName, @PathVariable int z, @PathVariable int x, @PathVariable int y, HttpServletResponse response) {
         byte[] tile = vectorTileService.getGeoVecterTiles(layerName, z, x, y);
+        sendVectorTileResponse(tile, response);
+    }
+
+    @GetMapping("/{layerName}/region/{regionId}/type/{type}/{z}/{x}/{y}")
+    public void getPatchGeoVecterTilesByParam(@PathVariable String layerName, @PathVariable String type, @PathVariable Integer regionId, @PathVariable int z, @PathVariable int x, @PathVariable int y, HttpServletResponse response) {
+        byte[] tile = vectorTileService.getPatchGeoVecterTilesByParam(layerName, z, x, y, type, regionId);
         sendVectorTileResponse(tile, response);
     }
 
@@ -45,6 +51,9 @@ public class VectorTileController {
             sos.write(tileRes);
             sos.flush();
             sos.close();
+        } catch (org.apache.catalina.connector.ClientAbortException e) {
+            //地图移动时客户端主动取消， 产生异常"你的主机中的软件中止了一个已建立的连接"，无需处理
+            log.info("Map moved. Client end MVT connection.");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

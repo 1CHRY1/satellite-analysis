@@ -3,22 +3,45 @@
 <mapper namespace="nnu.mnr.satellite.mapper.geo.IVectorTileMapper">
 
     <!-- MVT 瓦片查询 -->
-    <select id="getVectorTile" resultType="java.lang.Object" parameterType="nnu.mnr.satellite.model.pojo.common.TileBox">
-        select st_asmvt(result, #{visualId}) tile
-        from(
-        select st_asmvtgeom(geom, ST_Transform(
-            st_makeenvelope(
-                #{xMin,jdbcType=NUMERIC}, #{yMin,jdbcType=NUMERIC},
-                #{xMax,jdbcType=NUMERIC},#{yMax,jdbcType=NUMERIC}, 4326
-                ), 3857
-            ),
-            4096, 0, true
-            ) as geom
-        <foreach collection="fieldList" item="field" open=" " close=" ">
-            ,${field}
-        </foreach>
-        from ${name}
-        ) as result
+    <select id="getVectorTile" resultType="java.lang.Object">
+        WITH mvt_geom AS (
+        SELECT
+<!--        <foreach collection="visualizationFieldsList" item="field" separator=",">-->
+<!--            ${field}-->
+<!--        </foreach>,-->
+        ST_AsMVTGeom(
+        ST_Transform(original_table.geom, 3857),
+        ST_TileEnvelope(#{z}, #{x}, #{y}),
+        extent => 256, buffer => 64
+        ) AS geom
+        FROM "${tableName}" AS original_table
+        WHERE ST_Intersects(ST_Transform(original_table.geom, 3857), ST_TileEnvelope(#{z}, #{x}, #{y}))
+        )
+        SELECT ST_AsMVT(mvt_geom, '${tableName}', 256, 'geom') AS mvt
+        FROM mvt_geom;
     </select>
+
+    <select id="getVectorTileByBetweenParam" resultType="java.lang.Object">
+        WITH mvt_geom AS (
+        SELECT
+        <!--        <foreach collection="visualizationFieldsList" item="field" separator=",">-->
+        <!--            ${field}-->
+        <!--        </foreach>,-->
+        ST_AsMVTGeom(
+        ST_Transform(original_table.geom, 3857),
+        ST_TileEnvelope(#{z}, #{x}, #{y}),
+        extent => 256, buffer => 64
+        ) AS geom
+        FROM "${tableName}" AS original_table
+        WHERE ST_Intersects(ST_Transform(original_table.geom, 3857), ST_TileEnvelope(#{z}, #{x}, #{y}))
+        AND ${param} BETWEEN #{valueStart} AND #{valueEnd}
+        AND ST_Intersects(
+        ST_Transform(original_table.geom, 4326),
+        ST_GeomFromText(#{wkt}, 4326))
+        )
+        SELECT ST_AsMVT(mvt_geom, '${tableName}', 256, 'geom') AS mvt
+        FROM mvt_geom
+    </select>
+
 
 </mapper>

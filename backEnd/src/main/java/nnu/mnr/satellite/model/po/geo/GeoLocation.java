@@ -69,8 +69,8 @@ public class GeoLocation {
     private Geometry geometry;
 
     // 可选：完整 geojson feature 对象
-    @Field(type = FieldType.Object)
-    private Map<String, Object> geojson;
+//    @Field(type = FieldType.Object)
+//    private Map<String, Object> geojson;
 
     @Field(type = FieldType.Text, name = "一级类")
     private String level1;

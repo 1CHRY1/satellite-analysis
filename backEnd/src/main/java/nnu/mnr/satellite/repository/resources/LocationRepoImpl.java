@@ -1,4 +1,4 @@
-package nnu.mnr.satellite.repository.geo;
+package nnu.mnr.satellite.repository.resources;
 
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import nnu.mnr.satellite.model.po.geo.GeoLocation;
@@ -40,6 +40,11 @@ public class LocationRepoImpl implements LocationRepo{
                 .build();
         SearchHits<GeoLocation> hits = elasticsearchOperations.search(nativeQuery, GeoLocation.class);
         return hits.get().map(SearchHit::getContent).toList();
+    }
+
+    @Override
+    public GeoLocation searchById(String id) {
+        return elasticsearchOperations.get(id, GeoLocation.class);
     }
 
 }

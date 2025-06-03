@@ -15,7 +15,7 @@ import java.util.List;
 
 @Data
 @Builder
-public class RegionWindowVO {
+public class ViewWindowVO {
 
     private List<Double> center;
     private List<Double> bounds;

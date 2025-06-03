@@ -29,8 +29,10 @@ spring:
           driver-class-name: com.mysql.cj.jdbc.Driver
         pg_space:
           url: jdbc:postgresql://223.2.43.228:31543/gis_db
+#          url: jdbc:postgresql://127.0.0.1:5431/gis_db
           username: postgres
           password: 123456
+#          password: ogms250410
           driver-class-name: org.postgresql.Driver
   servlet:
     multipart:
@@ -45,6 +47,7 @@ spring:
       uri: mongodb://OGMSROOT:ogms1qaz2wsx@172.21.252.208:23266/opengmp
   elasticsearch:
     uris: http://223.2.43.228:30920
+#    uris: http://127.0.0.1:9200
 
 mybatis-plus:
   mapper-locations: classpath:mapper/*.xml

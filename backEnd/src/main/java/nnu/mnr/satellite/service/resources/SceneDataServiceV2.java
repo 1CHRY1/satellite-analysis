@@ -4,13 +4,11 @@ import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerImageDTO;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerSceneDTO;
-import nnu.mnr.satellite.model.dto.resources.CoverFetchSceneDTO;
-import nnu.mnr.satellite.model.dto.resources.RastersFetchDTO;
-import nnu.mnr.satellite.model.dto.resources.SceneImageDTO;
-import nnu.mnr.satellite.model.dto.resources.ScenesFetchDTOV2;
+import nnu.mnr.satellite.model.dto.resources.*;
 import nnu.mnr.satellite.model.po.resources.Region;
 import nnu.mnr.satellite.model.po.resources.Scene;
 import nnu.mnr.satellite.model.po.resources.SceneSP;
+import nnu.mnr.satellite.model.vo.resources.ViewWindowVO;
 import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
 import nnu.mnr.satellite.mapper.resources.ISceneRepo;
 import nnu.mnr.satellite.service.common.BandMapperGenerator;
@@ -51,6 +49,9 @@ public class SceneDataServiceV2 {
     @Autowired
     BandMapperGenerator bandMapperGenerator;
 
+    @Autowired
+    LocationService locationService;
+
     private final ISceneRepo sceneRepo;
 
     public SceneDataServiceV2(ISceneRepo sceneRepo) {
@@ -62,29 +63,33 @@ public class SceneDataServiceV2 {
     }
 
     public SceneImageDTO getSceneByIdWithImage(String sceneId) {
-<<<<<<< HEAD
         SceneImageDTO sceneImageDTO = sceneRepo.getSceneWithImages(sceneId);
         JSONObject bandMapper = bandMapperGenerator.getSatelliteConfigBySensorName(sceneImageDTO.getSensorName());
         sceneImageDTO.setBandMapper(bandMapper);
         return sceneImageDTO;
-=======
-        return sceneRepo.getSceneWithImages(sceneId);
->>>>>>> 17106968cf404f12bb793679a04b202f512d2f43
     }
 
     public SceneSP getSceneByIdWithProductAndSensor(String sceneId) {
         return sceneRepo.getSceneByIdWithProductAndSensor(sceneId);
     }
 
-    // Get Scenes that Least Covering Region
     public List<ModelServerSceneDTO> getCoveredSceneByRegionResolutionAndSensor(CoverFetchSceneDTO coverFetchSceneDTO) {
+        Geometry boundary = regionDataService.getRegionById(coverFetchSceneDTO.getRegionId()).getBoundary();
+        List<String> sceneIds = coverFetchSceneDTO.getSceneIds(); String sensorName = coverFetchSceneDTO.getSensorName();
+        return getCoveredSceneByBoundaryResolutionAndSensor(boundary, sceneIds, sensorName);
+    } // For Region
+    public List<ModelServerSceneDTO> getCoveredSceneByLocationResolutionAndSensor(CoverLocationFetchSceneDTO coverFetchSceneDTO) {
+        Geometry boundary = locationService.getLocationBoundary(coverFetchSceneDTO.getResolution(), coverFetchSceneDTO.getLocationId());
+        List<String> sceneIds = coverFetchSceneDTO.getSceneIds(); String sensorName = coverFetchSceneDTO.getSensorName();
+        return getCoveredSceneByBoundaryResolutionAndSensor(boundary, sceneIds, sensorName);
+    } // For Location
+    // Get Scenes that Least Covering Region
+    public List<ModelServerSceneDTO> getCoveredSceneByBoundaryResolutionAndSensor(Geometry boundary, List<String> sceneIds, String sensorName) {
         List<ModelServerSceneDTO> sceneDtos = new ArrayList<>();
-        Geometry regionBoundary = regionDataService.getRegionById(coverFetchSceneDTO.getRegionId()).getBoundary();
         QueryWrapper<Scene> queryWrapper = new QueryWrapper<>();
-        queryWrapper.in("scene_id", coverFetchSceneDTO.getSceneIds()).orderByDesc("scene_time");
+        queryWrapper.in("scene_id", sceneIds).orderByDesc("scene_time");
         List<Scene> scenes = sceneRepo.selectList(queryWrapper);
         GeometryFactory geometryFactory = new GeometryFactory();
-<<<<<<< HEAD
         MultiPolygon scenesBoundary = geometryFactory.createMultiPolygon(new Polygon[]{});
         for (Scene scene : scenes) {
             Geometry bbox = scene.getBbox();
@@ -102,32 +107,21 @@ public class SceneDataServiceV2 {
             } else {
                 throw new IllegalArgumentException("Unsupported geometry type: " + unionResult.getClass().getName());
             }
-=======
-        Polygon scenesBoundary = geometryFactory.createPolygon();
-        for (Scene scene : scenes) {
-            scenesBoundary = (Polygon) scenesBoundary.union(scene.getBbox());
->>>>>>> 17106968cf404f12bb793679a04b202f512d2f43
             List<ModelServerImageDTO> imageDTOS = imageDataService.getModelServerImageDTOBySceneId(scene.getSceneId());
             ModelServerSceneDTO modelServerSceneDTO = ModelServerSceneDTO.builder()
                     .sceneId(scene.getSceneId())
                     .sceneTime(scene.getSceneTime())
-<<<<<<< HEAD
                     .noData(scene.getNoData())
-=======
->>>>>>> 17106968cf404f12bb793679a04b202f512d2f43
-                    .bandMapper(bandMapperGenerator.getSatelliteConfigBySensorName(coverFetchSceneDTO.getSensorName()))
+                    .bandMapper(bandMapperGenerator.getSatelliteConfigBySensorName(sensorName))
                     .images(imageDTOS)
                     .build();
             sceneDtos.add(modelServerSceneDTO);
-            if (scenesBoundary.contains(regionBoundary)) {
+            if (scenesBoundary.contains(boundary)) {
                 break;
             }
         }
-<<<<<<< HEAD
-=======
 //        Geometry interscet = regionBoundary.intersection(scenesBoundary);
 //        Double res = interscet.getArea() / regionBoundary.getArea();
->>>>>>> 17106968cf404f12bb793679a04b202f512d2f43
         Collections.reverse(sceneDtos);
         return sceneDtos;
     }
@@ -141,6 +135,16 @@ public class SceneDataServiceV2 {
         Integer regionId = scenesFetchDTO.getRegionId(); Integer cloud = scenesFetchDTO.getCloud();
         Region region = regionDataService.getRegionById(regionId);
         String wkt = region.getBoundary().toText();
+        String dataType = "satellite";
+        return sceneRepo.getScenesDesByTimeCloudAndGeometry(startTime, endTime, cloud, wkt, dataType);
+    }
+
+    public List<SceneDesVO> getScenesDesByTimeLocationAndCloud(ScenesLocationFetchDTO scenesFetchDTO) {
+        String startTime = scenesFetchDTO.getStartTime(); String endTime = scenesFetchDTO.getEndTime();
+        Integer cloud = scenesFetchDTO.getCloud(); String locationId = scenesFetchDTO.getLocationId();
+        Integer resolution = scenesFetchDTO.getResolution();
+        Geometry boundary = locationService.getLocationBoundary(resolution, locationId);
+        String wkt = boundary.toText();
         String dataType = "satellite";
         return sceneRepo.getScenesDesByTimeCloudAndGeometry(startTime, endTime, cloud, wkt, dataType);
     }
@@ -180,6 +184,16 @@ public class SceneDataServiceV2 {
         queryWrapper.eq("scene_id", sceneId);
         Scene scene = sceneRepo.selectOne(queryWrapper);
         return GeometryUtil.geometry2Geojson(scene.getBbox());
+    }
+
+    public ViewWindowVO getSceneWindowById(String sceneId) throws IOException {
+        QueryWrapper<Scene> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("scene_id", sceneId);
+        Scene scene = sceneRepo.selectOne(queryWrapper);
+        return ViewWindowVO.builder()
+                .center(List.of(scene.getBbox().getCentroid().getX(), scene.getBbox().getCentroid().getY()))
+                .bounds(GeometryUtil.getGeometryBounds(scene.getBbox()))
+                .build();
     }
 
 }

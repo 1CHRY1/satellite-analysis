@@ -1,9 +1,8 @@
 package nnu.mnr.satellite.controller.resources;
 
 import com.alibaba.fastjson2.JSONObject;
-import nnu.mnr.satellite.model.vo.resources.GridBoundaryVO;
 import nnu.mnr.satellite.model.vo.resources.RegionInfoVO;
-import nnu.mnr.satellite.model.vo.resources.RegionWindowVO;
+import nnu.mnr.satellite.model.vo.resources.ViewWindowVO;
 import nnu.mnr.satellite.service.resources.RegionDataService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -45,13 +44,8 @@ public class RegionController {
     }
 
     @GetMapping("/window/region/{regionId}")
-    public ResponseEntity<RegionWindowVO> getRegionWindow(@PathVariable Integer regionId) {
+    public ResponseEntity<ViewWindowVO> getRegionWindow(@PathVariable Integer regionId) {
         return ResponseEntity.ok(regionDataService.getRegionWindowById(regionId));
-    }
-
-    @GetMapping("/grids/region/{regionId}/resolution/{resolution}")
-    public ResponseEntity<List<GridBoundaryVO>> getGridsByRegionAndResolution(@PathVariable Integer regionId, @PathVariable Integer resolution) throws IOException {
-        return ResponseEntity.ok(regionDataService.getGridsByRegionAndResolution(regionId, resolution));
     }
 
 }
