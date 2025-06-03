@@ -73,6 +73,13 @@ def calc_no_cloud():
     task_id = scheduler.start_task('calc_no_cloud', data)
     return api_response(data={'taskId': task_id})
 
+@bp.route(config.API_TIF_calc_no_cloud_grid, methods=['POST'])
+def calc_no_cloud_grid():
+    scheduler = init_scheduler()
+    data = request.json
+    task_id = scheduler.start_task('calc_no_cloud_grid', data)
+    return api_response(data={'taskId': task_id})
+
 @bp.route(config.API_TIF_calc_NDVI, methods=['POST'])
 def calc_NDVI():
     scheduler = init_scheduler()
