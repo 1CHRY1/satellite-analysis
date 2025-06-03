@@ -20,7 +20,7 @@
                             <select v-model="selectedSceneId" @change="showImageBBox"
                                 class="bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-3 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6] max-w-[calc(100%-90px)] truncate">
                                 <option disabled selected value="">请选择影像</option>
-                                <option v-for="image in props.thematicConfig.allImages" :key="image.sceneName"
+                                <option v-for="image in hyperspectralImages" :key="image.sceneName"
                                     :value="image.sceneId" :title="image.sceneName" class="truncate">
                                     {{ image.sceneName }}
                                 </option>
@@ -144,7 +144,12 @@ import {
 import { computed, nextTick, onMounted, onUnmounted, ref, watch, type ComponentPublicInstance, type ComputedRef, type Ref } from 'vue';
 import * as echarts from 'echarts'
 import * as MapOperation from '@/util/map/operation'
-import { getBoundaryBySceneId, getCaseResult, getCaseStatus, getSpectrum } from '@/api/http/satellite-data';
+import { getBoundaryBySceneId, getCaseResult, getCaseStatus, getRasterScenesDes, getSpectrum } from '@/api/http/satellite-data';
+import bus from '@/store/bus'
+import mapboxgl from 'mapbox-gl'
+import { mapManager } from '@/util/map/mapManager';
+
+
 
 type ThematicConfig = {
     allImages: any,
@@ -156,6 +161,17 @@ type LatLng = [number, number]
 
 const props = defineProps<{ thematicConfig: ThematicConfig }>()
 
+
+const hyperspectralImages = computed(() => {
+    let filteredImages = props.thematicConfig.allImages.filter((image: any) => {
+        return image.sceneName.includes('AHSI')
+    })
+    if (filteredImages.length === 0) {
+        ElMessage.warning('该区域暂无高光谱影像')
+    }
+
+    return filteredImages
+})
 
 const activeMode = ref<'point' | 'line' | 'false' | null>(null)
 const gridStore = useGridStore()
@@ -226,6 +242,7 @@ const analysisSpectrum = async () => {
         ElMessage.warning('请先选择您要计算的影像')
         return
     }
+    ElMessage.success('开始高光谱分析。')
     let spectrumParam = {
         sceneId: selectedSceneId.value,
         point: [pickedPoint.value[1], pickedPoint.value[0]]
@@ -386,8 +403,22 @@ watch(analysisData, (newData) => {
 
 const ndviProjectId = ref('')
 const spectrumProjectId = ref('')
-onMounted(() => {
 
+
+const markerRef = ref<mapboxgl.Marker | null>(null);
+const createMarker = ({ lng, lat }) => {
+
+    mapManager.withMap((map) => {
+        if (markerRef.value) {
+            markerRef.value.remove(); // 移除之前的标记
+        }
+        markerRef.value = new mapboxgl.Marker() // 创建一个新的标记
+            .setLngLat([lng, lat]) // 设置标记的位置
+            .addTo(map); // 将标记添加到地图上
+    })
+}
+onMounted(() => {
+    bus.on('point-finished', createMarker);
     ndviProjectId.value = ezStore.get('conf').ndviProjectId
     spectrumProjectId.value = ezStore.get('conf').spectrumProjectId
     nextTick(() => {
@@ -401,6 +432,13 @@ onMounted(() => {
 })
 onUnmounted(() => {
     gridStore.clearPicked()
+    bus.off('point-finished', createMarker);
+    if (markerRef.value) markerRef.value.remove()
+    mapManager.withMap((map) => {
+        if (map.getLayer('UniqueSceneLayer-fill')) map.removeLayer('UniqueSceneLayer-fill')
+        if (map.getLayer('UniqueSceneLayer-line')) map.removeLayer('UniqueSceneLayer-line')
+        if (map.getSource('UniqueSceneLayer-source')) map.removeSource('UniqueSceneLayer-source')
+    })
 })
 </script>
 

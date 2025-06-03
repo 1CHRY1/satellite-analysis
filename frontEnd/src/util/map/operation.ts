@@ -273,54 +273,54 @@ export function map_addPolygonLayer(options: {
     })
 }
 
-export function map_addPointLayer(
-    coord: [number, number], // [lon, lat]
-) {
-    const sourceId = 'uniquePOI-source'
-    const layerId = 'uniquePOI-layer'
-    const geoJson = {
-        type: 'FeatureCollection',
-        features: [
-            {
-                type: 'Feature',
-                geometry: {
-                    type: 'Point',
-                    coordinates: coord,
-                },
-                properties: {},
-            },
-        ],
-    }
+// export function map_addPointLayer(
+//     coord: [number, number], // [lon, lat]
+// ) {
+//     const sourceId = 'uniquePOI-source'
+//     const layerId = 'uniquePOI-layer'
+//     const geoJson = {
+//         type: 'FeatureCollection',
+//         features: [
+//             {
+//                 type: 'Feature',
+//                 geometry: {
+//                     type: 'Point',
+//                     coordinates: coord,
+//                 },
+//                 properties: {},
+//             },
+//         ],
+//     }
 
-    mapManager.withMap((map) => {
-        // 👉 清理旧图层和数据源
-        if (map.getLayer(layerId)) map.removeLayer(layerId)
-        if (map.getSource(sourceId)) map.removeSource(sourceId)
+//     mapManager.withMap((map) => {
+//         // 👉 清理旧图层和数据源
+//         if (map.getLayer(layerId)) map.removeLayer(layerId)
+//         if (map.getSource(sourceId)) map.removeSource(sourceId)
 
-        addPOIPoint(map, 120.123456, 36.123456)
+//         addPOIPoint(map, 120.123456, 36.123456)
 
-        // 👉 添加数据源
-        map.addSource(sourceId, {
-            type: 'geojson',
-            data: geoJson,
-        })
+//         // 👉 添加数据源
+//         map.addSource(sourceId, {
+//             type: 'geojson',
+//             data: geoJson,
+//         })
 
-        // 👉 添加图层：五角星样式（symbol layer）
-        map.addLayer({
-            id: layerId,
-            type: 'symbol',
-            source: sourceId,
-            layout: {
-                'icon-image': 'satellite-icon', // 使用 mapbox 内置五角星图标
-                'icon-size': 1.5,
-                'icon-allow-overlap': true,
-            },
-            paint: {
-                'icon-color': '#FF0000',
-            },
-        })
-    })
-}
+//         // 👉 添加图层：五角星样式（symbol layer）
+//         map.addLayer({
+//             id: layerId,
+//             type: 'symbol',
+//             source: sourceId,
+//             layout: {
+//                 'icon-image': 'satellite-icon', // 使用 mapbox 内置五角星图标
+//                 'icon-size': 1.5,
+//                 'icon-allow-overlap': true,
+//             },
+//             paint: {
+//                 'icon-color': '#FF0000',
+//             },
+//         })
+//     })
+// }
 export function addPOIPoint(map: mapboxgl.Map, lng: number, lat: number) {
     const iconId = 'satellite-icon'
 
@@ -1029,6 +1029,68 @@ export function map_destroyNoCloudLayer() {
     mapManager.withMap((m) => {
         m.getLayer(id) && m.removeLayer(id)
         m.getSource(source) && m.removeSource(source)
+    })
+}
+///// 爱分开加是吧
+type OneNoCloudGrid = {
+    bucket: string
+    tifPath: string
+    grid: any
+}
+type AllStrechParam = {
+    min_r: number
+    max_r: number
+    min_g: number
+    max_g: number
+    min_b: number
+    max_b: number
+    nodata?: number
+}
+export function map_addMultiNoCloudLayer(gridsInfo: OneNoCloudGrid[], sparam: AllStrechParam) {
+    if (!ezStore.get('noCloudGridsLayerIdList')) ezStore.set('noCloudGridsLayerIdList', [])
+    const layerIdList = ezStore.get('noCloudGridsLayerIdList') as string[]
+    mapManager.withMap((m) => {
+        for (let i = 0; i < gridsInfo.length; i++) {
+            const gridInfo = gridsInfo[i]
+            const fullPath = gridInfo.bucket + '/' + gridInfo.tifPath
+            const url = getNoCloudUrl({
+                fullTifPath: gridInfo.bucket + '/' + gridInfo.tifPath,
+                band1Scale: sparam.min_r + ',' + sparam.max_r,
+                band2Scale: sparam.min_g + ',' + sparam.max_g,
+                band3Scale: sparam.min_b + ',' + sparam.max_b,
+            })
+
+            const id = uid()
+            layerIdList.push(id)
+            const source = id + '-source'
+
+            m.getLayer(id) && m.removeLayer(id)
+            m.getSource(source) && m.removeSource(source)
+
+            m.addSource(source, {
+                type: 'raster',
+                tiles: [url],
+                tileSize: 256,
+            })
+
+            m.addLayer({
+                id,
+                type: 'raster',
+                source: source,
+                paint: {},
+            })
+        }
+    })
+}
+export function map_destroyMultiNoCloudLayer() {
+    const layerIdList = ezStore.get('noCloudGridsLayerIdList') as string[]
+    mapManager.withMap((m) => {
+        for (let i = 0; i < layerIdList.length; i++) {
+            const id = layerIdList[i]
+            const source = id + '-source'
+            m.getLayer(id) && m.removeLayer(id)
+            m.getSource(source) && m.removeSource(source)
+        }
     })
 }
 

@@ -1,6 +1,5 @@
 import { type StyleSpecification } from 'mapbox-gl'
 import { ezStore } from '@/store'
-import { version } from 'vue'
 
 const TianMapkey = '6e0b0d0a6b7929fbd537bbf1f5d8c629'
 const TianImageStyle = {
@@ -560,12 +559,16 @@ const LocalImageBaseMapStyle = {
     sources: {
         'Local-Imagelayer-Source': {
             type: 'raster',
-            tiles: [ezStore.get('conf')['intranet_img_url']],
+            tiles: [
+                `http://${window.location.host}` + ezStore.get('conf')['intranet_img_url']
+            ],
             tileSize: 256,
         },
         'Local-Interal-Source': {
             type: 'raster',
-            tiles: [ezStore.get('conf')['fk_url']],
+            tiles: [
+                `http://${window.location.host}` + ezStore.get('conf')['fk_url']
+            ],
             tileSize: 256,
         },
     },
@@ -581,7 +584,7 @@ const LocalImageBaseMapStyle = {
             source: 'Local-Interal-Source',
         },
     ],
-    glyphs: '/glyphs/mapbox/{fontstack}/{range}.pbf',
+    glyphs: `http://${window.location.host}/glyphs/mapbox/{fontstack}/{range}.pbf`,
     "sprite": `http://${window.location.host}/sprite`,
 }
 // 内网矢量风格底图
@@ -820,7 +823,9 @@ const LocalVectorBaseMapStyle = {
     "sources": {
         "openmaptiles": {
             "type": "vector",
-            "tiles": [ezStore.get('conf')['intranet_mvt_url']],
+            "tiles": [
+                `http://${window.location.host}` + ezStore.get('conf')['intranet_mvt_url']
+            ],
             "maxzoom": 14,
             "minzoom": 0
         }
@@ -1631,7 +1636,7 @@ const OurVectorBaseMapStyle = {
     sources: {
         offlineMapTiles: {
             type: 'vector',
-            tiles: [ezStore.get('conf')['intranet_mvt_url']],
+            tiles: [ `http://${window.location.host}` + ezStore.get('conf')['intranet_mvt_url']],
             minzoom: 0,
             maxzoom: 22,
         },

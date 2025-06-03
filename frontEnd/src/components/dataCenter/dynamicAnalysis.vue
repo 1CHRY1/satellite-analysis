@@ -88,6 +88,7 @@ import {
     Trash2Icon
 } from 'lucide-vue-next'
 import { ElMessage } from 'element-plus'
+import { mapManager } from '@/util/map/mapManager'
 
 const startTime = '2001-01-01'
 const endTime = '2030-01-01'
@@ -105,20 +106,20 @@ const displayLabel = computed(() => {
 })
 
 const optionalTasks = [
-    { value: 'DEM分析', label: 'DEM分析', disabled: false },
     { value: 'DSM分析', label: 'DSM分析', disabled: false },
+    { value: 'DEM分析', label: 'DEM分析', disabled: false },
     { value: '红绿立体', label: '红绿立体', disabled: false },
     { value: '形变速率', label: '形变速率', disabled: false },
     { value: 'NDVI时序计算', label: 'NDVI时序计算', disabled: false },
     { value: '光谱分析', label: '光谱分析', disabled: false },
 ]
 
-const selectedTask = ref(optionalTasks[1].value)
+const selectedTask = ref(optionalTasks[0].value)
 
 // 专题组件映射
 const taskComponentMap = {
-    'DEM分析': defineAsyncComponent(() => import('./thematic/demPanel.vue')),
     'DSM分析': defineAsyncComponent(() => import('./thematic/dsmPanel.vue')),
+    'DEM分析': defineAsyncComponent(() => import('./thematic/demPanel.vue')),
     '红绿立体': defineAsyncComponent(() => import('./thematic/RBbands.vue')),
     '形变速率': defineAsyncComponent(() => import('./thematic/deformationRate.vue')),
     'NDVI时序计算': defineAsyncComponent(() => import('./thematic/ndviPanel.vue')),
@@ -195,6 +196,11 @@ const clearImages = () => {
     MapOperation.map_destroyTerrain()
     MapOperation.map_destroyRGBImageTileLayer()
     MapOperation.map_destroyOneBandColorLayer()
+    mapManager.withMap((map) => {
+        if (map.getLayer('UniqueSceneLayer-fill')) map.removeLayer('UniqueSceneLayer-fill')
+        if (map.getLayer('UniqueSceneLayer-line')) map.removeLayer('UniqueSceneLayer-line')
+        if (map.getSource('UniqueSceneLayer-source')) map.removeSource('UniqueSceneLayer-source')
+    })
 }
 
 

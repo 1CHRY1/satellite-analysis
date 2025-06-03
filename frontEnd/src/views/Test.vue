@@ -52,7 +52,7 @@ const addMVTLayer = () => {
             },
         })
         map.on('click','test-layer',(e)=>{
-            console.log(e.features[0])
+            // console.log(e.features[0] )
         })
     })
 }

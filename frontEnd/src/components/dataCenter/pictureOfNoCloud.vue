@@ -252,7 +252,7 @@
                             </div>
 
                             <div class="flex w-full flex-col justify-center">
-                                <div class="flex flex-row gap-2 my-4 ml-[13px] items-center">
+                                <!-- <div class="flex flex-row gap-2 my-4 ml-[13px] items-center">
                                     <label class="flex items-center gap-2">
                                         <input type="checkbox" v-model="isMerging" class="h-4 w-4 rounded" />
                                         合并一版图
@@ -262,7 +262,7 @@
                                             <CircleHelp :size="14" />
                                         </el-tooltip>
                                     </div>
-                                </div>
+                                </div> -->
 
                                 <button @click="calNoClouds" :disabled="noCloudLoading"
                                     class="flex justify-center w-full rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
@@ -726,7 +726,7 @@ const previewNoCloud = async (data: any) => {
 
     const stopLoading = message.loading('正在加载无云一版图，请稍后...', 0)
     // 清除旧图层
-    // MapOperation.map_removeNocloudGridPreviewLayer()
+    MapOperation.map_removeNocloudGridPreviewLayer()
     MapOperation.map_destroyNoCloudLayer()
 
     const nocloudTifPath = data.bucket + '/' + data.tifPath
@@ -739,6 +739,12 @@ const previewNoCloud = async (data: any) => {
     })
 
     MapOperation.map_addNoCloudLayer(url)
+
+    // 清除旧图层
+    // MapOperation.map_destroyMultiNoCloudLayer()
+    // console.log(data)
+
+    // MapOperation.map_addMultiNoCloudLayer(data.grids, data.statistic)
 
 
 

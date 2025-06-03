@@ -111,12 +111,14 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch, watchEffect, type ComponentPublicInstance, type ComputedRef, type Ref } from 'vue';
-import { getRasterScenesDes, getRasterPoints, getBoundaryBySceneId, getCaseStatus, getCaseResult, getRasterLine, getDescriptionBySceneId } from '@/api/http/satellite-data';
+import { getRasterScenesDes, getRasterPoints, getBoundaryBySceneId, getCaseStatus, getCaseResult, getRasterLine, getDescriptionBySceneId, getWindow } from '@/api/http/satellite-data';
 import * as MapOperation from '@/util/map/operation'
 import { useGridStore, ezStore } from '@/store'
 import { formatTime } from '@/util/common';
 import * as echarts from 'echarts'
-
+import bus from '@/store/bus'
+import mapboxgl from 'mapbox-gl'
+import { mapManager } from '@/util/map/mapManager';
 
 import {
     ChartColumn,
@@ -203,6 +205,7 @@ const toggleMode = (mode: 'point' | 'line' | 'false') => {
 }
 
 const showTif = async (image) => {
+    ElMessage.success('正在为您加载影像...')
     let sceneId = image.sceneId
     let res = await getDescriptionBySceneId(sceneId)
     console.log(res, sceneId, 7575);
@@ -210,6 +213,11 @@ const showTif = async (image) => {
     MapOperation.map_addOneBandColorLayer({
         fullTifPath: url
     })
+    let window = await getWindow(sceneId)
+    MapOperation.map_fitView([
+        [window.bounds[0], window.bounds[1]],
+        [window.bounds[2], window.bounds[3]],
+    ])
 }
 
 const calTask: Ref<any> = ref({
@@ -230,6 +238,7 @@ const analysisDeforRate = async () => {
     if (!verifyAnalysis()) {
         return
     }
+    ElMessage.success('开始形变速率分析。')
     if (activeMode.value === 'point') {
         let pointParam = {
             point: [pickedPoint.value[1], pickedPoint.value[0]],
@@ -492,8 +501,23 @@ watch(analysisData, (newData) => {
 }, { deep: true })
 
 watch(() => props.thematicConfig.regionId, initDeforRatePanel)
+
+const markerRef = ref<mapboxgl.Marker | null>(null);
+const createMarker = ({ lng, lat }) => {
+
+    mapManager.withMap((map) => {
+        if (markerRef.value) {
+            markerRef.value.remove(); // 移除之前的标记
+        }
+        markerRef.value = new mapboxgl.Marker() // 创建一个新的标记
+            .setLngLat([lng, lat]) // 设置标记的位置
+            .addTo(map); // 将标记添加到地图上
+    })
+}
+
 onMounted(async () => {
     await initDeforRatePanel()
+    bus.on('point-finished', createMarker);
     nextTick(() => {
         analysisData.value.forEach((item, index) => {
             const el = document.getElementById(`chart-${index}`)
@@ -505,6 +529,8 @@ onMounted(async () => {
 })
 onUnmounted(() => {
     gridStore.clearPicked()
+    bus.off('point-finished', createMarker);
+    if (markerRef.value) markerRef.value.remove()
 })
 </script>
 
