@@ -2,14 +2,15 @@ package nnu.mnr.satellite.controller.resources;
 
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.model.dto.resources.GridSceneFetchDTO;
+import nnu.mnr.satellite.model.vo.resources.GridBoundaryVO;
 import nnu.mnr.satellite.model.vo.resources.GridSceneVO;
 import nnu.mnr.satellite.service.resources.GridDataService;
+import nnu.mnr.satellite.service.resources.RegionDataService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -27,8 +28,21 @@ public class GridController {
 
     private final GridDataService gridDataService;
 
+    @Autowired
+    private RegionDataService regionDataService;
+
     public GridController(GridDataService gridDataService) {
         this.gridDataService = gridDataService;
+    }
+
+    @GetMapping("/grids/region/{regionId}/resolution/{resolution}")
+    public ResponseEntity<List<GridBoundaryVO>> getGridsByRegionAndResolution(@PathVariable Integer regionId, @PathVariable Integer resolution) throws IOException {
+        return ResponseEntity.ok(regionDataService.getGridsByRegionAndResolution(regionId, resolution));
+    }
+
+    @GetMapping("/grids/location/{locationId}/resolution/{resolution}")
+    public ResponseEntity<List<GridBoundaryVO>> getGridsFromLocation(@PathVariable String locationId, @PathVariable Integer resolution) throws IOException {
+        return ResponseEntity.ok(gridDataService.getGridsByLocationId(locationId, resolution));
     }
 
     @PostMapping("/scene/grids")

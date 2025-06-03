@@ -1,4 +1,4 @@
-package nnu.mnr.satellite.repository.geo;
+package nnu.mnr.satellite.repository.resources;
 
 import nnu.mnr.satellite.model.po.geo.GeoLocation;
 
@@ -14,5 +14,7 @@ import java.util.List;
 public interface LocationRepo {
 
     List<GeoLocation> searchByName(String keyword);
+
+    public GeoLocation searchById(String id);
 
 }

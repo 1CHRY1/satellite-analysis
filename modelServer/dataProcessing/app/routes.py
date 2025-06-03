@@ -73,12 +73,13 @@ def calc_no_cloud():
     task_id = scheduler.start_task('calc_no_cloud', data)
     return api_response(data={'taskId': task_id})
 
-@bp.route(config.API_TIF_calc_NDVI, methods=['POST'])
-def calc_NDVI():
+@bp.route(config.API_TIF_calc_no_cloud_grid, methods=['POST'])
+def calc_no_cloud_grid():
     scheduler = init_scheduler()
     data = request.json
-    task_id = scheduler.start_task('calc_NDVI', data)
+    task_id = scheduler.start_task('calc_no_cloud_grid', data)
     return api_response(data={'taskId': task_id})
+
 
 @bp.route(config.API_TIF_get_spectral_profile, methods=['POST'])
 def get_spectral_profile():
@@ -101,49 +102,12 @@ def calc_raster_line():
     task_id = scheduler.start_task('calc_raster_line', data)
     return api_response(data={'taskId': task_id})
 
-
-# @bp.route(config.API_TIF_calc_qa, methods=['POST'])
-# def calc_qa():
-#     scheduler = init_scheduler()
-#     data = request.json
-#     task_id = scheduler.start_task('calc_qa', data)
-#     return api_response(data={'taskId': task_id})
-
-# @bp.route(config.API_TIF_calc_qa_simple, methods=['POST'])
-# def calc_qa_simple():
-#     scheduler = init_scheduler()
-#     data = request.json
-#     task_id = scheduler.start_task('calc_qa_simple', data)
-#     return api_response(data={'taskId': task_id})
-
-# @bp.route(config.API_TIF_calc_qa_middle, methods=['POST'])
-# def calc_qa_middle():
-#     scheduler = init_scheduler()
-#     data = request.json
-#     task_id = scheduler.start_task('calc_qa_middle', data)
-#     return api_response(data={'taskId': task_id})
-
-# @bp.route(config.API_TIF_calc_NDVI, methods=['POST'])
-# def calc_NDVI():
-#     scheduler = init_scheduler()
-#     data = request.json
-#     task_id = scheduler.start_task('calc_NDVI', data)
-#     return api_response(data={'taskId': task_id})
-
-# @bp.route(config.API_TIF_get_spectral_profile, methods=['POST'])
-# def get_spectral_profile():
-#     scheduler = init_scheduler()
-#     data = request.json
-#     task_id = scheduler.start_task('get_spectral_profile', data)
-#     return api_response(data={'taskId': task_id})
-
-# @bp.route(config.API_CALC_RASTER_POINT, methods=['POST'])
-# def calc_raster_point():
-#     scheduler = init_scheduler()
-#     data = request.json
-#     task_id = scheduler.start_task('calc_raster_point', data)
-#     return api_response(data={'taskId': task_id})
-
+@bp.route(config.API_TIF_calc_NDVI, methods=['POST'])
+def calc_NDVI():
+    scheduler = init_scheduler()
+    data = request.json
+    task_id = scheduler.start_task('calc_NDVI', data)
+    return api_response(data={'taskId': task_id})
 
 @bp.route(config.API_TASK_RESULT, methods=['GET'])
 def get_result():

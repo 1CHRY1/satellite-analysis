@@ -17,6 +17,7 @@ from dataProcessing.model.get_spectral_profile import get_spectral_profile
 from dataProcessing.model.calc_raster_point import calc_raster_point
 from dataProcessing.model.calc_raster_line import calc_raster_line
 from dataProcessing.model.calc_no_cloud import calc_no_cloud
+from dataProcessing.model.calc_no_cloud_grid import calc_no_cloud_grid
 
 
 class TaskScheduler:
@@ -94,6 +95,7 @@ class TaskScheduler:
             'merge_tif': MergeTifTask,
             'merge_tif_v2': MergeTifTaskV2,
             'calc_no_cloud': calc_no_cloud,
+            'calc_no_cloud_grid': calc_no_cloud_grid,
             'calc_NDVI': calc_NDVI,
             'get_spectral_profile': get_spectral_profile,
             'calc_raster_point': calc_raster_point,

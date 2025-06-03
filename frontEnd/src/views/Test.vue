@@ -28,7 +28,7 @@ const addMVTLayer = () => {
     // const url = baseUrl + '/patch/{z}/{x}/{y}'
 
     // const url = `http://${window.location.host}/chry/patch/{z}/{x}/{y}`
-    const url = 'http://223.2.47.202:9888/api/v1/geo/vector/tiles/patch/{z}/{x}/{y}'
+    const url = 'http://223.2.47.202:9888/api/v1/geo/vector/tiles/patch/region/370100/type/grass/{z}/{x}/{y}'
     // const url = 'http://127.0.0.1:8000/tiles/{z}/{x}/{y}'
 
     console.log(import.meta.env.VITE)
@@ -47,7 +47,7 @@ const addMVTLayer = () => {
             id: 'test-layer',
             type: 'fill',
             source: 't-source',
-            'source-layer': 'patches', //这个地方要注意,
+            'source-layer': 'patch', //这个地方要注意,
             paint: {
                 'fill-color': '#ffffff',
             },

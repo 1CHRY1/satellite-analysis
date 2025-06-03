@@ -21,6 +21,11 @@ spring:
           username: root
           password: ogms250410
           driver-class-name: com.mysql.cj.jdbc.Driver
+        pg_space:
+          url: jdbc:postgresql://172.31.13.21:5432/gis_db
+          username: postgres
+          password: ogms250410
+          driver-class-name: org.postgresql.Driver
   servlet:
     multipart:
       max-file-size: 1GB
@@ -32,6 +37,8 @@ spring:
       database: 0
     mongodb:
       uri: mongodb://172.31.13.21:27017/PortalModel
+  elasticsearch:
+    uris: http://172.31.13.21:9200
 
 mybatis-plus:
   mapper-locations: classpath:mapper/*.xml

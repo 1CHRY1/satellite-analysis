@@ -140,7 +140,10 @@ export function getSceneRGBCompositeTileUrl(param: RGBTileLayerParams) {
     requestParams.append('max_g', param.g_max.toString())
     requestParams.append('min_b', param.b_min.toString())
     requestParams.append('max_b', param.b_max.toString())
-    if (param.nodata) requestParams.append('nodata', param.nodata.toString())
+    // if (param.nodata) requestParams.append('nodata', param.nodata.toString())
+    if (param.nodata !== undefined && param.nodata !== null) {
+        requestParams.append('nodata', param.nodata.toString())
+    }
 
     return baseUrl + '?' + requestParams.toString()
 }
