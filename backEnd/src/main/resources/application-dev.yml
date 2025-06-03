@@ -78,7 +78,7 @@ docker:
   workDir: /usr/local/coding/
 
 modelServer:
-  address: http://127.0.0.1:5001
+  address: http://223.2.37.198:5002/
   #  address: http://223.2.43.228:30500
   apis:
     status: /v0/task/status

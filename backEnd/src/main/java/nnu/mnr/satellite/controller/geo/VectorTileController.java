@@ -34,11 +34,11 @@ public class VectorTileController {
         sendVectorTileResponse(tile, response);
     }
 
-//    @GetMapping("/{layerName}/{param}/{value}/{z}/{x}/{y}")
-//    public void getGeoVectorTilesByParam(@PathVariable String param, @PathVariable String value, @PathVariable String layerName, @PathVariable int z, @PathVariable int x, @PathVariable int y, HttpServletResponse response) {
-//        byte[] tile = vectorTileService.getGeoVecterTilesByParam(param, value, layerName, z, x, y);
-//        sendVectorTileResponse(tile, response);
-//    }
+    @GetMapping("/{layerName}/region/{regionId}/type/{type}/{z}/{x}/{y}")
+    public void getPatchGeoVecterTilesByParam(@PathVariable String layerName, @PathVariable String type, @PathVariable Integer regionId, @PathVariable int z, @PathVariable int x, @PathVariable int y, HttpServletResponse response) {
+        byte[] tile = vectorTileService.getPatchGeoVecterTilesByParam(layerName, z, x, y, type, regionId);
+        sendVectorTileResponse(tile, response);
+    }
 
     private void sendVectorTileResponse(byte[] tileRes, HttpServletResponse response) {
         if(tileRes == null) {

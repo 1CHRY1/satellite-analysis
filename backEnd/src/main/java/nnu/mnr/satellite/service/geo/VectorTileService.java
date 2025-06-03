@@ -1,6 +1,9 @@
 package nnu.mnr.satellite.service.geo;
 
 import nnu.mnr.satellite.mapper.geo.IVectorTileMapper;
+import nnu.mnr.satellite.service.resources.RegionDataService;
+import org.locationtech.jts.geom.Geometry;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -14,6 +17,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class VectorTileService {
 
+    @Autowired
+    RegionDataService regionDataService;
+
     private final IVectorTileMapper geoDataMapper;
 
     public VectorTileService(IVectorTileMapper geoDataMapper) {
@@ -21,48 +27,48 @@ public class VectorTileService {
     }
 
     public byte[] getGeoVecterTiles(String layerName, int z, int x, int y) {
-        String tableName = layerName + "_table";
-        return (byte[]) geoDataMapper.getVectorTile(tableName, x, y, z);
+        return (byte[]) geoDataMapper.getVectorTile(layerName, x, y, z);
     }
 
-//    public byte[] getGeoVecterTilesByParam(String param, String value, String layerName, int z, int x, int y) {
-//        return (byte[]) geoDataMapper.getVectorTileByParam(tileBox, param, value);
-//    }
+    public byte[] getGeoVecterTilesByBetweenParamAndWithinRegion(String layerName, int z, int x, int y, String param, Integer valueStart, Integer valueEnd, String wkt) {
+        return (byte[]) geoDataMapper.getVectorTileByBetweenParam(layerName, x, y, z, param, valueStart, valueEnd, wkt);
+    }
 
-//    public byte[] getPatchGeoVecterTilesByParam(String value, String layerName, int z, int x, int y) {
-//        int valueMin = Integer.MIN_VALUE, valueMax = Integer.MAX_VALUE;
-//        switch (value) {
-//            case "farm" -> {
-//                valueMin = 0;
-//                valueMax = 20;
-//            }
-//            case "forest" -> {
-//                valueMin = 20;
-//                valueMax = 30;
-//            }
-//            case "grass" -> {
-//                valueMin = 30;
-//                valueMax = 40;
-//            }
-//            case "water" -> {
-//                valueMin = 40;
-//                valueMax = 50;
-//            }
-//            case "city" -> {
-//                valueMin = 50;
-//                valueMax = 60;
-//            }
-//            case "inuse" -> {
-//                valueMin = 60;
-//                valueMax = 70;
-//            }
-//            case "ocean" -> {
-//                valueMin = 70;
-//                valueMax = 100;
-//            }
-//            default -> valueMin = 100;
-//        }
-//        return (byte[]) geoDataMapper.getVectorTileByParam(tileBox, "shandong_i", value);
-//    }
+    public byte[] getPatchGeoVecterTilesByParam(String layerName, int z, int x, int y, String type, Integer regionId) {
+        String wkt = regionDataService.getRegionById(regionId).getBoundary().toText();
+        int valueStart = Integer.MIN_VALUE, valueEnd = Integer.MAX_VALUE;
+        switch (type) {
+            case "farm" -> {
+                valueStart = 0;
+                valueEnd = 20;
+            }
+            case "forest" -> {
+                valueStart = 20;
+                valueEnd = 30;
+            }
+            case "grass" -> {
+                valueStart = 30;
+                valueEnd = 40;
+            }
+            case "water" -> {
+                valueStart = 40;
+                valueEnd = 50;
+            }
+            case "city" -> {
+                valueStart = 50;
+                valueEnd = 60;
+            }
+            case "inuse" -> {
+                valueStart = 60;
+                valueEnd = 70;
+            }
+            case "ocean" -> {
+                valueStart = 70;
+                valueEnd = 100;
+            }
+            default -> valueStart = 100;
+        }
+        return getGeoVecterTilesByBetweenParamAndWithinRegion(layerName, z, x, y, "shandong_i", valueStart, valueEnd, wkt);
+    }
 
 }

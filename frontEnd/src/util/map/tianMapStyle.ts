@@ -2,7 +2,7 @@ import { type StyleSpecification } from 'mapbox-gl'
 import { ezStore } from '@/store'
 import { version } from 'vue'
 
-const TianMapkey = '51d72ac2491e6e4228bdc5dd2e0a61b2'
+const TianMapkey = '6e0b0d0a6b7929fbd537bbf1f5d8c629'
 const TianImageStyle = {
     version: 8,
     lights: [

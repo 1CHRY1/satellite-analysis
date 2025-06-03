@@ -4,7 +4,7 @@ import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerSceneDTO;
 import nnu.mnr.satellite.model.dto.resources.*;
-import nnu.mnr.satellite.model.po.resources.SceneSP;
+import nnu.mnr.satellite.model.vo.resources.ViewWindowVO;
 import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
 import nnu.mnr.satellite.service.resources.SceneDataServiceV2;
 import org.springframework.http.ResponseEntity;
@@ -60,6 +60,11 @@ public class SceneControllerV2 {
     @GetMapping("/boundary/sceneId/{sceneId}")
     public ResponseEntity<JSONObject> getSceneBoundaryById(@PathVariable String sceneId) throws IOException {
         return ResponseEntity.ok(sceneDataService.getSceneBoundaryById(sceneId));
+    }
+
+    @GetMapping("/window/sceneId/{sceneId}")
+    public ResponseEntity<ViewWindowVO> getSceneWindowById(@PathVariable String sceneId) throws IOException {
+        return ResponseEntity.ok(sceneDataService.getSceneWindowById(sceneId));
     }
 
     @GetMapping("/sceneId/{sceneId}")

@@ -87,7 +87,7 @@ public class ModelExampleService {
             SceneSP scene = sceneDataServiceV2.getSceneByIdWithProductAndSensor(sceneId);
             List<ModelServerImageDTO> imageDTO = imageDataService.getModelServerImageDTOBySceneId(sceneId);
             ModelServerSceneDTO modelServerSceneDTO = ModelServerSceneDTO.builder()
-                    .sceneId(sceneId).images(imageDTO).sceneTime(scene.getSceneTime())
+                    .sceneId(sceneId).images(imageDTO).sceneTime(scene.getSceneTime()).resolution(scene.getResolution())
                     .bbox(GeometryUtil.geometry2Geojson(scene.getBbox())).noData(scene.getNoData())
                     .sensorName(scene.getSensorName()).productName(scene.getProductName()).cloud(scene.getCloud())
                     .bandMapper(bandMapperGenerator.getSatelliteConfigBySensorName(scene.getSensorName()))

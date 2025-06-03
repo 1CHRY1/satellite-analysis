@@ -4,6 +4,8 @@ import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.util.stream.Stream;
+
 /**
  * Created with IntelliJ IDEA.
  *
@@ -16,10 +18,8 @@ import org.apache.ibatis.annotations.Mapper;
 @DS("pg_space")
 public interface IVectorTileMapper extends BaseMapper<Object> {
 
-    Object getVectorTile(String tablename, int x, int y, int z);
+    Object getVectorTile(String tableName, int x, int y, int z);
 
-//    Object getVectorTileByParam(int x, int y, int z, String param, String value);
-
-//    Object getVectorTileByParam(TileBox tileBox, String param, String value);
+    Object getVectorTileByBetweenParam(String tableName, int x, int y, int z, String param, Integer valueStart, Integer valueEnd, String wkt);
 
 }

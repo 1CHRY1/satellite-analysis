@@ -8,6 +8,7 @@ import nnu.mnr.satellite.model.dto.resources.*;
 import nnu.mnr.satellite.model.po.resources.Region;
 import nnu.mnr.satellite.model.po.resources.Scene;
 import nnu.mnr.satellite.model.po.resources.SceneSP;
+import nnu.mnr.satellite.model.vo.resources.ViewWindowVO;
 import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
 import nnu.mnr.satellite.mapper.resources.ISceneRepo;
 import nnu.mnr.satellite.service.common.BandMapperGenerator;
@@ -183,6 +184,16 @@ public class SceneDataServiceV2 {
         queryWrapper.eq("scene_id", sceneId);
         Scene scene = sceneRepo.selectOne(queryWrapper);
         return GeometryUtil.geometry2Geojson(scene.getBbox());
+    }
+
+    public ViewWindowVO getSceneWindowById(String sceneId) throws IOException {
+        QueryWrapper<Scene> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("scene_id", sceneId);
+        Scene scene = sceneRepo.selectOne(queryWrapper);
+        return ViewWindowVO.builder()
+                .center(List.of(scene.getBbox().getCentroid().getX(), scene.getBbox().getCentroid().getY()))
+                .bounds(GeometryUtil.getGeometryBounds(scene.getBbox()))
+                .build();
     }
 
 }

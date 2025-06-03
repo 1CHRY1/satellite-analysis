@@ -2,7 +2,7 @@ package nnu.mnr.satellite.controller.resources;
 
 import com.alibaba.fastjson2.JSONObject;
 import nnu.mnr.satellite.model.po.geo.GeoLocation;
-import nnu.mnr.satellite.model.vo.resources.RegionWindowVO;
+import nnu.mnr.satellite.model.vo.resources.ViewWindowVO;
 import nnu.mnr.satellite.service.resources.LocationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -41,7 +41,7 @@ public class LocationController {
     }
 
     @GetMapping("/window/location/{locationId}/resolution/{resolution}")
-    public ResponseEntity<RegionWindowVO> getRegionWindow(@PathVariable Integer resolution, @PathVariable String locationId) {
+    public ResponseEntity<ViewWindowVO> getRegionWindow(@PathVariable Integer resolution, @PathVariable String locationId) {
         return ResponseEntity.ok(locationService.getLocationWindowById(resolution, locationId));
     }
 

@@ -2,7 +2,7 @@ package nnu.mnr.satellite.service.resources;
 
 import com.alibaba.fastjson2.JSONObject;
 import nnu.mnr.satellite.model.po.geo.GeoLocation;
-import nnu.mnr.satellite.model.vo.resources.RegionWindowVO;
+import nnu.mnr.satellite.model.vo.resources.ViewWindowVO;
 import nnu.mnr.satellite.repository.resources.LocationRepoImpl;
 import nnu.mnr.satellite.utils.geom.GeometryUtil;
 import nnu.mnr.satellite.utils.geom.TileCalculateUtil;
@@ -51,7 +51,7 @@ public class LocationService {
         return leftBottom.union(rightBottom).union(leftTop).union(rightTop).getEnvelope();
     }
 
-    public RegionWindowVO getLocationWindowById(Integer resolution, String id) {
+    public ViewWindowVO getLocationWindowById(Integer resolution, String id) {
         GeoLocation location = locationRepo.searchById(id);
         double lon = Double.parseDouble(location.getWgs84Lon());
         double lat = Double.parseDouble(location.getGcj02Lat());
@@ -59,7 +59,7 @@ public class LocationService {
         Geometry leftTop = TileCalculateUtil.getTileGeomByIdsAndResolution(grid[1]-1, grid[0]-1, resolution);
         Geometry rightBottom = TileCalculateUtil.getTileGeomByIdsAndResolution(grid[1]+1, grid[0]+1, resolution);
         List<Double> boundary = GeometryUtil.getGeometryBounds(leftTop.union(rightBottom).getBoundary());
-        return RegionWindowVO.builder()
+        return ViewWindowVO.builder()
                 .center(List.of(lon, lat)).bounds(boundary).build();
     }
 }
