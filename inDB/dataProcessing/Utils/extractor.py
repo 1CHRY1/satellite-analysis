@@ -164,7 +164,7 @@ def get_scene_basic_info(info_from_ds, info_from_config):
 
     # 如果不是雷达数据，但缺失云量path，云量设置为9999
     if SCENE_CONFIG["CLOUD_PATH"] is None and SCENE_CONFIG["TAGS"]["production"] != "radar":
-        basic_info["cloud"] = "9999"
+        basic_info["cloud"] = "0"
     return basic_info
 
 

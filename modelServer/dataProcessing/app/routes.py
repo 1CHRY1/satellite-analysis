@@ -79,6 +79,13 @@ def calc_NDVI():
     task_id = scheduler.start_task('calc_NDVI', data)
     return api_response(data={'taskId': task_id})
 
+@bp.route(config.API_VERSION + '/tif/calc_no_cloud_sg', methods=['POST'])
+def calc_no_cloud_sg():
+    scheduler = init_scheduler()
+    data = request.json
+    task_id = scheduler.start_task('calc_no_cloud_sg', data)
+    return api_response(data={'taskId': task_id})
+
 
 @bp.route(config.API_TASK_RESULT, methods=['GET'])
 def get_result():
