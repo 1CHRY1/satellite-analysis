@@ -220,7 +220,7 @@
                             <div class="config-item" v-for="([label, value], index) in resolutionType" :key="value">
                                 <div class="config-label relative">
                                     <BoltIcon :size="16" class="config-icon" />
-                                    <span>{{ label }}分辨率影像集</span>
+                                    <span>{{ label }}分辨率影像集</span><span v-if="label === '亚米'">（仅含ARD数据）</span>
                                 </div>
                                 <div class="config-control flex w-full flex-col gap-4">
                                     <div class="result-info-container w-full">
@@ -241,14 +241,15 @@
                                             </div>
                                             <div class="result-info-content">
                                                 <div class="result-info-label">影像覆盖率</div>
-                                                <div class="result-info-value">
+                                                <div v-if="!(allScenes.length > 0)" class="result-info-value">
+                                                    待计算
+                                                </div>
+                                                <div v-else class="result-info-value">
                                                     {{
-                                                        allSensorsItems[label]
-                                                            ? (
-                                                                (allSensorsItems[label] * 100) /
-                                                                allGridCount
-                                                            ).toFixed(2) + '%'
-                                                            : '待计算'
+                                                        (
+                                                            (allSensorsItems[label] * 100) /
+                                                            allGridCount
+                                                        ).toFixed(2) + '%'
                                                     }}
                                                 </div>
                                             </div>
@@ -495,11 +496,11 @@ const allGrids = ref([])
 const allGridCount = ref(0)
 const currentCityBounds = ref([])
 // 计算到了哪一级行政单位
-// 现在landId不再需要用来display，它其实是获取region/poi的id的计算属性
+// 其实是获取region/poi的id的计算属性
 const landId = computed(() => {
     let switchTab
     if (searchedTab.value === 'poi') {
-        switchTab = activeTab.value
+        switchTab = 'poi'
     } else if (searchedTab.value === 'region') {
         switchTab = 'region'
     } else if (activeTab.value === 'poi') {
@@ -666,11 +667,10 @@ const fetchPOIOptions = async (query: string) => {
             address: item.address === '[]' ? '' : item.address,
         }
     })
-    console.log(res, 7774);
 
 }
 /**
- * 用云量和日期初步获取影像数据
+ * 用日期初步获取影像数据
  */
 const allScenes = ref<any>([])
 const allSensorsItems = ref<any>([])
@@ -742,7 +742,7 @@ const filterByCloudAndDate = async () => {
     classifyScenesByResolution()
 
     // 刚拿到的时候根据默认tags先分类一次
-    filterByTags()
+    // filterByTags()
 
     // 恢复状态
     filterByCloudAndDateLoading.value = false
@@ -750,13 +750,12 @@ const filterByCloudAndDate = async () => {
 
 // 数各种分辨率分别覆盖了多少格网
 const countResolutionCoverage = (allGridScene: any[]) => {
-    console.log(allGridScene)
     const result = {
-        亚米: 0,
+        '亚米': 0,
         '2米': 0,
         '10米': 0,
         '30米': 0,
-        其他: 0,
+        '其他': 0,
     }
 
     allGridScene.forEach((grid) => {
@@ -766,8 +765,7 @@ const countResolutionCoverage = (allGridScene: any[]) => {
             const resStr = scene.resolution?.toString().replace('m', '')
             const res = parseFloat(resStr)
 
-            let key
-
+            let key: string
             if (res <= 1) {
                 key = '亚米'
             } else if (res === 2) {
@@ -904,7 +902,7 @@ const makeFullSceneGrid = async () => {
                 resolution: item.resolution,
             }
         }),
-        sceneIds: allScenes.value.map((image: any) => image.sceneId),
+        sceneIds: allScenes.value.filter(image => image.tags.includes('ard') || parseFloat(image.resolution) > 1).map((image: any) => image.sceneId),
     }
 
     // Destroy layer
@@ -995,24 +993,9 @@ const makeFullSceneGrid = async () => {
  * 标签筛选
  */
 
-const buttonGroups = [
-    ['国产影像', '国外影像'],
-    ['光学影像', 'SAR影像'],
-    ['原始影像', 'ARD影像'],
-]
+
 // 存储已激活的按钮标签
 const activeImgTags = ref<Set<string>>(new Set(['国产影像', '光学影像']))
-// 切换按钮选中状态
-const toggleButton = (label: string) => {
-    if (activeImgTags.value.has(label)) {
-        activeImgTags.value.delete(label)
-    } else {
-        activeImgTags.value.add(label)
-    }
-}
-
-// 判断按钮是否被选中
-const isActive = (label: string) => activeImgTags.value.has(label)
 
 const tagMap: Record<string, string> = {
     国产影像: 'national',
@@ -1023,7 +1006,6 @@ const tagMap: Record<string, string> = {
     ARD影像: 'ard',
 }
 
-// const filteredImages: Ref<any[]> = ref([])
 const coverageRate = ref('0.00%')
 const filteredSensorsItems = ref<any>([])
 
@@ -1048,8 +1030,12 @@ const filterByTags = async () => {
 // 根据分辨率获得影像总数的方法
 const getSceneCountByResolution = (resolution: number) => {
     let count = 0
+
+    // 去掉亚米传统数据
+    let filteredScenes = allScenes.value.filter(item => item.tags.includes('ard') || parseFloat(item.resolution) > 1)
+
     if (resolution === 1) {
-        allScenes.value.forEach((scene: any) => {
+        filteredScenes.forEach((scene: any) => {
             let data = parseFloat(scene.resolution)
             if (data <= 1) {
                 count++
@@ -1057,7 +1043,7 @@ const getSceneCountByResolution = (resolution: number) => {
         })
         return count
     } else if (resolution === 500) {
-        allScenes.value.forEach((scene: any) => {
+        filteredScenes.forEach((scene: any) => {
             let data = parseFloat(scene.resolution)
             if (data > 1 && data != 2 && data != 10 && data != 30) {
                 count++
@@ -1065,7 +1051,7 @@ const getSceneCountByResolution = (resolution: number) => {
         })
         return count
     } else {
-        allScenes.value.forEach((scene: any) => {
+        filteredScenes.forEach((scene: any) => {
             let data = parseFloat(scene.resolution)
             if (data === resolution) {
                 count++
@@ -1095,9 +1081,7 @@ const imageType = (tags: string[]) => {
  * 左下的影像可视化
  */
 
-const scaleRateFormatter = (value: number) => {
-    return `${value}%`
-}
+
 const showingImageStrech = reactive({
     r_min: 0,
     r_max: 5000,
@@ -1230,31 +1214,6 @@ const judgeGridOpacity = (index: number, sceneGridsRes: any) => {
     const totalImgLenght = allScenes.value.length
     opacity = (sceneGridsRes[index].scenes.length / totalImgLenght) * 0.3
     return opacity
-}
-// 卫语句
-const verifyFilterByTags = () => {
-    let buttons = activeImgTags.value
-    if (buttons.size === 0) {
-        ElMessage.warning('请设置筛选条件')
-        return false
-    }
-    if (allScenes.value.length === 0) {
-        ElMessage.warning('请先进行影像筛选')
-        return false
-    }
-    if (!buttons.has('国产影像') && !buttons.has('国外影像')) {
-        ElMessage.warning('请选择您需要的数据来源')
-        return false
-    }
-    if (!buttons.has('光学影像') && !buttons.has('SAR影像')) {
-        ElMessage.warning('请选择您需要的传感器类型')
-        return false
-    }
-    if (!buttons.has('原始影像') && !buttons.has('ARD影像')) {
-        ElMessage.warning('请选择您需要的数据级别')
-        return false
-    }
-    return true
 }
 
 onMounted(() => {
