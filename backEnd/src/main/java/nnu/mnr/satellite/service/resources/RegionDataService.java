@@ -5,8 +5,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.model.vo.resources.GridBoundaryVO;
 import nnu.mnr.satellite.model.po.resources.Region;
 import nnu.mnr.satellite.model.vo.resources.RegionInfoVO;
-import nnu.mnr.satellite.model.vo.resources.RegionWindowVO;
-import nnu.mnr.satellite.repository.resources.IRegionRepo;
+import nnu.mnr.satellite.model.vo.resources.ViewWindowVO;
+import nnu.mnr.satellite.mapper.resources.IRegionRepo;
 import nnu.mnr.satellite.utils.geom.GeometryUtil;
 import nnu.mnr.satellite.utils.geom.TileCalculateUtil;
 import org.modelmapper.ModelMapper;
@@ -65,9 +65,9 @@ public class RegionDataService {
         return regionRepo.selectOne(queryWrapper);
     }
 
-    public RegionWindowVO getRegionWindowById(Integer regionId) {
+    public ViewWindowVO getRegionWindowById(Integer regionId) {
         Region region = getRegionById(regionId);
-        return RegionWindowVO.builder()
+        return ViewWindowVO.builder()
                 .center(region.getCenter()).bounds(GeometryUtil.getGeometryBounds(region.getBoundary())).build();
     }
 

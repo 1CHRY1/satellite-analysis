@@ -1,11 +1,10 @@
 package nnu.mnr.satellite.service.resources;
 
-import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerImageDTO;
 import nnu.mnr.satellite.model.vo.resources.ImageInfoVO;
 import nnu.mnr.satellite.model.po.resources.Image;
-import nnu.mnr.satellite.repository.resources.IImageRepo;
+import nnu.mnr.satellite.mapper.resources.IImageRepo;
 import nnu.mnr.satellite.utils.data.MinioUtil;
 import org.json.simple.JSONObject;
 import org.modelmapper.ModelMapper;

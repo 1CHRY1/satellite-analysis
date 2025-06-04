@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.model.vo.resources.SensorDesVO;
 import nnu.mnr.satellite.model.vo.resources.SensorInfoVO;
 import nnu.mnr.satellite.model.po.resources.Sensor;
-import nnu.mnr.satellite.repository.resources.ISensorRepo;
+import nnu.mnr.satellite.mapper.resources.ISensorRepo;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;

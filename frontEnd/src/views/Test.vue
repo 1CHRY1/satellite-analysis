@@ -1,43 +1,139 @@
 <template>
-    <div class="absolute top-0 left-0 h-screen w-screen">
-        <div class="h-[92vh]" id="map"></div>
-        <div class="absolute top-10 right-10 z-10 flex flex-col gap-y-4">
+    <div class="flex bg-amber-50">
+        <MapComp class="flex-1" :style="'image'" :proj="'globe'" />
 
+        <div class="absolute top-10 right-10 flex h-fit w-fit flex-col gap-5">
+            <button class="bg-amber-300 p-5" @click="localMvt">本地MVT</button>
+            <button class="bg-amber-300 p-5" @click="localImg">本地影像瓦片</button>
+            <button class="bg-amber-300 p-5" @click="localTian">内网老版天地图</button>
+            <button class="bg-amber-300 p-5" @click="locate">定位</button>
+
+            <button class="bg-amber-500 p-5" @click="addFK">加他们的影像底图</button>
+
+            <button class="bg-red-500 p-5" @click="addMVTLayer">矢量瓦片测试</button>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref, type Ref } from 'vue'
+import MapComp from '@/components/feature/map/mapComp.vue'
 import { mapManager } from '@/util/map/mapManager'
-import * as Operations from '@/util/map/operation'
+import { StyleMap } from '@/util/map/tianMapStyle'
+import { ezStore } from '@/store'
+import http from '@/api/http/clientHttp'
 
+const addMVTLayer = () => {
+    // const baseUrl = '/chry'
+    // const url = baseUrl + '/patch/{z}/{x}/{y}'
+
+    // const url = `http://${window.location.host}/chry/patch/{z}/{x}/{y}`
+    const url = 'http://223.2.47.202:9888/api/v1/geo/vector/tiles/patch/region/370100/type/grass/{z}/{x}/{y}'
+    // const url = 'http://127.0.0.1:8000/tiles/{z}/{x}/{y}'
+
+    console.log(import.meta.env.VITE)
+
+    mapManager.withMap((map) => {
+        console.log('add layer')
+        map.addSource('t-source', {
+            type: 'vector',
+            tiles: [url],
+        })
+        setTimeout(() => {
+            const source = map.getSource('t-source')
+            console.log(source)
+        }, 1000)
+        map.addLayer({
+            id: 'test-layer',
+            type: 'fill',
+            source: 't-source',
+            'source-layer': 'patch', //这个地方要注意,
+            paint: {
+                'fill-color': '#ffffff',
+            },
+        })
+        map.on('click','test-layer',(e)=>{
+            // console.log(e.features[0] )
+        })
+    })
+}
+
+const localMvt = () => {
+    console.log('1')
+    mapManager.withMap((m) => {
+        console.log('设置本地mvt样式')
+        console.log(StyleMap.local.sources)
+        m.setStyle(StyleMap.localMvt)
+    })
+}
+
+const localImg = () => {
+    console.log('2')
+    mapManager.withMap((m) => {
+        console.log('设置本地img样式')
+        console.log(StyleMap.local.sources)
+        m.setStyle(StyleMap.localImg)
+    })
+}
+
+const localTian = () => {
+    console.log('3')
+    mapManager.withMap((m) => {
+        console.log('设置内网vec样式')
+        console.log(StyleMap.local.sources)
+        m.setStyle(StyleMap.localVec)
+    })
+}
+
+const locate = () => {
+    mapManager.withMap((m) => {
+        m.flyTo({
+            center: [121.42859, 28.66138],
+            zoom: 8,
+        })
+    })
+}
+
+const addFK = () => {
+    const url = ezStore.get('conf')['fk_url']
+    console.log(url)
+
+    mapManager.withMap((map) => {
+        map.addSource('wms-test-source', {
+            type: 'raster',
+            tiles: [url],
+            tileSize: 256,
+        })
+        map.addLayer({
+            id: 'wms-test-layer',
+            type: 'raster',
+            source: 'wms-test-source',
+            paint: {},
+        })
+    })
+}
 
 onMounted(() => {
-    mapManager.init('map', 'vector', 'mercator').then((map) => {
-        console.log(map)
-        // map.zoomTo(10)
-
-        // map.showTileBoundaries = true
-        ///// rio-tiler-test /////////////////////////
-        if (true) {
-            map.addSource('src', {
-                type: 'raster',
-                tiles: [
-                    // /tiles/WebMercatorQuad/9/428/208?scale=1&format=tif&url=http%3A%2F%2F223.2.43.228%3A30900%2Ftest-images%2Flandset8_test%252Flandset8_L2SP_test%252Ftif%252FLC08_L2SP_118038_20241201_20241203_02_T1%252FLC08_L2SP_118038_20241201_20241203_02_T1_SR_B6.TIF&bidx=1&unscale=false&resampling=nearest&reproject=nearest&return_mask=true
-                    // no cog
-                    // "http://223.2.32.242:8079/{z}/{x}/{y}.png?object=/test-images/landsat/landset7/tif/LE07_L1TP_122039_20210212_20210212_01_RT/LE07_L1TP_122039_20210212_20210212_01_RT_B1.TIF"
-                    'http://localhost:8000/tiles/WebMercatorQuad/{z}/{x}/{y}?scale=1&format=png&url=http://223.2.43.228:30900/test-images/qa/LC08_L2SP_120035_20250116_20250127_02_T1_SR_B1.TIF&bidx=1&unscale=false&resampling=nearest&reproject=nearest&return_mask=true',
-                    // "http://223.2.32.242:8079/{z}/{x}/{y}.png?object=/test-images/landset8_test/landset8_L2SP_test/tif/LC08_L2SP_118038_20241217_20241227_02_T1/LC08_L2SP_118038_20241217_20241227_02_T1_SR_B4.TIF"
-                ],
-            })
-            map.addLayer({
-                id: 'layer',
-                type: 'raster',
-                source: 'src',
-                minzoom: 0,
-            })
-        }
-    })
+ 
+    setTimeout(() => {
+        // mapManager.withMap((m) => {
+        // m.addSource('src', {
+        //     type: 'raster',
+        //     tiles: [
+        //         // '/hytemp/rgb/tiles/{z}/{x}/{y}.png?url_r=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B4.TIF&url_g=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B3.TIF&url_b=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B2.TIF'
+        //         '/hytemp/rgb/box/{z}/{x}/{y}.png?url_r=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B4.TIF&url_g=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B3.TIF&url_b=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B2.TIF&bbox=117,31.5,118,32&max_r=50000&max_g=50000&max_b=50000&min_r=20000&min_g=20000&min_b=20000'
+        //     ]
+        // })
+        // m.addLayer({
+        //     id: 'raster-layer',
+        //     source: 'src',
+        //     type: 'raster',
+        //     minzoom: 5,
+        //     maxzoom: 22
+        // })
+        // })
+    }, 1)
 })
 </script>
+
+<style scoped></style>

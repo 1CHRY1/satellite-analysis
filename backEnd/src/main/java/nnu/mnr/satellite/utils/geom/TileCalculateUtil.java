@@ -132,6 +132,42 @@ public class TileCalculateUtil {
         return grids;
     }
 
+    public static GridBoundaryVO getTileBoundaryByIdsAndResolution(Integer rowId, Integer columnId, Integer resolution) throws IOException {
+        // 参数校验
+        if (rowId == null || columnId == null || resolution == null || resolution <= 0) {
+            return null;
+        }
+        int[] gridNums = getGridNumFromTileResolution(resolution);
+        int gridNumX = gridNums[0];
+        int gridNumY = gridNums[1];
+        if (rowId < 0 || rowId >= gridNumY || columnId < 0 || columnId >= gridNumX) {
+            return null;
+        }
+        List<Double> rightLngBottomLat = grid2lnglat(rowId + 1, columnId + 1, gridNumX, gridNumY);
+        List<Double> leftLngTopLat = grid2lnglat(rowId, columnId, gridNumX, gridNumY);
+
+        Double rightLng = rightLngBottomLat.get(0);
+        Double bottomLat = rightLngBottomLat.get(1);
+        Double leftLng = leftLngTopLat.get(0);
+        Double topLat = leftLngTopLat.get(1);
+
+        GeometryFactory geometryFactory = new GeometryFactory();
+        Coordinate[] coordinates = new Coordinate[]{
+                new Coordinate(leftLng, bottomLat),     // 左下
+                new Coordinate(leftLng, topLat),     // 左上
+                new Coordinate(rightLng, topLat),     // 右上
+                new Coordinate(rightLng, bottomLat),     // 右下
+                new Coordinate(leftLng, bottomLat)      // 闭合
+        };
+        Polygon tilePolygon = geometryFactory.createPolygon(coordinates);
+        return GridBoundaryVO.builder()
+                .rowId(rowId)
+                .columnId(columnId)
+                .resolution(resolution)
+                .boundary(GeometryUtil.geometry2Geojson(tilePolygon))
+                .build();
+    }
+
     public static Geometry getTileGeomByIdsAndResolution(Integer rowId, Integer columnId, Integer resolution) {
         int[] gridNums = getGridNumFromTileResolution(resolution);
         Integer gridNumX = gridNums[0];
@@ -207,11 +243,25 @@ public class TileCalculateUtil {
         final double EARTH_CIRCUMFERENCE_MERIDIAN = 40008.0;
 
         double degreePerGridX = (360.0 * resolution) / EARTH_CIRCUMFERENCE_EQUATOR;
-        double degreePerGridY = (180.0 * resolution) / EARTH_CIRCUMFERENCE_MERIDIAN;
+        double degreePerGridY = (180.0 * resolution) / EARTH_CIRCUMFERENCE_MERIDIAN * 2.0;
 
         int gridNumX = (int) Math.ceil(360.0 / degreePerGridX);
         int gridNumY = (int) Math.ceil(180.0 / degreePerGridY);
 
         return new int[]{gridNumX, gridNumY};
+    }
+
+    public static int[] getGridXYByLngLatAndResolution(double lng, double lat, int resolution) {
+        int[] gridNum = getGridNumFromTileResolution(resolution);
+        int gridNumX = gridNum[0];
+        int gridNumY = gridNum[1];
+
+        int gridX = (int) Math.floor((lng + 180.0) / 360.0 * gridNumX);
+        int gridY = (int) Math.floor((90.0 - lat) / 180.0 * gridNumY);
+
+        gridX = Math.max(0, Math.min(gridNumX - 1, gridX));
+        gridY = Math.max(0, Math.min(gridNumY - 1, gridY));
+
+        return new int[]{gridX, gridY};
     }
 }

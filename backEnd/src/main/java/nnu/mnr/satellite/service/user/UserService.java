@@ -9,11 +9,9 @@ import nnu.mnr.satellite.model.dto.user.UserLoginDTO;
 import nnu.mnr.satellite.model.dto.user.UserRegisterDTO;
 import nnu.mnr.satellite.model.po.user.User;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
-import nnu.mnr.satellite.model.vo.modeling.ProjectVO;
 import nnu.mnr.satellite.model.vo.user.UserVO;
-import nnu.mnr.satellite.repository.modeling.IUserRepo;
+import nnu.mnr.satellite.mapper.modeling.IUserRepo;
 import nnu.mnr.satellite.utils.common.IdUtil;
-import nnu.mnr.satellite.utils.data.RedisUtil;
 import nnu.mnr.satellite.utils.security.JwtUtil;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
@@ -28,7 +26,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 

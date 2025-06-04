@@ -38,7 +38,9 @@ def get_geojson():
 def get_status():
     scheduler = init_scheduler()
     task_id = request.args.get('id', type=str)
+    print(f"当前任务的id是{task_id}")
     status = scheduler.get_status(task_id)
+    print(scheduler.task_status)
     print(f"等待中的任务数：{scheduler.pending_queue.qsize()}")
     print(f"正在执行的任务数：{scheduler.running_queue.qsize()}")
     print(f"错误的任务数：{scheduler.error_queue.qsize()}")
@@ -64,12 +66,40 @@ def merge_tifs_v2():
     task_id = scheduler.start_task('merge_tif_v2', data)
     return api_response(data={'taskId': task_id})
 
-
-@bp.route(config.API_TIF_calc_qa, methods=['POST'])
-def calc_qa():
+@bp.route(config.API_TIF_calc_no_cloud, methods=['POST'])
+def calc_no_cloud():
     scheduler = init_scheduler()
     data = request.json
-    task_id = scheduler.start_task('calc_qa', data)
+    task_id = scheduler.start_task('calc_no_cloud', data)
+    return api_response(data={'taskId': task_id})
+
+@bp.route(config.API_TIF_calc_no_cloud_grid, methods=['POST'])
+def calc_no_cloud_grid():
+    scheduler = init_scheduler()
+    data = request.json
+    task_id = scheduler.start_task('calc_no_cloud_grid', data)
+    return api_response(data={'taskId': task_id})
+
+
+@bp.route(config.API_TIF_get_spectral_profile, methods=['POST'])
+def get_spectral_profile():
+    scheduler = init_scheduler()
+    data = request.json
+    task_id = scheduler.start_task('get_spectral_profile', data)
+    return api_response(data={'taskId': task_id})
+
+@bp.route(config.API_TIF_calc_raster_point, methods=['POST'])
+def calc_raster_point():
+    scheduler = init_scheduler()
+    data = request.json
+    task_id = scheduler.start_task('calc_raster_point', data)
+    return api_response(data={'taskId': task_id})
+
+@bp.route(config.API_TIF_calc_raster_line, methods=['POST'])
+def calc_raster_line():
+    scheduler = init_scheduler()
+    data = request.json
+    task_id = scheduler.start_task('calc_raster_line', data)
     return api_response(data={'taskId': task_id})
 
 @bp.route(config.API_TIF_calc_NDVI, methods=['POST'])
@@ -78,14 +108,6 @@ def calc_NDVI():
     data = request.json
     task_id = scheduler.start_task('calc_NDVI', data)
     return api_response(data={'taskId': task_id})
-
-@bp.route(config.API_VERSION + '/tif/calc_no_cloud_sg', methods=['POST'])
-def calc_no_cloud_sg():
-    scheduler = init_scheduler()
-    data = request.json
-    task_id = scheduler.start_task('calc_no_cloud_sg', data)
-    return api_response(data={'taskId': task_id})
-
 
 @bp.route(config.API_TASK_RESULT, methods=['GET'])
 def get_result():

@@ -27,4 +27,8 @@ export interface interactiveExplore {
     dataRange: string[]
     cloud: number
     space: number
+    coverage: string
+    images: any
+    grids: any
+    boundary: any
 }

@@ -12,9 +12,12 @@ from dataProcessing.config import STATUS_RUNNING, STATUS_COMPLETE, STATUS_ERROR,
 
 from dataProcessing.model.mergeTifTask import MergeTifTask
 from dataProcessing.model.mergeTifTaskV2 import MergeTifTaskV2
-from dataProcessing.model.calc_qa import calc_qa
 from dataProcessing.model.calc_NDVI import calc_NDVI
-from dataProcessing.model.calc_no_cloud_sg import calc_no_cloud
+from dataProcessing.model.get_spectral_profile import get_spectral_profile
+from dataProcessing.model.calc_raster_point import calc_raster_point
+from dataProcessing.model.calc_raster_line import calc_raster_line
+from dataProcessing.model.calc_no_cloud import calc_no_cloud
+from dataProcessing.model.calc_no_cloud_grid import calc_no_cloud_grid
 
 
 class TaskScheduler:
@@ -59,6 +62,11 @@ class TaskScheduler:
                     traceback.print_exc()
 
     def start_task(self, task_type, *args, **kwargs):
+        cur_md5 = self.generate_md5(json.dumps(args))
+        if cur_md5 in self.task_md5.values():
+            for key, value in self.task_md5.items():
+                if value == cur_md5:
+                    return key
         # --------- Start task -------------------------------------
         task_id = str(uuid.uuid4())  # 生成唯一任务 ID
         task_class = self._get_task_class(task_type)
@@ -69,24 +77,9 @@ class TaskScheduler:
             self.task_info[task_id] = task_instance
             self.task_md5[task_id] = self.generate_md5(json.dumps(args))
 
-            # 复用逻辑
-            reuse_id = None
-            for key, value in self.task_md5.items():
-                if key == task_id:
-                    continue
-                if value == self.task_md5[task_id]:
-                    reuse_id = key
-                    self.task_md5[task_id] = None # 置空，防止再次查询到
-                    break
-            if reuse_id:
-                self.task_status[task_id] = STATUS_COMPLETE
-                self.task_results[task_id] = self.task_results[reuse_id]
-                self.complete_queue.put((datetime.now(), task_id))
-                return task_id
-            else:
-                # 加入pending队列
-                self.pending_queue.put(task_id)
-                self.condition.notify_all()  # 通知调度线程
+            # 加入pending队列
+            self.pending_queue.put(task_id)
+            self.condition.notify_all()  # 通知调度线程
 
         return task_id
 
@@ -101,9 +94,13 @@ class TaskScheduler:
         task_classes = {
             'merge_tif': MergeTifTask,
             'merge_tif_v2': MergeTifTaskV2,
-            'calc_qa': calc_qa,
+            'calc_no_cloud': calc_no_cloud,
+            'calc_no_cloud_grid': calc_no_cloud_grid,
             'calc_NDVI': calc_NDVI,
-            'calc_no_cloud_sg': calc_no_cloud,
+            'get_spectral_profile': get_spectral_profile,
+            'calc_raster_point': calc_raster_point,
+            'calc_raster_line': calc_raster_line
+            # 'test': 
             # 可以在这里扩展其他类型的任务
         }
         return task_classes.get(task_type)
@@ -165,6 +162,7 @@ class TaskScheduler:
         except Exception as e:
             # --------- Handle Exceptions --------------------------------
             with self.condition:
+                del self.task_md5[task_id]
                 self.task_status[task_id] = STATUS_ERROR
                 self.task_results[task_id] = str(e)
 
@@ -192,6 +190,7 @@ class TaskScheduler:
             self.save_to_history(task_id)
 
     def get_status(self, task_id):
+        
         # --------- Get the status of the task ---------------------------
         current_status = self.task_status.get(task_id)
         if current_status is None:

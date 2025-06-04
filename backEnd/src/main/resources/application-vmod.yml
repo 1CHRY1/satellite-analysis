@@ -21,6 +21,11 @@ spring:
           username: root
           password: ogms250410
           driver-class-name: com.mysql.cj.jdbc.Driver
+        pg_space:
+          url: jdbc:postgresql://172.31.13.21:5432/gis_db
+          username: postgres
+          password: ogms250410
+          driver-class-name: org.postgresql.Driver
   servlet:
     multipart:
       max-file-size: 1GB
@@ -32,6 +37,8 @@ spring:
       database: 0
     mongodb:
       uri: mongodb://172.31.13.21:27017/PortalModel
+  elasticsearch:
+    uris: http://172.31.13.21:9200
 
 mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
@@ -66,15 +73,23 @@ docker:
   workDir: /usr/local/coding/
 
 modelServer:
-  address: http://172.31.13.21:5000
+  address: http://172.31.13.20:5000
   apis:
     status: /v0/task/status
     result: /v0/task/result
     merge: /v0/tif/merge_v2
-    ndviPoint: /ndviPoint
-    ndviArea: /ndviArea
+    noCloud: /v0/tif/calc_no_cloud
+    spectrum: /v0/tif/get_spectral_profile
+    rasterPoint: /v0/tif/calc_raster_point
+    rasterLine: /v0/tif/calc_raster_line
+    #    noCloud: /v0/tif/calc_qa_simple
+    #    noCloud: /v0/tif/calc_qa
+    ndvi: /v0/tif/calc_NDVI
   interval:
     status: 2
 
 tiler:
   end-point: http://172.31.13.21:8079
+
+satelliteConfig:
+  path: /usr/resource/band_config.json

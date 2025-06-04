@@ -48,15 +48,16 @@ public class ModelServerService {
             String status = oStatus.get();
             return CommonResultVO.builder().status(1).message("success").data(status).build();
         } else {
-            return CommonResultVO.builder().status(-1).message("Out of Time Range").build();
+            return CommonResultVO.builder().status(-1).message("Wrong getting status").build();
         }
     }
 
     public CommonResultVO getModelCaseResultById(String caseId) {
-        String[] removeFields = {"bucket", "path"};
+        String[] removeFields = {};
+//        String[] removeFields = {"bucket", "path"};
         Optional<String> oModelResult = Optional.ofNullable(redisUtil.getJsonData(caseId).getString("result"));
         if (oModelResult.isEmpty()) {
-            return CommonResultVO.builder().status(-1).message("Out of Time Range").build();
+            return CommonResultVO.builder().status(-1).message("Wrong getting result by id").build();
         }
         String modelResult = oModelResult.get();
         try {
@@ -82,7 +83,7 @@ public class ModelServerService {
     public CommonResultVO getModelCaseTifResultById(String caseId) {
         Optional<String> oModelResult = Optional.ofNullable(redisUtil.getJsonData(caseId).getString("result"));
         if (oModelResult.isEmpty()) {
-            return CommonResultVO.builder().status(-1).message("Out of Time Range").build();
+            return CommonResultVO.builder().status(-1).message("Wrong getting tif result").build();
         }
         String modelResult = oModelResult.get();
         JSONObject modelResultJson = JSONObject.parseObject(modelResult);

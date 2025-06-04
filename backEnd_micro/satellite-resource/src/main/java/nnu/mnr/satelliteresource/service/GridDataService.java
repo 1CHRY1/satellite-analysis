@@ -5,6 +5,7 @@ import nnu.mnr.satelliteresource.model.dto.modeling.ModelServerSceneDTO;
 import nnu.mnr.satelliteresource.model.dto.resources.GridBasicDTO;
 import nnu.mnr.satelliteresource.model.dto.resources.GridSceneFetchDTO;
 import nnu.mnr.satelliteresource.model.po.Scene;
+import nnu.mnr.satelliteresource.model.po.SceneSP;
 import nnu.mnr.satelliteresource.model.vo.resources.GridSceneVO;
 import nnu.mnr.satelliteresource.utils.geom.TileCalculateUtil;
 import org.locationtech.jts.geom.Geometry;
@@ -39,7 +40,7 @@ public class GridDataService {
             List<String> sceneIds = gridSceneFetchDTO.getSceneIds();
             List<ModelServerSceneDTO> sceneDtos = new ArrayList<>();
             for (String sceneId : sceneIds) {
-                Scene scene = sceneDataService.getSceneById(sceneId);
+                SceneSP scene = sceneDataService.getSceneByIdWithProductAndSensor(sceneId);
                 Geometry gridPoly = TileCalculateUtil.getTileGeomByIdsAndResolution(grid.getRowId(), grid.getColumnId(), grid.getResolution());
                 if (scene.getBbox().disjoint(gridPoly)) {
                     continue;
@@ -47,7 +48,9 @@ public class GridDataService {
                 List<ModelServerImageDTO> imageDTOS = imageDataService.getModelServerImageDTOBySceneId(sceneId);
                 ModelServerSceneDTO sceneDto = ModelServerSceneDTO.builder()
                         .sceneId(sceneId).cloudPath(scene.getCloudPath())
-                        .sceneTime(scene.getSceneTime()).images(imageDTOS).build();
+                        .sensorName(scene.getSensorName()).productName(scene.getProductName())
+                        .resolution(scene.getResolution()).sceneTime(scene.getSceneTime())
+                        .bucket(scene.getBucket()).images(imageDTOS).build();
                 sceneDtos.add(sceneDto);
             }
             GridSceneVO gridRes = GridSceneVO.builder()

@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.model.vo.resources.ProductDesVO;
 import nnu.mnr.satellite.model.vo.resources.ProductInfoVO;
 import nnu.mnr.satellite.model.po.resources.Product;
-import nnu.mnr.satellite.repository.resources.IProductRepo;
+import nnu.mnr.satellite.mapper.resources.IProductRepo;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;

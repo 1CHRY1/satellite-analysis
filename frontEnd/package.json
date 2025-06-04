@@ -16,6 +16,7 @@
 		"@codemirror/theme-one-dark": "^6.1.2",
 		"@kjgl77/datav-vue3": "^1.7.4",
 		"@mapbox/mapbox-gl-draw": "^1.5.0",
+		"@pdf-lib/upng": "^1.0.1",
 		"@tailwindcss/vite": "^4.0.12",
 		"@vitejs/plugin-vue-jsx": "^4.1.2",
 		"animejs": "^3.2.2",
@@ -35,7 +36,8 @@
 		"vue": "^3.5.13",
 		"vue-codemirror": "^6.1.1",
 		"vue-echarts": "^7.0.3",
-		"vue-router": "^4.5.0"
+		"vue-router": "^4.5.0",
+		"vue3-draggable-resizable": "^1.6.5"
 	},
 	"devDependencies": {
 		"@types/codemirror": "^5.60.15",
