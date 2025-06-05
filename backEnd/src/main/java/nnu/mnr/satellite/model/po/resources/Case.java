@@ -34,6 +34,7 @@ public class Case {
     private Geometry boundary;
     @TableField(typeHandler = ListTypeHandler.class)
     private List<String> sceneList;
+    private String status;
     @TableField(typeHandler = FastJson2TypeHandler.class)
     private JSONObject result;
 }
