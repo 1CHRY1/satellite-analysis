@@ -1,3 +1,6 @@
+"""
+Copy from OpenGMS Model-Store, QingJun Guo
+"""
 import os
 import numpy as np
 import rasterio

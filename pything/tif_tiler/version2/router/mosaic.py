@@ -194,28 +194,29 @@ async def mosaictile(
         raise HTTPException(status_code=500, detail=str(e))
     
 
-@DeprecationWarning
-@router.get("/eazytile/{z}/{x}/{y}.png")
-async def test_mosaic_tile(
-    z: int, x: int, y: int,
-    assets: str = Query(..., description="COG paths list split by comma"),
-    min: float = Query(0, description="Normalization minimum value"),
-    max: float = Query(255, description="Normalization maximum value"),
-    pixel_selection: str = Query("first", description="Pixel selection method : first/highest/lowest")
-):
-    try:
-        asset_list = [a.strip() for a in assets.split(",") if a.strip()]
-        method = pixel_selection.lower()
-        if method == "highest":
-            sel = defaults.HighestMethod()
-        elif method == "lowest":
-            sel = defaults.LowestMethod()
-        else:
-            sel = defaults.FirstMethod()
-        img, mask = mosaic_tiler(asset_list, x, y, z, tiler, pixel_selection=sel)
-        img_uint8 = normalize(img, min, max)
-        content = render(img_uint8, mask)
-        return Response(content=content, media_type="image/png")
-    except Exception as e:
-        return Response(content=str(e), media_type="text/plain", status_code=500)
+
+# Deprecated
+# @router.get("/eazytile/{z}/{x}/{y}.png")
+# async def test_mosaic_tile(
+#     z: int, x: int, y: int,
+#     assets: str = Query(..., description="COG paths list split by comma"),
+#     min: float = Query(0, description="Normalization minimum value"),
+#     max: float = Query(255, description="Normalization maximum value"),
+#     pixel_selection: str = Query("first", description="Pixel selection method : first/highest/lowest")
+# ):
+#     try:
+#         asset_list = [a.strip() for a in assets.split(",") if a.strip()]
+#         method = pixel_selection.lower()
+#         if method == "highest":
+#             sel = defaults.HighestMethod()
+#         elif method == "lowest":
+#             sel = defaults.LowestMethod()
+#         else:
+#             sel = defaults.FirstMethod()
+#         img, mask = mosaic_tiler(asset_list, x, y, z, tiler, pixel_selection=sel)
+#         img_uint8 = normalize(img, min, max)
+#         content = render(img_uint8, mask)
+#         return Response(content=content, media_type="image/png")
+#     except Exception as e:
+#         return Response(content=str(e), media_type="text/plain", status_code=500)
 
