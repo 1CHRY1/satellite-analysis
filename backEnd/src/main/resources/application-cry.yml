@@ -40,8 +40,8 @@ spring:
       max-request-size: 1GB
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: 223.2.43.228
+      port: 30379
       database: 0
     mongodb:
       uri: mongodb://OGMSROOT:ogms1qaz2wsx@172.21.252.208:23266/opengmp
@@ -81,8 +81,8 @@ docker:
   workDir: /usr/local/coding/
 
 modelServer:
-  address: http://127.0.0.1:5001
-#  address: http://223.2.43.228:30500
+#  address: http://127.0.0.1:5001
+  address: http://223.2.43.228:30500
   apis:
     status: /v0/task/status
     result: /v0/task/result

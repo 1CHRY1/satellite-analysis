@@ -1,7 +1,6 @@
 import os, shutil, glob, time, json
 from functools import partial
 from multiprocessing import Pool, cpu_count
-import rasterio
 from rasterio.merge import merge
 from rio_cogeo.profiles import cog_profiles
 from rio_cogeo.cogeo import cog_translate, cog_info

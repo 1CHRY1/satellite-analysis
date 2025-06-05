@@ -6,7 +6,7 @@ from rasterio.merge import merge
 from rio_cogeo.profiles import cog_profiles
 from rio_cogeo.cogeo import cog_translate, cog_info
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import ray
+
 from dataProcessing.Utils.osUtils import uploadLocalFile
 from dataProcessing.Utils.gridUtil import GridHelper
 from dataProcessing.model.task import Task
@@ -15,7 +15,6 @@ import dataProcessing.config as config
 MINIO_ENDPOINT = f"http://{config.MINIO_IP}:{config.MINIO_PORT}"
 INFINITY = 999999
 
-@ray.remote
 def process_grid(grid, scenes, grid_helper, scene_band_paths, minio_endpoint, temp_dir_path):
     try:
         from rio_tiler.io import COGReader
@@ -298,31 +297,34 @@ class calc_no_cloud(Task):
         
         print('start time ', time.time())
 
-        ray_tasks = [
-            process_grid.remote(grid=g,
-                                scenes=scenes,
-                                grid_helper=grid_helper,
-                                scene_band_paths=scene_band_paths,
-                                minio_endpoint=MINIO_ENDPOINT,
-                                temp_dir_path=temp_dir_path)
-            for g in grids
-        ]
+        process_func = partial(
+            process_grid,
+            scenes=scenes,
+            grid_helper=grid_helper,
+            scene_band_paths=scene_band_paths,
+            minio_endpoint=MINIO_ENDPOINT,
+            temp_dir_path=temp_dir_path
+        )
         
-        results = ray.get(ray_tasks)
+        with Pool(processes=cpu_count()) as pool:
+            results = pool.map(process_func, grids)
+
 
         ## Step 3 : Results Uploading and Statistic #######################
         
-        # upload_results = []
-        # with ThreadPoolExecutor(max_workers=8) as executor:
-        #     futures = [
-        #         executor.submit(upload_one, tif_path, grid_x, grid_y, self.task_id)
-        #         for result in results if result is not None
-        #         for tif_path, grid_x, grid_y in [result]
-        #     ]
-        #     for future in as_completed(futures):
-        #         upload_results.append(future.result())
+        print('end time ', time.time())
+        
+        upload_results = []
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            futures = [
+                executor.submit(upload_one, tif_path, grid_x, grid_y, self.task_id)
+                for result in results if result is not None
+                for tif_path, grid_x, grid_y in [result]
+            ]
+            for future in as_completed(futures):
+                upload_results.append(future.result())
     
-        # upload_results.sort(key=lambda x: (x["grid"][0], x["grid"][1]))
+        upload_results.sort(key=lambda x: (x["grid"][0], x["grid"][1]))
         
         
         
@@ -334,11 +336,10 @@ class calc_no_cloud(Task):
         print('end upload ',time.time())
         
         # print(upload_results)
-        print('=============No Cloud Task Has Finally Finished=================')
+        print('=============ok=================')
 
         if os.path.exists(temp_dir_path):
             shutil.rmtree(temp_dir_path) 
-            print('=============No Cloud Origin Data Deleted=================')
 
         # return {
         #     "grids": upload_results,
