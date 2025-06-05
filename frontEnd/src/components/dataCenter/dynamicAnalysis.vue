@@ -54,7 +54,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { ref, type PropType, computed, type Ref, nextTick, onUpdated, onMounted, reactive, onBeforeUnmount, watch, defineAsyncComponent, type ComponentPublicInstance } from 'vue'
+import { ref, type PropType, computed, type Ref, nextTick, onUpdated, onMounted, reactive, onBeforeUnmount, watch, defineAsyncComponent, type ComponentPublicInstance, onUnmounted } from 'vue'
 import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'
 import { type interactiveExplore } from '@/components/dataCenter/type'
 import { formatTime } from '@/util/common'
@@ -90,8 +90,8 @@ import {
 import { ElMessage } from 'element-plus'
 import { mapManager } from '@/util/map/mapManager'
 
-const startTime = '2001-01-01'
-const endTime = '2030-01-01'
+const startTime = '1900-01-01'
+const endTime = '2050-01-01'
 const region = ref<RegionValues>({
     province: '370000',
     city: '370100',
@@ -120,7 +120,7 @@ const selectedTask = ref(optionalTasks[0].value)
 const taskComponentMap = {
     'DSM分析': defineAsyncComponent(() => import('./thematic/dsmPanel.vue')),
     'DEM分析': defineAsyncComponent(() => import('./thematic/demPanel.vue')),
-    '红绿立体': defineAsyncComponent(() => import('./thematic/RBbands.vue')),
+    '红绿立体': defineAsyncComponent(() => import('./thematic/RBbandsPanel.vue')),
     '形变速率': defineAsyncComponent(() => import('./thematic/deformationRate.vue')),
     'NDVI时序计算': defineAsyncComponent(() => import('./thematic/ndviPanel.vue')),
     '光谱分析': defineAsyncComponent(() => import('./thematic/spectrumPanel.vue')),
@@ -206,7 +206,52 @@ const clearImages = () => {
 
 
 watch(displayLabel, getOriginImages, { immediate: true })
+
+const addLocalInternalLayer = () => {
+    mapManager.withMap((map) => {
+        const sourceId = 'Local-Interal-Source'
+        const layerId = 'Local-Interal-Layer'
+
+        // 防止重复添加
+        if (map.getLayer(layerId)) {
+            map.removeLayer(layerId)
+        }
+        if (map.getSource(sourceId)) {
+            map.removeSource(sourceId)
+        }
+
+        // 添加 source
+        map.addSource(sourceId, {
+            type: 'raster',
+            tiles: [
+                `http://${window.location.host}${ezStore.get('conf')['fk_url']}`
+            ],
+            tileSize: 256,
+        })
+
+        // 添加 layer
+        map.addLayer({
+            id: layerId,
+            type: 'raster',
+            source: sourceId,
+        })
+    })
+}
 onMounted(async () => {
+    addLocalInternalLayer()
+})
+onUnmounted(() => {
+    mapManager.withMap((map) => {
+        const sourceId = 'Local-Interal-Source'
+        const layerId = 'Local-Interal-Layer'
+
+        if (map.getLayer(layerId)) {
+            map.removeLayer(layerId)
+        }
+        if (map.getSource(sourceId)) {
+            map.removeSource(sourceId)
+        }
+    })
 })
 </script>
 

@@ -21,7 +21,7 @@
                                         <label class="flex items-center gap-2">
                                             <input type="checkbox" v-model="additionalData[0]" disabled
                                                 class="h-4 w-4 rounded" />
-                                            国产亚米级影像
+                                            国产亚米级影像（仅含ARD数据）
                                         </label>
                                         <label class="flex items-center gap-2">
                                             <input type="checkbox" v-model="dataReconstruction[0]"
