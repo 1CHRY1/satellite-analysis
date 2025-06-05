@@ -9,7 +9,7 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 @SpringBootApplication
 @MapperScan("nnu.mnr.satellite.mapper")
 @EnableMongoRepositories(basePackages = "nnu.mnr.satellite.opengmp.repository")
-@EnableElasticsearchRepositories(basePackages = "nnu.mnr.satellite.repository.geo")
+@EnableElasticsearchRepositories(basePackages = "nnu.mnr.satellite.repository.resources")
 public class BackEndApplication {
 
     public static void main(String[] args) {

@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.jobs.QuartzSchedulerManager;
 import nnu.mnr.satellite.model.dto.modeling.*;
+import nnu.mnr.satellite.model.po.resources.Case;
 import nnu.mnr.satellite.model.po.resources.Scene;
 import nnu.mnr.satellite.model.po.resources.SceneSP;
 import nnu.mnr.satellite.model.pojo.modeling.ModelServerProperties;
@@ -66,6 +67,31 @@ public class ModelExampleService {
             JSONObject modelCaseResponse = JSONObject.parseObject(ProcessUtil.runModelCase(url, param));
             String caseId = modelCaseResponse.getJSONObject("data").getString("taskId");
             quartzSchedulerManager.startModelRunningStatusJob(caseId);
+            JSONObject modelCase = JSONObject.of("status", "RUNNING", "start", LocalDateTime.now());
+            redisUtil.addJsonDataWithExpiration(caseId, modelCase, expirationTime);
+            return CommonResultVO.builder().status(1).message("success").data(caseId).build();
+        } catch (Exception e) {
+            return CommonResultVO.builder().status(-1).message("Wrong Because of " + e.getMessage()).build();
+        }
+    }
+
+    // 函数重载，无云一版图专用
+    private CommonResultVO runModelServerModel(String url, JSONObject param, long expirationTime, boolean isToHistory) {
+        // 任务执行同时添加一条记录至case_table
+        try {
+            JSONObject modelCaseResponse = JSONObject.parseObject(ProcessUtil.runModelCase(url, param));
+            String caseId = modelCaseResponse.getJSONObject("data").getString("taskId");
+            quartzSchedulerManager.startModelRunningStatusJob(caseId);
+
+            // 持久化记录
+            Case caseObj = Case.builder()
+                    .caseId(caseId)
+                    .caseName("无云一版图")
+                    .resolution("无云一版图")
+                    .boundary(null)
+                    .sceneList(null)
+                    .result(null)
+                    .build();
             JSONObject modelCase = JSONObject.of("status", "RUNNING", "start", LocalDateTime.now());
             redisUtil.addJsonDataWithExpiration(caseId, modelCase, expirationTime);
             return CommonResultVO.builder().status(1).message("success").data(caseId).build();
