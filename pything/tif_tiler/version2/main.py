@@ -1,15 +1,14 @@
-
-
 def createApp():
+    
+    # 😋 If some error about PROJ_DATA, you can set environment variable as follows: 
     # import os
     # os.environ['PROJ_DATA'] = r'D:\env\miniconda\envs\grid\Lib\site-packages\rasterio\proj_data'
     
     from fastapi import FastAPI
     from titiler.core.factory import TilerFactory
-
     from starlette.middleware.cors import CORSMiddleware
 
-    from router import rgb, terrain, oneband
+    from router import rgb, terrain, oneband, mosaic
 
 
 
@@ -29,11 +28,12 @@ def createApp():
 
     # Register all the COG endpoints automatically
     app.include_router(cog.router, tags=["Cloud Optimized GeoTIFF"])
-    app.include_router(rgb.router, tags=["RGB Composite"], prefix="/rgb")
-    app.include_router(terrain.router, tags=["Terrain"], prefix="/terrain")
-    app.include_router(oneband.router, tags=["One Band"], prefix="/oneband")
+    app.include_router(rgb.router, tags=["RGB Composite Tiler"], prefix="/rgb")
+    app.include_router(terrain.router, tags=["Terrain RGB Tiler"], prefix="/terrain")
+    app.include_router(oneband.router, tags=["One Colorful Band Tiler"], prefix="/oneband")
+    app.include_router(mosaic.router, tags=["Mosaic Tiler"], prefix="/mosaic")
 
-    # Optional: Add a welcome message for the root endpoint
+    # Add a welcome message for the root endpoint
     @app.get("/")
     def read_index():
         return {"message": "Welcome to TiTiler"}

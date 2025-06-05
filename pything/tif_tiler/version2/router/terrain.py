@@ -6,8 +6,10 @@ import numpy as np
 import os
 
 ####### Helper ########################################################################################
+# Terrain-RGB Reference: https://docs.mapbox.com/data/tilesets/reference/mapbox-terrain-rgb-v1/
 
 def zero_height_rgb_tile(size: int = 256) -> bytes:
+    
     # 0m -> Terrain-RGB编码：(0 + 10000) * 10 = 100000
     # R = floor(100000 / (256*256)) = 1
     # G = floor((100000 - 1*256*256) / 256) = 134
@@ -19,11 +21,11 @@ ZERO_HEIGHT = zero_height_rgb_tile()
 
 
 def _encode_terrain_rgb(dem: np.ndarray) -> np.ndarray:
-    # 替换 NaN 和无穷值
-    height = np.nan_to_num(dem, nan=-10000, posinf=-10000, neginf=-10000).astype(np.float32)
+    # 替换 NaN 和无穷值 全为 0
+    height = np.nan_to_num(dem, nan=0, posinf=0, neginf=0).astype(np.float32)
 
-    # 避免无效值引起的溢出：先限制 height 范围
-    height = np.clip(height, -9000, 9000)  # 最高峰珠穆朗玛大约8848m，保守限制到9000
+    # 避免溢出：先限制 height 范围
+    height = np.clip(height, -9000, 9000)  # 珠穆朗玛也就8848m，保守限制到9000
 
     base = (height + 10000) * 10
     R = np.floor(base / (256 * 256))
@@ -56,7 +58,6 @@ async def get_tile(
         cog_path = url
         
         with COGReader(cog_path) as cog:
-            # dem = tile_data.data[0]  # 高程数据数组
             if(cog.tile_exists(x, y, z)):
                 tile_data = cog.tile(x, y, z)
 
@@ -66,11 +67,11 @@ async def get_tile(
                 return Response(content=ZERO_HEIGHT, media_type="image/png")
             
         rgb = _encode_terrain_rgb(dem)
-        # content = render(rgb, img_format="png", **img_profiles.get("png"))
-        content = render(rgb.transpose(2, 0, 1), img_format="png", **img_profiles.get("png"))
+        # rgb shape --> (H, W, 3)
+        # render need shape --> (3, H, W)
+        content = render(rgb.transpose(2, 0, 1), img_format="png", **img_profiles.get("png")) 
         return Response(content=content, media_type="image/png")
 
     except Exception as e:
         print("Terrain tile error:", e)
         return Response(content=ZERO_HEIGHT, media_type="image/png")
-        
