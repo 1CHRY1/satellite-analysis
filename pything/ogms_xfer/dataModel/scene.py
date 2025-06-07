@@ -11,8 +11,6 @@ class Scene(DatabaseClient.Base):
     scene_name = Column(String(255), index=True)
     scene_time = Column(DateTime)
     sensor_id = Column(String(36), index=True)
-    tile_level_num = Column(Integer)
-    tile_levels = Column(Text) # what is this?
     coordinate_system = Column(String(255))
     bounding_box = Column(Geometry(geometry_type='POLYGON')) # not sure
     description = Column(Text)
@@ -28,12 +26,10 @@ class Scene(DatabaseClient.Base):
             scene_name={self.scene_name}, \
             scene_time={self.scene_time}, \
             sensor_id={self.sensor_id}, \
-            tile_level_num={self.tile_level_num}, \
             coordinate_system={self.coordinate_system}, \
             bounding_box={self.bounding_box}, \
             description={self.description}, \
             png_path={self.png_path}, \
-            tile_levels={self.tile_levels}, \
             bands={self.bands}, \
             band_num={self.band_num}, \
             bucket={self.bucket}, \
