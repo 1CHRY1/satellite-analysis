@@ -4,10 +4,10 @@ from rio_tiler.io import COGReader
 from rasterio.transform import from_bounds
 
 from dataProcessing.model.task import Task
-import dataProcessing.config as config
+from dataProcessing.config import current_config as CONFIG
 import dataProcessing.Utils.cogUtils as cogUtils
 
-MINIO_ENDPOINT = f"http://{config.MINIO_IP}:{config.MINIO_PORT}"
+MINIO_ENDPOINT = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}"
 
 class calc_raster_line(Task):
     

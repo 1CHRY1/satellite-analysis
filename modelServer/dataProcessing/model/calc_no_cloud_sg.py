@@ -3,11 +3,11 @@ from multiprocessing import Pool, cpu_count
 from dataProcessing.Utils.osUtils import uploadLocalFile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataProcessing.model.task import Task
-import dataProcessing.config as config
+from dataProcessing.config import current_config as CONFIG
 from dataProcessing.Utils.gridUtil import GridHelper
 from functools import partial
 
-MINIO_ENDPOINT = f"http://{config.MINIO_IP}:{config.MINIO_PORT}"
+MINIO_ENDPOINT = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}"
 INFINITY = 999999
 
 def process_grid(grid, scenes, grid_helper, scene_band_paths, minio_endpoint, temp_dir_path):
@@ -172,10 +172,10 @@ def process_grid(grid, scenes, grid_helper, scene_band_paths, minio_endpoint, te
 
 def upload_one(tif_path, grid_x, grid_y, task_id):
     minio_key = f"{task_id}/{grid_x}_{grid_y}.tif"
-    uploadLocalFile(tif_path, config.MINIO_TEMP_FILES_BUCKET, minio_key)
+    uploadLocalFile(tif_path, CONFIG.MINIO_TEMP_FILES_BUCKET, minio_key)
     return {
         "grid": [grid_x, grid_y],
-        "bucket": config.MINIO_TEMP_FILES_BUCKET,
+        "bucket": CONFIG.MINIO_TEMP_FILES_BUCKET,
         "tifPath": minio_key
     }
 
@@ -249,7 +249,7 @@ class calc_no_cloud(Task):
                     bands['blue'] = img['tifPath']
             scene_band_paths[scene['sceneId']] = bands
 
-        temp_dir_path = os.path.join(config.TEMP_OUTPUT_DIR, self.task_id)
+        temp_dir_path = os.path.join(CONFIG.TEMP_OUTPUT_DIR, self.task_id)
         os.makedirs(temp_dir_path, exist_ok=True)
 
         process_func = partial(

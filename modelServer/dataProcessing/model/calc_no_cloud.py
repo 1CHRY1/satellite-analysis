@@ -10,9 +10,10 @@ import ray
 from dataProcessing.Utils.osUtils import uploadLocalFile
 from dataProcessing.Utils.gridUtil import GridHelper
 from dataProcessing.model.task import Task
-import dataProcessing.config as config
+from dataProcessing.config import current_config as CONFIG
+import requests
 
-MINIO_ENDPOINT = f"http://{config.MINIO_IP}:{config.MINIO_PORT}"
+MINIO_ENDPOINT = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}"
 INFINITY = 999999
 
 @ray.remote
@@ -211,15 +212,15 @@ def process_grid(grid, scenes, grid_helper, scene_band_paths, minio_endpoint, te
 
 def upload_one(tif_path, grid_x, grid_y, task_id):
     minio_key = f"{task_id}/{grid_x}_{grid_y}.tif"
-    uploadLocalFile(tif_path, config.MINIO_TEMP_FILES_BUCKET, minio_key)
+    uploadLocalFile(tif_path, CONFIG.MINIO_TEMP_FILES_BUCKET, minio_key)
     return {
         "grid": [grid_x, grid_y],
-        "bucket": config.MINIO_TEMP_FILES_BUCKET,
+        "bucket": CONFIG.MINIO_TEMP_FILES_BUCKET,
         "tifPath": minio_key
     }
 
 
-
+# -------------------- DeprecationWarning --------------------
 def merge_tifs(temp_dir_path: str, task_id: str) -> str:
     
     tif_files = glob.glob(os.path.join(temp_dir_path, "*.tif"))
@@ -293,7 +294,7 @@ class calc_no_cloud(Task):
                     bands['blue'] = img['tifPath']
             scene_band_paths[scene['sceneId']] = bands
 
-        temp_dir_path = os.path.join(config.TEMP_OUTPUT_DIR, self.task_id)
+        temp_dir_path = os.path.join(CONFIG.TEMP_OUTPUT_DIR, self.task_id)
         os.makedirs(temp_dir_path, exist_ok=True)
         
         print('start time ', time.time())
@@ -312,39 +313,44 @@ class calc_no_cloud(Task):
 
         ## Step 3 : Results Uploading and Statistic #######################
         
-        # upload_results = []
-        # with ThreadPoolExecutor(max_workers=8) as executor:
-        #     futures = [
-        #         executor.submit(upload_one, tif_path, grid_x, grid_y, self.task_id)
-        #         for result in results if result is not None
-        #         for tif_path, grid_x, grid_y in [result]
-        #     ]
-        #     for future in as_completed(futures):
-        #         upload_results.append(future.result())
+        upload_results = []
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            futures = [
+                executor.submit(upload_one, tif_path, grid_x, grid_y, self.task_id)
+                for result in results if result is not None
+                for tif_path, grid_x, grid_y in [result]
+            ]
+            for future in as_completed(futures):
+                upload_results.append(future.result())
     
-        # upload_results.sort(key=lambda x: (x["grid"][0], x["grid"][1]))
-        
-        
-        
-        print('start merge ',time.time())
-        result_path = merge_tifs(temp_dir_path, task_id=self.task_id)
-        print('end merge ',time.time())
-        minio_path = f"{self.task_id}/noCloud_merge.tif"
-        uploadLocalFile(result_path, config.MINIO_TEMP_FILES_BUCKET, minio_path)
+        upload_results.sort(key=lambda x: (x["grid"][0], x["grid"][1]))
         print('end upload ',time.time())
         
-        # print(upload_results)
-        print('=============No Cloud Task Has Finally Finished=================')
-
-        if os.path.exists(temp_dir_path):
-            shutil.rmtree(temp_dir_path) 
-            print('=============No Cloud Origin Data Deleted=================')
+        ## Step 4 : Deprecated(Merge TIF) #######################
+        # print('start merge ',time.time())
+        # result_path = merge_tifs(temp_dir_path, task_id=self.task_id)
+        # print('end merge ',time.time())
+        # minio_path = f"{self.task_id}/noCloud_merge.tif"
+        # uploadLocalFile(result_path, config.MINIO_TEMP_FILES_BUCKET, minio_path)
 
         # return {
         #     "grids": upload_results,
         #     "statistic": stats
         # }
-        return {
-            "bucket": config.MINIO_TEMP_FILES_BUCKET,
-            "tifPath": minio_path
-        }
+        
+        ## Step 4 : Generate MosaicJSON as result #######################
+        print([CONFIG.MINIO_TEMP_FILES_BUCKET+item["tifPath"] for item in upload_results])
+        response = requests.post(CONFIG.MOSAIC_CREATE_URL, json={
+            "files": [f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}/{item['bucket']}/{item['tifPath']}" for item in upload_results],
+            "minzoom": 7,
+            "maxzoom": 20,
+            "max_threads": 20
+        }, headers={ "Content-Type": "application/json" })
+
+        print('=============No Cloud Task Has Finally Finished=================')
+
+        if os.path.exists(temp_dir_path):
+            shutil.rmtree(temp_dir_path) 
+            print('=============No Cloud Origin Data Deleted=================')
+        
+        return response.json()

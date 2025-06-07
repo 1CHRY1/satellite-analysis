@@ -8,12 +8,18 @@ from apscheduler.schedulers.background import BackgroundScheduler
 cron_scheduler = BackgroundScheduler()
 
 
-def create_app():
+def create_app(profile=None):
+    """
+    创建Flask应用
+    :param profile: 配置环境 ('dev_slk', 'prod')
+    """
+
     # --------- Create Flask App -------------------------------
     app = Flask('Satellite Processing Service')
+    
+    # --------- Set Global Config ------------------------------
     app.register_blueprint(bp)
     CORS(app)
-
     create_cron_scheduler()
 
     return app

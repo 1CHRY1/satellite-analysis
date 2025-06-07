@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import nnu.mnr.satellite.utils.typeHandler.FastJson2TypeHandler;
+import nnu.mnr.satellite.utils.typeHandler.GeometryTypeHandler;
 import nnu.mnr.satellite.utils.typeHandler.ListTypeHandler;
 import org.locationtech.jts.geom.Geometry;
 
@@ -31,6 +32,7 @@ public class Case {
     private String caseId;
     private String caseName;
     private String resolution;
+    @TableField(typeHandler = GeometryTypeHandler.class)
     private Geometry boundary;
     @TableField(typeHandler = ListTypeHandler.class)
     private List<String> sceneList;

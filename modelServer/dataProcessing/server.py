@@ -1,5 +1,5 @@
-from dataProcessing import config
 from dataProcessing.app import create_app
+from dataProcessing.config import current_config as CONFIG
 import ray
 
 # 初始化ray
@@ -19,4 +19,4 @@ if __name__ == '__main__':
     from dataProcessing.model.scheduler import init_scheduler
     init_ray()
     scheduler = init_scheduler()
-    app.run(host="0.0.0.0", port=config.APP_PORT, debug=False)
+    app.run(host="0.0.0.0", port=CONFIG.APP_PORT, debug=CONFIG.APP_DEBUG)

@@ -13,11 +13,11 @@ from dataProcessing.Utils.osUtils import uploadLocalFile
 from osgeo import gdal
 
 from dataProcessing.model.task import Task
-import dataProcessing.config as config
+from dataProcessing.config import current_config as CONFIG
 from dataProcessing.Utils.gridUtil import GridHelper
 from functools import partial
 
-MINIO_ENDPOINT = f"http://{config.MINIO_IP}:{config.MINIO_PORT}"
+MINIO_ENDPOINT = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}"
 INFINITY = 999999
 
 def process_grid(grid, scenes, grid_helper, scene_band_paths, minio_endpoint, temp_dir_path):
@@ -211,7 +211,7 @@ class calc_no_cloud(Task):
                     bands['blue'] = img['tifPath']
             scene_band_paths[scene['sceneId']] = bands
 
-        temp_dir_path = os.path.join(config.TEMP_OUTPUT_DIR, self.task_id)
+        temp_dir_path = os.path.join(CONFIG.TEMP_OUTPUT_DIR, self.task_id)
         os.makedirs(temp_dir_path, exist_ok=True)
 
         process_func = partial(
@@ -229,12 +229,12 @@ class calc_no_cloud(Task):
         result_path = merge_tifs(temp_dir_path, task_id=self.task_id)
 
         minio_path = f"{self.task_id}/noCloud_merge.tif"
-        uploadLocalFile(result_path, config.MINIO_TEMP_FILES_BUCKET, minio_path)
+        uploadLocalFile(result_path, CONFIG.MINIO_TEMP_FILES_BUCKET, minio_path)
 
         if os.path.exists(temp_dir_path):
             shutil.rmtree(temp_dir_path) 
 
         return {
-            "bucket": config.MINIO_TEMP_FILES_BUCKET,
+            "bucket": CONFIG.MINIO_TEMP_FILES_BUCKET,
             "tifPath": minio_path
         }
