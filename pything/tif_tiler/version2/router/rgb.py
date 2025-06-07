@@ -60,7 +60,7 @@ def rgb_tile(
     max_b: int = Query(5000, description="Maximum value of the blue band"),
     nodata: float = Query(0.0, description="No data value"),
 ):
-    '''Get the RGB tile, too many parameters 🤣'''
+    '''Get the RGB tile, too many parameters'''
     try: 
         # Step 1: Read the three bands
         with COGReader(url_r, options={"nodata": nodata}) as cog_r:
@@ -111,7 +111,7 @@ def rgb_box_tile(
     nodata: float = Query(0.0, description="No data value"),
 ):
     try: 
-        '''Get the box RGB tile, too many parameters 🤣'''
+        '''Get the box RGB tile, too many parameters'''
         # Step 1: Parse the bbox
         try:
             bbox_minx, bbox_miny, bbox_maxx, bbox_maxy = map(float, bbox.split(","))

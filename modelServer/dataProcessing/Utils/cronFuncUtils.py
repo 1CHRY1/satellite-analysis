@@ -1,7 +1,7 @@
 import queue
 from datetime import datetime, timedelta
 
-from dataProcessing import config
+from dataProcessing.config import current_config as CONFIG
 from dataProcessing.Utils.osUtils import getMinioClient
 
 
@@ -11,14 +11,14 @@ def delete_old_objects():
 
     objects_to_delete = []
     client = getMinioClient()
-    for obj in client.list_objects(config.MINIO_TEMP_FILES_BUCKET, recursive=True):
+    for obj in client.list_objects(CONFIG.MINIO_TEMP_FILES_BUCKET, recursive=True):
         if obj.object_name < today:  # 只删除早于今天的
             objects_to_delete.append(obj.object_name)
 
     if objects_to_delete:
         print(f"Deleting {len(objects_to_delete)} old objects...")
         for obj_name in objects_to_delete:
-            client.remove_object(config.MINIO_TEMP_FILES_BUCKET, obj_name)
+            client.remove_object(CONFIG.MINIO_TEMP_FILES_BUCKET, obj_name)
         print("Deletion complete.")
     else:
         print("No old objects to delete.")

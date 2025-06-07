@@ -1,17 +1,13 @@
 package nnu.mnr.satellite.service.modeling;
 
 import com.alibaba.fastjson2.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.jobs.QuartzSchedulerManager;
 import nnu.mnr.satellite.model.dto.modeling.*;
 import nnu.mnr.satellite.model.po.resources.Scene;
 import nnu.mnr.satellite.model.po.resources.SceneSP;
 import nnu.mnr.satellite.model.pojo.modeling.ModelServerProperties;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
-import nnu.mnr.satellite.service.resources.ImageDataService;
-import nnu.mnr.satellite.service.resources.RegionDataService;
-import nnu.mnr.satellite.service.resources.SceneDataService;
-import nnu.mnr.satellite.service.resources.SceneDataServiceV2;
+import nnu.mnr.satellite.service.resources.*;
 import nnu.mnr.satellite.utils.common.ProcessUtil;
 import nnu.mnr.satellite.service.common.BandMapperGenerator;
 import nnu.mnr.satellite.utils.data.RedisUtil;
@@ -25,6 +21,8 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import static nnu.mnr.satellite.utils.geom.GeometryUtil.getGridsBoundaryByTilesAndResolution;
 
 /**
  * Created with IntelliJ IDEA.
@@ -59,6 +57,9 @@ public class ModelExampleService {
     RegionDataService regionDataService;
 
     @Autowired
+    CaseDataService caseDataService;
+
+    @Autowired
     BandMapperGenerator bandMapperGenerator;
 
     private CommonResultVO runModelServerModel(String url, JSONObject param, long expirationTime) {
@@ -66,6 +67,24 @@ public class ModelExampleService {
             JSONObject modelCaseResponse = JSONObject.parseObject(ProcessUtil.runModelCase(url, param));
             String caseId = modelCaseResponse.getJSONObject("data").getString("taskId");
             quartzSchedulerManager.startModelRunningStatusJob(caseId);
+            JSONObject modelCase = JSONObject.of("status", "RUNNING", "start", LocalDateTime.now());
+            redisUtil.addJsonDataWithExpiration(caseId, modelCase, expirationTime);
+            return CommonResultVO.builder().status(1).message("success").data(caseId).build();
+        } catch (Exception e) {
+            return CommonResultVO.builder().status(-1).message("Wrong Because of " + e.getMessage()).build();
+        }
+    }
+
+    // 函数重载，无云一版图专用
+    private CommonResultVO runModelServerModel(String url, JSONObject param, long expirationTime, JSONObject caseJsonObj) {
+        try {
+            JSONObject modelCaseResponse = JSONObject.parseObject(ProcessUtil.runModelCase(url, param));
+            String caseId = modelCaseResponse.getJSONObject("data").getString("taskId");
+            quartzSchedulerManager.startModelRunningStatusJob(caseId);
+            // 在没有相应历史记录的情况下, 持久化记录
+            if (caseDataService.selectById(caseId) == null) {
+                caseDataService.addCaseFromParamAndCaseId(caseId, caseJsonObj);
+            }
             JSONObject modelCase = JSONObject.of("status", "RUNNING", "start", LocalDateTime.now());
             redisUtil.addJsonDataWithExpiration(caseId, modelCase, expirationTime);
             return CommonResultVO.builder().status(1).message("success").data(caseId).build();
@@ -99,11 +118,18 @@ public class ModelExampleService {
         Geometry region = regionDataService.getRegionById(regionId).getBoundary();
         List<Integer[]> tileIds = TileCalculateUtil.getRowColByRegionAndResolution(region, resolution);
 
+        // 构建行政区地址信息
+        String address = regionDataService.getAddressById(regionId);
+
+        // 构建边界信息
+        Geometry boundary = getGridsBoundaryByTilesAndResolution(tileIds, resolution);
+
         // 请求modelServer
         JSONObject noCloudParam = JSONObject.of("tiles", tileIds, "scenes", modelServerSceneDTOs, "cloud", noCloudFetchDTO.getCloud(), "resolution", resolution);
+        JSONObject caseJsonObj = JSONObject.of("boundary", boundary, "address", address, "resolution", resolution, "sceneIds", sceneIds);
         String noCloudUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("noCloud");
         long expirationTime = 60 * 100;
-        return runModelServerModel(noCloudUrl, noCloudParam, expirationTime);
+        return runModelServerModel(noCloudUrl, noCloudParam, expirationTime, caseJsonObj);
     }
 
     // NDVI指数计算

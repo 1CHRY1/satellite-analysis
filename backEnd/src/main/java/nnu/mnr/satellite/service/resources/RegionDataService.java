@@ -9,6 +9,7 @@ import nnu.mnr.satellite.model.vo.resources.ViewWindowVO;
 import nnu.mnr.satellite.mapper.resources.IRegionRepo;
 import nnu.mnr.satellite.utils.geom.GeometryUtil;
 import nnu.mnr.satellite.utils.geom.TileCalculateUtil;
+import org.locationtech.jts.geom.Geometry;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,6 +75,21 @@ public class RegionDataService {
     public List<GridBoundaryVO> getGridsByRegionAndResolution(Integer regionId, Integer resolution) throws IOException {
         Region region = getRegionById(regionId);
         return TileCalculateUtil.getStrictlyCoveredRowColByRegionAndResolution(region.getBoundary(), resolution);
+    }
+
+    public String getAddressById(Integer regionId) {
+        Region region = getRegionById(regionId);
+        List<Integer> acroutes = region.getAcroutes();
+        StringBuilder fullName = new StringBuilder();
+        for (int i = 0; i < acroutes.size(); i++) {
+            // 跳过 i=0; 中国(adcode: 100000)
+            if (i == 0)
+                continue;
+            Region subRegion = getRegionById(acroutes.get(i));
+            fullName.append(subRegion.getRegionName());
+        }
+        fullName.append(region.getRegionName());
+        return fullName.toString();
     }
 
 }

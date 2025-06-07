@@ -1,9 +1,16 @@
 from rio_tiler.io import COGReader, Reader
 from dataProcessing.model.task import Task
-import dataProcessing.config as config
+from dataProcessing.config import current_config as CONFIG
 import dataProcessing.Utils.cogUtils as cogUtils
 
-MINIO_ENDPOINT = f"http://{config.MINIO_IP}:{config.MINIO_PORT}"
+# 使用函数获取MINIO_ENDPOINT
+def get_minio_endpoint():
+    try:
+        return f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}"
+    except:
+        return "http://localhost:9000"  # 默认值
+
+MINIO_ENDPOINT = None  # 初始化为None，将在需要时获取
 
 class calc_raster_point(Task):
     
@@ -14,6 +21,10 @@ class calc_raster_point(Task):
 
     def run(self):
         print("CalRasterPointTask run")
+        
+        global MINIO_ENDPOINT
+        if MINIO_ENDPOINT is None:
+            MINIO_ENDPOINT = get_minio_endpoint()
 
         [lon, lat] = self.point
         raster = self.raster

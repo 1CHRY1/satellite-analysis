@@ -9,9 +9,9 @@ from rasterio.transform import from_bounds
 import rasterio
 
 from dataProcessing.model.task import Task
-import dataProcessing.config as config
+from dataProcessing.config import current_config as CONFIG
 
-MINIO_ENDPOINT = f"http://{config.MINIO_IP}:{config.MINIO_PORT}"
+MINIO_ENDPOINT = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}"
 #### Helper functions #################################################
 #######################################################################
 

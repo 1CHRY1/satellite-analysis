@@ -4,7 +4,7 @@ import time
 import socket
 import os
 import random
-import dataProcessing.config as config
+from dataProcessing.config import current_config as CONFIG
 from datetime import datetime
 
 namespace = uuid.NAMESPACE_DNS
@@ -48,7 +48,7 @@ def select_tile_by_column_and_row(tile_table_name, tiles, bands):
     """
     from collections import defaultdict
 
-    connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_TILE_PORT, config.MYSQL_TILE_DB, config.MYSQL_USER, config.MYSQL_PWD)
+    connection, cursor = connect_mysql(CONFIG.MYSQL_HOST, CONFIG.MYSQL_TILE_PORT, CONFIG.MYSQL_TILE_DB, CONFIG.MYSQL_USER, CONFIG.MYSQL_PWD)
 
     # 生成 WHERE 条件，确保 columnId 和 rowId 必须是成对匹配的
     tile_conditions = " OR ".join(["(column_id = %s AND row_id = %s)"] * len(tiles))
@@ -96,7 +96,7 @@ def select_tile_by_column_and_row_v2(tiles, bands):
     """
     from collections import defaultdict
 
-    connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_TILE_PORT, config.MYSQL_TILE_DB, config.MYSQL_USER, config.MYSQL_PWD)
+    connection, cursor = connect_mysql(CONFIG.MYSQL_HOST, CONFIG.MYSQL_TILE_PORT, CONFIG.MYSQL_TILE_DB, CONFIG.MYSQL_USER, CONFIG.MYSQL_PWD)
 
     # 按照 sceneId 分组查询，每个 sceneId 对应一个查询
     grouped_result = defaultdict(list)
@@ -141,7 +141,7 @@ def select_tile_by_column_and_row_v2(tiles, bands):
 
 def select_scene_time(sceneId):
     # 建立数据库连接
-    connection, cursor = connect_mysql(config.MYSQL_HOST, config.MYSQL_RESOURCE_PORT, config.MYSQL_RESOURCE_DB, config.MYSQL_USER, config.MYSQL_PWD)
+    connection, cursor = connect_mysql(CONFIG.MYSQL_HOST, CONFIG.MYSQL_RESOURCE_PORT, CONFIG.MYSQL_RESOURCE_DB, CONFIG.MYSQL_USER, CONFIG.MYSQL_PWD)
     # 查询scene_table中的scene_time
     query = f"SELECT scene_time FROM scene_table WHERE scene_id = %s"
     cursor.execute(query, (sceneId,))
