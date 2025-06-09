@@ -10,8 +10,6 @@ def createApp():
 
     from router import rgb, terrain, oneband, mosaic
 
-
-
     app = FastAPI()
 
     # Add CORS middleware
