@@ -7,8 +7,7 @@ from typing import Any, Dict
 import os
 import json
 import hashlib
-
-from dataProcessing.config import STATUS_RUNNING, STATUS_COMPLETE, STATUS_ERROR, STATUS_PENDING, MAX_RUNNING_TASKS
+from dataProcessing.config import current_config as CONFIG
 
 from dataProcessing.model.mergeTifTask import MergeTifTask
 from dataProcessing.model.mergeTifTaskV2 import MergeTifTaskV2
@@ -19,6 +18,11 @@ from dataProcessing.model.calc_raster_line import calc_raster_line
 from dataProcessing.model.calc_no_cloud import calc_no_cloud
 from dataProcessing.model.calc_no_cloud_grid import calc_no_cloud_grid
 
+STATUS_RUNNING = CONFIG.STATUS_RUNNING
+STATUS_COMPLETE = CONFIG.STATUS_COMPLETE
+STATUS_ERROR = CONFIG.STATUS_ERROR
+STATUS_PENDING = CONFIG.STATUS_PENDING
+MAX_RUNNING_TASKS = CONFIG.MAX_RUNNING_TASKS
 
 class TaskScheduler:
     def __init__(self):
@@ -225,7 +229,7 @@ class TaskScheduler:
         return "Task Not Completed or Not Found"
 
     def save_to_history(self, task_id):
-        # 持久化任务记录至history
+        # 序列化任务记录至history
         file_path = os.path.join(os.path.dirname(__file__), "..", "history", f"{task_id}.json")
         json_data = {
             "STATUS": self.get_status(task_id),

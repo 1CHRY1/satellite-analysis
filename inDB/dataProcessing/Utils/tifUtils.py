@@ -14,7 +14,8 @@ def convert_tif2cog(tif_path):
         output_cog_tif = os.path.join(temp_dir, os.path.basename(tif_path))
         with rasterio.open(tif_path) as src:
             profile = cog_profiles.get("deflate")
-            cog_translate(src, output_cog_tif, profile, in_memory=False)
+            # cog_translate(src, output_cog_tif, profile, in_memory=False)
+            cog_translate(src, output_cog_tif, profile, in_memory=True, overview_resampling="nearest", resampling="nearest", allow_intermediate_compression=False, temporary_compression="LZW", config={"GDAL_NUM_THREADS": "ALL_CPUS"})
         return output_cog_tif
 
 

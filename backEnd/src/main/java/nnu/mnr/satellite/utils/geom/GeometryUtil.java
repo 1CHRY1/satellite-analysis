@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
+import static nnu.mnr.satellite.utils.geom.TileCalculateUtil.getTileGeomByIdsAndResolution;
+
 /**
  * Created with IntelliJ IDEA.
  *
@@ -219,5 +221,29 @@ public class GeometryUtil {
                 envelope.getMaxX(), // 右上角X
                 envelope.getMaxY()  // 右上角Y
         );
+    }
+
+    public static Geometry getGridsBoundaryByTilesAndResolution(List<Integer[]> tileIds, Integer resolution) {
+        GeometryFactory geometryFactory = new GeometryFactory();
+        MultiPolygon gridsBoundary = geometryFactory.createMultiPolygon(new Polygon[]{});
+
+        for (Integer[] tileId : tileIds) {
+            Geometry gridGeom = getTileGeomByIdsAndResolution(tileId[1], tileId[0], resolution);
+            if (gridsBoundary.contains(gridGeom)) {
+                continue;
+            }
+            if (gridGeom == null || gridGeom.isEmpty()) {
+                throw new IllegalArgumentException("Invalid tile bounding box");
+            }
+            Geometry unionResult = gridsBoundary.union(gridGeom);
+            if (unionResult instanceof MultiPolygon) {
+                gridsBoundary = (MultiPolygon) unionResult;
+            } else if (unionResult instanceof Polygon) {
+                gridsBoundary = geometryFactory.createMultiPolygon(new Polygon[]{(Polygon) unionResult});
+            } else {
+                throw new IllegalArgumentException("Unsupported geometry type: " + unionResult.getClass().getName());
+            }
+        }
+        return gridsBoundary;
     }
 }

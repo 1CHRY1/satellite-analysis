@@ -9,10 +9,10 @@ from dataProcessing.Utils.tifUtils import mband, convert_tif2cog, check_intersec
 from dataProcessing.Utils.tifUtils import calculate_cloud_coverage, get_tif_epsg, convert_bbox_to_utm
 from dataProcessing.Utils.gridUtil import GridHelper, GridCell
 from dataProcessing.model.task import Task
-import dataProcessing.config as config
+from dataProcessing.config import current_config as CONFIG
 
 
-MINIO_ENDPOINT = f"http://{config.MINIO_IP}:{config.MINIO_PORT}"
+MINIO_ENDPOINT = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}"
 
 
 class calc_qa_simple(Task):

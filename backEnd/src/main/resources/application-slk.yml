@@ -1,0 +1,104 @@
+server:
+  port: 8999
+
+netty:
+  websocket:
+    port: 9000
+
+spring:
+  datasource:
+    dynamic:
+      primary: mysql_satellite
+      strict: false
+      datasource:
+        mysql_satellite:
+          # k8s
+          url: jdbc:mysql://223.2.43.228:31136/satellite
+          #          url: jdbc:mysql://223.2.47.202:3306/satellite
+          username: root
+          password: 123456
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          hikari:
+            connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
+        mysql_tile:
+          #          url: jdbc:mysql://223.2.34.7:3306/tile
+          url: jdbc:mysql://223.2.43.228:31136/tile
+          username: root
+          password: 123456
+          driver-class-name: com.mysql.cj.jdbc.Driver
+        pg_space:
+          url: jdbc:postgresql://223.2.43.228:31543/gis_db
+          #          url: jdbc:postgresql://127.0.0.1:5431/gis_db
+          username: postgres
+          password: 123456
+          #          password: ogms250410
+          driver-class-name: org.postgresql.Driver
+  servlet:
+    multipart:
+      max-file-size: 1GB
+      max-request-size: 1GB
+  data:
+    redis:
+      host: 223.2.43.228
+      port: 30379
+      database: 0
+    mongodb:
+      uri: mongodb://OGMSROOT:ogms1qaz2wsx@172.21.252.208:23266/opengmp
+  elasticsearch:
+    uris: http://223.2.43.228:30920
+#    uris: http://127.0.0.1:9200
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: nnu.mnr.satellite.model.po
+  type-handlers-package: nnu.mnr.satellite.utils.typeHandler
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+#ca:
+#  dir: D:/1tools/OpenSSL/ca
+
+minio:
+  access-key: jTbgNHEqQafOpUxVg7Ol
+  secret-key: 7UxtrqhSOyN1KUeumbqTRMv1zeluLO69OwJnCC0M
+  #  url: http://223.2.34.7:9000
+  url: http://223.2.43.228:30900
+
+docker:
+  defaultServer:
+    #    port: 2376
+    #    host: "223.2.35.208"
+    #    username: "vge"
+    #    password: "3J44.njnu.edu.cn"
+    #  serverDir: /home/vge/satellite/
+    port: 2375
+    host: "223.2.35.153"
+    username: "root"
+    password: "dky.njnu.edu.cn"
+  localPath: D:/code/modelDockerVolume
+  serverDir: /home/satellite/
+  workDir: /usr/local/coding/
+
+modelServer:
+  address: http://127.0.0.1:5001
+  #  address: http://223.2.43.228:30500
+  apis:
+    status: /v0/task/status
+    result: /v0/task/result
+    merge: /v0/tif/merge_v2
+    spectrum: /v0/tif/get_spectral_profile
+    noCloud: /v0/tif/calc_no_cloud
+    #    noCloud: /v0/tif/calc_qa_middle
+    #    noCloud: /v0/tif/calc_qa_simple
+    #    noCloud: /v0/tif/calc_qa
+    rasterPoint: /v0/tif/calc_raster_point
+    rasterLine: /v0/tif/calc_raster_line
+    ndvi: /v0/tif/calc_NDVI
+  interval:
+    status: 2
+
+tiler:
+  end-point: http://223.2.32.242:8079
+
+satelliteConfig:
+  path: D:/code/band_config.json
