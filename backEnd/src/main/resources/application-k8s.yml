@@ -3,7 +3,7 @@ server:
 
 netty:
   websocket:
-    port: 9000
+    port: 9888
 
 spring:
   datasource:
@@ -12,26 +12,42 @@ spring:
       strict: false
       datasource:
         mysql_satellite:
-          url: jdbc:mysql://223.2.34.7:3306/satellite
+          #          url: jdbc:mysql://223.2.34.7:3306/satellite
+          url: jdbc:mysql://20.1.16.128:3306/satellite
           username: root
-          password: root
+          #          password: root
+          password: 123456
           driver-class-name: com.mysql.cj.jdbc.Driver
+          hikari:
+            connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
         mysql_tile:
-          url: jdbc:mysql://223.2.34.7:3306/tile
+          #          url: jdbc:mysql://223.2.34.7:3306/tile
+          url: jdbc:mysql://20.1.16.128:3306/tile
           username: root
-          password: root
+          #          password: root
+          password: 123456
           driver-class-name: com.mysql.cj.jdbc.Driver
+        pg_space:
+          url: jdbc:postgresql://20.1.210.119:5432/gis_db
+          #          url: jdbc:postgresql://127.0.0.1:5431/gis_db
+          username: postgres
+          password: 123456
+          #          password: ogms250410
+          driver-class-name: org.postgresql.Driver
   servlet:
     multipart:
       max-file-size: 1GB
       max-request-size: 1GB
   data:
     redis:
-      host: localhost
+      host: 55.2.1.188
       port: 6379
       database: 0
     mongodb:
       uri: mongodb://OGMSROOT:ogms1qaz2wsx@172.21.252.208:23266/opengmp
+  elasticsearch:
+    uris: http://55.2.1.232:9200
+#    uris: http://127.0.0.1:9200
 
 mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
@@ -46,7 +62,7 @@ mybatis-plus:
 minio:
   access-key: jTbgNHEqQafOpUxVg7Ol
   secret-key: 7UxtrqhSOyN1KUeumbqTRMv1zeluLO69OwJnCC0M
-  url: http://223.2.34.7:9000
+  url: http://20.1.11.176:9000
 
 docker:
   defaultServer:
@@ -64,15 +80,25 @@ docker:
   workDir: /usr/local/coding/
 
 modelServer:
-  address: http://223.2.34.7:5000
+  #  address: http://127.0.0.1:5001
+  address: http://20.1.187.40:5000
   apis:
     status: /v0/task/status
     result: /v0/task/result
     merge: /v0/tif/merge_v2
-    ndviPoint: /ndviPoint
-    ndviArea: /ndviArea
+    spectrum: /v0/tif/get_spectral_profile
+    noCloud: /v0/tif/calc_no_cloud
+    #    noCloud: /v0/tif/calc_qa_middle
+    #    noCloud: /v0/tif/calc_qa_simple
+    #    noCloud: /v0/tif/calc_qa
+    rasterPoint: /v0/tif/calc_raster_point
+    rasterLine: /v0/tif/calc_raster_line
+    ndvi: /v0/tif/calc_NDVI
   interval:
     status: 2
 
 tiler:
-  end-point: http://223.2.32.242:8079
+  end-point: http://20.1.73.184:8079
+
+satelliteConfig:
+  path: /usr/resource/band_config.json

@@ -23,7 +23,7 @@ import nnu.mnr.satellite.service.common.SftpDataService;
 import nnu.mnr.satellite.service.user.UserService;
 import nnu.mnr.satellite.utils.common.FileUtil;
 import nnu.mnr.satellite.utils.common.IdUtil;
-import nnu.mnr.satellite.utils.data.MinioUtil;
+import nnu.mnr.satellite.utils.dt.MinioUtil;
 import nnu.mnr.satellite.utils.docker.DockerFileUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

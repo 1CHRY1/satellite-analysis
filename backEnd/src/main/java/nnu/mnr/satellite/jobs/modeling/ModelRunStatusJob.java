@@ -6,9 +6,8 @@ import nnu.mnr.satellite.jobs.QuartzSchedulerManager;
 import nnu.mnr.satellite.model.pojo.modeling.ModelServerProperties;
 import nnu.mnr.satellite.utils.common.BeanUtil;
 import nnu.mnr.satellite.utils.common.ProcessUtil;
-import nnu.mnr.satellite.utils.data.RedisUtil;
+import nnu.mnr.satellite.utils.dt.RedisUtil;
 import org.quartz.*;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
 

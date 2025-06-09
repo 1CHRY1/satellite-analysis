@@ -1,4 +1,4 @@
-package nnu.mnr.satellite.mapper.modeling;
+package nnu.mnr.satellite.mapper.user;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import nnu.mnr.satellite.model.po.user.User;

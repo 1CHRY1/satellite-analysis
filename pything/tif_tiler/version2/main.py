@@ -1,6 +1,6 @@
 def createApp():
     
-    # 😋 If some error about PROJ_DATA, you can set environment variable as follows: 
+    # 馃構 If some error about PROJ_DATA, you can set environment variable as follows: 
     # import os
     # os.environ['PROJ_DATA'] = r'D:\env\miniconda\envs\grid\Lib\site-packages\rasterio\proj_data'
     
@@ -8,7 +8,7 @@ def createApp():
     from titiler.core.factory import TilerFactory
     from starlette.middleware.cors import CORSMiddleware
 
-    from router import rgb, terrain, oneband, mosaic
+    from router import rgb, terrain, oneband#, mosaic
 
 
 
@@ -31,7 +31,7 @@ def createApp():
     app.include_router(rgb.router, tags=["RGB Composite Tiler"], prefix="/rgb")
     app.include_router(terrain.router, tags=["Terrain RGB Tiler"], prefix="/terrain")
     app.include_router(oneband.router, tags=["One Colorful Band Tiler"], prefix="/oneband")
-    app.include_router(mosaic.router, tags=["Mosaic Tiler"], prefix="/mosaic")
+    # app.include_router(mosaic.router, tags=["Mosaic Tiler"], prefix="/mosaic")
 
     # Add a welcome message for the root endpoint
     @app.get("/")

@@ -11,7 +11,7 @@ import nnu.mnr.satellite.model.vo.modeling.JsonResultVO;
 import nnu.mnr.satellite.model.vo.modeling.ProjectResultVO;
 import nnu.mnr.satellite.model.vo.modeling.TilerResultVO;
 import nnu.mnr.satellite.mapper.modeling.IProjectResultRepo;
-import nnu.mnr.satellite.utils.data.MinioUtil;
+import nnu.mnr.satellite.utils.dt.MinioUtil;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;

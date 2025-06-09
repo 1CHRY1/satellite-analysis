@@ -7,8 +7,8 @@ import nnu.mnr.satellite.model.pojo.modeling.ModelServerProperties;
 import nnu.mnr.satellite.model.pojo.modeling.TilerProperties;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.model.vo.modeling.TilerResultVO;
-import nnu.mnr.satellite.utils.data.MinioUtil;
-import nnu.mnr.satellite.utils.data.RedisUtil;
+import nnu.mnr.satellite.utils.dt.MinioUtil;
+import nnu.mnr.satellite.utils.dt.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
