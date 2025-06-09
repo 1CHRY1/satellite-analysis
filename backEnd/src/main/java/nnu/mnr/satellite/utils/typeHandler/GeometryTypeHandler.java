@@ -7,6 +7,7 @@ import org.apache.ibatis.type.TypeHandler;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.WKBReader;
 import org.locationtech.jts.io.WKBWriter;
+import org.locationtech.jts.io.WKTWriter;
 import org.springframework.stereotype.Component;
 
 import java.sql.CallableStatement;
@@ -30,16 +31,21 @@ public class GeometryTypeHandler implements TypeHandler<Geometry> {
 
     private final WKBReader wkbReader = new WKBReader();
     private final WKBWriter wkbWriter = new WKBWriter();
+    private final WKTWriter wktWriter = new WKTWriter();
 
     @Override
     public void setParameter(PreparedStatement ps, int i, Geometry geom, JdbcType jdbcType) throws SQLException {
         try {
-            byte[] wkb = wkbWriter.write(geom);
-            ps.setBytes(i, wkb);
-        }catch (Exception e) {
-            throw new SQLException("Error converting Geometry to WKB", e);
+            if (geom != null) {
+                // 改为使用 WKT 格式
+                String wkt = wktWriter.write(geom);
+                ps.setString(i, wkt);
+            } else {
+                ps.setString(i, null);
+            }
+        } catch (Exception e) {
+            throw new SQLException("Error converting Geometry to WKT", e);
         }
-
     }
 
     @Override

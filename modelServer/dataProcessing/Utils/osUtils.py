@@ -4,15 +4,15 @@ import os
 from minio import Minio
 from minio.error import S3Error
 from osgeo import gdal
-import dataProcessing.config as config
+from dataProcessing.config import current_config as CONFIG
 
 
 def getMinioClient():
     client = Minio(
-        f"{config.MINIO_IP}:{config.MINIO_PORT}",
-        access_key=config.MINIO_ACCESS_KEY,
-        secret_key=config.MINIO_SECRET_KEY,
-        secure=config.MINIO_SECURE
+        f"{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}",
+        access_key=CONFIG.MINIO_ACCESS_KEY,
+        secret_key=CONFIG.MINIO_SECRET_KEY,
+        secure=CONFIG.MINIO_SECURE
     )
     return client
 
@@ -115,13 +115,13 @@ def configure_minio_access4gdal(use_https=False):
     gdal.SetConfigOption('AWS_NO_SIGN_REQUEST', 'NO')
 
     # 基本配置
-    gdal.SetConfigOption('AWS_ACCESS_KEY_ID', config.MINIO_ACCESS_KEY)
-    gdal.SetConfigOption('AWS_SECRET_ACCESS_KEY', config.MINIO_SECRET_KEY)
-    gdal.SetConfigOption('AWS_VIRTUAL_HOSTING', f"{config.MINIO_SECURE}")
+    gdal.SetConfigOption('AWS_ACCESS_KEY_ID', CONFIG.MINIO_ACCESS_KEY)
+    gdal.SetConfigOption('AWS_SECRET_ACCESS_KEY', CONFIG.MINIO_SECRET_KEY)
+    gdal.SetConfigOption('AWS_VIRTUAL_HOSTING', f"{CONFIG.MINIO_SECURE}")
 
     # 设置协议和端点
     protocol = 'https' if use_https else 'http'
-    gdal.SetConfigOption('AWS_S3_ENDPOINT', f"{config.MINIO_IP}:{config.MINIO_PORT}")
+    gdal.SetConfigOption('AWS_S3_ENDPOINT', f"{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}")
     gdal.SetConfigOption('AWS_HTTPS', 'YES' if use_https else 'NO')
 
     # 设置超时

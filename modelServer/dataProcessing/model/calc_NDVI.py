@@ -14,9 +14,9 @@ from dataProcessing.Utils.tifUtils import calculate_cloud_coverage, get_tif_epsg
 from dataProcessing.Utils.gridUtil import GridHelper, GridCell
 from dataProcessing.model.task import Task
 import dataProcessing.Utils.cogUtils as cogUtils
-import dataProcessing.config as config
+from dataProcessing.config import current_config as CONFIG
 
-MINIO_ENDPOINT = f"http://{config.MINIO_IP}:{config.MINIO_PORT}"
+MINIO_ENDPOINT = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}"
 MULTI_TASKS = os.cpu_count() - 3
 
 class calc_NDVI(Task):

@@ -1,9 +1,11 @@
 package nnu.mnr.satellite.jobs.modeling;
 
 import com.alibaba.fastjson2.JSONObject;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.jobs.QuartzSchedulerManager;
 import nnu.mnr.satellite.model.pojo.modeling.ModelServerProperties;
+import nnu.mnr.satellite.service.resources.CaseDataService;
 import nnu.mnr.satellite.utils.common.BeanUtil;
 import nnu.mnr.satellite.utils.common.ProcessUtil;
 import nnu.mnr.satellite.utils.dt.RedisUtil;
@@ -26,6 +28,9 @@ public class ModelRunStatusJob implements Job {
 
     private final QuartzSchedulerManager quartzSchedulerManager;
 
+    @Resource
+    private CaseDataService caseDataService;
+
     public ModelRunStatusJob() {
         redisUtil = BeanUtil.getBean(RedisUtil.class);
         quartzSchedulerManager = BeanUtil.getBean(QuartzSchedulerManager.class);
@@ -43,6 +48,7 @@ public class ModelRunStatusJob implements Job {
         String status = statusResponse.getJSONObject("data").getString("status");
         if (status.equals("COMPLETE")) {
             redisUtil.updateJsonField(caseId, "status", status);
+            caseDataService.updateCaseStatusById(caseId, status);
             log.info("model case " + caseId + " has finished!");
             try {
                 quartzSchedulerManager.deleteJob(jobName, jobGroup);
@@ -56,6 +62,7 @@ public class ModelRunStatusJob implements Job {
                 }
                 redisUtil.updateJsonField(caseId, "result", resObj);
                 redisUtil.updateJsonField(caseId, "end", LocalDateTime.now());
+                caseDataService.updateCaseResultById(caseId, resObj);
             } catch (SchedulerException e) {
                 log.info(e.toString());
             }
@@ -67,6 +74,7 @@ public class ModelRunStatusJob implements Job {
                 log.info(e.toString());
             }
             redisUtil.updateJsonField(caseId, "end", LocalDateTime.now());
+            caseDataService.removeCaseById(caseId);
         }
         // TODO: Add Other Conditions
 

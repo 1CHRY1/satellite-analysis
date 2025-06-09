@@ -16,9 +16,9 @@ from rasterio.mask import mask
 from shapely.geometry import shape, box
 from shapely.ops import unary_union
 from osgeo import osr
-import dataProcessing.config as config
+from dataProcessing.config import current_config as CONFIG
 
-MINIO_ENDPOINT = f"http://{config.MINIO_IP}:{config.MINIO_PORT}"
+MINIO_ENDPOINT = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}"
 
 def read_band(path):
     """读取单波段栅格数据"""
