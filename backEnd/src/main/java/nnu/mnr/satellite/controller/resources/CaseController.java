@@ -3,10 +3,13 @@ package nnu.mnr.satellite.controller.resources;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.service.resources.CaseDataService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import nnu.mnr.satellite.opengmp.model.dto.PageDTO;
+import nnu.mnr.satellite.model.po.resources.Case;
 
 /**
  * @name: CaseController
@@ -20,7 +23,14 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class CaseController {
 
-    @Resource
-    private CaseDataService caseDataService;
+    private final CaseDataService caseDataService;
+    public CaseController(CaseDataService caseDataService) {
+        this.caseDataService = caseDataService;
+    }
+
+    @GetMapping("/page")
+    public IPage<Case> getCasePage(@ModelAttribute PageDTO pageDTO) {
+        return caseDataService.getCasePage(pageDTO);
+    }
 
 }

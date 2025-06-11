@@ -1,0 +1,7 @@
+{
+  "STATUS": "COMPLETE",
+  "RESULT": "{\n    \"NDVI\": [\n        {\n            \"sceneTime\": \"2025-01-06 02:00:00\",\n            \"value\": 0.0\n        },\n        {\n            \"sceneTime\": \"2025-02-06 02:00:00\",\n            \"value\": 0.0\n        }\n    ]\n}",
+  "TIME": "2025-05-18 19:03:20",
+  "ID": "b4eb5856-4962-4fe4-9cf0-aac72e023bfe",
+  "MD5": "cc1114fd9cf0d528c3973acf32c2db36"
+}

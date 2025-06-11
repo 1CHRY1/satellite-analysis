@@ -35,6 +35,7 @@ public class Case {
     private String resolution;
     @TableField(typeHandler = GeometryTypeHandler.class)
     private Geometry boundary;
+    private String boundaryText;
     @TableField(typeHandler = ListTypeHandler.class)
     private List<String> sceneList;
     private String dataSet;
