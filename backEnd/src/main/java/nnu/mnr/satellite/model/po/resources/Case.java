@@ -13,6 +13,7 @@ import nnu.mnr.satellite.utils.typeHandler.GeometryTypeHandler;
 import nnu.mnr.satellite.utils.typeHandler.ListTypeHandler;
 import org.locationtech.jts.geom.Geometry;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -36,7 +37,9 @@ public class Case {
     private Geometry boundary;
     @TableField(typeHandler = ListTypeHandler.class)
     private List<String> sceneList;
+    private String dataSet;
     private String status;
     @TableField(typeHandler = FastJson2TypeHandler.class)
     private JSONObject result;
+    private LocalDateTime createTime;
 }

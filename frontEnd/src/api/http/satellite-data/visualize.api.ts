@@ -270,3 +270,15 @@ export function getNoCloudUrl(param: NoCloudInfoParam) {
 
     return fullUrl
 }
+
+type MosaicTileParam = {
+    mosaicJsonPath: string
+}
+export function getNoCloudUrl4MosaicJson(param: MosaicTileParam) {
+    let baseUrl = `${titilerEndPoint}/mosaic/mosaictile/{z}/{x}/{y}.png`
+    const requestParams = new URLSearchParams()
+    const mosaicUrl = minioEndPoint + '/' + param.mosaicJsonPath
+    requestParams.append('mosaic_url', mosaicUrl)
+    const fullUrl = baseUrl + '?' + requestParams.toString()
+    return fullUrl
+}

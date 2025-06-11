@@ -80,13 +80,14 @@ public class ModelExampleService {
         try {
             JSONObject modelCaseResponse = JSONObject.parseObject(ProcessUtil.runModelCase(url, param));
             String caseId = modelCaseResponse.getJSONObject("data").getString("taskId");
-            quartzSchedulerManager.startModelRunningStatusJob(caseId);
             // 在没有相应历史记录的情况下, 持久化记录
             if (caseDataService.selectById(caseId) == null) {
                 caseDataService.addCaseFromParamAndCaseId(caseId, caseJsonObj);
             }
             JSONObject modelCase = JSONObject.of("status", "RUNNING", "start", LocalDateTime.now());
             redisUtil.addJsonDataWithExpiration(caseId, modelCase, expirationTime);
+            // 注意最后再启动任务！！！不然会出现updateJsonField找不到对应键值的情况
+            quartzSchedulerManager.startModelRunningStatusJob(caseId);
             return CommonResultVO.builder().status(1).message("success").data(caseId).build();
         } catch (Exception e) {
             return CommonResultVO.builder().status(-1).message("Wrong Because of " + e.getMessage()).build();
@@ -95,7 +96,8 @@ public class ModelExampleService {
 
     // 无云一版图计算
     public CommonResultVO getNoCloudByRegion(NoCloudFetchDTO noCloudFetchDTO) throws IOException {
-        Integer regionId = noCloudFetchDTO.getRegionId(); Integer resolution = noCloudFetchDTO.getResolution();
+        Integer regionId = noCloudFetchDTO.getRegionId();
+        Integer resolution = noCloudFetchDTO.getResolution();
         List<String> sceneIds = noCloudFetchDTO.getSceneIds();
 
         // 构成影像景参数信息
@@ -126,7 +128,7 @@ public class ModelExampleService {
 
         // 请求modelServer
         JSONObject noCloudParam = JSONObject.of("tiles", tileIds, "scenes", modelServerSceneDTOs, "cloud", noCloudFetchDTO.getCloud(), "resolution", resolution);
-        JSONObject caseJsonObj = JSONObject.of("boundary", boundary, "address", address, "resolution", resolution, "sceneIds", sceneIds);
+        JSONObject caseJsonObj = JSONObject.of("boundary", boundary, "address", address, "resolution", resolution, "sceneIds", sceneIds, "dataSet", noCloudFetchDTO.getDataSet());
         String noCloudUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("noCloud");
         long expirationTime = 60 * 100;
         return runModelServerModel(noCloudUrl, noCloudParam, expirationTime, caseJsonObj);
@@ -154,17 +156,17 @@ public class ModelExampleService {
 //                    continue;
 //                }
 
-               ModelServerSceneDTO modelServerSceneDTO = ModelServerSceneDTO.builder()
+                ModelServerSceneDTO modelServerSceneDTO = ModelServerSceneDTO.builder()
                         .sceneId(sceneId).images(imageDTO).sceneTime(scene.getSceneTime())
-                       .sensorName(scene.getSensorName()).productName(scene.getProductName())
-                       .bandMapper(bandMapperGenerator.getSatelliteConfigBySensorName(scene.getSensorName()))
+                        .sensorName(scene.getSensorName()).productName(scene.getProductName())
+                        .bandMapper(bandMapperGenerator.getSatelliteConfigBySensorName(scene.getSensorName()))
                         .cloudPath(scene.getCloudPath()).bucket(scene.getBucket()).build();
                 modelServerSceneDTOs.add(modelServerSceneDTO);
             }
         }
 
         // 请求modelServer
-        JSONObject ndviParam = JSONObject.of("point",point, "scenes", modelServerSceneDTOs);
+        JSONObject ndviParam = JSONObject.of("point", point, "scenes", modelServerSceneDTOs);
         String ndviUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("ndvi");
         long expirationTime = 60 * 10;
         return runModelServerModel(ndviUrl, ndviParam, expirationTime);
@@ -184,7 +186,7 @@ public class ModelExampleService {
         List<ModelServerImageDTO> images = imageDataService.getModelServerImageDTOBySceneId(sceneId);
 
         // 请求modelServer
-        JSONObject ndviParam = JSONObject.of("point",point, "images", images);
+        JSONObject ndviParam = JSONObject.of("point", point, "images", images);
         String ndviUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("spectrum");
         long expirationTime = 60 * 10;
         return runModelServerModel(ndviUrl, ndviParam, expirationTime);
@@ -202,7 +204,7 @@ public class ModelExampleService {
             if (scene.getBbox().contains(geomPoint)) {
                 List<ModelServerImageDTO> images = imageDataService.getModelServerImageDTOBySceneId(scene.getSceneId());
                 // 请求modelServer
-                JSONObject pointRasterParam = JSONObject.of("point",point, "raster", images.get(0));
+                JSONObject pointRasterParam = JSONObject.of("point", point, "raster", images.get(0));
                 String pointRasterUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("rasterPoint");
                 long expirationTime = 60 * 10;
                 return runModelServerModel(pointRasterUrl, pointRasterParam, expirationTime);
@@ -222,7 +224,7 @@ public class ModelExampleService {
             List<ModelServerImageDTO> sceneImages = imageDataService.getModelServerImageDTOBySceneId(scene.getSceneId());
             images.add(sceneImages.get(0));
         }
-        JSONObject pointRasterParam = JSONObject.of("points",points, "rasters", images);
+        JSONObject pointRasterParam = JSONObject.of("points", points, "rasters", images);
         String pointRasterUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("rasterLine");
         long expirationTime = 60 * 10;
         return runModelServerModel(pointRasterUrl, pointRasterParam, expirationTime);
