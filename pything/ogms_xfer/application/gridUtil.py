@@ -1,22 +1,36 @@
 import math
 import time
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Any
 from dataclasses import dataclass
 from shapely.geometry import Polygon, box
 
 # Constants
-EARTH_RADIUS = 6371008.8  # meters
-EARTH_CIRCUMFERENCE = 2 * math.pi * EARTH_RADIUS
+EARTH_CIRCUMFERENCE_EQUATOR = 40075.0
+EARTH_CIRCUMFERENCE_MERIDIAN = 40008.0
+
 
 @dataclass
-class PolygonGeometry:
+class Geometry:
     type: str
     coordinates: List[List[List[float]]]
+
+@dataclass
+class Feature:
+    type: str
+    geometry: Geometry
+    properties: Dict[str, Any]
+
+@dataclass
+class GeoPolygon:
+    type: str  # "FeatureCollection"
+    features: List[Feature]
 
 @dataclass
 class GridCell:
     columnId: int
     rowId: int
+
+
 
 class GridHelper:
     def __init__(self, grid_resolution_in_kilometer: float = 1):
@@ -26,11 +40,16 @@ class GridHelper:
         Args:
             grid_resolution_in_kilometer: Grid resolution in kilometers
         """
-        self.grid_resolution_in_meter = grid_resolution_in_kilometer * 1000
-        self.grid_num_x = math.ceil(EARTH_CIRCUMFERENCE / self.grid_resolution_in_meter)
-        self.grid_num_y = math.ceil(EARTH_CIRCUMFERENCE / 2.0 / self.grid_resolution_in_meter)
+        
+        print(grid_resolution_in_kilometer)
+        
+        self.degreePerGridX = (360.0 * grid_resolution_in_kilometer) / EARTH_CIRCUMFERENCE_EQUATOR
+        self.degreePerGridY = (180.0 * grid_resolution_in_kilometer) / EARTH_CIRCUMFERENCE_MERIDIAN * 2.0
 
-    def get_grid_cells(self, polygon: PolygonGeometry) -> List[GridCell]:
+        self.grid_num_x = int(math.ceil(360.0 / self.degreePerGridX))
+        self.grid_num_y = int(math.ceil(180.0 / self.degreePerGridY))
+
+    def get_grid_cells(self, polygon: GeoPolygon) -> List[GridCell]:
         """
         Get grid cells that intersect with the input polygon.
         
@@ -87,36 +106,6 @@ class GridHelper:
         grid_y = math.floor(((90 - latitude) / 180) * self.grid_num_y)
         return GridCell(columnId=grid_x, rowId=grid_y)
 
-    def _create_shapely_polygon(self, polygon: PolygonGeometry) -> Polygon:
-        """Convert GeoJSON-like polygon to Shapely polygon."""
-        print(polygon.get("features")[0].get("geometry"))
-        return Polygon(polygon.get("features")[0].get("geometry").get("coordinates")[0])
-
-    def _get_grid_polygon(self, grid_x: int, grid_y: int) -> Polygon:
-        """Create Shapely polygon for a grid cell."""
-        left_lng, top_lat = self._grid_to_lnglat(grid_x, grid_y)
-        right_lng, bottom_lat = self._grid_to_lnglat(grid_x + 1, grid_y + 1)
-        return box(left_lng, bottom_lat, right_lng, top_lat)
-
-    def _grid_to_lnglat(self, grid_x: int, grid_y: int) -> Tuple[float, float]:
-        """Convert grid coordinates to longitude/latitude."""
-        lng = (grid_x / self.grid_num_x) * 360.0 - 180.0
-        lat = 90.0 - (grid_y / self.grid_num_y) * 180.0
-        return lng, lat
-
-    def _calculate_bbox(self, polygon: PolygonGeometry) -> Dict[str, List[float]]:
-        """Calculate bounding box of a polygon."""
-        coordinates = polygon.get("features")[0].get("geometry").get("coordinates")[0]
-        min_x = min(coord[0] for coord in coordinates)
-        max_x = max(coord[0] for coord in coordinates)
-        min_y = min(coord[1] for coord in coordinates)
-        max_y = max(coord[1] for coord in coordinates)
-        
-        return {
-            "topLeft": [min_x, max_y],
-            "bottomRight": [max_x, min_y]
-        }
-        
     def get_grid_cells_by_bbox(self, bbox: List[float]) -> List[GridCell]:
 
         left_bottom_grid = self.get_grid_cell(bbox[0], bbox[1])
@@ -165,3 +154,34 @@ class GridHelper:
             "type": "FeatureCollection",
             "features": features
         }
+        
+        
+    def _create_shapely_polygon(self, polygon: GeoPolygon) -> Polygon:
+        """Convert GeoJSON-like polygon to Shapely polygon."""
+        return Polygon(polygon.get("features")[0].get("geometry").get("coordinates")[0])
+
+    def _get_grid_polygon(self, grid_x: int, grid_y: int) -> Polygon:
+        """Create Shapely polygon for a grid cell."""
+        left_lng, top_lat = self._grid_to_lnglat(grid_x, grid_y)
+        right_lng, bottom_lat = self._grid_to_lnglat(grid_x + 1, grid_y + 1)
+        return box(left_lng, bottom_lat, right_lng, top_lat)
+
+    def _grid_to_lnglat(self, grid_x: int, grid_y: int) -> Tuple[float, float]:
+        """Convert grid coordinates to longitude/latitude."""
+        lng = (grid_x / self.grid_num_x) * 360.0 - 180.0
+        lat = 90.0 - (grid_y / self.grid_num_y) * 180.0
+        return lng, lat
+
+    def _calculate_bbox(self, polygon: GeoPolygon) -> Dict[str, List[float]]:
+        """Calculate bounding box of a polygon."""
+        coordinates = polygon.get("features")[0].get("geometry").get("coordinates")[0]
+        min_lng = min(coord[0] for coord in coordinates)
+        max_lng = max(coord[0] for coord in coordinates)
+        min_lat = min(coord[1] for coord in coordinates)
+        max_lat = max(coord[1] for coord in coordinates)
+        
+        return {
+            "topLeft": [min_lng, max_lat],
+            "bottomRight": [max_lng, min_lat]
+        }
+        

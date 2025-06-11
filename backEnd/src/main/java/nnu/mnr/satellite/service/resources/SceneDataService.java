@@ -9,7 +9,7 @@ import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
 import nnu.mnr.satellite.model.po.resources.Scene;
 import nnu.mnr.satellite.mapper.resources.ISceneRepo;
 import nnu.mnr.satellite.utils.geom.GeometryUtil;
-import nnu.mnr.satellite.utils.data.MinioUtil;
+import nnu.mnr.satellite.utils.dt.MinioUtil;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.PrecisionModel;

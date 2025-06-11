@@ -50,7 +50,7 @@ class Scene:
         return self._data.scene_name
 
     @property
-    def scene_time(self) -> str:
+    def scene_time(self) -> datetime:
         return self._data.scene_time
 
     @property

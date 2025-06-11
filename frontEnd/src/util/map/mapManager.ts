@@ -38,7 +38,7 @@ class MapManager {
                 center: [117, 36],
                 zoom: 2,
                 maxZoom: 22,
-                style: StyleMap[style],
+                // style: StyleMap[style],
                 transformRequest: (url) => {
                     // if (url.indexOf(conf['back_app']) > -1) {
                     //     const token = localStorage.getItem('token')

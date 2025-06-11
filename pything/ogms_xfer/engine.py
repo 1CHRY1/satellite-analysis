@@ -38,8 +38,9 @@ class OGMS_Xfer:
         from .application.image import Image
         return Image(image_id) if image_id is not None else Image
 
-    from .application import toolbox
+    from .application import toolbox, tileUtil
     Toolbox = toolbox
+    TileUtil = tileUtil
 
     from .application.urlutil import URLUtil
     URL = URLUtil

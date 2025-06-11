@@ -10,7 +10,7 @@ import nnu.mnr.satellite.model.dto.user.UserRegisterDTO;
 import nnu.mnr.satellite.model.po.user.User;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.model.vo.user.UserVO;
-import nnu.mnr.satellite.mapper.modeling.IUserRepo;
+import nnu.mnr.satellite.mapper.user.IUserRepo;
 import nnu.mnr.satellite.utils.common.IdUtil;
 import nnu.mnr.satellite.utils.security.JwtUtil;
 import org.modelmapper.ModelMapper;
