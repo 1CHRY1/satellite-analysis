@@ -33,6 +33,14 @@ public class GeometryTypeHandler implements TypeHandler<Geometry> {
     private final WKBWriter wkbWriter = new WKBWriter();
     private final WKTWriter wktWriter = new WKTWriter();
 
+    public String geometryToWKT(Geometry geom) {
+        if (geom != null) {
+            String wkt = wktWriter.write(geom);
+            return wkt;
+        }
+        return null;
+    }
+
     @Override
     public void setParameter(PreparedStatement ps, int i, Geometry geom, JdbcType jdbcType) throws SQLException {
         try {

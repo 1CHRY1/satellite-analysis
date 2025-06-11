@@ -5,7 +5,13 @@ import nnu.mnr.satellite.mapper.resources.ICaseRepo;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerSceneDTO;
 import nnu.mnr.satellite.model.po.resources.Case;
 import org.locationtech.jts.geom.Geometry;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+//分页
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import nnu.mnr.satellite.opengmp.model.dto.PageDTO;
+import nnu.mnr.satellite.utils.typeHandler.GeometryTypeHandler;
 
 import java.util.List;
 
@@ -20,9 +26,11 @@ import java.util.List;
 public class CaseDataService {
 
     private final ICaseRepo caseRepo;
+    private final GeometryTypeHandler geometryTypeHandler;
 
-    public CaseDataService(ICaseRepo caseRepo) {
+    public CaseDataService(ICaseRepo caseRepo, GeometryTypeHandler geometryTypeHandler) {
         this.caseRepo = caseRepo;
+        this.geometryTypeHandler = geometryTypeHandler;
     }
 
     public void addCaseFromParamAndCaseId(String caseId, JSONObject param) {
@@ -63,4 +71,26 @@ public class CaseDataService {
         return caseRepo.selectById(caseId);
     }
 
+    public IPage<Case> getCasePage(PageDTO pageDTO) {
+        // 构造分页对象
+        Page<Case> page = new Page<>(pageDTO.getPage(), pageDTO.getPageSize());
+
+        // 调用 Mapper 方法
+        IPage<Case> casePage = caseRepo.selectPageWithCondition(
+                page,
+                pageDTO.getSearchText(),
+                pageDTO.getSortField(),
+                pageDTO.getAsc()
+        );
+        if (casePage != null && casePage.getRecords() != null) {
+            for (Case caseItem : casePage.getRecords()) {
+                if (caseItem != null && caseItem.getBoundary() != null) {
+                    String wkt = geometryTypeHandler.geometryToWKT(caseItem.getBoundary());
+                    caseItem.setBoundaryText(wkt);
+                    caseItem.setBoundary(null);
+                }
+            }
+        }
+        return casePage;
+    }
 }

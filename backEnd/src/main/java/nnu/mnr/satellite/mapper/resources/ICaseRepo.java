@@ -4,6 +4,11 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import nnu.mnr.satellite.model.po.resources.Case;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Update;
+//分页
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 /**
  * @name: ICaseRepo
@@ -24,4 +29,29 @@ public interface ICaseRepo extends BaseMapper<Case> {
             "scene_list = #{sceneList}, status = #{status}, result = #{result} " +
             "WHERE case_id = #{caseId}")
     int updateCaseById(Case caseObj);
+
+    // 分页查询方法
+    @Select("<script>" +
+            "SELECT * FROM case_table " +
+            "<where>" +
+            "   <if test='searchText != null and searchText != \"\"'>" +
+            "       AND (case_name LIKE CONCAT('%', #{searchText}, '%') OR resolution LIKE CONCAT('%', #{searchText}, '%'))" +
+            "   </if>" +
+            "</where>" +
+            "<if test='sortField != null and sortField != \"\"'>" +
+            "   ORDER BY ${sortField}" +
+            "   <if test='asc != null and asc'>" +
+            "       ASC" +
+            "   </if>" +
+            "   <if test='asc != null and !asc'>" +
+            "       DESC" +
+            "   </if>" +
+            "</if>" +
+            "</script>")
+    IPage<Case> selectPageWithCondition(
+            Page<Case> page,
+            @Param("searchText") String searchText,
+            @Param("sortField") String sortField,
+            @Param("asc") Boolean asc
+    );
 }
