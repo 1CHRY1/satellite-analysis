@@ -35,12 +35,12 @@ public class Case {
     private String resolution;
     @TableField(typeHandler = GeometryTypeHandler.class)
     private Geometry boundary;
-    private String boundaryText;
     @TableField(typeHandler = ListTypeHandler.class)
     private List<String> sceneList;
     private String dataSet;
     private String status;
     @TableField(typeHandler = FastJson2TypeHandler.class)
     private JSONObject result;
+    @TableField("create_time")
     private LocalDateTime createTime;
 }
