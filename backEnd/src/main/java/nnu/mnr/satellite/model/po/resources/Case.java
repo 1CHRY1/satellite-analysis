@@ -41,5 +41,6 @@ public class Case {
     private String status;
     @TableField(typeHandler = FastJson2TypeHandler.class)
     private JSONObject result;
+    @TableField("create_time")
     private LocalDateTime createTime;
 }
