@@ -4,6 +4,7 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.model.vo.resources.CaseInfoVO;
 import nnu.mnr.satellite.service.resources.CaseDataService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,8 +31,8 @@ public class CaseController {
     }
 
     @GetMapping("/page")
-    public IPage<CaseInfoVO> getCasePage(@ModelAttribute PageDTO pageDTO) {
-        return caseDataService.getCasePage(pageDTO);
+    public ResponseEntity<IPage<CaseInfoVO>> getCasePage(@ModelAttribute PageDTO pageDTO) {
+        return ResponseEntity.ok(caseDataService.getCasePage(pageDTO));
     }
 
 }

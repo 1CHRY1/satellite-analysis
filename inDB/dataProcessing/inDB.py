@@ -46,7 +46,7 @@ def insert_to_db(scene_info, scene_conf, db_conf):
         insert_product(sensor_name, product_name, None, resolution, period)
     # insert scene
     sceneId = insert_scene(sensor_name, product_name, scene_info["scene_name"], scene_info["image_time"], scene_info["tile_level_num"], scene_info["tile_levels"], scene_info["cloud_path"],
-                            scene_info["crs"], scene_info["bbox"], None, scene_info["bands"], scene_info["band_num"], db_conf["MINIO_IMAGES_BUCKET"], scene_info["cloud"], scene_info["tags"])
+                            scene_info["crs"], scene_info["bbox"], None, scene_info["bands"], scene_info["band_num"], db_conf["MINIO_IMAGES_BUCKET"], scene_info["cloud"], scene_info["tags"], scene_info["no_data"])
     image_info_list = scene_info["image_info_list"]
     for info in image_info_list:
         # insert image

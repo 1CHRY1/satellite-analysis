@@ -552,6 +552,7 @@ const addRadarImages = () => {
                     }
                 }),
             }
+            console.log(gridFeature)
             radarGridFeature.value = gridFeature
             MapOperation.map_addGridLayer(gridFeature)
             MapOperation.draw_deleteAll()
@@ -689,6 +690,17 @@ const calNoClouds = async () => {
 
         // 1、先预览无云一版图影像
         let data = res.data
+        const getData = async (taskId: string) => {
+            let res:any
+            while (!(res = await getCaseResult(taskId)).data) {
+                console.log('Retrying...')
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            return res.data;
+        }
+        if(!data)
+            data = await getData(calTask.value.taskId)
+        
         previewNoCloud(data)
 
         // 2、补充数据

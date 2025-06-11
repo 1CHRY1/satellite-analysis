@@ -139,9 +139,6 @@ class TaskScheduler:
 
             # --------- Update the status and queue ---------------------------
             with self.condition:
-                self.task_status[task_id] = STATUS_COMPLETE
-                self.task_results[task_id] = result
-
                 # 显式移除特定任务ID
                 # TODO RUNNING 数组
                 temp_queue = queue.Queue()
@@ -161,15 +158,17 @@ class TaskScheduler:
                     print(f"Warning: Task {task_id} not found in running queue")
 
                 self.complete_queue.put((datetime.now(), task_id))
+
+                # Update the result and status
+                self.task_results[task_id] = result
+                self.task_status[task_id] = STATUS_COMPLETE
                 self.condition.notify_all()
 
         except Exception as e:
             # --------- Handle Exceptions --------------------------------
             with self.condition:
                 del self.task_md5[task_id]
-                self.task_status[task_id] = STATUS_ERROR
-                self.task_results[task_id] = str(e)
-
+                
                 temp_queue = queue.Queue()
                 found = False
                 while not self.running_queue.empty():
@@ -184,8 +183,11 @@ class TaskScheduler:
 
                 if not found:
                     print(f"Warning: Task {task_id} not found in running queue")
-
                 self.error_queue.put(task_id)
+
+                # Update the result and status
+                self.task_status[task_id] = STATUS_ERROR
+                self.task_results[task_id] = str(e)
                 self.condition.notify_all()
         finally:
             if self.get_status(task_id) != 'COMPLETE':

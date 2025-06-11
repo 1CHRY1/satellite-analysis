@@ -288,7 +288,7 @@ def get_product_byName(sensorName, productName):
 
 
 def insert_scene(sensorName, productName, sceneName, sceneTime, tileLevelNum, tileLevels, cloudPath, crs, bbox,
-                 description, bands, band_num, bucket, cloud, tags):
+                 description, bands, band_num, bucket, cloud, tags, no_data):
     global DB_CONFIG
     bands_str = ",".join([str(band) for band in bands or []]) if bands is not None else ""
     connection, cursor = connect_mysql(DB_CONFIG["MYSQL_HOST"], DB_CONFIG["MYSQL_RESOURCE_PORT"],
@@ -296,13 +296,13 @@ def insert_scene(sensorName, productName, sceneName, sceneTime, tileLevelNum, ti
                                        DB_CONFIG["MYSQL_PWD"])
     sensorId, productId = get_product_byName(sensorName, productName)
     insert_query = (
-        "INSERT INTO scene_table (scene_id, sensor_id, product_id, scene_name, scene_time, tile_level_num, tile_levels, coordinate_system, bounding_box, cloud_path, description, bands, band_num, bucket, cloud, tags) "
-        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, ST_GeomFromText(%s, 4326, 'axis-order=long-lat'), %s, %s, %s, %s, %s, %s, %s)")
+        "INSERT INTO scene_table (scene_id, sensor_id, product_id, scene_name, scene_time, tile_level_num, tile_levels, coordinate_system, bounding_box, cloud_path, description, bands, band_num, bucket, cloud, tags, no_data) "
+        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, ST_GeomFromText(%s, 4326, 'axis-order=long-lat'), %s, %s, %s, %s, %s, %s, %s, %s)")
     # sceneId = str(uuid.uuid5(namespace, uuidName))
     sceneId = generate_custom_id('SC', 11)
     data = (
         sceneId, sensorId, productId, sceneName, sceneTime, tileLevelNum, tileLevels, crs, bbox, cloudPath, description,
-        bands_str, band_num, bucket, cloud, tags)
+        bands_str, band_num, bucket, cloud, tags, no_data)
     try:
         # 执行插入操作
         cursor.execute(insert_query, data)

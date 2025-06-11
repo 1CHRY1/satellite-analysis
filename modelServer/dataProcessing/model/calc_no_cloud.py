@@ -102,9 +102,10 @@ def process_grid(grid, scenes, grid_helper, scene_band_paths, minio_endpoint, te
                 valid_mask = (nodata_mask.astype(bool))
                         
             else:
-                full_url = minio_endpoint + "/" + scene.get('bucket') + '/' + cloud_band_path
-                # reading cloud_band --> 确定格网 target_H, target_W
-                with COGReader(full_url, options={'nodata':int(nodata)}) as ctx:
+                scene_id = scene['sceneId']
+                paths = scene_band_paths.get(scene_id)
+                full_path = minio_endpoint + "/" + scene['bucket'] + "/" + paths['red']
+                with COGReader(full_path, options={'nodata': int(nodata)}) as ctx:
                     
                     if not first_shape_set:
                         temp_img_data = ctx.part(bbox=bbox, indexes=[1])

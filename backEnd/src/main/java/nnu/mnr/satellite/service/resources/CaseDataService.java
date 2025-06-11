@@ -1,6 +1,7 @@
 package nnu.mnr.satellite.service.resources;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.mapper.resources.ICaseRepo;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerSceneDTO;
@@ -93,25 +94,28 @@ public class CaseDataService {
         return mapPage(casePage);
     }
     private IPage<Case> getCasesWithCondition(Page<Case> page, String searchText, String sortField, Boolean asc) {
-        QueryWrapper<Case> queryWrapper = new QueryWrapper<>();
+        LambdaQueryWrapper<Case> lambdaQueryWrapper = new LambdaQueryWrapper<>();
 
-        // 添加搜索条件
+        // 添加搜索条件（使用Lambda表达式引用实体类属性）
         if (searchText != null && !searchText.isEmpty()) {
-            queryWrapper.and(wrapper -> wrapper
-                    .like("case_name", searchText)
+            lambdaQueryWrapper.and(wrapper -> wrapper
+                    .like(Case::getCaseName, searchText)  // 自动映射为数据库字段 case_name
                     .or()
-                    .like("resolution", searchText)
+                    .like(Case::getResolution, searchText) // 自动映射为 resolution
             );
         }
 
         // 添加排序条件
         if (sortField != null && !sortField.isEmpty()) {
-            if (sortField.equals("createTime")) {sortField = "create_time";}
-            queryWrapper.orderBy(true, asc, sortField);
+            if ("createTime".equals(sortField)) {
+                lambdaQueryWrapper.orderBy(true, asc, Case::getCreateTime);
+            } else {
+                // 其他字段可以通过反射或switch处理，这里简化处理
+                throw new IllegalArgumentException("Unsupported sort field: " + sortField);
+            }
         }
 
-        // 执行分页查询
-        return caseRepo.selectPage(page, queryWrapper);
+        return caseRepo.selectPage(page, lambdaQueryWrapper);
     }
     private IPage<CaseInfoVO> mapPage(IPage<Case> casePage) {
         // 映射记录列表
