@@ -66,6 +66,11 @@ def get_basic_info_from_ds(dataset):
     # 获取图像的空间参考和仿射变换信息
     basic_info["geotransform"] = dataset.GetGeoTransform()
     basic_info["projection"] = dataset.GetProjection()
+    band = dataset.GetRasterBand(1)
+    basic_info["no_data"] = band.GetNoDataValue()
+    # 如果没有 NoData 值，则默认设为 0
+    if basic_info["no_data"] is None:
+        basic_info["no_data"] = 0
     if basic_info["projection"] is None or basic_info["projection"] == "":
         print("缺失投影信息")
     spatial_ref = osr.SpatialReference()

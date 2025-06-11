@@ -12,7 +12,8 @@ class HttpClient {
     constructor(baseURL: string) {
         this.instance = axios.create({
             baseURL,
-            timeout: 10000,
+            // timeout: 10000,
+            timeout: 100000,
         })
 
         this.initializeInterceptors()
