@@ -1,18 +1,21 @@
 package nnu.mnr.satellite.service.resources;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.mapper.resources.ICaseRepo;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerSceneDTO;
 import nnu.mnr.satellite.model.po.resources.Case;
+import nnu.mnr.satellite.model.vo.resources.CaseInfoVO;
 import org.locationtech.jts.geom.Geometry;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.modelmapper.TypeToken;
 import org.springframework.stereotype.Service;
 //分页
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import nnu.mnr.satellite.opengmp.model.dto.PageDTO;
-import nnu.mnr.satellite.utils.typeHandler.GeometryTypeHandler;
+import org.modelmapper.ModelMapper;
 
+import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -27,11 +30,12 @@ import java.util.List;
 public class CaseDataService {
 
     private final ICaseRepo caseRepo;
-    private final GeometryTypeHandler geometryTypeHandler;
+    private final ModelMapper caseModelMapper;
 
-    public CaseDataService(ICaseRepo caseRepo, GeometryTypeHandler geometryTypeHandler) {
+
+    public CaseDataService(ICaseRepo caseRepo, ModelMapper caseModelMapper) {
         this.caseRepo = caseRepo;
-        this.geometryTypeHandler = geometryTypeHandler;
+        this.caseModelMapper = caseModelMapper;
     }
 
     public void addCaseFromParamAndCaseId(String caseId, JSONObject param) {
@@ -74,26 +78,54 @@ public class CaseDataService {
         return caseRepo.selectById(caseId);
     }
 
-    public IPage<Case> getCasePage(PageDTO pageDTO) {
+    public IPage<CaseInfoVO> getCasePage(PageDTO pageDTO) {
         // 构造分页对象
         Page<Case> page = new Page<>(pageDTO.getPage(), pageDTO.getPageSize());
-
+        QueryWrapper<Case> queryWrapper = new QueryWrapper<>();
         // 调用 Mapper 方法
-        IPage<Case> casePage = caseRepo.selectPageWithCondition(
+        IPage<Case> casePage = getCasesWithCondition(
                 page,
                 pageDTO.getSearchText(),
                 pageDTO.getSortField(),
                 pageDTO.getAsc()
         );
-        if (casePage != null && casePage.getRecords() != null) {
-            for (Case caseItem : casePage.getRecords()) {
-                if (caseItem != null && caseItem.getBoundary() != null) {
-                    String wkt = geometryTypeHandler.geometryToWKT(caseItem.getBoundary());
-                    caseItem.setBoundaryText(wkt);
-                    caseItem.setBoundary(null);
-                }
-            }
-        }
-        return casePage;
+
+        return mapPage(casePage);
     }
+    private IPage<Case> getCasesWithCondition(Page<Case> page, String searchText, String sortField, Boolean asc) {
+        QueryWrapper<Case> queryWrapper = new QueryWrapper<>();
+
+        // 添加搜索条件
+        if (searchText != null && !searchText.isEmpty()) {
+            queryWrapper.and(wrapper -> wrapper
+                    .like("case_name", searchText)
+                    .or()
+                    .like("resolution", searchText)
+            );
+        }
+
+        // 添加排序条件
+        if (sortField != null && !sortField.isEmpty()) {
+            if (sortField.equals("createTime")) {sortField = "create_time";}
+            queryWrapper.orderBy(true, asc, sortField);
+        }
+
+        // 执行分页查询
+        return caseRepo.selectPage(page, queryWrapper);
+    }
+    private IPage<CaseInfoVO> mapPage(IPage<Case> casePage) {
+        // 映射记录列表
+        Type destinationType = new TypeToken<List<CaseInfoVO>>() {}.getType();
+        List<CaseInfoVO> caseInfoVOList = caseModelMapper.map(casePage.getRecords(), destinationType);
+
+        // 创建一个新的 Page 对象
+        Page<CaseInfoVO> resultPage = new Page<>();
+        resultPage.setRecords(caseInfoVOList);
+        resultPage.setTotal(casePage.getTotal());
+        resultPage.setSize(casePage.getSize());
+        resultPage.setCurrent(casePage.getCurrent());
+
+        return resultPage;
+    }
+
 }

@@ -2,6 +2,7 @@ package nnu.mnr.satellite.controller.resources;
 
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import nnu.mnr.satellite.model.vo.resources.CaseInfoVO;
 import nnu.mnr.satellite.service.resources.CaseDataService;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,7 +30,7 @@ public class CaseController {
     }
 
     @GetMapping("/page")
-    public IPage<Case> getCasePage(@ModelAttribute PageDTO pageDTO) {
+    public IPage<CaseInfoVO> getCasePage(@ModelAttribute PageDTO pageDTO) {
         return caseDataService.getCasePage(pageDTO);
     }
 
