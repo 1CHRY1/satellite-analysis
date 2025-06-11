@@ -46,7 +46,7 @@
             <div class="py-1">
                 <img :src="avator" alt="user-avator" class="h-8 w-auto rounded-full" />
             </div>
-            <div class="absolute top-10 right-0 z-10 hidden w-24 rounded-lg bg-white text-center text-black shadow-lg group-hover:block"
+            <div class="absolute top-8 right-0 z-10 hidden w-24 rounded-lg bg-white text-center text-black shadow-lg group-hover:block"
                 @click="handleLogout">
                 退出登录
             </div>

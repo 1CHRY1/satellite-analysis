@@ -292,9 +292,10 @@
                     </div>
                     <div class="section-content">
                         <div class="config-container">
-                            <div v-for="(image, index) in calImage" class="config-item">
+                            <div v-for="(image, index) in calImage" :key="index" class="config-item">
                                 <div>无云一版图第{{ index + 1 }}次计算完成！</div>
                                 本次使用的数据包括：{{ image.dataSet }}
+                                <p>{{image}}</p>
                             </div>
                         </div>
                     </div>
@@ -320,7 +321,7 @@ import {
     getTifbandMinMax,
 } from '@/api/http/satellite-data/visualize.api'
 import { grid2Coordinates } from '@/util/map/gridMaker'
-import { getNoCloudScaleParam, getNoCloudUrl } from '@/api/http/satellite-data/visualize.api'
+import { getNoCloudScaleParam, getNoCloudUrl, getNoCloudUrl4MosaicJson } from '@/api/http/satellite-data/visualize.api'
 
 import {
     Loader,
@@ -622,12 +623,19 @@ const calNoClouds = async () => {
     if (dataReconstruction.value[2] === true) {
         addedImages = addedImages.concat(radarImages.value)
     }
+    let dataSet = [
+                '国产亚米影像',
+                dataReconstruction.value[0] ? '国产2m超分影像' : null,
+                dataReconstruction.value[1] ? '国外影像超分数据' : null,
+                dataReconstruction.value[2] ? 'SAR色彩转换数据' : null,
+    ].filter(Boolean).join('、')
 
     let getNoCloudParam = {
         regionId: props.regionConfig.regionCode,
         cloud: props.regionConfig.cloud,
         resolution: props.regionConfig.space,
         sceneIds: addedImages.map((image) => image.sceneId),
+        dataSet: dataSet,
     }
 
     console.log(getNoCloudParam, '发起请求')
@@ -689,14 +697,7 @@ const calNoClouds = async () => {
             demotic2m: dataReconstruction.value[0],
             international: dataReconstruction.value[1],
             radar: dataReconstruction.value[2],
-            dataSet: [
-                '国产亚米影像',
-                dataReconstruction.value[0] ? '国产2m超分影像' : null,
-                dataReconstruction.value[1] ? '国外影像超分数据' : null,
-                dataReconstruction.value[2] ? 'SAR色彩转换数据' : null,
-            ]
-                .filter(Boolean)
-                .join('、'),
+            dataSet: dataSet,
         }
         console.log(dataReconstruction.value, calResult)
 
@@ -728,17 +729,21 @@ const previewNoCloud = async (data: any) => {
     // 清除旧图层
     MapOperation.map_removeNocloudGridPreviewLayer()
     MapOperation.map_destroyNoCloudLayer()
-
-    const nocloudTifPath = data.bucket + '/' + data.tifPath
-
+    // -------- 旧版无云一版图（合并版）展示逻辑 ------------------------------
+    /* const nocloudTifPath = data.bucket + '/' + data.tifPath
     const band123Scale = await getNoCloudScaleParam(nocloudTifPath)
-
     const url = getNoCloudUrl({
         fullTifPath: nocloudTifPath,
         ...band123Scale
     })
+    MapOperation.map_addNoCloudLayer(url) */
 
-    MapOperation.map_addNoCloudLayer(url)
+    // -------- 新版无云一版图（MosaicJson）展示逻辑 --------------------------
+    const mosaicJsonPath = data.bucket + '/' + data.object_path
+    const url4MosaicJson = getNoCloudUrl4MosaicJson({
+        mosaicJsonPath: mosaicJsonPath
+    })
+    MapOperation.map_addNoCloudLayer(url4MosaicJson)
 
     // 清除旧图层
     // MapOperation.map_destroyMultiNoCloudLayer()
