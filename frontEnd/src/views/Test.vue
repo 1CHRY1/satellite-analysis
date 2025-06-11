@@ -11,6 +11,8 @@
             <button class="bg-amber-500 p-5" @click="addFK">加他们的影像底图</button>
 
             <button class="bg-red-500 p-5" @click="addMVTLayer">矢量瓦片测试</button>
+
+            <button class="bg-red-500 p-5" @click="addMosaicJsonLayer">MOSAICJSON测试</button>
         </div>
     </div>
 </template>
@@ -22,6 +24,7 @@ import { mapManager } from '@/util/map/mapManager'
 import { StyleMap } from '@/util/map/tianMapStyle'
 import { ezStore } from '@/store'
 import http from '@/api/http/clientHttp'
+import * as MapOperation from '@/util/map/operation'
 
 const addMVTLayer = () => {
     // const baseUrl = '/chry'
@@ -113,13 +116,24 @@ const addFK = () => {
     })
 }
 
+const addMosaicJsonLayer = () => {
+    // TEMP
+    let titilerEndPoint = 'http://223.2.43.228:31800'
+    let baseUrl = `${titilerEndPoint}/mosaic/mosaictile/{z}/{x}/{y}.png`
+    const requestParams = new URLSearchParams()
+    requestParams.append('mosaic_url', 'http://223.2.43.228:30900/' + 'temp-files' + '/' + 'mosaicjson/b0e75625-7224-495e-b875-c9b3e1493c9b.json')
+    const fullUrl = baseUrl + '?' + requestParams.toString()
+    MapOperation.map_removeNocloudGridPreviewLayer()
+    MapOperation.map_destroyNoCloudLayer()
+    MapOperation.map_addNoCloudLayer(fullUrl)
+}
+
 onMounted(() => {
  
     setTimeout(() => {
-        // mapManager.withMap((m) => {
-        // m.addSource('src', {
-        //     type: 'raster',
-        //     tiles: [
+        mapManager.withMap((m) => {
+            m.showTileBoundaries = true
+        })
         //         // '/hytemp/rgb/tiles/{z}/{x}/{y}.png?url_r=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B4.TIF&url_g=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B3.TIF&url_b=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B2.TIF'
         //         '/hytemp/rgb/box/{z}/{x}/{y}.png?url_r=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B4.TIF&url_g=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B3.TIF&url_b=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B2.TIF&bbox=117,31.5,118,32&max_r=50000&max_g=50000&max_b=50000&min_r=20000&min_g=20000&min_b=20000'
         //     ]

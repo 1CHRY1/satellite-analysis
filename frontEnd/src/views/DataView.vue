@@ -24,7 +24,7 @@
             </div>
         </div>
         <!-- <ImageSearcher class="h-full w-[28vw] mt-10" /> -->
-        <MapComp class="flex-1" :style="'empty'" :proj="'globe'" :isPicking="isPicking" />
+        <MapComp class="flex-1" :style="'image'" :proj="'globe'" :isPicking="isPicking" />
     </div>
 </template>
 

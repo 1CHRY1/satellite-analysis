@@ -2,7 +2,7 @@ import math
 import os
 
 class BaseConfig:
-    APP_PORT                                        =       5001
+    APP_PORT                                        =       5000
     APP_DEBUG                                       =       False
 
     # API Version
@@ -37,7 +37,7 @@ class BaseConfig:
     GRID_RESOLUTION                                 =       1
     MAX_RUNNING_TASKS                               =       200
 
-class DevSlkConfig(BaseConfig):
+class DevK8SConfig(BaseConfig):
     # MinIO Config
     MINIO_PORT                                      =       30900
     MINIO_IP                                        =       "223.2.43.228"
@@ -62,27 +62,24 @@ class DevSlkConfig(BaseConfig):
     TITILER_BASE_URL                                =       "http://223.2.43.228:31800"
     MOSAIC_CREATE_URL                               =       TITILER_BASE_URL + "/mosaic/create"
 
-    # Gdal_Config
-    GDAL_PROJ_LIB                                   =       r"F:\App\anaconda3\envs\bankModel\Library\share"
-
     TEMP_OUTPUT_DIR                                 =       r"/usr/resource/temp"
 
 # --------------- class ProdConfig(BaseConfig): ---------------
 
 # 配置映射字典 - 类似Spring Boot的profile机制
 config = {
-    'dev_slk': DevSlkConfig,
+    'k8s': DevK8SConfig,
 }
 
 def get_config(profile=None):
     """获取配置类，如果profile为None则使用开发配置"""
     if profile is None:
-        profile = 'dev_slk'
+        profile = 'k8s'
     
-    return config.get(profile, config['dev_slk'])
+    return config.get(profile, config['k8s'])
 
 # 获取当前环境配置 - 类似Spring Boot的 spring.profiles.active
-CURRENT_PROFILE = os.getenv('APP_PROFILE', 'dev_slk')  # 默认使用dev_slk
+CURRENT_PROFILE = os.getenv('APP_PROFILE', 'k8s')  # 默认使用k8s
 
 # 获取配置类
 def get_current_config():

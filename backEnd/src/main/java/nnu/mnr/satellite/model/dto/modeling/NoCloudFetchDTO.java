@@ -22,5 +22,6 @@ public class NoCloudFetchDTO {
     private Integer resolution;
     private Integer cloud;
     private List<String> sceneIds;
+    private String dataSet;
 
 }

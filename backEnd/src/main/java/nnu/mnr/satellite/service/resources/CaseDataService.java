@@ -7,6 +7,7 @@ import nnu.mnr.satellite.model.po.resources.Case;
 import org.locationtech.jts.geom.Geometry;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -27,7 +28,7 @@ public class CaseDataService {
 
     public void addCaseFromParamAndCaseId(String caseId, JSONObject param) {
         Integer resolution = (Integer) param.get("resolution");
-        String caseName = param.get("address").toString() + resolution + "米无云一版图";
+        String caseName = param.get("address").toString() + resolution + "km格网无云一版图";
         List<String> sceneIds = (List<String>) param.get("sceneIds");
 
         Case caseObj = Case.builder()
@@ -36,8 +37,10 @@ public class CaseDataService {
                 .resolution(resolution.toString())
                 .boundary((Geometry) param.get("boundary"))
                 .sceneList(sceneIds)
+                .dataSet(param.get("dataSet").toString())
                 .status("RUNNING")
                 .result(null)
+                .createTime(LocalDateTime.now())
                 .build();
 
         caseRepo.insertCase(caseObj);

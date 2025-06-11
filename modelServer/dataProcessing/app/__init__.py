@@ -11,7 +11,7 @@ cron_scheduler = BackgroundScheduler()
 def create_app(profile=None):
     """
     创建Flask应用
-    :param profile: 配置环境 ('dev_slk', 'prod')
+    :param profile: 配置环境 ('k8s', 'prod')
     """
 
     # --------- Create Flask App -------------------------------

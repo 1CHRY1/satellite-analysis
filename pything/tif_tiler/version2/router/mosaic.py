@@ -13,6 +13,8 @@ from rio_tiler_mosaic.mosaic import mosaic_tiler
 from rio_tiler_mosaic.methods import defaults
 from rio_tiler.utils import render
 
+
+
 #### Helper functions ##################################################################
 
 MINIO_ENDPOINT = "223.2.43.228:30900"
@@ -186,7 +188,9 @@ async def mosaictile(
             return Response(content=TRANSPARENT_CONTENT, media_type="image/png", status_code=204)
         
         # Step 5: Normalize, render and response
-        img_uint8 = normalize(img, min, max)
+        min_val = [np.min(arr, axis=(0, 1)) for arr in img]  # 各个波段 min
+        max_val = [np.max(arr, axis=(0, 1)) for arr in img]  # 各个波段 max
+        img_uint8 = normalize(img, min_val, max_val)
         content = render(img_uint8, mask)
         return Response(content=content, media_type="image/png")
     except Exception as e:
