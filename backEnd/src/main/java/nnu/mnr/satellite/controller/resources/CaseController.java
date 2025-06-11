@@ -2,6 +2,7 @@ package nnu.mnr.satellite.controller.resources;
 
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.model.vo.resources.CaseInfoVO;
 import nnu.mnr.satellite.service.resources.CaseDataService;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +32,7 @@ public class CaseController {
     }
 
     @GetMapping("/page")
-    public ResponseEntity<IPage<CaseInfoVO>> getCasePage(@ModelAttribute PageDTO pageDTO) {
+    public ResponseEntity<CommonResultVO> getCasePage(@ModelAttribute PageDTO pageDTO) {
         return ResponseEntity.ok(caseDataService.getCasePage(pageDTO));
     }
 
