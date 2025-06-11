@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.mapper.resources.ICaseRepo;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerSceneDTO;
 import nnu.mnr.satellite.model.po.resources.Case;
+import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.model.vo.resources.CaseInfoVO;
 import org.locationtech.jts.geom.Geometry;
 import org.modelmapper.TypeToken;
@@ -79,7 +80,7 @@ public class CaseDataService {
         return caseRepo.selectById(caseId);
     }
 
-    public IPage<CaseInfoVO> getCasePage(PageDTO pageDTO) {
+    public CommonResultVO getCasePage(PageDTO pageDTO) {
         // 构造分页对象
         Page<Case> page = new Page<>(pageDTO.getPage(), pageDTO.getPageSize());
         QueryWrapper<Case> queryWrapper = new QueryWrapper<>();
@@ -90,8 +91,11 @@ public class CaseDataService {
                 pageDTO.getSortField(),
                 pageDTO.getAsc()
         );
-
-        return mapPage(casePage);
+        return CommonResultVO.builder()
+                .status(1)
+                .message("分页查询成功")
+                .data(mapPage(casePage))
+                .build();
     }
     private IPage<Case> getCasesWithCondition(Page<Case> page, String searchText, String sortField, Boolean asc) {
         LambdaQueryWrapper<Case> lambdaQueryWrapper = new LambdaQueryWrapper<>();
