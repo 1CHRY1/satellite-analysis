@@ -43,4 +43,6 @@ public class Case {
     private JSONObject result;
     @TableField("create_time")
     private LocalDateTime createTime;
+    @TableField("region_id")
+    private int regionId;
 }

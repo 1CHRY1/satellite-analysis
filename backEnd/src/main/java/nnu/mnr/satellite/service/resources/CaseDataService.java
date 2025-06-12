@@ -2,23 +2,25 @@ package nnu.mnr.satellite.service.resources;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.mapper.resources.ICaseRepo;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerSceneDTO;
 import nnu.mnr.satellite.model.po.resources.Case;
+import nnu.mnr.satellite.model.po.resources.Region;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.model.vo.resources.CaseInfoVO;
 import org.locationtech.jts.geom.Geometry;
 import org.modelmapper.TypeToken;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 //分页
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import nnu.mnr.satellite.opengmp.model.dto.PageDTO;
 import org.modelmapper.ModelMapper;
+import nnu.mnr.satellite.model.dto.resources.CasePageDTO;
 
 import java.lang.reflect.Type;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -33,11 +35,13 @@ public class CaseDataService {
 
     private final ICaseRepo caseRepo;
     private final ModelMapper caseModelMapper;
+    private RegionDataService regionDataService;
 
 
-    public CaseDataService(ICaseRepo caseRepo, ModelMapper caseModelMapper) {
+    public CaseDataService(ICaseRepo caseRepo, ModelMapper caseModelMapper, RegionDataService regionDataService) {
         this.caseRepo = caseRepo;
         this.caseModelMapper = caseModelMapper;
+        this.regionDataService = regionDataService;
     }
 
     public void addCaseFromParamAndCaseId(String caseId, JSONObject param) {
@@ -80,16 +84,16 @@ public class CaseDataService {
         return caseRepo.selectById(caseId);
     }
 
-    public CommonResultVO getCasePage(PageDTO pageDTO) {
+    public CommonResultVO getCasePage(CasePageDTO casePageDTO) {
         // 构造分页对象
-        Page<Case> page = new Page<>(pageDTO.getPage(), pageDTO.getPageSize());
-        QueryWrapper<Case> queryWrapper = new QueryWrapper<>();
+        Page<Case> page = new Page<>(casePageDTO.getPage(), casePageDTO.getPageSize());
         // 调用 Mapper 方法
         IPage<Case> casePage = getCasesWithCondition(
                 page,
-                pageDTO.getSearchText(),
-                pageDTO.getSortField(),
-                pageDTO.getAsc()
+                casePageDTO.getSearchText(),
+                casePageDTO.getSortField(),
+                casePageDTO.getAsc(),
+                casePageDTO.getRegionId()
         );
         return CommonResultVO.builder()
                 .status(1)
@@ -97,8 +101,28 @@ public class CaseDataService {
                 .data(mapPage(casePage))
                 .build();
     }
-    private IPage<Case> getCasesWithCondition(Page<Case> page, String searchText, String sortField, Boolean asc) {
+    private IPage<Case> getCasesWithCondition(Page<Case> page, String searchText, String sortField, Boolean asc, Integer regionId) {
+
         LambdaQueryWrapper<Case> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+
+        // 查询 region_table 表，获取 acroutes 列表
+        List<Integer> acroutes;
+        if (regionId != null) {
+            acroutes = getAcroutesByRegionId(regionId);
+        } else {
+            acroutes = null;
+        }
+
+        // 添加区域条件
+        if (acroutes != null && !acroutes.isEmpty()) {
+            lambdaQueryWrapper.and(wrapper -> wrapper
+                    .nested(innerWrapper -> innerWrapper
+                            .in(Case::getRegionId, acroutes)
+                            .or()
+                            .eq(Case::getRegionId, regionId)
+                    )
+            );
+        }
 
         // 添加搜索条件（使用Lambda表达式引用实体类属性）
         if (searchText != null && !searchText.isEmpty()) {
@@ -111,16 +135,36 @@ public class CaseDataService {
 
         // 添加排序条件
         if (sortField != null && !sortField.isEmpty()) {
-            if ("createTime".equals(sortField)) {
-                lambdaQueryWrapper.orderBy(true, asc, Case::getCreateTime);
-            } else {
-                // 其他字段可以通过反射或switch处理，这里简化处理
-                throw new IllegalArgumentException("Unsupported sort field: " + sortField);
+            // 使用 sortField 对应的数据库字段进行排序
+            switch (sortField) {
+                case "createTime":
+                    lambdaQueryWrapper.orderBy(true, asc, Case::getCreateTime);
+                    break;
+                case "regionId":
+                    lambdaQueryWrapper.orderBy(true, asc, Case::getRegionId);
+                    break;
+                case "resolution":
+                    lambdaQueryWrapper.orderBy(true, asc, Case::getResolution);
+                    break;
+                // 可以根据需要添加更多的字段
+                default:
+                    throw new IllegalArgumentException("Unsupported sort field: " + sortField);
             }
         }
 
         return caseRepo.selectPage(page, lambdaQueryWrapper);
     }
+
+    private List<Integer> getAcroutesByRegionId(Integer regionId) {
+        Region region = regionDataService.getRegionById(regionId);
+
+        if (region != null && region.getAcroutes() != null) {
+            return region.getAcroutes();
+        } else {
+            return List.of(); // 返回空列表，避免 null
+        }
+    }
+
     private IPage<CaseInfoVO> mapPage(IPage<Case> casePage) {
         // 映射记录列表
         Type destinationType = new TypeToken<List<CaseInfoVO>>() {}.getType();
