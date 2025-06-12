@@ -18,4 +18,5 @@ public class CaseInfoVO {
     private String status;
     private JSONObject result;
     private LocalDateTime createTime;
+    private int regionId;
 }
