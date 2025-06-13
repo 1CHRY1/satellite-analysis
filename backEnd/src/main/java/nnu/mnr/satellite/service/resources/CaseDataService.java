@@ -141,7 +141,7 @@ public class CaseDataService {
         // 添加搜索条件（使用Lambda表达式引用实体类属性）
         if (searchText != null && !searchText.isEmpty()) {
             lambdaQueryWrapper.and(wrapper -> wrapper
-                    .like(Case::getAddress, searchText)  // 自动映射为数据库字段 case_name
+                    .like(Case::getAddress, searchText)  // 自动映射为数据库字段 address
                     .or()
                     .like(Case::getResolution, searchText) // 自动映射为 resolution
             );
