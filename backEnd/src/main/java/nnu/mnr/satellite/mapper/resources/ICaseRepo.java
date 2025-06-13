@@ -25,10 +25,10 @@ import java.time.LocalDateTime;
 public interface ICaseRepo extends BaseMapper<Case> {
 
     @Insert("INSERT INTO case_table (case_id, case_name, resolution, boundary, scene_list, data_set, status, result, create_time) " +
-            "VALUES (#{caseId}, #{caseName}, #{resolution}, ST_GeomFromText(#{boundary}, 4326, 'axis-order=long-lat'), #{sceneList}, #{dataSet}, #{status}, #{result}, #{createTime})")
+            "VALUES (#{caseId}, #{address}, #{resolution}, ST_GeomFromText(#{boundary}, 4326, 'axis-order=long-lat'), #{sceneList}, #{dataSet}, #{status}, #{result}, #{createTime})")
     int insertCase(Case caseObj);
 
-    @Update("UPDATE case_table SET case_name = #{caseName}, resolution = #{resolution}, " +
+    @Update("UPDATE case_table SET case_name = #{address}, resolution = #{resolution}, " +
             "boundary = ST_GeomFromText(#{boundary}, 4326, 'axis-order=long-lat'), " +
             "scene_list = #{sceneList}, data_set = #{dataSet}, status = #{status}, result = #{result}, create_time = #{createTime} " +
             "WHERE case_id = #{caseId}")
