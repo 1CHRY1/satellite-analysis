@@ -8,45 +8,79 @@
         </div>
         <h2 class="section-title">历史无云一版图</h2>
     </div>
-    <div class="flex border-b border-[#2c3e50] mb-4 justify-center">
-        <a-segmented v-model:value="activeTab" :options="historyClassTabs" />
-    </div>
-    <div class="gap-5 p-2 flex border-b border-[#2c3e50] mb-4">
-        <button v-for="tab in historyClassTabs" :key="tab.value" @click="activeTab = tab.value" :class="[
-            'flex-1 text-center px-4 py-2 text-sm font-medium ',
-            activeTab === tab.value
-                ? 'border-b-2 border-[#38bdf8] text-[#38bdf8]'
-                : 'text-gray-400 hover:text-[#38bdf8]'
-        ]">
-            {{ tab.label }}
-        </button>
-    </div>
+    
     <div class="section-content">
         <div class="config-container">
-            <div class="config-item w-full">
+            <segmented :options="historyClassTabs" :active-tab="activeTab" @change="handleSelectTab" />
+        </div>
+        <div class="config-container" v-if="activeTab === 'running'">
+            <div class="config-item">
+                <div class="flex items-center justify-between">
+                    <div class="config-label relative">
+                        <loadingIcon /> 共 2 个任务运行中
+                    </div>
+                    <a-button class="a-button">刷新全部</a-button>
+                </div>
+            </div>
+        </div>
+        <div class="config-container" v-else>
+            <div class="config-item">
                 <div class="config-label relative">
-                    <MapIcon :size="16" class="config-icon" />
-                    <span>研究区选择</span>
+                    <ListFilter :size="22" class="config-icon" />
+                    <span>筛选条件</span>
+                    <div class="absolute right-0 cursor-pointer">
+                        <ChevronUp v-if="isExpand" @click="isExpand = true" :size="22" />
+                        <ChevronDown v-else :size="22" @click="isExpand = false" />
+                    </div>
                 </div>
-                <!-- <div class="config-control justify-center">
-                    <RegionSelects v-model="region" :placeholder="['选择省份', '选择城市', '选择区县']"
-                        class="flex gap-2"
-                        select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
-                </div> -->
-                
-                <div v-if="activeTab === 'region'" class="config-control justify-center">
-                    <RegionSelects v-model="region" :placeholder="['选择省份', '选择城市', '选择区县']"
-                        class="flex gap-2"
-                        select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
+                <div v-show="isExpand" class="config-control flex-col !items-start">
+                    <div class="flex w-full flex-col gap-2">
+                        <div class="result-info-container">
+                            <div class="result-info-item">
+                                <div class="result-info-content">
+                                    <div class="result-info-label">生成时间</div>
+                                    <div class="result-info-value">
+                                        <select v-model="selectedTime"
+                                            class="custom-select" style="width: 8rem;">
+                                            <option v-for="option in timeOptionList" :key="option" :value="option"
+                                                class="custom-option">
+                                                {{ option.label }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="result-info-item">
+                                <div class="result-info-content">
+                                    <div class="result-info-label">格网分辨率</div>
+                                    <div class="result-info-value">
+                                        <select v-model="selectedResolution"
+                                            class="custom-select" style="width: 6rem;">
+                                            <option v-for="option in resolutionList" :key="option" :value="option"
+                                                class="custom-option">
+                                                {{ `${option === EMPTY_RESOLUTION ? '请选择' : option + 'km'}` }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="result-info-item">
+                                <div class="result-info-content">
+                                    <div class="result-info-label">行政区划</div>
+                                    <div class="result-info-value">
+                                        <RegionSelects v-model="selectedRegion" :placeholder="['选择省份', '选择城市', '选择区县']"
+                                            class="flex gap-2"
+                                            select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div v-else-if="activeTab === 'poi'" class="config-control justify-center w-full">
-                    <el-select v-model="selectedPOI" filterable remote reserve-keyword value-key="id"
-                        placeholder="请输入 POI 关键词" :remote-method="fetchPOIOptions"
-                        class="!w-[90%] bg-[#0d1526] text-white" popper-class="bg-[#0d1526] text-white">
-                        <el-option v-for="item in poiOptions" :key="item.id"
-                            :label="item.name + '(' + item.pname + item.cityname + item.adname + item.address + ')'"
-                            :value="item" />
-                    </el-select>
+                <div class="config-control !items-start justify-end relative">
+                    <div class="flex w-1/4 flex-col gap-2">
+                        <a-button type="primary" class="a-button">应用</a-button>  
+                    </div>
                 </div>
             </div>
         </div>
@@ -54,7 +88,7 @@
             <div v-for="item in caseList" class="config-item" :key="item.caseId">
                 <div class="config-label relative">
                     <Image :size="16" class="config-icon" />
-                    <span>{{ item.caseName }}</span>
+                    <span>{{ `${item.address}无云一版图` }}</span>
                     <div class="absolute right-0 cursor-pointer">
                         <a-tooltip>
                             <template #title>预览</template>
@@ -114,12 +148,17 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowLeft, CalendarIcon, DatabaseIcon, Eye, EyeOff, Grid3x3, Image, TimerIcon } from 'lucide-vue-next';
+import { ArrowBigDown, ArrowLeft, CalendarIcon, ChevronDown, ChevronDownCircle, ChevronDownIcon, ChevronDownSquare, ChevronUp, DatabaseIcon, ExpandIcon, Eye, EyeOff, Grid3x3, Image, ListFilter, TimerIcon } from 'lucide-vue-next';
 import { useViewHistoryModule } from './viewHistory';
 import { onMounted } from 'vue';
 import { formatTimeToText } from '@/util/common';
+import segmented from '@/components/common/segmented.vue';
+import loadingIcon from '@/components/common/loadingIcon.vue'
+import { RegionSelects } from 'v-region'
 
-const { caseList, currentPage, sectionHeader, pageSize, total, historyClassTabs, activeTab, getCaseList } = useViewHistoryModule()
+const { caseList, currentPage, sectionHeader, pageSize, total, historyClassTabs, activeTab, handleSelectTab,
+     selectedRegion, selectedTime, timeOptionList, selectedResolution, resolutionList, EMPTY_RESOLUTION, getCaseList,
+    isExpand } = useViewHistoryModule()
 
 onMounted(() => {
     getCaseList(currentPage.value)

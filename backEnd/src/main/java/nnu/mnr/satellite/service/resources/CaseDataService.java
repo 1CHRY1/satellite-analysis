@@ -51,7 +51,7 @@ public class CaseDataService {
 
         Case caseObj = Case.builder()
                 .caseId(caseId)
-                .caseName(caseName)
+                .address(param.get("address").toString())
                 .resolution(resolution.toString())
                 .boundary((Geometry) param.get("boundary"))
                 .sceneList(sceneIds)
@@ -127,7 +127,7 @@ public class CaseDataService {
         // 添加搜索条件（使用Lambda表达式引用实体类属性）
         if (searchText != null && !searchText.isEmpty()) {
             lambdaQueryWrapper.and(wrapper -> wrapper
-                    .like(Case::getCaseName, searchText)  // 自动映射为数据库字段 case_name
+//                    .like(Case::getCaseName, searchText)  // 自动映射为数据库字段 case_name
                     .or()
                     .like(Case::getResolution, searchText) // 自动映射为 resolution
             );

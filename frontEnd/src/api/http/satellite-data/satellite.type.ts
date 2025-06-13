@@ -197,7 +197,7 @@ export namespace Case {
 
     export interface Case {
         caseId: string,
-        caseName: string,
+        address: string,
         resolution: string,
         sceneList: Array<string>,
         dataSet: string,

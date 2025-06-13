@@ -1,0 +1,175 @@
+/**
+ * segmented
+ */
+.custom-segmented {
+    display: flex;
+    background-color: rgba(15, 23, 42, 0.6);
+    border-radius: 0.5rem;
+    border: 1px solid rgba(56, 189, 248, 0.15);
+    overflow: hidden;
+    position: relative;
+    backdrop-filter: blur(4px);
+    transition: all 0.3s ease;
+}
+
+.custom-segmented:hover {
+    border-color: rgba(56, 189, 248, 0.3);
+    box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.1);
+}
+
+.segment-item {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-right: 1px solid rgba(56, 189, 248, 0.1);
+    background: transparent;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.segment-item:last-child {
+    border-right: none;
+}
+
+.segment-item:hover:not(.active) {
+    background-color: rgba(56, 189, 248, 0.05);
+    transform: translateY(-1px);
+}
+
+.segment-item.active {
+    background: linear-gradient(135deg, 
+        rgba(56, 189, 248, 0.15) 0%, 
+        rgba(56, 189, 248, 0.25) 100%);
+    border-color: rgba(56, 189, 248, 0.4);
+    box-shadow: 
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        0 2px 8px rgba(56, 189, 248, 0.15);
+    transform: translateY(-1px);
+}
+
+.segment-item.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, 
+        rgba(56, 189, 248, 0.8), 
+        rgba(147, 197, 253, 0.8));
+    border-radius: 2px 2px 0 0;
+}
+
+.segment-text {
+    color: #e0f2fe !important;
+    font-weight: 600;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
+}
+
+.segment-item:hover .segment-text {
+    color: #f0f9ff !important;
+    text-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
+}
+
+.segment-item.active .segment-text {
+    color: #ffffff !important;
+    font-weight: 700;
+    text-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+}
+
+/* 暗色主题适配 */
+@media (prefers-color-scheme: dark) {
+    .segment-text {
+        color: #e0f2fe !important;
+}
+
+.segment-item:hover .segment-text {
+    color: #f0f9ff !important;
+}
+
+.segment-item.active .segment-text {
+    color: #ffffff !important;
+}
+}
+
+/* 禁用状态 */
+.custom-segmented[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.custom-segmented[disabled] .segment-item {
+    cursor: not-allowed;
+}
+
+.custom-segmented[disabled] .segment-item:hover {
+    background: transparent;
+    transform: none;
+}
+
+/* 响应式设计 */
+@media (max-width: 640px) {
+    .segment-item {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+    }
+}
+
+/* 动画效果 */
+@keyframes segmentGlow {
+    0% {
+        box-shadow: 0 0 5px rgba(56, 189, 248, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+    }
+    100% {
+        box-shadow: 0 0 5px rgba(56, 189, 248, 0.3);
+    }
+}
+
+.segment-item.active {
+    animation: segmentGlow 2s ease-in-out infinite;
+}
+
+/**
+ * loadingIcon
+ */
+.simple-lines {
+    width: 20px;
+    height: 20px;
+    position: relative;
+    margin-left: 0.5rem;
+}
+.line {
+    position: absolute;
+    width: 2px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 1px;
+    transform-origin: 1px 10px;
+    animation: lines-fade 1.2s linear infinite;
+    animation-delay: calc(var(--i) * -0.15s);
+}
+
+.line:nth-child(1) { transform: rotate(0deg) translateY(-4px); }
+.line:nth-child(2) { transform: rotate(45deg) translateY(-4px); }
+.line:nth-child(3) { transform: rotate(90deg) translateY(-4px); }
+.line:nth-child(4) { transform: rotate(135deg) translateY(-4px); }
+.line:nth-child(5) { transform: rotate(180deg) translateY(-4px); }
+.line:nth-child(6) { transform: rotate(225deg) translateY(-4px); }
+.line:nth-child(7) { transform: rotate(270deg) translateY(-4px); }
+.line:nth-child(8) { transform: rotate(315deg) translateY(-4px); }
+
+@keyframes lines-fade {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}

@@ -48,6 +48,25 @@
     background-color: rgba(56, 189, 248, 0.1);
 }
 
+.a-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s ease;
+    background-color: #1c668a;
+}
+
+.a-button:hover {
+    color: white;
+    background-color: #1c668a;
+}
+
 .panel-section {
     background-color: rgba(15, 23, 42, 0.6);
     border-radius: 0.5rem;
@@ -603,6 +622,31 @@
 .empty-icon {
     margin-bottom: 1rem;
     color: rgba(56, 189, 248, 0.5);
+}
+
+.custom-select {
+    appearance: none;
+    border-radius: 0.5rem; /* rounded-lg */
+    border: 1px solid #2c3e50; /* border border-[#2c3e50] */
+    background-color: #0d1526; /* bg-[#0d1526] */
+    padding: 0.5rem 1rem; /* px-4 py-2 */
+    padding-right: 2rem; /* pr-8 */
+    color: white; /* text-white */
+    transition: all 0.2s; /* transition-all duration-200 */
+}
+  
+.custom-select:hover {
+    border-color: #206d93; /* hover:border-[#206d93] */
+}
+  
+.custom-select:focus {
+    border-color: #3b82f6; /* focus:border-[#3b82f6] */
+    outline: none; /* focus:outline-none */
+}
+  
+.custom-option {
+    background-color: #0d1526; /* bg-[#0d1526] */
+    color: white; /* text-white */
 }
 
 .selection-summary {
