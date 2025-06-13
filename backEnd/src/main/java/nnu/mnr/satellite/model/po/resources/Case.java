@@ -31,7 +31,7 @@ import java.util.List;
 public class Case {
     @TableId
     private String caseId;
-    private String caseName;
+    private String address;
     private String resolution;
     @TableField(typeHandler = GeometryTypeHandler.class)
     private Geometry boundary;

@@ -46,12 +46,12 @@ public class CaseDataService {
 
     public void addCaseFromParamAndCaseId(String caseId, JSONObject param) {
         Integer resolution = (Integer) param.get("resolution");
-        String caseName = param.get("address").toString() + resolution + "km格网无云一版图";
+        String address = param.get("address").toString();
         List<String> sceneIds = (List<String>) param.get("sceneIds");
 
         Case caseObj = Case.builder()
                 .caseId(caseId)
-                .caseName(caseName)
+                .address(address)
                 .resolution(resolution.toString())
                 .boundary((Geometry) param.get("boundary"))
                 .sceneList(sceneIds)
@@ -93,7 +93,11 @@ public class CaseDataService {
                 casePageDTO.getSearchText(),
                 casePageDTO.getSortField(),
                 casePageDTO.getAsc(),
-                casePageDTO.getRegionId()
+                casePageDTO.getRegionId(),
+                casePageDTO.getStartTime(),
+                casePageDTO.getEndTime(),
+                casePageDTO.getResolution()
+
         );
         return CommonResultVO.builder()
                 .status(1)
@@ -101,7 +105,7 @@ public class CaseDataService {
                 .data(mapPage(casePage))
                 .build();
     }
-    private IPage<Case> getCasesWithCondition(Page<Case> page, String searchText, String sortField, Boolean asc, Integer regionId) {
+    private IPage<Case> getCasesWithCondition(Page<Case> page, String searchText, String sortField, Boolean asc, Integer regionId, LocalDateTime startTime, LocalDateTime endTime, Integer resolution) {
 
         LambdaQueryWrapper<Case> lambdaQueryWrapper = new LambdaQueryWrapper<>();
 
@@ -124,10 +128,20 @@ public class CaseDataService {
             );
         }
 
+        // 添加时间条件
+        if (startTime != null && endTime != null) {
+            lambdaQueryWrapper.between(Case::getCreateTime, startTime, endTime);
+        }
+
+        // 添加分辨率条件
+        if (resolution != null) {
+            lambdaQueryWrapper.eq(Case::getResolution, resolution);
+        }
+
         // 添加搜索条件（使用Lambda表达式引用实体类属性）
         if (searchText != null && !searchText.isEmpty()) {
             lambdaQueryWrapper.and(wrapper -> wrapper
-                    .like(Case::getCaseName, searchText)  // 自动映射为数据库字段 case_name
+                    .like(Case::getAddress, searchText)  // 自动映射为数据库字段 case_name
                     .or()
                     .like(Case::getResolution, searchText) // 自动映射为 resolution
             );

@@ -11,12 +11,12 @@ import java.util.List;
 @Data
 public class CaseInfoVO {
     private String caseId;
-    private String caseName;
+    private String address;
     private String resolution;
     private List<String> sceneList;
     private String dataSet;
     private String status;
     private JSONObject result;
     private LocalDateTime createTime;
-    private int regionId;
+    private Integer regionId;
 }

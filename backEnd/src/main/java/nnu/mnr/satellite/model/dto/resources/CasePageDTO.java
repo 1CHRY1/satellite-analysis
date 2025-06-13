@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import nnu.mnr.satellite.opengmp.model.dto.PageDTO;
 
+import java.time.LocalDateTime;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -16,4 +18,7 @@ public class CasePageDTO extends PageDTO {
     private String searchText = ""; //查询内容
     private String sortField = "createTime"; //排序字段
     private Integer regionId = null;
+    private LocalDateTime startTime = null;
+    private LocalDateTime endTime = null;
+    private Integer resolution = null;
 }
