@@ -1,5 +1,5 @@
 import http from '../clientHttp'
-import type { Sensor, Product, SensorImage, ImageTile, Project } from './satellite.type'
+import type { Sensor, Product, SensorImage, ImageTile, Project, Case } from './satellite.type'
 import { blobDownload } from '../../util'
 
 export async function getSensorList(): Promise<Sensor.SensorListResponse> {
@@ -186,4 +186,17 @@ export async function getRasterLine(param: any): Promise<any> {
 
 export async function getPoiInfo(query: string): Promise<any> {
     return http.get<any>(`data/location/name/${query}`)
+}
+
+/**
+ * Case历史记录
+ */
+export async function getCasePage(param: Case.CasePageRequest): Promise<Case.CasePageResponse> {
+    const requestParams = new URLSearchParams()
+    Object.entries(param).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+            requestParams.append(key, value.toString())
+        }
+    })
+    return http.get<Case.CasePageResponse>(`data/case/page?${requestParams.toString()}`)
 }

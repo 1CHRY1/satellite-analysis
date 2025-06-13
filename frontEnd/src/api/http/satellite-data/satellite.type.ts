@@ -1,5 +1,34 @@
 import type { polygonGeometry } from '@/util/share.type'
 
+/**
+ * Common API
+ */
+export namespace Common {
+    export interface CommonResult<T> {
+        status: number
+        message: string
+        data: T
+    }
+
+    export interface PageRequest {
+        page: number
+        pageSize: number,
+        asc?: boolean,
+        searchText?: string,
+        sortField?: string
+    }
+
+    export interface Page<T> {
+        records: Array<T>,
+        total: number,
+        size: number,
+        current: number,
+        pages: number
+    }
+
+    export interface PageResponse<T> extends CommonResult<Page<T>> { }
+}
+
 ///// Sensor API /////////////////////////
 export namespace Sensor {
     export interface SensorResponse {
@@ -156,5 +185,32 @@ export namespace Project {
         userId: string
         projectId: string
         object: string
+    }
+}
+
+/**
+ * Case API
+ */
+export namespace Case {
+    export interface CasePageRequest extends Common.PageRequest {
+    }
+
+    export interface Case {
+        caseId: string,
+        caseName: string,
+        resolution: string,
+        sceneList: Array<string>,
+        dataSet: string,
+        status: string,
+        result: {
+            bucket: string,
+            object_path: string
+        },
+        createTime: string
+    }
+
+    export interface CaseResponse extends Common.CommonResult<Case> { }
+
+    export interface CasePageResponse extends Common.PageResponse<Case> {
     }
 }

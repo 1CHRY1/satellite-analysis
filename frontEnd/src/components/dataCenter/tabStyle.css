@@ -847,6 +847,10 @@
     gap: 1rem;
     padding: 0.5rem;
 }
+/* 单数最后一个子元素占满 */
+.result-info-container > :nth-last-child(1):nth-child(odd) {
+    grid-column: 1 / -1;
+}
 
 .result-info-item {
     display: flex;
