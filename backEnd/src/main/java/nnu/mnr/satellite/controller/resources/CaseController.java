@@ -1,19 +1,11 @@
 package nnu.mnr.satellite.controller.resources;
 
-import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.model.dto.resources.CasePageDTO;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
-import nnu.mnr.satellite.model.vo.resources.CaseInfoVO;
 import nnu.mnr.satellite.service.resources.CaseDataService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import nnu.mnr.satellite.opengmp.model.dto.PageDTO;
-import nnu.mnr.satellite.model.po.resources.Case;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @name: CaseController
@@ -35,6 +27,11 @@ public class CaseController {
     @GetMapping("/page")
     public ResponseEntity<CommonResultVO> getCasePage(@ModelAttribute CasePageDTO casePageDTO) {
         return ResponseEntity.ok(caseDataService.getCasePage(casePageDTO));
+    }
+
+    @GetMapping("/{caseId}/boundary")
+    public ResponseEntity<CommonResultVO> getCaseBoundaryByCaseId(@PathVariable("caseId") String caseId) {
+        return ResponseEntity.ok(caseDataService.getCaseBoundaryByCaseId(caseId));
     }
 
 }

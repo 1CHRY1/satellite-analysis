@@ -29,8 +29,8 @@
                     <ListFilter :size="22" class="config-icon" />
                     <span>筛选条件</span>
                     <div class="absolute right-0 cursor-pointer">
-                        <ChevronUp v-if="isExpand" @click="isExpand = true" :size="22" />
-                        <ChevronDown v-else :size="22" @click="isExpand = false" />
+                        <ChevronDown v-if="!isExpand" :size="22" @click="isExpand = true" />
+                        <ChevronUp v-else @click="isExpand = false" :size="22" />
                     </div>
                 </div>
                 <div v-show="isExpand" class="config-control flex-col !items-start">

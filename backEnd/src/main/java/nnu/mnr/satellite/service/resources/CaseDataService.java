@@ -3,14 +3,13 @@ package nnu.mnr.satellite.service.resources;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import nnu.mnr.satellite.mapper.resources.ICaseRepo;
-import nnu.mnr.satellite.model.dto.modeling.ModelServerSceneDTO;
 import nnu.mnr.satellite.model.po.resources.Case;
 import nnu.mnr.satellite.model.po.resources.Region;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.model.vo.resources.CaseInfoVO;
+import nnu.mnr.satellite.utils.geom.GeometryUtil;
 import org.locationtech.jts.geom.Geometry;
 import org.modelmapper.TypeToken;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 //分页
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -18,9 +17,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.modelmapper.ModelMapper;
 import nnu.mnr.satellite.model.dto.resources.CasePageDTO;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -35,7 +34,7 @@ public class CaseDataService {
 
     private final ICaseRepo caseRepo;
     private final ModelMapper caseModelMapper;
-    private RegionDataService regionDataService;
+    private final RegionDataService regionDataService;
 
 
     public CaseDataService(ICaseRepo caseRepo, ModelMapper caseModelMapper, RegionDataService regionDataService) {
@@ -46,12 +45,12 @@ public class CaseDataService {
 
     public void addCaseFromParamAndCaseId(String caseId, JSONObject param) {
         Integer resolution = (Integer) param.get("resolution");
-        String caseName = param.get("address").toString() + resolution + "km格网无云一版图";
+        String address = param.get("address").toString();
         List<String> sceneIds = (List<String>) param.get("sceneIds");
 
         Case caseObj = Case.builder()
                 .caseId(caseId)
-                .address(param.get("address").toString())
+                .address(address)
                 .resolution(resolution.toString())
                 .boundary((Geometry) param.get("boundary"))
                 .sceneList(sceneIds)
@@ -93,7 +92,11 @@ public class CaseDataService {
                 casePageDTO.getSearchText(),
                 casePageDTO.getSortField(),
                 casePageDTO.getAsc(),
-                casePageDTO.getRegionId()
+                casePageDTO.getRegionId(),
+                casePageDTO.getStartTime(),
+                casePageDTO.getEndTime(),
+                casePageDTO.getResolution()
+
         );
         return CommonResultVO.builder()
                 .status(1)
@@ -101,7 +104,7 @@ public class CaseDataService {
                 .data(mapPage(casePage))
                 .build();
     }
-    private IPage<Case> getCasesWithCondition(Page<Case> page, String searchText, String sortField, Boolean asc, Integer regionId) {
+    private IPage<Case> getCasesWithCondition(Page<Case> page, String searchText, String sortField, Boolean asc, Integer regionId, LocalDateTime startTime, LocalDateTime endTime, Integer resolution) {
 
         LambdaQueryWrapper<Case> lambdaQueryWrapper = new LambdaQueryWrapper<>();
 
@@ -124,10 +127,20 @@ public class CaseDataService {
             );
         }
 
+        // 添加时间条件
+        if (startTime != null && endTime != null) {
+            lambdaQueryWrapper.between(Case::getCreateTime, startTime, endTime);
+        }
+
+        // 添加分辨率条件
+        if (resolution != null) {
+            lambdaQueryWrapper.eq(Case::getResolution, resolution);
+        }
+
         // 添加搜索条件（使用Lambda表达式引用实体类属性）
         if (searchText != null && !searchText.isEmpty()) {
             lambdaQueryWrapper.and(wrapper -> wrapper
-//                    .like(Case::getCaseName, searchText)  // 自动映射为数据库字段 case_name
+                    .like(Case::getAddress, searchText)  // 自动映射为数据库字段 address
                     .or()
                     .like(Case::getResolution, searchText) // 自动映射为 resolution
             );
@@ -178,6 +191,47 @@ public class CaseDataService {
         resultPage.setCurrent(casePage.getCurrent());
 
         return resultPage;
+    }
+
+    public CommonResultVO getCaseBoundaryByCaseId(String caseId){
+
+        LambdaQueryWrapper<Case> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+
+        lambdaQueryWrapper.eq(Case::getCaseId, caseId);
+
+        Case caseEntity = caseRepo.selectOne(lambdaQueryWrapper);
+
+        // 检查是否找到 Case
+        if (caseEntity == null) {
+            return CommonResultVO.builder()
+                    .status(0)
+                    .message("未找到对应的 Case")
+                    .data(null)
+                    .build();
+        }
+
+        // 提取 boundary 字段
+        Geometry boundary = caseEntity.getBoundary();
+        JSONObject JSONBoundary;
+
+        try {
+            JSONBoundary = GeometryUtil.geometry2Geojson(boundary);
+        } catch (IOException e) {
+            // 处理异常，例如记录日志或返回错误信息
+            System.err.println("转换 Geometry 到 GeoJSON 时发生错误: " + e.getMessage());
+            return CommonResultVO.builder()
+                    .status(0)
+                    .message("转换 Geometry 到 GeoJSON 时发生错误")
+                    .data(null)
+                    .build();
+        }
+
+        // 构建返回结果
+        return CommonResultVO.builder()
+                .status(1)
+                .message("boundary查询成功")
+                .data(JSONBoundary)
+                .build();
     }
 
 }

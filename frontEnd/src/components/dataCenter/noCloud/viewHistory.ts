@@ -52,13 +52,12 @@ export function useViewHistoryModule() {
             label: '请选择',
             value: null
         },
-        {
-            label: '7天内',
-            value: {
-                startTime: '',
-                endTime: ''
-            }
-        }
+        { label: '最近1小时', value: { startTime:, endTime: } },
+        { label: '今天', value: 'today' },
+        { label: '最近7天', value: '7d' },
+        { label: '最近30天', value: '30d' },
+        { label: '最近3个月', value: '3m' },
+        { label: '更早之前', value: 'custom' }
     ])
     const EMPTY_RESOLUTION = 0 // 预设请选择分辨率选项
     const selectedResolution = ref<number>(EMPTY_RESOLUTION)
