@@ -96,7 +96,6 @@ public class CaseDataService {
                 .build();
     }
     private IPage<Case> getCasesWithCondition(Page<Case> page, CasePageDTO casePageDTO) {
-        Integer regionId = casePageDTO.getRegionId();
         Integer resolution = casePageDTO.getResolution();
         LocalDateTime startTime = casePageDTO.getStartTime();
         LocalDateTime endTime = casePageDTO.getEndTime();
