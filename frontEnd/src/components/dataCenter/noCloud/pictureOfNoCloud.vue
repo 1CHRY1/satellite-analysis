@@ -320,11 +320,12 @@ import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'
 import { type interactiveExplore } from '@/components/dataCenter/type'
 import noCloudHistory from '@/components/dataCenter/noCloud/noCloudHistory.vue'
 import { formatTime } from '@/util/common'
-import { getSceneGrids, getNoCloud, getCaseStatus, getCaseResult } from '@/api/http/satellite-data'
+import { getSceneGrids, getNoCloud, getCaseStatus, getCaseResult, pollStatus } from '@/api/http/satellite-data'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import * as MapOperation from '@/util/map/operation'
 import { ElMessage } from 'element-plus'
 import ezStore from '@/store/ezStore'
+import { useTaskStore } from '@/store'
 import {
     getGridImage,
     getGridPreviewUrl,
@@ -587,10 +588,12 @@ const progress = ref([0, 0, 0, 0])
 // 四个进度条的显示状态
 const showProgress = ref([false, false, false, false])
 // const showCalResult = ref(false)
+
 const calTask: Ref<any> = ref({
     calState: 'start',
     taskId: '',
 })
+const taskStore = useTaskStore()
 
 // 填补勾选框
 const additionalData = ref([true, false, false])
@@ -623,11 +626,8 @@ const progressControl = (index: number) => {
 
 // 开始计算
 const calNoClouds = async () => {
-    setCurrentPanel('history')
     noCloudLoading.value = true
     const stopLoading = message.loading("正在重构无云一版图...", 0)
-
-    // 发送请求，计算无云一版图
 
     // 根据勾选情况合并影像
     // 1、国产亚米
@@ -657,46 +657,25 @@ const calNoClouds = async () => {
         dataSet: dataSet,
     }
 
+    // 发送请求
     console.log(getNoCloudParam, '发起请求')
-
     let startCalcRes = await getNoCloud(getNoCloudParam)
     if (startCalcRes.message !== 'success') {
         ElMessage.error('计算失败，请重试')
         console.error(startCalcRes)
         return
     }
-
+    // 更新任务，跳转至历史panel
     calTask.value.taskId = startCalcRes.data
+    taskStore.setTaskStatus(calTask.value.taskId, 'PENDING')
+    setCurrentPanel('history')
 
     // 1、启动进度条
     controlProgress(3)
 
-    // // 2、轮询运行状态，直到运行完成
-    const pollStatus = async (taskId: string) => {
-        const interval = 1000 // 每秒轮询一次
-        return new Promise<void>((resolve, reject) => {
-            const timer = setInterval(async () => {
-                try {
-                    const res = await getCaseStatus(taskId)!
-                    console.log('状态:', res.data)
-
-                    if (res.data === 'COMPLETE') {
-                        clearInterval(timer)
-                        resolve()
-                    }
-                    if (res.data === 'FAILED' || res.data === 'ERROR') {
-                        console.log(res, res.data)
-                        clearInterval(timer)
-                        reject(new Error('任务失败'))
-                    }
-                } catch (err) {
-                    clearInterval(timer)
-                    console.log('错误', err)
-                    reject(err)
-                }
-            }, interval)
-        })
-    }
+    // 这里不再轮询
+    /** 
+    // 轮询运行状态，直到运行完成
     try {
         await pollStatus(calTask.value.taskId)
         // ✅ 成功后设置状态
@@ -741,7 +720,7 @@ const calNoClouds = async () => {
         noCloudLoading.value = false
         stopLoading()
         ElMessage.error('无云一版图计算失败，请重试')
-    }
+    } */
 }
 
 const showingImageStrech = reactive({

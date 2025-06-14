@@ -110,7 +110,7 @@ export namespace SensorImage {
     export interface SensorImageBandListResponse extends Array<SensorImageBandResponse> { }
 }
 
-type ModelStatus = 'COMPLETE' | 'RUNNING' | 'PENDING' | 'NONE' | 'ERROR'
+export type ModelStatus = 'COMPLETE' | 'RUNNING' | 'PENDING' | 'NONE' | 'ERROR'
 
 /**
  * ImageTile API

@@ -75,6 +75,7 @@
                 </a-badge-ribbon>
                 
             </div>
+            <a-empty v-if="total === 0" />
         </div>
 
         <!-- Content-3 Complete cases -->
@@ -194,6 +195,7 @@
                     </div>
                 </div>
             </div>
+            <a-empty v-if="total === 0" />
         </div>
 
         <!-- Content-4 Pagination -->
@@ -215,10 +217,11 @@ import { formatTimeToText } from '@/util/common';
 import segmented from '@/components/common/segmented.vue';
 import loadingIcon from '@/components/common/loadingIcon.vue'
 import { RegionSelects } from 'v-region'
-
+import { useTaskPollModule } from './taskPoll'
 const { caseList, currentPage, sectionHeader, pageSize, total, historyClassTabs, activeTab, handleSelectTab,
      selectedRegion, selectedTime, timeOptionList, selectedResolution, resolutionList, EMPTY_RESOLUTION, getCaseList,
     isExpand, reset } = useViewHistoryModule()
+const {  } = useTaskPollModule()
 
 onMounted(() => {
     getCaseList()
