@@ -52,6 +52,7 @@ public class CaseDataService {
         Case caseObj = Case.builder()
                 .caseId(caseId)
                 .address(address)
+                .regionId((Integer) param.get("regionId"))
                 .resolution(resolution.toString())
                 .boundary((Geometry) param.get("boundary"))
                 .sceneList(sceneIds)
