@@ -173,37 +173,37 @@ def rgb_box_tile(
 
 
 
-# @Deprecated
-# @router.get("/rgb/preview")
-# def rgb_preview(
-#     url_r: str = Query(...),
-#     url_g: str = Query(...),
-#     url_b: str = Query(...),
-#     width: int = Query(1024, description="Maximum width of the preview image"),
-#     height: int = Query(1024, description="Maximum height of the preview image"),
-#     nodata: float = Query(0.0, description="No data value"),
-# ):
-#     try:
-#         # 分别读取三个波段的 preview（自动缩放）
-#         with COGReader(url_r, options={"nodata": nodata}) as cog_r:
-#             img_r, _ = cog_r.preview(width=width, height=height)
-#         with COGReader(url_g) as cog_g:
-#             img_g, _ = cog_g.preview(width=width, height=height)
-#         with COGReader(url_b) as cog_b:
-#             img_b, _ = cog_b.preview(width=width, height=height)
+@DeprecationWarning
+@router.get("/rgb/preview")
+def rgb_preview(
+    url_r: str = Query(...),
+    url_g: str = Query(...),
+    url_b: str = Query(...),
+    width: int = Query(1024, description="Maximum width of the preview image"),
+    height: int = Query(1024, description="Maximum height of the preview image"),
+    nodata: float = Query(0.0, description="No data value"),
+):
+    try:
+        # 分别读取三个波段的 preview（自动缩放）
+        with COGReader(url_r, options={"nodata": nodata}) as cog_r:
+            img_r, _ = cog_r.preview(width=width, height=height)
+        with COGReader(url_g) as cog_g:
+            img_g, _ = cog_g.preview(width=width, height=height)
+        with COGReader(url_b) as cog_b:
+            img_b, _ = cog_b.preview(width=width, height=height)
             
-#         r = normalize(img_r.squeeze())
-#         g = normalize(img_g.squeeze())
-#         b = normalize(img_b.squeeze())
+        r = normalize(img_r.squeeze())
+        g = normalize(img_g.squeeze())
+        b = normalize(img_b.squeeze())
         
-#         rgb = np.stack([r,g,b])
+        rgb = np.stack([r,g,b])
 
 
-#         # 渲染为 PNG
-#         content = render(rgb, img_format="png", **img_profiles.get("png"))
+        # 渲染为 PNG
+        content = render(rgb, img_format="png", **img_profiles.get("png"))
         
-#         return Response(content, media_type="image/png")
+        return Response(content, media_type="image/png")
     
-#     except Exception as e:
-#         print(e)
-#         return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
+    except Exception as e:
+        print(e)
+        return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
