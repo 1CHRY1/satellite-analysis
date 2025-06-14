@@ -1,6 +1,7 @@
 package nnu.mnr.satellite.service.resources;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.model.vo.resources.GridBoundaryVO;
 import nnu.mnr.satellite.model.po.resources.Region;
@@ -13,9 +14,11 @@ import org.locationtech.jts.geom.Geometry;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.aggregation.ArrayOperators;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -53,6 +56,21 @@ public class RegionDataService {
         queryWrapper.eq("parent", parent);
         List<Region> regions = regionRepo.selectList(queryWrapper);
         return regionModelMapper.map(regions, new TypeToken<List<RegionInfoVO>>() {}.getType());
+    }
+
+    public List<Integer> getAllRegionIdsByParent(Integer parent, List<Integer> allRegionIds) {
+        allRegionIds.add(parent);
+        if (parent % 100 != 0) {
+            return allRegionIds;
+        } else {
+            LambdaQueryWrapper<Region> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(Region::getParent, parent);
+            List<Integer> subRegionIds = regionRepo.selectList(queryWrapper).stream().map(Region::getAdcode).toList();
+            for (Integer id : subRegionIds) {
+                getAllRegionIdsByParent(id, allRegionIds);
+            }
+            return allRegionIds;
+        }
     }
 
     public JSONObject getRegionBoundaryById(Integer regionId) throws IOException {

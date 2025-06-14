@@ -29,7 +29,9 @@ export namespace Common {
     export interface PageResponse<T> extends CommonResult<Page<T>> { }
 }
 
-///// Sensor API /////////////////////////
+/**
+ * Sensor API
+ */
 export namespace Sensor {
     export interface SensorResponse {
         sensorId: string
@@ -44,7 +46,9 @@ export namespace Sensor {
     }
 }
 
-///// Product API /////////////////////////
+/**
+ * Product API
+ */
 export namespace Product {
     export interface ProductResponse {
         productId: string
@@ -62,7 +66,9 @@ export namespace Product {
 
 export namespace Scene { }
 
-///// Sensor Image API /////////////////////////
+/**
+ * SensorImage API
+ */
 export namespace SensorImage {
     export interface SensorImageSearchRequest {
         sensorId: string
@@ -105,7 +111,10 @@ export namespace SensorImage {
 }
 
 type ModelStatus = 'COMPLETE' | 'RUNNING' | 'PENDING' | 'NONE' | 'ERROR'
-///// Tile API /////////////////////////
+
+/**
+ * ImageTile API
+ */
 export namespace ImageTile {
     export interface ImageTileItemResponse {
         id: string
@@ -169,7 +178,9 @@ export namespace ImageTile {
     export interface ImageTileQueryResponse extends Array<ImageTileQueryResponseItem> { }
 }
 
-///// Project API /////////////////////////
+/**
+ * Project API
+ */
 export namespace Project {
     export interface ProjectActionRequest {
         projectId: string
@@ -189,10 +200,23 @@ export namespace Project {
 }
 
 /**
+ * Region API
+ */
+export namespace Region {
+    
+}
+
+/**
  * Case API
  */
 export namespace Case {
     export interface CasePageRequest extends Common.PageRequest {
+        // regionId: number | null,
+        address: string,
+        startTime: string | null,
+        endTime: string | null,
+        resolution: number | null,
+        status: ModelStatus
     }
 
     export interface Case {

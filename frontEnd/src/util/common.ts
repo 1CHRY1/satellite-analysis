@@ -11,7 +11,7 @@ export const sizeConversion = (size: number) => {
 }
 
 // 时间格式化
-export const formatTime = (time: string | any, model: string = 'minutes', timeLag: number = 0) => {
+export const formatTime = (time: string | any, model: string = 'minutes', timeLag: number = 0, isHyphen: boolean = false) => {
     // 将时间戳解析为 Date 对象
     const utcDate = new Date(time)
 
@@ -24,15 +24,21 @@ export const formatTime = (time: string | any, model: string = 'minutes', timeLa
     const day = String(beijingTime.getDate()).padStart(2, '0')
     const hours = String(beijingTime.getHours()).padStart(2, '0')
     const minutes = String(beijingTime.getMinutes()).padStart(2, '0')
+    const seconds = String(beijingTime.getSeconds()).padStart(2, '0')
 
     // 拼接为目标格式
-    if (model === 'minutes') {
-        return `${year}/${month}/${day} ${hours}:${minutes}`
+    let result: string = ''
+    if (model === 'seconds') {
+        result = `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`
+    } else if (model === 'minutes') {
+        result = `${year}/${month}/${day} ${hours}:${minutes}`
     } else if (model === 'day') {
-        return `${year}/${month}/${day}`
+        result = `${year}/${month}/${day}`
     }
-    const formattedTime = `${year}/${month}/${day} ${hours}:${minutes}`
-    return formattedTime
+    if (isHyphen) {
+        result = result.replace(/\//g, '-')
+    }
+    return result
 }
 
 // polygon feature 转 box coordinates 序列

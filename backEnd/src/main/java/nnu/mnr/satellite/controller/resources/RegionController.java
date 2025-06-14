@@ -1,6 +1,7 @@
 package nnu.mnr.satellite.controller.resources;
 
 import com.alibaba.fastjson2.JSONObject;
+import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.model.vo.resources.RegionInfoVO;
 import nnu.mnr.satellite.model.vo.resources.ViewWindowVO;
 import nnu.mnr.satellite.service.resources.RegionDataService;
@@ -46,6 +47,14 @@ public class RegionController {
     @GetMapping("/window/region/{regionId}")
     public ResponseEntity<ViewWindowVO> getRegionWindow(@PathVariable Integer regionId) {
         return ResponseEntity.ok(regionDataService.getRegionWindowById(regionId));
+    }
+
+    @GetMapping("/address/{regionId}")
+    public CommonResultVO getAddressById(@PathVariable Integer regionId) {
+        return CommonResultVO.builder()
+                .data(regionDataService.getAddressById(regionId))
+                .status(1)
+                .build();
     }
 
 }

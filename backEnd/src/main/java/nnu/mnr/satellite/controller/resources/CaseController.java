@@ -24,8 +24,8 @@ public class CaseController {
         this.caseDataService = caseDataService;
     }
 
-    @GetMapping("/page")
-    public ResponseEntity<CommonResultVO> getCasePage(@ModelAttribute CasePageDTO casePageDTO) {
+    @PostMapping("/page")
+    public ResponseEntity<CommonResultVO> getCasePage(@RequestBody CasePageDTO casePageDTO) {
         return ResponseEntity.ok(caseDataService.getCasePage(casePageDTO));
     }
 

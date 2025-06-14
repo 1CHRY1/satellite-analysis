@@ -1,5 +1,5 @@
 import http from '../clientHttp'
-import type { Sensor, Product, SensorImage, ImageTile, Project, Case } from './satellite.type'
+import type { Sensor, Product, SensorImage, ImageTile, Project, Case, Common } from './satellite.type'
 import { blobDownload } from '../../util'
 
 export async function getSensorList(): Promise<Sensor.SensorListResponse> {
@@ -141,6 +141,10 @@ export async function getBoundary(region: number | string): Promise<any> {
     return http.get<any>(`data/region/boundary/${region}`)
 }
 
+export async function getAddress(region: number | string): Promise<Common.CommonResult<string>> {
+    return http.get<Common.CommonResult<string>>(`data/region/address/${region}`)
+}
+
 export async function getRegionPosition(region: number | string): Promise<any> {
     return http.get<any>(`data/region/window/region/${region}`)
 }
@@ -192,11 +196,5 @@ export async function getPoiInfo(query: string): Promise<any> {
  * Case历史记录
  */
 export async function getCasePage(param: Case.CasePageRequest): Promise<Case.CasePageResponse> {
-    const requestParams = new URLSearchParams()
-    Object.entries(param).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-            requestParams.append(key, value.toString())
-        }
-    })
-    return http.get<Case.CasePageResponse>(`data/case/page?${requestParams.toString()}`)
+    return http.post<Case.CasePageResponse>(`data/case/page`, param)
 }

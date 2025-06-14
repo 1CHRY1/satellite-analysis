@@ -67,6 +67,25 @@
     background-color: #1c668a;
 }
 
+.a-button-dark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s ease;
+    background-color: #122f45;
+}
+
+.a-button-dark:hover {
+    color: white;
+    background-color: #1c668a;
+}
+
 .panel-section {
     background-color: rgba(15, 23, 42, 0.6);
     border-radius: 0.5rem;

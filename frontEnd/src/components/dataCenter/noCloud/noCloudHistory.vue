@@ -13,13 +13,13 @@
         <div class="config-container">
             <segmented :options="historyClassTabs" :active-tab="activeTab" @change="handleSelectTab" />
         </div>
-        <div class="config-container" v-if="activeTab === 'running'">
+        <div class="config-container" v-if="activeTab === 'RUNNING'">
             <div class="config-item">
                 <div class="flex items-center justify-between">
                     <div class="config-label relative">
-                        <loadingIcon /> 共 2 个任务运行中
+                        <loadingIcon v-if="total > 0" /> {{ total > 0 ? `共 ${total} 个任务运行中` : '暂无运行中的任务' }}
                     </div>
-                    <a-button class="a-button">刷新全部</a-button>
+                    <a-button class="a-button" @click="getCaseList">刷新全部</a-button>
                 </div>
             </div>
         </div>
@@ -29,8 +29,8 @@
                     <ListFilter :size="22" class="config-icon" />
                     <span>筛选条件</span>
                     <div class="absolute right-0 cursor-pointer">
-                        <ChevronDown v-if="!isExpand" :size="22" @click="isExpand = true" />
-                        <ChevronUp v-else @click="isExpand = false" :size="22" />
+                        <ChevronDown v-if="isExpand" :size="22" @click="isExpand = false" />
+                        <ChevronUp v-else @click="isExpand = true" :size="22" />
                     </div>
                 </div>
                 <div v-show="isExpand" class="config-control flex-col !items-start">
@@ -77,16 +77,65 @@
                         </div>
                     </div>
                 </div>
-                <div class="config-control !items-start justify-end relative">
-                    <div class="flex w-1/4 flex-col gap-2">
-                        <a-button type="primary" class="a-button">应用</a-button>  
+                <div class="config-control">
+                    <div class="flex justify-between gap-3 items-center w-full">
+                        <span class="result-info-label">共找到 {{ total }} 条记录</span>
+                        <div class="flex gap-3">
+                            <a-button type="primary" class="a-button-dark" @click="reset">重置</a-button>  
+                            <a-button type="primary" class="a-button" @click="getCaseList">筛选</a-button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="config-container">
             <div v-for="item in caseList" class="config-item" :key="item.caseId">
-                <div class="config-label relative">
+                <a-badge-ribbon v-if="item.status === 'RUNNING'" text="运行中" style="position: absolute; top: -9px; right: -20px;" color="#ffa726">
+                    <div class="config-label relative">
+                        <Image :size="16" class="config-icon" />
+                        <span>{{ `${item.address}无云一版图` }}</span>
+                    </div>
+                    <div class="config-control flex-col !items-start">
+                        <div class="flex w-full flex-col gap-2">
+                            <div class="result-info-container">
+                                <div class="result-info-item">
+                                    <div class="result-info-icon">
+                                        <Grid3x3 :size="12" />
+                                    </div>
+                                    <div class="result-info-content">
+                                        <div class="result-info-label">格网分辨率</div>
+                                        <div class="result-info-value">
+                                            {{ item.resolution }}km
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="result-info-item">
+                                    <div class="result-info-icon">
+                                        <CalendarIcon :size="12" />
+                                    </div>
+                                    <div class="result-info-content">
+                                        <div class="result-info-label">开始时间</div>
+                                        <div class="result-info-value">
+                                            {{ formatTimeToText(item.createTime) }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="result-info-item">
+                                    <div class="result-info-icon">
+                                        <DatabaseIcon :size="12" />
+                                    </div>
+                                    <div class="result-info-content">
+                                        <div class="result-info-label">使用数据</div>
+                                        <div>
+                                            {{ item.dataSet }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a-badge-ribbon>
+                <div v-if="item.status === 'COMPLETE'" class="config-label relative">
                     <Image :size="16" class="config-icon" />
                     <span>{{ `${item.address}无云一版图` }}</span>
                     <div class="absolute right-0 cursor-pointer">
@@ -97,7 +146,7 @@
                         </a-tooltip>
                     </div>
                 </div>
-                <div class="config-control flex-col !items-start">
+                <div v-if="item.status === 'COMPLETE'" class="config-control flex-col !items-start">
                     <div class="flex w-full flex-col gap-2">
                         <div class="result-info-container">
                             <div class="result-info-item">
@@ -137,9 +186,10 @@
                     </div>
                 </div>
             </div>
+            
 
             <div class="flex h-[60px] justify-around">
-                <el-pagination background layout="prev, pager, next" v-model:current-page="currentPage" :total="total"
+                <el-pagination v-if="total > 0" background layout="prev, pager, next" v-model:current-page="currentPage" :total="total"
                     :page-size="pageSize" @current-change="getCaseList" @next-click="" @prev-click="">
                 </el-pagination>
             </div>
@@ -158,10 +208,10 @@ import { RegionSelects } from 'v-region'
 
 const { caseList, currentPage, sectionHeader, pageSize, total, historyClassTabs, activeTab, handleSelectTab,
      selectedRegion, selectedTime, timeOptionList, selectedResolution, resolutionList, EMPTY_RESOLUTION, getCaseList,
-    isExpand } = useViewHistoryModule()
+    isExpand, reset } = useViewHistoryModule()
 
 onMounted(() => {
-    getCaseList(currentPage.value)
+    getCaseList()
 })
 </script>
 
