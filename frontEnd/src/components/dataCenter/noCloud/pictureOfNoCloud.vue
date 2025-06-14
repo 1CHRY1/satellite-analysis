@@ -623,6 +623,7 @@ const progressControl = (index: number) => {
 
 // 开始计算
 const calNoClouds = async () => {
+    setCurrentPanel('history')
     noCloudLoading.value = true
     const stopLoading = message.loading("正在重构无云一版图...", 0)
 

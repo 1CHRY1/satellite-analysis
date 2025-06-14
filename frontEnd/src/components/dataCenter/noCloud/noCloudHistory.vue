@@ -1,4 +1,5 @@
 <template>
+    <!-- Header -->
     <div class="section-header" ref="sectionHeader">
         <div class="section-icon cursor-pointer">
             <a-tooltip>
@@ -9,10 +10,14 @@
         <h2 class="section-title">历史无云一版图</h2>
     </div>
     
+    <!-- Content -->
     <div class="section-content">
+        <!-- Content-1 Tab -->
         <div class="config-container">
             <segmented :options="historyClassTabs" :active-tab="activeTab" @change="handleSelectTab" />
         </div>
+
+        <!-- Content-2 Running cases -->
         <div class="config-container" v-if="activeTab === 'RUNNING'">
             <div class="config-item">
                 <div class="flex items-center justify-between">
@@ -22,7 +27,57 @@
                     <a-button class="a-button" @click="getCaseList">刷新全部</a-button>
                 </div>
             </div>
+            <div v-for="item in caseList" class="config-item" :key="item.caseId">
+                <a-badge-ribbon text="运行中" style="position: absolute; top: -9px; right: -20px;" color="#ffa726">
+                    <div class="config-label relative">
+                        <Image :size="16" class="config-icon" />
+                        <span>{{ `${item.address}无云一版图` }}</span>
+                    </div>
+                    <div class="config-control flex-col !items-start">
+                        <div class="flex w-full flex-col gap-2">
+                            <div class="result-info-container">
+                                <div class="result-info-item">
+                                    <div class="result-info-icon">
+                                        <Grid3x3 :size="12" />
+                                    </div>
+                                    <div class="result-info-content">
+                                        <div class="result-info-label">格网分辨率</div>
+                                        <div class="result-info-value">
+                                            {{ item.resolution }}km
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="result-info-item">
+                                    <div class="result-info-icon">
+                                        <CalendarIcon :size="12" />
+                                    </div>
+                                    <div class="result-info-content">
+                                        <div class="result-info-label">开始时间</div>
+                                        <div class="result-info-value">
+                                            {{ formatTimeToText(item.createTime) }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="result-info-item">
+                                    <div class="result-info-icon">
+                                        <DatabaseIcon :size="12" />
+                                    </div>
+                                    <div class="result-info-content">
+                                        <div class="result-info-label">使用数据</div>
+                                        <div>
+                                            {{ item.dataSet }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a-badge-ribbon>
+                
+            </div>
         </div>
+
+        <!-- Content-3 Complete cases -->
         <div class="config-container" v-else>
             <div class="config-item">
                 <div class="config-label relative">
@@ -87,55 +142,8 @@
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="config-container">
             <div v-for="item in caseList" class="config-item" :key="item.caseId">
-                <a-badge-ribbon v-if="item.status === 'RUNNING'" text="运行中" style="position: absolute; top: -9px; right: -20px;" color="#ffa726">
-                    <div class="config-label relative">
-                        <Image :size="16" class="config-icon" />
-                        <span>{{ `${item.address}无云一版图` }}</span>
-                    </div>
-                    <div class="config-control flex-col !items-start">
-                        <div class="flex w-full flex-col gap-2">
-                            <div class="result-info-container">
-                                <div class="result-info-item">
-                                    <div class="result-info-icon">
-                                        <Grid3x3 :size="12" />
-                                    </div>
-                                    <div class="result-info-content">
-                                        <div class="result-info-label">格网分辨率</div>
-                                        <div class="result-info-value">
-                                            {{ item.resolution }}km
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="result-info-item">
-                                    <div class="result-info-icon">
-                                        <CalendarIcon :size="12" />
-                                    </div>
-                                    <div class="result-info-content">
-                                        <div class="result-info-label">开始时间</div>
-                                        <div class="result-info-value">
-                                            {{ formatTimeToText(item.createTime) }}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="result-info-item">
-                                    <div class="result-info-icon">
-                                        <DatabaseIcon :size="12" />
-                                    </div>
-                                    <div class="result-info-content">
-                                        <div class="result-info-label">使用数据</div>
-                                        <div>
-                                            {{ item.dataSet }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </a-badge-ribbon>
-                <div v-if="item.status === 'COMPLETE'" class="config-label relative">
+                <div class="config-label relative">
                     <Image :size="16" class="config-icon" />
                     <span>{{ `${item.address}无云一版图` }}</span>
                     <div class="absolute right-0 cursor-pointer">
@@ -146,7 +154,7 @@
                         </a-tooltip>
                     </div>
                 </div>
-                <div v-if="item.status === 'COMPLETE'" class="config-control flex-col !items-start">
+                <div class="config-control flex-col !items-start">
                     <div class="flex w-full flex-col gap-2">
                         <div class="result-info-container">
                             <div class="result-info-item">
@@ -186,8 +194,10 @@
                     </div>
                 </div>
             </div>
-            
+        </div>
 
+        <!-- Content-4 Pagination -->
+        <div class="config-container">
             <div class="flex h-[60px] justify-around">
                 <el-pagination v-if="total > 0" background layout="prev, pager, next" v-model:current-page="currentPage" :total="total"
                     :page-size="pageSize" @current-change="getCaseList" @next-click="" @prev-click="">
