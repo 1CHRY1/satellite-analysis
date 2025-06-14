@@ -2,12 +2,18 @@
     <div class="custom-panel px-2">
         <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]">
             <div class="main-container">
-                <section class="panel-section">
+                <section class="panel-section" v-show="currentPanel === 'noCloud'" key="noCloud">
                     <div class="section-header">
                         <div class="section-icon">
                             <CloudIcon :size="18" />
                         </div>
                         <h2 class="section-title">无云一版图重构</h2>
+                        <div class="section-icon absolute right-0 cursor-pointer">
+                            <a-tooltip>
+                                <template #title>历史重构记录</template>
+                                <History :size="18" @click="setCurrentPanel('history')"/>
+                            </a-tooltip>
+                        </div>
                     </div>
                     <div class="section-content">
                         <div class="config-container">
@@ -35,7 +41,6 @@
                                         </div>
                                     </div>
                                     <div class="result-info-container">
-
                                         <div class="result-info-item">
                                             <div class="result-info-icon">
                                                 <ImageIcon :size="16" />
@@ -283,6 +288,10 @@
                     </div>
                 </section>
 
+                <section class="panel-section" v-show="currentPanel === 'history'" key="history">
+                    <noCloudHistory @toggle="setCurrentPanel" />
+                </section>
+
                 <section class="panel-section" v-if="calImage.length > 0">
                     <div class="section-header">
                         <div class="section-icon">
@@ -309,6 +318,7 @@
 import { computed, onMounted, ref, type PropType, type Ref, reactive } from 'vue'
 import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'
 import { type interactiveExplore } from '@/components/dataCenter/type'
+import noCloudHistory from '@/components/dataCenter/noCloud/noCloudHistory.vue'
 import { formatTime } from '@/util/common'
 import { getSceneGrids, getNoCloud, getCaseStatus, getCaseResult } from '@/api/http/satellite-data'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
@@ -342,10 +352,12 @@ import {
     BoltIcon,
     BanIcon,
     MapIcon,
+    History,
 } from 'lucide-vue-next'
 import { FastBackwardFilled } from '@ant-design/icons-vue'
 import bandMergeHelper from '@/util/image/util'
 import { message } from 'ant-design-vue'
+import { usePanelSwitchModule } from './panelSwitch'
 
 const props = defineProps({
     regionConfig: {
@@ -353,6 +365,11 @@ const props = defineProps({
         required: true,
     },
 })
+
+/**
+ * 面板显示控制区
+ */
+const { currentPanel, setCurrentPanel } = usePanelSwitchModule()
 
 /**
  * 国产区
@@ -1000,8 +1017,9 @@ const getCoverage = (gridImages: any, gridCount: number) => {
 }
 </script>
 
-<style scoped src="./tabStyle.css">
+<style scoped src="../tabStyle.css">
 :deep(.border-box-content) {
     padding: 1.5rem;
 }
+
 </style>

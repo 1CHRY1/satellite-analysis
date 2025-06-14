@@ -78,7 +78,7 @@
                 <section class="panel-section">
                     <div class="section-header">
                         <div class="section-icon">
-                            <MapPinIcon :size="18" />
+                            <Clock :size="18" />
                         </div>
                         <h2 class="section-title">按时间筛选</h2>
                     </div>
@@ -415,6 +415,7 @@ import {
     BanIcon,
     MapIcon,
     Cloud,
+    Clock,
     Images,
     Loader,
     Trash2Icon,

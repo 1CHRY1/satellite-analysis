@@ -20,6 +20,7 @@ import nnu.mnr.satellite.model.dto.resources.CasePageDTO;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -87,57 +88,48 @@ public class CaseDataService {
         // 构造分页对象
         Page<Case> page = new Page<>(casePageDTO.getPage(), casePageDTO.getPageSize());
         // 调用 Mapper 方法
-        IPage<Case> casePage = getCasesWithCondition(
-                page,
-                casePageDTO.getSearchText(),
-                casePageDTO.getSortField(),
-                casePageDTO.getAsc(),
-                casePageDTO.getRegionId(),
-                casePageDTO.getStartTime(),
-                casePageDTO.getEndTime(),
-                casePageDTO.getResolution()
-
-        );
+        IPage<Case> casePage = getCasesWithCondition(page, casePageDTO);
         return CommonResultVO.builder()
                 .status(1)
                 .message("分页查询成功")
                 .data(mapPage(casePage))
                 .build();
     }
-    private IPage<Case> getCasesWithCondition(Page<Case> page, String searchText, String sortField, Boolean asc, Integer regionId, LocalDateTime startTime, LocalDateTime endTime, Integer resolution) {
+    private IPage<Case> getCasesWithCondition(Page<Case> page, CasePageDTO casePageDTO) {
+        Integer resolution = casePageDTO.getResolution();
+        LocalDateTime startTime = casePageDTO.getStartTime();
+        LocalDateTime endTime = casePageDTO.getEndTime();
+        String searchText = casePageDTO.getSearchText();
+        String sortField = casePageDTO.getSortField();
+        Boolean asc = casePageDTO.getAsc();
 
         LambdaQueryWrapper<Case> lambdaQueryWrapper = new LambdaQueryWrapper<>();
 
-        // 查询 region_table 表，获取 acroutes 列表
-        List<Integer> acroutes;
+        // TODO: DEPRECATED 查询 region_table 表，获取当前行政区下所有regionId
+        /*List<Integer> allRegionIds = new ArrayList<>();
         if (regionId != null) {
-            acroutes = getAcroutesByRegionId(regionId);
+            allRegionIds = regionDataService.getAllRegionIdsByParent(regionId, allRegionIds);
         } else {
-            acroutes = null;
+            allRegionIds = null;
         }
-
         // 添加区域条件
-        if (acroutes != null && !acroutes.isEmpty()) {
-            lambdaQueryWrapper.and(wrapper -> wrapper
-                    .nested(innerWrapper -> innerWrapper
-                            .in(Case::getRegionId, acroutes)
-                            .or()
-                            .eq(Case::getRegionId, regionId)
-                    )
-            );
-        }
+        if (allRegionIds != null && !allRegionIds.isEmpty()) {
+            List<Integer> finalCollection = allRegionIds;
+            lambdaQueryWrapper.in(Case::getRegionId, finalCollection);
+        }*/
+        lambdaQueryWrapper.like(Case::getAddress, casePageDTO.getAddress());
 
-        // 添加时间条件
+        // 添加时间范围筛选条件
         if (startTime != null && endTime != null) {
             lambdaQueryWrapper.between(Case::getCreateTime, startTime, endTime);
         }
-
-        // 添加分辨率条件
+        // 添加分辨率过滤条件
         if (resolution != null) {
             lambdaQueryWrapper.eq(Case::getResolution, resolution);
         }
-
-        // 添加搜索条件（使用Lambda表达式引用实体类属性）
+        // 添加状态过滤条件
+        lambdaQueryWrapper.eq(casePageDTO.getStatus() != null, Case::getStatus, casePageDTO.getStatus());
+        // 添加搜索条件
         if (searchText != null && !searchText.isEmpty()) {
             lambdaQueryWrapper.and(wrapper -> wrapper
                     .like(Case::getAddress, searchText)  // 自动映射为数据库字段 address
@@ -145,7 +137,6 @@ public class CaseDataService {
                     .like(Case::getResolution, searchText) // 自动映射为 resolution
             );
         }
-
         // 添加排序条件
         if (sortField != null && !sortField.isEmpty()) {
             // 使用 sortField 对应的数据库字段进行排序
