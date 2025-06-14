@@ -103,6 +103,7 @@ public class CaseDataService {
         String searchText = casePageDTO.getSearchText();
         String sortField = casePageDTO.getSortField();
         Boolean asc = casePageDTO.getAsc();
+        Integer regionId = casePageDTO.getRegionId();
 
         LambdaQueryWrapper<Case> lambdaQueryWrapper = new LambdaQueryWrapper<>();
 
@@ -118,7 +119,20 @@ public class CaseDataService {
             List<Integer> finalCollection = allRegionIds;
             lambdaQueryWrapper.in(Case::getRegionId, finalCollection);
         }*/
-        lambdaQueryWrapper.like(Case::getAddress, casePageDTO.getAddress());
+
+        // 模糊查询address
+        // lambdaQueryWrapper.like(Case::getAddress, casePageDTO.getAddress());
+
+        // 按regionId筛选子区域
+        if (regionId != null){
+            if(regionId % 10000 == 0) {
+                lambdaQueryWrapper.between(Case::getRegionId, regionId, regionId + 9999);
+            } else if (regionId % 100 == 0) {
+                lambdaQueryWrapper.between(Case::getRegionId, regionId, regionId + 99);
+            }else {
+                lambdaQueryWrapper.eq(Case::getRegionId, regionId);
+            }
+        }
 
         // 添加时间范围筛选条件
         if (startTime != null && endTime != null) {
