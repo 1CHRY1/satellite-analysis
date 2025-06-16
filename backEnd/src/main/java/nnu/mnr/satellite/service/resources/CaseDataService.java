@@ -96,6 +96,7 @@ public class CaseDataService {
                 .data(mapPage(casePage))
                 .build();
     }
+
     private IPage<Case> getCasesWithCondition(Page<Case> page, CasePageDTO casePageDTO) {
         Integer resolution = casePageDTO.getResolution();
         LocalDateTime startTime = casePageDTO.getStartTime();
@@ -124,12 +125,12 @@ public class CaseDataService {
         // lambdaQueryWrapper.like(Case::getAddress, casePageDTO.getAddress());
 
         // 按regionId筛选子区域
-        if (regionId != null){
-            if(regionId % 10000 == 0) {
+        if (regionId != null) {
+            if (regionId % 10000 == 0) {
                 lambdaQueryWrapper.between(Case::getRegionId, regionId, regionId + 9999);
             } else if (regionId % 100 == 0) {
                 lambdaQueryWrapper.between(Case::getRegionId, regionId, regionId + 99);
-            }else {
+            } else {
                 lambdaQueryWrapper.eq(Case::getRegionId, regionId);
             }
         }
@@ -186,7 +187,8 @@ public class CaseDataService {
 
     private IPage<CaseInfoVO> mapPage(IPage<Case> casePage) {
         // 映射记录列表
-        Type destinationType = new TypeToken<List<CaseInfoVO>>() {}.getType();
+        Type destinationType = new TypeToken<List<CaseInfoVO>>() {
+        }.getType();
         List<CaseInfoVO> caseInfoVOList = caseModelMapper.map(casePage.getRecords(), destinationType);
 
         // 创建一个新的 Page 对象
@@ -199,14 +201,8 @@ public class CaseDataService {
         return resultPage;
     }
 
-    public CommonResultVO getCaseBoundaryByCaseId(String caseId){
-
-        LambdaQueryWrapper<Case> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-
-        lambdaQueryWrapper.eq(Case::getCaseId, caseId);
-
-        Case caseEntity = caseRepo.selectOne(lambdaQueryWrapper);
-
+    public CommonResultVO getCaseBoundaryByCaseId(String caseId) {
+        Case caseEntity = caseRepo.selectById(caseId);
         // 检查是否找到 Case
         if (caseEntity == null) {
             return CommonResultVO.builder()
@@ -215,7 +211,6 @@ public class CaseDataService {
                     .data(null)
                     .build();
         }
-
         // 提取 boundary 字段
         Geometry boundary = caseEntity.getBoundary();
         JSONObject JSONBoundary;
@@ -238,6 +233,24 @@ public class CaseDataService {
                 .message("boundary查询成功")
                 .data(JSONBoundary)
                 .build();
+    }
+
+    public CommonResultVO getCaseByCaseId(String caseId) {
+        Case caseEntity = caseRepo.selectById(caseId);
+        // 检查是否找到 Case
+        if (caseEntity == null) {
+            return CommonResultVO.builder()
+                    .status(1)
+                    .message("未找到对应的 Case")
+                    .data(null)
+                    .build();
+        } else {
+            return CommonResultVO.builder()
+                    .status(1)
+                    .message("success")
+                    .data(caseModelMapper.map(caseEntity, CaseInfoVO.class))
+                    .build();
+        }
     }
 
 }

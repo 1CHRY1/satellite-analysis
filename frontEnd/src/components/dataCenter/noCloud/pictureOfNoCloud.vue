@@ -288,7 +288,7 @@
                     </div>
                 </section>
 
-                <section class="panel-section" v-show="currentPanel === 'history'" key="history">
+                <section class="panel-section" v-if="currentPanel === 'history'" key="history">
                     <noCloudHistory @toggle="setCurrentPanel" />
                 </section>
 
@@ -626,8 +626,12 @@ const progressControl = (index: number) => {
 
 // 开始计算
 const calNoClouds = async () => {
-    noCloudLoading.value = true
-    const stopLoading = message.loading("正在重构无云一版图...", 0)
+    // noCloudLoading.value = true
+    // const stopLoading = message.loading("正在重构无云一版图...", 0)
+
+    // 因为从后端拿到taskId需要一定时间，所以先向任务store推送一个初始化任务状态
+    taskStore.setIsInitialTaskPending(true)
+    setCurrentPanel('history')
 
     // 根据勾选情况合并影像
     // 1、国产亚米
@@ -668,10 +672,10 @@ const calNoClouds = async () => {
     // 更新任务，跳转至历史panel
     calTask.value.taskId = startCalcRes.data
     taskStore.setTaskStatus(calTask.value.taskId, 'PENDING')
-    setCurrentPanel('history')
+    taskStore.setIsInitialTaskPending(false)
 
     // 1、启动进度条
-    controlProgress(3)
+    // controlProgress(3)
 
     // 这里不再轮询
     /** 

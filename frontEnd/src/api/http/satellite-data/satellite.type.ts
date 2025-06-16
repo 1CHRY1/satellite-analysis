@@ -211,8 +211,8 @@ export namespace Region {
  */
 export namespace Case {
     export interface CasePageRequest extends Common.PageRequest {
-        // regionId: number | null,
-        address: string,
+        regionId: number | null,
+        // address: string,
         startTime: string | null,
         endTime: string | null,
         resolution: number | null,

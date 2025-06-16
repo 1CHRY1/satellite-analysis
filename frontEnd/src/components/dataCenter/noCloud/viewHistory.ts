@@ -32,18 +32,13 @@ export function useViewHistoryModule() {
     
     const getCaseList = async () => {
         const regionId = getRegionId()
-        let address: string = ''
-        if (regionId) {
-            let response = await getAddress(regionId)
-            address = response.data
-        }
         const res = await getCasePage({
             page: currentPage.value,
             pageSize: pageSize.value,
             asc: false,
             sortField: 'createTime',
             status: activeTab.value,
-            address,
+            regionId: regionId ? Number(regionId) : null,
             startTime: selectedTime.value.value?.startTime as string,
             endTime: selectedTime.value.value?.endTime as string,
             resolution: selectedResolution.value === EMPTY_RESOLUTION ? null : selectedResolution.value,
@@ -152,6 +147,7 @@ export function useViewHistoryModule() {
             break
         case 'earlier':
             startTime = new Date("1900-01-01 00:00:00")
+            endTime.setMonth(new Date(now).getMonth() - 3)
             break
         default:
             startTime = now
@@ -192,7 +188,8 @@ export function useViewHistoryModule() {
           value: calculateTimeRange('earlier')
         }
     ])
-    const selectedTime = computed<TimeOption>(() => timeOptionList.value[0])
+    const selectedTimeIndex = ref<number>(0)
+    const selectedTime = computed<TimeOption>(() => timeOptionList.value[selectedTimeIndex.value])
     const EMPTY_RESOLUTION = 0 // 预设请选择分辨率选项
     const selectedResolution = ref<number>(EMPTY_RESOLUTION)
     const resolutionList = ref<number[]>([EMPTY_RESOLUTION, 1, 2, 5, 10, 15, 20, 25, 30, 40, 50, 80, 100, 150])
@@ -203,7 +200,7 @@ export function useViewHistoryModule() {
             city: '',
             area: ''
         }
-        selectedTime.value = timeOptionList.value[0]
+        selectedTimeIndex.value = 0
         selectedResolution.value = EMPTY_RESOLUTION
         getCaseList()
     }
@@ -220,6 +217,7 @@ export function useViewHistoryModule() {
         selectedRegion,
         getCaseList,
         selectedTime,
+        selectedTimeIndex,
         selectedResolution,
         EMPTY_RESOLUTION,
         timeOptionList,

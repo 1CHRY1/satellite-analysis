@@ -29,9 +29,14 @@ public class CaseController {
         return ResponseEntity.ok(caseDataService.getCasePage(casePageDTO));
     }
 
-    @GetMapping("/{caseId}/boundary")
+    @GetMapping("/boundary/{caseId}")
     public ResponseEntity<CommonResultVO> getCaseBoundaryByCaseId(@PathVariable("caseId") String caseId) {
         return ResponseEntity.ok(caseDataService.getCaseBoundaryByCaseId(caseId));
+    }
+
+    @GetMapping("/{caseId}")
+    public ResponseEntity<CommonResultVO> getCaseByCaseId(@PathVariable("caseId") String caseId) {
+        return ResponseEntity.ok(caseDataService.getCaseByCaseId(caseId));
     }
 
 }

@@ -22,7 +22,14 @@
             <div class="config-item">
                 <div class="flex items-center justify-between">
                     <div class="config-label relative">
-                        <loadingIcon v-if="total > 0" /> {{ total > 0 ? `共 ${total} 个任务运行中` : '暂无运行中的任务' }}
+                        <span v-if="pendingTaskList.length > 0 || isPending" class="flex items-center gap-2">
+                            <loadingIcon/>
+                            {{ (pendingTaskList.length > 0 || isPending) ? `任务初始化中，请稍后...` : '' }}
+                        </span>
+                        <span v-else class="flex items-center gap-2">
+                            <loadingIcon v-if="total > 0"/>
+                            {{ total > 0 ? `共 ${total} 个任务运行中` : '暂无运行中的任务' }}
+                        </span>
                     </div>
                     <a-button class="a-button" @click="getCaseList">刷新全部</a-button>
                 </div>
@@ -96,9 +103,9 @@
                                 <div class="result-info-content">
                                     <div class="result-info-label">生成时间</div>
                                     <div class="result-info-value">
-                                        <select v-model="selectedTime"
+                                        <select v-model="selectedTimeIndex"
                                             class="custom-select" style="width: 8rem;">
-                                            <option v-for="option in timeOptionList" :key="option" :value="option"
+                                            <option v-for="(option, index) in timeOptionList" :key="option.label" :value="index"
                                                 class="custom-option">
                                                 {{ option.label }}
                                             </option>
@@ -212,19 +219,50 @@
 <script setup lang="ts">
 import { ArrowBigDown, ArrowLeft, CalendarIcon, ChevronDown, ChevronDownCircle, ChevronDownIcon, ChevronDownSquare, ChevronUp, DatabaseIcon, ExpandIcon, Eye, EyeOff, Grid3x3, Image, ListFilter, TimerIcon } from 'lucide-vue-next';
 import { useViewHistoryModule } from './viewHistory';
-import { onMounted } from 'vue';
+import { onMounted, onUnmounted, computed, watch } from 'vue';
 import { formatTimeToText } from '@/util/common';
 import segmented from '@/components/common/segmented.vue';
 import loadingIcon from '@/components/common/loadingIcon.vue'
 import { RegionSelects } from 'v-region'
 import { useTaskPollModule } from './taskPoll'
+import bus from '@/store/bus'
+import { useTaskStore } from '@/store'
 const { caseList, currentPage, sectionHeader, pageSize, total, historyClassTabs, activeTab, handleSelectTab,
-     selectedRegion, selectedTime, timeOptionList, selectedResolution, resolutionList, EMPTY_RESOLUTION, getCaseList,
+     selectedRegion, selectedTimeIndex, timeOptionList, selectedResolution, resolutionList, EMPTY_RESOLUTION, getCaseList,
     isExpand, reset } = useViewHistoryModule()
-const {  } = useTaskPollModule()
+const { pendingTaskList, startPolling, stopPolling } = useTaskPollModule()
+const taskStore = useTaskStore()
+// 检测由noCloud跳转至history面板时（setCurrentPanel），前端是否还在初始化任务（calNoCloud处理请求参数）
+const isPending = computed(() => taskStore._isInitialTaskPending)
 
 onMounted(() => {
+    bus.on('case-list-refresh', getCaseList)
+    console.log('noCloudHistory mounted')
     getCaseList()
+    console.log('caseList obtained')
+    startPolling()
+    console.log('polling started')
+})
+
+watch(activeTab, (newVal) => {
+  if (newVal === 'RUNNING') {
+    startPolling();
+  } else {
+    stopPolling();
+  }
+});
+
+watch(activeTab, (newVal) => {
+  if (newVal === 'RUNNING') {
+    startPolling();
+  } else {
+    stopPolling();
+  }
+});
+
+onUnmounted(() => {
+    bus.off('case-list-refresh', getCaseList)
+    stopPolling()
 })
 </script>
 

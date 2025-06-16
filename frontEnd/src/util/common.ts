@@ -68,8 +68,12 @@ export const formatTimeToText = (time: string | number | Date, lang: 'zh' | 'en'
     const diffDay = Math.floor(diffHour / 24);
     
     // 精确到分钟
-    if (diffSec < 60) {
+    if (diffSec < 300) {
       return lang === 'zh' ? '刚刚' : 'Just now';
+    } else if (diffMin < 30) {
+      return lang === 'zh' ? `${diffMin}分钟前` : `${diffMin} minutes ago`;
+    } else if (diffMin < 40) {
+      return lang === 'zh' ? '半小时前' : 'Half an hour ago';
     } else if (diffMin < 60) {
       return lang === 'zh' ? `${diffMin}分钟前` : `${diffMin} minutes ago`;
     } else if (diffHour < 24) {
