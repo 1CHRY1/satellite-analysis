@@ -74,7 +74,8 @@ public class ModelRunStatusJob implements Job {
                 log.info(e.toString());
             }
             redisUtil.updateJsonField(caseId, "end", LocalDateTime.now());
-            caseDataService.removeCaseById(caseId);
+            // caseDataService.removeCaseById(caseId);
+            caseDataService.updateCaseStatusById(caseId, status);
         }
         // TODO: Add Other Conditions
 

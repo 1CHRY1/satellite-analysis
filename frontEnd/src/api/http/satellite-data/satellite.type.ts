@@ -110,7 +110,7 @@ export namespace SensorImage {
     export interface SensorImageBandListResponse extends Array<SensorImageBandResponse> { }
 }
 
-type ModelStatus = 'COMPLETE' | 'RUNNING' | 'PENDING' | 'NONE' | 'ERROR'
+export type ModelStatus = 'COMPLETE' | 'RUNNING' | 'PENDING' | 'NONE' | 'ERROR'
 
 /**
  * ImageTile API
@@ -211,8 +211,8 @@ export namespace Region {
  */
 export namespace Case {
     export interface CasePageRequest extends Common.PageRequest {
-        // regionId: number | null,
-        address: string,
+        regionId: number | null,
+        // address: string,
         startTime: string | null,
         endTime: string | null,
         resolution: number | null,

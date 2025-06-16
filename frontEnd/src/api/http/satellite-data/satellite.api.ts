@@ -180,6 +180,32 @@ export async function getCaseResult(taskId: string): Promise<any> {
     return http.get<any>(`modeling/case/result/caseId/${taskId}`)
 }
 
+export const pollStatus = async (taskId: string) => {
+    const interval = 1000 // 每秒轮询一次
+    return new Promise<void>((resolve, reject) => {
+        const timer = setInterval(async () => {
+            try {
+                const res = await getCaseStatus(taskId)!
+                console.log('状态:', res.data)
+
+                if (res.data === 'COMPLETE') {
+                    clearInterval(timer)
+                    resolve()
+                }
+                if (res.data === 'FAILED' || res.data === 'ERROR') {
+                    console.log(res, res.data)
+                    clearInterval(timer)
+                    reject(new Error('任务失败'))
+                }
+            } catch (err) {
+                clearInterval(timer)
+                console.log('错误', err)
+                reject(err)
+            }
+        }, interval)
+    })
+}
+
 export async function getRasterPoints(param: any): Promise<any> {
     return http.post<any>(`modeling/example/raster/point`, param)
 }
@@ -197,4 +223,8 @@ export async function getPoiInfo(query: string): Promise<any> {
  */
 export async function getCasePage(param: Case.CasePageRequest): Promise<Case.CasePageResponse> {
     return http.post<Case.CasePageResponse>(`data/case/page`, param)
+}
+
+export async function getCaseById(caseId: string): Promise<Case.CaseResponse> {
+    return http.get<Case.CaseResponse>(`data/case/${caseId}`)
 }
