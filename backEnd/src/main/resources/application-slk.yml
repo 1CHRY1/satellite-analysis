@@ -98,7 +98,7 @@ modelServer:
     status: 2
 
 tiler:
-  end-point: http://223.2.32.242:8079
+  end-point: http://223.2.43.228:31800
 
 satelliteConfig:
   path: D:/code/band_config.json

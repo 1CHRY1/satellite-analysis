@@ -6,6 +6,7 @@ import nnu.mnr.satellite.model.dto.common.FileData;
 import nnu.mnr.satellite.model.dto.modeling.ProjectBasicDTO;
 import nnu.mnr.satellite.model.dto.modeling.ProjectResultDTO;
 import nnu.mnr.satellite.model.po.modeling.ProjectResult;
+import nnu.mnr.satellite.model.pojo.modeling.MinioProperties;
 import nnu.mnr.satellite.model.pojo.modeling.TilerProperties;
 import nnu.mnr.satellite.model.vo.modeling.JsonResultVO;
 import nnu.mnr.satellite.model.vo.modeling.ProjectResultVO;
@@ -41,6 +42,8 @@ public class ProjectResultDataService {
     TilerProperties tilerProperties;
 
     private final IProjectResultRepo projectResultRepo;
+    @Autowired
+    private MinioProperties minioProperties;
 
     public ProjectResultDataService(IProjectResultRepo iProjectResultRepo) {
         this.projectResultRepo = iProjectResultRepo;
@@ -66,6 +69,7 @@ public class ProjectResultDataService {
         return TilerResultVO.tilerBuilder()
                 .tilerUrl(tilerProperties.getEndPoint())
                 .object(projectResult.getBucket() + projectResult.getPath())
+                .minioEndpoint(minioProperties.getUrl())
                 .build();
     }
 

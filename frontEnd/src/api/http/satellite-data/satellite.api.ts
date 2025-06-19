@@ -228,3 +228,7 @@ export async function getCasePage(param: Case.CasePageRequest): Promise<Case.Cas
 export async function getCaseById(caseId: string): Promise<Case.CaseResponse> {
     return http.get<Case.CaseResponse>(`data/case/${caseId}`)
 }
+// 注意与getCaseResult的区别
+export async function getResultByCaseId(caseId: string): Promise<any> {
+    return http.get<any>(`data/case/result/${caseId}`)
+}

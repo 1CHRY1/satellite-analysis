@@ -17,5 +17,6 @@ public class TilerResultVO {
 
     private String tilerUrl;
     private String object;
+    private String minioEndpoint;
 
 }

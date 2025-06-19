@@ -222,6 +222,7 @@ export namespace Case {
     export interface Case {
         caseId: string,
         address: string,
+        regionId: number,
         resolution: string,
         sceneList: Array<string>,
         dataSet: string,

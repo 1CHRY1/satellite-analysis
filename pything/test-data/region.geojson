@@ -1,0 +1,80 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+  "bbox": [
+    118.64831551906971,
+    34.92287819596478,
+    121.34139016042543,
+    37.143171889554715
+  ],
+  "type": "Feature",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [
+		  120.136045,36.302282
+        ],
+        [
+          120.71556,36.320895
+        ],
+        [
+          120.678766,35.962746
+        ],
+        [
+          120.218833,35.959006
+        ],
+        [
+          120.136045,36.302282
+        ]
+      ]
+    ]
+  },
+  "properties": {
+    "bounds": [
+      113085,
+      3872685,
+      348615,
+      4112115
+    ],
+    "crs": "http://www.opengis.net/def/crs/EPSG/0/32651",
+    "band_metadata": [
+      [
+        "b1",
+        {}
+      ]
+    ],
+    "band_descriptions": [
+      [
+        "b1",
+        ""
+      ]
+    ],
+    "dtype": "uint16",
+    "nodata_type": "None",
+    "colorinterp": [
+      "gray"
+    ],
+    "scales": [
+      1
+    ],
+    "offsets": [
+      0
+    ],
+    "driver": "GTiff",
+    "count": 1,
+    "width": 7851,
+    "height": 7981,
+    "overviews": [
+      2,
+      4,
+      8,
+      16,
+      32,
+      64
+    ]
+  }
+}
+  ]
+}

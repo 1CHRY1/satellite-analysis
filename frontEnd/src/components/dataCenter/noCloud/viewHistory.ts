@@ -1,8 +1,11 @@
-import { getAddress, getCasePage } from '@/api/http/satellite-data/satellite.api';
+import { getAddress, getCasePage, getRegionPosition, getResultByCaseId } from '@/api/http/satellite-data/satellite.api';
 import { ref, computed, nextTick } from 'vue';
 import type { Case } from '@/api/http/satellite-data/satellite.type';
 import type { RegionValues } from 'v-region'
 import { formatTime } from '@/util/common';
+import { getNoCloudUrl4MosaicJson } from '@/api/http/satellite-data/visualize.api';
+import { message } from 'ant-design-vue';
+import * as MapOperation from '@/util/map/operation'
 
 type HistoryValueTab = 'RUNNING' | 'COMPLETE'
 type HistoryTab = {
@@ -205,6 +208,69 @@ export function useViewHistoryModule() {
         getCaseList()
     }
 
+    /**
+    * 预览无云一版图
+    */
+    const previewList = computed<boolean[]>(() => {
+        const list = Array(total.value).fill(false)
+        if (previewIndex.value !== null) {
+            list[previewIndex.value] = true
+        }
+        return list
+    })
+    const previewIndex = ref<number | null>(null)
+    const previewNoCloud = async (data: any) => {
+        const stopLoading = message.loading('正在加载无云一版图，请稍后...', 0)
+        // 清除旧图层
+        MapOperation.map_removeNocloudGridPreviewLayer()
+        MapOperation.map_destroyNoCloudLayer()
+    
+        // -------- 新版无云一版图（MosaicJson）展示逻辑 --------------------------
+        const mosaicJsonPath = data.bucket + '/' + data.object_path
+        const url4MosaicJson = getNoCloudUrl4MosaicJson({
+            mosaicJsonPath: mosaicJsonPath
+        })
+        MapOperation.map_addNoCloudLayer(url4MosaicJson)
+    
+        setTimeout(() => {
+            stopLoading()
+        }, 5000);
+        // console.log('一下加几十个图层，等着吃好果子')
+    }
+    const fitView = async (regionId: number) => {
+        let window = await getRegionPosition(regionId)
+        MapOperation.map_fitView([
+            [window.bounds[0], window.bounds[1]],
+            [window.bounds[2], window.bounds[3]],
+        ])
+    }
+    const showResult = async (caseId: string, regionId: number) => {
+        previewIndex.value = caseList.value.findIndex(item => item.caseId === caseId)
+        fitView(regionId)
+        let res = await getResultByCaseId(caseId)
+        console.log(res, '结果')
+
+        // 预览无云一版图影像
+        let data = res.data
+        const getData = async (taskId: string) => {
+            let res:any
+            while (!(res = await getResultByCaseId(taskId)).data) {
+                console.log('Retrying...')
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            return res.data;
+        }
+        if(!data)
+            data = await getData(caseId)
+        
+        previewNoCloud(data)
+    }
+    const unPreview = () => {
+        previewIndex.value = null
+        MapOperation.map_removeNocloudGridPreviewLayer()
+        MapOperation.map_destroyNoCloudLayer()
+    }
+
     return {
         caseList,
         currentPage,
@@ -223,6 +289,10 @@ export function useViewHistoryModule() {
         timeOptionList,
         resolutionList,
         isExpand,
-        reset
+        reset,
+        previewList,
+        previewIndex,
+        showResult,
+        unPreview
     }
 }

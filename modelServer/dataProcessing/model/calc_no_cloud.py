@@ -16,7 +16,7 @@ import requests
 MINIO_ENDPOINT = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}"
 INFINITY = 999999
 
-@ray.remote
+@ray.remote(num_cpus=CONFIG.RAY_NUM_CPUS, memory=CONFIG.RAY_MEMORY_PER_TASK)
 def process_grid(grid, scenes, grid_helper, scene_band_paths, minio_endpoint, temp_dir_path):
     try:
         from rio_tiler.io import COGReader

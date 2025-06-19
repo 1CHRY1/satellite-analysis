@@ -16,20 +16,15 @@ def calc_ndvi(nir_path, red_path, output_path):
     nir_ds = gdal.Open(nir_path)
     red_ds = gdal.Open(red_path)
 
-    # 获取输入文件的大小
-    nir_xsize, nir_ysize = nir_ds.RasterXSize, nir_ds.RasterYSize
-    red_xsize, red_ysize = red_ds.RasterXSize, red_ds.RasterYSize
-
-    if nir_xsize != red_xsize or nir_ysize != red_ysize:
-        raise ValueError("Input images do not have the same size")
+    if not nir_ds or not red_ds:
+        raise ValueError("无法打开影像数据，请检查 URL 是否有效")
 
     # 读取NoData值
     nir_nodata = nir_ds.GetRasterBand(1).GetNoDataValue()
     red_nodata = red_ds.GetRasterBand(1).GetNoDataValue()
 
-    # 读取波段数据
-    nir_band = nir_ds.GetRasterBand(1).ReadAsArray()
-    red_band = red_ds.GetRasterBand(1).ReadAsArray()
+    nir_band = nir_ds.GetRasterBand(1).ReadAsArray().astype(np.float32)
+    red_band = red_ds.GetRasterBand(1).ReadAsArray().astype(np.float32)
 
     # 构建掩膜
     mask = np.full(nir_band.shape, False)
@@ -38,19 +33,23 @@ def calc_ndvi(nir_path, red_path, output_path):
     if red_nodata is not None:
         mask |= (red_band == red_nodata)
 
-    # 计算 NDVI
-    ndvi = (nir_band.astype(float) - red_band.astype(float)) / (nir_band + red_band + 1e-6)
+    # 计算NDVI
+    ndvi = (nir_band - red_band) / (nir_band + red_band + 1e-10)
     ndvi_nodata = -9999
     ndvi = np.where(mask, ndvi_nodata, ndvi)  # 保证掩膜区为-9999
 
-    # 创建输出文件
-    driver = gdal.GetDriverByName('MEM')
-    ndvi_ds = driver.Create('', nir_xsize, nir_ysize, 1, gdal.GDT_Float32)
-    ndvi_ds.SetProjection(nir_ds.GetProjection())
-    ndvi_ds.SetGeoTransform(nir_ds.GetGeoTransform())
+    geo_transform = nir_ds.GetGeoTransform()
+    projection = nir_ds.GetProjection()
+    cols, rows = nir_band.shape
+
+    driver = gdal.GetDriverByName("GTiff")
+    ndvi_ds = driver.Create(output_path, rows, cols, 1, gdal.GDT_Float32)
+
+    ndvi_ds.SetGeoTransform(geo_transform)
+    ndvi_ds.SetProjection(projection)
+
     ndvi_ds.GetRasterBand(1).WriteArray(ndvi)
     ndvi_ds.GetRasterBand(1).SetNoDataValue(ndvi_nodata)
-    ndvi_ds.FlushCache()
     print("ndvi_ds created, start to translate to COG")
     
     gdal.Translate(
@@ -63,7 +62,6 @@ def calc_ndvi(nir_path, red_path, output_path):
         ]
     )
     print("COG NDVI calculation completed successfully")
-    
     return output_path
 
 
@@ -126,16 +124,16 @@ def calculate_scene_ndvi(scene, feature, ndvi_output_path):
 
 ##### 区域影像获取 （1st）
 # 感兴趣区
-with open(xfer.URL.dataUrl('region3.geojson'), "r") as f:
+with open(xfer.URL.dataUrl('region.geojson'), "r") as f:
     region = json.load(f)
     feature = region['features'][0]
 
 # 目标产品
-product = xfer.Product().query(product_name="landset8_L2SP")[0]
+product = xfer.Product().query(product_name="L2SP")[0]
 
 # 按条件筛选出系列影像
 scenes = xfer.Scene().query(
-    product_id=product.product_id,
+    # product_id=product.product_id,
     polygon=region,
     # time_range=(datetime(2021, 1, 1), datetime(2025, 1, 31)),
     # cloud_range=(0, 10)
@@ -154,8 +152,8 @@ print(f"区域时序NDVI计算完成，总计用时{end_time - start_time}")
 
 # 基于给定点采样生成历年ndvi曲线
 point = [
-    121.4089252118747,
-    31.7407566292287
+    120.4089252118747,
+    30.5407566292287
 ]
 # point = [119.295706, 31.603155]
 json_path = xfer.URL.outputUrl('data.json')
