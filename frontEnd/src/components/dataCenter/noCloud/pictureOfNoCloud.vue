@@ -292,7 +292,7 @@
                     <noCloudHistory @toggle="setCurrentPanel" />
                 </section>
 
-                <section class="panel-section" v-if="calImage.length > 0">
+                <!-- <section class="panel-section" v-if="calImage.length > 0">
                     <div class="section-header">
                         <div class="section-icon">
                             <CloudIcon :size="18" />
@@ -308,7 +308,7 @@
                             </div>
                         </div>
                     </div>
-                </section>
+                </section> -->
             </div>
         </dv-border-box12>
     </div>

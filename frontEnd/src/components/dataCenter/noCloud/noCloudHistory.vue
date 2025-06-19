@@ -150,15 +150,15 @@
                     </div>
                 </div>
             </div>
-            <div v-for="item in caseList" class="config-item" :key="item.caseId">
+            <div v-for="(item, index) in caseList" class="config-item" :key="item.caseId">
                 <div class="config-label relative">
                     <Image :size="16" class="config-icon" />
                     <span>{{ `${item.address}无云一版图` }}</span>
                     <div class="absolute right-0 cursor-pointer">
                         <a-tooltip>
                             <template #title>预览</template>
-                            <Eye v-if="!item.status" :size="16" class="cursor-pointer"/>
-                            <EyeOff v-else :size="16" class="cursor-pointer"/>
+                            <Eye v-if="previewList[index]" @click="unPreview" :size="16" class="cursor-pointer"/>
+                            <EyeOff v-else :size="16" @click="showResult(item.caseId, item.regionId)" class="cursor-pointer"/>
                         </a-tooltip>
                     </div>
                 </div>
@@ -229,13 +229,13 @@ import bus from '@/store/bus'
 import { useTaskStore } from '@/store'
 const { caseList, currentPage, sectionHeader, pageSize, total, historyClassTabs, activeTab, handleSelectTab,
      selectedRegion, selectedTimeIndex, timeOptionList, selectedResolution, resolutionList, EMPTY_RESOLUTION, getCaseList,
-    isExpand, reset } = useViewHistoryModule()
+    isExpand, reset, previewList, previewIndex, showResult, unPreview } = useViewHistoryModule()
 const { pendingTaskList, startPolling, stopPolling } = useTaskPollModule()
 const taskStore = useTaskStore()
 // 检测由noCloud跳转至history面板时（setCurrentPanel），前端是否还在初始化任务（calNoCloud处理请求参数）
 const isPending = computed(() => taskStore._isInitialTaskPending)
 
-onMounted(() => {
+onMounted(() => { 
     bus.on('case-list-refresh', getCaseList)
     console.log('noCloudHistory mounted')
     getCaseList()
@@ -263,6 +263,7 @@ watch(activeTab, (newVal) => {
 onUnmounted(() => {
     bus.off('case-list-refresh', getCaseList)
     stopPolling()
+    unPreview()
 })
 </script>
 

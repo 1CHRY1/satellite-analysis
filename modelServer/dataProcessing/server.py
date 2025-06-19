@@ -5,7 +5,20 @@ import ray
 # 初始化ray
 def init_ray():
     try:
-        ray.init(address='auto')
+        ray.init(
+            address='auto',
+            # 可预留内存：12GB（约60%）
+            # 用于任务执行过程中的内存分配
+            _memory=CONFIG.RAY_MEMORY,
+            
+            # 启用资源隔离（推荐）
+            enable_resource_isolation=True,
+            
+            # 系统预留内存：2GB
+            # Ray系统进程预留内存，剩余内存约2GB给系统
+            system_reserved_memory=CONFIG.RAY_SYSTEM_RESERVED_MEMORY,
+        )
+        # ray.init(address='auto')
         for node in ray.nodes():
             print(node)
         print("Connected to existing Ray cluster")

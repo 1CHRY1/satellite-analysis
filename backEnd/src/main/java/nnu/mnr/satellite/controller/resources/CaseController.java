@@ -39,4 +39,9 @@ public class CaseController {
         return ResponseEntity.ok(caseDataService.getCaseByCaseId(caseId));
     }
 
+    @GetMapping("result/{caseId}")
+    public ResponseEntity<CommonResultVO> getResultByCaseId(@PathVariable("caseId") String caseId) {
+        return ResponseEntity.ok(caseDataService.getResultByCaseId(caseId));
+    }
+
 }

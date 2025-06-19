@@ -64,19 +64,63 @@ class DevK8SConfig(BaseConfig):
 
     TEMP_OUTPUT_DIR                                 =       r"/usr/resource/temp"
 
+    # Limitation for Ray
+    RAY_MEMORY                                      =       40 * 1024**3
+    RAY_MEMORY_PER_TASK                             =       5 * 1024**3
+    RAY_OBJECT_STORE_MEMORY                         =       RAY_MEMORY * 0.3
+    RAY_NUM_CPUS                                    =       6
+    RAY_SYSTEM_RESERVED_MEMORY                      =       2 * 1024**3
+
+class VmodConfig(BaseConfig):
+    # MinIO Config
+    MINIO_PORT                                      =       30900
+    MINIO_IP                                        =       "223.2.43.228"
+    MINIO_ACCESS_KEY                                =       "jTbgNHEqQafOpUxVg7Ol"
+    MINIO_SECRET_KEY                                =       "7UxtrqhSOyN1KUeumbqTRMv1zeluLO69OwJnCC0M"
+    MINIO_SECURE                                    =       False
+    MINIO_IMAGES_BUCKET                             =       "test-images"
+    MINIO_TILES_BUCKET                              =       "test-tiles"
+    MINIO_GRID_BUCKET                               =       "test-tiles"
+    MINIO_TEMP_FILES_BUCKET                         =       "temp-files"
+
+    # MySQL Config
+    MYSQL_HOST                                      =       "223.2.43.228"
+    MYSQL_TILE_PORT                                 =       30779
+    MYSQL_TILE_DB                                   =       "tile"
+    MYSQL_RESOURCE_PORT                             =       30778
+    MYSQL_RESOURCE_DB                               =       "resource"
+    MYSQL_USER                                      =       "root"
+    MYSQL_PWD                                       =       "123456"
+
+    # Titiler Config
+    TITILER_BASE_URL                                =       "http://223.2.43.228:31800"
+    MOSAIC_CREATE_URL                               =       TITILER_BASE_URL + "/mosaic/create"
+
+    TEMP_OUTPUT_DIR                                 =       r"/usr/resource/temp"
+
+    # Limitation for Ray
+    RAY_MEMORY                                      =       40 * 1024**3
+    RAY_MEMORY_PER_TASK                             =       5 * 1024**3
+    RAY_OBJECT_STORE_MEMORY                         =       RAY_MEMORY * 0.3
+    RAY_NUM_CPUS                                    =       6
+    RAY_SYSTEM_RESERVED_MEMORY                      =       2 * 1024**3
+
 # --------------- class ProdConfig(BaseConfig): ---------------
 
 # 配置映射字典 - 类似Spring Boot的profile机制
 config = {
     'k8s': DevK8SConfig,
+    'vmod':VmodConfig
 }
 
 def get_config(profile=None):
-    """获取配置类，如果profile为None则使用开发配置"""
+    """获取配置类，如果profile为None则使用k8s配置"""
     if profile is None:
         profile = 'k8s'
     
-    return config.get(profile, config['k8s'])
+    # 更安全的方式，避免KeyError
+    default_config = config.get('k8s', {})
+    return config.get(profile, default_config)
 
 # 获取当前环境配置 - 类似Spring Boot的 spring.profiles.active
 CURRENT_PROFILE = os.getenv('APP_PROFILE', 'k8s')  # 默认使用k8s

@@ -7,8 +7,8 @@ xfer.initialize(config_file_path)
 ##################################################
 start_time = datetime.datetime.now()
 
-base_tif = xfer.URL.dataUrl('base.tif')
-pga_tif = xfer.URL.dataUrl('pga.tif')
+base_tif = xfer.URL.dataUrl('basecog.tif')
+pga_tif = xfer.URL.dataUrl('PGA.tif')
 intensity_tif = xfer.URL.dataUrl('intensity.tif')
 
 output_pga_tif = xfer.URL.outputUrl('outputPGApbtyTif.tif')

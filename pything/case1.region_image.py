@@ -8,7 +8,7 @@ xfer.initialize(config_file_path)
 ##################################################
 
 # 感兴趣区
-with open(xfer.URL.dataUrl('region2.geojson'), "r") as f:
+with open(xfer.URL.dataUrl('region.geojson'), "r") as f:
     region = json.load(f)
     feature = region['features'][0]
 

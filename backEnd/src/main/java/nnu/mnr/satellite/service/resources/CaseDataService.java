@@ -253,4 +253,22 @@ public class CaseDataService {
         }
     }
 
+    public CommonResultVO getResultByCaseId(String caseId) {
+        Case caseEntity = caseRepo.selectById(caseId);
+        // 检查是否找到 Case
+        if (caseEntity == null) {
+            return CommonResultVO.builder()
+                    .status(1)
+                    .message("未找到对应的 Case")
+                    .data(null)
+                    .build();
+        } else {
+            return CommonResultVO.builder()
+                    .status(1)
+                    .message("success")
+                    .data(caseEntity.getResult())
+                    .build();
+        }
+    }
+
 }

@@ -51,37 +51,23 @@ def read_image_box_save(cog_path: str, bbox: Tuple[float, float, float, float], 
     Returns:
         None
     """
-    if nodata is not None:
-        options = {"nodata": nodata}
-    else:
-        options = {}
-    
-    with COGReader(cog_path, options=options) as cog:
-        data, mask = cog.part(bbox)
-        bounds = bbox
-        height, width = data.shape[1], data.shape[2]
-        count = data.shape[0]
-        dtype = data.dtype
-        crs = cog.dataset.crs
-        transform = from_bounds(*bounds, width=width, height=height)
-
-        # 保存为TIF
-        with rasterio.open(
-            save_path,
-            'w',
-            driver='COG',
-            height=height,
-            width=width,
-            count=count,
-            dtype=dtype,
-            crs=crs,
-            transform=transform,
-            nodata=nodata
-        ) as dst:
-            dst.write(data)
-            dst.write_mask(mask)
-
-        print(f"保存成功: {save_path}")
+    minx, miny, maxx, maxy = bbox
+    coordinates = [[
+        [minx, miny],
+        [minx, maxy],
+        [maxx, maxy],
+        [maxx, miny],
+        [minx, miny]
+    ]]
+    feature = {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": coordinates
+        }
+    }
+    return read_image_feature_save(cog_path, feature, save_path, nodata)
 
 
 def read_image_feature(cog_path: str, feature: Dict, nodata=None):
@@ -116,49 +102,51 @@ def read_image_feature_save(cog_path: str, feature: Dict, save_path: str, nodata
     Returns:
         None
     """
+    """
+    更简洁的版本，直接使用rio_tiler的part方法
+    """
     if nodata is not None:
         options = {"nodata": nodata}
     else:
         options = {}
     
     with COGReader(cog_path, options=options) as cog:
-        data, mask = cog.feature(shape=feature)
-        # 通用提取Polygon和MultiPolygon的所有点
+        # 使用part方法，直接传入bbox
         geometry = feature.get("geometry")
         coords = geometry.get("coordinates")
         geom_type = geometry.get("type")
+        
         if geom_type == "Polygon":
             all_points = [pt for ring in coords for pt in ring]
         elif geom_type == "MultiPolygon":
             all_points = [pt for polygon in coords for ring in polygon for pt in ring]
         else:
             raise ValueError("只支持Polygon和MultiPolygon")
+        
         xs = [pt[0] for pt in all_points]
         ys = [pt[1] for pt in all_points]
-        minx, maxx = min(xs), max(xs)
-        miny, maxy = min(ys), max(ys)
-        bounds = (minx, miny, maxx, maxy)
-        height, width = data.shape[1], data.shape[2]
-        count = data.shape[0]
-        dtype = data.dtype
-        crs = cog.dataset.crs
-        transform = from_bounds(*bounds, width=width, height=height)
-
+        bbox = (min(xs), min(ys), max(xs), max(ys))
+        
+        # 使用part方法获取数据，它会自动处理坐标转换
+        img = cog.part(bbox, dst_crs=cog.dataset.crs)
+        
         # 保存为TIF
         with rasterio.open(
             save_path,
             'w',
             driver='COG',
-            height=height,
-            width=width,
-            count=count,
-            dtype=dtype,
-            crs=crs,
-            transform=transform,
+            height=img.height,
+            width=img.width,
+            count=img.count,
+            dtype=img.array.dtype,
+            crs=cog.dataset.crs,
+            transform=img.transform,
             nodata=nodata
         ) as dst:
-            dst.write(data)
-            dst.write_mask(mask)
+            dst.write(img.array)
+            if hasattr(img, 'mask'):
+                dst.write_mask(img.mask)
+    
     return save_path
 
 

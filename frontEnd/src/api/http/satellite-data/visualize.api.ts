@@ -57,6 +57,19 @@ export async function getImgStatistics(tifFullPath: string): Promise<any> {
     return json
 }
 
+export async function getImgBounds(tifFullPath: string): Promise<any> {
+    let url = `${titilerEndPoint}/info`
+
+    const requestParams = new URLSearchParams()
+    requestParams.append('url', minioEndPoint + '/' + tifFullPath)
+    url += '?' + requestParams.toString()
+
+    const response = await fetch(url)
+    const json = await response.json()
+
+    return json.bounds
+}
+
 // 获取一张tif的统计信息
 async function getTifStatistic(tifFullPath: string) {
     let url = `${titilerEndPoint}/statistics`
