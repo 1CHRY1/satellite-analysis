@@ -80,7 +80,6 @@
                             <option value="Python2_7" disabled>Python 2.7 ( 暂不支持 )</option>
                             <option value="Python3_9">Python 3.9</option>
                             <option value="Python3_10" disabled>Python 3.10 ( 暂不支持 )</option>
-                            <option value="Python3_12">Python 3.12</option>
                         </select>
 
                         <!-- 关键词 -->
@@ -192,7 +191,7 @@ const createProjectView = ref(false)
 const createLoading = ref(false)
 const newProject = ref({
     projectName: '',
-    environment: 'Python3_12',
+    environment: 'Python3_9',
     // keywords: [],
     description: '',
     // authority: ''
