@@ -5,7 +5,7 @@
             <div class="container mx-auto px-4">
                 <div class="grid items-center gap-0 md:grid-cols-2">
                     <div class="space-y-6">
-                        <h1 class="flex items-center text-4xl leading-tight font-bold md:text-5xl">遥感ARD平台</h1>
+                        <h1 class="flex items-center text-4xl leading-tight font-bold md:text-5xl">多源遥感应用支撑云平台</h1>
                         <p class="text-lg text-slate-300">通过集成分析工具与可视化功能，深度挖掘卫星数据中的洞察力。</p>
                         <div class="flex flex-col space-y-3 pt-4 sm:flex-row sm:space-y-0 sm:space-x-4">
                             <button
@@ -287,7 +287,7 @@
             <div class="container mx-auto px-4 text-center">
                 <h2 class="mb-6 text-3xl font-bold">从卫星数据中解读最新信息</h2>
                 <p class="mx-auto mb-8  text-slate-300">
-                    加入数以千计的研究人员、组织和政府机构的行列，使用遥感ARD平台分析卫星图像获得结论与解决方案。
+                    加入数以千计的研究人员、组织和政府机构的行列，使用多源遥感应用支撑云平台分析卫星图像获得结论与解决方案。
                 </p>
                 <!-- <div class="flex flex-col justify-center space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4">
                     <button
@@ -306,7 +306,7 @@
                         <div class="mb-4 flex items-center space-x-2">
                             <img :src="logo" alt="Logo" class="h-10 w-auto  cursor-pointer mr-12" @click="jumpToOGMS" />
                             <satellite class="text-primary h-8 w-8" />
-                            <span class="text-xl font-bold text-white">遥感ARD平台</span>
+                            <span class="text-xl font-bold text-white">多源遥感应用支撑云平台</span>
 
                         </div>
                         <p class="text-sm">为研究人员、组织和政府机构提供先进的遥感ARD方案</p>
@@ -379,7 +379,7 @@
 
                 <div
                     class="mt-12 flex flex-col items-center justify-between border-t border-slate-800 pt-8 md:flex-row">
-                    <p class="text-sm">© 2025 OpenGMS 遥感ARD平台。 保留所有权利。</p>
+                    <p class="text-sm">© 2025 OpenGMS 多源遥感应用支撑云平台。 保留所有权利。</p>
                     <div class="mt-4 flex space-x-4 md:mt-0">
                         <a href="#" class="text-slate-400 transition-colors hover:text-white">
                             <!-- <twitter class="h-5 w-5" /> -->
