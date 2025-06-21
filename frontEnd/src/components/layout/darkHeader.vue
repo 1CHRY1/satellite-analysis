@@ -6,7 +6,7 @@
                 <satellite class="!text-[#3b82f6] h-8 w-8 mr-2" />
 
                 <span
-                    class="bg-gradient-to-r from-sky-100 to-white bg-clip-text font-semibold whitespace-nowrap text-transparent sm:text-lg md:text-xl lg:text-2xl">遥感ARD平台</span>
+                    class="bg-gradient-to-r from-sky-100 to-white bg-clip-text font-semibold whitespace-nowrap text-transparent sm:text-lg md:text-xl lg:text-2xl">多源遥感应用支撑云平台</span>
             </div>
 
             <nav class="ml-[5vw] flex items-center space-x-[1.5vw]">

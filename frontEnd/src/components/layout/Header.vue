@@ -12,7 +12,7 @@
                 />
                 <span
                     class="ml-3 bg-gradient-to-r from-sky-950 to-sky-500 bg-clip-text font-semibold whitespace-nowrap text-transparent sm:text-lg md:text-xl lg:text-3xl"
-                    >遥感ARD平台</span
+                    >多源遥感应用支撑云平台</span
                 >
             </div>
 

@@ -166,9 +166,26 @@ def process_grid(grid, scenes, grid_helper, scene_band_paths, minio_endpoint, te
                 G = read_band(paths['green'])
                 B = read_band(paths['blue'])
                 
-                img_R[fill_mask] = R[fill_mask]
-                img_G[fill_mask] = G[fill_mask] 
-                img_B[fill_mask] = B[fill_mask]
+                # 如果选择归一化，请打开NEW 否则打开OLD
+                #################### OLD START ####################
+                # img_R[fill_mask] = R[fill_mask]
+                # img_G[fill_mask] = G[fill_mask] 
+                # img_B[fill_mask] = B[fill_mask]
+                #################### OLD END ####################
+
+                #################### NEW START ####################
+                sensor_name = scene.get('sensorName')
+                print(sensor_name)
+                # 拉伸到0-255范围 - 选择拉伸方法
+                stretch_method = 'percentile'  # 可以改为 'preset' 或 'minmax'
+                R_stretched = stretch_to_8bit(R, sensor_name, stretch_method)
+                G_stretched = stretch_to_8bit(G, sensor_name, stretch_method)
+                B_stretched = stretch_to_8bit(B, sensor_name, stretch_method)
+                # 填充到目标数组（需要转换回float32以保持一致性）
+                img_R[fill_mask] = R_stretched[fill_mask].astype(np.float32)
+                img_G[fill_mask] = G_stretched[fill_mask].astype(np.float32)
+                img_B[fill_mask] = B_stretched[fill_mask].astype(np.float32)
+                #################### NEW END ####################
 
                 need_fill_mask[fill_mask] = False # False if pixel filled
 
@@ -197,7 +214,9 @@ def process_grid(grid, scenes, grid_helper, scene_band_paths, minio_endpoint, te
             height=img.shape[1],
             width=img.shape[2],
             count=3,
-            dtype=img.dtype,
+            # dtype=img.dtype,
+            # Very Important!!!!!!!!!!!!!!!!
+            dtype=np.float32,
             crs='EPSG:4326',
             transform=transform
         ) as dst:
@@ -209,6 +228,61 @@ def process_grid(grid, scenes, grid_helper, scene_band_paths, minio_endpoint, te
         print(f"进程ERROR: {e}")
         return None
 
+# 归一拉伸至0-255
+def stretch_to_8bit(data, sensor_name, stretch_method='percentile'):
+    """
+    将不同传感器的像素值拉伸到0-255范围
+    
+    Args:
+        data: 输入数据数组
+        sensor_name: 传感器名称
+        stretch_method: 拉伸方法 ('percentile', 'minmax', 'preset')
+    
+    Returns:
+        拉伸后的8bit数据
+    """
+    import numpy as np
+    
+    # 移除无效值
+    valid_data = data[data > 0]  # 假设0为无效值
+    
+    if len(valid_data) == 0:
+        return data.astype(np.float32)
+    
+    if stretch_method == 'preset':
+        # 根据不同传感器使用预设的拉伸范围
+        if "Landsat" in sensor_name or "Landset" in sensor_name:
+            # Landsat 8/9 Surface Reflectance: 0-65535 对应 0-1的反射率
+            # 通常取2-98百分位进行拉伸
+            min_val, max_val = 7000, 25000  # 经验值
+        elif "MODIS" in sensor_name:
+            # MODIS Surface Reflectance: -100 to 16000
+            min_val, max_val = 0, 8000
+        elif "GF" in sensor_name:
+            # 高分卫星通常是0-1023或0-4095
+            min_val, max_val = 0, 1000
+        elif "Sentinel-1" in sensor_name:
+            min_val, max_val = 0, 3000
+        elif "Sentinel-2" in sensor_name:
+            min_val, max_val = 0, 10000
+        else:
+            # 默认使用百分位拉伸
+            min_val = np.percentile(valid_data, 2)
+            max_val = np.percentile(valid_data, 98)
+            
+    elif stretch_method == 'percentile':
+        # 使用2-98百分位拉伸（去除异常值）
+        min_val = np.percentile(valid_data, 2)
+        max_val = np.percentile(valid_data, 98)
+        
+    elif stretch_method == 'minmax':
+        # 使用最小最大值拉伸
+        min_val = np.min(valid_data)
+        max_val = np.max(valid_data)
+    
+    # 执行拉伸
+    stretched = np.clip((data - min_val) / (max_val - min_val) * 255, 0, 255)
+    return stretched.astype(np.float32)
 
 
 def upload_one(tif_path, grid_x, grid_y, task_id):
@@ -300,6 +374,7 @@ class calc_no_cloud(Task):
         
         print('start time ', time.time())
 
+        # 使用ray
         ray_tasks = [
             process_grid.remote(grid=g,
                                 scenes=scenes,
@@ -309,8 +384,14 @@ class calc_no_cloud(Task):
                                 temp_dir_path=temp_dir_path)
             for g in grids
         ]
-        
         results = ray.get(ray_tasks)
+
+        # 不使用ray
+        # results = []
+        # for g in grids:
+        #     result = process_grid(g, scenes, grid_helper, scene_band_paths, MINIO_ENDPOINT, temp_dir_path)
+        #     results.append(result)
+
 
         ## Step 3 : Results Uploading and Statistic #######################
         

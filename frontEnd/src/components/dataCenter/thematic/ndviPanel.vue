@@ -424,6 +424,12 @@ const initChart = (el: HTMLElement, data: any, index: number) => {
                 type: data.type
             }
         ],
+        dataZoom: [{  // 关键配置：时间轴滑动条
+            type: 'slider',  // 滑块型
+            xAxisIndex: 0,   // 控制第一个X轴
+            start: 50,       // 初始显示范围的起始百分比（50%）
+            end: 100         // 初始显示范围的结束百分比（100%）
+        }],
         tooltip: {
             trigger: 'axis'
         },

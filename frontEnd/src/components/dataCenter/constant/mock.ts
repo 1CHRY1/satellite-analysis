@@ -88,7 +88,7 @@ export const mockFilterResult = [
 export const myTestProject: Project = {
     projectId: 'PRJzYdhkbc9SAgmrM4yP',
     projectName: 'huanyuTesting',
-    environment: 'Python3_9',
+    environment: 'Python3_12',
     createTime: '2025-04-03T11:19:10',
     packages: '[numpy]',
     createUser: 'USR22DjM7sfWVlJeT3m2',
