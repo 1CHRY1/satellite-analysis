@@ -67,12 +67,18 @@ public class CaseDataService {
 
     public void updateCaseStatusById(String caseId, String status) {
         Case caseObj = caseRepo.selectById(caseId);
+        if (caseObj == null) {
+            return;
+        }
         caseObj.setStatus(status);
         caseRepo.updateCaseById(caseObj);
     }
 
     public void updateCaseResultById(String caseId, JSONObject result) {
         Case caseObj = caseRepo.selectById(caseId);
+        if (caseObj == null) {
+            return;
+        }
         caseObj.setResult(result);
         caseRepo.updateCaseById(caseObj);
     }

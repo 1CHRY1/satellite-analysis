@@ -17,6 +17,7 @@ def init_ray():
             # 系统预留内存：2GB
             # Ray系统进程预留内存，剩余内存约2GB给系统
             system_reserved_memory=CONFIG.RAY_SYSTEM_RESERVED_MEMORY,
+            system_reserved_cpu=CONFIG.RAY_SYSTEM_RESERVED_CPU,  # 至少 0.5
         )
         # ray.init(address='auto')
         for node in ray.nodes():
