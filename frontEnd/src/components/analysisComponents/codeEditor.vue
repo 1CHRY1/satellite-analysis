@@ -128,8 +128,8 @@ const emit = defineEmits(['addMessage'])
  */
 
 const showDropdown = ref(false)
-const envOptions = ['Python 2.7', 'Python 3.6', 'Python 3.9', 'Python 3.12']
-const selectedEnv = ref('Python 3.12')
+const envOptions = ['Python 2.7', 'Python 3.6', 'Python 3.9']
+const selectedEnv = ref('Python 3.9')
 const dialogVisible = ref(false)
 const addPackageShow = ref(false)
 const addedPackageInfo = ref({
