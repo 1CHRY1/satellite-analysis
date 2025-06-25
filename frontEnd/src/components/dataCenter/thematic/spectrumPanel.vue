@@ -5,21 +5,21 @@
             <div class="section-icon">
                 <MapIcon :size="18" />
             </div>
-            <h2 class="section-title">光谱分析</h2>
+            <h2 class="section-title">{{ t('datapage.optional_thematic.spectrum.title') }}</h2>
         </div>
         <div class="section-content">
             <div class="config-container">
                 <div class="config-item">
                     <div class="config-label relative">
                         <MapIcon :size="16" class="config-icon" />
-                        <span>待分析影像</span>
+                        <span>{{ t('datapage.optional_thematic.spectrum.wait') }}</span>
                     </div>
                     <div class="config-control justify-center">
                         <div class="flex items-center gap-2 mt-2 w-full">
-                            <label class="text-white">影像选择：</label>
+                            <label class="text-white">{{ t('datapage.optional_thematic.spectrum.select') }}</label>
                             <select v-model="selectedSceneId" @change="showImageBBox"
                                 class="bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-3 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6] max-w-[calc(100%-90px)] truncate">
-                                <option disabled selected value="">请选择影像</option>
+                                <option disabled selected value="">{{ t('datapage.optional_thematic.spectrum.op_select') }}</option>
                                 <option v-for="image in hyperspectralImages" :key="image.sceneName"
                                     :value="image.sceneId" :title="image.sceneName" class="truncate">
                                     {{ image.sceneName }}
@@ -41,7 +41,7 @@
                 <div class="config-item">
                     <div class="config-label relative">
                         <MapIcon :size="16" class="config-icon" />
-                        <span>空间选择</span>
+                        <span>{{ t('datapage.optional_thematic.spectrum.space') }}</span>
                     </div>
                     <div class="config-control justify-center">
                         <div class="flex gap-10">
@@ -55,7 +55,7 @@
                                     'hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95'
                                 ]">
                                 <MapPinIcon class="mb-2" />
-                                地图选点
+                                  {{ t('datapage.optional_thematic.spectrum.map_point') }}
                             </div>
 
                             <!-- 划线采点块 -->
@@ -70,11 +70,11 @@
                                         : 'hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95'
                                 ]">
                                 <LayersIcon class="mb-2" />
-                                划线采点
+                                {{ t('datapage.optional_thematic.spectrum.line_point') }}
                                 <div v-if="true"
                                     class="absolute inset-0 bg-black bg-opacity-40 rounded-lg flex flex-col items-center justify-center text-xs text-white cursor-not-allowed">
                                     <LayersIcon class="mb-2" />
-                                    划线采点
+                                    {{ t('datapage.optional_thematic.spectrum.line_point') }}
                                 </div>
                             </div>
                         </div>
@@ -82,7 +82,7 @@
                 </div>
                 <button @click="analysisSpectrum"
                     class="cursor-pointer rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95">
-                    开始分析
+                    {{ t('datapage.optional_thematic.spectrum.button') }}
                 </button>
             </div>
         </div>
@@ -94,11 +94,11 @@
             <div class="section-icon">
                 <ChartColumn :size="18" />
             </div>
-            <h2 class="section-title">计算结果</h2>
+            <h2 class="section-title">{{ t('datapage.optional_thematic.spectrum.result') }}</h2>
         </div>
         <div class="section-content">
             <div v-if="analysisData.length === 0" class="flex justify-center my-6">
-                <SquareDashedMousePointer class="mr-2" />暂无计算结果
+                <SquareDashedMousePointer class="mr-2" />{{ t('datapage.optional_thematic.spectrum.noresult') }}
             </div>
             <div class="config-item" v-for="(item, index) in analysisData" :key="index">
                 <div>第{{ index + 1 }}次计算：{{ item.analysis }}</div>
@@ -110,7 +110,7 @@
                 <div class="chart-wrapper flex flex-col items-end">
                     <div class="chart" :ref="el => setChartRef(el, index)" :id="`chart-${index}`"
                         style="width: 100%; height: 400px;"></div>
-                    <button class="!text-[#38bdf8] cursor-pointer" @click="fullscreenChart(index)">全屏查看</button>
+                    <button class="!text-[#38bdf8] cursor-pointer" @click="fullscreenChart(index)">{{ t('datapage.optional_thematic.spectrum.fullview') }}</button>
                 </div>
             </div>
         </div>
@@ -149,7 +149,8 @@ import bus from '@/store/bus'
 import mapboxgl from 'mapbox-gl'
 import { mapManager } from '@/util/map/mapManager';
 
-
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 type ThematicConfig = {
     allImages: any,
@@ -167,7 +168,8 @@ const hyperspectralImages = computed(() => {
         return image.sceneName.includes('AHSI')
     })
     if (filteredImages.length === 0) {
-        ElMessage.warning('该区域暂无高光谱影像')
+        // '该区域暂无高光谱影像'
+        ElMessage.warning(t('datapage.optional_thematic.spectrum.message.info_noima'))
     }
 
     return filteredImages
@@ -193,10 +195,10 @@ const toggleMode = (mode: 'point' | 'line' | 'false') => {
     activeMode.value = mode
     if (mode === 'point') {
         MapOperation.draw_pointMode()
-        ElMessage.info('请在地图上绘制研究点')
+        ElMessage.info(t('datapage.optional_thematic.spectrum.message.info_point'))
     } else if (mode === 'line') {
         MapOperation.draw_lineMode()
-        ElMessage.info('请在地图上绘制研究线')
+        ElMessage.info(t('datapage.optional_thematic.spectrum.message.info_line'))
     }
 }
 
@@ -214,10 +216,10 @@ const showImageBBox = async () => {
             fillColor: '#a4ffff',
             fillOpacity: 0.2,
         })
-        ElMessage.success('已加影像边界，请在影像与行政区的交集内选点。')
+        ElMessage.success(t('datapage.optional_thematic.spectrum.message.success_poin'))
     } catch (e) {
         console.error("有错误找后端", e)
-        ElMessage.error('加载影像边界失败。')
+        ElMessage.error(t('datapage.optional_thematic.spectrum.message.info_fail'))
     }
 }
 
@@ -235,21 +237,21 @@ const analysisData = ref<any>([])
 const analysisSpectrum = async () => {
 
     if (!pickedPoint.value[0] || !pickedPoint.value[1]) {
-        ElMessage.warning('请先选择您要计算的区域')
+        ElMessage.warning(t('datapage.optional_thematic.spectrum.message.info_reg'))
         return
     }
     if (selectedSceneId.value === '') {
-        ElMessage.warning('请先选择您要计算的影像')
+        ElMessage.warning(t('datapage.optional_thematic.spectrum.message.info_ima'))
         return
     }
-    ElMessage.success('开始高光谱分析。')
+    ElMessage.success(t('datapage.optional_thematic.spectrum.essage.info_start'))
     let spectrumParam = {
         sceneId: selectedSceneId.value,
         point: [pickedPoint.value[1], pickedPoint.value[0]]
     }
     let getSpectrumRes = await getSpectrum(spectrumParam)
     if (getSpectrumRes.message !== 'success') {
-        ElMessage.error('计算失败，请重试')
+        ElMessage.error(t('datapage.optional_thematic.spectrum.message.calerror'))
         console.error(getSpectrumRes)
         return
     }
@@ -311,10 +313,10 @@ const analysisSpectrum = async () => {
             imageName: selectedImage.sceneName,
             point: [...pickedPoint.value]
         })
-        ElMessage.success('光谱分析计算完成')
+        ElMessage.success(t('datapage.optional_thematic.spectrum.message.success'))
     } catch (error) {
         calTask.value.calState = 'failed'
-        ElMessage.error('光谱分析计算失败，请重试')
+        ElMessage.error(t('datapage.optional_thematic.spectrum.message.info_retry'))
         console.error(error);
     }
 }

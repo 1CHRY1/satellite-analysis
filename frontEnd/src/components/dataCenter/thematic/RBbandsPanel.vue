@@ -5,19 +5,19 @@
             <div class="section-icon">
                 <MapIcon :size="18" />
             </div>
-            <h2 class="section-title">红绿立体</h2>
+            <h2 class="section-title">{{t('datapage.optional_thematic.RG.title')}}</h2>
         </div>
         <div class="section-content">
             <div class="config-container">
                 <div class="config-item">
                     <div class="config-label relative">
                         <MapIcon :size="16" class="config-icon" />
-                        <span>红绿立体影像集</span>
+                        <span>{{t('datapage.optional_thematic.RG.set')}}</span>
                     </div>
                     <div class="config-control justify-center">
                         <div class="w-full space-y-2 max-h-[500px] overflow-auto">
                             <div v-if="RGImages.length === 0" class="flex justify-center my-6">
-                                <SquareDashedMousePointer class="mr-2" />该区域暂无红绿立体影像
+                                <SquareDashedMousePointer class="mr-2" />{{t('datapage.optional_thematic.RG.noimage')}}
                             </div>
                             <div v-for="(image, index) in RGImages" :key="index" @click="showTif(image)"
                                 class="flex flex-col border cursor-pointer border-[#247699] bg-[#0d1526] text-white px-4 py-2 rounded-lg transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c]">
@@ -75,6 +75,9 @@ import * as MapOperation from '@/util/map/operation'
 import { formatTime } from '@/util/common';
 import { ElMessage } from 'element-plus';
 
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+
 /**
  * type
  */
@@ -91,7 +94,7 @@ const props = defineProps<{
 }>()
 
 const showTif = async (image) => {
-    ElMessage.success('正在为您加载影像...')
+    ElMessage.success(t('datapage.optional_thematic.RG.load'))
     let sceneId = image.sceneId
     let res = await getDescriptionBySceneId(sceneId)
     console.log(res, '红绿立体');

@@ -5,19 +5,19 @@
             <div class="section-icon">
                 <MapIcon :size="18" />
             </div>
-            <h2 class="section-title">DSM分析</h2>
+            <h2 class="section-title">{{t('datapage.optional_thematic.DSM.title')}}</h2>
         </div>
         <div class="section-content">
             <div class="config-container">
                 <div class="config-item">
                     <div class="config-label relative">
                         <MapIcon :size="16" class="config-icon" />
-                        <span>DSM影像集</span>
+                        <span>{{t('datapage.optional_thematic.DSM.set')}}</span>
                     </div>
                     <div class="config-control justify-center">
                         <div class="w-full space-y-2">
                             <div v-if="allDsmImages.length === 0" class="flex justify-center my-6">
-                                <SquareDashedMousePointer class="mr-2" />该区域暂无DSM影像
+                                <SquareDashedMousePointer class="mr-2" />{{t('datapage.optional_thematic.DSM.noimage')}}
                             </div>
                             <div v-for="(image, index) in allDsmImages" :key="index" @click="showTif(image)"
                                 class="flex flex-col border cursor-pointer border-[#247699] bg-[#0d1526] text-white px-4 py-2 rounded-lg transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c]">
@@ -30,7 +30,7 @@
                 <div class="config-item">
                     <div class="config-label relative">
                         <MapIcon :size="16" class="config-icon" />
-                        <span>空间选择</span>
+                        <span>{{t('datapage.optional_thematic.DSM.space')}}</span>
                     </div>
                     <div class="config-control justify-center">
                         <div class="flex gap-10">
@@ -44,7 +44,7 @@
                                     'hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95'
                                 ]">
                                 <MapPinIcon class="mb-2" />
-                                地图选点
+                                {{t('datapage.optional_thematic.DSM.map_point')}}
                             </div>
 
                             <!-- 划线采点块 -->
@@ -70,11 +70,11 @@
                                         : 'hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95'
                                 ]">
                                 <LayersIcon class="mb-2" />
-                                划线采点
+                                {{t('datapage.optional_thematic.DSM.line_point')}}
                                 <div v-if="true"
                                     class="absolute inset-0 bg-black bg-opacity-40 rounded-lg flex flex-col items-center justify-center text-xs text-white cursor-not-allowed">
                                     <LayersIcon class="mb-2" />
-                                    划线采点
+                                    {{t('datapage.optional_thematic.DSM.line_point')}}
                                 </div>
                             </div>
                         </div>
@@ -83,7 +83,7 @@
                 </div>
                 <button @click="analysisDsm"
                     class="cursor-pointer rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95">
-                    开始分析
+                    {{t('datapage.optional_thematic.DSM.button')}}
                 </button>
             </div>
         </div>
@@ -95,12 +95,12 @@
             <div class="section-icon">
                 <ChartColumn :size="18" />
             </div>
-            <h2 class="section-title">计算结果</h2>
+            <h2 class="section-title">{{t('datapage.optional_thematic.DSM.result')}}</h2>
         </div>
         <div class="section-content">
             <div class="config-container">
                 <div v-if="analysisData.length === 0" class="flex justify-center my-6">
-                    <SquareDashedMousePointer class="mr-2" />暂无计算结果
+                    <SquareDashedMousePointer class="mr-2" />{{t('datapage.optional_thematic.DSM.noresult')}}
                 </div>
                 <div v-for="(item, index) in analysisData" :key="index" class="config-item">
                     <div class="config-label relative">
@@ -117,7 +117,7 @@
                                 <div class="chart" :ref="el => setChartRef(el, index)" :id="`chart-${index}`"
                                     style="width: 100%; height: 400px;"></div>
                                 <button class="!text-[#38bdf8] cursor-pointer"
-                                    @click="fullscreenChart(index)">全屏查看</button>
+                                    @click="fullscreenChart(index)">{{t('datapage.optional_thematic.DSM.fullview')}}</button>
                             </div>
                         </div>
                     </div>
@@ -161,7 +161,8 @@ import bus from '@/store/bus'
 import mapboxgl from 'mapbox-gl'
 import { mapManager } from '@/util/map/mapManager';
 
-
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 
 /**
@@ -213,15 +214,15 @@ const toggleMode = (mode: 'point' | 'line' | 'false') => {
     activeMode.value = mode
     if (mode === 'point') {
         MapOperation.draw_pointMode()
-        ElMessage.info('请在地图上绘制研究点')
+        ElMessage.info(t('datapage.optional_thematic.DSM.message.info_point'))
     } else if (mode === 'line') {
         MapOperation.draw_lineMode()
-        ElMessage.info('请在地图上绘制研究线')
+        ElMessage.info(t('datapage.optional_thematic.DSM.message.info_line'))
     }
 }
 
 const showTif = async (image) => {
-    ElMessage.success('正在为您加载影像...')
+    ElMessage.success(t('datapage.optional_thematic.DSM.message.load'))
     let sceneId = image.sceneId
     let res = await getDescriptionBySceneId(sceneId)
     let url = res.images[0].bucket + '/' + res.images[0].tifPath
@@ -263,7 +264,7 @@ const analysisDsm = async () => {
     if (!verifyAnalysis()) {
         return
     }
-    ElMessage.success('开始DSM分析。')
+    ElMessage.success(t('datapage.optional_thematic.DSM.message.info_start'))
     if (activeMode.value === 'point') {
         let pointParam = {
             point: [pickedPoint.value[1], pickedPoint.value[0]],
@@ -271,7 +272,7 @@ const analysisDsm = async () => {
         }
         let res = await getRasterPoints(pointParam)
         if (res?.message != 'success') {
-            ElMessage.warning('计算服务出错')
+            ElMessage.warning(t('datapage.optional_thematic.DSM.message.calerror'))
         }
         calTask.value.taskId = res.data
         const pollStatus = async (taskId: string) => {
@@ -315,10 +316,10 @@ const analysisDsm = async () => {
                 value: dsmValue,
                 point: [...pickedPoint.value]
             })
-            ElMessage.success('DSM计算完成')
+            ElMessage.success(t('datapage.optional_thematic.DSM.message.success'))
         } catch (error) {
             calTask.value.calState = 'failed'
-            ElMessage.error('DSM计算失败，请重试')
+            ElMessage.error(t('datapage.optional_thematic.DSM.message.info_retry'))
             console.error(error);
         }
     } else if (activeMode.value === 'line') {
@@ -330,7 +331,7 @@ const analysisDsm = async () => {
         let lineRes = await getRasterLine(lineParam)
 
         if (lineRes?.message != 'success') {
-            ElMessage.warning('计算服务出错')
+            ElMessage.warning(t('datapage.optional_thematic.DSM.message.calerror'))
         }
         calTask.value.taskId = lineRes.data
         const pollStatus = async (taskId: string) => {
@@ -375,10 +376,10 @@ const analysisDsm = async () => {
                 analysis: "空间采点DSM变化趋势",
                 line: pickedLine.value
             })
-            ElMessage.success('DSM计算完成')
+            ElMessage.success(t('datapage.optional_thematic.DSM.message.success'))
         } catch (error) {
             calTask.value.calState = 'failed'
-            ElMessage.error('DSM计算失败，请重试')
+            ElMessage.error(t('datapage.optional_thematic.DSM.message.info_retry'))
             console.error(error);
         }
     }
@@ -386,11 +387,11 @@ const analysisDsm = async () => {
 // 卫语句
 const verifyAnalysis = () => {
     if (activeMode.value != 'point' && activeMode.value != 'line') {
-        ElMessage.warning('请先完成空间选择')
+        ElMessage.warning(t('datapage.optional_thematic.DSM.message.info_space'))
         return false
     }
     if (allDsmImages.value.length === 0) {
-        ElMessage.warning('该区域未检出DSM数据，请更换研究区')
+        ElMessage.warning(t('datapage.optional_thematic.DSM.message.info_noima'))
         return false
     }
 

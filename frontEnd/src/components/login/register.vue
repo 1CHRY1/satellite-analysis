@@ -2,8 +2,8 @@
     <div class="main">
         <div class="container">
             <div class="left">
-                <div class="login">注 册</div>
-                <div class="eula">请填写以下信息完成注册！</div>
+                <div class="login">{{$t('signup.pagetitle')}} </div>
+                <div class="eula">{{$t('signup.descript')}}</div>
             </div>
             <div class="right">
                 <!-- <svg viewBox="0 0 320 300">
@@ -25,27 +25,27 @@
                     />
                 </svg> -->
                 <div class="form">
-                    <label for="email">邮 箱</label>
-                    <input type="email" placeholder="请输入您的邮箱" id="email" v-model="email" />
-                    <label for="password">密 码</label>
+                    <label for="email">{{$t('signup.email')}}</label>
+                    <input type="email" :placeholder="t('signup.intext_email')" id="email" v-model="email" />
+                    <label for="password">{{$t('signup.password')}}</label>
                     <input
                         type="password"
-                        placeholder="请输入密码"
+                        :placeholder="t('signup.intext_password')"
                         id="password"
                         v-model="password"
                     />
-                    <label for="confirm-password">确认密码</label>
+                    <label for="confirm-password">{{$t('signup.repassword')}}</label>
                     <input
                         type="password"
-                        placeholder="请再次输入密码"
+                        :placeholder="t('signup.intext_repassword')"
                         id="confirm-password"
                         v-model="confirmPassword"
                     />
-                    <label for="name">用户名</label>
-                    <input type="text" placeholder="请输入您的用户名" id="name" v-model="name" />
-                    <label for="title">称 谓</label>
+                    <label for="name">{{$t('signup.username')}}</label>
+                    <input type="text" :placeholder="t('signup.intext_name')"  id="name" v-model="name" />
+                    <label for="title">{{$t('signup.title')}}</label>
                     <!-- <input type="text" placeholder="请输入您的头衔" id="title" v-model="title" /> -->
-                    <el-select v-model="title" class="!p-0" placeholder="请选择您的称谓">
+                    <el-select v-model="title" class="!p-0" :placeholder="t('signup.intext_title')">
                         <el-option label="Professor" value="Professor"></el-option>
                         <el-option label="Dr" value="Dr"></el-option>
                         <el-option label="Mr" value="Mr"></el-option>
@@ -54,23 +54,23 @@
                         <el-option label="Ms" value="Ms"></el-option>
                         <el-option label="Mx" value="Mx"></el-option>
                     </el-select>
-                    <label for="organization">组 织</label>
+                    <label for="organization">{{$t('signup.organization')}}</label>
                     <input
                         type="text"
-                        placeholder="请输入您的组织"
+                        :placeholder="t('signup.intext_organization')"
                         id="organization"
                         v-model="organization"
                     />
                     <div class="flex h-[80px] w-[245px] flex-row items-center justify-center">
                         <button type="button" class="submit cursor-pointer" @click="handleRegister">
-                            注 册
+                            {{$t('signup.button.register')}}
                         </button>
                         <button
                             type="button"
                             class="submit cursor-pointer"
                             @click="router.push('/login')"
                         >
-                            返 回
+                            {{$t('signup.button.back')}}
                         </button>
                     </div>
                 </div>
@@ -85,6 +85,10 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { createUser } from '@/api/http/user'
 
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+
+
 const router = useRouter()
 
 const email = ref('')
@@ -96,7 +100,7 @@ const organization = ref('')
 
 const handleRegister = async () => {
     if (password.value !== confirmPassword.value) {
-        ElMessage.error('密码和确认密码不匹配！')
+        ElMessage.error(t('signup.message.error.unmatch'))
         return
     }
     let result = await createUser({
@@ -108,9 +112,9 @@ const handleRegister = async () => {
     })
     if (result?.status === 1) {
         router.push('/login')
-        ElMessage.success('注册成功！')
+        ElMessage.success(t('signup.message.success'))
     } else {
-        ElMessage.error('注册失败，请重试')
+         ElMessage.error(t('signup.message.error.fail'))
     }
 }
 </script>

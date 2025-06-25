@@ -6,7 +6,7 @@
         <el-row class="relative z-10 flex h-[calc(100vh-56px)] text-white" style="flex: none">
             <el-col :span="5" class="h-full">
                 <div class="cardShadow border-box mx-[3vw] my-[3vh] opacity-80 p-6 h-[calc(100%-6vh)] overflow-auto">
-                    <h2 class="text-lg font-bold">模型目录</h2>
+                    <h2 class="text-lg font-bold">{{t("modelpage.title")}}</h2>
                     <!-- <ul class="mt-4 space-y-2">
                         <li v-for="category in categories" :key="category" class="cursor-pointer hover:text-blue-400">
                             {{ category }}
@@ -25,7 +25,7 @@
                                 class="w-[100%] rounded bg-white p-2 !text-black focus:ring-2 focus:ring-blue-400 focus:outline-none" />
                             <button class="w-20 cursor-pointer rounded bg-blue-600 px-4 py-2 hover:bg-blue-500"
                                 @click="">
-                                搜索
+                                 {{t("modelpage.search")}}
                             </button>
                         </div>
                     </el-row>
@@ -72,7 +72,7 @@
                                     class="px-4 py-2 text-[12px] rounded hover:text-blue-500 absolute bottom-2 font-bold right-2 flex items-center">
                                     <!-- Add to project -->
                                     <a href="https://geomodeling.njnu.edu.cn/modelItem/repository" target="_blank">
-                                        详情信息
+                                        {{t("modelpage.detail")}}
                                     </a>
                                     <FilePlus2 v-if="0" :size="16" class="ml-1" />
                                 </div>
@@ -97,58 +97,61 @@ import { getModels } from '@/api/http/analysis'
 import { FilePlus2, Mail, Package } from 'lucide-vue-next'
 import type { modelsOrMethods } from '@/type/modelCentral'
 
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+
 
 const treeData = [
     {
-        label: "面向应用的分类",
+        label: t("modelpage.treedata.label_appli"),
         children: [
             {
-                label: "自然视角",
+                label: t("modelpage.treedata.subleb_nature"),
                 children: [
-                    { label: "陆地圈" },
-                    { label: "海洋圈" },
-                    { label: "冰冻圈" },
-                    { label: "大气圈" },
-                    { label: "太空-地球" },
-                    { label: "固体地球" },
+                    { label: t("modelpage.treedata.nature_land") },
+                    { label: t("modelpage.treedata.nature_sea") },
+                    { label: t("modelpage.treedata.nature_ice") },
+                    { label: t("modelpage.treedata.nature_atmosphere") },
+                    { label: t("modelpage.treedata.nature_space") },
+                    { label: t("modelpage.treedata.nature_earth") },
                 ],
             },
             {
-                label: "人文视角",
+                label: t("modelpage.treedata.subleb_human"),
                 children: [
-                    { label: "发展活动" },
-                    { label: "社会活动" },
-                    { label: "经济活动" },
+                    { label: t("modelpage.treedata.human_dev")},
+                    { label: t("modelpage.treedata.human_soc")},
+                    { label: t("modelpage.treedata.human_eco") },
                 ],
             },
             {
-                label: "综合视角",
+                label: t("modelpage.treedata.subleb_comprehensive"),
                 children: [
-                    { label: "全球尺度" },
-                    { label: "区域尺度" },
+                    { label: t("modelpage.treedata.general_glo") },
+                    { label: t("modelpage.treedata.general_reg")},
                 ],
             },
         ],
     },
     {
-        label: "面向方法的分类",
+        label: t("modelpage.treedata.label_method"),
         children: [
             {
-                label: "数据视角",
+                label: t("modelpage.treedata.subleb_data"),
                 children: [
-                    { label: "地理信息分析" },
-                    { label: "遥感分析" },
-                    { label: "地统计分析" },
-                    { label: "智能计算分析" },
+                    { label: t("modelpage.treedata.data_geo") },
+                    { label: t("modelpage.treedata.data_rem")},
+                    { label: t("modelpage.treedata.data_geostat")},
+                    { label: t("modelpage.treedata.data_sma") },
                 ],
             },
             {
-                label: "过程视角",
+                label:t("modelpage.treedata.subleb_process"),
                 children: [
-                    { label: "物理过程计算" },
-                    { label: "化学过程计算" },
-                    { label: "生物过程计算" },
-                    { label: "人类活动计算" },
+                    { label: t("modelpage.treedata.process_phy") },
+                    { label: t("modelpage.treedata.process_chm") },
+                    { label: t("modelpage.treedata.process_bio")},
+                    { label:  t("modelpage.treedata.process_hun")},
                 ],
             },
         ],
