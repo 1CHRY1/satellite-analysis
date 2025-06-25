@@ -3,12 +3,12 @@
         <projectsBg
             class="absolute inset-0 z-0 h-full w-full overflow-hidden bg-[radial-gradient(ellipse_at_bottom,_#1b2735_0%,_#090a0f_100%)]">
         </projectsBg>
-        <div class="relative z-99 flex flex-col items-center justify-center">
+        <div class="relative z-10 flex flex-col items-center justify-center">
             <div class="my-10 flex w-[50vw] flex-col items-center justify-center">
                 <img src="@/assets/image/toolsEstablish.png" class="h-12 w-fit" alt="" />
                 <div class="searchContainer mt-6 w-[100%]">
                     <div class="model_research">
-                        <input type="text" autocomplete="false" placeholder="根据工具名称、创建人或工具信息进行搜索，搜索词为空则显示所有工具"
+                         <input type="text" autocomplete="false" :placeholder="t('projectpage.searchbar')"
                             class="model_research_input" v-model="searchInput" style="font-size: 14px"
                             @keyup.enter="researchProjects" />
 
@@ -21,7 +21,7 @@
                                 height: 2rem;
                             " @click="researchProjects">
                             <Search class="h-4" />
-                            搜索
+                            {{t("projectpage.search")}}
                         </el-button>
                     </div>
                     <el-button type="primary" color="#049f40" style="
@@ -30,7 +30,7 @@
                             font-size: 14px;
                             height: 2rem;
                         " @click="createProjectView = !createProjectView">
-                        {{ createProjectView ? '取消创建' : '创建工具' }}
+                        {{ createProjectView ? t('projectpage.canceltool') : t('projectpage.createtool')}}
                     </el-button>
                     <el-button type="primary" color="#049f40" :disabled="searchProjectsVisible" style="
                             margin-left: 10px;
@@ -38,7 +38,7 @@
                             font-size: 14px;
                             height: 2rem;
                         " @click="viewMyProjects">
-                        {{ myProjectsVisible ? '所有工具' : '我的工具' }}
+                        {{ myProjectsVisible ? t('projectpage.alltool') : t('projectpage.mytool') }}
                     </el-button>
                 </div>
             </div>
@@ -60,12 +60,13 @@
                 <!-- 创建工具的卡片 -->
                 <div v-if="createProjectView" class="absolute top-[calc(50vh-240px-206px)] flex opacity-80">
                     <div class="w-96 rounded-xl bg-gray-700 p-6 text-white shadow-xl">
-                        <h2 class="mb-4 text-center text-xl font-semibold">创建工具</h2>
+                        <h2 class="mb-4 text-center text-xl font-semibold">{{ t("projectpage.createtool") }}</h2>
+
 
                         <!-- 工具名称 -->
                         <label class="mb-1 flex text-sm">
                             <div style="color: red; margin-right: 4px">*</div>
-                            工具名称
+                            {{t("projectpage.toolname")}}
                         </label>
                         <input v-model="newProject.projectName" type="text"
                             class="w-full rounded bg-gray-800 p-2 text-white focus:ring-2 focus:ring-green-400 focus:outline-none" />
@@ -73,7 +74,7 @@
                         <!-- 运行环境 -->
                         <label class="mt-3 mb-1 flex text-sm">
                             <div style="color: red; margin-right: 4px">*</div>
-                            运行环境
+                            {{t("projectpage.envir")}}
                         </label>
                         <select v-model="newProject.environment"
                             class="w-full rounded bg-gray-800 p-2 text-white focus:ring-2 focus:ring-green-400 focus:outline-none">
@@ -122,13 +123,13 @@
                             <button @click="create" class="mx-2 rounded-xl bg-green-600 px-6 py-2 hover:bg-green-500"
                                 :class="{ 'cursor-pointer': !createLoading }" :disabled="createLoading">
                                 <div v-if="createLoading" class="is-loading flex items-center">
-                                    <Loading class="h-4 w-4 mr-1" />创建
+                                    <Loading class="h-4 w-4 mr-1" />{{t("projectpage.button.create")}}
                                 </div>
-                                <div v-else>创建</div>
+                                <div v-else>{{t("projectpage.button.create")}}</div>
                             </button>
                             <button @click="createProjectView = false"
                                 class="mx-2 !ml-4 rounded-xl bg-gray-500 px-6 py-2 hover:bg-gray-400 cursor-pointer">
-                                取消
+                                {{t("projectpage.button.cancel")}}
                             </button>
                         </div>
                     </div>
@@ -148,6 +149,9 @@ import { Loading } from "@element-plus/icons-vue"
 import type { project, newProject } from '@/type/analysis'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
+
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 const router = useRouter()
 const userId = localStorage.getItem('userId')
@@ -209,21 +213,21 @@ const enterProject = (item: project) => {
     if (item.createUser === userId) {
         router.push(`/project/${item.projectId}`)
     } else {
-        ElMessage.error('您没有访问该工具的权限，请联系工具创建者')
+        ElMessage.error(t("projectpage.message.error.entererr"))
     }
 }
 
 const create = async () => {
     if (!newProject.value.projectName) {
-        ElMessage.error('工具名称不能为空')
+        ElMessage.error(t("projectpage.message.error.create_name_empty"))
         return
     } else if (!newProject.value.description) {
-        ElMessage.error('描述不能为空')
+        ElMessage.error(t("projectpage.message.error.create_description_empty"))
         return
     } else if (
         projectList.value.some((item: project) => item.projectName === newProject.value.projectName)
     ) {
-        ElMessage.error('该工具已存在，请更换工具名称')
+        ElMessage.error(t("projectpage.message.error.create_name_exist"))
         return
     }
     createLoading.value = true
@@ -233,7 +237,7 @@ const create = async () => {
     }
     let createRes = await createProject(createBody)
     router.push(`/project/${createRes.projectId}`)
-    ElMessage.success('创建成功')
+    ElMessage.success(t("projectpage.message.success"))
     createLoading.value = false
     createProjectView.value = false
 }

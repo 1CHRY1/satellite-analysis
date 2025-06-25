@@ -5,14 +5,14 @@
             <div class="section-icon">
                 <MapIcon :size="18" />
             </div>
-            <h2 class="section-title">NDVI时序计算</h2>
+            <h2 class="section-title">{{$t('datapage.optional_thematic.NDVI.title')}}</h2>
         </div>
         <div class="section-content">
             <div class="config-container">
                 <div class="config-item">
                     <div class="config-label relative">
                         <MapIcon :size="16" class="config-icon" />
-                        <span>空间选择</span>
+                        <span>{{$t('datapage.optional_thematic.NDVI.space')}}</span>
                     </div>
                     <div class="config-control flex-col  gap-2 w-full">
                         <div class="flex gap-10">
@@ -26,7 +26,7 @@
                                     'hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95'
                                 ]">
                                 <MapPinIcon class="mb-2" />
-                                地图选点
+                                {{$t('datapage.optional_thematic.NDVI.map_point')}}
                             </div>
 
                             <!-- 划线采点块 -->
@@ -41,16 +41,16 @@
                                         : 'hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95'
                                 ]">
                                 <LayersIcon class="mb-2" />
-                                划线采点
+                                {{$t('datapage.optional_thematic.NDVI.line_point')}}
                                 <div v-if="true"
                                     class="absolute inset-0 bg-black bg-opacity-40 rounded-lg flex flex-col items-center justify-center text-xs text-white cursor-not-allowed">
                                     <LayersIcon class="mb-2" />
-                                    划线采点
+                                    {{$t('datapage.optional_thematic.NDVI.line_point')}}
                                 </div>
                             </div>
                         </div>
                         <div class="flex gap-4 my-4 items-center mb-4">
-                            添加辅助图斑:
+                            {{$t('datapage.optional_thematic.NDVI.add')}}
                             <div class="  relative">
                                 <el-select v-model="selectedDimension" multiple placeholder="Select" class="w-[190px]"
                                     @change="showMVTLayers(selectedDimension)" popper-class="ndviSelect">
@@ -72,7 +72,7 @@
                         </div>
                         <button @click="analysisNDVI"
                             class="cursor-pointer w-full rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95">
-                            开始分析
+                            {{$t('datapage.optional_thematic.NDVI.button')}}
                         </button>
                         <!-- 请确定您要研究的区域： -->
                         <!-- <div class="flex items-center gap-2 mt-2 w-full">
@@ -121,11 +121,11 @@
             <div class="section-icon">
                 <ChartColumn :size="18" />
             </div>
-            <h2 class="section-title">计算结果</h2>
+            <h2 class="section-title">{{$t('datapage.optional_thematic.NDVI.result')}}</h2>
         </div>
         <div class="section-content">
             <div v-if="analysisData.length === 0" class="flex justify-center my-6">
-                <SquareDashedMousePointer class="mr-2" />暂无计算结果
+                <SquareDashedMousePointer class="mr-2" />{{$t('datapage.optional_thematic.NDVI.noresult')}}
             </div>
             <div class="config-item" v-for="(item, index) in analysisData" :key="index">
                 <div>第{{ index + 1 }}次计算：{{ item.analysis }}</div>
@@ -136,7 +136,7 @@
                 <div class="chart-wrapper flex flex-col items-end">
                     <div class="chart" :ref="el => setChartRef(el, index)" :id="`chart-${index}`"
                         style="width: 100%; height: 400px;"></div>
-                    <button class="!text-[#38bdf8] cursor-pointer" @click="fullscreenChart(index)">全屏查看</button>
+                    <button class="!text-[#38bdf8] cursor-pointer" @click="fullscreenChart(index)">{{$t('datapage.optional_thematic.NDVI.fullview')}}</button>
                 </div>
             </div>
         </div>
@@ -176,6 +176,9 @@ import {
 } from 'lucide-vue-next'
 import { useGridStore } from '@/store'
 import { mapManager } from '@/util/map/mapManager'
+
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 type ThematicConfig = {
     allImages: any,
@@ -303,10 +306,10 @@ const toggleMode = (mode: 'point' | 'line' | 'false') => {
     activeMode.value = mode
     if (mode === 'point') {
         MapOperation.draw_pointMode()
-        ElMessage.info('请在地图上绘制研究点')
+        ElMessage.info(t('datapage.optional_thematic.NDVI.message.info_point'))
     } else if (mode === 'line') {
         MapOperation.draw_lineMode()
-        ElMessage.info('请在地图上绘制研究线')
+        ElMessage.info(t('datapage.optional_thematic.NDVI.message.info_line'))
     }
 }
 /**
@@ -320,18 +323,18 @@ const analysisData = ref<any>([])
 
 const analysisNDVI = async () => {
     if (!pickedPoint.value[0] || !pickedPoint.value[1]) {
-        ElMessage.warning('请先选择您要计算的区域')
+        ElMessage.warning(t('datapage.optional_thematic.NDVI.message.info_choose'))
         return
     }
     let getNdviPointParam = {
         sceneIds: allNdviRateImages.value.map(image => image.sceneId),
         point: [pickedPoint.value[1], pickedPoint.value[0]]
     }
-    ElMessage.success('开始ndvi时序分析。')
+    ElMessage.success(t('datapage.optional_thematic.NDVI.message.info_start'))
 
     let getNdviRes = await getNdviPoint(getNdviPointParam)
     if (getNdviRes.message !== 'success') {
-        ElMessage.error('计算失败，请重试')
+        ElMessage.error(t('datapage.optional_thematic.NDVI.message.calerror'))
         console.error(getNdviRes)
         return
     }

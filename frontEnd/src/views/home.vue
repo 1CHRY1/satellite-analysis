@@ -36,20 +36,20 @@
             <div class="absolute inset-0 bg-gradient-to-br from-black/80 via-black/60 to-black/70"></div>
 
             <div class="relative z-10 flex h-full flex-col items-center justify-center text-center text-white px-6">
-                <h1 class="!text-[3vw] font-bold md:text-6xl leading-tight">遥感 ARD 平台</h1>
+                <h1 class="!text-[3vw] font-bold md:text-6xl leading-tight">{{ t('homepage.title.maintitle') }}</h1>
                 <p class="mt-4 !text-[0.9vw] text-slate-300 md:text-xl ">
-                    通过集成分析工具与可视化功能，深度挖掘卫星数据中的洞察力，探索地球的每一寸变化。
+                    {{t("homepage.text.hero_description")}}
                 </p>
                 <div class="mt-6 flex flex-col gap-3 sm:flex-row">
                     <button
                         class="bg-blue-600 hover:bg-blue-700 rounded-xl px-6 py-3 text-white font-semibold transition cursor-pointer"
                         @click="gotoPages('data')">
-                        🚀 探索数据
+                         {{t("homepage.button.explore")}}
                     </button>
                     <button
                         class="rounded-xl border border-slate-500 px-6 py-3 text-white hover:bg-white/10 transition cursor-pointer"
                         @click="gotoPages('projects')">
-                        🧪 开始分析
+                        {{t("homepage.button.analysis")}}
                     </button>
                 </div>
             </div>
@@ -63,8 +63,8 @@
         <section class="bg-white py-16">
             <div class="container mx-auto px-4">
                 <div class="mb-16 text-center">
-                    <h2 class="text-3xl font-bold text-slate-800">一体化集成分析工具</h2>
-                    <p class="mx-auto mt-4 max-w-2xl text-slate-600">为卫星图像的管理、分析与可视化提供全面支持</p>
+                    <h2 class="text-3xl font-bold text-slate-800">{{t("homepage.title.subtitle_tool")}}</h2>
+                    <p class="mx-auto mt-4 max-w-2xl text-slate-600">{{t("homepage.text.tool_description")}}</p>
                 </div>
 
                 <div class="grid gap-8 md:grid-cols-3">
@@ -72,17 +72,17 @@
                         <div class="bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
                             <Search class="text-primary h-6 w-6" />
                         </div>
-                        <h3 class="mb-2 text-xl font-semibold text-slate-800">图像检索</h3>
-                        <p class="text-slate-600">利用高级过滤选项访问和检索多个来源的卫星图像。</p>
+                        <h3 class="mb-2 text-xl font-semibold text-slate-800">{{t("homepage.text.tool_search")}}</h3>
+                        <p class="text-slate-600">{{t("homepage.text.tool_search_description")}}</p>
                     </div>
 
                     <div class="rounded-xl bg-slate-50 p-6 shadow-sm transition-shadow hover:shadow-md">
                         <div class="bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
                             <bar-chart-2 class="text-primary h-6 w-6" />
                         </div>
-                        <h3 class="mb-2 text-xl font-semibold text-slate-800">数据可视化</h3>
+                        <h3 class="mb-2 text-xl font-semibold text-slate-800">{{t("homepage.text.tool_visualisation")}}</h3>
                         <p class="text-slate-600">
-                            将复杂的卫星数据转化为清晰、可操作的可视化信息和视角。
+                            {{t("homepage.text.tool_visualisation_description")}}
                         </p>
                     </div>
 
@@ -90,8 +90,8 @@
                         <div class="bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
                             <SquareChevronRight class="text-primary h-6 w-6" />
                         </div>
-                        <h3 class="mb-2 text-xl font-semibold text-slate-800">在线分析</h3>
-                        <p class="text-slate-600">利用灵活的在线编程工具对卫星图像进行定制分析。</p>
+                        <h3 class="mb-2 text-xl font-semibold text-slate-800">{{t("homepage.text.tool_analysis")}}</h3>
+                        <p class="text-slate-600">{{t("homepage.text.tool_analysis_description")}}</p>
                     </div>
                 </div>
             </div>
@@ -108,12 +108,12 @@
                         </div>
                     </div>
                     <div class="order-1 space-y-6 md:order-2">
-                        <h2 class="text-3xl font-bold text-slate-800">交互式数据探索与可视化</h2>
-                        <p class="text-slate-600">提供直观的交互式工具，帮助您轻松探索卫星数据。</p>
+                        <h2 class="text-3xl font-bold text-slate-800">{{t("homepage.title.subtitle_explore")}}</h2>
+                        <p class="text-slate-600">{{t("homepage.text.explore_description")}}</p>
                         <ul class="space-y-3">
                             <li class="flex items-start">
                                 <check-circle class="mt-0.5 mr-2 h-6 w-6 flex-shrink-0 text-green-500" />
-                                <span class="text-slate-700">实时数据处理和可视化</span>
+                                <span class="text-slate-700">{{t("homepage.text.explore_visualisation")}}</span>
                             </li>
                             <!-- <li class="flex items-start">
                                 <check-circle class="mt-0.5 mr-2 h-6 w-6 flex-shrink-0 text-green-500" />
@@ -121,17 +121,17 @@
                             </li> -->
                             <li class="flex items-start">
                                 <check-circle class="mt-0.5 mr-2 h-6 w-6 flex-shrink-0 text-green-500" />
-                                <span class="text-slate-700">高级过滤和数据筛选功能</span>
+                                <span class="text-slate-700">{{t("homepage.text.explore_fliter")}}</span>
                             </li>
                             <li class="flex items-start">
                                 <check-circle class="mt-0.5 mr-2 h-6 w-6 flex-shrink-0 text-green-500" />
-                                <span class="text-slate-700">空间数据的在线预览功能</span>
+                                <span class="text-slate-700">{{t("homepage.text.explore_onlineview")}}</span>
                             </li>
                         </ul>
                         <button
                             class="bg-primary hover:bg-primary/90 rounded-md px-6 py-3 font-medium text-white transition-colors cursor-pointer"
                             @click=" gotoPages('data')">
-                            探索更多
+                            {{t("homepage.button.exploremore")}}
                         </button>
                     </div>
                 </div>
@@ -147,12 +147,12 @@
                         </div>
                     </div>
                     <div class="order-1 space-y-6 md:order-1">
-                        <h2 class="text-3xl font-bold text-slate-800">在线编程分析卫星数据</h2>
-                        <p class="text-slate-600">提供强大的在线编程环境，用于分析和处理卫星数据，并实时生成可视化结果。</p>
+                        <h2 class="text-3xl font-bold text-slate-800">{{t("homepage.title.subtitle_program")}}</h2>
+                        <p class="text-slate-600">{{t("homepage.text.program_description")}}</p>
                         <ul class="space-y-3">
                             <li class="flex items-start">
                                 <check-circle class="mt-0.5 mr-2 h-6 w-6 flex-shrink-0 text-green-500" />
-                                <span class="text-slate-700">内置丰富的卫星数据分析工具和库</span>
+                                <span class="text-slate-700">{{t("homepage.text.program_base")}}</span>
                             </li>
                             <!-- <li class="flex items-start">
                                 <check-circle class="mt-0.5 mr-2 h-6 w-6 flex-shrink-0 text-green-500" />
@@ -160,17 +160,17 @@
                             </li> -->
                             <li class="flex items-start">
                                 <check-circle class="mt-0.5 mr-2 h-6 w-6 flex-shrink-0 text-green-500" />
-                                <span class="text-slate-700">支持多种编程语言</span>
+                                <span class="text-slate-700">{{t("homepage.text.program_language")}}</span>
                             </li>
                             <li class="flex items-start">
                                 <check-circle class="mt-0.5 mr-2 h-6 w-6 flex-shrink-0 text-green-500" />
-                                <span class="text-slate-700">实时数据处理与可视化反馈</span>
+                                <span class="text-slate-700">{{t("homepage.text.program_feedback")}}</span>
                             </li>
                         </ul>
                         <button
                             class="bg-primary hover:bg-primary/90 rounded-md px-6 py-3 font-medium text-white transition-colors cursor-pointer"
                             @click=" gotoPages('/projects')">
-                            探索更多
+                            {{t("homepage.button.exploremore")}}
                         </button>
                     </div>
                 </div>
@@ -226,7 +226,7 @@
         <section class="bg-slate-50 py-16">
             <div class="container mx-auto px-4">
                 <div class="mb-8 flex items-center justify-between">
-                    <h2 class="text-2xl font-bold text-slate-800">参考案例</h2>
+                    <h2 class="text-2xl font-bold text-slate-800">{{t("homepage.case.title")}}</h2>
                     <!-- <button class="text-primary flex items-center font-medium" @click=" gotoPages('projects')">
                         查看更多
                         <chevron-right class="ml-1 h-5 w-5" />
@@ -243,8 +243,8 @@
                                 <span
                                     class="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">已完成</span>
                             </div> -->
-                            <h3 class="mb-2 text-lg font-semibold text-slate-800">城市发展分析</h3>
-                            <p class="mb-4 text-sm text-slate-600">利用时间序列卫星图像分析大都市地区的城市扩张。</p>
+                            <h3 class="mb-2 text-lg font-semibold text-slate-800">{{t("homepage.case.urbananalysis")}}</h3>
+                            <p class="mb-4 text-sm text-slate-600">{{t("homepage.case.urban_description")}}</p>
                             <!-- <button class="text-primary text-sm font-medium">查阅细节</button> -->
                         </div>
                     </div>
@@ -258,8 +258,8 @@
                                 <span
                                     class="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">已完成</span>
                             </div> -->
-                            <h3 class="mb-2 text-lg font-semibold text-slate-800">植被指数分析</h3>
-                            <p class="mb-4 text-sm text-slate-600">对农业区域进行NDVI分析，以监测作物健康和生长模式。</p>
+                            <h3 class="mb-2 text-lg font-semibold text-slate-800">{{t("homepage.case.indexanalysis")}}</h3>
+                            <p class="mb-4 text-sm text-slate-600">{{t("homepage.case.index_description")}}</p>
                             <!-- <button class="text-primary text-sm font-medium">查阅细节</button> -->
                         </div>
                     </div>
@@ -273,8 +273,8 @@
                                 <span
                                     class="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">进行中</span>
                             </div> -->
-                            <h3 class="mb-2 text-lg font-semibold text-slate-800">海岸侵蚀研究</h3>
-                            <p class="mb-4 text-sm text-slate-600">海岸线变化的时间序列分析，以确定侵蚀模式和速率。</p>
+                            <h3 class="mb-2 text-lg font-semibold text-slate-800">{{t("homepage.case.erosionstudy")}}</h3>
+                            <p class="mb-4 text-sm text-slate-600">{{t("homepage.case.erosion_description")}}</p>
                             <!-- <button class="text-primary text-sm font-medium">查阅细节</button> -->
                         </div>
                     </div>
@@ -285,9 +285,9 @@
         <!-- CTA Section -->
         <section class="bg-gradient-to-br from-slate-800 to-slate-900 py-16 text-white">
             <div class="container mx-auto px-4 text-center">
-                <h2 class="mb-6 text-3xl font-bold">从卫星数据中解读最新信息</h2>
+                <h2 class="mb-6 text-3xl font-bold">{{t("homepage.CTA.title")}}</h2>
                 <p class="mx-auto mb-8  text-slate-300">
-                    加入数以千计的研究人员、组织和政府机构的行列，使用多源遥感应用支撑云平台分析卫星图像获得结论与解决方案。
+                    {{t("homepage.CTA.CTAtext")}}
                 </p>
                 <!-- <div class="flex flex-col justify-center space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4">
                     <button
@@ -306,53 +306,53 @@
                         <div class="mb-4 flex items-center space-x-2">
                             <img :src="logo" alt="Logo" class="h-10 w-auto  cursor-pointer mr-12" @click="jumpToOGMS" />
                             <satellite class="text-primary h-8 w-8" />
-                            <span class="text-xl font-bold text-white">多源遥感应用支撑云平台</span>
+                            <span class="text-xl font-bold text-white">{{t("homepage.Footer.logo")}}</span>
 
                         </div>
-                        <p class="text-sm">为研究人员、组织和政府机构提供先进的遥感ARD方案</p>
+                        <p class="text-sm">{{t("homepage.Footer.text_forgroups")}}</p>
                     </div>
                     <div>
-                        <h3 class="mb-4 font-semibold text-white">OpenGMS系统</h3>
+                        <h3 class="mb-4 font-semibold text-white">{{t("homepage.Footer.subtitle_OpenGMS")}}</h3>
                         <ul class="space-y-2 text-sm">
                             <li>
                                 <a href="https://geomodeling.njnu.edu.cn/home" target="_blank"
-                                    class="transition-colors hover:text-white">OpenGMS门户网站</a>
+                                    class="transition-colors hover:text-white">{{t("homepage.Footer.OpenGMS_platform")}}</a>
                             </li>
                             <li>
                                 <a href="https://geomodeling.njnu.edu.cn/OpenGMP/#/" target="_blank"
-                                    class="transition-colors hover:text-white">开放式建模平台</a>
+                                    class="transition-colors hover:text-white">{{t("homepage.Footer.platform_open")}}</a>
                             </li>
                             <li>
                                 <a href="https://geomodeling.njnu.edu.cn/PExploration/home" target="_blank"
-                                    class="transition-colors hover:text-white">地理问题求解平台</a>
+                                    class="transition-colors hover:text-white">{{t("homepage.Footer.platform_geo")}}</a>
                             </li>
                             <li>
                                 <a href="https://geomodeling.njnu.edu.cn/PMIP/" target="_blank"
-                                    class="transition-colors hover:text-white">模型比较平台</a>
+                                    class="transition-colors hover:text-white">{{t("homepage.Footer.platform_comp")}}</a>
                             </li>
                             <li>
                                 <a href="https://geomodeling.njnu.edu.cn/YangtzeVGLab/#/" target="_blank"
-                                    class="transition-colors hover:text-white">长三角虚拟地理实验平台</a>
+                                    class="transition-colors hover:text-white">{{t("homepage.Footer.platform_changsanjiao")}}</a>
                             </li>
                         </ul>
                     </div>
 
                     <div>
-                        <h3 class="mb-4 font-semibold text-white">关于我们</h3>
+                        <h3 class="mb-4 font-semibold text-white">{{t("homepage.Footer.subtitle_about")}}</h3>
                         <ul class="space-y-2 text-sm">
                             <li>
                                 <a href="http://opengmsteam.com/" target="_blank"
-                                    class="transition-colors hover:text-white">关于OpenGMS</a>
+                                    class="transition-colors hover:text-white">{{t("homepage.Footer.about")}}</a>
                             </li>
                             <li>
                                 <a href="https://geomodeling.njnu.edu.cn/user/register" target="_blank"
-                                    class="transition-colors hover:text-white">加入我们</a>
+                                    class="transition-colors hover:text-white">{{t("homepage.Footer.join")}}</a>
                             </li>
                         </ul>
                     </div>
 
                     <div>
-                        <h3 class="mb-4 font-semibold text-white">联系我们</h3>
+                        <h3 class="mb-4 font-semibold text-white">{{t("homepage.Footer.subtitle_contact")}}</h3>
                         <ul class="space-y-2 text-sm">
                             <li>
                                 <a href="#" class="transition-colors hover:text-white">
@@ -371,7 +371,7 @@
                                 </a>
                             </li>
                             <li>
-                                <a href="#" class="transition-colors hover:text-white">微信公众号:VGETeam</a>
+                                <a href="#" class="transition-colors hover:text-white">{{t("homepage.Footer.wechat")}}:VGETeam</a>
                             </li>
                         </ul>
                     </div>
@@ -379,7 +379,7 @@
 
                 <div
                     class="mt-12 flex flex-col items-center justify-between border-t border-slate-800 pt-8 md:flex-row">
-                    <p class="text-sm">© 2025 OpenGMS 多源遥感应用支撑云平台。 保留所有权利。</p>
+                    <p class="text-sm">© 2025 OpenGMS 遥感ARD平台。 保留所有权利。</p>
                     <div class="mt-4 flex space-x-4 md:mt-0">
                         <a href="#" class="text-slate-400 transition-colors hover:text-white">
                             <!-- <twitter class="h-5 w-5" /> -->
@@ -416,6 +416,8 @@ import {
 import { useRouter } from 'vue-router';
 import logo from '@/assets/image/logo2.png'
 import banner from "@/assets/image/home/banner.jpeg"
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 const router = useRouter();
 

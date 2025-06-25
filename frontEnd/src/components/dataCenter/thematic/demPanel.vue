@@ -5,19 +5,19 @@
             <div class="section-icon">
                 <MapIcon :size="18" />
             </div>
-            <h2 class="section-title">DEM分析</h2>
+            <h2 class="section-title">{{ t('datapage.optional_thematic.DEM.title') }}</h2>
         </div>
         <div class="section-content">
             <div class="config-container">
                 <div class="config-item">
                     <div class="config-label relative">
                         <MapIcon :size="16" class="config-icon" />
-                        <span>DEM影像集</span>
+                        <span>{{ t('datapage.optional_thematic.DEM.set') }}</span>
                     </div>
                     <div class="config-control justify-center">
                         <div class="w-full space-y-2">
                             <div v-if="allDemImages.length === 0" class="flex justify-center my-6">
-                                <SquareDashedMousePointer class="mr-2" />该区域暂无DEM影像
+                                <SquareDashedMousePointer class="mr-2" />{{ t('datapage.optional_thematic.DEM.noimage') }}
                             </div>
                             <div v-for="(image, index) in allDemImages" :key="index" @click="showTif(image)"
                                 class="flex flex-col border cursor-pointer border-[#247699] bg-[#0d1526] text-white px-4 py-2 rounded-lg transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c]">
@@ -30,7 +30,7 @@
                 <div class="config-item">
                     <div class="config-label relative">
                         <MapIcon :size="16" class="config-icon" />
-                        <span>空间选择</span>
+                        <span>{{ t('datapage.optional_thematic.DEM.space') }}</span>
                     </div>
                     <div class="config-control justify-center">
                         <div class="flex gap-10">
@@ -44,7 +44,7 @@
                                     'hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95'
                                 ]">
                                 <MapPinIcon class="mb-2" />
-                                地图选点
+                                {{ t('datapage.optional_thematic.DEM.map_point') }}
                             </div>
 
                             <!-- 划线采点块 -->
@@ -57,7 +57,7 @@
                                     'hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95'
                                 ]">
                                 <LayersIcon class="mb-2" />
-                                划线采点
+                                {{ t('datapage.optional_thematic.DEM.line_point') }}
                             </div>
                         </div>
 
@@ -65,7 +65,7 @@
                 </div>
                 <button @click="analysisDem"
                     class="cursor-pointer rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95">
-                    开始分析
+                    {{ t('datapage.optional_thematic.DEM.button') }}
                 </button>
             </div>
         </div>
@@ -77,12 +77,12 @@
             <div class="section-icon">
                 <ChartColumn :size="18" />
             </div>
-            <h2 class="section-title" @click="test">计算结果</h2>
+            <h2 class="section-title" @click="test">{{ t('datapage.optional_thematic.DEM.result') }}</h2>
         </div>
         <div class="section-content">
             <div class="config-container">
                 <div v-if="analysisData.length === 0" class="flex justify-center my-6">
-                    <SquareDashedMousePointer class="mr-2" />暂无计算结果
+                    <SquareDashedMousePointer class="mr-2" />{{ t('datapage.optional_thematic.DEM.noresult') }}
                 </div>
                 <div v-for="(item, index) in analysisData" :key="index" class="config-item">
                     <div class="config-label relative">
@@ -99,7 +99,7 @@
                                 <div class="chart" :ref="el => setChartRef(el, index)" :id="`chart-${index}`"
                                     style="width: 100%; height: 400px;"></div>
                                 <button class="!text-[#38bdf8] cursor-pointer"
-                                    @click="fullscreenChart(index)">全屏查看</button>
+                                    @click="fullscreenChart(index)">{{ t('datapage.optional_thematic.DEM.fullview') }}</button>
                             </div>
                         </div>
                     </div>
@@ -142,6 +142,9 @@ import { ElMessage } from 'element-plus';
 import bus from '@/store/bus'
 import mapboxgl from 'mapbox-gl'
 import { mapManager } from '@/util/map/mapManager';
+
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 
 const test = () => {
@@ -195,15 +198,15 @@ const toggleMode = (mode: 'point' | 'line' | 'false') => {
     activeMode.value = mode
     if (mode === 'point') {
         MapOperation.draw_pointMode()
-        ElMessage.info('请在地图上绘制研究点')
+        ElMessage.info(t('datapage.optional_thematic.DEM.message.info_point'))
     } else if (mode === 'line') {
         MapOperation.draw_lineMode()
-        ElMessage.info('请在地图上绘制研究线')
+        ElMessage.info(t('datapage.optional_thematic.DEM.message.info_line'))
     }
 }
 
 const showTif = async (image) => {
-    ElMessage.success('正在为您加载影像...')
+    ElMessage.success(t('datapage.optional_thematic.DEM.message.load'))
     let sceneId = image.sceneId
     let res = await getDescriptionBySceneId(sceneId)
     let url = res.images[0].bucket + '/' + res.images[0].tifPath
@@ -244,7 +247,7 @@ const analysisDem = async () => {
     if (!verifyAnalysis()) {
         return
     }
-    ElMessage.success('开始DEM分析。')
+    ElMessage.success(t('datapage.optional_thematic.DEM.message.info_start'))
     if (activeMode.value === 'point') {
         let pointParam = {
             point: [pickedPoint.value[1], pickedPoint.value[0]],
@@ -252,7 +255,7 @@ const analysisDem = async () => {
         }
         let res = await getRasterPoints(pointParam)
         if (res?.message != 'success') {
-            ElMessage.warning('计算服务出错')
+            ElMessage.warning(t('datapage.optional_thematic.DEM.message.calerror'))
         }
         calTask.value.taskId = res.data
         const pollStatus = async (taskId: string) => {
@@ -296,10 +299,10 @@ const analysisDem = async () => {
                 value: demValue,
                 point: [...pickedPoint.value]
             })
-            ElMessage.success('DEM计算完成')
+            ElMessage.success(t('datapage.optional_thematic.DEM.message.success'))
         } catch (error) {
             calTask.value.calState = 'failed'
-            ElMessage.error('DEM计算失败，请重试')
+            ElMessage.error(t('datapage.optional_thematic.DEM.message.info_retry'))
             console.error(error);
         }
     } else if (activeMode.value === 'line') {
@@ -311,7 +314,7 @@ const analysisDem = async () => {
         let lineRes = await getRasterLine(lineParam)
 
         if (lineRes?.message != 'success') {
-            ElMessage.warning('计算服务出错')
+            ElMessage.warning(t('datapage.optional_thematic.DEM.message.calerror'))
         }
         calTask.value.taskId = lineRes.data
         const pollStatus = async (taskId: string) => {
@@ -356,10 +359,10 @@ const analysisDem = async () => {
                 analysis: "空间采点DEM变化趋势",
                 line: pickedLine.value
             })
-            ElMessage.success('DEM计算完成')
+            ElMessage.success(t('datapage.optional_thematic.DEM.message.success'))
         } catch (error) {
             calTask.value.calState = 'failed'
-            ElMessage.error('DEM计算失败，请重试')
+            ElMessage.error(t('datapage.optional_thematic.DEM.message.info_retry'))
             console.error(error);
         }
     }
@@ -368,11 +371,11 @@ const analysisDem = async () => {
 // 卫语句
 const verifyAnalysis = () => {
     if (activeMode.value != 'point' && activeMode.value != 'line') {
-        ElMessage.warning('请先完成空间选择')
+        ElMessage.warning(t('datapage.optional_thematic.DEM.message.info_space'))
         return false
     }
     if (allDemImages.value.length === 0) {
-        ElMessage.warning('该区域未检出DEM数据，请更换研究区')
+        ElMessage.warning(t('datapage.optional_thematic.DEM.message.info_noima'))
         return false
     }
 

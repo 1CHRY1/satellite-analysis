@@ -5,19 +5,19 @@
             <div class="section-icon">
                 <MapIcon :size="18" />
             </div>
-            <h2 class="section-title">形变速率分析</h2>
+            <h2 class="section-title">{{ t('datapage.optional_thematic.rate.title') }}</h2>
         </div>
         <div class="section-content">
             <div class="config-container">
                 <div class="config-item">
                     <div class="config-label relative">
                         <MapIcon :size="16" class="config-icon" />
-                        <span>形变速率影像集</span>
+                        <span>{{ t('datapage.optional_thematic.rate.set') }}</span>
                     </div>
                     <div class="config-control justify-center">
                         <div class="w-full space-y-2">
                             <div v-if="allDeforRateImages.length === 0" class="flex justify-center my-6">
-                                <SquareDashedMousePointer class="mr-2" />该区域暂无形变速率影像
+                                <SquareDashedMousePointer class="mr-2" />{{ t('datapage.optional_thematic.rate.no_ima') }}
                             </div>
                             <div v-for="(image, index) in allDeforRateImages" :key="index" @click="showTif(image)"
                                 class="flex flex-col border cursor-pointer border-[#247699] bg-[#0d1526] text-white px-4 py-2 rounded-lg transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c]">
@@ -30,7 +30,7 @@
                 <div class="config-item">
                     <div class="config-label relative">
                         <MapIcon :size="16" class="config-icon" />
-                        <span>空间选择</span>
+                        <span>{{ t('datapage.optional_thematic.rate.space') }}</span>
                     </div>
                     <div class="config-control justify-center">
                         <div class="flex gap-10">
@@ -44,7 +44,7 @@
                                     'hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95'
                                 ]">
                                 <MapPinIcon class="mb-2" />
-                                地图选点
+                                {{ t('datapage.optional_thematic.rate.map') }}
                             </div>
 
                             <!-- 划线采点块 -->
@@ -57,7 +57,7 @@
                                     'hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95'
                                 ]">
                                 <LayersIcon class="mb-2" />
-                                划线采点
+                                {{ t('datapage.optional_thematic.rate.point') }}
                             </div>
                         </div>
 
@@ -65,7 +65,7 @@
                 </div>
                 <button @click="analysisDeforRate"
                     class="cursor-pointer rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95">
-                    开始分析
+                    {{ t('datapage.optional_thematic.rate.button') }}
                 </button>
             </div>
         </div>
@@ -77,12 +77,12 @@
             <div class="section-icon">
                 <ChartColumn :size="18" />
             </div>
-            <h2 class="section-title" @click="test">计算结果</h2>
+            <h2 class="section-title" @click="test">{{ t('datapage.optional_thematic.rate.result') }}</h2>
         </div>
         <div class="section-content">
             <div class="config-container">
                 <div v-if="analysisData.length === 0" class="flex justify-center my-6">
-                    <SquareDashedMousePointer class="mr-2" />暂无计算结果
+                    <SquareDashedMousePointer class="mr-2" />{{ t('datapage.optional_thematic.rate.no_result') }}
                 </div>
                 <div v-for="(item, index) in analysisData" :key="index" class="config-item">
                     <div class="config-label relative">
@@ -99,7 +99,7 @@
                                 <div class="chart" :ref="el => setChartRef(el, index)" :id="`chart-${index}`"
                                     style="width: 100%; height: 400px;"></div>
                                 <button class="!text-[#38bdf8] cursor-pointer"
-                                    @click="fullscreenChart(index)">全屏查看</button>
+                                    @click="fullscreenChart(index)">{{ t('datapage.optional_thematic.rate.fullview') }}</button>
                             </div>
                         </div>
                     </div>
@@ -141,6 +141,9 @@ import {
     SquareDashedMousePointer
 } from 'lucide-vue-next'
 import { ElMessage } from 'element-plus';
+
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 
 
@@ -197,15 +200,15 @@ const toggleMode = (mode: 'point' | 'line' | 'false') => {
     activeMode.value = mode
     if (mode === 'point') {
         MapOperation.draw_pointMode()
-        ElMessage.info('请在地图上绘制研究点')
+        ElMessage.info(t('datapage.optional_thematic.rate.message.info_point'))
     } else if (mode === 'line') {
         MapOperation.draw_lineMode()
-        ElMessage.info('请在地图上绘制研究线')
+        ElMessage.info(t('datapage.optional_thematic.rate.message.info_line'))
     }
 }
 
 const showTif = async (image) => {
-    ElMessage.success('正在为您加载影像...')
+    ElMessage.success(t('datapage.optional_thematic.rate.message.load'))
     let sceneId = image.sceneId
     let res = await getDescriptionBySceneId(sceneId)
     console.log(res, sceneId, 7575);
@@ -238,7 +241,7 @@ const analysisDeforRate = async () => {
     if (!verifyAnalysis()) {
         return
     }
-    ElMessage.success('开始形变速率分析。')
+    ElMessage.success(t('datapage.optional_thematic.rate.message.info_start'))
     if (activeMode.value === 'point') {
         let pointParam = {
             point: [pickedPoint.value[1], pickedPoint.value[0]],
@@ -246,7 +249,7 @@ const analysisDeforRate = async () => {
         }
         let res = await getRasterPoints(pointParam)
         if (res?.message != 'success') {
-            ElMessage.warning('计算服务出错')
+            ElMessage.warning(t('datapage.optional_thematic.rate.message.calerror'))
         }
         calTask.value.taskId = res.data
         const pollStatus = async (taskId: string) => {
@@ -290,10 +293,10 @@ const analysisDeforRate = async () => {
                 value: deforRateValue,
                 point: [...pickedPoint.value]
             })
-            ElMessage.success('形变速率计算完成')
+            ElMessage.success(t('datapage.optional_thematic.rate.message.success'))
         } catch (error) {
             calTask.value.calState = 'failed'
-            ElMessage.error('形变速率计算失败，请重试')
+            ElMessage.error(t('datapage.optional_thematic.rate.message.info_retry'))
             console.error(error);
         }
     } else if (activeMode.value === 'line') {
@@ -305,7 +308,7 @@ const analysisDeforRate = async () => {
         let lineRes = await getRasterLine(lineParam)
 
         if (lineRes?.message != 'success') {
-            ElMessage.warning('计算服务出错')
+            ElMessage.warning(t('datapage.optional_thematic.rate.message.calerror'))
         }
         calTask.value.taskId = lineRes.data
         const pollStatus = async (taskId: string) => {
@@ -350,10 +353,10 @@ const analysisDeforRate = async () => {
                 analysis: "空间采点形变速率变化趋势",
                 line: pickedLine.value
             })
-            ElMessage.success('形变速率计算完成')
+            ElMessage.success(t('datapage.optional_thematic.rate.message.success'))
         } catch (error) {
             calTask.value.calState = 'failed'
-            ElMessage.error('形变速率计算失败，请重试')
+            ElMessage.error(t('datapage.optional_thematic.rate.message.info_retry'))
             console.error(error);
         }
     }
@@ -361,11 +364,11 @@ const analysisDeforRate = async () => {
 // 卫语句
 const verifyAnalysis = () => {
     if (activeMode.value != 'point' && activeMode.value != 'line') {
-        ElMessage.warning('请先完成空间选择')
+        ElMessage.warning(t('datapage.optional_thematic.rate.message.info_space'))
         return false
     }
     if (allDeforRateImages.value.length === 0) {
-        ElMessage.warning('该区域未检出形变速率数据，请更换研究区')
+        ElMessage.warning(t('datapage.optional_thematic.rate.message.info_noima'))
         return false
     }
 

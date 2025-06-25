@@ -16,6 +16,8 @@ import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import { message } from 'ant-design-vue'
 
+import i18n from './i18n'
+
 ///// Fetching Static Config Json /////////////////////////
 fetch('/app.conf.json').then((response) => {
     response.json().then((conf) => {
@@ -42,6 +44,7 @@ fetch('/app.conf.json').then((response) => {
         app.use(router)
         app.use(pinia)
         app.use(ElementPlus)
+        app.use(i18n)
         app.mount('#app')
 
         ////  Inject config

@@ -7,14 +7,15 @@
                         <div class="section-icon">
                             <MapPinIcon :size="18" />
                         </div>
-                        <h2 class="section-title">行政区划与格网分辨率</h2>
+                        <h2 class="section-title">{{ t('datapage.explore.section1.sectiontitle') }}</h2>
                     </div>
                     <div class="section-content">
                         <div class="config-container">
                             <div class="config-item w-full">
                                 <div class="config-label relative">
                                     <MapIcon :size="16" class="config-icon" />
-                                    <span>研究区选择</span>
+                                    <!-- 研究区 -->
+                                    <span>{{t('datapage.explore.section1.subtitle1')}}</span>
                                 </div>
                                 <!-- <div class="config-control justify-center">
                                     <RegionSelects v-model="region" :placeholder="['选择省份', '选择城市', '选择区县']"
@@ -32,13 +33,13 @@
                                     </button>
                                 </div>
                                 <div v-if="activeTab === 'region'" class="config-control justify-center">
-                                    <RegionSelects v-model="region" :placeholder="['选择省份', '选择城市', '选择区县']"
+                                    <RegionSelects v-model="region" :placeholder="[t('datapage.explore.section1.intext_choose')]"
                                         class="flex gap-2"
                                         select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
                                 </div>
                                 <div v-else-if="activeTab === 'poi'" class="config-control justify-center w-full">
                                     <el-select v-model="selectedPOI" filterable remote reserve-keyword value-key="id"
-                                        placeholder="请输入 POI 关键词" :remote-method="fetchPOIOptions"
+                                        :placeholder="t('datapage.explore.section1.intext_POI')" :remote-method="fetchPOIOptions"
                                         class="!w-[90%] bg-[#0d1526] text-white" popper-class="bg-[#0d1526] text-white">
                                         <el-option v-for="item in poiOptions" :key="item.id"
                                             :label="item.name + '(' + item.pname + item.cityname + item.adname + item.address + ')'"
@@ -49,11 +50,12 @@
                             <div class="config-item">
                                 <div class="config-label relative">
                                     <BoltIcon :size="16" class="config-icon" />
-                                    <span>格网分辨率</span>
+                                    <!-- 格网分辨率 -->
+                                    <span>{{t('datapage.explore.section1.subtitle2')}}</span>
                                 </div>
                                 <div class="config-control flex-col !items-start">
                                     <div>
-                                        格网分辨率选择：
+                                        {{ t('datapage.explore.section1.resolution') }}
                                         <select v-model="selectedRadius"
                                             class="w-40 appearance-none rounded-lg border border-[#2c3e50] bg-[#0d1526] px-4 py-2 pr-8 text-white transition-all duration-200 hover:border-[#206d93] focus:border-[#3b82f6] focus:outline-none">
                                             <option v-for="option in radiusOptions" :key="option" :value="option"
@@ -64,13 +66,13 @@
                                     </div>
                                     <div class="flex flex-row">
                                         <div class="text-red-500">*</div>
-                                        建议省级行政单位格网分辨率不小于20km
+                                        {{ t('datapage.explore.section1.advice') }}
                                     </div>
                                 </div>
                             </div>
                             <button @click="getAllGrid"
                                 class="cursor-pointer rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95">
-                                获取格网
+                                {{ t('datapage.explore.section1.button') }}
                             </button>
                         </div>
                     </div>
@@ -80,14 +82,14 @@
                         <div class="section-icon">
                             <Clock :size="18" />
                         </div>
-                        <h2 class="section-title">按时间筛选</h2>
+                        <h2 class="section-title">{{ t('datapage.explore.section2.sectiontitle') }}</h2>
                     </div>
                     <div class="section-content">
                         <div class="config-container">
                             <div class="config-item">
                                 <div class="config-label relative">
                                     <CalendarIcon :size="16" class="config-icon" />
-                                    <span>时间范围</span>
+                                    <span>{{ t('datapage.explore.section2.subtitle1') }}</span>
                                 </div>
                                 <!-- <div class="config-control">
                                     <a-range-picker class="custom-date-picker" v-model:value="tileMergeConfig.dateRange"
@@ -95,7 +97,7 @@
                                 </div> -->
                                 <div class="config-control">
                                     <a-range-picker class="custom-date-picker" v-model:value="tileMergeConfig.dateRange"
-                                        :allow-clear="false" :placeholder="['开始日期', '结束日期']" />
+                                        :allow-clear="false" :placeholder="t('datapage.explore.section2.intext_data')" />
                                 </div>
                             </div>
                             <!-- <div class="config-item">
@@ -125,13 +127,13 @@
                                     'cursor-not-allowed': filterByCloudAndDateLoading,
                                     'cursor-pointer': !filterByCloudAndDateLoading,
                                 }">
-                                <span>影像筛选 </span>
+                                <span>{{ t('datapage.explore.section2.button') }} </span>
                                 <Loader v-if="filterByCloudAndDateLoading" class="ml-2" />
                             </button>
                             <div class="config-item">
                                 <div class="config-label relative">
                                     <BoltIcon :size="16" class="config-icon" />
-                                    <span>统计信息</span>
+                                    <span>{{ t('datapage.explore.section2.subtitle2') }}</span>
                                 </div>
                                 <div class="config-control flex-col gap-4">
                                     <div class="result-info-container">
@@ -140,7 +142,7 @@
                                                 <MapIcon :size="16" />
                                             </div>
                                             <div class="result-info-content">
-                                                <div class="result-info-label">格网分辨率</div>
+                                                <div class="result-info-label">{{ t('datapage.explore.section2.resolution') }}</div>
                                                 <div class="result-info-value">
                                                     {{ selectedRadius }}km
                                                 </div>
@@ -151,7 +153,7 @@
                                                 <CalendarIcon :size="16" />
                                             </div>
                                             <div class="result-info-content">
-                                                <div class="result-info-label">涵盖时间范围</div>
+                                                <div class="result-info-label">{{ t('datapage.explore.section2.time') }}</div>
                                                 <div class="result-info-value date-range">
                                                     <div class="date-item">
                                                         {{
@@ -175,7 +177,7 @@
                                                 <CloudIcon :size="16" />
                                             </div>
                                             <div class="result-info-content">
-                                                <div class="result-info-label">当前已检索到</div>
+                                                <div class="result-info-label">{{ t('datapage.explore.section2.search') }}</div>
                                                 <div class="result-info-value">
                                                     {{ allScenes.length }}景影像
                                                 </div>
@@ -186,7 +188,7 @@
                                                 <CloudIcon :size="16" />
                                             </div>
                                             <div class="result-info-content">
-                                                <div class="result-info-label">影像覆盖率</div>
+                                                <div class="result-info-label">{{ t('datapage.explore.percent') }}</div>
                                                 <div class="result-info-value">
                                                     {{
                                                         coverageRate != 'NaN%'
@@ -207,10 +209,10 @@
                         <div class="section-icon">
                             <DatabaseIcon :size="18" />
                         </div>
-                        <h2 class="section-title">交互探索</h2>
+                        <h2 class="section-title">{{ t('datapage.explore.section3.sectiontitle') }}</h2>
                         <div class="section-icon absolute right-0 cursor-pointer" @click="clearAllShowingSensor">
                             <a-tooltip>
-                                <template #title>清空影像图层</template>
+                                <template #title>{{ t('datapage.explore.section3.clear') }}</template>
                                 <Trash2Icon :size="18" />
                             </a-tooltip>
                         </div>
@@ -220,7 +222,7 @@
                             <div class="config-item" v-for="([label, value], index) in resolutionType" :key="value">
                                 <div class="config-label relative">
                                     <BoltIcon :size="16" class="config-icon" />
-                                    <span>{{ label }}分辨率影像集</span><span v-if="label === '亚米'">（仅含ARD数据）</span>
+                                    <span>{{ label }}{{ t('datapage.explore.section3.subtitle') }}</span><span v-if="label === '亚米'">{{ t('datapage.explore.section3.subtitle1') }}</span>
                                 </div>
                                 <div class="config-control flex w-full flex-col gap-4">
                                     <div class="result-info-container w-full">
@@ -229,9 +231,9 @@
                                                 <CloudIcon :size="16" />
                                             </div>
                                             <div class="result-info-content">
-                                                <div class="result-info-label">包含</div>
+                                                <div class="result-info-label">{{ t('datapage.explore.include') }}</div>
                                                 <div class="result-info-value">
-                                                    {{ getSceneCountByResolution(value) }}景影像
+                                                    {{ getSceneCountByResolution(value) }}{{ t('datapage.explore.scene') }}
                                                 </div>
                                             </div>
                                         </div>
@@ -240,9 +242,9 @@
                                                 <CloudIcon :size="16" />
                                             </div>
                                             <div class="result-info-content">
-                                                <div class="result-info-label">影像覆盖率</div>
+                                                <div class="result-info-label">{{ t('datapage.explore.percent') }}</div>
                                                 <div v-if="!(allScenes.length > 0)" class="result-info-value">
-                                                    待计算
+                                                    {{ t('datapage.explore.section3.intext1') }}
                                                 </div>
                                                 <div v-else class="result-info-value">
                                                     {{
@@ -256,11 +258,11 @@
                                         </div>
                                     </div>
                                     <div v-if="Object.keys(classifiedScenes).length > 0" class="!w-full">
-                                        <label class="mr-2 text-white">选择传感器：</label>
+                                        <label class="mr-2 text-white">{{ t('datapage.explore.section3.scene') }}</label>
                                         <select
                                             class="max-h-[600px] w-[calc(100%-113px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
                                             v-model="resolutionPlatformSensor[label]">
-                                            <option disabled selected value="">请选择</option>
+                                            <option disabled selected value="">{{ t('datapage.explore.section3.choose') }}</option>
                                             <!-- <option :value="'all'" class="truncate">全选</option> -->
                                             <option v-for="platformName in classifiedScenes[
                                                 value + 'm'
@@ -272,10 +274,10 @@
                                             <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
                                                 @click="handleShowResolutionSensorImage(label)"
                                                 :disabled="!resolutionPlatformSensor[label]">
-                                                影像可视化
+                                                 {{ t('datapage.explore.section3.button') }}
                                             </a-button>
                                             <a-tooltip>
-                                                <template #title>清空影像图层</template>
+                                                <template #title>{{ t('datapage.explore.section3.clear') }}</template>
                                                 <Trash2Icon :size="18" class="mt-4! ml-4! cursor-pointer"
                                                     @click="clearAllShowingSensor" />
                                             </a-tooltip>
@@ -425,6 +427,9 @@ import { message } from 'ant-design-vue'
 import mapboxgl from 'mapbox-gl'
 const emit = defineEmits(['submitConfig'])
 
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+
 /**
  * !!!!!!!!!
  * !!@!!!!!!!
@@ -465,20 +470,20 @@ type POIInfo = {
     adname: string
 }
 
-const resolutionType: ResolutionItem[] = [
-    ['亚米', 1],
-    ['2米', 2],
-    ['10米', 10],
-    ['30米', 30],
-    ['其他', 500],
-]
+const resolutionType: ResolutionItem[] = computed(()=>[
+    [t('datapage.explore.section3.resolutiontype.yami'), 1],
+    [t('datapage.explore.section3.resolutiontype.twom'), 2],
+    [t('datapage.explore.section3.resolutiontype.tenm'), 10],
+    [t('datapage.explore.section3.resolutiontype.thirtym'), 30],
+    [t('datapage.explore.section3.resolutiontype.others'), 500],
+])
 // 绑定每个select的选中项
 const resolutionPlatformSensor = reactive<any>({
-    亚米: '',
-    '2米': '',
-    '10米': '',
-    '30米': '',
-    其他: '',
+    [t('datapage.explore.section3.resolutiontype.yami')]: '',
+    [t('datapage.explore.section3.resolutiontype.twom')]: '',
+    [t('datapage.explore.section3.resolutiontype.tenw')]: '',
+    [t('datapage.explore.section3.resolutiontype.thirtym')]: '',
+    [t('datapage.explore.section3.resolutiontype.others')]: '',
 })
 
 const selectedRadius = ref(20)
@@ -561,7 +566,7 @@ const getAllGrid = async () => {
     let gridRes: any = []
     let window: any = []
     if (gridUsedId.value === '未选择') {
-        ElMessage.warning('请选择行政区或POI')
+         ElMessage.warning(t('datapage.explore.message.POIerror'))
         return
     }
     MapOperation.map_destroyImagePolygon()

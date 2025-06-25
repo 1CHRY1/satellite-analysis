@@ -2,8 +2,8 @@
     <div class="main">
         <div class="container">
             <div class="left">
-                <div class="login">登 录</div>
-                <div class="eula">请使用您的邮箱（或用户名）和密码登录！</div>
+                <div class="login">{{ $t('login.title') }}</div>
+                <div class="eula">{{ $t('login.title_description')}}！</div>
             </div>
             <div class="right">
                 <svg viewBox="0 0 320 300">
@@ -26,18 +26,18 @@
                     />
                 </svg>
                 <div class="form">
-                    <label for="email" class="bg-[#474a59]">邮 箱/用户名</label>
+                    <label for="email" class="bg-[#474a59]">{{$t('login.username')}}</label>
                     <input
                         type="email"
-                        placeholder="请输入您的邮箱地址"
+                        :placeholder="t('login.intext_email')"
                         id="email"
                         autocomplete="off"
                         v-model="email"
                     />
-                    <label for="password">密 码</label>
+                    <label for="password">{{ $t('login.password') }}</label>
                     <input
                         type="password"
-                        placeholder="请输入您的密码"
+                        :placeholder="t('login.intext_password')"
                         id="password"
                         autocomplete="new-password"
                         v-model="password"
@@ -49,7 +49,7 @@
                             @click="gotoRegister"
                             class="submit cursor-pointer"
                         >
-                            去 注 册
+                            {{$t('login.button.register')}}
                         </button>
                         <button
                             type="submit"
@@ -57,7 +57,7 @@
                             @click="handleLogin"
                             class="submit cursor-pointer"
                         >
-                            登 录
+                            {{$t('login.button.submit')}}
                         </button>
                     </div>
                 </div>
@@ -76,6 +76,9 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store'
 import { login, getUsers } from '@/api/http/user'
 import { ElMessage } from 'element-plus'
+
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 const router = useRouter()
 const userStore = useUserStore()
