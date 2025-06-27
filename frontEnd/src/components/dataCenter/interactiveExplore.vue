@@ -179,7 +179,7 @@
                                             <div class="result-info-content">
                                                 <div class="result-info-label">{{ t('datapage.explore.section2.search') }}</div>
                                                 <div class="result-info-value">
-                                                    {{ allScenes.length }}景影像
+                                                    {{ allScenes.length }}{{ t('datapage.explore.scene') }}
                                                 </div>
                                             </div>
                                         </div>
@@ -653,13 +653,13 @@ interface Tab {
     value: TabValue
     label: string
 }
-const tabs: Tab[] = [{
+const tabs: Tab[] = computed(() =>  [{
     value: 'region',
-    label: '行政区'
+    label: t('datapage.explore.section1.admin')
 }, {
     value: 'poi',
     label: 'POI'
-}]
+}])
 const selectedPOI = ref<POIInfo>()
 const poiOptions = ref<POIInfo[]>([])
 
@@ -684,10 +684,10 @@ const filterByCloudAndDateLoading = ref(false)
 // const allFilteredImages = ref<any>([])
 const filterByCloudAndDate = async () => {
     if (landId.value === '未选择') {
-        ElMessage.warning('请先选择行政区并获取格网')
+        ElMessage.warning(t('datapage.explore.message.filtererror_choose'))
         return
     } else if (allGrids.value.length === 0) {
-        ElMessage.warning('请先获取格网')
+        ElMessage.warning(t('datapage.explore.message.filtererror_grid'))
         return
     }
     // 先禁止按钮，渲染loading状态
@@ -730,7 +730,7 @@ const filterByCloudAndDate = async () => {
     await makeFullSceneGrid()
 
     if (allScenes.value.length === 0) {
-        ElMessage.warning('未筛选出符合要求的影像，请重新设置条件')
+        ElMessage.warning(t('datapage.explore.message.sceneerror_recondition'))
     } else {
         ElMessage.success(`已检索到${allScenes.value.length}景影像，请进一步筛选您所需的影像`)
     }
@@ -1102,7 +1102,7 @@ const onAfterScaleRateChange = (scale_rate: number) => {
 const showImageBySensorAndSelect = async (image: any, imageName: string) => {
     if (imageName === '') {
         console.error('搞毛啊，能选出空值来？')
-        ElMessage.warning('请选择有效影像')
+        ElMessage.warning(t('datapage.explore.message.imagery_error'))
         return
     }
     console.log('传入的', image)
@@ -1177,7 +1177,7 @@ const handleShowResolutionSensorImage = async (label: string) => {
 
 
 
-    const stopLoading = message.loading('正在加载影像...')
+    const stopLoading = message.loading(t('datapage.explore.message.load'))
 
     let coverScenes
     if (searchedTab.value === 'region') {

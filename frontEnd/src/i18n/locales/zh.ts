@@ -158,7 +158,6 @@ export default{
         success:"创建成功"
 
     }
-
   },
 
   login:{
@@ -444,6 +443,7 @@ export default{
     explore:{
         section1:{
             sectiontitle:"行政区划与格网分辨率",
+            admin:"行政区",
             subtitle1:"研究区选择",
             intext_choose:"'选择省份', '选择城市', '选择区县'",
             intext_POI:"请输入 POI 关键词",
@@ -496,7 +496,6 @@ export default{
             scene:"选择传感器：",
             choose:"请选择"
 
-
         },
 
         include:"包含",
@@ -510,6 +509,8 @@ export default{
             sceneerror_recondition:"未筛选出符合要求的影像，请重新设置条件",
             sceneerror_searched:"已检索到",
             sceneerror_filter:"景影像，请进一步筛选您所需的影像",
+            imagery_error:"请选择有效影像",
+            load:"正在加载影像...",
             typyerror_condition:"请设置筛选条件",
             typyerror_filter:"请先进行影像筛选",
             typyerror_source:"请选择您需要的数据来源",
@@ -584,6 +585,35 @@ export default{
             guochanload:"国产亚米级影像加载完毕"
 
         }
+      },
+
+      history:{
+        his_recon:"历史记录重构",
+        back:"返回",
+        his_noclo:"历史无云一版图",
+        wait:"任务初始化中，请稍后...",
+        no_task:"暂无运行中的任务", 
+        refresh:"刷新全部",
+        resolution:"格网分辨率",
+        sta_time:"开始时间",
+        data:"使用数据",
+        condition:"筛选条件",
+        create_time:"生成时间",
+        choose:"请选择",
+        admin:"行政区划",
+        admin_choose:"['选择省份', '选择城市', '选择区县']",
+        clear:"重置",
+        fliter:"筛选",
+        preview:"预览",
+
+        process:"运行中",
+        finish:"已完成",
+        onehour:"最近一小时",
+        today:"今天",
+        sevenday:"最近7天",
+        thirtyday:"最近30天",
+        threemonth:"最近3个月",
+        ealier:"更早之前"
       }
 
     },

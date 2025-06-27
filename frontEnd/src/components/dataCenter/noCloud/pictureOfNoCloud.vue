@@ -10,7 +10,7 @@
                         <h2 class="section-title">{{t('datapage.nocloud.title')}}</h2>
                         <div class="section-icon absolute right-0 cursor-pointer">
                             <a-tooltip>
-                                <template #title>历史重构记录</template>
+                                <template #title>{{t('datapage.history.his_recon')}}</template>
                                 <History :size="18" @click="setCurrentPanel('history')"/>
                             </a-tooltip>
                         </div>
@@ -85,7 +85,7 @@
                                                     {{t('datapage.nocloud.section_chinese.text_national_research')}}
                                                 </div>
                                                 <div class="result-info-value">
-                                                    {{ demotic }}景影像
+                                                    {{ demotic }}{{ t('datapage.explore.scene') }}
                                                 </div>
                                             </div>
                                         </div>
@@ -115,7 +115,7 @@
                                                     {{t('datapage.nocloud.section_chinese.text_research2m')}}
                                                 </div>
                                                 <div class="result-info-value">
-                                                    {{ demotic2mImages.length }}景影像
+                                                    {{ demotic2mImages.length }}{{ t('datapage.explore.scene') }}
                                                 </div>
                                             </div>
                                         </div>
@@ -175,7 +175,7 @@
                                             <div class="result-info-content">
                                                 <div class="result-info-label">{{t('datapage.nocloud.section_international.text_research')}}</div>
                                                 <div class="result-info-value">
-                                                    {{ internationalImages.length }}景影像
+                                                    {{ internationalImages.length }}{{ t('datapage.explore.scene') }}
                                                 </div>
                                             </div>
                                         </div>
@@ -233,7 +233,7 @@
                                             <div class="result-info-content">
                                                 <div class="result-info-label">{{t('datapage.nocloud.section_SAR.text_SARresearch')}}</div>
                                                 <div class="result-info-value">
-                                                    {{ radarImages.length }}景影像
+                                                    {{ radarImages.length }}{{ t('datapage.explore.scene') }}
                                                 </div>
                                             </div>
                                         </div>
@@ -961,7 +961,7 @@ onMounted(async () => {
     MapOperation.map_addGridLayer(gridFeature)
     MapOperation.draw_deleteAll()
 
-    ElMessage.success(`国产亚米级影像加载完毕`)
+    ElMessage.success(t('datapage.nocloud.message.guochanload'))
 })
 
 // 算格网的颜色,接收的数据分别为：要上色的格网本身，累积影像分布到格网的结果，格网数量，所属层级

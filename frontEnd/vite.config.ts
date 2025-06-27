@@ -17,7 +17,7 @@ export default defineConfig({
             '/api2': {
                 // target: 'http://223.2.47.202:8999/api/v1',
                 // target: 'http://223.2.47.202:8999/api/v2',
-                target: 'http://223.2.43.228:32489/api/v2',
+                target: 'http://localhost:8999/api/v2',
                 // target: 'http://223.2.43.228:30899/api/v1',
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/api2/, ''),
@@ -25,7 +25,7 @@ export default defineConfig({
             '/api': {
                 // target: 'http://223.2.47.202:8999/api/v1',
                 // target: 'http://223.2.47.202:8999/api/v1',
-                target: 'http://223.2.43.228:32489/api/v1',
+                target: 'http://localhost:8999/api/v1',
                 // target: 'http://223.2.43.228:30899/api/v1',
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/api/, ''),
@@ -33,7 +33,7 @@ export default defineConfig({
             '/websocket': {
                 // target: 'ws://223.2.47.202:8899/model/websocket',
                 // target: 'http://223.2.43.228:30535/api/v1',
-                target: 'http://223.2.43.228:31808/model/websocket',
+                target: 'http://localhost:9000/model/websocket',
                 ws: true,
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/websocket/, ''),
