@@ -444,6 +444,7 @@ export default{
         section1:{
             sectiontitle:"Administrative divisions and grid resolution",
             subtitle1:"Research region selection",
+            admin:"Administrative division",
             intext_choose:"'Province Selection', 'City Selection', 'County Selection'",
             intext_POI:"Please enter the POI keyword",
 
@@ -498,16 +499,18 @@ export default{
         },
 
         include:"Include",
-        scene:"景影像",
+        scene:"-Scene Imagery",
         percent:"Image coverage",
-        scene_choose:"选择传感器：",
+        scene_choose:"Select sensor：",
 
         message:{
             filtererror_choose:"Please select the administrative division and access the grid first",
             filtererror_grid:"Please access the grid first",
             sceneerror_recondition:"No imagery matching the requirements , please reset the conditions",
             sceneerror_searched:"Retrieved",
-            sceneerror_filter:"景影像，请进一步筛选您所需的影像",
+            sceneerror_filter:"-scene imagery, please refine your image selection criteria",
+            imagery_error:"Please select valid imagery",
+            load:"Loading imagery...",
             typyerror_condition:"Please set the filter conditions",
             typyerror_filter:"Please screen the imagery first",
             typyerror_source:"Please select the data source you need",
@@ -582,7 +585,36 @@ export default{
             guochanload:"National sub-meter imagery loaded."
 
         }
-    }
+    },
+
+    history:{
+        his_recon:"Reconstruction Archive",
+        back:"Back",
+        his_noclo:"Cloud-Free Basemap Archive",
+        wait:"Task initialization in progress, please wait...",
+        no_task:"No tasks currently running", 
+        refresh:"Refresh all",
+        resolution:"Grid resolution",
+        sta_time:"Start Time",
+        data:"Utilized Data",
+        condition:"Filter Criteria",
+        create_time:"Generation Time",
+        choose:"Please select",
+        admin:"Administrative Division",
+        admin_choose:"'Province Selection', 'City Selection', 'County Selection'",
+        clear:"Reset",
+        fliter:"Filter",
+        preview:"Preview",
+        
+        process:"Processing",
+        finish:"Finished",
+        onehour:"Past 1 hour",
+        today:"Today",
+        sevenday:"Past 7 days",
+        thirtyday:"Past 1 month",
+        threemonth:"Past 3 months",
+        ealier:"Older"
+      }
 
   },
 }

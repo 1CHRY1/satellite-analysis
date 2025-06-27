@@ -3,11 +3,11 @@
     <div class="section-header" ref="sectionHeader">
         <div class="section-icon cursor-pointer">
             <a-tooltip>
-                <template #title>返回</template>
+                <template #title>{{t('datapage.history.back')}}</template>
                 <ArrowLeft :size="18" @click="$emit('toggle', 'noCloud')"/>
             </a-tooltip>
         </div>
-        <h2 class="section-title">历史无云一版图</h2>
+        <h2 class="section-title">{{t('datapage.history.his_noclo')}}</h2>
     </div>
     
     <!-- Content -->
@@ -24,14 +24,14 @@
                     <div class="config-label relative">
                         <span v-if="pendingTaskList.length > 0 || isPending" class="flex items-center gap-2">
                             <loadingIcon/>
-                            {{ (pendingTaskList.length > 0 || isPending) ? `任务初始化中，请稍后...` : '' }}
+                            {{ (pendingTaskList.length > 0 || isPending) ? t("datapage.history.wait") : '' }}
                         </span>
                         <span v-else class="flex items-center gap-2">
                             <loadingIcon v-if="total > 0"/>
-                            {{ total > 0 ? `共 ${total} 个任务运行中` : '暂无运行中的任务' }}
+                            {{ total > 0 ? `共 ${total} 个任务运行中` : t('datapage.history.no_task') }}
                         </span>
                     </div>
-                    <a-button class="a-button" @click="getCaseList">刷新全部</a-button>
+                    <a-button class="a-button" @click="getCaseList">{{t('datapage.history.refresh')}}</a-button>
                 </div>
             </div>
             <div v-for="item in caseList" class="config-item" :key="item.caseId">
@@ -48,7 +48,7 @@
                                         <Grid3x3 :size="12" />
                                     </div>
                                     <div class="result-info-content">
-                                        <div class="result-info-label">格网分辨率</div>
+                                        <div class="result-info-label">{{t('datapage.history.resolution')}}</div>
                                         <div class="result-info-value">
                                             {{ item.resolution }}km
                                         </div>
@@ -59,7 +59,7 @@
                                         <CalendarIcon :size="12" />
                                     </div>
                                     <div class="result-info-content">
-                                        <div class="result-info-label">开始时间</div>
+                                        <div class="result-info-label">{{t('datapage.history.sta_time')}}</div>
                                         <div class="result-info-value">
                                             {{ formatTimeToText(item.createTime) }}
                                         </div>
@@ -70,7 +70,7 @@
                                         <DatabaseIcon :size="12" />
                                     </div>
                                     <div class="result-info-content">
-                                        <div class="result-info-label">使用数据</div>
+                                        <div class="result-info-label">{{t('datapage.history.data')}}</div>
                                         <div>
                                             {{ item.dataSet }}
                                         </div>
@@ -90,7 +90,7 @@
             <div class="config-item">
                 <div class="config-label relative">
                     <ListFilter :size="22" class="config-icon" />
-                    <span>筛选条件</span>
+                    <span>{{t('datapage.history.condition')}}</span>
                     <div class="absolute right-0 cursor-pointer">
                         <ChevronDown v-if="isExpand" :size="22" @click="isExpand = false" />
                         <ChevronUp v-else @click="isExpand = true" :size="22" />
@@ -101,7 +101,7 @@
                         <div class="result-info-container">
                             <div class="result-info-item">
                                 <div class="result-info-content">
-                                    <div class="result-info-label">生成时间</div>
+                                    <div class="result-info-label">{{t('datapage.history.create_time')}}</div>
                                     <div class="result-info-value">
                                         <select v-model="selectedTimeIndex"
                                             class="custom-select" style="width: 8rem;">
@@ -115,13 +115,13 @@
                             </div>
                             <div class="result-info-item">
                                 <div class="result-info-content">
-                                    <div class="result-info-label">格网分辨率</div>
+                                    <div class="result-info-label">{{t('datapage.history.resolution')}}</div>
                                     <div class="result-info-value">
                                         <select v-model="selectedResolution"
                                             class="custom-select" style="width: 6rem;">
                                             <option v-for="option in resolutionList" :key="option" :value="option"
                                                 class="custom-option">
-                                                {{ `${option === EMPTY_RESOLUTION ? '请选择' : option + 'km'}` }}
+                                                {{ `${option === EMPTY_RESOLUTION ? t('datapage.history.choose') : option + 'km'}` }}
                                             </option>
                                         </select>
                                     </div>
@@ -129,9 +129,9 @@
                             </div>
                             <div class="result-info-item">
                                 <div class="result-info-content">
-                                    <div class="result-info-label">行政区划</div>
+                                    <div class="result-info-label">{{t('datapage.history.admin')}}</div>
                                     <div class="result-info-value">
-                                        <RegionSelects v-model="selectedRegion" :placeholder="['选择省份', '选择城市', '选择区县']"
+                                        <RegionSelects v-model="selectedRegion" :placeholder="t('datapage.history.admin_choose')"
                                             class="flex gap-2"
                                             select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
                                     </div>
@@ -144,8 +144,8 @@
                     <div class="flex justify-between gap-3 items-center w-full">
                         <span class="result-info-label">共找到 {{ total }} 条记录</span>
                         <div class="flex gap-3">
-                            <a-button type="primary" class="a-button-dark" @click="reset">重置</a-button>  
-                            <a-button type="primary" class="a-button" @click="getCaseList">筛选</a-button>
+                            <a-button type="primary" class="a-button-dark" @click="reset">{{t('datapage.history.clear')}}</a-button>  
+                            <a-button type="primary" class="a-button" @click="getCaseList">{{t('datapage.history.fliter')}}</a-button>
                         </div>
                     </div>
                 </div>
@@ -156,7 +156,7 @@
                     <span>{{ `${item.address}无云一版图` }}</span>
                     <div class="absolute right-0 cursor-pointer">
                         <a-tooltip>
-                            <template #title>预览</template>
+                            <template #title>{{t('datapage.history.preview')}}</template>
                             <Eye v-if="previewList[index]" @click="unPreview" :size="16" class="cursor-pointer"/>
                             <EyeOff v-else :size="16" @click="showResult(item.caseId, item.regionId)" class="cursor-pointer"/>
                         </a-tooltip>
@@ -170,7 +170,7 @@
                                     <Grid3x3 :size="12" />
                                 </div>
                                 <div class="result-info-content">
-                                    <div class="result-info-label">格网分辨率</div>
+                                    <div class="result-info-label">{{t('datapage.history.resolution')}}</div>
                                     <div class="result-info-value">
                                         {{ item.resolution }}km
                                     </div>
@@ -181,7 +181,7 @@
                                     <CalendarIcon :size="12" />
                                 </div>
                                 <div class="result-info-content">
-                                    <div class="result-info-label">生成时间</div>
+                                    <div class="result-info-label">{{t('datapage.history.create_time')}}</div>
                                     <div class="result-info-value">
                                         {{ formatTimeToText(item.createTime) }}
                                     </div>
@@ -192,7 +192,7 @@
                                     <DatabaseIcon :size="12" />
                                 </div>
                                 <div class="result-info-content">
-                                    <div class="result-info-label">使用数据</div>
+                                    <div class="result-info-label">{{t('datapage.history.data')}}</div>
                                     <div>
                                         {{ item.dataSet }}
                                     </div>
@@ -227,6 +227,10 @@ import { RegionSelects } from 'v-region'
 import { useTaskPollModule } from './taskPoll'
 import bus from '@/store/bus'
 import { useTaskStore } from '@/store'
+
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+
 const { caseList, currentPage, sectionHeader, pageSize, total, historyClassTabs, activeTab, handleSelectTab,
      selectedRegion, selectedTimeIndex, timeOptionList, selectedResolution, resolutionList, EMPTY_RESOLUTION, getCaseList,
     isExpand, reset, previewList, previewIndex, showResult, unPreview } = useViewHistoryModule()
