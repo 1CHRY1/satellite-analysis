@@ -7,14 +7,14 @@
                         <div class="section-icon">
                             <MapPinIcon :size="18" />
                         </div>
-                        <h2 class="section-title">研究区域选择</h2>
+                        <h2 class="section-title">{{t('datapage.analysis.section1.subtitle')}}</h2>
                     </div>
                     <div class="section-content">
                         <div class="config-container">
                             <div class="config-item">
                                 <div class="config-label relative">
                                     <MapIcon :size="16" class="config-icon" />
-                                    <span>行政区</span>
+                                    <span>{{t('datapage.analysis.section1.area')}}</span>
                                 </div>
                                 <div class="config-control justify-center">
                                     <RegionSelects v-model="region" class="flex gap-2"
@@ -29,7 +29,7 @@
                         <div class="section-icon">
                             <ChartColumn :size="18" />
                         </div>
-                        <h2 class="section-title">专题选择：</h2>
+                        <h2 class="section-title">{{t('datapage.analysis.section2.subtitle')}}</h2>
                         <select v-model="selectedTask" @change="handleThematicChange"
                             class="bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-3 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6] max-w-[calc(100%-90px)] truncate">
                             <option v-for="option in optionalTasks" :key="option.value" :value="option.value"
@@ -39,7 +39,7 @@
                         </select>
                         <div class="absolute right-6" @click="clearImages">
                             <a-tooltip>
-                                <template #title>清空影像图层</template>
+                                <template #title>{{t('datapage.analysis.section2.clear')}}</template>
                                 <Trash2Icon :size="20" />
                             </a-tooltip>
                         </div>
@@ -90,6 +90,9 @@ import {
 import { ElMessage } from 'element-plus'
 import { mapManager } from '@/util/map/mapManager'
 
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+
 const startTime = '1900-01-01'
 const endTime = '2050-01-01'
 const region = ref<RegionValues>({
@@ -106,13 +109,14 @@ const displayLabel = computed(() => {
 })
 
 const optionalTasks = [
-    { value: 'DSM分析', label: 'DSM分析', disabled: false },
-    { value: 'DEM分析', label: 'DEM分析', disabled: false },
-    { value: '红绿立体', label: '红绿立体', disabled: false },
-    { value: '形变速率', label: '形变速率', disabled: false },
-    { value: 'NDVI时序计算', label: 'NDVI时序计算', disabled: false },
-    { value: '光谱分析', label: '光谱分析', disabled: false },
+    { value: 'DSM分析', label: t('datapage.analysis.optionallab.task_DSM'), disabled: false },
+    { value: 'DEM分析', label: t('datapage.analysis.optionallab.task_DEM'), disabled: false },
+    { value: '红绿立体', label: t('datapage.analysis.optionallab.task_red_green'), disabled: false },
+    { value: '形变速率', label: t('datapage.analysis.optionallab.task_rate'), disabled: false },
+    { value: 'NDVI时序计算', label: t('datapage.analysis.optionallab.task_NDVI'), disabled: false },
+    { value: '光谱分析', label: t('datapage.analysis.optionallab.task_spectral'), disabled: false },
 ]
+
 
 const selectedTask = ref(optionalTasks[0].value)
 
@@ -134,7 +138,7 @@ const originImages = ref([])
 const thematicConfig = ref({})
 const getOriginImages = async (newRegion: number | '未选择') => {
     if (newRegion === "未选择") {
-        ElMessage.warning('请选择正确的研究区域')
+        ElMessage.warning(t('datapage.analysis.message.region'))
         return
     }
     let filterData = {

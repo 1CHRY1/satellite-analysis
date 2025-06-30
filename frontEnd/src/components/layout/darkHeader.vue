@@ -6,7 +6,7 @@
                 <satellite class="!text-[#3b82f6] h-8 w-8 mr-2" />
 
                 <span
-                    class="bg-gradient-to-r from-sky-100 to-white bg-clip-text font-semibold whitespace-nowrap text-transparent sm:text-lg md:text-xl lg:text-2xl">多源遥感应用支撑云平台</span>
+                    class="bg-gradient-to-r from-sky-100 to-white bg-clip-text font-semibold whitespace-nowrap text-transparent sm:text-lg md:text-xl lg:text-2xl">{{ t('nav.title') }}</span>
             </div>
 
             <nav class="ml-[5vw] flex items-center space-x-[1.5vw]">
@@ -39,6 +39,11 @@
             </nav>
         </div>
 
+        <!-- Switch language -->
+         <div class="flex items-center mr-4">
+            <SwitcheLanguage />
+         </div>
+
         <!-- user authenticated -->
         <div v-if="userStore.authenticated"
             class="group relative flex cursor-pointer items-center justify-between rounded-4xl bg-gray-800 transition-colors hover:bg-gray-700">
@@ -48,7 +53,7 @@
             </div>
             <div class="absolute top-8 right-0 z-10 hidden w-24 rounded-lg bg-white text-center text-black shadow-lg group-hover:block"
                 @click="handleLogout">
-                退出登录
+                {{t('nav.button.logout')}}
             </div>
         </div>
 
@@ -56,11 +61,11 @@
         <div v-else class="flex items-center gap-4">
             <router-link to="/login"
                 class="text-md cursor-pointer rounded-md border-2 border-sky-600 px-4 py-1 text-sky-300 transition-colors hover:bg-gray-800 hover:font-bold hover:text-sky-200">
-                登录
+                {{ t('nav.button.login') }}
             </router-link>
             <button @click="router.push('/register')"
                 class="text-md cursor-pointer rounded-md border-2 border-sky-600 bg-sky-800 px-4 py-1 text-white transition-colors hover:bg-sky-700 hover:font-bold">
-                注册
+                {{ t('nav.button.signup') }}
             </button>
         </div>
     </header>
@@ -71,23 +76,28 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/store'
 import { useRouter } from 'vue-router'
+import SwitcheLanguage from './SwitchLanguage.vue';
 
 // import logo from '@/assets/image/logo2.png'
 import avator from '@/assets/image/avator.png'
 import { Satellite } from 'lucide-vue-next'
+
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 //////// Router //////////////////////////////////
 const route = useRoute()
 const router = useRouter()
 const currentRoute = computed(() => route.path)
 
-const navItems = [
-    { external: false, name: '首页', path: '/home' },
-    { external: false, name: '模型中心', path: '/models' },
-    { external: false, name: '数据中心', path: '/data' },
-    { external: false, name: '工具发布', path: '/projects' },
-    { external: true, name: '关于我们', path: 'http://opengmsteam.com/' },
-]
+const navItems = computed(() =>[
+    { external: false, name: t('nav.home'), path: '/home' },
+    { external: false, name: t('nav.models'), path: '/models' },
+    { external: false, name: t('nav.data'), path: '/data' },
+    { external: false, name: t('nav.tools'), path: '/projects' },
+    { external: true, name: t('nav.about'), path: 'http://opengmsteam.com/' },
+    ]
+)
 
 // const jumpToOGMS = () => {
 //     const OGMS_URL = 'https://geomodeling.njnu.edu.cn/'

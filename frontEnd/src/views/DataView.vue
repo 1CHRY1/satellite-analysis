@@ -29,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, type Ref } from 'vue'
+import { ref, type Ref , computed } from 'vue'
 import MapComp from '@/components/feature/map/mapComp.vue'
 // import ImageSearcher from '@/components/dataCenter/imageSearcher.vue'
 import dataExplore from '@/components/dataCenter/interactiveExplore.vue'
@@ -39,6 +39,9 @@ import { type interactiveExplore } from '@/components/dataCenter/type'
 // import * as MapOperation from '@/util/map/operation'
 import bus from '@/store/bus'
 import { ElMessage } from 'element-plus'
+
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 const showPage = ref('explore')
 const regionConfig: Ref<interactiveExplore | null> = ref(null)
@@ -63,9 +66,9 @@ const submitConfig = (config: interactiveExplore) => {
     regionConfig.value = config
 }
 
-const pages = [
-    { label: '交互式探索', value: 'explore' },
-    { label: '无云一版图', value: 'noClouds' },
-    { label: '动态展示分析', value: 'analysis' },
-]
+const pages = computed(() =>[
+    { label: t('datapage.title_explore'), value: 'explore' },
+    { label: t('datapage.title_nocloud'), value: 'noClouds' },
+    { label: t('datapage.title_analysis'), value: 'analysis' },
+])
 </script>

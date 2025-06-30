@@ -7,10 +7,10 @@
                         <div class="section-icon">
                             <CloudIcon :size="18" />
                         </div>
-                        <h2 class="section-title">无云一版图重构</h2>
+                        <h2 class="section-title">{{t('datapage.nocloud.title')}}</h2>
                         <div class="section-icon absolute right-0 cursor-pointer">
                             <a-tooltip>
-                                <template #title>历史重构记录</template>
+                                <template #title>{{t('datapage.history.his_recon')}}</template>
                                 <History :size="18" @click="setCurrentPanel('history')"/>
                             </a-tooltip>
                         </div>
@@ -20,19 +20,19 @@
                             <div class="config-item">
                                 <div class="config-label relative">
                                     <BoltIcon :size="16" class="config-icon" />
-                                    <span>国产光学影像</span>
+                                    <span>{{t('datapage.nocloud.section_chinese.subtitle')}}</span>
                                 </div>
                                 <div class="config-control flex-col !items-start">
                                     <div class="flex w-full flex-col gap-2">
                                         <label class="flex items-center gap-2">
                                             <input type="checkbox" v-model="additionalData[0]" disabled
                                                 class="h-4 w-4 rounded" />
-                                            国产亚米级影像（仅含ARD数据）
+                                            {{t('datapage.nocloud.section_chinese.text_national_image')}}
                                         </label>
                                         <label class="flex items-center gap-2">
                                             <input type="checkbox" v-model="dataReconstruction[0]"
                                                 @click="add2mDemoticImages" class="h-4 w-4 rounded" />
-                                            使用国产2m级影像
+                                            {{t('datapage.nocloud.section_chinese.text_national2m')}}
                                         </label>
                                         <div v-if="showProgress[0]"
                                             class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
@@ -46,7 +46,7 @@
                                                 <ImageIcon :size="16" />
                                             </div>
                                             <div class="result-info-content">
-                                                <div class="result-info-label">格网分辨率</div>
+                                                <div class="result-info-label">{{t('datapage.nocloud.section_chinese.resolution')}}</div>
                                                 <div class="result-info-value">
                                                     {{ props.regionConfig.space }}km
                                                 </div>
@@ -57,7 +57,7 @@
                                                 <CalendarIcon :size="16" />
                                             </div>
                                             <div class="result-info-content">
-                                                <div class="result-info-label">涵盖时间范围</div>
+                                                <div class="result-info-label">{{t('datapage.nocloud.section_chinese.timerange')}}</div>
                                                 <div class="result-info-value date-range">
                                                     <div class="date-item">
                                                         {{
@@ -82,10 +82,10 @@
                                             </div>
                                             <div class="result-info-content">
                                                 <div class="result-info-label">
-                                                    研究区亚米级国产影像
+                                                    {{t('datapage.nocloud.section_chinese.text_national_research')}}
                                                 </div>
                                                 <div class="result-info-value">
-                                                    {{ demotic }}景影像
+                                                    {{ demotic }}{{ t('datapage.explore.scene') }}
                                                 </div>
                                             </div>
                                         </div>
@@ -95,7 +95,7 @@
                                             </div>
                                             <div class="result-info-content">
                                                 <div class="result-info-label">
-                                                    亚米级国产影像覆盖率
+                                                    {{t('datapage.nocloud.section_chinese.text_national_coverage')}}
                                                 </div>
                                                 <div class="result-info-value">
                                                     {{
@@ -112,10 +112,10 @@
                                             </div>
                                             <div class="result-info-content">
                                                 <div class="result-info-label">
-                                                    研究区国产影像（2m超分后）
+                                                    {{t('datapage.nocloud.section_chinese.text_research2m')}}
                                                 </div>
                                                 <div class="result-info-value">
-                                                    {{ demotic2mImages.length }}景影像
+                                                    {{ demotic2mImages.length }}{{ t('datapage.explore.scene') }}
                                                 </div>
                                             </div>
                                         </div>
@@ -125,7 +125,7 @@
                                             </div>
                                             <div class="result-info-content">
                                                 <div class="result-info-label">
-                                                    影像覆盖率（2m超分后）
+                                                    {{t('datapage.nocloud.section_chinese.text_coverage2m')}}
                                                 </div>
                                                 <div class="result-info-value">
                                                     {{
@@ -142,7 +142,7 @@
                             <div class="config-item">
                                 <div class="config-label relative">
                                     <CalendarIcon :size="16" class="config-icon" />
-                                    <span>融合国外光学影像</span>
+                                    <span>{{t('datapage.nocloud.section_international.subtitle')}}</span>
                                     <el-tooltip content="对于缺失数据的格网，采用国外光学影像进行填补，填补过程中基于AI算法进行超分辨率重建" placement="top"
                                         effect="dark">
                                         <CircleHelp :size="14" />
@@ -153,13 +153,13 @@
                                         <label class="flex items-center gap-2">
                                             <input type="checkbox" v-model="additionalData[1]" @click="addAbroadImages"
                                                 :disabled="!dataReconstruction[0]" class="h-4 w-4 rounded" />
-                                            国外影像填补格网效果预览
+                                            {{t('datapage.nocloud.section_international.text_preview')}}
                                         </label>
                                         <label class="flex items-center gap-2">
                                             <input type="checkbox" v-model="dataReconstruction[1]"
                                                 @click="controlProgress(1)" :disabled="!dataReconstruction[0]"
                                                 class="h-4 w-4 rounded" />
-                                            使用国外影像数据参与重构
+                                            {{t('datapage.nocloud.section_international.text_overseaimage')}}
                                         </label>
                                         <div v-if="showProgress[1]"
                                             class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
@@ -173,9 +173,9 @@
                                                 <CloudIcon :size="16" />
                                             </div>
                                             <div class="result-info-content">
-                                                <div class="result-info-label">研究区国外影像</div>
+                                                <div class="result-info-label">{{t('datapage.nocloud.section_international.text_research')}}</div>
                                                 <div class="result-info-value">
-                                                    {{ internationalImages.length }}景影像
+                                                    {{ internationalImages.length }}{{ t('datapage.explore.scene') }}
                                                 </div>
                                             </div>
                                         </div>
@@ -184,7 +184,7 @@
                                                 <CloudIcon :size="16" />
                                             </div>
                                             <div class="result-info-content">
-                                                <div class="result-info-label">累积影像覆盖率</div>
+                                                <div class="result-info-label">{{t('datapage.nocloud.section_international.text_coverage')}}</div>
                                                 <div class="result-info-value">
                                                     {{
                                                         coverageRate.international != 'NaN%'
@@ -200,7 +200,7 @@
                             <div class="config-item">
                                 <div class="config-label relative">
                                     <CalendarIcon :size="16" class="config-icon" />
-                                    <span>融合SAR影像</span>
+                                    <span>{{t('datapage.nocloud.section_SAR.subtitle')}}</span>
                                     <el-tooltip content="勾选将使用雷达数据进行色彩变换，与光学数据配准，并补充重构。" placement="top" effect="dark">
                                         <CircleHelp :size="14" />
                                     </el-tooltip>
@@ -211,13 +211,13 @@
                                             <input type="checkbox" v-model="additionalData[2]" @click="addRadarImages"
                                                 :disabled="!additionalData[1] || !dataReconstruction[1]
                                                     " class="h-4 w-4 rounded" />
-                                            SAR影像填补格网效果预览
+                                             {{t('datapage.nocloud.section_SAR.text_preview')}}
                                         </label>
                                         <label class="flex items-center gap-2">
                                             <input type="checkbox" v-model="dataReconstruction[2]"
                                                 @click="controlProgress(2)" :disabled="!additionalData[1] || !dataReconstruction[1]
                                                     " class="h-4 w-4 rounded" />
-                                            使用SAR影像色彩变换参与重构
+                                            {{t('datapage.nocloud.section_SAR.text_SARtrans')}}
                                         </label>
                                         <div v-if="showProgress[2]"
                                             class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
@@ -231,9 +231,9 @@
                                                 <CloudIcon :size="16" />
                                             </div>
                                             <div class="result-info-content">
-                                                <div class="result-info-label">研究区SAR影像</div>
+                                                <div class="result-info-label">{{t('datapage.nocloud.section_SAR.text_SARresearch')}}</div>
                                                 <div class="result-info-value">
-                                                    {{ radarImages.length }}景影像
+                                                    {{ radarImages.length }}{{ t('datapage.explore.scene') }}
                                                 </div>
                                             </div>
                                         </div>
@@ -242,7 +242,7 @@
                                                 <CloudIcon :size="16" />
                                             </div>
                                             <div class="result-info-content">
-                                                <div class="result-info-label">累积影像覆盖率</div>
+                                                <div class="result-info-label">{{t('datapage.nocloud.section_SAR.text_coverage')}}</div>
                                                 <div class="result-info-value">
                                                     {{
                                                         coverageRate.addRadar != 'NaN%'
@@ -275,7 +275,7 @@
                                         'cursor-not-allowed': noCloudLoading,
                                         'cursor-pointer': !noCloudLoading,
                                     }">
-                                    <span>一版图重构 </span>
+                                    <span>{{t('datapage.nocloud.section4.button')}} </span>
                                     <Loader v-if="noCloudLoading" class="ml-2" />
                                 </button>
                                 <div v-if="showProgress[3]"
@@ -359,6 +359,9 @@ import { FastBackwardFilled } from '@ant-design/icons-vue'
 import bandMergeHelper from '@/util/image/util'
 import { message } from 'ant-design-vue'
 import { usePanelSwitchModule } from './panelSwitch'
+
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 const props = defineProps({
     regionConfig: {
@@ -596,7 +599,7 @@ const calTask: Ref<any> = ref({
 const taskStore = useTaskStore()
 
 // 填补勾选框
-const additionalData = ref([true, false, false])
+const additionalData = ref([false, false, false])
 // 数据重构勾选框
 const dataReconstruction = ref([false, false, false])
 // 是否合并
@@ -665,7 +668,7 @@ const calNoClouds = async () => {
     console.log(getNoCloudParam, '发起请求')
     let startCalcRes = await getNoCloud(getNoCloudParam)
     if (startCalcRes.message !== 'success') {
-        ElMessage.error('计算失败，请重试')
+        ElMessage.error(t('datapage.nocloud.message.calerror'))
         console.error(startCalcRes)
         return
     }
@@ -738,7 +741,7 @@ const showingImageStrech = reactive({
 // 预览无云一版图
 const previewNoCloud = async (data: any) => {
 
-    const stopLoading = message.loading('正在加载无云一版图，请稍后...', 0)
+    const stopLoading = message.loading(t('datapage.nocloud.message.load'), 0)
     // 清除旧图层
     MapOperation.map_removeNocloudGridPreviewLayer()
     MapOperation.map_destroyNoCloudLayer()
@@ -960,7 +963,7 @@ onMounted(async () => {
     MapOperation.map_addGridLayer(gridFeature)
     MapOperation.draw_deleteAll()
 
-    ElMessage.success(`国产亚米级影像加载完毕`)
+    ElMessage.success(t('datapage.nocloud.message.guochanload'))
 })
 
 // 算格网的颜色,接收的数据分别为：要上色的格网本身，累积影像分布到格网的结果，格网数量，所属层级

@@ -7,8 +7,8 @@
             <button @click="handleZoomOut" class="map-button">➖</button>
             <button @click="handleRightRotate" class="map-button">↩️</button>
             <button @click="handleLeftRotate" class="map-button">↪️</button>
-            <button @click="localTian" class="map-button text-gray-900!">矢量底图</button>
-            <button @click="localImg" class="map-button text-gray-900!">影像底图</button>
+            <button @click="localTian" class="map-button text-gray-900!">{{ t('datapage.mapcomp.vector') }}</button>
+            <button @click="localImg" class="map-button text-gray-900!">{{ t('datapage.mapcomp.imagery') }}</button>
         </div>
         <CubeTimeline
             class="absolute right-1/2 bottom-10 flex translate-x-1/2 gap-2"
@@ -25,6 +25,8 @@ import { mapManager } from '@/util/map/mapManager'
 import { StyleMap } from '@/util/map/tianMapStyle'
 import CubeTimeline from './cubeTimeline.vue'
 import bus from '@/store/bus'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 const props = defineProps({
     style: {
