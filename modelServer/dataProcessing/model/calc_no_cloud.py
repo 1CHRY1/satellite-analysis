@@ -17,13 +17,22 @@ MINIO_ENDPOINT = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}"
 INFINITY = 999999
 
 @ray.remote(num_cpus=CONFIG.RAY_NUM_CPUS, memory=CONFIG.RAY_MEMORY_PER_TASK)
-def process_grid(grid, scenes, grid_helper, scene_band_paths, minio_endpoint, temp_dir_path):
+def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper, minio_endpoint, temp_dir_path):
     try:
         from rio_tiler.io import COGReader
         import numpy as np
         import rasterio
         from rasterio.transform import from_bounds
         from rasterio.enums import Resampling
+        import json
+        import os
+
+        # 从JSON文件中加载数据
+        with open(scenes_json_file, 'r', encoding='utf-8') as f:
+            scenes = json.load(f)
+        
+        with open(scene_band_paths_json_file, 'r', encoding='utf-8') as f:
+            scene_band_paths = json.load(f)
 
         grid_x, grid_y = grid
         grid_lable = f'grid_{grid_x}_{grid_y}'
@@ -218,7 +227,8 @@ def process_grid(grid, scenes, grid_helper, scene_band_paths, minio_endpoint, te
             # Very Important!!!!!!!!!!!!!!!!
             dtype=np.float32,
             crs='EPSG:4326',
-            transform=transform
+            transform=transform,
+            BIGTIFF='YES'
         ) as dst:
             dst.write(img)
             
@@ -332,6 +342,42 @@ def merge_tifs(temp_dir_path: str, task_id: str) -> str:
             
         return final_merge_path
 
+# 序列化数据到临时文件
+def serialize_data_to_temp_files(scenes, scene_band_paths):
+    """
+    将scenes和scene_band_paths序列化为JSON文件
+    返回文件路径
+    """
+    import uuid
+    import json
+
+    # 生成唯一的文件名
+    uuid = str(uuid.uuid4())
+    
+    # 生成文件路径
+    scenes_json_file = os.path.join(CONFIG.TEMP_OUTPUT_DIR, f"scenes_{uuid}.json")
+    scene_band_paths_json_file = os.path.join(CONFIG.TEMP_OUTPUT_DIR, f"scene_band_paths_{uuid}.json")
+    
+    # 序列化并写入文件
+    with open(scenes_json_file, 'w', encoding='utf-8') as f:
+        json.dump(scenes, f, ensure_ascii=False, indent=2)
+    
+    with open(scene_band_paths_json_file, 'w', encoding='utf-8') as f:
+        json.dump(scene_band_paths, f, ensure_ascii=False, indent=2)
+    
+    return scenes_json_file, scene_band_paths_json_file
+
+def cleanup_temp_files(scenes_json_file, scene_band_paths_json_file):
+    """
+    清理临时JSON文件
+    """
+    try:
+        if os.path.exists(scenes_json_file):
+            os.remove(scenes_json_file)
+        if os.path.exists(scene_band_paths_json_file):
+            os.remove(scene_band_paths_json_file)
+    except Exception as e:
+        print(f"清理临时文件时出错: {e}")
 
 
 class calc_no_cloud(Task):
@@ -374,12 +420,14 @@ class calc_no_cloud(Task):
         
         print('start time ', time.time())
 
+        # 序列化数据到临时文件
+        scenes_json_file, scene_band_paths_json_file = serialize_data_to_temp_files(scenes, scene_band_paths)
         # 使用ray
         ray_tasks = [
             process_grid.remote(grid=g,
-                                scenes=scenes,
+                                scenes_json_file=scenes_json_file,
+                                scene_band_paths_json_file=scene_band_paths_json_file,
                                 grid_helper=grid_helper,
-                                scene_band_paths=scene_band_paths,
                                 minio_endpoint=MINIO_ENDPOINT,
                                 temp_dir_path=temp_dir_path)
             for g in grids

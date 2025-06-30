@@ -225,6 +225,10 @@ export async function getCasePage(param: Case.CasePageRequest): Promise<Case.Cas
     return http.post<Case.CasePageResponse>(`data/case/page`, param)
 }
 
+export async function getCurrentTime(): Promise<any> {
+    return http.get<any>(`time/current`)
+}
+
 export async function getCaseById(caseId: string): Promise<Case.CaseResponse> {
     return http.get<Case.CaseResponse>(`data/case/${caseId}`)
 }

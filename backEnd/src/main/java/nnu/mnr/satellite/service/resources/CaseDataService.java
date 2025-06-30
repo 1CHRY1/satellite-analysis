@@ -20,6 +20,7 @@ import nnu.mnr.satellite.model.dto.resources.CasePageDTO;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,7 +60,7 @@ public class CaseDataService {
                 .dataSet(param.get("dataSet").toString())
                 .status("RUNNING")
                 .result(null)
-                .createTime(LocalDateTime.now())
+                .createTime(LocalDateTime.now(ZoneId.of("Asia/Shanghai")))
                 .build();
 
         caseRepo.insertCase(caseObj);
