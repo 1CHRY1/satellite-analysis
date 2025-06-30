@@ -12,12 +12,12 @@ spring:
       strict: false
       datasource:
         mysql_satellite:
-          url: jdbc:mysql://172.31.13.21:3306/satellite
+          url: jdbc:mysql://172.31.13.21:3306/satellite?useSSL=false&allowPublicKeyRetrieval=true
           username: root
           password: ogms250410
           driver-class-name: com.mysql.cj.jdbc.Driver
         mysql_tile:
-          url: jdbc:mysql://172.31.13.21:3306/tile
+          url: jdbc:mysql://172.31.13.21:3306/tile?useSSL=false&allowPublicKeyRetrieval=true
           username: root
           password: ogms250410
           driver-class-name: com.mysql.cj.jdbc.Driver
@@ -73,13 +73,13 @@ docker:
   workDir: /usr/local/coding/
 
 modelServer:
-  address: http://172.31.13.20:5000
+  address: http://172.31.13.23:5000
   apis:
     status: /v0/task/status
     result: /v0/task/result
     merge: /v0/tif/merge_v2
     noCloud: /v0/tif/calc_no_cloud
-    spectrum: /v0/tif/get_spectral_profile
+    spectrum: /v0/tif/get_spectral_profilen
     rasterPoint: /v0/tif/calc_raster_point
     rasterLine: /v0/tif/calc_raster_line
     #    noCloud: /v0/tif/calc_qa_simple
@@ -89,7 +89,7 @@ modelServer:
     status: 2
 
 tiler:
-  end-point: http://172.31.13.21:8079
+  end-point: http://172.31.13.21:5050
 
 satelliteConfig:
   path: /usr/resource/band_config.json

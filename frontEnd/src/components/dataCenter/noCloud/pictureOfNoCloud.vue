@@ -915,6 +915,7 @@ onMounted(async () => {
         grids: allGrids,
         sceneIds: demotic1mImages.value.map((images) => images.sceneId),
     })
+    console.log('国产亚米级影像分布情况', demotic1mGridImages.value)
     coverageRate.value.demotic1m = getCoverage(demotic1mGridImages.value, gridCount)
 
     let addDemotic1mImages = demotic1mImages.value.concat(demotic2mImages.value)
@@ -922,6 +923,7 @@ onMounted(async () => {
         grids: allGrids,
         sceneIds: addDemotic1mImages.map((images) => images.sceneId),
     })
+    console.log('国产2m超分影像分布情况', demotic2mGridImages.value)
     coverageRate.value.demotic2m = getCoverage(demotic2mGridImages.value, gridCount)
 
     let addInternationalImages = addDemotic1mImages.concat(internationalImages.value)

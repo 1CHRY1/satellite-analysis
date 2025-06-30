@@ -14,26 +14,26 @@ spring:
         mysql_satellite:
           # k8s
           #url: jdbc:mysql://223.2.43.228:31136/satellite
-          url: jdbc:mysql://localhost:3306/satellite
+          url: jdbc:mysql://localhost:3306/satellite?useSSL=false&allowPublicKeyRetrieval=true
           username: root
           #password: 123456
           password: root
           driver-class-name: com.mysql.cj.jdbc.Driver
           hikari:
             connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
-        mysql_tile:
-          #          url: jdbc:mysql://223.2.34.7:3306/tile
-          url: jdbc:mysql://223.2.43.228:31136/tile
-          username: root
-          password: 123456
-          driver-class-name: com.mysql.cj.jdbc.Driver
-        pg_space:
-          url: jdbc:postgresql://223.2.43.228:31543/gis_db
-          #          url: jdbc:postgresql://127.0.0.1:5431/gis_db
-          username: postgres
-          password: 123456
-          #          password: ogms250410
-          driver-class-name: org.postgresql.Driver
+#        mysql_tile:
+#          #          url: jdbc:mysql://223.2.34.7:3306/tile
+#          url: jdbc:mysql://223.2.43.228:31136/tile?useSSL=false&allowPublicKeyRetrieval=true
+#          username: root
+#          password: 123456
+#          driver-class-name: com.mysql.cj.jdbc.Driver
+#        pg_space:
+#          url: jdbc:postgresql://223.2.43.228:31543/gis_db
+#          #          url: jdbc:postgresql://127.0.0.1:5431/gis_db
+#          username: postgres
+#          password: 123456
+#          #          password: ogms250410
+#          driver-class-name: org.postgresql.Driver
   servlet:
     multipart:
       max-file-size: 1GB

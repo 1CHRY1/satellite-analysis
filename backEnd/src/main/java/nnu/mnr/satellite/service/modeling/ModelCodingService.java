@@ -69,7 +69,7 @@ public class ModelCodingService {
 
     @Autowired
     ProjectDataService projectDataService;
-    
+
     @Autowired
     IProjectRepo projectRepo;
 
@@ -106,7 +106,8 @@ public class ModelCodingService {
                 "endpoint", satelliteDs.getUrl().split("://")[1].split("/")[0],
                 "user", satelliteDs.getUsername(),
                 "password", satelliteDs.getPassword(),
-                "satellite_database", satelliteDs.getUrl().split("://")[1].split("/", 2)[1],
+//                "satellite_database", satelliteDs.getUrl().split("://")[1].split("/", 2)[1],
+                "satellite_database", "satellite",
                 "tile_database", tileDs.getUrl().split("://")[1].split("/", 2)[1]);
         JSONObject remoteConfig = JSONObject.of("minio", minioConfig, "database", databaseConfig, "project_info", projectConfig);
         return  remoteConfig.toString();
