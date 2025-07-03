@@ -86,6 +86,9 @@ public class ModelCodingService {
     @Autowired
     private MinioProperties minioProperties;
 
+    @Autowired
+    private RayOptimizationService rayOptimizationService;
+
     private final String projectDataBucket = "project-data-bucket";
 
     public String getRemoteConfig(Project project) {
@@ -498,9 +501,23 @@ public class ModelCodingService {
             responseInfo = "Container Not Connected";
             return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
         }
-        String command = "python " + project.getPyPath();
-        CompletableFuture.runAsync( () -> dockerService.runCMDInContainer(userId, projectId, containerId, command));
-        responseInfo = "Script Executing Successfully";
+        
+        // 🚀 Ray优化增强：自动优化用户代码并执行
+        String scriptPath;
+        try {
+            // 创建Ray优化脚本
+            scriptPath = rayOptimizationService.createRayOptimizedScript(project, userId);
+            responseInfo = "Ray优化脚本正在执行...";
+            log.info("[RAY] 使用Ray优化脚本执行用户代码，项目ID: {}, 用户ID: {}", projectId, userId);
+        } catch (Exception e) {
+            // 如果Ray优化失败，降级到原始脚本
+            log.warn("[RAY] Ray优化失败，降级到原始脚本执行，项目ID: {}, 错误: {}", projectId, e.getMessage());
+            scriptPath = project.getPyPath();
+            responseInfo = "脚本执行中（标准模式）...";
+        }
+        
+        final String finalCommand = "python " + scriptPath;
+        CompletableFuture.runAsync( () -> dockerService.runCMDInContainer(userId, projectId, containerId, finalCommand));
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
     }
 
