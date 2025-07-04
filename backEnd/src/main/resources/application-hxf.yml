@@ -87,7 +87,7 @@ docker:
   workDir: /usr/local/coding/
 
 modelServer:
-  address: http://192.168.1.101:30500
+  address: http://127.0.0.1:5000
   #  address: http://223.2.43.228:30500
   apis:
     status: /v0/task/status
@@ -105,7 +105,7 @@ modelServer:
     status: 2
 
 tiler:
-  end-point: http://192.168.1.101:8000/
+  end-point: http://127.0.0.1:8000/
 
 satelliteConfig:
   path: D:/IdeaProjects/satellite-analysis/backEnd/src/main/resources/config/band_config.json

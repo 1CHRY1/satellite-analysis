@@ -13,6 +13,7 @@ import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
 import nnu.mnr.satellite.mapper.resources.ISceneRepo;
 import nnu.mnr.satellite.service.common.BandMapperGenerator;
 import nnu.mnr.satellite.utils.geom.GeometryUtil;
+import nnu.mnr.satellite.utils.geom.TileCalculateUtil;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.MultiPolygon;
@@ -76,18 +77,25 @@ public class SceneDataServiceV2 {
     public List<ModelServerSceneDTO> getCoveredSceneByRegionResolutionAndSensor(CoverFetchSceneDTO coverFetchSceneDTO) {
         Geometry boundary = regionDataService.getRegionById(coverFetchSceneDTO.getRegionId()).getBoundary();
         List<String> sceneIds = coverFetchSceneDTO.getSceneIds(); String sensorName = coverFetchSceneDTO.getSensorName();
-        return getCoveredSceneByBoundaryResolutionAndSensor(boundary, sceneIds, sensorName);
+        Integer resolution = coverFetchSceneDTO.getResolution();
+        return getCoveredSceneByBoundaryResolutionAndSensor(boundary, sceneIds, sensorName, resolution);
     } // For Region
-    public List<ModelServerSceneDTO> getCoveredSceneByLocationResolutionAndSensor(CoverLocationFetchSceneDTO coverFetchSceneDTO) {
-        Geometry boundary = locationService.getLocationBoundary(coverFetchSceneDTO.getResolution(), coverFetchSceneDTO.getLocationId());
-        List<String> sceneIds = coverFetchSceneDTO.getSceneIds(); String sensorName = coverFetchSceneDTO.getSensorName();
-        return getCoveredSceneByBoundaryResolutionAndSensor(boundary, sceneIds, sensorName);
+    public List<ModelServerSceneDTO> getCoveredSceneByLocationResolutionAndSensor(CoverLocationFetchSceneDTO CoverLocationFetchSceneDTO) {
+        Geometry boundary = locationService.getLocationBoundary(CoverLocationFetchSceneDTO.getResolution(), CoverLocationFetchSceneDTO.getLocationId());
+        List<String> sceneIds = CoverLocationFetchSceneDTO.getSceneIds(); String sensorName = CoverLocationFetchSceneDTO.getSensorName();
+        Integer resolution = CoverLocationFetchSceneDTO.getResolution();
+        return getCoveredSceneByBoundaryResolutionAndSensor(boundary, sceneIds, sensorName, resolution);
     } // For Location
     // Get Scenes that Least Covering Region
-    public List<ModelServerSceneDTO> getCoveredSceneByBoundaryResolutionAndSensor(Geometry boundary, List<String> sceneIds, String sensorName) {
+    public List<ModelServerSceneDTO> getCoveredSceneByBoundaryResolutionAndSensor(Geometry boundary, List<String> sceneIds, String sensorName, Integer resolution) {
         List<ModelServerSceneDTO> sceneDtos = new ArrayList<>();
         QueryWrapper<Scene> queryWrapper = new QueryWrapper<>();
         queryWrapper.in("scene_id", sceneIds).orderByDesc("scene_time");
+
+        // 获取格网边界
+        List<Integer[]> tileIds = TileCalculateUtil.getRowColByRegionAndResolution(boundary, resolution);
+        Geometry gridsBoundary = GeometryUtil.getGridsBoundaryByTilesAndResolution(tileIds, resolution);
+
         List<Scene> scenes = sceneRepo.selectList(queryWrapper);
         GeometryFactory geometryFactory = new GeometryFactory();
         MultiPolygon scenesBoundary = geometryFactory.createMultiPolygon(new Polygon[]{});
@@ -108,7 +116,8 @@ public class SceneDataServiceV2 {
                 throw new IllegalArgumentException("Unsupported geometry type: " + unionResult.getClass().getName());
             }
             // 判断是否相交
-            boolean isIntersect = boundary.intersects(bbox);
+            boolean isPartiallyOverlapped = isPartiallyOverlapped(gridsBoundary, bbox);
+
             List<ModelServerImageDTO> imageDTOS = imageDataService.getModelServerImageDTOBySceneId(scene.getSceneId());
             ModelServerSceneDTO modelServerSceneDTO = ModelServerSceneDTO.builder()
                     .sceneId(scene.getSceneId())
@@ -116,7 +125,7 @@ public class SceneDataServiceV2 {
                     .noData(scene.getNoData())
                     .bandMapper(bandMapperGenerator.getSatelliteConfigBySensorName(sensorName))
                     .images(imageDTOS)
-                    .isIntersect(isIntersect)
+                    .isPartiallyOverlapped(isPartiallyOverlapped)
                     .build();
             sceneDtos.add(modelServerSceneDTO);
             if (scenesBoundary.contains(boundary)) {
@@ -197,6 +206,24 @@ public class SceneDataServiceV2 {
                 .center(List.of(scene.getBbox().getCentroid().getX(), scene.getBbox().getCentroid().getY()))
                 .bounds(GeometryUtil.getGeometryBounds(scene.getBbox()))
                 .build();
+    }
+
+    public static boolean isPartiallyOverlapped(Geometry geom1, Geometry geom2) {
+    /**
+     * 判断两个图形是否部分重叠（非完全包含或完全分离）
+     */
+        // 1. 检查是否相交
+        if (!geom1.intersects(geom2)) {
+            return false; // 完全分离
+        }
+
+        // 2. 排除完全包含的情况
+        if (geom1.contains(geom2) || geom2.contains(geom1)) {
+            return false; // 完全包含
+        }
+
+        // 3. 剩余情况即为部分重叠
+        return true;
     }
 
 }

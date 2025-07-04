@@ -18,4 +18,5 @@ public class CoverFetchSceneDTO {
     private Integer regionId;
     private String sensorName;
     private List<String> sceneIds;
+    private Integer resolution;
 }
