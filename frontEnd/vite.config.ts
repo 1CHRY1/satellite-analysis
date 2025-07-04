@@ -39,8 +39,9 @@ export default defineConfig({
                 rewrite: (path) => path.replace(/^\/websocket/, ''),
             },
             '/tiler': {
-                target: 'http://192.168.1.101:8000',
-                // target: 'http://localhost:8000',
+                // target: 'http://223.2.43.228:31800',
+                target: 'http://localhost:8000',
+
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/tiler/, ''),
             },

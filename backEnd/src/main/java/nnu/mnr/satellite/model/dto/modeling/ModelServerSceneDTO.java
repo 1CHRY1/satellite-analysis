@@ -38,6 +38,6 @@ public class ModelServerSceneDTO {
     private JSONObject bandMapper;
 
     //判断相交
-    private boolean isIntersect;
+    private boolean isPartiallyOverlapped;
 
 }
