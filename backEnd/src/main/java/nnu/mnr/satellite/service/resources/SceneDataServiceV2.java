@@ -107,6 +107,8 @@ public class SceneDataServiceV2 {
             } else {
                 throw new IllegalArgumentException("Unsupported geometry type: " + unionResult.getClass().getName());
             }
+            // 判断是否相交
+            boolean isIntersect = boundary.intersects(bbox);
             List<ModelServerImageDTO> imageDTOS = imageDataService.getModelServerImageDTOBySceneId(scene.getSceneId());
             ModelServerSceneDTO modelServerSceneDTO = ModelServerSceneDTO.builder()
                     .sceneId(scene.getSceneId())
@@ -114,6 +116,7 @@ public class SceneDataServiceV2 {
                     .noData(scene.getNoData())
                     .bandMapper(bandMapperGenerator.getSatelliteConfigBySensorName(sensorName))
                     .images(imageDTOS)
+                    .isIntersect(isIntersect)
                     .build();
             sceneDtos.add(modelServerSceneDTO);
             if (scenesBoundary.contains(boundary)) {
