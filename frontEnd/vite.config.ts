@@ -41,6 +41,7 @@ export default defineConfig({
             '/tiler': {
                 // target: 'http://223.2.43.228:31800',
                 target: 'http://localhost:8000',
+
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/tiler/, ''),
             },
