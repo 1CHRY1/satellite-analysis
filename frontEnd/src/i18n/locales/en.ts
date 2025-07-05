@@ -458,7 +458,7 @@ export default{
         section2:{
             sectiontitle:"Filter by time",
             subtitle1:"Time range",
-            intext1:"'date of start', 'date of end'",
+            intext_date:"'date of start', 'date of end'",
             button:"Image filtering",
 
             subtitle2:"Statistical information",
@@ -468,7 +468,7 @@ export default{
             
         },
 
-        section3:{
+        section_interactive:{
             sectiontitle:"Interactive Exploration",
             clear:"Clear image layers",
             subtitle:" resolution image set",
@@ -504,11 +504,11 @@ export default{
         scene_choose:"Select sensor：",
 
         message:{
+            ordererror:"Please complete the imagery flitering first, then generate the cloud-free basemap",
             filtererror_choose:"Please select the administrative division and access the grid first",
             filtererror_grid:"Please access the grid first",
             sceneerror_recondition:"No imagery matching the requirements , please reset the conditions",
-            sceneerror_searched:"Retrieved",
-            sceneerror_filter:"-scene imagery, please refine your image selection criteria",
+            scene_searched:"Retrieved {count} -scene imagery, please refine your image selection criteria",
             imagery_error:"Please select valid imagery",
             load:"Loading imagery...",
             typyerror_condition:"Please set the filter conditions",
@@ -576,6 +576,8 @@ export default{
         section5:{
             subtitle:"Reconstruction Information",
         },
+
+        choose: "Select Priority Sensor:",
 
         message:{
             load:"Loading cloud-free basemap, please wait...",

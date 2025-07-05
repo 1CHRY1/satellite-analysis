@@ -25,8 +25,9 @@
                                 <div class="config-control flex-col !items-start">
                                     <div class="flex w-full flex-col gap-2">
                                         <label class="flex items-center gap-2">
-                                            <input type="checkbox" v-model="additionalData[0]" disabled
-                                                class="h-4 w-4 rounded" />
+                                            <input type="checkbox" v-model="additionalData[0]" 
+                                                class="h-4 w-4 rounded" 
+                                                @click="add1mDemoticImage"/>
                                             {{t('datapage.nocloud.section_chinese.text_national_image')}}
                                         </label>
                                         <label class="flex items-center gap-2">
@@ -34,6 +35,30 @@
                                                 @click="add2mDemoticImages" class="h-4 w-4 rounded" />
                                             {{t('datapage.nocloud.section_chinese.text_national2m')}}
                                         </label>
+                                        <!-- 传感器选择 -->
+                                        <label >
+                                            {{ t('datapage.nocloud.choose') }}
+                                        </label>
+                                        <select class="max-h-[600px] w-[calc(100%-113px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
+                                         v-model="selectnation"
+                                         >
+                                            <option disabled selected value="">{{ t('datapage.explore.section_interactive.choose') }}</option>
+                                            <option v-for="platform in groupedLists.national" 
+                                            :key="platform.platformName" 
+                                            :value="platform"
+                                            >
+                                            {{ platform.platformName }}
+                                            <span v-if="platform.tags?.includes('national')" style="color: red; margin-left: 5px;">
+                                                (推荐)
+                                            </span>
+                                                </option>
+                                        </select>
+
+                                        <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
+                                                @click="handleShowSensorImage(selectnation)">
+                                                 {{ t('datapage.explore.section_interactive.button') }}
+                                        </a-button>
+
                                         <div v-if="showProgress[0]"
                                             class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
                                             <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
@@ -161,6 +186,29 @@
                                                 class="h-4 w-4 rounded" />
                                             {{t('datapage.nocloud.section_international.text_overseaimage')}}
                                         </label>
+                                         <!-- 传感器选择 -->
+                                        <label >
+                                            {{ t('datapage.nocloud.choose') }}
+                                        </label>
+                                        <select class="max-h-[600px] w-[calc(100%-113px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
+                                         v-model="selectinternation"
+                                         >
+                                            <option disabled selected value="">{{ t('datapage.explore.section_interactive.choose') }}</option>
+                                            <option v-for="platform in groupedLists.international" 
+                                            :key="platform.platformName" 
+                                            :value="platform"
+                                            >
+                                            {{ platform.platformName }}
+                                            <span v-if="platform.tags?.includes('international')" style="color: red; margin-left: 5px;">
+                                                (推荐)
+                                            </span>
+                                            </option>
+                                        </select>
+                                        <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
+                                                @click="handleShowSensorImage(selectinternation)">
+                                                 {{ t('datapage.explore.section_interactive.button') }}
+                                        </a-button>
+
                                         <div v-if="showProgress[1]"
                                             class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
                                             <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
@@ -219,6 +267,30 @@
                                                     " class="h-4 w-4 rounded" />
                                             {{t('datapage.nocloud.section_SAR.text_SARtrans')}}
                                         </label>
+
+                                         <!-- 传感器选择 -->
+                                        <label >
+                                            {{ t('datapage.nocloud.choose') }}
+                                        </label>
+                                       <select class="max-h-[600px] w-[calc(100%-113px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
+                                         v-model="selectsar"
+                                         >
+                                            <option disabled selected value="">{{ t('datapage.explore.section_interactive.choose') }}</option>
+                                            <option v-for="platform in groupedLists.sar" 
+                                            :key="platform.platformName" 
+                                            :value="platform"
+                                            >
+                                            {{ platform.platformName }}
+                                            <span v-if="platform.tags?.includes('radar')" style="color: red; margin-left: 5px;">
+                                                (推荐)
+                                            </span>
+                                            </option>
+                                        </select>
+                                        <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
+                                                @click="handleShowSensorImage(selectsar)">
+                                                 {{ t('datapage.explore.section_interactive.button') }}
+                                        </a-button>
+
                                         <div v-if="showProgress[2]"
                                             class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
                                             <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
@@ -315,7 +387,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, type PropType, type Ref, reactive } from 'vue'
+import { inject, computed, onMounted, ref, type PropType, type Ref, reactive } from 'vue'
 import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'
 import { type interactiveExplore } from '@/components/dataCenter/type'
 import noCloudHistory from '@/components/dataCenter/noCloud/noCloudHistory.vue'
@@ -359,6 +431,11 @@ import { FastBackwardFilled } from '@ant-design/icons-vue'
 import bandMergeHelper from '@/util/image/util'
 import { message } from 'ant-design-vue'
 import { usePanelSwitchModule } from './panelSwitch'
+import {
+    getCoverRegionSensorScenes,
+    getCoverPOISensorScenes,
+} from '@/api/http/satellite-data'
+import { getRGBTileLayerParamFromSceneObject } from '@/util/visualizeHelper/index'
 
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
@@ -369,6 +446,8 @@ const props = defineProps({
         required: true,
     },
 })
+console.log( props.regionConfig)
+console.log(props.regionConfig.images)
 
 /**
  * 面板显示控制区
@@ -411,6 +490,157 @@ const coverageRate: Ref<CoverageRate> = ref({
 
 const noCloudLoading = ref(false)
 
+interface platformType {
+    platformName: string,
+    tags?: string[]
+    resolution: string,
+    sceneId:string[],
+    sensorName: string
+}
+
+
+// 获取筛选后的传感器和tags
+const platformList: platformType[] = Array.from(
+  props.regionConfig.images.reduce((map, item) => {
+    const existing = map.get(item.platformName);
+    if (existing) {
+      // 如果已存在，将 sceneId 合并为数组
+      existing.sceneId = Array.isArray(existing.sceneId)
+        ? [...existing.sceneId, item.sceneId]  // 已是数组，追加
+        : [existing.sceneId, item.sceneId];    // 原为单值，转为数组
+    } else {
+        // 如果不存在，初始化条目（sceneId 直接存为数组）
+      map.set(item.platformName, {
+        platformName: item.platformName,
+        tags: item.tags ,
+        resolution: item.resolution,
+        sceneId: [item.sceneId],
+        sensorName: item.sensorName
+      })
+    }
+  return map;
+  }, new Map())
+  .values()
+);
+
+console.log('传感器和类别',platformList)
+// 优先级选项排序
+const groupedLists = computed(() => ({
+  national: [
+    ...platformList.filter(item => item.tags?.includes('national')),
+    ...platformList.filter(item => !item.tags?.includes('national')),
+  ],
+  international: [
+    ...platformList.filter(item => ['international', 'light'].every(tag => item.tags?.includes(tag))),
+    ...platformList.filter(item => !item.tags?.includes('international')),
+  ],
+  sar: [
+    ...platformList.filter(item => item.tags?.includes('radar')),
+    ...platformList.filter(item => !item.tags?.includes('radar')),
+  ],
+}));
+
+// const prioritized = [];
+// const nonPrioritized = [];
+
+// platformList.forEach(item => {
+//   // Assuming tags is an array - adjust condition as needed
+//   if (item.tags && item.tags.includes('national')) {
+//     prioritized.push(item);
+//   } else {
+//     nonPrioritized.push(item);
+//   }
+// });
+// // Merge them with prioritized first
+// const platformList_natioan = [...prioritized, ...nonPrioritized];
+
+
+
+
+
+// const getSceneIdsByPlatformName = (platformName: string, label: string) => {
+//     console.log('所有景', props.regionConfig.images.value)
+//     console.log('选中的平台名', platformName)
+//     let scenes = props.regionConfig.images.value
+//     if (label === '亚米') {
+//         scenes = props.regionConfig.images.value.filter((scene) => {
+//             if (scene.tags.includes('ard')) {
+//                 return scene
+//             }
+//         })
+//     }
+//     console.log(scenes, 'Images')
+
+//     if (platformName === 'all') return scenes.map((item) => item.sceneId)
+
+//     const res: any[] = []
+//     scenes.forEach((item) => {
+//         if (item.platformName == platformName) {
+//             res.push(item.sceneId)
+//         }
+//     })
+//     console.log(res, 'images')
+
+//     return res
+// }
+const landId = props.regionConfig.regionCode
+const space = props.regionConfig.space 
+const searchtab = props.regionConfig.searchtab
+// const selectedOption  = ref<platformType | null>(null);
+const selectnation = ref<platformType | null>(null);
+const selectinternation = ref<platformType | null>(null);
+const selectsar = ref<platformType | null>(null);
+
+const handleShowSensorImage = async (selectedSensor: platformType | null)  => {
+    console.log(selectedSensor,'选择')
+    const sceneIds = selectedSensor?.sceneId || []
+    console.log('选中的景ids', sceneIds)
+    console.log('当前所有的景', props.regionConfig.images)
+    const sensorName = selectedSensor?.sensorName || []
+
+    console.log('匹配的sensorName', sensorName)
+
+    console.log('对应LandId',landId)
+    console.log(searchtab)
+
+    const stopLoading = message.loading(t('datapage.explore.message.load'))
+
+    let coverScenes
+    if (searchtab === 'region') {
+        const params = {
+            sensorName,
+            sceneIds,
+            regionId: landId,
+        }
+        coverScenes = await getCoverRegionSensorScenes(params)
+    } else if (searchtab === 'poi') {
+        const params = {
+            sensorName,
+            sceneIds,
+            locationId: landId,
+            resolution: space,
+        }
+        coverScenes = await getCoverPOISensorScenes(params)
+    }
+    console.log(coverScenes, 1476);
+
+
+    console.log('接口返回：覆盖的景们', coverScenes)
+
+    const promises: Promise<any>[] = []
+
+    for (let scene of coverScenes) {
+        promises.push(getRGBTileLayerParamFromSceneObject(scene))
+    }
+
+    const rgbTileLayerParamList = await Promise.all(promises)
+
+    console.log('可视化参数们', rgbTileLayerParamList)
+
+    MapOperation.map_addMultiRGBImageTileLayer(rgbTileLayerParamList, stopLoading)
+}
+
+
 // 看起来是计算属性，其实已经影像分类初始化了
 const demotic = computed(() => {
     let allImages = props.regionConfig.images
@@ -433,6 +663,60 @@ const demotic = computed(() => {
 
     return demotic1mImages.value.length
 })
+
+const add1mDemoticImage = async () => {
+    const isChecked = additionalData.value[0];
+    // 清除格网图层，得放到一个请求上面，不然添加图层的时候还没销毁
+    // gridStore.cleadAllGrids()
+    MapOperation.map_destroyImagePolygon()
+    MapOperation.map_destroyImagePreviewLayer()
+    MapOperation.map_destroyGridLayer()
+
+    // 不管是否勾选，都要调用这个，因为取消勾选的进度条显示逻辑也在里面！！！
+    controlProgress(0)
+
+    if (isChecked) {
+        return;
+    }
+    // 计算国产1m影像的格网分布和覆盖率
+    const gridCount = props.regionConfig.grids.length;
+    const allGrids = props.regionConfig.grids.map((item: any) => ({
+        rowId: item.rowId,
+        columnId: item.columnId,
+        resolution: item.resolution,
+    }));
+
+    demotic1mGridImages.value = await getSceneGrids({
+        grids: allGrids,
+        sceneIds: demotic1mImages.value.map((image) => image.sceneId),
+    });
+    coverageRate.value.demotic1m = getCoverage(demotic1mGridImages.value, gridCount);
+
+    // 国产影像渲染
+    // 添加带有数据指示的格网
+    let gridFeature: FeatureCollection = {
+        type: 'FeatureCollection',
+        features: props.regionConfig.grids.map((item: any, index) => {
+            return {
+                type: 'Feature',
+                geometry: item.boundary.geometry as Geometry,
+                properties: {
+                    ...(item.properties || {}),
+                    id: item.properties?.id ?? index, // 确保每个都有 id
+                    opacity: judgeGridOpacity(index, demotic1mGridImages.value),
+                    source: classifyGridSource(index, demotic1mGridImages.value, null) || null,
+                },
+            }
+        }),
+    }
+    console.log(props.regionConfig.grids, 111)
+
+    demotic1mGridFeature.value = gridFeature
+    MapOperation.map_addGridLayer(gridFeature)
+    MapOperation.draw_deleteAll()
+
+    ElMessage.success(t('datapage.nocloud.message.guochanload'))
+}
 
 const add2mDemoticImages = () => {
     cancelCheckbox('grid', 0)
@@ -896,9 +1180,9 @@ const controlProgress = (index: number) => {
 onMounted(async () => {
     // 清除格网图层，得放到一个请求上面，不然添加图层的时候还没销毁
     // gridStore.cleadAllGrids()
-    MapOperation.map_destroyImagePolygon()
-    MapOperation.map_destroyImagePreviewLayer()
-    MapOperation.map_destroyGridLayer()
+    // MapOperation.map_destroyImagePolygon()
+    // MapOperation.map_destroyImagePreviewLayer()
+    // MapOperation.map_destroyGridLayer()
 
     // 计算四个覆盖率
     let gridCount = props.regionConfig.grids.length
@@ -940,30 +1224,30 @@ onMounted(async () => {
     })
     coverageRate.value.addRadar = getCoverage(radarGridImages.value, gridCount)
 
-    // 国产影像渲染
-    // 添加带有数据指示的格网
-    let gridFeature: FeatureCollection = {
-        type: 'FeatureCollection',
-        features: props.regionConfig.grids.map((item: any, index) => {
-            return {
-                type: 'Feature',
-                geometry: item.boundary.geometry as Geometry,
-                properties: {
-                    ...(item.properties || {}),
-                    id: item.properties?.id ?? index, // 确保每个都有 id
-                    opacity: judgeGridOpacity(index, demotic1mGridImages.value),
-                    source: classifyGridSource(index, demotic1mGridImages.value, null) || null,
-                },
-            }
-        }),
-    }
-    console.log(props.regionConfig.grids, 111)
+    // // 国产影像渲染
+    // // 添加带有数据指示的格网
+    // let gridFeature: FeatureCollection = {
+    //     type: 'FeatureCollection',
+    //     features: props.regionConfig.grids.map((item: any, index) => {
+    //         return {
+    //             type: 'Feature',
+    //             geometry: item.boundary.geometry as Geometry,
+    //             properties: {
+    //                 ...(item.properties || {}),
+    //                 id: item.properties?.id ?? index, // 确保每个都有 id
+    //                 opacity: judgeGridOpacity(index, demotic1mGridImages.value),
+    //                 source: classifyGridSource(index, demotic1mGridImages.value, null) || null,
+    //             },
+    //         }
+    //     }),
+    // }
+    // console.log(props.regionConfig.grids, 111)
 
-    demotic1mGridFeature.value = gridFeature
-    MapOperation.map_addGridLayer(gridFeature)
-    MapOperation.draw_deleteAll()
+    // demotic1mGridFeature.value = gridFeature
+    // MapOperation.map_addGridLayer(gridFeature)
+    // MapOperation.draw_deleteAll()
 
-    ElMessage.success(t('datapage.nocloud.message.guochanload'))
+    // ElMessage.success(t('datapage.nocloud.message.guochanload'))
 })
 
 // 算格网的颜色,接收的数据分别为：要上色的格网本身，累积影像分布到格网的结果，格网数量，所属层级

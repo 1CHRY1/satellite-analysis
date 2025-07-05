@@ -97,7 +97,7 @@
                                 </div> -->
                                 <div class="config-control">
                                     <a-range-picker class="custom-date-picker" v-model:value="tileMergeConfig.dateRange"
-                                        :allow-clear="false" :placeholder="t('datapage.explore.section2.intext_data')" />
+                                        :allow-clear="false" :placeholder="t('datapage.explore.section2.intext_date')" />
                                 </div>
                             </div>
                             <!-- <div class="config-item">
@@ -209,10 +209,10 @@
                         <div class="section-icon">
                             <DatabaseIcon :size="18" />
                         </div>
-                        <h2 class="section-title">{{ t('datapage.explore.section3.sectiontitle') }}</h2>
+                        <h2 class="section-title">{{ t('datapage.explore.section_interactive.sectiontitle') }}</h2>
                         <div class="section-icon absolute right-0 cursor-pointer" @click="clearAllShowingSensor">
                             <a-tooltip>
-                                <template #title>{{ t('datapage.explore.section3.clear') }}</template>
+                                <template #title>{{ t('datapage.explore.section_interactive.clear') }}</template>
                                 <Trash2Icon :size="18" />
                             </a-tooltip>
                         </div>
@@ -222,7 +222,7 @@
                             <div class="config-item" v-for="([label, value], index) in resolutionType" :key="value">
                                 <div class="config-label relative">
                                     <BoltIcon :size="16" class="config-icon" />
-                                    <span>{{ label }}{{ t('datapage.explore.section3.subtitle') }}</span><span v-if="label === '亚米'">{{ t('datapage.explore.section3.subtitle1') }}</span>
+                                    <span>{{ label }}{{ t('datapage.explore.section_interactive.subtitle') }}</span><span v-if="label === '亚米'">{{ t('datapage.explore.section_interactive.subtitle1') }}</span>
                                 </div>
                                 <div class="config-control flex w-full flex-col gap-4">
                                     <div class="result-info-container w-full">
@@ -244,7 +244,7 @@
                                             <div class="result-info-content">
                                                 <div class="result-info-label">{{ t('datapage.explore.percent') }}</div>
                                                 <div v-if="!(allScenes.length > 0)" class="result-info-value">
-                                                    {{ t('datapage.explore.section3.intext1') }}
+                                                    {{ t('datapage.explore.section_interactive.intext1') }}
                                                 </div>
                                                 <div v-else class="result-info-value">
                                                     {{
@@ -258,11 +258,11 @@
                                         </div>
                                     </div>
                                     <div v-if="Object.keys(classifiedScenes).length > 0" class="!w-full">
-                                        <label class="mr-2 text-white">{{ t('datapage.explore.section3.scene') }}</label>
+                                        <label class="mr-2 text-white">{{ t('datapage.explore.section_interactive.scene') }}</label>
                                         <select
                                             class="max-h-[600px] w-[calc(100%-113px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
                                             v-model="resolutionPlatformSensor[label]">
-                                            <option disabled selected value="">{{ t('datapage.explore.section3.choose') }}</option>
+                                            <option disabled selected value="">{{ t('datapage.explore.section_interactive.choose') }}</option>
                                             <!-- <option :value="'all'" class="truncate">全选</option> -->
                                             <option v-for="platformName in classifiedScenes[
                                                 value + 'm'
@@ -274,10 +274,10 @@
                                             <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
                                                 @click="handleShowResolutionSensorImage(label)"
                                                 :disabled="!resolutionPlatformSensor[label]">
-                                                 {{ t('datapage.explore.section3.button') }}
+                                                 {{ t('datapage.explore.section_interactive.button') }}
                                             </a-button>
                                             <a-tooltip>
-                                                <template #title>{{ t('datapage.explore.section3.clear') }}</template>
+                                                <template #title>{{ t('datapage.explore.section_interactive.clear') }}</template>
                                                 <Trash2Icon :size="18" class="mt-4! ml-4! cursor-pointer"
                                                     @click="clearAllShowingSensor" />
                                             </a-tooltip>
@@ -374,7 +374,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, type Ref, watch, reactive, onMounted } from 'vue'
+import { ref, computed, type Ref, watch, reactive, onMounted, provide,inject } from 'vue'
 import dayjs from 'dayjs'
 import { RegionSelects } from 'v-region'
 import type { RegionValues } from 'v-region'
@@ -425,9 +425,11 @@ import {
 import { ElMessage } from 'element-plus'
 import { message } from 'ant-design-vue'
 import mapboxgl from 'mapbox-gl'
+import type{ComputedRef} from 'vue'
 const emit = defineEmits(['submitConfig'])
 
 import { useI18n } from 'vue-i18n'
+import type { AnyColumns } from 'element-plus/es/components/table-v2/src/types.mjs'
 const { t } = useI18n()
 
 /**
@@ -470,20 +472,20 @@ type POIInfo = {
     adname: string
 }
 
-const resolutionType: ResolutionItem[] = computed(()=>[
-    [t('datapage.explore.section3.resolutiontype.yami'), 1],
-    [t('datapage.explore.section3.resolutiontype.twom'), 2],
-    [t('datapage.explore.section3.resolutiontype.tenm'), 10],
-    [t('datapage.explore.section3.resolutiontype.thirtym'), 30],
-    [t('datapage.explore.section3.resolutiontype.others'), 500],
+const resolutionType: ComputedRef<ResolutionItem[]> = computed(()=>[
+    [t('datapage.explore.section_interactive.resolutiontype.yami'), 1],
+    [t('datapage.explore.section_interactive.resolutiontype.twom'), 2],
+    [t('datapage.explore.section_interactive.resolutiontype.tenm'), 10],
+    [t('datapage.explore.section_interactive.resolutiontype.thirtym'), 30],
+    [t('datapage.explore.section_interactive.resolutiontype.others'), 500],
 ])
 // 绑定每个select的选中项
 const resolutionPlatformSensor = reactive<any>({
-    [t('datapage.explore.section3.resolutiontype.yami')]: '',
-    [t('datapage.explore.section3.resolutiontype.twom')]: '',
-    [t('datapage.explore.section3.resolutiontype.tenw')]: '',
-    [t('datapage.explore.section3.resolutiontype.thirtym')]: '',
-    [t('datapage.explore.section3.resolutiontype.others')]: '',
+    [t('datapage.explore.section_interactive.resolutiontype.yami')]: '',
+    [t('datapage.explore.section_interactive.resolutiontype.twom')]: '',
+    [t('datapage.explore.section_interactive.resolutiontype.tenm')]: '',
+    [t('datapage.explore.section_interactive.resolutiontype.thirtym')]: '',
+    [t('datapage.explore.section_interactive.resolutiontype.others')]: '',
 })
 
 const selectedRadius = ref(20)
@@ -653,7 +655,7 @@ interface Tab {
     value: TabValue
     label: string
 }
-const tabs: Tab[] = computed(() =>  [{
+const tabs: ComputedRef<Tab[]> = computed(() =>  [{
     value: 'region',
     label: t('datapage.explore.section1.admin')
 }, {
@@ -732,9 +734,9 @@ const filterByCloudAndDate = async () => {
     if (allScenes.value.length === 0) {
         ElMessage.warning(t('datapage.explore.message.sceneerror_recondition'))
     } else {
-        ElMessage.success(`已检索到${allScenes.value.length}景影像，请进一步筛选您所需的影像`)
+        ElMessage.success(t('datapage.explore.message.scene_searched',{ count: allScenes.value.length }) )
     }
-
+// ${allScenes.value.length}
     // 根据所有的传感器+分辨率，找出每个格网上，在特定传感器+分辨率情况下，有多少景影像
     // allSensorsItems.value = countSensorsCoverage(
     //     allSensorsItems.value,
@@ -984,6 +986,7 @@ const makeFullSceneGrid = async () => {
     MapOperation.draw_deleteAll()
 
     emit('submitConfig', {
+        searchtab: searchedTab.value,
         regionCode: landId.value,
         dataRange: [...tileMergeConfig.value.dateRange],
         cloud: tileMergeConfig.value.cloudRange[1],
