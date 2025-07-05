@@ -1188,6 +1188,7 @@ const handleShowResolutionSensorImage = async (label: string) => {
             sensorName,
             sceneIds,
             regionId: landId.value,
+            resolution: selectedRadius.value,
         }
         coverScenes = await getCoverRegionSensorScenes(params)
     } else if (searchedTab.value === 'poi') {

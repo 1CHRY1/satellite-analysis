@@ -16,7 +16,7 @@ import requests
 MINIO_ENDPOINT = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}"
 INFINITY = 999999
 
-@ray.remote(num_cpus=CONFIG.RAY_NUM_CPUS, memory=CONFIG.RAY_MEMORY_PER_TASK)
+# @ray.remote(num_cpus=CONFIG.RAY_NUM_CPUS, memory=CONFIG.RAY_MEMORY_PER_TASK)
 def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper, minio_endpoint, temp_dir_path):
     try:
         from rio_tiler.io import COGReader
@@ -51,6 +51,27 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
             polygon = shape(scene_geom)
             bbox_polygon = box(*bbox_wgs84)
             return polygon.contains(bbox_polygon)
+        
+        def convert_to_uint8(data, original_dtype):
+            """
+            自动将不同数据类型转换为uint8
+            - Byte (uint8): 直接返回
+            - UInt16: 映射到0-255范围
+            """
+            if original_dtype == np.uint8:
+                return data.astype(np.uint8)
+            elif original_dtype == np.uint16:
+                # 将uint16 (0-65535) 线性映射到 uint8 (0-255)
+                return (data / 65535.0 * 255.0).astype(np.uint8)
+            else:
+                # 其他类型，先归一化到0-1，再映射to 0-255
+                data_min = np.min(data)
+                data_max = np.max(data)
+                if data_max > data_min:
+                    normalized = (data - data_min) / (data_max - data_min)
+                    return (normalized * 255.0).astype(np.uint8)
+                else:
+                    return np.zeros_like(data, dtype=np.uint8)
 
         bbox = grid_bbox()
         target_H = None
@@ -100,9 +121,9 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
                         target_H, target_W = temp_img_data.data[0].shape
                         print(f"{grid_lable}: H={target_H}, W={target_W}")
 
-                        img_R = np.full((target_H, target_W), 0, dtype=np.float32)
-                        img_G = np.full((target_H, target_W), 0, dtype=np.float32)
-                        img_B = np.full((target_H, target_W), 0, dtype=np.float32)
+                        img_R = np.full((target_H, target_W), 0, dtype=np.uint8)
+                        img_G = np.full((target_H, target_W), 0, dtype=np.uint8)
+                        img_B = np.full((target_H, target_W), 0, dtype=np.uint8)
                         need_fill_mask = np.ones((target_H, target_W), dtype=bool) # all true，待填充
                         first_shape_set = True
 
@@ -121,9 +142,9 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
                         target_H, target_W = temp_img_data.data[0].shape
                         print(f"{grid_lable}: H={target_H}, W={target_W}")
 
-                        img_R = np.full((target_H, target_W), 0, dtype=np.float32)
-                        img_G = np.full((target_H, target_W), 0, dtype=np.float32)
-                        img_B = np.full((target_H, target_W), 0, dtype=np.float32)
+                        img_R = np.full((target_H, target_W), 0, dtype=np.uint8)
+                        img_G = np.full((target_H, target_W), 0, dtype=np.uint8)
+                        img_B = np.full((target_H, target_W), 0, dtype=np.uint8)
                         need_fill_mask = np.ones((target_H, target_W), dtype=bool) # all true，全都待标记
                         first_shape_set = True
                     
@@ -165,40 +186,39 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
                 paths = scene_band_paths.get(scene_id)
                 if not paths:
                     continue
+                
+                ################# OLD START ####################
+                # def read_band(band_path):
+                #     full_path = minio_endpoint + "/" + scene['bucket'] + "/" + band_path
+                #     with COGReader(full_path, options={'nodata': int(nodata)}) as reader:
+                #         return reader.part(bbox=bbox, indexes=[1], height=target_H, width=target_W).data[0]
+                ################# OLD END ######################
 
+                ################# NEW START ####################
                 def read_band(band_path):
                     full_path = minio_endpoint + "/" + scene['bucket'] + "/" + band_path
                     with COGReader(full_path, options={'nodata': int(nodata)}) as reader:
-                        return reader.part(bbox=bbox, indexes=[1], height=target_H, width=target_W).data[0]
+                        band_data = reader.part(bbox=bbox, indexes=[1], height=target_H, width=target_W)
+                        original_data = band_data.data[0]
+                        original_dtype = original_data.dtype
+                        
+                        # 【新增】自动转换为uint8
+                        converted_data = convert_to_uint8(original_data, original_dtype)
+                        print(f"Band data converted from {original_dtype} to uint8")
+                        
+                        return converted_data
+                ################# NEW END ######################
 
                 R = read_band(paths['red'])
                 G = read_band(paths['green'])
                 B = read_band(paths['blue'])
                 
-                # 如果选择归一化，请打开NEW 否则打开OLD
-                #################### OLD START ####################
-                # img_R[fill_mask] = R[fill_mask]
-                # img_G[fill_mask] = G[fill_mask] 
-                # img_B[fill_mask] = B[fill_mask]
-                #################### OLD END ####################
-
-                #################### NEW START ####################
-                sensor_name = scene.get('sensorName')
-                print(sensor_name)
-                # 拉伸到0-255范围 - 选择拉伸方法
-                stretch_method = 'percentile'  # 可以改为 'preset' 或 'minmax'
-                R_stretched = stretch_to_8bit(R, sensor_name, stretch_method)
-                G_stretched = stretch_to_8bit(G, sensor_name, stretch_method)
-                B_stretched = stretch_to_8bit(B, sensor_name, stretch_method)
-                # 填充到目标数组（需要转换回float32以保持一致性）
-                img_R[fill_mask] = R_stretched[fill_mask].astype(np.float32)
-                img_G[fill_mask] = G_stretched[fill_mask].astype(np.float32)
-                img_B[fill_mask] = B_stretched[fill_mask].astype(np.float32)
-                #################### NEW END ####################
+                img_R[fill_mask] = R[fill_mask]
+                img_G[fill_mask] = G[fill_mask] 
+                img_B[fill_mask] = B[fill_mask]
 
                 need_fill_mask[fill_mask] = False # False if pixel filled
 
-                        
                 filled_ratio = 1.0 - (np.count_nonzero(need_fill_mask) / need_fill_mask.size)
                 
                 print(f"grid fill progress: {filled_ratio * 100:.2f}%")
@@ -225,7 +245,8 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
             count=3,
             # dtype=img.dtype,
             # Very Important!!!!!!!!!!!!!!!!
-            dtype=np.float32,
+            # dtype=np.float32,
+            dtype=np.uint8,
             crs='EPSG:4326',
             transform=transform,
             BIGTIFF='YES'
@@ -237,63 +258,6 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
     except Exception as e:
         print(f"进程ERROR: {e}")
         return None
-
-# 归一拉伸至0-255
-def stretch_to_8bit(data, sensor_name, stretch_method='percentile'):
-    """
-    将不同传感器的像素值拉伸到0-255范围
-    
-    Args:
-        data: 输入数据数组
-        sensor_name: 传感器名称
-        stretch_method: 拉伸方法 ('percentile', 'minmax', 'preset')
-    
-    Returns:
-        拉伸后的8bit数据
-    """
-    import numpy as np
-    
-    # 移除无效值
-    valid_data = data[data > 0]  # 假设0为无效值
-    
-    if len(valid_data) == 0:
-        return data.astype(np.float32)
-    
-    if stretch_method == 'preset':
-        # 根据不同传感器使用预设的拉伸范围
-        if "Landsat" in sensor_name or "Landset" in sensor_name:
-            # Landsat 8/9 Surface Reflectance: 0-65535 对应 0-1的反射率
-            # 通常取2-98百分位进行拉伸
-            min_val, max_val = 7000, 25000  # 经验值
-        elif "MODIS" in sensor_name:
-            # MODIS Surface Reflectance: -100 to 16000
-            min_val, max_val = 0, 8000
-        elif "GF" in sensor_name:
-            # 高分卫星通常是0-1023或0-4095
-            min_val, max_val = 0, 1000
-        elif "Sentinel-1" in sensor_name:
-            min_val, max_val = 0, 3000
-        elif "Sentinel-2" in sensor_name:
-            min_val, max_val = 0, 10000
-        else:
-            # 默认使用百分位拉伸
-            min_val = np.percentile(valid_data, 2)
-            max_val = np.percentile(valid_data, 98)
-            
-    elif stretch_method == 'percentile':
-        # 使用2-98百分位拉伸（去除异常值）
-        min_val = np.percentile(valid_data, 2)
-        max_val = np.percentile(valid_data, 98)
-        
-    elif stretch_method == 'minmax':
-        # 使用最小最大值拉伸
-        min_val = np.min(valid_data)
-        max_val = np.max(valid_data)
-    
-    # 执行拉伸
-    stretched = np.clip((data - min_val) / (max_val - min_val) * 255, 0, 255)
-    return stretched.astype(np.float32)
-
 
 def upload_one(tif_path, grid_x, grid_y, task_id):
     minio_key = f"{task_id}/{grid_x}_{grid_y}.tif"
@@ -423,22 +387,22 @@ class calc_no_cloud(Task):
         # 序列化数据到临时文件
         scenes_json_file, scene_band_paths_json_file = serialize_data_to_temp_files(scenes, scene_band_paths)
         # 使用ray
-        ray_tasks = [
-            process_grid.remote(grid=g,
-                                scenes_json_file=scenes_json_file,
-                                scene_band_paths_json_file=scene_band_paths_json_file,
-                                grid_helper=grid_helper,
-                                minio_endpoint=MINIO_ENDPOINT,
-                                temp_dir_path=temp_dir_path)
-            for g in grids
-        ]
-        results = ray.get(ray_tasks)
+        # ray_tasks = [
+        #     process_grid.remote(grid=g,
+        #                         scenes_json_file=scenes_json_file,
+        #                         scene_band_paths_json_file=scene_band_paths_json_file,
+        #                         grid_helper=grid_helper,
+        #                         minio_endpoint=MINIO_ENDPOINT,
+        #                         temp_dir_path=temp_dir_path)
+        #     for g in grids
+        # ]
+        # results = ray.get(ray_tasks)
 
         # 不使用ray
-        # results = []
-        # for g in grids:
-        #     result = process_grid(g, scenes, grid_helper, scene_band_paths, MINIO_ENDPOINT, temp_dir_path)
-        #     results.append(result)
+        results = []
+        for g in grids:
+            result = process_grid(g, scenes, grid_helper, scene_band_paths, MINIO_ENDPOINT, temp_dir_path)
+            results.append(result)
 
 
         ## Step 3 : Results Uploading and Statistic #######################
