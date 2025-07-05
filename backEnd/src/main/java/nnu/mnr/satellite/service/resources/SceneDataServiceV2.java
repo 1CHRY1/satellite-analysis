@@ -117,6 +117,13 @@ public class SceneDataServiceV2 {
             }
             // 判断是否相交
             boolean isPartiallyOverlapped = isPartiallyOverlapped(gridsBoundary, bbox);
+            JSONObject gridsBoundaryJSON = null;
+            try {
+                gridsBoundaryJSON = GeometryUtil.geometry2Geojson(gridsBoundary);
+            } catch (IOException e) {
+                // 处理异常（如记录日志或设置默认值）
+                throw new RuntimeException("Failed to convert geometry to GeoJSON", e);
+            }
 
             List<ModelServerImageDTO> imageDTOS = imageDataService.getModelServerImageDTOBySceneId(scene.getSceneId());
             ModelServerSceneDTO modelServerSceneDTO = ModelServerSceneDTO.builder()
@@ -126,6 +133,7 @@ public class SceneDataServiceV2 {
                     .bandMapper(bandMapperGenerator.getSatelliteConfigBySensorName(sensorName))
                     .images(imageDTOS)
                     .isPartiallyOverlapped(isPartiallyOverlapped)
+                    .gridsBoundary(gridsBoundaryJSON)
                     .build();
             sceneDtos.add(modelServerSceneDTO);
             if (scenesBoundary.contains(boundary)) {
