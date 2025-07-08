@@ -1,6 +1,6 @@
 export default{
     nav: {
-        title: "遥感ARD平台",
+        title: "多元遥感应用支撑云平台",
         home: "首页",
         models: "模型中心",
         data: "数据中心",
@@ -12,6 +12,7 @@ export default{
             signup: "注册",
             logout:"退出登录"
         },
+        disabled_message:"该功能当前不可用,请先完成交互探索"
     },
 
     homepage: {
@@ -455,7 +456,7 @@ export default{
             button:"获取格网",
         },
 
-        section2:{
+        section_time:{
             sectiontitle:"按时间筛选",
             subtitle1:"时间范围",
             intext_date:"'开始日期', '结束日期'",

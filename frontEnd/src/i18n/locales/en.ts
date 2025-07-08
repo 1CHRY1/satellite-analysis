@@ -1,6 +1,6 @@
 export default{
   nav: {
-    title: "Remote Sensing ARD Platform",
+    title: "Muti_resource RS Application Cloud Platform",
     home: "Home",
     models: "Model Center",
     data: "Data Center",
@@ -11,7 +11,9 @@ export default{
       login: "Sign in",
       signup: "Sign up",
       logout:"Log out"
-    }
+    },
+
+    disabled_message:"This Page is currently unavailable. Please complete the interactive exploration first"
   },
 
   homepage: {
@@ -455,7 +457,7 @@ export default{
             button:"Access Grid",
         },
 
-        section2:{
+        section_time:{
             sectiontitle:"Filter by time",
             subtitle1:"Time range",
             intext_date:"'date of start', 'date of end'",
