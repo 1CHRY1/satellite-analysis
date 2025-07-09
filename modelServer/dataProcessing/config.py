@@ -68,7 +68,7 @@ class DevK8SConfig(BaseConfig):
     RAY_MEMORY                                      =       40 * 1024**3
     RAY_MEMORY_PER_TASK                             =       5 * 1024**3
     RAY_OBJECT_STORE_MEMORY                         =       RAY_MEMORY * 0.3
-    RAY_NUM_CPUS                                    =       6
+    RAY_NUM_CPUS                                    =       8
     RAY_SYSTEM_RESERVED_CPU                         =       0.5
     RAY_SYSTEM_RESERVED_MEMORY                      =       2 * 1024**3
 
@@ -103,7 +103,7 @@ class VmodConfig(BaseConfig):
     RAY_MEMORY                                      =       40 * 1024**3
     RAY_MEMORY_PER_TASK                             =       5 * 1024**3
     RAY_OBJECT_STORE_MEMORY                         =       RAY_MEMORY * 0.3
-    RAY_NUM_CPUS                                    =       6
+    RAY_NUM_CPUS                                    =       8
     RAY_SYSTEM_RESERVED_CPU                         =       0.5
     RAY_SYSTEM_RESERVED_MEMORY                      =       2 * 1024**3
 

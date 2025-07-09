@@ -20,7 +20,12 @@ import nnu.mnr.satellite.mapper.modeling.IProjectRepo;
 import nnu.mnr.satellite.mapper.resources.ITileRepo;
 import nnu.mnr.satellite.service.common.DockerService;
 import nnu.mnr.satellite.service.common.SftpDataService;
+import nnu.mnr.satellite.service.common.UnifiedDockerService;
 import nnu.mnr.satellite.service.user.UserService;
+import nnu.mnr.satellite.service.optimization.CodeOptimizationFacade;
+import nnu.mnr.satellite.service.optimization.OptimizationRequest;
+import nnu.mnr.satellite.service.optimization.CodeOptimizationOutcome;
+import nnu.mnr.satellite.service.optimization.ExecutionPlan;
 import nnu.mnr.satellite.utils.common.FileUtil;
 import nnu.mnr.satellite.utils.common.IdUtil;
 import nnu.mnr.satellite.utils.dt.MinioUtil;
@@ -65,6 +70,9 @@ public class ModelCodingService {
     DockerService dockerService;
 
     @Autowired
+    UnifiedDockerService unifiedDockerService;
+
+    @Autowired
     UserService userService;
 
     @Autowired
@@ -79,15 +87,15 @@ public class ModelCodingService {
     @Autowired
     MinioUtil minioUtil;
 
+    @Autowired
+    CodeOptimizationFacade codeOptimizationFacade;
+
     // config info
     @Autowired
     private DynamicDataSourceProperties dynamicDataSourceProperties;
 
     @Autowired
     private MinioProperties minioProperties;
-
-    @Autowired
-    private RayOptimizationService rayOptimizationService;
 
     private final String projectDataBucket = "project-data-bucket";
 
@@ -133,8 +141,9 @@ public class ModelCodingService {
             return CodingProjectVO.builder().status(-1).info(responseInfo).build();
         }
         String projectId = IdUtil.generateProjectId();
-        String serverDir = dockerServerProperties.getServerDir() + projectId + "/";
-        String workDir = dockerServerProperties.getWorkDir();
+        // 根据Docker模式设置路径
+        String serverDir = unifiedDockerService.getServerPath() + "/" + projectId + "/";
+        String workDir = unifiedDockerService.getWorkDir();
         String pyPath = workDir + "main.py";
         String watchPath = workDir + "watcher.py";
         String outputPath = workDir + "output";
@@ -153,21 +162,21 @@ public class ModelCodingService {
                 .pyPath(pyPath).serverPyPath(serverPyPath)
                 .watchPath(watchPath).outputPath(outputPath).dataPath(dataPath)
                 .build();
-        dockerService.initEnv(serverDir);
+        unifiedDockerService.initEnv(serverDir);
 
         // Load Config
         String configPath = serverDir + "config.json";
-        sftpDataService.writeRemoteFile(configPath, getRemoteConfig(project));
+        unifiedDockerService.writeFile(configPath, getRemoteConfig(project));
 
-        String containerId = dockerService.createContainer(imageEnv, projectId, project.getServerDir(), workDir);
-        String pyContent = sftpDataService.readRemoteFile(project.getServerPyPath());
+        String containerId = unifiedDockerService.createContainer(imageEnv, projectId, project.getServerDir(), workDir);
+        String pyContent = unifiedDockerService.readFile(project.getServerPyPath());
         project.setPyContent(pyContent);
         project.setContainerId(containerId);
-        dockerService.startContainer(containerId);
+        unifiedDockerService.startContainer(containerId);
 
         // Start Watching Process
         String watchCommand = "nohup python -u " + project.getWatchPath() + " > watcher.out 2>&1";
-        CompletableFuture.runAsync(() -> dockerService.runCMDInContainerWithoutInteraction(userId, projectId, containerId, watchCommand));
+        CompletableFuture.runAsync(() -> unifiedDockerService.runCMDInContainerWithoutInteraction(userId, projectId, containerId, watchCommand));
         projectRepo.insert(project);
         responseInfo = "Project " + projectId + " has been Created";
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
@@ -189,13 +198,13 @@ public class ModelCodingService {
         try {
             String containerId = project.getContainerId();
             // Container Running ?
-            if (!dockerService.checkContainerState(containerId)){
-                dockerService.startContainer(containerId);
+            if (!unifiedDockerService.checkContainerState(containerId)){
+                unifiedDockerService.startContainer(containerId);
                 responseInfo = "Project " + projectId + " is Opened";
             } else { responseInfo = "Project " + projectId + " has been Opened"; }
             // Start Watching Process
             String watchCommand = "nohup python -u " + project.getWatchPath() + " > watcher.out 2>&1";
-            CompletableFuture.runAsync( () -> dockerService.runCMDInContainer(userId, projectId, containerId, watchCommand));
+            CompletableFuture.runAsync( () -> unifiedDockerService.runCMDInContainer(userId, projectId, containerId, watchCommand));
 
             return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
         } catch (Exception e) {
@@ -223,14 +232,14 @@ public class ModelCodingService {
             String containerId = project.getContainerId();
             CompletableFuture.runAsync( () -> {
                 try {
-                    dockerService.stopContainer(containerId);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    unifiedDockerService.stopContainer(containerId);
+                } catch (Exception e) {
+                    log.error("Failed to stop container", e);
                 } finally {
                     try {
-                        dockerService.removeContainer(containerId);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        unifiedDockerService.removeContainer(containerId);
+                    } catch (Exception e) {
+                        log.error("Failed to remove container", e);
                     }
                 }
             });
@@ -238,7 +247,7 @@ public class ModelCodingService {
         // Wait for Watch Dog Deleting Data
         CompletableFuture<Void> deleteContentsFuture = CompletableFuture.runAsync(() -> {
             try {
-                sftpDataService.deleteFolderContents(project.getServerDir() + "output/");
+                unifiedDockerService.deleteFolderContents(project.getServerDir() + "output/");
             } catch (Exception e) {
                 log.error("Failed to delete folder contents", e);
             }
@@ -246,7 +255,7 @@ public class ModelCodingService {
         deleteContentsFuture.thenRunAsync(() -> {
             try {
                 Thread.sleep(5000);
-                sftpDataService.deleteFolder(project.getServerDir());
+                unifiedDockerService.deleteFolder(project.getServerDir());
             } catch (Exception e) {
                 log.error("Failed to delete folder", e);
             }
@@ -276,9 +285,9 @@ public class ModelCodingService {
         String containerId = project.getContainerId();
         CompletableFuture.runAsync( () -> {
             try {
-                dockerService.stopContainer(containerId);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                unifiedDockerService.stopContainer(containerId);
+            } catch (Exception e) {
+                log.error("Failed to stop container", e);
             }
         });
         responseInfo = "Project " + projectId + " is closing";
@@ -299,7 +308,7 @@ public class ModelCodingService {
             responseInfo = "Project " + projectId + " hasn't been Registered";
             return responseInfo;
         }
-        return sftpDataService.readRemoteFile(project.getServerPyPath());
+        return unifiedDockerService.readFile(project.getServerPyPath());
     }
 
     public List<DFileInfo> getProjectCurDirFiles(ProjectFileDTO projectFileDTO) throws Exception {
@@ -313,11 +322,11 @@ public class ModelCodingService {
             return null;
         }
         String containerId = project.getContainerId();
-        if (!dockerService.checkContainerState(containerId)) {
+        if (!unifiedDockerService.checkContainerState(containerId)) {
             return null;
         }
         List<DFileInfo> fileTree = new ArrayList<>();
-        return dockerService.getCurDirFiles(projectId, containerId, path, fileTree);
+        return unifiedDockerService.getCurDirFiles(projectId, containerId, path, fileTree);
     }
 
     public CodingProjectVO newProjectFolder(ProjectFileDTO projectFileDTO) {
@@ -343,7 +352,7 @@ public class ModelCodingService {
         String storagePath = path.equals("") ? folderName : path + folderName;
         storagePath = project.getWorkDir() + storagePath;
         String command = "mkdir -p " + storagePath + " && chmod 777 " + storagePath;
-        dockerService.runCMDInContainer(userId, projectId, containerId, command);
+        unifiedDockerService.runCMDInContainer(userId, projectId, containerId, command);
         responseInfo = "New Folder " + folderName + " has been Created";
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
     }
@@ -365,7 +374,7 @@ public class ModelCodingService {
         String containerId = project.getContainerId();
         StringBuilder cmdBuilder = new StringBuilder("rm -rf");
         cmdBuilder.append(" ").append(project.getWorkDir() + path + fileName);
-        dockerService.runCMDInContainer(userId, projectId, containerId, cmdBuilder.toString());
+        unifiedDockerService.runCMDInContainer(userId, projectId, containerId, cmdBuilder.toString());
         responseInfo = "File " + fileName + " has been Deleted";
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
     }
@@ -387,7 +396,7 @@ public class ModelCodingService {
             project.setPyContent(projectFileDTO.getContent());
             projectRepo.updateById(project);
             try (InputStream inputStream = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8))) {
-                sftpDataService.uploadFileFromStream(inputStream, project.getServerPyPath());
+                unifiedDockerService.uploadFileFromStream(inputStream, project.getServerPyPath());
             }
             responseInfo = "Python Script " + projectId + " has been Saved";
             return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
@@ -423,7 +432,7 @@ public class ModelCodingService {
         String fileName = projectDataDTO.getUploadDataName() + ".geojson";
         String remotePath = project.getServerDir() + "data/" + fileName;
         try (InputStream inputStream = new ByteArrayInputStream(geometry.toString().getBytes(StandardCharsets.UTF_8))) {
-            sftpDataService.uploadFileFromStream(inputStream, remotePath);
+            unifiedDockerService.uploadFileFromStream(inputStream, remotePath);
         }
         responseInfo = "Project Data has been Uploaded";
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
@@ -472,7 +481,7 @@ public class ModelCodingService {
         CompletableFuture.runAsync(() -> {
             String remoteDataPath = project.getServerDir() + "data/";
             InputStream tileStream = minioUtil.getObjectStream(bucket, path);
-            sftpDataService.uploadFileFromStream(tileStream, remoteDataPath + projectTileDataDTO.getName() + ".tif");
+            unifiedDockerService.uploadFileFromStream(tileStream, remoteDataPath + projectTileDataDTO.getName() + ".tif");
         });
         responseInfo = "Data Uploading Successfully";
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
@@ -502,22 +511,48 @@ public class ModelCodingService {
             return CodingProjectVO.builder().status(-1).info(responseInfo).projectId(projectId).build();
         }
         
-        // 🚀 Ray优化增强：自动优化用户代码并执行
-        String scriptPath;
+        // ========= Ray优化集成 =========
         try {
-            // 创建Ray优化脚本
-            scriptPath = rayOptimizationService.createRayOptimizedScript(project, userId);
-            responseInfo = "Ray优化脚本正在执行...";
-            log.info("[RAY] 使用Ray优化脚本执行用户代码，项目ID: {}, 用户ID: {}", projectId, userId);
+            log.info("Starting Ray optimization for project: {}", projectId);
+            
+            // 1. 创建优化请求
+            OptimizationRequest optimizationRequest = OptimizationRequest.create(project, containerId, userId);
+            
+            // 2. 执行优化并获取执行计划
+            CodeOptimizationOutcome outcome = codeOptimizationFacade.optimizeAndPrepareExecution(optimizationRequest);
+            
+            // 3. 获取执行计划
+            ExecutionPlan executionPlan = outcome.getExecutionPlan();
+            
+            // 4. 执行优化后的代码（或回退到原始代码）
+            if (executionPlan != null) {
+                String finalCommand = executionPlan.getCommand();
+                log.info("Executing {} code for project {}: {}", 
+                        executionPlan.isOptimized() ? "Ray optimized" : "original", 
+                        projectId, executionPlan.getDescription());
+                
+                CompletableFuture.runAsync(() -> dockerService.runCMDInContainer(userId, projectId, containerId, finalCommand));
+                
+                responseInfo = outcome.isUsingOptimizedCode() ? 
+                    "Ray优化代码执行中 (预期加速" + String.format("%.1f", outcome.getOptimizationResult().getExpectedSpeedup()) + "x)" :
+                    "原始代码执行中 (" + outcome.getExecutionDescription() + ")";
+            } else {
+                // 回退到原始执行方式
+                String command = "python " + project.getPyPath();
+                CompletableFuture.runAsync(() -> dockerService.runCMDInContainer(userId, projectId, containerId, command));
+                responseInfo = "Script Executing Successfully (fallback)";
+            }
+            
         } catch (Exception e) {
-            // 如果Ray优化失败，降级到原始脚本
-            log.warn("[RAY] Ray优化失败，降级到原始脚本执行，项目ID: {}, 错误: {}", projectId, e.getMessage());
-            scriptPath = project.getPyPath();
-            responseInfo = "脚本执行中（标准模式）...";
+            log.error("Ray optimization failed for project {}, falling back to original execution: {}", 
+                     projectId, e.getMessage());
+            
+            // 回退到原始执行方式
+        String command = "python " + project.getPyPath();
+            CompletableFuture.runAsync(() -> dockerService.runCMDInContainer(userId, projectId, containerId, command));
+            responseInfo = "Script Executing Successfully (optimization failed, using original code)";
         }
         
-        final String finalCommand = "python " + scriptPath;
-        CompletableFuture.runAsync( () -> dockerService.runCMDInContainer(userId, projectId, containerId, finalCommand));
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
     }
 

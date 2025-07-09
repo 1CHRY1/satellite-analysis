@@ -39,9 +39,6 @@ public class ModelCodingController {
     @Autowired
     ProjectResultDataService projectResultDataService;
 
-    @Autowired
-    private nnu.mnr.satellite.service.modeling.RayOptimizationService rayOptimizationService;
-
     // Project Controller
     @PostMapping("/project/new")
     public ResponseEntity<CodingProjectVO> createCodingProject(@RequestBody CreateProjectDTO createProjectDTO) throws JSchException, SftpException, IOException {
@@ -112,11 +109,6 @@ public class ModelCodingController {
     @PostMapping("/project/canceling")
     public ResponseEntity<CodingProjectVO> stopPythonScript(@RequestBody ProjectBasicDTO projectBasicDTO) {
         return ResponseEntity.ok(modelCodingService.stopScript(projectBasicDTO));
-    }
-
-    @PostMapping("/project/ray-optimize")
-    public ResponseEntity<CodingProjectVO> optimizeWithRay(@RequestBody ProjectBasicDTO projectBasicDTO) {
-        return ResponseEntity.ok(rayOptimizationService.optimizeUserCode(projectBasicDTO));
     }
 
     // Environment Controller

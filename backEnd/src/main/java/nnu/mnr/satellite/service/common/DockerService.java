@@ -282,4 +282,59 @@ public class DockerService {
         }
     }
 
+    /**
+     * 在容器中执行命令并获取输出
+     * @param containerId 容器ID
+     * @param command 命令
+     * @return 命令输出
+     */
+    public String runCMDInContainerAndGetOutput(String containerId, String command) {
+        try {
+            String[] cmd = {"/bin/bash", "-c", command};
+            ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(containerId)
+                    .withAttachStdout(true)
+                    .withAttachStderr(true)
+                    .withTty(false)
+                    .withAttachStdin(false)
+                    .withCmd(cmd)
+                    .exec();
+
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            String exeId = execCreateCmdResponse.getId();
+            dockerClient.execStartCmd(exeId)
+                    .exec(new ExecStartResultCallback(outputStream, outputStream))
+                    .awaitCompletion(60, TimeUnit.SECONDS);
+            
+            return outputStream.toString();
+        } catch (InterruptedException e) {
+            log.error("Command execution interrupted: {}", e.getMessage());
+            throw new RuntimeException("Command execution failed", e);
+        }
+    }
+
+    /**
+     * 静默执行命令（不抛出异常）
+     * @param containerId 容器ID
+     * @param command 命令
+     */
+    public void runCMDInContainerSilent(String containerId, String command) {
+        try {
+            String[] cmd = {"/bin/bash", "-c", command};
+            ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(containerId)
+                    .withAttachStdout(false)
+                    .withAttachStderr(false)
+                    .withTty(false)
+                    .withAttachStdin(false)
+                    .withCmd(cmd)
+                    .exec();
+            
+            String exeId = execCreateCmdResponse.getId();
+            dockerClient.execStartCmd(exeId)
+                    .exec(new ExecStartResultCallback())
+                    .awaitCompletion(30, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            log.debug("Silent command execution failed (ignored): {}", e.getMessage());
+        }
+    }
+
 }
