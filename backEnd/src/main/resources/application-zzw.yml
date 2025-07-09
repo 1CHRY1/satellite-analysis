@@ -59,16 +59,47 @@ minio:
   url: http://192.168.1.101:30900
   # 备用地址: http://223.2.36.238:30901
 
-# 简化Docker配置 - 全部使用本地路径
+# Docker配置
+
+#docker:
+#  defaultServer:
+#    port: 2375
+#    host: "223.2.35.153"
+#    username: "root"
+#    password: "dky.njnu.edu.cn"
+#  localPath: D:/satellite/modelDockerVolume/
+#  serverDir: /home/satellite/
+#  workDir: /usr/local/coding/
+
 docker:
+  # 执行模式：local（本地Docker）或 remote（远程服务器）
+  mode: "local"
+  # 本地Docker配置
+  local:
+    enabled: true
+    localPath: D:/satellite-projects/
+    workDir: /workspace/
+  # 远程服务器配置（保留原有配置）
   defaultServer:
     port: 2375
-    host: "223.2.35.153"
-    username: "root"
-    password: "dky.njnu.edu.cn"
-  localPath: D:/satellite/modelDockerVolume/
-  serverDir: /home/satellite/
-  workDir: /usr/local/coding/
+    host: "localhost"
+    # 本地Docker不需要SSH，但JSchConnectionManager需要这些配置
+    username: "localhost"
+    password: "localhost"
+  localPath: D:/satellite-projects/
+  serverDir: /workspace/
+  workDir: /workspace/
+
+# # 简化Docker配置 - 全部使用本地路径
+# docker:
+#   defaultServer:
+#     port: 2375
+#     host: "223.2.35.153"
+#     username: "root"
+#     password: "dky.njnu.edu.cn"
+#   localPath: D:/satellite/modelDockerVolume/
+#   serverDir: /home/satellite/
+#   workDir: /usr/local/coding/
 
 # 添加默认的模型服务器配置
 modelServer:
@@ -92,3 +123,29 @@ tiler:
 # 卫星配置文件路径 - 请根据实际情况配置
 satelliteConfig:
   path: D:/satellite/band_config.json
+
+# Ray优化配置
+ray:
+  optimization:
+    enabled: true                    # 是否启用Ray优化
+    cpuCount: 4                     # Ray使用的CPU数量
+    memoryMB: 2048                  # Ray使用的内存量(MB)
+    timeout: 60                     # 优化超时时间(秒)
+    fallbackOnError: true           # 优化失败时是否回退到原始代码
+    analysisMode: "auto"            # 分析模式：auto/conservative/aggressive
+    logLevel: "INFO"                # 日志级别
+    tempDir: "/tmp/ray"             # Ray临时目录
+    enableOptimizationReport: true   # 是否生成优化报告
+    maxRetries: 2                   # 最大重试次数
+    enableCaching: true             # 是否启用优化缓存
+    cacheTtlMinutes: 60             # 缓存过期时间(分钟)
+    # 本地Ray优化模块路径
+    modulePath: D:/satellite-analysis/pything/ray_optimization/
+    # Docker运行时的额外参数（用于解决Ray的shm警告）
+    dockerRunOptions: "--shm-size=1.44gb"
+    # Ray Dashboard配置
+    dashboard:
+      enabled: true                 # 是否启用Ray Dashboard访问
+      port: 8265                    # Ray Dashboard端口
+      hostPort: 8265                # 宿主机映射端口
+

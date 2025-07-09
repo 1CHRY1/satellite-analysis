@@ -112,4 +112,5 @@ tiler:
   end-point: http://127.0.0.1:8000/
 
 satelliteConfig:
-  path: D:/IdeaProjects/satellite-analysis/backEnd/src/main/resources/config/band_config.json
+  path: D:/code/band_config.json
+
