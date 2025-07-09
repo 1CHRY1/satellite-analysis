@@ -1,0 +1,13 @@
+{
+    "SCENE_PREFIX": "LC09",
+    "TEMP_OUTPUT_DIR": "D:\\code\\test",
+    "CUR_SENSOR_NAME": "Landsat9_OLI",
+    "CUR_PRODUCT_NAME": "L2SP",
+    "CUR_RESOLUTION": "30m",
+    "CUR_PERIOD": "16d",
+    "TAGS": {
+        "source": "international",
+        "production": "light",
+        "category": "normal"
+    }
+}

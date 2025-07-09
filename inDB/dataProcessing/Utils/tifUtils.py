@@ -1,16 +1,16 @@
 import os
-import tempfile
 
 import rasterio
 from rio_cogeo.cogeo import cog_translate, cog_info
 from rio_cogeo.profiles import cog_profiles
 
+
 ########## TIF 转 COG ##########
-def convert_tif2cog(tif_path):
+def convert_tif2cog(tif_path, SCENE_CONFIG):
     if cog_info(tif_path)["COG"]:
         return tif_path
     else:
-        temp_dir = tempfile.gettempdir()
+        temp_dir = SCENE_CONFIG["TEMP_OUTPUT_DIR"]
         output_cog_tif = os.path.join(temp_dir, os.path.basename(tif_path))
         with rasterio.open(tif_path) as src:
             profile = cog_profiles.get("deflate")
@@ -76,10 +76,10 @@ def convert_bbox_to_4326(dataset):
             try:
                 src_srs.ImportFromEPSG(epsg)
             except:
-                print("警告: 无法从EPSG代码导入空间参考")
+                print("[WARNING] Unable to import spatial reference from EPSG code")
                 return None
         else:
-            print("警告: 数据集没有定义投影信息")
+            print("[WARNING] Dataset has no defined projection information")
             return None
     else:
         src_srs.ImportFromWkt(src_wkt)
@@ -91,8 +91,8 @@ def convert_bbox_to_4326(dataset):
         # 尝试导入EPSG:4326
         dst_srs.ImportFromEPSG(4326)
     except Exception as e:
-        print(f"警告: 无法导入EPSG:4326 - {str(e)}")
-        print("可能是PROJ库配置问题")
+        print(f"[WARNING] Unable to import EPSG:4326 - {str(e)}")
+        print("[WARNING] This may be a PROJ library configuration issue")
 
         # 尝试使用WKT定义WGS84
         wgs84_wkt = """GEOGCS["WGS 84",
@@ -109,11 +109,11 @@ def convert_bbox_to_4326(dataset):
         try:
             dst_srs.ImportFromWkt(wgs84_wkt)
         except Exception as e2:
-            print(f"警告: 无法使用WKT定义WGS84 - {str(e2)}")
-            print("正在检查PROJ库配置...")
+            print(f"[WARNING] Unable to define WGS84 using WKT - {str(e2)}")
+            print("[INFO] Checking PROJ library configuration...")
 
             # 打印PROJ相关环境变量
-            print(f"PROJ_LIB环境变量: {os.environ.get('PROJ_LIB', '未设置')}")
+            print(f"[INFO] PROJ_LIB environment variable: {os.environ.get('PROJ_LIB', 'Not set')}")
 
             # 尝试查找PROJ库文件
             proj_paths = [
@@ -126,20 +126,20 @@ def convert_bbox_to_4326(dataset):
 
             for path in proj_paths:
                 if os.path.exists(path):
-                    print(f"找到可能的PROJ数据目录: {path}")
-                    print(f"尝试设置PROJ_LIB环境变量到: {path}")
+                    print(f"[INFO] Found possible PROJ data directory: {path}")
+                    print(f"[INFO] Trying to set PROJ_LIB environment variable to: {path}")
                     os.environ["PROJ_LIB"] = path
 
                     try:
                         dst_srs = osr.SpatialReference()
                         dst_srs.ImportFromEPSG(4326)
-                        print("成功导入EPSG:4326！")
+                        print("[SUCCESS] Successfully imported EPSG:4326!")
                         break
                     except:
-                        print(f"设置环境变量后仍无法导入EPSG:4326")
+                        print(f"[WARNING] Still unable to import EPSG:4326 after setting environment variable")
 
             if not dst_srs.IsGeographic():
-                print("警告: 无法配置PROJ库。尝试手动构建坐标转换...")
+                print("[WARNING] Unable to configure PROJ library. Trying to manually build coordinate transformation...")
                 return None
 
     # 创建坐标转换
@@ -158,10 +158,10 @@ def convert_bbox_to_4326(dataset):
         # 测试转换是否工作
         try:
             test_point = transform.TransformPoint(geo_corners[0][0], geo_corners[0][1], 0)
-            print("坐标转换测试成功!")
+            print("[SUCCESS] Coordinate transformation test succeeded!")
         except Exception as e:
-            print(f"坐标转换测试失败: {str(e)}")
-            print("尝试使用pyproj进行转换...")
+            print(f"[WARNING] Coordinate transformation test failed: {str(e)}")
+            print("[INFO] Trying to use pyproj for transformation...")
 
             try:
                 import pyproj
@@ -183,16 +183,16 @@ def convert_bbox_to_4326(dataset):
 
                 # 替换transform.TransformPoint
                 transform.TransformPoint = transform_with_pyproj
-                print("已使用pyproj替代GDAL的坐标转换功能")
+                print("[INFO] pyproj is now used instead of GDAL for coordinate transformation")
             except ImportError:
-                print("pyproj库未安装，无法进行坐标转换")
+                print("[ERROR] pyproj library is not installed, cannot perform coordinate transformation")
                 return None
             except Exception as e:
-                print(f"使用pyproj转换时出错: {str(e)}")
+                print(f"\033[91m[ERROR] Error occurred while using pyproj for transformation: {str(e)}\033[0m")
                 return None
     except Exception as e:
-        print(f"创建坐标转换时出错: {str(e)}")
-        print("PROJ库可能未正确配置")
+        print(f"\033[91m[ERROR] Error occurred while creating coordinate transformation: {str(e)}\033[0m")
+        print("[WARNING] PROJ library may not be configured correctly")
         return None
 
     # 将地理坐标转换为EPSG:4326坐标系
@@ -216,14 +216,14 @@ def convert_bbox_to_4326(dataset):
 
                 wgs84_corners.append((point[0], point[1]))
             except Exception as e:
-                print(f"转换点({x}, {y})时出错: {str(e)}")
+                print(f"\033[91m[ERROR] Error occurred while transforming point ({x}, {y}): {str(e)}\033[0m")
                 return None
     except Exception as e:
-        print(f"坐标转换过程中出错: {str(e)}")
+        print(f"\033[91m[ERROR] Error occurred during coordinate transformation: {str(e)}\033[0m")
         return None
 
     if not wgs84_corners or len(wgs84_corners) != 4:
-        print("坐标转换失败，无法生成有效的边界框")
+        print("[ERROR] Coordinate transformation failed, unable to generate valid bounding box")
         return None
 
     # 添加起始点以闭合多边形（需要与第一个点相同）

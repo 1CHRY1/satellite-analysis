@@ -27,7 +27,7 @@ def uploadFileToMinio(buffer, dataLength, bucketName, objectName):
         if not found:
             client.make_bucket(bucketName)
         else:
-            print(f"Bucket '{bucketName}' already exists.")
+            print(f"[INFO] Bucket '{bucketName}' already exists.")
 
         client.put_object(
             bucketName,
@@ -35,10 +35,10 @@ def uploadFileToMinio(buffer, dataLength, bucketName, objectName):
             buffer,
             dataLength
         )
-        print(f"File has been successfully uploaded to bucket '{bucketName}' as '{objectName}'.")
+        print(f"[SUCCESS] File has been successfully uploaded to bucket '{bucketName}' as '{objectName}'.")
 
     except S3Error as e:
-        print(f"Error occurred: {e}")
+        print(f"\033[91m[ERROR] Error occurred: {e}\033[0m")
 
 
 def uploadLocalFile(filePath: str, bucketName: str, objectName: str):
@@ -54,7 +54,7 @@ def upload_file_by_mc(file_path, bucket, object_prefix):
     with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1,
                           universal_newlines=True) as process:
         for line in process.stdout:
-            print(line, end="")  # 逐行输出，不额外换行
+            print(f"[INFO] {line}", end="")  # line already has newline
         for err in process.stderr:
-            print("ERROR:", err, end="")  # 逐行输出错误信息
+            print(f"\033[91m[ERROR] {err}\033[0m", end="")  # line already has newline
     process.wait()

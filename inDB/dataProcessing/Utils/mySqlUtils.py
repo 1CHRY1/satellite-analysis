@@ -43,16 +43,16 @@ def connect_mysql(host, port, database, user, password):
         cursor = connection.cursor()
         return connection, cursor
     except pymysql.Error as err:
-        print(f"Error connecting to MySQL: {err}")
+        print(f"\033[91m[ERROR] Error connecting to MySQL: {err}\033[0m")
         if err.errno == pymysql.err.ER_ACCESS_DENIED_ERROR:
-            print("Invalid username or password")
+            print("[ERROR] Invalid username or password")
         elif err.errno == pymysql.err.ER_BAD_DB_ERROR:
-            print("Database does not exist")
+            print("[ERROR] Database does not exist")
         else:
-            print(f"Error {err.errno}: {err.args[1]}")
+            print(f"\033[91m[ERROR] Error {err.errno}: {err.args[1]}\033[0m")
         return None, None
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        print(f"\033[91m[ERROR] Unexpected error: {e}\033[0m")
         return None, None
 
 
@@ -157,13 +157,13 @@ def create_DB():
     for command in sql_commands:
         try:
             cursor.execute(command)
-            print(f"Executed: {command}")
+            print(f"[INFO] Executed: {command}")
         except Exception as e:
-            print(f"Wrong when executing {command.splitlines()[0]} : {e}")
+            print(f"\033[91m[ERROR] Wrong when executing {command.splitlines()[0]} : {e}\033[0m")
     connection.commit()
     cursor.close()
     connection.close()
-    print("All SQL Executed")
+    print("[SUCCESS] All SQL Executed")
 
 
 def create_tile_table(table_name):
@@ -204,13 +204,13 @@ def create_tile_table(table_name):
     for command in sql_commands:
         try:
             cursor.execute(command)
-            print(f"Executed: {command}")
+            print(f"[INFO] Executed: {command}")
         except Exception as e:
-            print(f"Wrong when executing {command.splitlines()[0]} : {e}")
+            print(f"\033[91m[ERROR] Wrong when executing {command.splitlines()[0]} : {e}\033[0m")
     connection.commit()
     cursor.close()
     connection.close()
-    print("All SQL Executed")
+    print("[SUCCESS] All SQL Executed")
 
 
 def insert_sensor(sensorName, platformName, description):
@@ -221,12 +221,17 @@ def insert_sensor(sensorName, platformName, description):
     insert_query = "INSERT INTO sensor_table (sensor_id, sensor_name, platform_name, description) VALUES (%s, %s, %s, %s)"
     data = (generate_custom_id('SE', 7), sensorName, platformName, description)
     cursor.execute(insert_query, data)
-
-    connection.commit()
-    print(cursor.rowcount, f"Sensor {sensorName} inserted!")
-
-    cursor.close()
-    connection.close()
+    try:
+        connection.commit()
+        print(f"[SUCCESS] {cursor.rowcount} row(s) affected. Sensor {sensorName} inserted!")
+        return True
+    except Exception as e:
+        print(f"\033[91m[ERROR] Error: {e}\033[0m")
+        connection.rollback()
+        return False
+    finally:
+        cursor.close()
+        connection.close()
 
 
 def get_sensor_byName(sensorName):
@@ -257,11 +262,17 @@ def insert_product(sensorName, productName, description, resolution, period):
     data = (generate_custom_id('P', 9), sensorId, productName, description, resolution, period)
     cursor.execute(insert_query, data)
 
-    connection.commit()
-    print(cursor.rowcount, f"Product {sensorName} inserted!")
-
-    cursor.close()
-    connection.close()
+    try:
+        connection.commit()
+        print(f"[SUCCESS] {cursor.rowcount} row(s) affected. Product {sensorName} inserted!")
+        return True
+    except Exception as e:
+        print(f"\033[91m[ERROR] Error: {e}\033[0m")
+        connection.rollback()
+        return False
+    finally:
+        cursor.close()
+        connection.close()
 
 
 def get_product_byName(sensorName, productName):
@@ -287,6 +298,27 @@ def get_product_byName(sensorName, productName):
         return None
 
 
+def get_scene_byName(sceneName):
+    global DB_CONFIG
+    connection, cursor = connect_mysql(DB_CONFIG["MYSQL_HOST"], DB_CONFIG["MYSQL_RESOURCE_PORT"],
+                                       DB_CONFIG["MYSQL_RESOURCE_DB"], DB_CONFIG["MYSQL_USER"],
+                                       DB_CONFIG["MYSQL_PWD"])
+    select_query = """
+        SELECT s.sensor_id, s.scene_id, s.scene_name
+        FROM scene_table s
+        WHERE s.scene_name = %s
+    """
+    cursor.execute(select_query, (sceneName, ))
+    result = cursor.fetchone()
+    cursor.close()
+    connection.close()
+    if result:
+        scene_id = result['scene_id']
+        return scene_id
+    else:
+        return None
+
+
 def insert_scene(sensorName, productName, sceneName, sceneTime, tileLevelNum, tileLevels, cloudPath, crs, bbox,
                  description, bands, band_num, bucket, cloud, tags, no_data):
     global DB_CONFIG
@@ -295,6 +327,10 @@ def insert_scene(sensorName, productName, sceneName, sceneTime, tileLevelNum, ti
                                        DB_CONFIG["MYSQL_RESOURCE_DB"], DB_CONFIG["MYSQL_USER"],
                                        DB_CONFIG["MYSQL_PWD"])
     sensorId, productId = get_product_byName(sensorName, productName)
+    sceneId = get_scene_byName(sceneName)
+    if sceneId is not None:
+        print(f"\033[91m[WARNING] Scene {sceneName} already exists. Skipping insertion.\033[0m")
+        return None
     insert_query = (
         "INSERT INTO scene_table (scene_id, sensor_id, product_id, scene_name, scene_time, tile_level_num, tile_levels, coordinate_system, bounding_box, cloud_path, description, bands, band_num, bucket, cloud, tags, no_data) "
         "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, ST_GeomFromText(%s, 4326, 'axis-order=long-lat'), %s, %s, %s, %s, %s, %s, %s, %s)")
@@ -308,15 +344,16 @@ def insert_scene(sensorName, productName, sceneName, sceneTime, tileLevelNum, ti
         cursor.execute(insert_query, data)
         connection.commit()
 
-        print(cursor.rowcount, f"Scene {sceneId} inserted!")
+        print(f"[SUCCESS] {cursor.rowcount} row(s) affected. Scene {sceneId} inserted!")
+        return sceneId
     except Exception as err:
-        print(f"Error: {err}")
+        print(f"\033[91m[ERROR] Error: {err}\033[0m")
         connection.rollback()
+        return None
     finally:
         # 确保关闭游标和连接
         cursor.close()
         connection.close()
-        return sceneId
 
 
 def insert_image(sceneId, tifPath, band, bucket, cloud):
@@ -334,15 +371,16 @@ def insert_image(sceneId, tifPath, band, bucket, cloud):
         cursor.execute(insert_query, data)
         connection.commit()
 
-        print(cursor.rowcount, f"Image {imageId} inserted!")
+        print(f"[SUCCESS] {cursor.rowcount} row(s) affected. Image {imageId} inserted!")
+        return imageId
     except pymysql.Error as err:
-        print(f"Error: {err}")
+        print(f"\033[91m[ERROR] Error: {err}\033[0m")
         connection.rollback()
+        return None
     finally:
         # 确保关闭游标和连接
         cursor.close()
         connection.close()
-        return imageId
 
 
 def insert_tile(tile_table_name, image_id, tileLevel, columnId, rowId, path, bucket, bbox, cloud, band):
@@ -359,9 +397,9 @@ def insert_tile(tile_table_name, image_id, tileLevel, columnId, rowId, path, buc
         cursor.execute(insert_query, data)
         connection.commit()
 
-        print(cursor.rowcount, f"Tile {tileId} inserted!")
+        print(f"[SUCCESS] {cursor.rowcount} row(s) affected. Tile {tileId} inserted!")
     except pymysql.Error as err:
-        print(f"Error: {err}")
+        print(f"\033[91m[ERROR] Error: {err}\033[0m")
         connection.rollback()
     finally:
         # 确保关闭游标和连接
@@ -386,9 +424,9 @@ def insert_batch_tile(tile_table_name, image_id, tileLevel, tile_info_list, band
         cursor.executemany(insert_query, data_list)
         connection.commit()
 
-        print(cursor.rowcount, f"tiles inserted!")
+        print(f"[SUCCESS] {cursor.rowcount} row(s) affected. Tiles inserted!")
     except pymysql.Error as err:
-        print(f"Error: {err}")
+        print(f"\033[91m[ERROR] Error: {err}\033[0m")
         connection.rollback()
     finally:
         # 确保关闭游标和连接

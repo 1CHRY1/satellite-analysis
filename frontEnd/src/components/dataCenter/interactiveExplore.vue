@@ -356,7 +356,7 @@
                                                             @afterChange="onAfterScaleRateChange" />
                                                     </div>
                                                     <div>
-                                                
+
                                                         <a-button class="custom-button w-full!" :loading="sensorItem.loading"
                                                             @click="handleShowImage(sensorItem)">
                                                             影像可视化
@@ -364,7 +364,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                    
+
                                         </div>
                                     </div> -->
                                 </div>
@@ -375,7 +375,7 @@
             </div>
         </div>
         <MapComp class="flex-1" :style="'local'" :proj="'globe'" :isPicking="isPicking" />
-    </div>    
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -451,8 +451,8 @@ const { t } = useI18n()
  * 小心
  * 小心
  * 小心
- * 
- * 
+ *
+ *
  */
 
 
@@ -481,7 +481,7 @@ type POIInfo = {
     adname: string
 }
 
-const resolutionType: ComputedRef<ResolutionItem[]> = computed(()=>[
+const resolutionType = computed<ResolutionItem[]>(()=>[
     [t('datapage.explore.section_interactive.resolutiontype.yami'), 1],
     [t('datapage.explore.section_interactive.resolutiontype.twom'), 2],
     [t('datapage.explore.section_interactive.resolutiontype.tenm'), 10],
@@ -669,7 +669,7 @@ interface Tab {
     value: TabValue
     label: string
 }
-const tabs: ComputedRef<Tab[]> = computed(() =>  [{
+const tabs = computed<Tab[]>(() =>  [{
     value: 'region',
     label: t('datapage.explore.section1.admin')
 }, {
@@ -1270,9 +1270,9 @@ onMounted(async() => {
     if (!ezStore.get('sceneNodataMap')) ezStore.set('sceneNodataMap', new Map())
 
      await mapManager.waitForInit();
-  
 
-    
+
+
     // 最后添加边界（确保在最上层）
     setTimeout(() => {
         if (exploreData.load){
