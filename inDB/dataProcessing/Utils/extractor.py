@@ -72,12 +72,12 @@ def get_basic_info_from_ds(dataset):
     if basic_info["no_data"] is None:
         basic_info["no_data"] = 0
     if basic_info["projection"] is None or basic_info["projection"] == "":
-        print("缺失投影信息")
+        print("[WARNING] Missing projection information")
     spatial_ref = osr.SpatialReference()
     spatial_ref.ImportFromWkt(basic_info["projection"])
     basic_info["crs"] = spatial_ref.GetAttrValue("AUTHORITY", 1)  # 获取 EPSG 代码
     if basic_info["crs"] is None:
-        print("缺失EPSG CODE，已恢复默认4326")
+        print("[WARNING] Missing EPSG CODE, defaulting to 4326")
         basic_info["crs"] = 4326
     basic_info["bbox"] = convert_bbox_to_4326(dataset)
     if isinstance(SCENE_CONFIG["SCENE_PATH"], list):
@@ -160,7 +160,7 @@ def get_scene_basic_info(info_from_ds, info_from_config):
     if info_from_config["bbox"] is not None:
         basic_info["bbox"] = info_from_config["bbox"]
     if basic_info["bbox"] is None:
-        print("空间范围 Bbox 缺失，程序自动退出")
+        print("[ERROR] Spatial extent (Bbox) missing, program will exit.")
         sys.exit(1)
     if info_from_ds["bands"] is None:
         basic_info["bands"] = info_from_config["bands"]
@@ -177,11 +177,11 @@ def process_single_band(scene_path_list):
     global SCENE_CONFIG, DB_CONFIG
     if len(scene_path_list) == 0:
         raise ValueError("scene_path_list is empty")
-    print(f"正在读取单波段tif文件(波段：{scene_path_list[0]["band"]})，请稍后...")
+    print(f"[INFO] Reading single-band tif file (band: {scene_path_list[0]['band']}), please wait...")
     dataset = gdal.Open(scene_path_list[0]["path"])
     if not dataset:
         raise FileNotFoundError(f"Unable to open file: {scene_path_list[0]["path"]}")
-    print("读取完毕")
+    print("[INFO] Reading completed")
     scene_basic_info = get_basic_info_from_ds(dataset)
     band_list = scene_path_list
     return band_list, scene_basic_info
@@ -190,11 +190,13 @@ def process_single_band(scene_path_list):
 def process_multi_band(scene_path):
     global SCENE_CONFIG, DB_CONFIG
     temp_dir = SCENE_CONFIG["TEMP_OUTPUT_DIR"]
-    print("正在读取多波段tif文件，请稍后...")
+    print("[INFO] Reading multi-band tif file, please wait...")
     dataset = gdal.Open(scene_path)
     if not dataset:
-        raise FileNotFoundError(f"Unable to open file: {scene_path}")
-    print("读取完毕")
+        print(f"\033[91m[ERROR] Unable to open file: {scene_path}\033[0m")
+        return [], None
+    
+    print("[INFO] Reading completed")
     scene_basic_info = get_basic_info_from_ds(dataset)
     try:
         band_list = []
@@ -204,7 +206,7 @@ def process_multi_band(scene_path):
 
         # 循环处理每个波段
         for band_idx in range(1, num_bands + 1):
-            print(f"正在写入波段 {band_idx} ...")
+            print(f"    [INFO] Writing band {band_idx} ...")
             # 获取波段数据
             band = dataset.GetRasterBand(band_idx)
             band_data = band.ReadAsArray()
@@ -228,7 +230,7 @@ def process_multi_band(scene_path):
 
             # 将波段数据写入新文件
             single_band_dataset.GetRasterBand(1).WriteArray(band_data)
-            print(f"波段 {band_idx} 写入完毕")
+            print(f"    [INFO] Band {band_idx} writing completed")
             # 清理
             single_band_dataset.FlushCache()
             band_list.append({"path": band_filename, "band": band_idx})
@@ -236,7 +238,8 @@ def process_multi_band(scene_path):
         return band_list, scene_basic_info
 
     except Exception as e:
-        print(f"Error processing the file: {e}")
+        print(f"\033[91m[ERROR] Error processing the file: {e}\033[0m")
+        # sys.exit(1)
         return [], scene_basic_info
 
 
@@ -307,21 +310,28 @@ def upload_data(scene_info):
     # 上传单波段影像
     image_info_list = scene_info["image_info_list"]
     for image_info in image_info_list:
-        uploadLocalFile(convert_tif2cog(image_info["file_path"]), DB_CONFIG["MINIO_IMAGES_BUCKET"], image_info["tif_path"])
+        uploadLocalFile(convert_tif2cog(image_info["file_path"], SCENE_CONFIG), DB_CONFIG["MINIO_IMAGES_BUCKET"], image_info["tif_path"])
     # 上传云量波段
     if SCENE_CONFIG.get("CLOUD_PATH") is not None:
-        uploadLocalFile(convert_tif2cog(SCENE_CONFIG["CLOUD_PATH"]), DB_CONFIG["MINIO_IMAGES_BUCKET"], scene_info["cloud_path"])
+        uploadLocalFile(convert_tif2cog(SCENE_CONFIG["CLOUD_PATH"], SCENE_CONFIG), DB_CONFIG["MINIO_IMAGES_BUCKET"], scene_info["cloud_path"])
 
 
 def main(object_prefix):
     band_list, scene_basic_info_from_ds = preset()
-    scene_info = get_scene_info(object_prefix, scene_basic_info_from_ds)
-    image_info_list = []
-    for band_item in band_list:
-        image_info = get_image_info(band_item, scene_info, object_prefix)
-        image_info_list.append(image_info)
-    scene_info["image_info_list"] = image_info_list
-    upload_data(scene_info)
+    if len(band_list) == 0:
+        # 在此反馈内部错误，从而跳过该景（不然直接SUCCESS，但实际失败）
+        return None
+    try:
+        scene_info = get_scene_info(object_prefix, scene_basic_info_from_ds)
+        image_info_list = []
+        for band_item in band_list:
+            image_info = get_image_info(band_item, scene_info, object_prefix)
+            image_info_list.append(image_info)
+        scene_info["image_info_list"] = image_info_list
+        upload_data(scene_info)
+    except Exception as e:
+        print(f"\033[91m[ERROR] Error processing or uploading image: {e}\033[0m")
+        return None
     return scene_info
 
 

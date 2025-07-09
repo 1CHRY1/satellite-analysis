@@ -1,0 +1,13 @@
+{
+    "SCENE_PREFIX": "GF1",
+    "TEMP_OUTPUT_DIR": "Z:\\NNU_OpenGMS\\temp",
+    "CUR_SENSOR_NAME": "GF-1_PMS",
+    "CUR_PRODUCT_NAME": "GF-1_ARD",
+    "CUR_RESOLUTION": "2m",
+    "CUR_PERIOD": "16d",
+    "TAGS": {
+        "source": "national",
+        "production": "light",
+        "category": "ard"
+    }
+}
