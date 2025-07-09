@@ -37,7 +37,8 @@ public class ModelServerSceneDTO {
     // 波段配置
     private JSONObject bandMapper;
 
-    //判断相交
-    private boolean isIntersect;
+    // 判断相交
+    private boolean isPartiallyOverlapped;
+    private JSONObject gridsBoundary;
 
 }

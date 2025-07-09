@@ -16,7 +16,7 @@ import requests
 MINIO_ENDPOINT = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}"
 INFINITY = 999999
 
-@ray.remote(num_cpus=CONFIG.RAY_NUM_CPUS, memory=CONFIG.RAY_MEMORY_PER_TASK)
+# @ray.remote(num_cpus=CONFIG.RAY_NUM_CPUS, memory=CONFIG.RAY_MEMORY_PER_TASK)
 def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper, minio_endpoint, temp_dir_path):
     try:
         from rio_tiler.io import COGReader
@@ -387,22 +387,22 @@ class calc_no_cloud(Task):
         # 序列化数据到临时文件
         scenes_json_file, scene_band_paths_json_file = serialize_data_to_temp_files(scenes, scene_band_paths)
         # 使用ray
-        ray_tasks = [
-            process_grid.remote(grid=g,
-                                scenes_json_file=scenes_json_file,
-                                scene_band_paths_json_file=scene_band_paths_json_file,
-                                grid_helper=grid_helper,
-                                minio_endpoint=MINIO_ENDPOINT,
-                                temp_dir_path=temp_dir_path)
-            for g in grids
-        ]
-        results = ray.get(ray_tasks)
+        # ray_tasks = [
+        #     process_grid.remote(grid=g,
+        #                         scenes_json_file=scenes_json_file,
+        #                         scene_band_paths_json_file=scene_band_paths_json_file,
+        #                         grid_helper=grid_helper,
+        #                         minio_endpoint=MINIO_ENDPOINT,
+        #                         temp_dir_path=temp_dir_path)
+        #     for g in grids
+        # ]
+        # results = ray.get(ray_tasks)
 
         # 不使用ray
-        # results = []
-        # for g in grids:
-        #     result = process_grid(g, scenes, grid_helper, scene_band_paths, MINIO_ENDPOINT, temp_dir_path)
-        #     results.append(result)
+        results = []
+        for g in grids:
+            result = process_grid(g, scenes, grid_helper, scene_band_paths, MINIO_ENDPOINT, temp_dir_path)
+            results.append(result)
 
 
         ## Step 3 : Results Uploading and Statistic #######################

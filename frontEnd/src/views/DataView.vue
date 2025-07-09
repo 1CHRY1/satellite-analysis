@@ -29,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, type Ref , computed } from 'vue'
+import { ref, type Ref , computed} from 'vue'
 import MapComp from '@/components/feature/map/mapComp.vue'
 // import ImageSearcher from '@/components/dataCenter/imageSearcher.vue'
 import dataExplore from '@/components/dataCenter/interactiveExplore.vue'
@@ -50,7 +50,7 @@ const isPicking = ref(false)
 
 const pageCheckout = (tab: string) => {
     if (tab === 'noClouds' && unlockTab.value === false) {
-        ElMessage.warning('请完成影像筛选后再计算无云一版图')
+        ElMessage.warning(t('datapage.explore.message.ordererror'))
         return
     }
     if (tab != 'explore') {

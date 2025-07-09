@@ -1,56 +1,62 @@
 <template>
-    <div class="custom-panel px-2">
-        <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]">
-            <div class="main-container">
-                <section class="panel-section">
-                    <div class="section-header">
-                        <div class="section-icon">
-                            <MapPinIcon :size="18" />
-                        </div>
-                        <h2 class="section-title">{{t('datapage.analysis.section1.subtitle')}}</h2>
-                    </div>
-                    <div class="section-content">
-                        <div class="config-container">
-                            <div class="config-item">
-                                <div class="config-label relative">
-                                    <MapIcon :size="16" class="config-icon" />
-                                    <span>{{t('datapage.analysis.section1.area')}}</span>
+    <div class="relative flex flex-1 flex-row bg-black">
+        <div class="w-[28vw] p-4 text-gray-200">
+            <div class="custom-panel px-2">
+                <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]">
+                    <div class="main-container">
+                        <section class="panel-section">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <MapPinIcon :size="18" />
                                 </div>
-                                <div class="config-control justify-center">
-                                    <RegionSelects v-model="region" class="flex gap-2"
-                                        select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
+                                <h2 class="section-title">{{t('datapage.analysis.section1.subtitle')}}</h2>
+                            </div>
+                            <div class="section-content">
+                                <div class="config-container">
+                                    <div class="config-item">
+                                        <div class="config-label relative">
+                                            <MapIcon :size="16" class="config-icon" />
+                                            <span>{{t('datapage.analysis.section1.area')}}</span>
+                                        </div>
+                                        <div class="config-control justify-center">
+                                            <RegionSelects v-model="region" class="flex gap-2"
+                                                select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </section>
-                <section class="panel-section">
-                    <div class="section-header">
-                        <div class="section-icon">
-                            <ChartColumn :size="18" />
-                        </div>
-                        <h2 class="section-title">{{t('datapage.analysis.section2.subtitle')}}</h2>
-                        <select v-model="selectedTask" @change="handleThematicChange"
-                            class="bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-3 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6] max-w-[calc(100%-90px)] truncate">
-                            <option v-for="option in optionalTasks" :key="option.value" :value="option.value"
-                                :disabled="option.disabled">
-                                {{ option.label }}
-                            </option>
-                        </select>
-                        <div class="absolute right-6" @click="clearImages">
-                            <a-tooltip>
-                                <template #title>{{t('datapage.analysis.section2.clear')}}</template>
-                                <Trash2Icon :size="20" />
-                            </a-tooltip>
-                        </div>
+                        </section>
+                        <section class="panel-section">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <ChartColumn :size="18" />
+                                </div>
+                                <h2 class="section-title">{{t('datapage.analysis.section2.subtitle')}}</h2>
+                                <select v-model="selectedTask" @change="handleThematicChange"
+                                    class="bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-3 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6] max-w-[calc(100%-90px)] truncate">
+                                    <option v-for="option in optionalTasks" :key="option.value" :value="option.value"
+                                        :disabled="option.disabled">
+                                        {{ option.label }}
+                                    </option>
+                                </select>
+                                <div class="absolute right-6" @click="clearImages">
+                                    <a-tooltip>
+                                        <template #title>{{t('datapage.analysis.section2.clear')}}</template>
+                                        <Trash2Icon :size="20" />
+                                    </a-tooltip>
+                                </div>
 
-                    </div>
-                </section>
+                            </div>
+                        </section>
 
-                <component :is="currentTaskComponent" :thematicConfig="thematicConfig" />
+                        <component :is="currentTaskComponent" :thematicConfig="thematicConfig" />
+                    </div>
+
+                </dv-border-box12>
             </div>
-
-        </dv-border-box12>
+        </div>
+        <!-- <ImageSearcher class="h-full w-[28vw] mt-10" /> -->
+        <MapComp class="flex-1" :style="'local'" :proj="'globe'" :isPicking="isPicking" />
     </div>
 </template>
 <script setup lang="ts">
@@ -89,9 +95,14 @@ import {
 } from 'lucide-vue-next'
 import { ElMessage } from 'element-plus'
 import { mapManager } from '@/util/map/mapManager'
+import { useExploreStore } from '@/store'
+const exploreData = useExploreStore()
 
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
+
+import MapComp from '@/components/feature/map/mapComp.vue'
+const isPicking = ref(false)
 
 const startTime = '1900-01-01'
 const endTime = '2050-01-01'
@@ -153,10 +164,10 @@ const getOriginImages = async (newRegion: number | '未选择') => {
     MapOperation.map_destroyImagePreviewLayer()
     MapOperation.map_destroyGridLayer()
 
-    let boundaryRes = await getBoundary(newRegion)
+    let boundaryRes = await exploreData.boundary
     let window = await getRegionPosition(newRegion)
 
-    // 先清除现有的矢量边界，然后再添加新的
+    // 先清除现有的矢量边界，然后再添加新的  
     MapOperation.map_addPolygonLayer({
         geoJson: boundaryRes,
         id: 'UniqueLayer',
