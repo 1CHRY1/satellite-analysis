@@ -470,7 +470,7 @@ type POIInfo = {
     adname: string
 }
 
-const resolutionType: ResolutionItem[] = computed(()=>[
+const resolutionType = computed<ResolutionItem[]>(()=>[
     [t('datapage.explore.section3.resolutiontype.yami'), 1],
     [t('datapage.explore.section3.resolutiontype.twom'), 2],
     [t('datapage.explore.section3.resolutiontype.tenm'), 10],
@@ -653,7 +653,7 @@ interface Tab {
     value: TabValue
     label: string
 }
-const tabs: Tab[] = computed(() =>  [{
+const tabs = computed<Tab[]>(() =>  [{
     value: 'region',
     label: t('datapage.explore.section1.admin')
 }, {
