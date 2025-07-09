@@ -28,6 +28,27 @@ export const routes = [
         },
     },
     {
+        path: '/explore',
+        component: () => import('@/components/dataCenter/interactiveExplore.vue'),
+        meta: {
+            requiresAuth: true,
+        },
+    },
+    {
+        path: '/nocloud',
+        component: () => import('@/components/dataCenter/noCloud/pictureOfNoCloud.vue'),
+        meta: {
+            requiresAuth: true,
+        },
+    },
+    {
+        path: '/analysis',
+        component: () => import('@/components/dataCenter/dynamicAnalysis.vue'),
+        meta: {
+            requiresAuth: true,
+        },
+    },
+    {
         path: '/projects',
         component: () => import('@/views/projects.vue'),
         meta: {

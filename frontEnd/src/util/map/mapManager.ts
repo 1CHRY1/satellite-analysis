@@ -13,6 +13,9 @@ class MapManager {
     private map: mapboxgl.Map | null = null
     private draw: MapboxDraw | null = null
     private initPromise: Promise<mapboxgl.Map> | null = null
+    
+    private _isInitialized = false;
+    private _isDrawInitialized = false;
 
     private constructor() {}
 
@@ -29,7 +32,11 @@ class MapManager {
         style: Style = 'local', // 默认用本地影像
         proj: 'mercator' | 'globe' = 'mercator', // 默认用Mercortor平面
     ): Promise<mapboxgl.Map> {
-        if (this.map) return this.map
+        if (this._isInitialized && this.map) return this.map;
+
+        this._isInitialized = false;
+        this._isDrawInitialized = false;
+
         this.initPromise = new Promise((resolve) => {
             const conf = ezStore.get('conf')
             this.map = new mapboxgl.Map({
@@ -104,7 +111,7 @@ class MapManager {
             })
         })
         return this.initPromise
-    }
+    }    
 
     public registerDrawCallback(): void {}
 
@@ -191,6 +198,12 @@ class MapManager {
         this.initPromise = null
         this.map = null
     }
+
+    public async waitForInit(): Promise<void> {
+    if (this.initPromise) {
+        await this.initPromise;
+    }
+}
 }
 
 // 辅助函数：获取瓦片的 EPSG:3857 坐标范围

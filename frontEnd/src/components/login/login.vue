@@ -110,18 +110,18 @@ const handleLogin = async () => {
         })
         ElMessage({
             type: 'success',
-            message: '登录成功',
+            message: t('login.message.success'),
         })
         router.push('/home')
     } else if (loginRes.status === -1) {
         ElMessage({
             type: 'error',
-            message: '邮箱或密码错误',
+            message: t('login.message.error_wrongdetail'),
         })
     } else {
         ElMessage({
             type: 'error',
-            message: '登录失败,请咨询网站管理员',
+            message: t('login.message.error_fail'),
         })
     }
 }

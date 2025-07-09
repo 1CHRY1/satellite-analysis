@@ -23,6 +23,7 @@ export interface Project {
 }
 
 export interface interactiveExplore {
+    searchtab:string,
     regionCode: number
     dataRange: string[]
     cloud: number

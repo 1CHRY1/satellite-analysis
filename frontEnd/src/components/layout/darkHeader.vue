@@ -9,35 +9,79 @@
                     class="bg-gradient-to-r from-sky-100 to-white bg-clip-text font-semibold whitespace-nowrap text-transparent sm:text-lg md:text-xl lg:text-2xl">{{ t('nav.title') }}</span>
             </div>
 
-            <nav class="ml-[5vw] flex items-center space-x-[1.5vw]">
-                <div v-for="(item, index) in navItems" class="flex flex-row space-x-[1.5vw]">
-                    <!-- 判断是否为外部链接 -->
-                    <template v-if="item.external">
-                        <a :href="item.path" target="_blank" rel="noopener noreferrer"
-                            class="text-shadow-deepblue relative rounded-md px-2 py-1 font-semibold whitespace-nowrap text-white transition-all duration-300 hover:text-sky-100 sm:text-lg md:text-lg lg:text-xl"
-                            :class="{
-                                'nav-link': true,
-                                'nav-link-active': currentRoute === item.path,
-                            }">
-                            {{ item.name }}
-                        </a>
-                    </template>
-                    <template v-else>
-                        <router-link :to="item.path"
-                            class="text-shadow-deepblue relative rounded-md px-2 py-1 font-semibold whitespace-nowrap text-white transition-all duration-300 hover:text-sky-100 sm:text-lg md:text-lg lg:text-xl"
-                            :class="{
-                                'nav-link': true,
-                                'nav-link-active': currentRoute === item.path,
-                            }">
-                            {{ item.name }}
-                        </router-link>
-                    </template>
-
-                    <!-- 分隔线 -->
-                    <div class="h-8 w-0 border-r-2 border-gray-600" v-if="index < navItems.length - 1"></div>
+            <nav class="ml-[5vw] flex items-center">
+                <template v-for="(item, index) in navItems" :key="item.path || index" class="space-x-[1.5vw]">
+                <!-- 分隔线 (移到前面) -->
+                <div 
+                    v-if="index > 0"
+                    class="h-8 w-0 border-r-2 border-gray-600 mx-[1.5vw]">
                 </div>
+                
+                <!-- 有子菜单的项 -->
+                <div v-if="item.children" class="relative group">
+                    <div
+                    class="text-shadow-deepblue relative rounded-md px-2 py-1 font-semibold whitespace-nowrap text-white transition-all duration-300 hover:text-sky-100 sm:text-lg md:text-lg lg:text-xl cursor-pointer flex items-center"
+                    @mouseenter="openSubMenu(index)"
+                    @mouseleave="closeSubMenu"
+                    
+                    >
+                    {{ item.name }}
+                    <!-- <svg class="w-4 h-4 ml-1 transition-transform" :class="{ 'rotate-180': activeSubMenu === index }">
+                        <path d="M5 8l5 5 5-5" stroke="currentColor" fill="none"/>
+                    </svg> -->
+                    </div>
+
+                    <!-- 下拉菜单 -->
+                    <transition name="fade">
+                    <ul
+                        v-show="activeSubMenu === index"
+                        class="absolute left-0 mt-1 w-48 bg-gray-800 rounded-md shadow-lg z-50 py-1"
+                        @mouseenter="openSubMenu(index)"
+                        @mouseleave="closeSubMenu"
+                    >
+                        <li v-for="child in item.children" :key="child.path">
+                        <router-link
+                            v-if="child.path && !child.disabled"
+                            :to="child.path"
+                            class="block px-4 py-2 text-white hover:bg-gray-700"
+                            @click="closeSubMenu"
+                        >
+                            {{ child.name }}
+                        </router-link>
+                        <span
+                            v-else
+                            class="block px-4 py-2 text-gray-500 cursor-not-allowed"
+                            @click="showDisabledMessage"
+                        >
+                            {{ child.name }}
+                        </span>
+                        </li>
+                    </ul>
+                    </transition>
+                </div>
+
+                <!-- 普通菜单项 -->
+                <template v-else>
+                    <a
+                    v-if="item.external"
+                    :href="item.path"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-shadow-deepblue relative rounded-md px-2 py-1 font-semibold whitespace-nowrap text-white transition-all duration-300 hover:text-sky-100 sm:text-lg md:text-lg lg:text-xl"
+                    >
+                    {{ item.name }}
+                    </a>
+                    <router-link
+                    v-else
+                    :to ="item.path|| '/'"
+                    class="text-shadow-deepblue relative rounded-md px-2 py-1 font-semibold whitespace-nowrap text-white transition-all duration-300 hover:text-sky-100 sm:text-lg md:text-lg lg:text-xl"
+                    >
+                    {{ item.name }}
+                    </router-link>
+                </template>
+                </template>
             </nav>
-        </div>
+    </div>
 
         <!-- Switch language -->
          <div class="flex items-center mr-4">
@@ -47,14 +91,7 @@
         <!-- user authenticated -->
         <div v-if="userStore.authenticated"
             class="group relative flex cursor-pointer items-center justify-between rounded-4xl bg-gray-800 transition-colors hover:bg-gray-700">
-            <span class="px-4 text-gray-300">{{ userStore.user.name }}</span>
-            <div class="py-1">
-                <img :src="avator" alt="user-avator" class="h-8 w-auto rounded-full" />
-            </div>
-            <div class="absolute top-8 right-0 z-10 hidden w-24 rounded-lg bg-white text-center text-black shadow-lg group-hover:block"
-                @click="handleLogout">
-                {{t('nav.button.logout')}}
-            </div>
+            <menuList />
         </div>
 
         <!-- login or register -->
@@ -72,28 +109,68 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed,ref, type ComputedRef, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/store'
 import { useRouter } from 'vue-router'
 import SwitcheLanguage from './SwitchLanguage.vue';
+import menuList from '@/components/user/menuList.vue'
 
 // import logo from '@/assets/image/logo2.png'
 import avator from '@/assets/image/avator.png'
 import { Satellite } from 'lucide-vue-next'
+import { ElMessage } from 'element-plus';
 
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
+import { useExploreStore } from '@/store';
+import type { AnyPaint } from 'mapbox-gl';
+const exploreData = useExploreStore()
+const load = exploreData.load 
+
+const activeSubMenu = ref<number | null>(null);
+
+const openSubMenu = (index: number) => {
+  activeSubMenu.value = index;
+};
+
+const closeSubMenu = () => {
+  activeSubMenu.value = null;
+};
+
+interface NavChild {
+  name: string
+  path?: any  
+  disabled?: boolean
+}
+
+interface NavItem {
+  external?: boolean;
+  name: string;
+  path?: string ;
+  disabled?: boolean
+  children?: NavChild[]; 
+}
 //////// Router //////////////////////////////////
 const route = useRoute()
 const router = useRouter()
 const currentRoute = computed(() => route.path)
 
-const navItems = computed(() =>[
+const navItems: ComputedRef<NavItem[]> = computed(() =>[
     { external: false, name: t('nav.home'), path: '/home' },
     { external: false, name: t('nav.models'), path: '/models' },
-    { external: false, name: t('nav.data'), path: '/data' },
+    { external: false, name: t('nav.data'), path: '/explore',
+    children : [
+        {name: t('datapage.title_explore'), path: '/explore'},
+        {
+            name: t('datapage.title_nocloud'), 
+            path: exploreData.load ? '/nocloud' : null,
+            disabled: !exploreData.load
+        },
+        {name: t('datapage.title_analysis'), path: '/analysis'}
+    ] 
+    },
     { external: false, name: t('nav.tools'), path: '/projects' },
     { external: true, name: t('nav.about'), path: 'http://opengmsteam.com/' },
     ]
@@ -103,7 +180,9 @@ const navItems = computed(() =>[
 //     const OGMS_URL = 'https://geomodeling.njnu.edu.cn/'
 //     window.open(OGMS_URL, '_blank')
 // }
-
+const showDisabledMessage = () => {
+    ElMessage.warning(t('nav.disabled_message')) // 使用国际化消息
+}
 /////// User //////////////////////////////////
 const userStore = useUserStore()
 
