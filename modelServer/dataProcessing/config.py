@@ -74,10 +74,46 @@ class DevK8SConfig(BaseConfig):
 
 class VmodConfig(BaseConfig):
     # MinIO Config
+    MINIO_PORT                                      =       9000
+    MINIO_IP                                        =       "172.31.13.21"
+    MINIO_ACCESS_KEY                                =       "OGMS"
+    MINIO_SECRET_KEY                                =       "ogms250410"
+    MINIO_SECURE                                    =       False
+    MINIO_IMAGES_BUCKET                             =       "images"
+    MINIO_TILES_BUCKET                              =       "tiles"
+    MINIO_GRID_BUCKET                               =       "tiles"
+    MINIO_SR_BUCKET                                 =       "SR"  # Super resolution
+    MINIO_TEMP_FILES_BUCKET                         =       "temp-files"
+
+    # MySQL Config
+    MYSQL_HOST                                      =       "172.31.13.21"
+    MYSQL_TILE_PORT                                 =       3306
+    MYSQL_TILE_DB                                   =       "tile"
+    MYSQL_RESOURCE_PORT                             =       3306
+    MYSQL_RESOURCE_DB                               =       "satellite"
+    MYSQL_USER                                      =       "root"
+    MYSQL_PWD                                       =       "ogms250410"
+
+    # Titiler Config
+    TITILER_BASE_URL                                =       "http://172.31.13.21:5050"
+    MOSAIC_CREATE_URL                               =       TITILER_BASE_URL + "/mosaic/create"
+
+    TEMP_OUTPUT_DIR                                 =       r"/usr/resource/temp"
+
+    # Limitation for Ray
+    RAY_MEMORY                                      =       35 * 1024**3
+    RAY_MEMORY_PER_TASK                             =       12 * 1024**3
+    RAY_OBJECT_STORE_MEMORY                         =       RAY_MEMORY * 0.3
+    RAY_NUM_CPUS                                    =       36
+    RAY_SYSTEM_RESERVED_CPU                         =       0.5
+    RAY_SYSTEM_RESERVED_MEMORY                      =       2 * 1024**3
+
+class hxfConfig(BaseConfig):
+    # MinIO Config
     MINIO_PORT                                      =       30900
-    MINIO_IP                                        =       "223.2.43.228"
-    MINIO_ACCESS_KEY                                =       "jTbgNHEqQafOpUxVg7Ol"
-    MINIO_SECRET_KEY                                =       "7UxtrqhSOyN1KUeumbqTRMv1zeluLO69OwJnCC0M"
+    MINIO_IP                                        =       "192.168.1.101"
+    MINIO_ACCESS_KEY                                =       "minioadmin"
+    MINIO_SECRET_KEY                                =       "minioadmin"
     MINIO_SECURE                                    =       False
     MINIO_IMAGES_BUCKET                             =       "test-images"
     MINIO_TILES_BUCKET                              =       "test-tiles"
@@ -85,7 +121,7 @@ class VmodConfig(BaseConfig):
     MINIO_TEMP_FILES_BUCKET                         =       "temp-files"
 
     # MySQL Config
-    MYSQL_HOST                                      =       "223.2.43.228"
+    MYSQL_HOST                                      =       "192.168.1.101"
     MYSQL_TILE_PORT                                 =       30779
     MYSQL_TILE_DB                                   =       "tile"
     MYSQL_RESOURCE_PORT                             =       30778
@@ -94,13 +130,13 @@ class VmodConfig(BaseConfig):
     MYSQL_PWD                                       =       "123456"
 
     # Titiler Config
-    TITILER_BASE_URL                                =       "http://223.2.43.228:31800"
+    TITILER_BASE_URL                                =       "http://127.0.0.1:8000"
     MOSAIC_CREATE_URL                               =       TITILER_BASE_URL + "/mosaic/create"
 
     TEMP_OUTPUT_DIR                                 =       r"/usr/resource/temp"
 
     # Limitation for Ray
-    RAY_MEMORY                                      =       40 * 1024**3
+    RAY_MEMORY                                      =       10 * 1024**3
     RAY_MEMORY_PER_TASK                             =       5 * 1024**3
     RAY_OBJECT_STORE_MEMORY                         =       RAY_MEMORY * 0.3
     RAY_NUM_CPUS                                    =       8
@@ -112,7 +148,8 @@ class VmodConfig(BaseConfig):
 # 配置映射字典 - 类似Spring Boot的profile机制
 config = {
     'k8s': DevK8SConfig,
-    'vmod':VmodConfig
+    'vmod':VmodConfig,
+    'hxf':hxfConfig
 }
 
 def get_config(profile=None):
@@ -124,13 +161,14 @@ def get_config(profile=None):
     default_config = config.get('k8s', {})
     return config.get(profile, default_config)
 
-# 获取当前环境配置 - 类似Spring Boot的 spring.profiles.active
-CURRENT_PROFILE = os.getenv('APP_PROFILE', 'k8s')  # 默认使用k8s
-
 # 获取配置类
 def get_current_config():
     """获取当前环境的配置类"""
     return get_config(CURRENT_PROFILE)
+
+
+# 获取当前环境配置 - 类似Spring Boot的 spring.profiles.active
+CURRENT_PROFILE = os.getenv('APP_PROFILE', 'hxf')  # 默认使用k8s
 
 # 创建全局配置实例 - 这是关键
 CUR_CONFIG_CLASS = get_current_config()

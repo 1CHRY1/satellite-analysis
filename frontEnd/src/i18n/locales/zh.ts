@@ -1,6 +1,6 @@
 export default{
     nav: {
-        title: "遥感ARD平台",
+        title: "多元遥感应用支撑云平台",
         home: "首页",
         models: "模型中心",
         data: "数据中心",
@@ -12,6 +12,7 @@ export default{
             signup: "注册",
             logout:"退出登录"
         },
+        disabled_message:"该功能当前不可用,请先完成交互探索"
     },
 
     homepage: {
@@ -455,7 +456,7 @@ export default{
             button:"获取格网",
         },
 
-        section2:{
+        section_time:{
             sectiontitle:"按时间筛选",
             subtitle1:"时间范围",
             intext_date:"'开始日期', '结束日期'",
@@ -468,7 +469,7 @@ export default{
             
         },
 
-        section3:{
+        section_interactive:{
             sectiontitle:"交互探索",
             clear:"清空影像图层",
             subtitle:"分辨率影像集",
@@ -504,11 +505,11 @@ export default{
         scene_choose:"选择传感器：",
 
         message:{
+            ordererror:"请完成影像筛选后再计算无云一版图",
             filtererror_choose:"请先选择行政区并获取格网",
             filtererror_grid:"请先获取格网",
             sceneerror_recondition:"未筛选出符合要求的影像，请重新设置条件",
-            sceneerror_searched:"已检索到",
-            sceneerror_filter:"景影像，请进一步筛选您所需的影像",
+            scene_searched:"已检索到{count}景影像，请进一步筛选您所需的影像",
             imagery_error:"请选择有效影像",
             load:"正在加载影像...",
             typyerror_condition:"请设置筛选条件",
@@ -576,6 +577,8 @@ export default{
         section5:{
             subtitle:"重构信息",
         },
+
+        choose: "选择优先使用的传感器",
 
         message:{
             load:"正在加载无云一版图，请稍后...",

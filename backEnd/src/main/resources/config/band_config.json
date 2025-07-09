@@ -1,0 +1,143 @@
+{
+    "Landset8": {
+        "Red": "4",
+        "Green": "3",
+        "Blue": "2",
+        "NIR": "5"
+    },
+	"GF-1_PMS": {
+        "Red": "3",
+        "Green": "2",
+        "Blue": "1",
+        "NIR": "4"
+    },
+    "GF-2_PMS": {
+        "Red": "3",
+        "Green": "2",
+        "Blue": "1",
+        "NIR": "4"
+    },
+	"Landsat8_OLI": {
+        "Red": "4",
+        "Green": "3",
+        "Blue": "2",
+        "NIR": "5"
+    },
+	"Sentinel-2B_MSI": {
+        "Red": "4",
+        "Green": "3",
+        "Blue": "2",
+        "NIR": "8"
+    },
+	"MODIS_MOD02": {
+        "Red": "1",
+        "Green": "4",
+        "Blue": "3",
+        "NIR": "2"
+    },
+	"LT-1_SAR": {
+        "Red": "1",
+        "Green": "1",
+        "Blue": "1",
+        "NIR": "1"
+    },
+	"Sentinel-1A_SAR": {
+        "Red": "1",
+        "Green": "1",
+        "Blue": "1",
+        "NIR": "1"
+    },
+	
+	
+	
+	"GF-7_3D_Display": {
+		"Red": "3",
+        "Green": "2",
+        "Blue": "1",
+        "NIR": "4"
+	},
+	"BJ3": {
+		"Red": "3",
+        "Green": "2",
+        "Blue": "1",
+        "NIR": "4"
+	},
+	"Sentinel-1_SAR": {
+        "Red": "1",
+        "Green": "1",
+        "Blue": "1",
+        "NIR": "1"
+    },
+	"GF-7_PMS": {
+        "Red": "3",
+        "Green": "2",
+        "Blue": "1",
+        "NIR": "4"
+    },
+	"SVR_LT-1_SAR": {
+        "Red": "1",
+        "Green": "1",
+        "Blue": "1",
+        "NIR": "1"
+    },
+    "Sentinel-2_MSI": {
+        "Red": "4",
+        "Green": "3",
+        "Blue": "2",
+        "NIR": "8"
+    },
+	"DSM": {
+		"Red": "1",
+        "Green": "1",
+        "Blue": "1",
+        "NIR": "1"
+	},
+	"ZY1_AHSI": {
+		"Red": "32",
+        "Green": "19",
+        "Blue": "11",
+        "NIR": "55"
+	},
+	"NDVI_LANDSAT_OLI": {
+		"Red": "1",
+        "Green": "1",
+        "Blue": "1",
+        "NIR": "1"
+	},
+	"NDVI_MODIS_MOD02": {
+		"Red": "1",
+        "Green": "1",
+        "Blue": "1",
+        "NIR": "1"
+	},
+	"ZY3_3D_Display": {
+		"Red": "3",
+        "Green": "2",
+        "Blue": "1",
+        "NIR": "4"
+	},
+	"GF-6_PMS": {
+		"Red": "3",
+        "Green": "2",
+        "Blue": "1",
+        "NIR": "4"
+	},
+	"SVN3": {
+		"Red": "3",
+        "Green": "2",
+        "Blue": "1",
+        "NIR": "4"
+	},
+	"ORTHO_LT-1_SAR": {
+		"Red": "1",
+        "Green": "1",
+        "Blue": "1",
+        "NIR": "1"
+	},
+	"Sentinel-2_SR": {
+		"Red": "3",
+        "Green": "2",
+        "Blue": "1",
+        "NIR": "1"
+	}
+}

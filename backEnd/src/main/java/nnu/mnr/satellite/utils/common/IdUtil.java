@@ -15,6 +15,7 @@ public class IdUtil {
 
     private static final int PRO_NUM = 17;
     private static final int USR_NUM = 17;
+    private static final int TOL_NUM = 17;
 
     public static String generateProjectId() {
         StringBuilder sb = new StringBuilder("PRJ");
@@ -30,6 +31,16 @@ public class IdUtil {
         StringBuilder sb = new StringBuilder("USR");
         Random random = new Random();
         for (int i = 0; i < USR_NUM; i++) {
+            int index = random.nextInt(CHARACTERS.length());
+            sb.append(CHARACTERS.charAt(index));
+        }
+        return sb.toString();
+    }
+
+    public static String generateToolId() {
+        StringBuilder sb = new StringBuilder("Tol");
+        Random random = new Random();
+        for (int i = 0; i < TOL_NUM; i++) {
             int index = random.nextInt(CHARACTERS.length());
             sb.append(CHARACTERS.charAt(index));
         }

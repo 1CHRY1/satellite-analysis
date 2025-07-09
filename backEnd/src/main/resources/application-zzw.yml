@@ -90,6 +90,17 @@ docker:
   serverDir: /workspace/
   workDir: /workspace/
 
+# # 简化Docker配置 - 全部使用本地路径
+# docker:
+#   defaultServer:
+#     port: 2375
+#     host: "223.2.35.153"
+#     username: "root"
+#     password: "dky.njnu.edu.cn"
+#   localPath: D:/satellite/modelDockerVolume/
+#   serverDir: /home/satellite/
+#   workDir: /usr/local/coding/
+
 # 添加默认的模型服务器配置
 modelServer:
   address: http://localhost:5002/
@@ -137,3 +148,4 @@ ray:
       enabled: true                 # 是否启用Ray Dashboard访问
       port: 8265                    # Ray Dashboard端口
       hostPort: 8265                # 宿主机映射端口
+

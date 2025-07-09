@@ -101,7 +101,7 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
 
-const treeData = [
+const treeData = computed(()=> [
     {
         label: t("modelpage.treedata.label_appli"),
         children: [
@@ -156,7 +156,7 @@ const treeData = [
             },
         ],
     },
-];
+]);
 
 const defaultProps = {
     children: 'children',

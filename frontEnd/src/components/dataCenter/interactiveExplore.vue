@@ -1,380 +1,386 @@
 <template>
-    <div class="custom-panel px-2">
-        <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]">
-            <div class="main-container">
-                <section class="panel-section">
-                    <div class="section-header">
-                        <div class="section-icon">
-                            <MapPinIcon :size="18" />
-                        </div>
-                        <h2 class="section-title">{{ t('datapage.explore.section1.sectiontitle') }}</h2>
-                    </div>
-                    <div class="section-content">
-                        <div class="config-container">
-                            <div class="config-item w-full">
-                                <div class="config-label relative">
-                                    <MapIcon :size="16" class="config-icon" />
-                                    <!-- 研究区 -->
-                                    <span>{{t('datapage.explore.section1.subtitle1')}}</span>
+    <div class="relative flex flex-1 flex-row bg-black">
+        <div class="w-[28vw] p-4 text-gray-200 mb-0 gap-0">
+            <div class="custom-panel px-2 mb-0 ">
+                <dv-border-box12 class="!h-full">
+                    <div class="main-container " >
+                        <section class="panel-section">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <MapPinIcon :size="18" />
                                 </div>
-                                <!-- <div class="config-control justify-center">
-                                    <RegionSelects v-model="region" :placeholder="['选择省份', '选择城市', '选择区县']"
-                                        class="flex gap-2"
-                                        select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
-                                </div> -->
-                                <div class="flex border-b border-[#2c3e50] mb-4">
-                                    <button v-for="tab in tabs" :key="tab.value" @click="activeTab = tab.value" :class="[
-                                        'flex-1 text-center px-4 py-2 text-sm font-medium ',
-                                        activeTab === tab.value
-                                            ? 'border-b-2 border-[#38bdf8] text-[#38bdf8]'
-                                            : 'text-gray-400 hover:text-[#38bdf8]'
-                                    ]">
-                                        {{ tab.label }}
+                                <h2 class="section-title">{{ t('datapage.explore.section1.sectiontitle') }}</h2>
+                            </div>
+                            <div class="section-content">
+                                <div class="config-container">
+                                    <div class="config-item w-full">
+                                        <div class="config-label relative">
+                                            <MapIcon :size="16" class="config-icon" />
+                                            <!-- 研究区 -->
+                                            <span>{{t('datapage.explore.section1.subtitle1')}}</span>
+                                        </div>
+                                        <!-- <div class="config-control justify-center">
+                                            <RegionSelects v-model="region" :placeholder="['选择省份', '选择城市', '选择区县']"
+                                                class="flex gap-2"
+                                                select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
+                                        </div> -->
+                                        <div class="flex border-b border-[#2c3e50] mb-4">
+                                            <button v-for="tab in tabs" :key="tab.value" @click="activeTab = tab.value" :class="[
+                                                'flex-1 text-center px-4 py-2 text-sm font-medium ',
+                                                activeTab === tab.value
+                                                    ? 'border-b-2 border-[#38bdf8] text-[#38bdf8]'
+                                                    : 'text-gray-400 hover:text-[#38bdf8]'
+                                            ]">
+                                                {{ tab.label }}
+                                            </button>
+                                        </div>
+                                        <div v-if="activeTab === 'region'" class="config-control justify-center">
+                                            <RegionSelects v-model="region" :placeholder="[t('datapage.explore.section1.intext_choose')]"
+                                                class="flex gap-2"
+                                                select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
+                                        </div>
+                                        <div v-else-if="activeTab === 'poi'" class="config-control justify-center w-full">
+                                            <el-select v-model="selectedPOI" filterable remote reserve-keyword value-key="id"
+                                                :placeholder="t('datapage.explore.section1.intext_POI')" :remote-method="fetchPOIOptions"
+                                                class="!w-[90%] bg-[#0d1526] text-white" popper-class="bg-[#0d1526] text-white">
+                                                <el-option v-for="item in poiOptions" :key="item.id"
+                                                    :label="item.name + '(' + item.pname + item.cityname + item.adname + item.address + ')'"
+                                                    :value="item" />
+                                            </el-select>
+                                        </div>
+                                    </div>
+                                    <div class="config-item">
+                                        <div class="config-label relative">
+                                            <BoltIcon :size="16" class="config-icon" />
+                                            <!-- 格网分辨率 -->
+                                            <span>{{t('datapage.explore.section1.subtitle2')}}</span>
+                                        </div>
+                                        <div class="config-control flex-col !items-start">
+                                            <div>
+                                                {{ t('datapage.explore.section1.resolution') }}
+                                                <select v-model="selectedRadius"
+                                                    class="w-40 appearance-none rounded-lg border border-[#2c3e50] bg-[#0d1526] px-4 py-2 pr-8 text-white transition-all duration-200 hover:border-[#206d93] focus:border-[#3b82f6] focus:outline-none">
+                                                    <option v-for="option in radiusOptions" :key="option" :value="option"
+                                                        class="bg-[#0d1526] text-white">
+                                                        {{ option }}km
+                                                    </option>
+                                                </select>
+                                            </div>
+                                            <div class="flex flex-row">
+                                                <div class="text-red-500">*</div>
+                                                {{ t('datapage.explore.section1.advice') }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button @click="getAllGrid"
+                                        class="cursor-pointer rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95">
+                                        {{ t('datapage.explore.section1.button') }}
                                     </button>
                                 </div>
-                                <div v-if="activeTab === 'region'" class="config-control justify-center">
-                                    <RegionSelects v-model="region" :placeholder="[t('datapage.explore.section1.intext_choose')]"
-                                        class="flex gap-2"
-                                        select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
-                                </div>
-                                <div v-else-if="activeTab === 'poi'" class="config-control justify-center w-full">
-                                    <el-select v-model="selectedPOI" filterable remote reserve-keyword value-key="id"
-                                        :placeholder="t('datapage.explore.section1.intext_POI')" :remote-method="fetchPOIOptions"
-                                        class="!w-[90%] bg-[#0d1526] text-white" popper-class="bg-[#0d1526] text-white">
-                                        <el-option v-for="item in poiOptions" :key="item.id"
-                                            :label="item.name + '(' + item.pname + item.cityname + item.adname + item.address + ')'"
-                                            :value="item" />
-                                    </el-select>
-                                </div>
                             </div>
-                            <div class="config-item">
-                                <div class="config-label relative">
-                                    <BoltIcon :size="16" class="config-icon" />
-                                    <!-- 格网分辨率 -->
-                                    <span>{{t('datapage.explore.section1.subtitle2')}}</span>
+                        </section>
+                        <section class="panel-section">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <Clock :size="18" />
                                 </div>
-                                <div class="config-control flex-col !items-start">
-                                    <div>
-                                        {{ t('datapage.explore.section1.resolution') }}
-                                        <select v-model="selectedRadius"
-                                            class="w-40 appearance-none rounded-lg border border-[#2c3e50] bg-[#0d1526] px-4 py-2 pr-8 text-white transition-all duration-200 hover:border-[#206d93] focus:border-[#3b82f6] focus:outline-none">
-                                            <option v-for="option in radiusOptions" :key="option" :value="option"
-                                                class="bg-[#0d1526] text-white">
-                                                {{ option }}km
-                                            </option>
-                                        </select>
-                                    </div>
-                                    <div class="flex flex-row">
-                                        <div class="text-red-500">*</div>
-                                        {{ t('datapage.explore.section1.advice') }}
-                                    </div>
-                                </div>
+                                <h2 class="section-title">{{ t('datapage.explore.section_time.sectiontitle') }}</h2>
                             </div>
-                            <button @click="getAllGrid"
-                                class="cursor-pointer rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95">
-                                {{ t('datapage.explore.section1.button') }}
-                            </button>
-                        </div>
-                    </div>
-                </section>
-                <section class="panel-section">
-                    <div class="section-header">
-                        <div class="section-icon">
-                            <Clock :size="18" />
-                        </div>
-                        <h2 class="section-title">{{ t('datapage.explore.section2.sectiontitle') }}</h2>
-                    </div>
-                    <div class="section-content">
-                        <div class="config-container">
-                            <div class="config-item">
-                                <div class="config-label relative">
-                                    <CalendarIcon :size="16" class="config-icon" />
-                                    <span>{{ t('datapage.explore.section2.subtitle1') }}</span>
-                                </div>
-                                <!-- <div class="config-control">
-                                    <a-range-picker class="custom-date-picker" v-model:value="tileMergeConfig.dateRange"
-                                        format='YYYY/MM/DD' :allow-clear="false" :placeholder="['开始日期', '结束日期']" />
-                                </div> -->
-                                <div class="config-control">
-                                    <a-range-picker class="custom-date-picker" v-model:value="tileMergeConfig.dateRange"
-                                        :allow-clear="false" :placeholder="t('datapage.explore.section2.intext_data')" />
-                                </div>
-                            </div>
-                            <!-- <div class="config-item">
-                                <div class="config-label relative">
-                                    <CloudIcon :size="16" class="config-icon" />
-                                    <span>最大云量限度</span>
-                                    <a-checkbox v-model:checked="tileMergeConfig.useMinCloud"
-                                        class="absolute right-1 !text-sky-300">
-                                        云量最小优先
-                                    </a-checkbox>
-                                </div>
-                                <div class="config-control">
-                                    <div class="cloud-slider-container">
-                                        <span class="cloud-value">{{ tileMergeConfig.cloudRange[0] }}%</span>
-                                        <div class="slider-wrapper">
-                                            <a-slider class="custom-slider" range
-                                                v-model:value="tileMergeConfig.cloudRange"
-                                                :tipFormatter="(value: number) => value + '%'" />
+                            <div class="section-content">
+                                <div class="config-container">
+                                    <div class="config-item">
+                                        <div class="config-label relative">
+                                            <CalendarIcon :size="16" class="config-icon" />
+                                            <span>{{ t('datapage.explore.section_time.subtitle1') }}</span>
                                         </div>
-                                        <span class="cloud-value">{{ tileMergeConfig.cloudRange[1] }}%</span>
+                                        <!-- <div class="config-control">
+                                            <a-range-picker class="custom-date-picker" v-model:value="tileMergeConfig.dateRange"
+                                                format='YYYY/MM/DD' :allow-clear="false" :placeholder="['开始日期', '结束日期']" />
+                                        </div> -->
+                                        <div class="config-control">
+                                            <a-range-picker class="custom-date-picker" v-model:value="tileMergeConfig.dateRange"
+                                                :allow-clear="false" :placeholder="t('datapage.explore.section_time.intext_date')" />
+                                        </div>
                                     </div>
-                                </div>
-                            </div> -->
-                            <button @click="filterByCloudAndDate" :disabled="filterByCloudAndDateLoading"
-                                class="flex justify-center rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
-                                :class="{
-                                    'cursor-not-allowed': filterByCloudAndDateLoading,
-                                    'cursor-pointer': !filterByCloudAndDateLoading,
-                                }">
-                                <span>{{ t('datapage.explore.section2.button') }} </span>
-                                <Loader v-if="filterByCloudAndDateLoading" class="ml-2" />
-                            </button>
-                            <div class="config-item">
-                                <div class="config-label relative">
-                                    <BoltIcon :size="16" class="config-icon" />
-                                    <span>{{ t('datapage.explore.section2.subtitle2') }}</span>
-                                </div>
-                                <div class="config-control flex-col gap-4">
-                                    <div class="result-info-container">
-                                        <div class="result-info-item">
-                                            <div class="result-info-icon">
-                                                <MapIcon :size="16" />
-                                            </div>
-                                            <div class="result-info-content">
-                                                <div class="result-info-label">{{ t('datapage.explore.section2.resolution') }}</div>
-                                                <div class="result-info-value">
-                                                    {{ selectedRadius }}km
+                                    <!-- <div class="config-item">
+                                        <div class="config-label relative">
+                                            <CloudIcon :size="16" class="config-icon" />
+                                            <span>最大云量限度</span>
+                                            <a-checkbox v-model:checked="tileMergeConfig.useMinCloud"
+                                                class="absolute right-1 !text-sky-300">
+                                                云量最小优先
+                                            </a-checkbox>
+                                        </div>
+                                        <div class="config-control">
+                                            <div class="cloud-slider-container">
+                                                <span class="cloud-value">{{ tileMergeConfig.cloudRange[0] }}%</span>
+                                                <div class="slider-wrapper">
+                                                    <a-slider class="custom-slider" range
+                                                        v-model:value="tileMergeConfig.cloudRange"
+                                                        :tipFormatter="(value: number) => value + '%'" />
                                                 </div>
+                                                <span class="cloud-value">{{ tileMergeConfig.cloudRange[1] }}%</span>
                                             </div>
                                         </div>
-                                        <div class="result-info-item">
-                                            <div class="result-info-icon">
-                                                <CalendarIcon :size="16" />
-                                            </div>
-                                            <div class="result-info-content">
-                                                <div class="result-info-label">{{ t('datapage.explore.section2.time') }}</div>
-                                                <div class="result-info-value date-range">
-                                                    <div class="date-item">
-                                                        {{
-                                                            formatTime(
-                                                                tileMergeConfig.dateRange[0],
-                                                                'day',
-                                                            )
-                                                        }}~
-                                                        {{
-                                                            formatTime(
-                                                                tileMergeConfig.dateRange[1],
-                                                                'day',
-                                                            )
-                                                        }}
+                                    </div> -->
+                                    <button @click="filterByCloudAndDate" :disabled="filterByCloudAndDateLoading"
+                                        class="flex justify-center rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
+                                        :class="{
+                                            'cursor-not-allowed': filterByCloudAndDateLoading,
+                                            'cursor-pointer': !filterByCloudAndDateLoading,
+                                        }">
+                                        <span>{{ t('datapage.explore.section_time.button') }} </span>
+                                        <Loader v-if="filterByCloudAndDateLoading" class="ml-2" />
+                                    </button>
+                                    <div class="config-item">
+                                        <div class="config-label relative">
+                                            <BoltIcon :size="16" class="config-icon" />
+                                            <span>{{ t('datapage.explore.section_time.subtitle2') }}</span>
+                                        </div>
+                                        <div class="config-control flex-col gap-4">
+                                            <div class="result-info-container">
+                                                <div class="result-info-item">
+                                                    <div class="result-info-icon">
+                                                        <MapIcon :size="16" />
+                                                    </div>
+                                                    <div class="result-info-content">
+                                                        <div class="result-info-label">{{ t('datapage.explore.section_time.resolution') }}</div>
+                                                        <div class="result-info-value">
+                                                            {{ selectedRadius }}km
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="result-info-item">
+                                                    <div class="result-info-icon">
+                                                        <CalendarIcon :size="16" />
+                                                    </div>
+                                                    <div class="result-info-content">
+                                                        <div class="result-info-label">{{ t('datapage.explore.section_time.time') }}</div>
+                                                        <div class="result-info-value date-range">
+                                                            <div class="date-item">
+                                                                {{
+                                                                    formatTime(
+                                                                        tileMergeConfig.dateRange[0],
+                                                                        'day',
+                                                                    )
+                                                                }}~
+                                                                {{
+                                                                    formatTime(
+                                                                        tileMergeConfig.dateRange[1],
+                                                                        'day',
+                                                                    )
+                                                                }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="result-info-item">
+                                                    <div class="result-info-icon">
+                                                        <CloudIcon :size="16" />
+                                                    </div>
+                                                    <div class="result-info-content">
+                                                        <div class="result-info-label">{{ t('datapage.explore.section_time.search') }}</div>
+                                                        <div class="result-info-value">
+                                                            {{ allScenes.length }}{{ t('datapage.explore.scene') }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="result-info-item">
+                                                    <div class="result-info-icon">
+                                                        <CloudIcon :size="16" />
+                                                    </div>
+                                                    <div class="result-info-content">
+                                                        <div class="result-info-label">{{ t('datapage.explore.percent') }}</div>
+                                                        <div class="result-info-value">
+                                                            {{
+                                                                coverageRate != 'NaN%'
+                                                                    ? coverageRate
+                                                                    : '待计算'
+                                                            }}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="result-info-item">
-                                            <div class="result-info-icon">
-                                                <CloudIcon :size="16" />
-                                            </div>
-                                            <div class="result-info-content">
-                                                <div class="result-info-label">{{ t('datapage.explore.section2.search') }}</div>
-                                                <div class="result-info-value">
-                                                    {{ allScenes.length }}{{ t('datapage.explore.scene') }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="result-info-item">
-                                            <div class="result-info-icon">
-                                                <CloudIcon :size="16" />
-                                            </div>
-                                            <div class="result-info-content">
-                                                <div class="result-info-label">{{ t('datapage.explore.percent') }}</div>
-                                                <div class="result-info-value">
-                                                    {{
-                                                        coverageRate != 'NaN%'
-                                                            ? coverageRate
-                                                            : '待计算'
-                                                    }}
-                                                </div>
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </section>
-                <section class="panel-section">
-                    <div class="section-header">
-                        <div class="section-icon">
-                            <DatabaseIcon :size="18" />
-                        </div>
-                        <h2 class="section-title">{{ t('datapage.explore.section3.sectiontitle') }}</h2>
-                        <div class="section-icon absolute right-0 cursor-pointer" @click="clearAllShowingSensor">
-                            <a-tooltip>
-                                <template #title>{{ t('datapage.explore.section3.clear') }}</template>
-                                <Trash2Icon :size="18" />
-                            </a-tooltip>
-                        </div>
-                    </div>
-                    <div class="section-content">
-                        <div class="config-container">
-                            <div class="config-item" v-for="([label, value], index) in resolutionType" :key="value">
-                                <div class="config-label relative">
-                                    <BoltIcon :size="16" class="config-icon" />
-                                    <span>{{ label }}{{ t('datapage.explore.section3.subtitle') }}</span><span v-if="label === '亚米'">{{ t('datapage.explore.section3.subtitle1') }}</span>
+                        </section>
+                        <section class="panel-section">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <DatabaseIcon :size="18" />
                                 </div>
-                                <div class="config-control flex w-full flex-col gap-4">
-                                    <div class="result-info-container w-full">
-                                        <div class="result-info-item">
-                                            <div class="result-info-icon">
-                                                <CloudIcon :size="16" />
-                                            </div>
-                                            <div class="result-info-content">
-                                                <div class="result-info-label">{{ t('datapage.explore.include') }}</div>
-                                                <div class="result-info-value">
-                                                    {{ getSceneCountByResolution(value) }}{{ t('datapage.explore.scene') }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="result-info-item">
-                                            <div class="result-info-icon">
-                                                <CloudIcon :size="16" />
-                                            </div>
-                                            <div class="result-info-content">
-                                                <div class="result-info-label">{{ t('datapage.explore.percent') }}</div>
-                                                <div v-if="!(allScenes.length > 0)" class="result-info-value">
-                                                    {{ t('datapage.explore.section3.intext1') }}
-                                                </div>
-                                                <div v-else class="result-info-value">
-                                                    {{
-                                                        (
-                                                            (allSensorsItems[label] * 100) /
-                                                            allGridCount
-                                                        ).toFixed(2) + '%'
-                                                    }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div v-if="Object.keys(classifiedScenes).length > 0" class="!w-full">
-                                        <label class="mr-2 text-white">{{ t('datapage.explore.section3.scene') }}</label>
-                                        <select
-                                            class="max-h-[600px] w-[calc(100%-113px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
-                                            v-model="resolutionPlatformSensor[label]">
-                                            <option disabled selected value="">{{ t('datapage.explore.section3.choose') }}</option>
-                                            <!-- <option :value="'all'" class="truncate">全选</option> -->
-                                            <option v-for="platformName in classifiedScenes[
-                                                value + 'm'
-                                            ]" :value="platformName" :key="platformName" class="truncate">
-                                                {{ platformName }}
-                                            </option>
-                                        </select>
-                                        <div class="flex flex-row items-center">
-                                            <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
-                                                @click="handleShowResolutionSensorImage(label)"
-                                                :disabled="!resolutionPlatformSensor[label]">
-                                                 {{ t('datapage.explore.section3.button') }}
-                                            </a-button>
-                                            <a-tooltip>
-                                                <template #title>{{ t('datapage.explore.section3.clear') }}</template>
-                                                <Trash2Icon :size="18" class="mt-4! ml-4! cursor-pointer"
-                                                    @click="clearAllShowingSensor" />
-                                            </a-tooltip>
-                                        </div>
-                                    </div>
+                                <h2 class="section-title">{{ t('datapage.explore.section_interactive.sectiontitle') }}</h2>
+                                <div class="section-icon absolute right-0 cursor-pointer" @click="clearAllShowingSensor">
+                                    <a-tooltip>
+                                        <template #title>{{ t('datapage.explore.section_interactive.clear') }}</template>
+                                        <Trash2Icon :size="18" />
+                                    </a-tooltip>
                                 </div>
                             </div>
-                            <!-- 检索后的统计信息 -->
-                            <!-- <div class="config-item">
-                                <div class="config-label relative">
-                                    <BoltIcon :size="16" class="config-icon" />
-                                    <span>统计信息</span>
-                                </div>
-                                <div class="config-control flex-col gap-4">
-                                    <div v-for="(sensorItem, index) in filteredSensorsItems" class="config-item w-full">
-                                        <div>传感器名称及分辨率：{{ sensorItem.key }}</div>
-                                        <div>类型：{{ imageType(sensorItem.tags) }}</div>
-                                        <div class="result-info-container">
-                                            <div class="result-info-item">
-                                                <div class="result-info-icon">
-                                                    <CloudIcon :size="16" />
-                                                </div>
-                                                <div class="result-info-content">
-                                                    <div class="result-info-label">包含</div>
-                                                    <div class="result-info-value">
-                                                        {{ sensorItem.sceneCount }}景影像
+                            <div class="section-content">
+                                <div class="config-container">
+                                    <div class="config-item" v-for="([label, value], index) in resolutionType" :key="value">
+                                        <div class="config-label relative">
+                                            <BoltIcon :size="16" class="config-icon" />
+                                            <span>{{ label }}{{ t('datapage.explore.section_interactive.subtitle') }}</span><span v-if="label === '亚米'">{{ t('datapage.explore.section_interactive.subtitle1') }}</span>
+                                        </div>
+                                        <div class="config-control flex w-full flex-col gap-4 h-full">
+                                            <div class="result-info-container w-full h-full">
+                                                <div class="result-info-item">
+                                                    <div class="result-info-icon">
+                                                        <CloudIcon :size="16" />
+                                                    </div>
+                                                    <div class="result-info-content">
+                                                        <div class="result-info-label">{{ t('datapage.explore.include') }}</div>
+                                                        <div class="result-info-value">
+                                                            {{ getSceneCountByResolution(value) }}{{ t('datapage.explore.scene') }}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div class="result-info-item">
-                                                <div class="result-info-icon">
-                                                    <CloudIcon :size="16" />
-                                                </div>
-                                                <div class="result-info-content">
-                                                    <div class="result-info-label">影像覆盖率</div>
-                                                    <div class="result-info-value">
-                                                        {{
-                                                            sensorItem.coveredCount != 'NaN%'
-                                                                ? (
-                                                                    (sensorItem.coveredCount *
-                                                                        100) /
+                                                <div class="result-info-item">
+                                                    <div class="result-info-icon">
+                                                        <CloudIcon :size="16" />
+                                                    </div>
+                                                    <div class="result-info-content">
+                                                        <div class="result-info-label">{{ t('datapage.explore.percent') }}</div>
+                                                        <div v-if="!(allScenes.length > 0)" class="result-info-value">
+                                                            {{ t('datapage.explore.section_interactive.intext1') }}
+                                                        </div>
+                                                        <div v-else class="result-info-value">
+                                                            {{
+                                                                (
+                                                                    (allSensorsItems[label] * 100) /
                                                                     allGridCount
                                                                 ).toFixed(2) + '%'
-                                                                : '待计算'
-                                                        }}
+                                                            }}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div>
-                                            <label class="mr-2 text-white">选择影像：</label>
-                                            <select @change="
-                                                (e) =>
-                                                    showImageBySensorAndSelect(
-                                                        sensorItem,
-                                                        (e.target as HTMLSelectElement).value,
-                                                    )
-                                            "
-                                                class="max-h-[600px] max-w-[calc(100%-90px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none">
-                                                <option disabled selected value="">
-                                                    请选择影像
-                                                </option>
-                                                <option v-for="sceneName in sensorItem.sceneNames" :key="sceneName"
-                                                    :value="sceneName" class="truncate">
-                                                    {{ sceneName }}
-                                                </option>
-                                            </select>
-                                        </div>
-                                        <div v-show="sensorItem.selectedSceneInfo" class="mt-4">
-                                            <div class="mr-1 grid grid-cols-[1fr_2fr]">
-                                                <span class="text-white">亮度拉伸:</span>
-                                                <a-slider :tip-formatter="scaleRateFormatter"
-                                                    v-model:value="sensorItem.scaleRate"
-                                                    @afterChange="onAfterScaleRateChange" />
-                                            </div>
-                                            <div>
-                                        
-                                                <a-button class="custom-button w-full!" :loading="sensorItem.loading"
-                                                    @click="handleShowImage(sensorItem)">
-                                                    影像可视化
-                                                </a-button>
+                                            <div v-if="Object.keys(classifiedScenes).length > 0" class="!w-full">
+                                                <label class="mr-2 text-white">{{ t('datapage.explore.section_interactive.scene') }}</label>
+                                                <select
+                                                    class="max-h-[600px] w-[calc(100%-113px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
+                                                    v-model="resolutionPlatformSensor[label]">
+                                                    <option disabled selected value="">{{ t('datapage.explore.section_interactive.choose') }}</option>
+                                                    <!-- <option :value="'all'" class="truncate">全选</option> -->
+                                                    <option v-for="platformName in classifiedScenes[
+                                                        value + 'm'
+                                                    ]" :value="platformName" :key="platformName" class="truncate">
+                                                        {{ platformName }}
+                                                    </option>
+                                                </select>
+                                                <div class="flex flex-row items-center">
+                                                    <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
+                                                        @click="handleShowResolutionSensorImage(label)"
+                                                        :disabled="!resolutionPlatformSensor[label]">
+                                                        {{ t('datapage.explore.section_interactive.button') }}
+                                                    </a-button>
+                                                    <a-tooltip>
+                                                        <template #title>{{ t('datapage.explore.section_interactive.clear') }}</template>
+                                                        <Trash2Icon :size="18" class="mt-4! ml-4! cursor-pointer"
+                                                            @click="clearAllShowingSensor" />
+                                                    </a-tooltip>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                             
+                                    <!-- 检索后的统计信息 -->
+                                    <!-- <div class="config-item">
+                                        <div class="config-label relative">
+                                            <BoltIcon :size="16" class="config-icon" />
+                                            <span>统计信息</span>
+                                        </div>
+                                        <div class="config-control flex-col gap-4">
+                                            <div v-for="(sensorItem, index) in filteredSensorsItems" class="config-item w-full">
+                                                <div>传感器名称及分辨率：{{ sensorItem.key }}</div>
+                                                <div>类型：{{ imageType(sensorItem.tags) }}</div>
+                                                <div class="result-info-container">
+                                                    <div class="result-info-item">
+                                                        <div class="result-info-icon">
+                                                            <CloudIcon :size="16" />
+                                                        </div>
+                                                        <div class="result-info-content">
+                                                            <div class="result-info-label">包含</div>
+                                                            <div class="result-info-value">
+                                                                {{ sensorItem.sceneCount }}景影像
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="result-info-item">
+                                                        <div class="result-info-icon">
+                                                            <CloudIcon :size="16" />
+                                                        </div>
+                                                        <div class="result-info-content">
+                                                            <div class="result-info-label">影像覆盖率</div>
+                                                            <div class="result-info-value">
+                                                                {{
+                                                                    sensorItem.coveredCount != 'NaN%'
+                                                                        ? (
+                                                                            (sensorItem.coveredCount *
+                                                                                100) /
+                                                                            allGridCount
+                                                                        ).toFixed(2) + '%'
+                                                                        : '待计算'
+                                                                }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label class="mr-2 text-white">选择影像：</label>
+                                                    <select @change="
+                                                        (e) =>
+                                                            showImageBySensorAndSelect(
+                                                                sensorItem,
+                                                                (e.target as HTMLSelectElement).value,
+                                                            )
+                                                    "
+                                                        class="max-h-[600px] max-w-[calc(100%-90px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none">
+                                                        <option disabled selected value="">
+                                                            请选择影像
+                                                        </option>
+                                                        <option v-for="sceneName in sensorItem.sceneNames" :key="sceneName"
+                                                            :value="sceneName" class="truncate">
+                                                            {{ sceneName }}
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                                <div v-show="sensorItem.selectedSceneInfo" class="mt-4">
+                                                    <div class="mr-1 grid grid-cols-[1fr_2fr]">
+                                                        <span class="text-white">亮度拉伸:</span>
+                                                        <a-slider :tip-formatter="scaleRateFormatter"
+                                                            v-model:value="sensorItem.scaleRate"
+                                                            @afterChange="onAfterScaleRateChange" />
+                                                    </div>
+                                                    <div>
+                                                
+                                                        <a-button class="custom-button w-full!" :loading="sensorItem.loading"
+                                                            @click="handleShowImage(sensorItem)">
+                                                            影像可视化
+                                                        </a-button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                    
+                                        </div>
+                                    </div> -->
                                 </div>
-                            </div> -->
-                        </div>
+                            </div>
+                        </section>
                     </div>
-                </section>
+                </dv-border-box12>
             </div>
-        </dv-border-box12>
-    </div>
+        </div>
+        <MapComp class="flex-1" :style="'local'" :proj="'globe'" :isPicking="isPicking" />
+    </div>    
 </template>
 
 <script setup lang="ts">
-import { ref, computed, type Ref, watch, reactive, onMounted } from 'vue'
+import MapComp from '@/components/feature/map/mapComp.vue'
+import { ref, computed, type Ref, watch, reactive, onMounted, provide,inject } from 'vue'
 import dayjs from 'dayjs'
 import { RegionSelects } from 'v-region'
 import type { RegionValues } from 'v-region'
@@ -425,9 +431,14 @@ import {
 import { ElMessage } from 'element-plus'
 import { message } from 'ant-design-vue'
 import mapboxgl from 'mapbox-gl'
+import type{ComputedRef} from 'vue'
 const emit = defineEmits(['submitConfig'])
 
+import { useExploreStore } from '@/store/exploreStore'
+const exploreData = useExploreStore()
+
 import { useI18n } from 'vue-i18n'
+import type { AnyColumns } from 'element-plus/es/components/table-v2/src/types.mjs'
 const { t } = useI18n()
 
 /**
@@ -470,20 +481,20 @@ type POIInfo = {
     adname: string
 }
 
-const resolutionType: ResolutionItem[] = computed(()=>[
-    [t('datapage.explore.section3.resolutiontype.yami'), 1],
-    [t('datapage.explore.section3.resolutiontype.twom'), 2],
-    [t('datapage.explore.section3.resolutiontype.tenm'), 10],
-    [t('datapage.explore.section3.resolutiontype.thirtym'), 30],
-    [t('datapage.explore.section3.resolutiontype.others'), 500],
+const resolutionType: ComputedRef<ResolutionItem[]> = computed(()=>[
+    [t('datapage.explore.section_interactive.resolutiontype.yami'), 1],
+    [t('datapage.explore.section_interactive.resolutiontype.twom'), 2],
+    [t('datapage.explore.section_interactive.resolutiontype.tenm'), 10],
+    [t('datapage.explore.section_interactive.resolutiontype.thirtym'), 30],
+    [t('datapage.explore.section_interactive.resolutiontype.others'), 500],
 ])
 // 绑定每个select的选中项
 const resolutionPlatformSensor = reactive<any>({
-    [t('datapage.explore.section3.resolutiontype.yami')]: '',
-    [t('datapage.explore.section3.resolutiontype.twom')]: '',
-    [t('datapage.explore.section3.resolutiontype.tenw')]: '',
-    [t('datapage.explore.section3.resolutiontype.thirtym')]: '',
-    [t('datapage.explore.section3.resolutiontype.others')]: '',
+    [t('datapage.explore.section_interactive.resolutiontype.yami')]: '',
+    [t('datapage.explore.section_interactive.resolutiontype.twom')]: '',
+    [t('datapage.explore.section_interactive.resolutiontype.tenm')]: '',
+    [t('datapage.explore.section_interactive.resolutiontype.thirtym')]: '',
+    [t('datapage.explore.section_interactive.resolutiontype.others')]: '',
 })
 
 const selectedRadius = ref(20)
@@ -569,9 +580,14 @@ const getAllGrid = async () => {
          ElMessage.warning(t('datapage.explore.message.POIerror'))
         return
     }
-    MapOperation.map_destroyImagePolygon()
-    MapOperation.map_destroyImagePreviewLayer()
-    MapOperation.map_destroyGridLayer()
+    try {
+        await MapOperation.map_destroyImagePolygon();
+        await MapOperation.map_destroyImagePreviewLayer();
+        await MapOperation.map_destroyGridLayer();
+    } catch (error) {
+        console.warn('清理操作遇到问题:', error);
+    }
+
     if (marker) marker.remove()
 
     if (activeTab.value === 'region') {
@@ -653,7 +669,7 @@ interface Tab {
     value: TabValue
     label: string
 }
-const tabs: Tab[] = computed(() =>  [{
+const tabs: ComputedRef<Tab[]> = computed(() =>  [{
     value: 'region',
     label: t('datapage.explore.section1.admin')
 }, {
@@ -732,9 +748,9 @@ const filterByCloudAndDate = async () => {
     if (allScenes.value.length === 0) {
         ElMessage.warning(t('datapage.explore.message.sceneerror_recondition'))
     } else {
-        ElMessage.success(`已检索到${allScenes.value.length}景影像，请进一步筛选您所需的影像`)
+        ElMessage.success(t('datapage.explore.message.scene_searched',{ count: allScenes.value.length }) )
     }
-
+// ${allScenes.value.length}
     // 根据所有的传感器+分辨率，找出每个格网上，在特定传感器+分辨率情况下，有多少景影像
     // allSensorsItems.value = countSensorsCoverage(
     //     allSensorsItems.value,
@@ -983,7 +999,20 @@ const makeFullSceneGrid = async () => {
     MapOperation.map_addGridLayer_coverOpacity(gridFeature)
     MapOperation.draw_deleteAll()
 
-    emit('submitConfig', {
+    // emit('submitConfig', {
+    //     searchtab: searchedTab.value,
+    //     regionCode: landId.value,
+    //     dataRange: [...tileMergeConfig.value.dateRange],
+    //     cloud: tileMergeConfig.value.cloudRange[1],
+    //     space: selectedRadius.value,
+    //     coverage: coverageRate.value,
+    //     images: allScenes.value,
+    //     grids: allGrids.value,
+    //     boundary: currentCityBounds.value,
+    // })
+
+    exploreData.updateFields({
+        searchtab: searchedTab.value,
         regionCode: landId.value,
         dataRange: [...tileMergeConfig.value.dateRange],
         cloud: tileMergeConfig.value.cloudRange[1],
@@ -992,7 +1021,17 @@ const makeFullSceneGrid = async () => {
         images: allScenes.value,
         grids: allGrids.value,
         boundary: currentCityBounds.value,
-    })
+        load:true
+        });
+
+    // console.log([...tileMergeConfig.value.dateRange])
+    // console.log(tileMergeConfig.value.cloudRange[1])
+    // console.log(selectedRadius.value)
+    // console.log(coverageRate.value)
+    // console.log(allScenes.value)
+    // console.log(allGrids.value)
+    // console.log(currentCityBounds.value)
+
 }
 
 /**
@@ -1185,6 +1224,7 @@ const handleShowResolutionSensorImage = async (label: string) => {
             sensorName,
             sceneIds,
             regionId: landId.value,
+            resolution: selectedRadius.value,
         }
         coverScenes = await getCoverRegionSensorScenes(params)
     } else if (searchedTab.value === 'poi') {
@@ -1221,10 +1261,28 @@ const judgeGridOpacity = (index: number, sceneGridsRes: any) => {
     opacity = (sceneGridsRes[index].scenes.length / totalImgLenght) * 0.3
     return opacity
 }
+// 地图展示
+const isPicking = ref(false)
 
-onMounted(() => {
+
+onMounted(async() => {
     if (!ezStore.get('statisticCache')) ezStore.set('statisticCache', new Map())
     if (!ezStore.get('sceneNodataMap')) ezStore.set('sceneNodataMap', new Map())
+
+     await mapManager.waitForInit();
+  
+
+    
+    // 最后添加边界（确保在最上层）
+    setTimeout(() => {
+        if (exploreData.load){
+        MapOperation.map_addPolygonLayer({
+        geoJson: exploreData.boundary,
+        id: 'UniqueLayer',
+        lineColor: '#8fffff'
+        });
+        }
+    }, 2); // 适当延迟
 })
 </script>
 
@@ -1238,4 +1296,5 @@ onMounted(() => {
     pointer-events: none;
     color: #aaa;
 }
+
 </style>
