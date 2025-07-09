@@ -61,7 +61,7 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
             if original_dtype == np.uint8:
                 return data.astype(np.uint8)
             elif original_dtype == np.uint16:
-                # 将uint16 (0-65535) 线性映射到 uint8 (0-255)
+                # 将 uint16 (0-65535) 线性映射到 uint8 (0-255)
                 return (data / 65535.0 * 255.0).astype(np.uint8)
             else:
                 # 其他类型，先归一化到0-1，再映射to 0-255
@@ -401,7 +401,7 @@ class calc_no_cloud(Task):
         # 不使用ray
         results = []
         for g in grids:
-            result = process_grid(g, scenes, grid_helper, scene_band_paths, MINIO_ENDPOINT, temp_dir_path)
+            result = process_grid(g, scene, grid_helper, scene_band_paths, MINIO_ENDPOINT, temp_dir_path)
             results.append(result)
 
 
