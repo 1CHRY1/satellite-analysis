@@ -43,7 +43,7 @@
                 <div class="mt-6 flex flex-col gap-3 sm:flex-row">
                     <button
                         class="bg-blue-600 hover:bg-blue-700 rounded-xl px-6 py-3 text-white font-semibold transition cursor-pointer"
-                        @click="gotoPages('data')">
+                        @click="gotoPages('explore')">
                          {{t("homepage.button.explore")}}
                     </button>
                     <button
@@ -130,7 +130,7 @@
                         </ul>
                         <button
                             class="bg-primary hover:bg-primary/90 rounded-md px-6 py-3 font-medium text-white transition-colors cursor-pointer"
-                            @click=" gotoPages('data')">
+                            @click=" gotoPages('explore')">
                             {{t("homepage.button.exploremore")}}
                         </button>
                     </div>
