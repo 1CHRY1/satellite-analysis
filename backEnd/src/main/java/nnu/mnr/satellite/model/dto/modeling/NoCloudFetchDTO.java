@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSONObject;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -23,5 +24,6 @@ public class NoCloudFetchDTO {
     private Integer cloud;
     private List<String> sceneIds;
     private String dataSet;
+    private List<String> bandList;
 
 }

@@ -70,10 +70,10 @@ minio:
 #  access-key: jTbgNHEqQafOpUxVg7Ol
 #  secret-key: 7UxtrqhSOyN1KUeumbqTRMv1zeluLO69OwJnCC0M
 #  #  url: http://223.2.34.7:9000
-#  url: http://223.2.32.166:30900
+  url: http://192.168.1.101:30900
   access-key: minioadmin
   secret-key: minioadmin
-  url: http://223.2.34.8:30900
+#  url: http://223.2.34.8:30900
 
 docker:
   defaultServer:

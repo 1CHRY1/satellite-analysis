@@ -17,7 +17,7 @@ export default defineConfig({
             '/api2': {
                 // target: 'http://223.2.47.202:8999/api/v1',
                 // target: 'http://223.2.47.202:8999/api/v2',
-                target: 'http://192.168.1.101:8999/api/v2',
+                target: 'http://192.168.1.106:8999/api/v2',
                 // target: 'http://223.2.43.228:30899/api/v1',
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/api2/, ''),
@@ -25,7 +25,7 @@ export default defineConfig({
             '/api': {
                 // target: 'http://223.2.47.202:8999/api/v1',
                 // target: 'http://223.2.47.202:8999/api/v1',
-                target: 'http://192.168.1.101:8999/api/v1',
+                target: 'http://192.168.1.106:8999/api/v1',
                 // target: 'http://223.2.43.228:30899/api/v1',
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/api/, ''),
@@ -33,13 +33,13 @@ export default defineConfig({
             '/websocket': {
                 // target: 'ws://223.2.47.202:8899/model/websocket',
                 // target: 'http://223.2.43.228:30535/api/v1',
-                target: 'ws//http://192.168.1.101:8999/model/websocket',
+                target: 'ws//http://192.168.1.106:8999/model/websocket',
                 ws: true,
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/websocket/, ''),
             },
             '/tiler': {
-                target: 'http://192.168.1.101:8000',
+                target: 'http://192.168.1.106:8000',
                 // target: 'http://localhost:8000',
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/tiler/, ''),
