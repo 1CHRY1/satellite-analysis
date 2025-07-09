@@ -77,9 +77,9 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
         target_H = None
         target_W = None
 
-        img_R = None
-        img_G = None
-        img_B = None
+        img_1 = None
+        img_2 = None
+        img_3 = None
         need_fill_mask = None
         first_shape_set = False
         
@@ -112,7 +112,7 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
 
                     scene_id = scene['sceneId']
                     paths = scene_band_paths.get(scene_id)
-                    full_path = minio_endpoint + "/" + scene['bucket'] + "/" + paths['red']
+                    full_path = minio_endpoint + "/" + scene['bucket'] + "/" + next(iter(paths.values())) # paths字典中第一个键值
                     with COGReader(full_path, options={'nodata': int(nodata)}) as reader:
                         
                         temp_img_data = reader.part(bbox=bbox, indexes=[1]) # 不设置width/height的话不会重采样，分辨率与原始tif一致
@@ -121,9 +121,9 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
                         target_H, target_W = temp_img_data.data[0].shape
                         print(f"{grid_lable}: H={target_H}, W={target_W}")
 
-                        img_R = np.full((target_H, target_W), 0, dtype=np.uint8)
-                        img_G = np.full((target_H, target_W), 0, dtype=np.uint8)
-                        img_B = np.full((target_H, target_W), 0, dtype=np.uint8)
+                        img_1 = np.full((target_H, target_W), 0, dtype=np.uint8)
+                        img_2 = np.full((target_H, target_W), 0, dtype=np.uint8)
+                        img_3 = np.full((target_H, target_W), 0, dtype=np.uint8)
                         need_fill_mask = np.ones((target_H, target_W), dtype=bool) # all true，待填充
                         first_shape_set = True
 
@@ -134,7 +134,7 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
             else:
                 scene_id = scene['sceneId']
                 paths = scene_band_paths.get(scene_id)
-                full_path = minio_endpoint + "/" + scene['bucket'] + "/" + paths['red']
+                full_path = minio_endpoint + "/" + scene['bucket'] + "/" + next(iter(paths.values()))
                 with COGReader(full_path, options={'nodata': int(nodata)}) as ctx:
                     
                     if not first_shape_set:
@@ -142,9 +142,9 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
                         target_H, target_W = temp_img_data.data[0].shape
                         print(f"{grid_lable}: H={target_H}, W={target_W}")
 
-                        img_R = np.full((target_H, target_W), 0, dtype=np.uint8)
-                        img_G = np.full((target_H, target_W), 0, dtype=np.uint8)
-                        img_B = np.full((target_H, target_W), 0, dtype=np.uint8)
+                        img_1 = np.full((target_H, target_W), 0, dtype=np.uint8)
+                        img_2 = np.full((target_H, target_W), 0, dtype=np.uint8)
+                        img_3 = np.full((target_H, target_W), 0, dtype=np.uint8)
                         need_fill_mask = np.ones((target_H, target_W), dtype=bool) # all true，全都待标记
                         first_shape_set = True
                     
@@ -208,14 +208,14 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
                         
                         return converted_data
                 ################# NEW END ######################
-
-                R = read_band(paths['red'])
-                G = read_band(paths['green'])
-                B = read_band(paths['blue'])
+                paths = list(paths.values())
+                band_1 = read_band(paths[0])
+                band_2 = read_band(paths[1])
+                band_3 = read_band(paths[2])
                 
-                img_R[fill_mask] = R[fill_mask]
-                img_G[fill_mask] = G[fill_mask] 
-                img_B[fill_mask] = B[fill_mask]
+                img_1[fill_mask] = band_1[fill_mask]
+                img_2[fill_mask] = band_2[fill_mask]
+                img_3[fill_mask] = band_3[fill_mask]
 
                 need_fill_mask[fill_mask] = False # False if pixel filled
 
@@ -232,7 +232,7 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
         first_shape_set = False
         
         # 读取RGB并保存tif
-        img = np.stack([img_R, img_G, img_B])
+        img = np.stack([img_1, img_2, img_3])
         
 
         tif_path = os.path.join(temp_dir_path, f"{grid_x}_{grid_y}.tif")
@@ -352,6 +352,7 @@ class calc_no_cloud(Task):
         self.resolution = self.args[0].get('resolution', 1)
         self.cloud = self.args[0].get('cloud', 10)
         self.scenes = self.args[0].get('scenes', [])
+        self.bandList = self.args[0].get('bandList', ['Red', 'Green', 'Blue'])
         
 
     def run(self):
@@ -361,6 +362,7 @@ class calc_no_cloud(Task):
         grids = self.tiles
         gridResolution = self.resolution
         scenes = self.scenes
+        bandList = self.bandList
         # cloud = data.get('cloud') 没啥用
 
         ## Step 2 : Multithread Processing 4 Grids ############################# 
@@ -369,14 +371,11 @@ class calc_no_cloud(Task):
         scene_band_paths = {} # as cache 
         for scene in scenes:
             mapper = scene['bandMapper']
-            bands = { 'red': None, 'green': None, 'blue': None }
+            bands = { band: None for band in bandList}
             for img in scene['images']:
-                if img['band'] == mapper['Red']:
-                    bands['red'] = img['tifPath']
-                if img['band'] == mapper['Green']:
-                    bands['green'] = img['tifPath']
-                if img['band'] == mapper['Blue']:
-                    bands['blue'] = img['tifPath']
+                for band in bandList:
+                    if img['band'] == mapper[band]:  # 检查当前图像是否匹配目标波段
+                        bands[band] = img['tifPath']  # 动态赋值
             scene_band_paths[scene['sceneId']] = bands
 
         temp_dir_path = os.path.join(CONFIG.TEMP_OUTPUT_DIR, self.task_id)
@@ -401,7 +400,7 @@ class calc_no_cloud(Task):
         # 不使用ray
         results = []
         for g in grids:
-            result = process_grid(g, scenes, grid_helper, scene_band_paths, MINIO_ENDPOINT, temp_dir_path)
+            result = process_grid(g, scenes_json_file, scene_band_paths_json_file, grid_helper, MINIO_ENDPOINT, temp_dir_path)
             results.append(result)
 
 
@@ -442,7 +441,7 @@ class calc_no_cloud(Task):
         }, headers={ "Content-Type": "application/json" })
 
         print('=============No Cloud Task Has Finally Finished=================')
-
+        cleanup_temp_files(scenes_json_file, scene_band_paths_json_file)
         if os.path.exists(temp_dir_path):
             shutil.rmtree(temp_dir_path) 
             print('=============No Cloud Origin Data Deleted=================')

@@ -133,7 +133,7 @@ class hxfConfig(BaseConfig):
     TITILER_BASE_URL                                =       "http://127.0.0.1:8000"
     MOSAIC_CREATE_URL                               =       TITILER_BASE_URL + "/mosaic/create"
 
-    TEMP_OUTPUT_DIR                                 =       r"/usr/resource/temp"
+    TEMP_OUTPUT_DIR                                 =       r"D:/IdeaProjects/test"
 
     # Limitation for Ray
     RAY_MEMORY                                      =       10 * 1024**3

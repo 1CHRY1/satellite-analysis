@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static nnu.mnr.satellite.utils.geom.GeometryUtil.getGridsBoundaryByTilesAndResolution;
@@ -99,6 +100,10 @@ public class ModelExampleService {
         Integer regionId = noCloudFetchDTO.getRegionId();
         Integer resolution = noCloudFetchDTO.getResolution();
         List<String> sceneIds = noCloudFetchDTO.getSceneIds();
+        List<String> bandList = noCloudFetchDTO.getBandList();
+        if (bandList == null || bandList.isEmpty()) {
+            bandList = Arrays.asList("Red", "Green", "Blue");
+        }
 
         // 构成影像景参数信息
         List<ModelServerSceneDTO> modelServerSceneDTOs = new ArrayList<>();
@@ -127,8 +132,9 @@ public class ModelExampleService {
         Geometry boundary = getGridsBoundaryByTilesAndResolution(tileIds, resolution);
 
         // 请求modelServer
-        JSONObject noCloudParam = JSONObject.of("tiles", tileIds, "scenes", modelServerSceneDTOs, "cloud", noCloudFetchDTO.getCloud(), "resolution", resolution);
+        JSONObject noCloudParam = JSONObject.of("tiles", tileIds, "scenes", modelServerSceneDTOs, "cloud", noCloudFetchDTO.getCloud(), "resolution", resolution, "bandList", bandList);
         JSONObject caseJsonObj = JSONObject.of("boundary", boundary, "address", address, "resolution", resolution, "sceneIds", sceneIds, "dataSet", noCloudFetchDTO.getDataSet());
+        caseJsonObj.put("bandList", bandList);
         caseJsonObj.put("regionId", regionId);
         String noCloudUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("noCloud");
         long expirationTime = 60 * 100;
