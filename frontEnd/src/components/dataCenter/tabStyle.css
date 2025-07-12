@@ -86,6 +86,9 @@
     background-color: #1c668a;
 }
 
+/**
+ * section
+ */
 .panel-section {
     background-color: rgba(15, 23, 42, 0.6);
     border-radius: 0.5rem;
@@ -154,6 +157,91 @@
     gap: 0.75rem;
 }
 
+.stats {
+    background-color: rgba(15, 23, 42, 0.6);
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    margin-top: 0.5rem;
+    border: 1px solid rgba(56, 189, 248, 0.15);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.stats:hover {
+    box-shadow: 0 2px 8px rgba(56, 189, 248, 0.15);
+    border-color: rgba(56, 189, 248, 0.3);
+}
+
+.stats-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 0.6rem 1rem;
+    border-bottom: 1.35px solid rgba(56, 189, 248, 0.2);
+    background: linear-gradient(to right, rgba(56, 189, 248, 0.05), transparent);
+}
+
+
+.stats-content {
+    padding: 0.75rem 1rem;
+}
+
+.stats-item {
+    display: flex;
+    flex-direction: column;
+    background-color: rgba(15, 23, 42, 0.3);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0rem 0.75rem 1.25rem; /* 左侧多留点空间给竖线 */
+    /* border: 1px solid rgba(56, 189, 248, 0.15);  去掉外边框 */
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.stats-item::before {
+    content: "";
+    position: absolute;
+    left: 0.01rem;
+    top: 0.75rem;
+    bottom: 1rem;
+    width: 4px;
+    border-radius: 4px;
+    background: linear-gradient(to bottom, rgb(54, 133, 181), transparent 90%);
+    opacity: 0.85;
+}
+
+.stats-item-tree {
+    display: flex;
+    flex-direction: column;
+    background-color: rgba(15, 23, 42, 0.3);
+    border: 1px solid rgba(56, 189, 248, 0.15);
+    position: relative;
+    padding: 0.8rem 0.5rem 0.8rem 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.stats-item-rounded-t {
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+}
+.stats-item-rounded-b {
+    border-bottom-left-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+}
+.stats-item-rounded-none {
+    border-radius: 0;
+}
+
+.stats-subtitile {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+/**
+ * upload
+ */
+
 .upload-area {
     display: flex;
     flex-direction: column;
@@ -189,6 +277,10 @@
     color: #e0f2fe;
     font-size: 0.9rem;
 }
+
+/**
+ * tab
+ */
 
 .custom-tabs :deep(.ant-tabs-nav) {
     margin-bottom: 0.5rem;
@@ -310,8 +402,8 @@
 .custom-date-picker {
     width: 100%;
     height: 2rem;
-    background-color: rgba(56, 191, 248, 0.097);
-    border-color: #247699;
+    background-color: rgba(13, 21, 38);
+    border-color: rgb(17, 42, 63);
     color: #3fc5ff;
 }
 
@@ -962,6 +1054,35 @@
     color: #e0f2fe;
 }
 
+.control-info-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    padding: 0.2rem;
+}
+
+/* 单数最后一个子元素占满 */
+.control-info-container > :nth-last-child(1):nth-child(odd) {
+    grid-column: 1 / -1;
+}
+
+.control-info-item {
+    display: flex;
+    align-items: center;
+    background-color: rgba(15, 23, 42, 0.4);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.control-info-item:hover {
+    background-color: rgba(14, 165, 233, 0.1);
+    border-color: rgba(56, 189, 248, 0.4);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.15);
+}
+
 .date-range {
     display: flex;
     flex-direction: column;
@@ -997,6 +1118,17 @@
     background-color: rgba(14, 165, 233, 0.1);
     border-color: rgba(56, 189, 248, 0.3);
     box-shadow: 0 0 10px rgba(56, 189, 248, 0.1);
+}
+
+.config-item-no-hover {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    background-color: rgba(15, 23, 42, 0.3);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    border: 1px solid rgba(56, 189, 248, 0.15);
+    transition: all 0.3s ease;
 }
 
 .config-label {
@@ -1049,5 +1181,19 @@
     /* line-height: 2rem; */
     padding: 0.15rem 1rem;
     border: #d8fffca7 1px solid;
+    cursor: pointer;
+}
+
+.page-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #e0f2fe;
+}
+
+.cursor-not-allowed {
+    cursor: not-allowed;
+}
+
+.cursor-pointer {
     cursor: pointer;
 }

@@ -21,15 +21,8 @@ export const routes = [
         },
     },
     {
-        path: '/data',
-        component: () => import('@/views/DataView.vue'),
-        meta: {
-            requiresAuth: true,
-        },
-    },
-    {
         path: '/explore',
-        component: () => import('@/components/dataCenter/interactiveExplore.vue'),
+        component: () => import('@/components/dataCenter/interactiveExplore/interactiveExplore.vue'),
         meta: {
             requiresAuth: true,
         },

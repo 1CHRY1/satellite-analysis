@@ -1,393 +1,383 @@
 <template>
     <div class="relative flex flex-1 flex-row bg-black">
-        <div class="w-[28vw] p-4 text-gray-200">
-            <template></template>
-                <div class="custom-panel px-2">
-                    <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]">
-                        <div class="main-container">
-                            <section class="panel-section" v-show="currentPanel === 'noCloud'" key="noCloud">
-                                <div class="section-header">
-                                    <div class="section-icon">
-                                        <CloudIcon :size="18" />
-                                    </div>
-                                    <h2 class="section-title">{{t('datapage.nocloud.title')}}</h2>
-                                    <div class="section-icon absolute right-0 cursor-pointer">
-                                        <a-tooltip>
-                                            <template #title>{{t('datapage.history.his_recon')}}</template>
-                                            <History :size="18" @click="setCurrentPanel('history')"/>
-                                        </a-tooltip>
-                                    </div>
-                                </div>
-                                <div class="section-content">
-                                    <div class="config-container">
-                                        <div class="config-item">
-                                            <div class="config-label relative">
-                                                <BoltIcon :size="16" class="config-icon" />
-                                                <span>{{t('datapage.nocloud.section_chinese.subtitle')}}</span>
-                                            </div>
-                                            <div class="config-control flex-col !items-start">
-                                                <div class="flex w-full flex-col gap-2">
-                                                    <label class="flex items-center gap-2">
-                                                        <input type="checkbox" v-model="additionalData[0]" 
-                                                            class="h-4 w-4 rounded" 
-                                                            @click="add1mDemoticImage"/>
-                                                        {{t('datapage.nocloud.section_chinese.text_national_image')}}
-                                                    </label>
-                                                    <label class="flex items-center gap-2">
-                                                        <input type="checkbox" v-model="dataReconstruction[0]"
-                                                            @click="add2mDemoticImages" class="h-4 w-4 rounded" />
-                                                        {{t('datapage.nocloud.section_chinese.text_national2m')}}
-                                                    </label>
-                                                    <!-- 传感器选择 -->
-                                                    <label >
-                                                        {{ t('datapage.nocloud.choose') }}
-                                                    </label>
-                                                    <select class="max-h-[600px] w-[calc(100%-113px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
-                                                    v-model="selectnation"
-                                                    >
-                                                        <option disabled selected value="">{{ t('datapage.explore.section_interactive.choose') }}</option>
-                                                        <option v-for="platform in groupedLists.national" 
-                                                        :key="platform.platformName" 
-                                                        :value="platform"
-                                                        >
-                                                        {{ platform.platformName }}
-                                                        <span v-if="platform.tags?.includes('national')" style="color: red; margin-left: 5px;">
-                                                            (推荐)
-                                                        </span>
-                                                            </option>
-                                                    </select>
-
-                                                    <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
-                                                            @click="handleShowSensorImage(selectnation)">
-                                                            {{ t('datapage.explore.section_interactive.button') }}
-                                                    </a-button>
-
-                                                    <div v-if="showProgress[0]"
-                                                        class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
-                                                        <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
-                                                            :style="{ width: `${progress[0]}%` }"></div>
-                                                    </div>
-                                                </div>
-                                                <div class="result-info-container">
-                                                    <div class="result-info-item">
-                                                        <div class="result-info-icon">
-                                                            <ImageIcon :size="16" />
-                                                        </div>
-                                                        <div class="result-info-content">
-                                                            <div class="result-info-label">{{t('datapage.nocloud.section_chinese.resolution')}}</div>
-                                                            <div class="result-info-value">
-                                                                {{ exploreData.space }}km
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="result-info-item">
-                                                        <div class="result-info-icon">
-                                                            <CalendarIcon :size="16" />
-                                                        </div>
-                                                        <div class="result-info-content">
-                                                            <div class="result-info-label">{{t('datapage.nocloud.section_chinese.timerange')}}</div>
-                                                            <div class="result-info-value date-range">
-                                                                <div class="date-item">
-                                                                    {{
-                                                                        formatTime(
-                                                                            exploreData.dataRange[0],
-                                                                            'day',
-                                                                        )
-                                                                    }}~
-                                                                    {{
-                                                                        formatTime(
-                                                                            exploreData.dataRange[1],
-                                                                            'day',
-                                                                        )
-                                                                    }}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="result-info-item">
-                                                        <div class="result-info-icon">
-                                                            <CloudIcon :size="16" />
-                                                        </div>
-                                                        <div class="result-info-content">
-                                                            <div class="result-info-label">
-                                                                {{t('datapage.nocloud.section_chinese.text_national_research')}}
-                                                            </div>
-                                                            <div class="result-info-value">
-                                                                {{ demotic }}{{ t('datapage.explore.scene') }}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="result-info-item">
-                                                        <div class="result-info-icon">
-                                                            <CloudIcon :size="16" />
-                                                        </div>
-                                                        <div class="result-info-content">
-                                                            <div class="result-info-label">
-                                                                {{t('datapage.nocloud.section_chinese.text_national_coverage')}}
-                                                            </div>
-                                                            <div class="result-info-value">
-                                                                {{
-                                                                    coverageRate.demotic1m != 'NaN%'
-                                                                        ? coverageRate.demotic1m
-                                                                        : '待计算'
-                                                                }}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="result-info-item">
-                                                        <div class="result-info-icon">
-                                                            <CloudIcon :size="16" />
-                                                        </div>
-                                                        <div class="result-info-content">
-                                                            <div class="result-info-label">
-                                                                {{t('datapage.nocloud.section_chinese.text_research2m')}}
-                                                            </div>
-                                                            <div class="result-info-value">
-                                                                {{ demotic2mImages.length }}{{ t('datapage.explore.scene') }}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="result-info-item">
-                                                        <div class="result-info-icon">
-                                                            <CloudIcon :size="16" />
-                                                        </div>
-                                                        <div class="result-info-content">
-                                                            <div class="result-info-label">
-                                                                {{t('datapage.nocloud.section_chinese.text_coverage2m')}}
-                                                            </div>
-                                                            <div class="result-info-value">
-                                                                {{
-                                                                    coverageRate.demotic2m != 'NaN%'
-                                                                        ? coverageRate.demotic2m
-                                                                        : '待计算'
-                                                                }}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="config-item">
-                                            <div class="config-label relative">
-                                                <CalendarIcon :size="16" class="config-icon" />
-                                                <span>{{t('datapage.nocloud.section_international.subtitle')}}</span>
-                                                <el-tooltip content="对于缺失数据的格网，采用国外光学影像进行填补，填补过程中基于AI算法进行超分辨率重建" placement="top"
-                                                    effect="dark">
-                                                    <CircleHelp :size="14" />
-                                                </el-tooltip>
-                                            </div>
-                                            <div class="config-control flex-col !items-start">
-                                                <div class="flex flex-col gap-2">
-                                                    <label class="flex items-center gap-2">
-                                                        <input type="checkbox" v-model="additionalData[1]" @click="addAbroadImages"
-                                                            :disabled="!dataReconstruction[0]" class="h-4 w-4 rounded" />
-                                                        {{t('datapage.nocloud.section_international.text_preview')}}
-                                                    </label>
-                                                    <label class="flex items-center gap-2">
-                                                        <input type="checkbox" v-model="dataReconstruction[1]"
-                                                            @click="controlProgress(1)" :disabled="!dataReconstruction[0]"
-                                                            class="h-4 w-4 rounded" />
-                                                        {{t('datapage.nocloud.section_international.text_overseaimage')}}
-                                                    </label>
-                                                    <!-- 传感器选择 -->
-                                                    <label >
-                                                        {{ t('datapage.nocloud.choose') }}
-                                                    </label>
-                                                    <select class="max-h-[600px] w-[calc(100%-113px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
-                                                    v-model="selectinternation"
-                                                    >
-                                                        <option disabled selected value="">{{ t('datapage.explore.section_interactive.choose') }}</option>
-                                                        <option v-for="platform in groupedLists.international" 
-                                                        :key="platform.platformName" 
-                                                        :value="platform"
-                                                        >
-                                                        {{ platform.platformName }}
-                                                        <span v-if="platform.tags?.includes('international')" style="color: red; margin-left: 5px;">
-                                                            (推荐)
-                                                        </span>
-                                                        </option>
-                                                    </select>
-                                                    <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
-                                                            @click="handleShowSensorImage(selectinternation)">
-                                                            {{ t('datapage.explore.section_interactive.button') }}
-                                                    </a-button>
-
-                                                    <div v-if="showProgress[1]"
-                                                        class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
-                                                        <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
-                                                            :style="{ width: `${progress[1]}%` }"></div>
-                                                    </div>
-                                                </div>
-                                                <div class="result-info-container w-full">
-                                                    <div class="result-info-item">
-                                                        <div class="result-info-icon">
-                                                            <CloudIcon :size="16" />
-                                                        </div>
-                                                        <div class="result-info-content">
-                                                            <div class="result-info-label">{{t('datapage.nocloud.section_international.text_research')}}</div>
-                                                            <div class="result-info-value">
-                                                                {{ internationalImages.length }}{{ t('datapage.explore.scene') }}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="result-info-item">
-                                                        <div class="result-info-icon">
-                                                            <CloudIcon :size="16" />
-                                                        </div>
-                                                        <div class="result-info-content">
-                                                            <div class="result-info-label">{{t('datapage.nocloud.section_international.text_coverage')}}</div>
-                                                            <div class="result-info-value">
-                                                                {{
-                                                                    coverageRate.international != 'NaN%'
-                                                                        ? coverageRate.international
-                                                                        : '待计算'
-                                                                }}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="config-item">
-                                            <div class="config-label relative">
-                                                <CalendarIcon :size="16" class="config-icon" />
-                                                <span>{{t('datapage.nocloud.section_SAR.subtitle')}}</span>
-                                                <el-tooltip content="勾选将使用雷达数据进行色彩变换，与光学数据配准，并补充重构。" placement="top" effect="dark">
-                                                    <CircleHelp :size="14" />
-                                                </el-tooltip>
-                                            </div>
-                                            <div class="config-control flex-col !items-start">
-                                                <div class="flex flex-col gap-2">
-                                                    <label class="flex items-center gap-2">
-                                                        <input type="checkbox" v-model="additionalData[2]" @click="addRadarImages"
-                                                            :disabled="!additionalData[1] || !dataReconstruction[1]
-                                                                " class="h-4 w-4 rounded" />
-                                                        {{t('datapage.nocloud.section_SAR.text_preview')}}
-                                                    </label>
-                                                    <label class="flex items-center gap-2">
-                                                        <input type="checkbox" v-model="dataReconstruction[2]"
-                                                            @click="controlProgress(2)" :disabled="!additionalData[1] || !dataReconstruction[1]
-                                                                " class="h-4 w-4 rounded" />
-                                                        {{t('datapage.nocloud.section_SAR.text_SARtrans')}}
-                                                    </label>
-
-                                                    <!-- 传感器选择 -->
-                                                    <label >
-                                                        {{ t('datapage.nocloud.choose') }}
-                                                    </label>
-                                                <select class="max-h-[600px] w-[calc(100%-113px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
-                                                    v-model="selectsar"
-                                                    >
-                                                        <option disabled selected value="">{{ t('datapage.explore.section_interactive.choose') }}</option>
-                                                        <option v-for="platform in groupedLists.sar" 
-                                                        :key="platform.platformName" 
-                                                        :value="platform"
-                                                        >
-                                                        {{ platform.platformName }}
-                                                        <span v-if="platform.tags?.includes('radar')" style="color: red; margin-left: 5px;">
-                                                            (推荐)
-                                                        </span>
-                                                        </option>
-                                                    </select>
-                                                    <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
-                                                            @click="handleShowSensorImage(selectsar)">
-                                                            {{ t('datapage.explore.section_interactive.button') }}
-                                                    </a-button>
-
-                                                    <div v-if="showProgress[2]"
-                                                        class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
-                                                        <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
-                                                            :style="{ width: `${progress[2]}%` }"></div>
-                                                    </div>
-                                                </div>
-                                                <div class="result-info-container w-full">
-                                                    <div class="result-info-item">
-                                                        <div class="result-info-icon">
-                                                            <CloudIcon :size="16" />
-                                                        </div>
-                                                        <div class="result-info-content">
-                                                            <div class="result-info-label">{{t('datapage.nocloud.section_SAR.text_SARresearch')}}</div>
-                                                            <div class="result-info-value">
-                                                                {{ radarImages.length }}{{ t('datapage.explore.scene') }}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="result-info-item">
-                                                        <div class="result-info-icon">
-                                                            <CloudIcon :size="16" />
-                                                        </div>
-                                                        <div class="result-info-content">
-                                                            <div class="result-info-label">{{t('datapage.nocloud.section_SAR.text_coverage')}}</div>
-                                                            <div class="result-info-value">
-                                                                {{
-                                                                    coverageRate.addRadar != 'NaN%'
-                                                                        ? coverageRate.addRadar
-                                                                        : '待计算'
-                                                                }}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="flex w-full flex-col justify-center">
-                                            <!-- <div class="flex flex-row gap-2 my-4 ml-[13px] items-center">
-                                                <label class="flex items-center gap-2">
-                                                    <input type="checkbox" v-model="isMerging" class="h-4 w-4 rounded" />
-                                                    合并一版图
-                                                </label>
-                                                <div>
-                                                    <el-tooltip content="需要输出时勾选，会大幅增加计算时间。" placement="top" effect="dark">
-                                                        <CircleHelp :size="14" />
-                                                    </el-tooltip>
-                                                </div>
-                                            </div> -->
-
-                                            <button @click="calNoClouds" :disabled="noCloudLoading"
-                                                class="flex justify-center w-full rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
-                                                :class="{
-                                                    'cursor-not-allowed': noCloudLoading,
-                                                    'cursor-pointer': !noCloudLoading,
-                                                }">
-                                                <span>{{t('datapage.nocloud.section4.button')}} </span>
-                                                <Loader v-if="noCloudLoading" class="ml-2" />
-                                            </button>
-                                            <div v-if="showProgress[3]"
-                                                class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
-                                                <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
-                                                    :style="{ width: `${progress[3]}%` }"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </section>
-
-                            <section class="panel-section" v-if="currentPanel === 'history'" key="history">
-                                <noCloudHistory @toggle="setCurrentPanel" />
-                            </section>
-
-                            <!-- <section class="panel-section" v-if="calImage.length > 0">
-                                <div class="section-header">
-                                    <div class="section-icon">
-                                        <CloudIcon :size="18" />
-                                    </div>
-                                    <h2 class="section-title">重构信息</h2>
-                                </div>
-                                <div class="section-content">
-                                    <div class="config-container">
-                                        <div v-for="(image, index) in calImage" :key="index" class="config-item">
-                                            <div>无云一版图第{{ index + 1 }}次计算完成！</div>
-                                            本次使用的数据包括：{{ image.dataSet }}
-                                            <p>{{image}}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </section> -->
-                        </div>
-                    </dv-border-box12>
+        <div class="w-[28vw] max-h-[calc(100vh-100px)] p-4 text-gray-200">
+            <section class="panel-section ml-2 mr-2" style="margin-top: 0rem; margin-bottom: 0.5rem;">
+                <div class="section-header">
+                    <div class="section-icon">
+                        🗺️
                     </div>
-                </div> 
+                    <span class="page-title">无云一版图</span>
+                </div>
+            </section>
+            <div class="custom-panel px-2">
+                <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]">
+                    <div class="main-container">
+                        <section class="panel-section" v-show="currentPanel === 'noCloud'" key="noCloud">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <CloudIcon :size="18" />
+                                </div>
+                                <h2 class="section-title">{{t('datapage.nocloud.title')}}</h2>
+                                <div class="section-icon absolute right-0 cursor-pointer">
+                                    <a-tooltip>
+                                        <template #title>{{t('datapage.history.his_recon')}}</template>
+                                        <History :size="18" @click="setCurrentPanel('history')"/>
+                                    </a-tooltip>
+                                </div>
+                            </div>
+                            <div class="section-content">
+                                <div class="config-container">
+                                    <div class="config-item">
+                                        <div class="config-label relative">
+                                            <BoltIcon :size="16" class="config-icon" />
+                                            <span>{{t('datapage.nocloud.section_chinese.subtitle')}}</span>
+                                        </div>
+                                        <div class="config-control flex-col !items-start">
+                                            <div class="flex w-full flex-col gap-2">
+                                                <label class="flex items-center gap-2">
+                                                    <input type="checkbox" v-model="additionalData[0]" 
+                                                        class="h-4 w-4 rounded" 
+                                                        @click="add1mDemoticImage"/>
+                                                    {{t('datapage.nocloud.section_chinese.text_national_image')}}
+                                                </label>
+                                                <label class="flex items-center gap-2">
+                                                    <input type="checkbox" v-model="dataReconstruction[0]"
+                                                        @click="add2mDemoticImages" class="h-4 w-4 rounded" />
+                                                    {{t('datapage.nocloud.section_chinese.text_national2m')}}
+                                                </label>
+                                                <!-- 传感器选择 -->
+                                                <label >
+                                                    {{ t('datapage.nocloud.choose') }}
+                                                </label>
+                                                <select class="max-h-[600px] w-[calc(100%-113px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
+                                                v-model="selectnation"
+                                                >
+                                                    <option disabled selected value="">{{ t('datapage.explore.section_interactive.choose') }}</option>
+                                                    <option v-for="platform in groupedLists.national" 
+                                                    :key="platform.platformName" 
+                                                    :value="platform"
+                                                    >
+                                                    {{ platform.platformName }}
+                                                    <span v-if="platform.tags?.includes('national')" style="color: red; margin-left: 5px;">
+                                                        (推荐)
+                                                    </span>
+                                                        </option>
+                                                </select>
+
+                                                <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
+                                                        @click="handleShowSensorImage(selectnation)">
+                                                        {{ t('datapage.explore.section_interactive.button') }}
+                                                </a-button>
+
+                                                <div v-if="showProgress[0]"
+                                                    class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
+                                                    <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
+                                                        :style="{ width: `${progress[0]}%` }"></div>
+                                                </div>
+                                            </div>
+                                            <div class="result-info-container">
+                                                <div class="result-info-item">
+                                                    <div class="result-info-icon">
+                                                        <ImageIcon :size="16" />
+                                                    </div>
+                                                    <div class="result-info-content">
+                                                        <div class="result-info-label">{{t('datapage.nocloud.section_chinese.resolution')}}</div>
+                                                        <div class="result-info-value">
+                                                            {{ exploreData.space }}km
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="result-info-item">
+                                                    <div class="result-info-icon">
+                                                        <CalendarIcon :size="16" />
+                                                    </div>
+                                                    <div class="result-info-content">
+                                                        <div class="result-info-label">{{t('datapage.nocloud.section_chinese.timerange')}}</div>
+                                                        <div class="result-info-value date-range">
+                                                            <div class="date-item">
+                                                                {{
+                                                                    formatTime(
+                                                                        exploreData.dataRange[0],
+                                                                        'day',
+                                                                    )
+                                                                }}~
+                                                                {{
+                                                                    formatTime(
+                                                                        exploreData.dataRange[1],
+                                                                        'day',
+                                                                    )
+                                                                }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="result-info-item">
+                                                    <div class="result-info-icon">
+                                                        <CloudIcon :size="16" />
+                                                    </div>
+                                                    <div class="result-info-content">
+                                                        <div class="result-info-label">
+                                                            {{t('datapage.nocloud.section_chinese.text_national_research')}}
+                                                        </div>
+                                                        <div class="result-info-value">
+                                                            {{ demotic }}{{ t('datapage.explore.scene') }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="result-info-item">
+                                                    <div class="result-info-icon">
+                                                        <CloudIcon :size="16" />
+                                                    </div>
+                                                    <div class="result-info-content">
+                                                        <div class="result-info-label">
+                                                            {{t('datapage.nocloud.section_chinese.text_national_coverage')}}
+                                                        </div>
+                                                        <div class="result-info-value">
+                                                            {{
+                                                                coverageRate.demotic1m != 'NaN%'
+                                                                    ? coverageRate.demotic1m
+                                                                    : '待计算'
+                                                            }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="result-info-item">
+                                                    <div class="result-info-icon">
+                                                        <CloudIcon :size="16" />
+                                                    </div>
+                                                    <div class="result-info-content">
+                                                        <div class="result-info-label">
+                                                            {{t('datapage.nocloud.section_chinese.text_research2m')}}
+                                                        </div>
+                                                        <div class="result-info-value">
+                                                            {{ demotic2mImages.length }}{{ t('datapage.explore.scene') }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="result-info-item">
+                                                    <div class="result-info-icon">
+                                                        <CloudIcon :size="16" />
+                                                    </div>
+                                                    <div class="result-info-content">
+                                                        <div class="result-info-label">
+                                                            {{t('datapage.nocloud.section_chinese.text_coverage2m')}}
+                                                        </div>
+                                                        <div class="result-info-value">
+                                                            {{
+                                                                coverageRate.demotic2m != 'NaN%'
+                                                                    ? coverageRate.demotic2m
+                                                                    : '待计算'
+                                                            }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="config-item">
+                                        <div class="config-label relative">
+                                            <CalendarIcon :size="16" class="config-icon" />
+                                            <span>{{t('datapage.nocloud.section_international.subtitle')}}</span>
+                                            <el-tooltip content="对于缺失数据的格网，采用国外光学影像进行填补，填补过程中基于AI算法进行超分辨率重建" placement="top"
+                                                effect="dark">
+                                                <CircleHelp :size="14" />
+                                            </el-tooltip>
+                                        </div>
+                                        <div class="config-control flex-col !items-start">
+                                            <div class="flex flex-col gap-2">
+                                                <label class="flex items-center gap-2">
+                                                    <input type="checkbox" v-model="additionalData[1]" @click="addAbroadImages"
+                                                        :disabled="!dataReconstruction[0]" class="h-4 w-4 rounded" />
+                                                    {{t('datapage.nocloud.section_international.text_preview')}}
+                                                </label>
+                                                <label class="flex items-center gap-2">
+                                                    <input type="checkbox" v-model="dataReconstruction[1]"
+                                                        @click="controlProgress(1)" :disabled="!dataReconstruction[0]"
+                                                        class="h-4 w-4 rounded" />
+                                                    {{t('datapage.nocloud.section_international.text_overseaimage')}}
+                                                </label>
+                                                <!-- 传感器选择 -->
+                                                <label >
+                                                    {{ t('datapage.nocloud.choose') }}
+                                                </label>
+                                                <select class="max-h-[600px] w-[calc(100%-113px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
+                                                v-model="selectinternation"
+                                                >
+                                                    <option disabled selected value="">{{ t('datapage.explore.section_interactive.choose') }}</option>
+                                                    <option v-for="platform in groupedLists.international" 
+                                                    :key="platform.platformName" 
+                                                    :value="platform"
+                                                    >
+                                                    {{ platform.platformName }}
+                                                    <span v-if="platform.tags?.includes('international')" style="color: red; margin-left: 5px;">
+                                                        (推荐)
+                                                    </span>
+                                                    </option>
+                                                </select>
+                                                <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
+                                                        @click="handleShowSensorImage(selectinternation)">
+                                                        {{ t('datapage.explore.section_interactive.button') }}
+                                                </a-button>
+
+                                                <div v-if="showProgress[1]"
+                                                    class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
+                                                    <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
+                                                        :style="{ width: `${progress[1]}%` }"></div>
+                                                </div>
+                                            </div>
+                                            <div class="result-info-container w-full">
+                                                <div class="result-info-item">
+                                                    <div class="result-info-icon">
+                                                        <CloudIcon :size="16" />
+                                                    </div>
+                                                    <div class="result-info-content">
+                                                        <div class="result-info-label">{{t('datapage.nocloud.section_international.text_research')}}</div>
+                                                        <div class="result-info-value">
+                                                            {{ internationalImages.length }}{{ t('datapage.explore.scene') }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="result-info-item">
+                                                    <div class="result-info-icon">
+                                                        <CloudIcon :size="16" />
+                                                    </div>
+                                                    <div class="result-info-content">
+                                                        <div class="result-info-label">{{t('datapage.nocloud.section_international.text_coverage')}}</div>
+                                                        <div class="result-info-value">
+                                                            {{
+                                                                coverageRate.international != 'NaN%'
+                                                                    ? coverageRate.international
+                                                                    : '待计算'
+                                                            }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="config-item">
+                                        <div class="config-label relative">
+                                            <CalendarIcon :size="16" class="config-icon" />
+                                            <span>{{t('datapage.nocloud.section_SAR.subtitle')}}</span>
+                                            <el-tooltip content="勾选将使用雷达数据进行色彩变换，与光学数据配准，并补充重构。" placement="top" effect="dark">
+                                                <CircleHelp :size="14" />
+                                            </el-tooltip>
+                                        </div>
+                                        <div class="config-control flex-col !items-start">
+                                            <div class="flex flex-col gap-2">
+                                                <label class="flex items-center gap-2">
+                                                    <input type="checkbox" v-model="additionalData[2]" @click="addRadarImages"
+                                                        :disabled="!additionalData[1] || !dataReconstruction[1]
+                                                            " class="h-4 w-4 rounded" />
+                                                    {{t('datapage.nocloud.section_SAR.text_preview')}}
+                                                </label>
+                                                <label class="flex items-center gap-2">
+                                                    <input type="checkbox" v-model="dataReconstruction[2]"
+                                                        @click="controlProgress(2)" :disabled="!additionalData[1] || !dataReconstruction[1]
+                                                            " class="h-4 w-4 rounded" />
+                                                    {{t('datapage.nocloud.section_SAR.text_SARtrans')}}
+                                                </label>
+
+                                                <!-- 传感器选择 -->
+                                                <label >
+                                                    {{ t('datapage.nocloud.choose') }}
+                                                </label>
+                                            <select class="max-h-[600px] w-[calc(100%-113px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
+                                                v-model="selectsar"
+                                                >
+                                                    <option disabled selected value="">{{ t('datapage.explore.section_interactive.choose') }}</option>
+                                                    <option v-for="platform in groupedLists.sar" 
+                                                    :key="platform.platformName" 
+                                                    :value="platform"
+                                                    >
+                                                    {{ platform.platformName }}
+                                                    <span v-if="platform.tags?.includes('radar')" style="color: red; margin-left: 5px;">
+                                                        (推荐)
+                                                    </span>
+                                                    </option>
+                                                </select>
+                                                <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
+                                                        @click="handleShowSensorImage(selectsar)">
+                                                        {{ t('datapage.explore.section_interactive.button') }}
+                                                </a-button>
+
+                                                <div v-if="showProgress[2]"
+                                                    class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
+                                                    <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
+                                                        :style="{ width: `${progress[2]}%` }"></div>
+                                                </div>
+                                            </div>
+                                            <div class="result-info-container w-full">
+                                                <div class="result-info-item">
+                                                    <div class="result-info-icon">
+                                                        <CloudIcon :size="16" />
+                                                    </div>
+                                                    <div class="result-info-content">
+                                                        <div class="result-info-label">{{t('datapage.nocloud.section_SAR.text_SARresearch')}}</div>
+                                                        <div class="result-info-value">
+                                                            {{ radarImages.length }}{{ t('datapage.explore.scene') }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="result-info-item">
+                                                    <div class="result-info-icon">
+                                                        <CloudIcon :size="16" />
+                                                    </div>
+                                                    <div class="result-info-content">
+                                                        <div class="result-info-label">{{t('datapage.nocloud.section_SAR.text_coverage')}}</div>
+                                                        <div class="result-info-value">
+                                                            {{
+                                                                coverageRate.addRadar != 'NaN%'
+                                                                    ? coverageRate.addRadar
+                                                                    : '待计算'
+                                                            }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex w-full flex-col justify-center">
+                                        <!-- <div class="flex flex-row gap-2 my-4 ml-[13px] items-center">
+                                            <label class="flex items-center gap-2">
+                                                <input type="checkbox" v-model="isMerging" class="h-4 w-4 rounded" />
+                                                合并一版图
+                                            </label>
+                                            <div>
+                                                <el-tooltip content="需要输出时勾选，会大幅增加计算时间。" placement="top" effect="dark">
+                                                    <CircleHelp :size="14" />
+                                                </el-tooltip>
+                                            </div>
+                                        </div> -->
+
+                                        <button @click="calNoClouds" :disabled="noCloudLoading"
+                                            class="flex justify-center w-full rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
+                                            :class="{
+                                                'cursor-not-allowed': noCloudLoading,
+                                                'cursor-pointer': !noCloudLoading,
+                                            }">
+                                            <span>{{t('datapage.nocloud.section4.button')}} </span>
+                                            <Loader v-if="noCloudLoading" class="ml-2" />
+                                        </button>
+                                        <div v-if="showProgress[3]"
+                                            class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
+                                            <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
+                                                :style="{ width: `${progress[3]}%` }"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="panel-section" v-if="currentPanel === 'history'" key="history">
+                            <noCloudHistory @toggle="setCurrentPanel" />
+                        </section>
+
+                    </div>
+                </dv-border-box12>
+                </div>
+            </div> 
         <MapComp class="flex-1" :style="'local'" :proj="'globe'" :isPicking="isPicking" />
     </div>  
 </template>
@@ -433,6 +423,7 @@ import {
     BanIcon,
     MapIcon,
     History,
+    CloudOffIcon,
 } from 'lucide-vue-next'
 import { FastBackwardFilled } from '@ant-design/icons-vue'
 import bandMergeHelper from '@/util/image/util'

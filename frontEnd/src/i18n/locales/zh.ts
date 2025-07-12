@@ -1,6 +1,6 @@
 export default{
     nav: {
-        title: "多元遥感应用支撑云平台",
+        title: "多源遥感应用支撑云平台",
         home: "首页",
         models: "模型中心",
         data: "数据中心",
@@ -406,7 +406,7 @@ export default{
         revolution:"格网分辨率",
         timerange:"涵盖时间范围",
         quyingxiang:"研究区影像",
-        percent:"影像覆盖率",
+        percent:"覆盖率",
 
         calbutton:"开始计算",
         calresult:"计算结果",
@@ -451,7 +451,7 @@ export default{
 
             subtitle2:"格网分辨率",
             resolution:"格网分辨率选择：",
-            advice:" 建议省级行政单位格网分辨率不小于20km",
+            advice:" 建议省级行政单位格网分辨率不超过30km",
 
             button:"获取格网",
         },
@@ -460,7 +460,7 @@ export default{
             sectiontitle:"按时间筛选",
             subtitle1:"时间范围",
             intext_date:"'开始日期', '结束日期'",
-            button:"影像筛选",
+            button:"数据检索",
 
             subtitle2:"统计信息",
             resolution:"格网分辨率",
@@ -501,11 +501,11 @@ export default{
 
         include:"包含",
         scene:"景影像",
-        percent:"影像覆盖率",
+        percent:"覆盖率",
         scene_choose:"选择传感器：",
 
         message:{
-            ordererror:"请完成影像筛选后再计算无云一版图",
+            ordererror:"请完成数据检索后再计算无云一版图",
             filtererror_choose:"请先选择行政区并获取格网",
             filtererror_grid:"请先获取格网",
             sceneerror_recondition:"未筛选出符合要求的影像，请重新设置条件",
@@ -513,7 +513,7 @@ export default{
             imagery_error:"请选择有效影像",
             load:"正在加载影像...",
             typyerror_condition:"请设置筛选条件",
-            typyerror_filter:"请先进行影像筛选",
+            typyerror_filter:"请先进行数据检索",
             typyerror_source:"请选择您需要的数据来源",
             typyerror_type:"请选择您需要的传感器类型",
             typyerror_data:"请选择您需要的数据级别",
