@@ -45,6 +45,7 @@ public class SceneDesVO {
     private String productName;
     private String platformName;
     private String resolution;
+    private String dataType;
 //    @TableField(typeHandler = JSONArrayTypeHandler.class)
 //    private JSONArray images;
 
