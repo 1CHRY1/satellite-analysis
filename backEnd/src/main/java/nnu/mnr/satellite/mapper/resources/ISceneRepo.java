@@ -29,7 +29,7 @@ public interface ISceneRepo extends BaseMapper<Scene> {
 
     @Select("SELECT sc.scene_id, sc.scene_name, sc.scene_time, sc.tile_level_num, sc.tile_levels, sc.coordinate_system, " +
             "sc.description, sc.band_num, sc.bands, sc.cloud, sc.tags, sc.no_data, " +
-            "ss.sensor_name, ss.platform_name, pd.product_name, pd.resolution " +
+            "ss.sensor_name, ss.platform_name, pd.product_name, pd.resolution, ss.data_type " +
 //            "(SELECT CONCAT('[', GROUP_CONCAT(JSON_OBJECT('path', im.tif_path, 'band', im.band)), ']') " +
 //            "FROM image_table im WHERE im.scene_id = sc.scene_id) AS images " +
             "FROM scene_table sc " +
@@ -59,6 +59,7 @@ public interface ISceneRepo extends BaseMapper<Scene> {
             @Result(property = "platformName", column = "platform_name"),
             @Result(property = "productName", column = "product_name"),
             @Result(property = "resolution", column = "resolution"),
+            @Result(property = "dataType", column = "data_type"),
 //            @Result(property = "images", column = "images", typeHandler = JSONArrayTypeHandler.class)
     })
     List<SceneDesVO> getScenesDesByTimeCloudAndGeometry(
@@ -144,7 +145,7 @@ public interface ISceneRepo extends BaseMapper<Scene> {
             "        1=0" +
             "    </otherwise>" +
             "</choose>" +
-            "AND ss.data_type = 'satellite' " +
+            "AND ss.data_type in ('satellite', 'dem') " +
             "ORDER BY sc.scene_time ASC" +
             "</script>")
     @Results({

@@ -249,12 +249,19 @@ export const useFilter = () => {
         }
         // allFilteredImages.value = await getSceneByConfig(filterData)
         if (searchedSpatialFilterMethod.value === 'region') {
-            allScenes.value = (await getSceneByConfig(filterData)).map((image) => {
-                return {
+            const allScenesRes = await getSceneByConfig(filterData)
+            allScenes.value = allScenesRes
+                .filter((image) => image.dataType === 'satellite')
+                .map((image) => ({
                     ...image,
                     tags: [image.tags.source, image.tags.production, image.tags.category],
-                }
-            })
+                }))
+            allDEMs.value = allScenesRes
+                .filter((image) => image.dataType === 'dem')
+                .map((image) => ({
+                    ...image,
+                    tags: [image.tags.source, image.tags.production, image.tags.category],
+                }))
         } else if (searchedSpatialFilterMethod.value === 'poi') {
             const poiFilter = {
                 startTime: defaultConfig.value.dateRange[0].format('YYYY-MM-DD'),
@@ -263,14 +270,22 @@ export const useFilter = () => {
                 locationId: finalLandId.value,
                 resolution: selectedGrid.value
             }
-            allScenes.value = (await getSceneByPOIConfig(poiFilter)).map((image) => {
-                return {
+            const allScenesRes = await getSceneByPOIConfig(poiFilter)
+            allScenes.value = allScenesRes
+                .filter((image) => image.dataType === 'satellite')
+                .map((image) => ({
                     ...image,
-                    tags: [image.tags.source, image.tags.production, image.tags.category]
-                }
-            })
+                    tags: [image.tags.source, image.tags.production, image.tags.category],
+                }))
+            allDEMs.value = allScenesRes
+                .filter((image) => image.dataType === 'dem')
+                .map((image) => ({
+                    ...image,
+                    tags: [image.tags.source, image.tags.production, image.tags.category],
+                }))
         }
         console.log('allScenes', allScenes.value)
+        console.log('allDEMs', allDEMs.value)
     
         // 记录所有景中含有的“传感器+分辨率字段”
         // allSensorsItems.value = getSensorsAndResolutions(allScenes.value)
@@ -290,9 +305,6 @@ export const useFilter = () => {
         // 获取各分辨率拥有多少种传感器，用来渲染下拉框
         classifyScenesByResolution(allScenes.value)
     
-        // 刚拿到的时候根据默认tags先分类一次
-        // filterByTags()
-    
         // 恢复状态
         filterLoading.value = false
         isFilterDone.value = true
@@ -307,7 +319,8 @@ export const useFilter = () => {
                     resolution: item.resolution,
                 }
             }),
-            sceneIds: allScenes.value.filter(image => image.tags.includes('ard') || parseFloat(image.resolution) > 1).map((image: any) => image.sceneId),
+            sceneIds: allScenes.value.filter(image => image.tags.includes('ard') || parseFloat(image.resolution) > 1).map((image: any) => image.sceneId)
+                        ,
         }
     
         // Destroy layer
@@ -349,8 +362,14 @@ export const useFilter = () => {
         ezStore.set('sceneGridsRes', sceneGridsRes)
     
         // 算覆盖率
-        const nonEmptyScenesCount = sceneGridsRes.filter((item) => item.scenes.length > 0).length
+        let nonEmptyScenesCount = 0
+        let nonEmptyDEMsCount = 0
+        for (const item of sceneGridsRes) {
+            if (item.scenes.some(scene => scene.dataType === 'satellite')) nonEmptyScenesCount++
+            if (item.scenes.some(scene => scene.dataType === 'dem')) nonEmptyDEMsCount++
+        }
         coverageRSRate.value = ((nonEmptyScenesCount * 100) / sceneGridsRes.length).toFixed(2) + '%'
+        coverageDEMRate.value = ((nonEmptyDEMsCount * 100) / sceneGridsRes.length).toFixed(2) + '%'
     
         updateFullSceneGridLayer(allGrids.value, sceneGridsRes, allScenes.value.length)
     
@@ -378,7 +397,7 @@ export const useFilter = () => {
     
         const stopLoading = message.loading(t('datapage.explore.message.load'))
     
-        let coverScenes
+        let coverScenes, gridsBoundary
         if (searchedSpatialFilterMethod.value === 'region') {
             const params = {
                 sensorName,
@@ -386,7 +405,9 @@ export const useFilter = () => {
                 regionId: finalLandId.value,
                 resolution: selectedGrid.value,
             }
-            coverScenes = await getCoverRegionSensorScenes(params)
+            const coverScenesRes = await getCoverRegionSensorScenes(params)
+            coverScenes = coverScenesRes.sceneList
+            gridsBoundary = coverScenesRes.gridsBoundary
         } else if (searchedSpatialFilterMethod.value === 'poi') {
             const params = {
                 sensorName,
@@ -394,10 +415,12 @@ export const useFilter = () => {
                 locationId: finalLandId.value,
                 resolution: selectedGrid.value,
             }
-            coverScenes = await getCoverPOISensorScenes(params)
+            const coverScenesRes = await getCoverRegionSensorScenes(params)
+            coverScenes = coverScenesRes.sceneList
+            gridsBoundary = coverScenesRes.gridsBoundary
         }
         console.log('接口返回：覆盖的景们', coverScenes)
-        await addMultiRGBImageTileLayer(coverScenes, stopLoading)
+        await addMultiRGBImageTileLayer(coverScenes, gridsBoundary, stopLoading)
     }
 
 
@@ -422,6 +445,8 @@ export const useFilter = () => {
         activeSpatialFilterMethod,
         tabs,
         allScenes,
+        allDEMs,
+        coverageDEMRate,
         allSensorsItems,
         coverageRSRate,
         handleSelectTab,

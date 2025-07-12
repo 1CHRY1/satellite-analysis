@@ -415,7 +415,7 @@
                                                         <div class="result-info-content">
                                                             <div class="result-info-label">{{ t('datapage.explore.section_time.search') }}</div>
                                                             <div class="result-info-value">
-                                                                {{ allScenes.length }}幅DEM
+                                                                {{ allDEMs.length }}幅DEM
                                                             </div>
                                                         </div>
                                                     </div>
@@ -427,8 +427,8 @@
                                                             <div class="result-info-label">{{ t('datapage.explore.percent') }}</div>
                                                             <div class="result-info-value">
                                                                 {{
-                                                                    coverageRSRate != 'NaN%'
-                                                                        ? coverageRSRate
+                                                                    coverageDEMRate != 'NaN%'
+                                                                        ? coverageDEMRate
                                                                         : '待计算'
                                                                 }}
                                                             </div>
@@ -603,9 +603,9 @@ const {
     // 选择空间检索方法
     handleSelectTab,
     // 筛选
-    allScenes, allSensorsItems, filter: applyFilter, filterLoading, isFilterDone,
+    allScenes, allSensorsItems, allDEMs, filter: applyFilter, filterLoading, isFilterDone,
     // 统计信息面板
-    coverageRSRate, handleShowResolutionSensorImage,
+    coverageRSRate, coverageDEMRate, handleShowResolutionSensorImage,
     // 影像分辨率相关变量
     resolutionType, resolutionPlatformSensor
 } = useFilter()
