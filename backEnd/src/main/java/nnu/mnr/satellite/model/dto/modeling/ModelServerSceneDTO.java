@@ -41,4 +41,7 @@ public class ModelServerSceneDTO {
     private boolean isPartiallyOverlapped;
     private JSONObject gridsBoundary;
 
+    // 分辨矢量、Dem和卫星
+    private String dataType;
+
 }

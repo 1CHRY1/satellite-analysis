@@ -47,18 +47,17 @@ public class ToolController {
     }
 
     // 根据ID获取工具详情
-    @GetMapping("/all")
-    public ResponseEntity<List<ToolInfoVO>> getToolById() {
-        List<ToolInfoVO> toolList = toolService.getAllTool();
-        return ResponseEntity.ok(toolList);
+    @PostMapping("/all")
+    public ResponseEntity<CommonResultVO> getToolPage(@RequestBody ToolPageDTO toolPageDTO) {
+        CommonResultVO resultVO = toolService.getToolPage(toolPageDTO);
+        return ResponseEntity.ok(resultVO);
     }
 
-//    // 3. 执行工具（如运行打包后的代码）
-//    @PostMapping("/{toolId}/execute")
-//    public ResponseEntity<ExecutionResultVO> executeTool(
-//            @PathVariable String toolId,
-//            @RequestBody ExecutionInputDTO input) {
-//        ExecutionResultVO result = codeToolService.executeTool(toolId, input);
-//        return ResponseEntity.ok(result);
-//    }
+    // 3. 执行工具（如运行打包后的代码）
+    @PostMapping("/execute")
+    public ResponseEntity<CommonResultVO> executeTool(
+            @RequestBody ExecutionInputDTO executionInputDTO) {
+        CommonResultVO result = toolService.executeTool(executionInputDTO);
+        return ResponseEntity.ok(result);
+    }
 }
