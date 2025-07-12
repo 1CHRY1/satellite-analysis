@@ -3,6 +3,7 @@ import os.path
 import uuid
 from types import SimpleNamespace
 import sys
+import shutil
 
 from osgeo import gdal, osr
 import json
@@ -203,6 +204,13 @@ def process_multi_band(scene_path):
 
         # 获取图像的波段数
         num_bands = dataset.RasterCount
+
+        # 如果只有一个波段，则拷贝后直接返回
+        if num_bands == 1:
+            band_filename = os.path.join(temp_dir, f"1_{str(uuid.uuid4())}.tif")
+            shutil.copy(scene_path, band_filename)
+            band_list.append({"path": band_filename, "band": 1})
+            return band_list, scene_basic_info
 
         # 循环处理每个波段
         for band_idx in range(1, num_bands + 1):
