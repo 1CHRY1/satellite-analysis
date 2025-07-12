@@ -16,5 +16,6 @@ public class Code2ToolDTO {
     private List<String> tags;
     private String category;
     private List<JSONObject> parameters;
+    private String outputType;
 }
 

@@ -435,6 +435,7 @@ import {
 } from '@/api/http/satellite-data'
 import { getRGBTileLayerParamFromSceneObject } from '@/util/visualizeHelper/index'
 import { mapManager } from '@/util/map/mapManager'
+import router from '@/router'
 
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
@@ -1194,6 +1195,11 @@ onMounted(async () => {
     // MapOperation.map_destroyImagePolygon()
     // MapOperation.map_destroyImagePreviewLayer()
     // MapOperation.map_destroyGridLayer()
+    if (!exploreData.load){
+        ElMessage.error(t('nav.disabled_message'))
+
+        router.push('/')
+    }
 
     // 计算四个覆盖率
     let gridCount = exploreData.grids.length

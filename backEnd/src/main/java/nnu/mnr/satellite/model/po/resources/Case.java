@@ -45,4 +45,6 @@ public class Case {
     private LocalDateTime createTime;
     @TableField("region_id")
     private Integer regionId;
+    @TableField(typeHandler = ListTypeHandler.class)
+    private List<String> bandList;
 }

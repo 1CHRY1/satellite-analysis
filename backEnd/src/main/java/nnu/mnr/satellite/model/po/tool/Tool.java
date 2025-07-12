@@ -32,6 +32,7 @@ public class Tool {
     private String category;
     @TableField(typeHandler = ListTypeHandler.class)
     private String parameters;
+    private String outputType;
     @TableField("create_time")
     private LocalDateTime createTime;
 }

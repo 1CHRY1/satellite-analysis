@@ -49,6 +49,7 @@ public class CaseDataService {
         Integer resolution = (Integer) param.get("resolution");
         String address = param.get("address").toString();
         List<String> sceneIds = (List<String>) param.get("sceneIds");
+        List<String> bandList = (List<String>) param.get("bandList");
 
         Case caseObj = Case.builder()
                 .caseId(caseId)
@@ -58,6 +59,7 @@ public class CaseDataService {
                 .boundary((Geometry) param.get("boundary"))
                 .sceneList(sceneIds)
                 .dataSet(param.get("dataSet").toString())
+                .bandList(bandList)
                 .status("RUNNING")
                 .result(null)
                 .createTime(LocalDateTime.now(ZoneId.of("Asia/Shanghai")))
