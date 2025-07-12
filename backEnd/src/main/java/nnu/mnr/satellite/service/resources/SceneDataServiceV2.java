@@ -8,6 +8,7 @@ import nnu.mnr.satellite.model.dto.resources.*;
 import nnu.mnr.satellite.model.po.resources.Region;
 import nnu.mnr.satellite.model.po.resources.Scene;
 import nnu.mnr.satellite.model.po.resources.SceneSP;
+import nnu.mnr.satellite.model.vo.resources.SceneCoveredVO;
 import nnu.mnr.satellite.model.vo.resources.ViewWindowVO;
 import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
 import nnu.mnr.satellite.mapper.resources.ISceneRepo;
@@ -74,20 +75,20 @@ public class SceneDataServiceV2 {
         return sceneRepo.getSceneByIdWithProductAndSensor(sceneId);
     }
 
-    public List<ModelServerSceneDTO> getCoveredSceneByRegionResolutionAndSensor(CoverFetchSceneDTO coverFetchSceneDTO) {
+    public SceneCoveredVO getCoveredSceneByRegionResolutionAndSensor(CoverFetchSceneDTO coverFetchSceneDTO) {
         Geometry boundary = regionDataService.getRegionById(coverFetchSceneDTO.getRegionId()).getBoundary();
         List<String> sceneIds = coverFetchSceneDTO.getSceneIds(); String sensorName = coverFetchSceneDTO.getSensorName();
         Integer resolution = coverFetchSceneDTO.getResolution();
         return getCoveredSceneByBoundaryResolutionAndSensor(boundary, sceneIds, sensorName, resolution);
     } // For Region
-    public List<ModelServerSceneDTO> getCoveredSceneByLocationResolutionAndSensor(CoverLocationFetchSceneDTO CoverLocationFetchSceneDTO) {
+    public SceneCoveredVO getCoveredSceneByLocationResolutionAndSensor(CoverLocationFetchSceneDTO CoverLocationFetchSceneDTO) {
         Geometry boundary = locationService.getLocationBoundary(CoverLocationFetchSceneDTO.getResolution(), CoverLocationFetchSceneDTO.getLocationId());
         List<String> sceneIds = CoverLocationFetchSceneDTO.getSceneIds(); String sensorName = CoverLocationFetchSceneDTO.getSensorName();
         Integer resolution = CoverLocationFetchSceneDTO.getResolution();
         return getCoveredSceneByBoundaryResolutionAndSensor(boundary, sceneIds, sensorName, resolution);
     } // For Location
     // Get Scenes that Least Covering Region
-    public List<ModelServerSceneDTO> getCoveredSceneByBoundaryResolutionAndSensor(Geometry boundary, List<String> sceneIds, String sensorName, Integer resolution) {
+    public SceneCoveredVO getCoveredSceneByBoundaryResolutionAndSensor(Geometry boundary, List<String> sceneIds, String sensorName, Integer resolution) {
         List<ModelServerSceneDTO> sceneDtos = new ArrayList<>();
         QueryWrapper<Scene> queryWrapper = new QueryWrapper<>();
         queryWrapper.in("scene_id", sceneIds).orderByDesc("scene_time");
@@ -95,6 +96,13 @@ public class SceneDataServiceV2 {
         // 获取格网边界
         List<Integer[]> tileIds = TileCalculateUtil.getRowColByRegionAndResolution(boundary, resolution);
         Geometry gridsBoundary = GeometryUtil.getGridsBoundaryByTilesAndResolution(tileIds, resolution);
+        JSONObject gridsBoundaryJSON = null;
+        try {
+            gridsBoundaryJSON = GeometryUtil.geometry2Geojson(gridsBoundary);
+        } catch (IOException e) {
+            // 处理异常（如记录日志或设置默认值）
+            throw new RuntimeException("Failed to convert geometry to GeoJSON", e);
+        }
 
         List<Scene> scenes = sceneRepo.selectList(queryWrapper);
         GeometryFactory geometryFactory = new GeometryFactory();
@@ -117,13 +125,6 @@ public class SceneDataServiceV2 {
             }
             // 判断是否相交
             boolean isPartiallyOverlapped = isPartiallyOverlapped(gridsBoundary, bbox);
-            JSONObject gridsBoundaryJSON = null;
-            try {
-                gridsBoundaryJSON = GeometryUtil.geometry2Geojson(gridsBoundary);
-            } catch (IOException e) {
-                // 处理异常（如记录日志或设置默认值）
-                throw new RuntimeException("Failed to convert geometry to GeoJSON", e);
-            }
 
             List<ModelServerImageDTO> imageDTOS = imageDataService.getModelServerImageDTOBySceneId(scene.getSceneId());
             ModelServerSceneDTO modelServerSceneDTO = ModelServerSceneDTO.builder()
@@ -133,7 +134,6 @@ public class SceneDataServiceV2 {
                     .bandMapper(bandMapperGenerator.getSatelliteConfigBySensorName(sensorName))
                     .images(imageDTOS)
                     .isPartiallyOverlapped(isPartiallyOverlapped)
-                    .gridsBoundary(gridsBoundaryJSON)
                     .build();
             sceneDtos.add(modelServerSceneDTO);
             if (scenesBoundary.contains(boundary)) {
@@ -143,7 +143,10 @@ public class SceneDataServiceV2 {
 //        Geometry interscet = regionBoundary.intersection(scenesBoundary);
 //        Double res = interscet.getArea() / regionBoundary.getArea();
         Collections.reverse(sceneDtos);
-        return sceneDtos;
+        return SceneCoveredVO.builder()
+                .sceneList(sceneDtos)
+                .gridsBoundary(gridsBoundaryJSON)
+                .build();
     }
 
     public List<SceneSP> getScenesByIdsWithProductAndSensor(List<String> sceneIds) {
