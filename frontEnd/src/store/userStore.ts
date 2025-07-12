@@ -1,8 +1,19 @@
 import { defineStore } from 'pinia'
+import { ref } from 'vue'
 
 export interface UserInfo {
     name: string
     email: string
+    id:string
+}
+
+interface User {
+  id: string
+  name: string
+  email: string
+  title: string
+  organization: string
+  role: string
 }
 
 export const useUserStore = defineStore('user-store', {
