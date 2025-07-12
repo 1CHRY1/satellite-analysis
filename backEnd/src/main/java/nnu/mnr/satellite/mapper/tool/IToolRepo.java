@@ -14,7 +14,7 @@ public interface IToolRepo extends BaseMapper<Tool> {
             "VALUES (#{toolId}, #{projectId}, #{environment}, #{userId}, #{toolName}, #{description}, #{tags}, #{category}, #{parameters}, #{outputType})")
     int insertTool(Tool toolObj);
 
-    @Update("UPDATE tool.tool_table SET environment = #{environment}, tool_name = #{toolName}, description = #{description}, output_type = #{outputType}" +
+    @Update("UPDATE tool.tool_table SET environment = #{environment}, tool_name = #{toolName}, description = #{description}, output_type = #{outputType}, " +
             "tags = #{tags}, category = #{category}, parameters = #{parameters} " +
             "WHERE tool_id = #{toolId}")
     int updateToolById(Tool toolObj);

@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerSceneDTO;
 import nnu.mnr.satellite.model.dto.resources.*;
+import nnu.mnr.satellite.model.vo.resources.SceneCoveredVO;
 import nnu.mnr.satellite.model.vo.resources.ViewWindowVO;
 import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
 import nnu.mnr.satellite.service.resources.SceneDataServiceV2;
@@ -48,12 +49,12 @@ public class SceneControllerV2 {
     }
 
     @PostMapping("/cover/region/sceneIds")
-    public ResponseEntity<List<ModelServerSceneDTO>> getCoveredSceneByRegionResolutionAndSensor(@RequestBody CoverFetchSceneDTO coverFetchSceneDTO) {
+    public ResponseEntity<SceneCoveredVO> getCoveredSceneByRegionResolutionAndSensor(@RequestBody CoverFetchSceneDTO coverFetchSceneDTO) {
         return ResponseEntity.ok(sceneDataService.getCoveredSceneByRegionResolutionAndSensor(coverFetchSceneDTO));
     }
 
     @PostMapping("/cover/location/resolution/sceneIds")
-    public ResponseEntity<List<ModelServerSceneDTO>> getCoveredSceneByLocationResolutionAndSensor(@RequestBody CoverLocationFetchSceneDTO coverFetchSceneDTO) {
+    public ResponseEntity<SceneCoveredVO> getCoveredSceneByLocationResolutionAndSensor(@RequestBody CoverLocationFetchSceneDTO coverFetchSceneDTO) {
         return ResponseEntity.ok(sceneDataService.getCoveredSceneByLocationResolutionAndSensor(coverFetchSceneDTO));
     }
 
