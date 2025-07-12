@@ -6,6 +6,17 @@
         <el-row class="relative z-10 flex h-[calc(100vh-56px)] text-white" style="flex: none">
             <el-col :span="5" class="h-full">
                 <div class="cardShadow border-box mx-[3vw] my-[3vh] opacity-80 p-6 h-[calc(100%-6vh)] overflow-auto">
+                    <div class="flex justify-between items-center mb-4">
+                        
+                        <el-switch
+                            v-model="showTools"
+                            active-text="工具"
+                            inactive-text="模型"
+                            @change="handleViewSwitch"
+                            class="ml-2"
+                        />
+                    </div>
+                    
                     <h2 class="text-lg font-bold">{{t("modelpage.title")}}</h2>
                     <!-- <ul class="mt-4 space-y-2">
                         <li v-for="category in categories" :key="category" class="cursor-pointer hover:text-blue-400">
@@ -98,6 +109,7 @@ import { FilePlus2, Mail, Package } from 'lucide-vue-next'
 import type { modelsOrMethods } from '@/type/modelCentral'
 
 import { useI18n } from 'vue-i18n'
+import router from '@/router'
 const { t } = useI18n()
 
 
@@ -163,6 +175,7 @@ const defaultProps = {
     label: 'label',
 };
 
+const showTools = ref(false) 
 const searchQuery = ref<string>('')
 const models: Ref<modelsOrMethods[]> = ref([])
 const currentPage: Ref<number> = ref(1)
@@ -186,7 +199,15 @@ const pageChange = async (page: number) => {
     })).data;
 }
 
-
+const handleViewSwitch = (isTools: false) => {
+    // 可以在这里添加切换后的逻辑
+    if (!isTools){
+        router.push('/models')
+    } 
+    if (isTools){
+        router.push('/tool')
+    }
+}
 
 onMounted(async () => {
     updateColumns();
