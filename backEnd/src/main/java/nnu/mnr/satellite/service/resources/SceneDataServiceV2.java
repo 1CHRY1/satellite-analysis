@@ -155,7 +155,7 @@ public class SceneDataServiceV2 {
         Integer regionId = scenesFetchDTO.getRegionId(); Integer cloud = scenesFetchDTO.getCloud();
         Region region = regionDataService.getRegionById(regionId);
         String wkt = region.getBoundary().toText();
-        String dataType = "satellite";
+        String dataType = "'satellite', 'dem'";
         return sceneRepo.getScenesDesByTimeCloudAndGeometry(startTime, endTime, cloud, wkt, dataType);
     }
 
@@ -165,7 +165,7 @@ public class SceneDataServiceV2 {
         Integer resolution = scenesFetchDTO.getResolution();
         Geometry boundary = locationService.getLocationBoundary(resolution, locationId);
         String wkt = boundary.toText();
-        String dataType = "satellite";
+        String dataType = "'satellite', 'dem'";
         return sceneRepo.getScenesDesByTimeCloudAndGeometry(startTime, endTime, cloud, wkt, dataType);
     }
 
@@ -226,7 +226,7 @@ public class SceneDataServiceV2 {
         }
 
         // 2. 排除完全包含的情况
-        if (geom1.contains(geom2) || geom2.contains(geom1)) {
+        if (geom1.contains(geom2)) {
             return false; // 完全包含
         }
 

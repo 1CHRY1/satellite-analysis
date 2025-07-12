@@ -82,7 +82,7 @@ class VmodConfig(BaseConfig):
     MINIO_IMAGES_BUCKET                             =       "images"
     MINIO_TILES_BUCKET                              =       "tiles"
     MINIO_GRID_BUCKET                               =       "tiles"
-    MINIO_SR_BUCKET                                 =       "SR"  # Super resolution
+    MINIO_SR_BUCKET                                 =       "temp-files/temp-superResolution"  # Super resolution
     MINIO_TEMP_FILES_BUCKET                         =       "temp-files"
 
     # MySQL Config
@@ -111,7 +111,7 @@ class VmodConfig(BaseConfig):
 class hxfConfig(BaseConfig):
     # MinIO Config
     MINIO_PORT                                      =       30900
-    MINIO_IP                                        =       "192.168.1.101"
+    MINIO_IP                                        =       "192.168.1.110"
     MINIO_ACCESS_KEY                                =       "minioadmin"
     MINIO_SECRET_KEY                                =       "minioadmin"
     MINIO_SECURE                                    =       False
@@ -121,7 +121,7 @@ class hxfConfig(BaseConfig):
     MINIO_TEMP_FILES_BUCKET                         =       "temp-files"
 
     # MySQL Config
-    MYSQL_HOST                                      =       "192.168.1.101"
+    MYSQL_HOST                                      =       "192.168.1.110"
     MYSQL_TILE_PORT                                 =       30779
     MYSQL_TILE_DB                                   =       "tile"
     MYSQL_RESOURCE_PORT                             =       30778

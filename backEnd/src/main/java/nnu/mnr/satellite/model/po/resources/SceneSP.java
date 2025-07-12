@@ -54,4 +54,5 @@ public class SceneSP {
     @TableField(typeHandler = FastJson2TypeHandler.class)
     private JSONObject tags;
     private Double noData;
+    private String dataType;
 }

@@ -2,20 +2,28 @@ package nnu.mnr.satellite.service.tool;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.mapper.modeling.IProjectRepo;
 import nnu.mnr.satellite.mapper.tool.IToolRepo;
 import nnu.mnr.satellite.mapper.user.IUserRepo;
 import nnu.mnr.satellite.model.dto.tool.*;
+import nnu.mnr.satellite.model.po.resources.Case;
 import nnu.mnr.satellite.model.po.tool.*;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
+import nnu.mnr.satellite.model.vo.resources.CaseInfoVO;
 import nnu.mnr.satellite.model.vo.tool.*;
 import nnu.mnr.satellite.utils.common.IdUtil;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.Type;
 import java.util.*;
 
 @Service
@@ -31,6 +39,9 @@ public class ToolService {
     @Autowired
     IProjectRepo projectRepo;
 
+    @Autowired
+    ModelMapper toolModelMapper;
+
     public CommonResultVO publishTool(Code2ToolDTO code2ToolDTO) {
 
         String toolId = IdUtil.generateToolId();
@@ -40,6 +51,7 @@ public class ToolService {
         List<String> tags = Optional.ofNullable(code2ToolDTO.getTags()).orElse(Collections.emptyList());
         String category = code2ToolDTO.getCategory();
         List<JSONObject> parameters = Optional.ofNullable(code2ToolDTO.getParameters()).orElse(Collections.emptyList());
+        String outputType = code2ToolDTO.getOutputType();
         String userId = Optional.ofNullable(code2ToolDTO.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("userId 不能为空"));
         String projectId = Optional.ofNullable(code2ToolDTO.getProjectId())
@@ -68,6 +80,7 @@ public class ToolService {
                 .tags(tags)
                 .category(category)
                 .parameters(parameters.toString())
+                .outputType(outputType)
                 .build();
 
         // 插入数据库
@@ -98,6 +111,7 @@ public class ToolService {
         List<String> tags = Optional.ofNullable(toolInfoDTO.getTags()).orElse(Collections.emptyList());
         String category = toolInfoDTO.getCategory();
         List<JSONObject> parameters = Optional.ofNullable(toolInfoDTO.getParameters()).orElse(Collections.emptyList());
+        String outputType = toolInfoDTO.getOutputType();
         if(isToolIdExistInTool(toolId)){
             Tool toolObj = Tool.builder()
                     .toolId(toolId)
@@ -107,6 +121,7 @@ public class ToolService {
                     .tags(tags)
                     .category(category)
                     .parameters(parameters.toString())
+                    .outputType(outputType)
                     .build();
             // 更新数据库
             try {
@@ -170,36 +185,39 @@ public class ToolService {
         return toolInfoVO;
     }
 
-    public List<ToolInfoVO> getAllTool() {
-        // 1. 查询所有工具
-        List<Tool> tools = toolRepo.selectList(new QueryWrapper<>());
-        // 2. 转换为 ToolInfoVO 列表
-        List<ToolInfoVO> toolList = new ArrayList<>();
-        for (Tool tool : tools) {
-            ToolInfoVO toolInfoVO = new ToolInfoVO();
-            // 复制普通字段
-            BeanUtils.copyProperties(tool, toolInfoVO);
+    public CommonResultVO getToolPage(ToolPageDTO toolPageDTO) {
+        // 构造分页对象
+        Page<Tool> page = new Page<>(toolPageDTO.getPage(), toolPageDTO.getPageSize());
 
-            // 处理 parameters 字段（String → List<JSONObject>）
-            if (tool.getParameters() != null) {
-                try {
-                    toolInfoVO.setParameters(JSONArray.parseArray(tool.getParameters(), JSONObject.class));
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to parse parameters for toolId: " + tool.getToolId(), e);
-                }
+        // 排序
+        String sortField = toolPageDTO.getSortField();
+        Boolean asc = toolPageDTO.getAsc();
+        LambdaQueryWrapper<Tool> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        if (sortField != null && !sortField.isEmpty()) {
+            // 使用 sortField 对应的数据库字段进行排序
+            switch (sortField) {
+                case "createTime":
+                    lambdaQueryWrapper.orderBy(true, asc, Tool::getCreateTime);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unsupported sort field: " + sortField);
             }
-
-            toolList.add(toolInfoVO);
         }
+        // 查询，lambdaQueryWrapper没有显式指定selecet，默认select *
+        IPage<Tool> toolPage = toolRepo.selectPage(page, lambdaQueryWrapper);
 
-        return toolList;
+        return CommonResultVO.builder()
+                .status(1)
+                .message("分页查询成功")
+                .data(mapPage(toolPage))
+                .build();
     }
 
-//    // 3. 执行工具
-//    public ExecutionResultVO executeTool(String toolId, ExecutionInputDTO input) {
-//        // 调用运行时环境（如Docker容器）执行代码
-//        // 返回执行结果（日志、输出等）
-//    }
+    // 3. 执行工具
+    public CommonResultVO executeTool(ExecutionInputDTO executionInputDTO) {
+
+        return null;
+    }
 
     public String isProjectIdExistInTool(String projectId) {
         QueryWrapper<Tool> queryWrapper = new QueryWrapper<>();
@@ -212,6 +230,22 @@ public class ToolService {
         QueryWrapper<Tool> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("tool_Id", toolId); // 构造查询条件
         return toolRepo.selectCount(queryWrapper) > 0;
+    }
+
+    private IPage<ToolInfoVO> mapPage(IPage<Tool> toolPage) {
+        // 映射记录列表
+        Type destinationType = new TypeToken<List<ToolInfoVO>>() {
+        }.getType();
+        List<ToolInfoVO> toolInfoVOList = toolModelMapper.map(toolPage.getRecords(), destinationType);
+
+        // 创建一个新的 Page 对象
+        Page<ToolInfoVO> resultPage = new Page<>();
+        resultPage.setRecords(toolInfoVOList);
+        resultPage.setTotal(toolPage.getTotal());
+        resultPage.setSize(toolPage.getSize());
+        resultPage.setCurrent(toolPage.getCurrent());
+
+        return resultPage;
     }
 
 }

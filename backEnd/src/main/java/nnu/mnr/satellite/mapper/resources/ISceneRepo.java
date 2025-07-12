@@ -37,7 +37,7 @@ public interface ISceneRepo extends BaseMapper<Scene> {
             "LEFT JOIN product_table pd ON sc.product_id = pd.product_id " +
             "WHERE sc.scene_time BETWEEN #{startTime} AND #{endTime} " +
             "AND sc.cloud < #{cloud} " +
-            "AND ss.data_type = #{dataType} " +
+            "AND ss.data_type in (${dataType}) " +
             "AND ( ST_Intersects(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), sc.bounding_box) OR " +
             "ST_Contains(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), sc.bounding_box) OR " +
             "ST_Within(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), sc.bounding_box) )" +
@@ -128,7 +128,7 @@ public interface ISceneRepo extends BaseMapper<Scene> {
     @Select("<script>" +
             "SELECT sc.scene_id, sc.scene_name, sc.scene_time, sc.coordinate_system, " +
             "sc.band_num, sc.bands, sc.cloud, sc.tags, sc.no_data, sc.bounding_box, sc.bucket, sc.cloud_path, " +
-            "ss.sensor_name, ss.platform_name, pd.product_name, pd.resolution " +
+            "ss.sensor_name, ss.platform_name, pd.product_name, pd.resolution, ss.data_type " +
             "FROM scene_table sc " +
             "LEFT JOIN sensor_table ss ON sc.sensor_id = ss.sensor_id " +
             "LEFT JOIN product_table pd ON sc.product_id = pd.product_id " +
@@ -164,6 +164,7 @@ public interface ISceneRepo extends BaseMapper<Scene> {
             @Result(property = "tags", column = "tags", typeHandler = FastJson2TypeHandler.class),
             @Result(property = "noData", column = "no_data"),
             @Result(property = "bbox", column = "bounding_box", typeHandler = GeometryTypeHandler.class),
+            @Result(property = "dataType", column = "data_type"),
     })
     List<SceneSP> getScenesByIdsWithProductAndSensor(@Param("sceneIds") List<String> sceneIds);
 
