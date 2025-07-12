@@ -79,7 +79,15 @@ def load_product_configs(product_config_json_paths):
 def process_folder(PRODUCT_CONFIG, scenes_dir):
     print(f"[INFO] ------------ Processing Scene Folders: {PRODUCT_CONFIG['CUR_SENSOR_NAME']} ------------\r\n")
     scene_prefix = PRODUCT_CONFIG["SCENE_PREFIX"]
-    folders = [f for f in os.listdir(scenes_dir) if os.path.isdir(os.path.join(scenes_dir, f)) and f.startswith(scene_prefix)]
+    if isinstance(scene_prefix, str):
+        prefix_tuple = (scene_prefix,)
+    else:
+        prefix_tuple = tuple(scene_prefix)
+
+    folders = [
+        f for f in os.listdir(scenes_dir)
+        if os.path.isdir(os.path.join(scenes_dir, f)) and f.startswith(prefix_tuple)
+    ]
     folders.sort()
     print(f"[INFO] Found {len(folders)} scene folders\r\n")
     SCENE_CONFIGS = []
@@ -157,6 +165,13 @@ def set_initial_scene_info(PRODUCT_CONFIG):
     }
     return SCENE_CONFIG
 
+def check_time_format(time_str):
+    try:
+        datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S")
+        return True
+    except Exception:
+        return False
+
 def parse_xml(xml_path, SCENE_CONFIG):
     try:
         # 解析XML文件
@@ -165,10 +180,23 @@ def parse_xml(xml_path, SCENE_CONFIG):
 
         # 获取时间信息
         start_time = root.find(".//StartTime")
-        if start_time is not None and start_time.text:
+        end_time = root.find(".//EndTime")
+        center_time = root.find(".//CenterTime")
+        produce_time = root.find(".//ProduceTime")
+        receive_time = root.find(".//ReceiveTime")
+        
+        if start_time is not None and start_time.text and check_time_format(start_time.text):
             SCENE_CONFIG["XML"]["IMAGE_TIME"] = start_time.text
+        elif end_time is not None and end_time.text and check_time_format(end_time.text):
+            SCENE_CONFIG["XML"]["IMAGE_TIME"] = end_time.text
+        elif center_time is not None and center_time.text and check_time_format(center_time.text):
+            SCENE_CONFIG["XML"]["IMAGE_TIME"] = center_time.text
+        elif produce_time is not None and produce_time.text and check_time_format(produce_time.text):
+            SCENE_CONFIG["XML"]["IMAGE_TIME"] = produce_time.text
+        elif receive_time is not None and receive_time.text and check_time_format(receive_time.text):
+            SCENE_CONFIG["XML"]["IMAGE_TIME"] = receive_time.text
         else:
-            exit_with_error(f"[ERROR] No start time found in {xml_path}\r\n")
+            exit_with_error(f"[ERROR] No time found in {xml_path} or time format error, should be yyyy-mm-dd hh:mm:ss\r\n")
         # Get cloud info
         cloud_value = root.find(".//CloudCoverPercent")
         if cloud_value is not None and cloud_value.text:
@@ -186,9 +214,10 @@ def parse_xml(xml_path, SCENE_CONFIG):
         SCENE_CONFIG["XML"]["TR"] = get_coords("TopRightLatitude", "TopRightLongitude")
         SCENE_CONFIG["XML"]["BR"] = get_coords("BottomRightLatitude", "BottomRightLongitude")
         SCENE_CONFIG["XML"]["BL"] = get_coords("BottomLeftLatitude", "BottomLeftLongitude")
-        return SCENE_CONFIG
     except Exception as e:
         exit_with_error(f"[ERROR] Error parsing XML file: {e}\r\nXML file: {xml_path}\r\n")
+    finally:
+        return SCENE_CONFIG
 
 def append_to_log(log_path, log_content):
     try:

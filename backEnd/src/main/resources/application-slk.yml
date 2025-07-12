@@ -68,19 +68,38 @@ minio:
   #url: http://223.2.43.228:30900
 
 docker:
+  # 执行模式：local（本地Docker）或 remote（远程服务器）
+  mode: "local"
+  # 本地Docker配置
+  local:
+    enabled: true
+    localPath: D:/satellite-projects/
+    workDir: /workspace/
+  # 远程服务器配置（保留原有配置）
   defaultServer:
-    #    port: 2376
-    #    host: "223.2.35.208"
-    #    username: "vge"
-    #    password: "3J44.njnu.edu.cn"
-    #  serverDir: /home/vge/satellite/
     port: 2375
-    host: "223.2.35.153"
-    username: "root"
-    password: "dky.njnu.edu.cn"
-  localPath: D:/code/modelDockerVolume
-  serverDir: /home/satellite/
-  workDir: /usr/local/coding/
+    host: "localhost"
+    # 本地Docker不需要SSH，但JSchConnectionManager需要这些配置
+    username: "localhost"
+    password: "localhost"
+  localPath: D:/satellite-projects/
+  serverDir: /workspace/
+  workDir: /workspace/
+
+#docker:
+#  defaultServer:
+#    #    port: 2376
+#    #    host: "223.2.35.208"
+#    #    username: "vge"
+#    #    password: "3J44.njnu.edu.cn"
+#    #  serverDir: /home/vge/satellite/
+#    port: 2375
+#    host: "223.2.35.153"
+#    username: "root"
+#    password: "dky.njnu.edu.cn"
+#  localPath: D:/code/modelDockerVolume
+#  serverDir: /home/satellite/
+#  workDir: /usr/local/coding/
 
 modelServer:
   address: http://127.0.0.1:5000

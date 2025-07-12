@@ -21,13 +21,6 @@ import rasterio.sample
 import rasterio._features
 import morecantile
 import _cffi_backend
-# 强制设定 cacert.pem 路径（打包后 certifi/cacert.pem 一定在同目录）
-cert_path = os.path.join(os.path.dirname(__file__), "certifi", "cacert.pem")
-# 设置环境变量（requests/urllib 会用）
-os.environ['SSL_CERT_FILE'] = cert_path
-# 设置 Python 内置 ssl 的默认上下文（可兼容 pyproj、urllib）
-ssl._create_default_https_context = ssl.create_default_context
-ssl._create_default_https_context().load_verify_locations(cert_path)
 ## 此处注意替换本地环境中的两个文件，一个是morecantile，一个是certifi，QQ群里有相应文件
 
 
@@ -71,6 +64,15 @@ def insert_to_db(scene_info, scene_conf, db_conf):
             return False
     return True
 
+def check_if_scene_exists(scene_name):
+    scene_id = get_scene_byName(scene_name)
+    if scene_id is not None:
+        return True
+    else:
+        return False
+    
+    
+
 def batch_insert(PRODUCT_CONFIGS, DB_CONFIG):
     for i, PRODUCT_CONFIG in enumerate(PRODUCT_CONFIGS):
         print(f"========== [{PRODUCT_CONFIG['CUR_SENSOR_NAME']}] Insert Start ==========")
@@ -82,6 +84,12 @@ def batch_insert(PRODUCT_CONFIGS, DB_CONFIG):
             print(f"  [Scene {j+1}] {SCENE_CONFIG['SCENE_PATH']}")
             append_to_log(args.output_log, f"[Scene {j+1}] {SCENE_CONFIG['SCENE_PATH']}\n")
             try:
+                scene_name = os.path.basename(os.path.dirname(SCENE_CONFIG["SCENE_PATH"]))
+                if check_if_scene_exists(scene_name):
+                    status = 'NotStarted'
+                    print(f"    [NOT STARTED] Scene {j+1} already exists, skipping...")
+                    err_info += f"[ERROR] Scene {scene_name} already exists\n"
+                    continue
                 object_prefix = f'{SCENE_CONFIG["CUR_SENSOR_NAME"]}/{SCENE_CONFIG["CUR_PRODUCT_NAME"]}'
                 set_initial_config(SCENE_CONFIG, DB_CONFIG)
                 try:

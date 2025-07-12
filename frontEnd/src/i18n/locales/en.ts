@@ -452,7 +452,7 @@ export default{
 
             subtitle2:"Grid resolution",
             resolution:"Grid resolution selection:",
-            advice:" We recommend that the grid resolution of the provincial administrative units should not be less than 20km",
+            advice:" We recommend that the grid resolution of the provincial administrative units should not be more than 30km",
 
             button:"Access Grid",
         },
@@ -461,7 +461,7 @@ export default{
             sectiontitle:"Filter by time",
             subtitle1:"Time range",
             intext_date:"'date of start', 'date of end'",
-            button:"Image filtering",
+            button:"Data retrieval",
 
             subtitle2:"Statistical information",
             resolution:"Grid resolution",
@@ -506,7 +506,7 @@ export default{
         scene_choose:"Select sensor：",
 
         message:{
-            ordererror:"Please complete the imagery flitering first, then generate the cloud-free basemap",
+            ordererror:"Please complete the data retrieval first, then generate the cloud-free basemap",
             filtererror_choose:"Please select the administrative division and access the grid first",
             filtererror_grid:"Please access the grid first",
             sceneerror_recondition:"No imagery matching the requirements , please reset the conditions",
@@ -514,7 +514,7 @@ export default{
             imagery_error:"Please select valid imagery",
             load:"Loading imagery...",
             typyerror_condition:"Please set the filter conditions",
-            typyerror_filter:"Please screen the imagery first",
+            typyerror_filter:"Please retrieve the data first",
             typyerror_source:"Please select the data source you need",
             typyerror_type:"Please select the type of sensor you need",
             typyerror_data:"Please select the data level you need",

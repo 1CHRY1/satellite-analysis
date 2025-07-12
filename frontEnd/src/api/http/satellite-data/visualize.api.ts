@@ -139,6 +139,7 @@ type RGBTileLayerParams = {
     b_min: number
     b_max: number
     nodata?: number
+    gridsBoundary?: any
 }
 export function getSceneRGBCompositeTileUrl(param: RGBTileLayerParams) {
     let baseUrl = `${titilerEndPoint}/rgb/tiles/{z}/{x}/{y}.png`
@@ -153,6 +154,9 @@ export function getSceneRGBCompositeTileUrl(param: RGBTileLayerParams) {
     requestParams.append('max_g', param.g_max.toString())
     requestParams.append('min_b', param.b_min.toString())
     requestParams.append('max_b', param.b_max.toString())
+    if (param.gridsBoundary) {
+        requestParams.append('grids_boundary', JSON.stringify(param.gridsBoundary))
+    }
     // if (param.nodata) requestParams.append('nodata', param.nodata.toString())
     if (param.nodata !== undefined && param.nodata !== null) {
         requestParams.append('nodata', param.nodata.toString())

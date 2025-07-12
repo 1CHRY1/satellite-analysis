@@ -11,13 +11,16 @@ type RGBTileLayerParams = {
     g_max: number
     b_min: number
     b_max: number
-    nodata: number
+    nodata: number,
+    gridsBoundary: any
 }
 
 const getRGBTileLayerParamFromSceneObject = async (scene): Promise<RGBTileLayerParams> => {
 
     // const bandMapper = scene.bandMapper;
     const nodata = scene.noData
+    const gridsBoundary = scene?.gridsBoundary
+    const partiallyOverlapped = scene?.partiallyOverlapped
     let redPath = '', greenPath = '', bluePath = ''
     for (let img of scene.images) {
 
@@ -71,7 +74,8 @@ const getRGBTileLayerParamFromSceneObject = async (scene): Promise<RGBTileLayerP
         g_max,
         b_min,
         b_max,
-        nodata
+        nodata,
+        gridsBoundary: partiallyOverlapped ? gridsBoundary : null,
     }
 }
 

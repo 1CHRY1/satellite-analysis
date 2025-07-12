@@ -5,6 +5,11 @@ from rio_tiler.profiles import img_profiles
 import numpy as np
 import os
 import math
+import json
+from shapely.geometry import Polygon, Point
+from shapely.ops import unary_union
+from rasterio.features import geometry_mask
+from rasterio.transform import from_bounds
 
 
 ####### Helper ########################################################################################
@@ -52,6 +57,7 @@ def rgb_tile(
     url_r: str = Query(...),
     url_g: str = Query(...),
     url_b: str = Query(...),
+    grids_boundary: str = Query(None, description="GeoJSON polygon string (JSON.stringify from frontend)"),
     min_r: int = Query(0, description="Minimum value of the red band"),
     min_g: int = Query(0, description="Minimum value of the green band"),
     min_b: int = Query(0, description="Minimum value of the blue band"),
@@ -60,7 +66,7 @@ def rgb_tile(
     max_b: int = Query(5000, description="Maximum value of the blue band"),
     nodata: float = Query(0.0, description="No data value"),
 ):
-    '''Get the RGB tile, too many parameters'''
+    '''Get the RGB tile with optional GeoJSON polygon boundary'''
     try: 
         # Step 1: Read the three bands
         with COGReader(url_r, options={"nodata": nodata}) as cog_r:
@@ -77,15 +83,96 @@ def rgb_tile(
         with COGReader(url_b) as cog_b:
             tile_b, _ = cog_b.tile(x, y, z)
 
-        # Step 2: Combine the RGB (3, H, W)
+        # Step 2: Process GeoJSON boundary if provided
+        if grids_boundary:
+            try:
+                # Parse the GeoJSON polygon
+                geojson_data = json.loads(grids_boundary)
+                if geojson_data.get("type") == "FeatureCollection":
+                    # 处理 FeatureCollection
+                    polygons = []
+                    for feature in geojson_data["features"]:
+                        if feature["geometry"]["type"] == "Polygon":
+                            coords = feature["geometry"]["coordinates"][0]  # 取外环
+                            polygons.append(Polygon(coords))
+                        elif feature["geometry"]["type"] == "MultiPolygon":
+                            for poly_coords in feature["geometry"]["coordinates"]:
+                                polygons.append(Polygon(poly_coords[0]))  # 取每个多边形的外环
+                    if polygons:
+                        boundary_polygon = unary_union(polygons)
+                    else:
+                        return Response(status_code=400, content=b"No valid polygons found in GeoJSON")
+                elif geojson_data.get("type") == "Feature":
+                    # 处理单个 Feature
+                    if geojson_data["geometry"]["type"] == "Polygon":
+                        coords = geojson_data["geometry"]["coordinates"][0]
+                        boundary_polygon = Polygon(coords)
+                    elif geojson_data["geometry"]["type"] == "MultiPolygon":
+                        polygons = []
+                        for poly_coords in geojson_data["geometry"]["coordinates"]:
+                            polygons.append(Polygon(poly_coords[0]))
+                        boundary_polygon = unary_union(polygons)
+                    else:
+                        return Response(status_code=400, content=b"Unsupported geometry type")
+                elif geojson_data.get("type") == "Polygon":
+                    # 处理单个 Polygon
+                    coords = geojson_data["coordinates"][0]
+                    boundary_polygon = Polygon(coords)
+                else:
+                    return Response(status_code=400, content=b"Unsupported GeoJSON type")
+                
+                # 优化方案：先检查瓦片是否与多边形相交
+                tile_wgs_bounds = tile_bounds(x, y, z)
+                tile_bbox = Polygon([
+                    (tile_wgs_bounds["west"], tile_wgs_bounds["south"]),
+                    (tile_wgs_bounds["east"], tile_wgs_bounds["south"]),
+                    (tile_wgs_bounds["east"], tile_wgs_bounds["north"]),
+                    (tile_wgs_bounds["west"], tile_wgs_bounds["north"]),
+                    (tile_wgs_bounds["west"], tile_wgs_bounds["south"])
+                ])
+                
+                # 如果瓦片与多边形不相交，直接返回透明瓦片
+                if not tile_bbox.intersects(boundary_polygon):
+                    return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
+                
+                # 使用 rasterio 的向量化操作生成掩膜
+                H, W = tile_r.squeeze().shape
+                
+                # 创建从瓦片边界到像素坐标的变换矩阵
+                transform = from_bounds(
+                    tile_wgs_bounds['west'], tile_wgs_bounds['south'], 
+                    tile_wgs_bounds['east'], tile_wgs_bounds['north'], 
+                    W, H
+                )
+                
+                # 使用向量化操作生成多边形掩膜
+                # invert=True 表示多边形内部为 True，外部为 False
+                polygon_mask = geometry_mask(
+                    [boundary_polygon], 
+                    out_shape=(H, W), 
+                    transform=transform, 
+                    invert=True
+                )
+                
+                # 合并掩膜 (nodata mask & polygon mask)
+                final_mask = np.logical_and(mask == 255, polygon_mask)
+                final_mask_uint8 = final_mask.astype("uint8") * 255
+                
+            except Exception as e:
+                return Response(status_code=400, content=f"Invalid GeoJSON format: {str(e)}".encode())
+        else:
+            # No boundary provided, use original mask
+            final_mask_uint8 = mask
+
+        # Step 3: Combine the RGB (3, H, W)
         r = normalize(tile_r.squeeze(),  min_r, max_r)
         g = normalize(tile_g.squeeze(),  min_g, max_g)
         b = normalize(tile_b.squeeze(),  min_b, max_b)
         
         rgb = np.stack([r,g,b])
 
-        # Step 3: Render the PNG
-        content = render(rgb, mask=mask, img_format="png", **img_profiles.get("png"))
+        # Step 4: Render the PNG
+        content = render(rgb, mask=final_mask_uint8, img_format="png", **img_profiles.get("png"))
 
         return Response(content, media_type="image/png")
     
@@ -108,7 +195,7 @@ def rgb_box_tile(
     max_r: int = Query(5000),
     max_g: int = Query(5000),
     max_b: int = Query(5000),
-    nodata: float = Query(0.0, description="No data value"),
+    nodata: float = Query(0.0, description="No data value")
 ):
     try: 
         '''Get the box RGB tile, too many parameters'''
