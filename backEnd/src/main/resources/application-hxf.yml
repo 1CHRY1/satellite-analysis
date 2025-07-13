@@ -37,7 +37,7 @@ spring:
 #          driver-class-name: org.postgresql.Driver
         pg_satellite:
 #          url: jdbc:postgresql://223.2.34.8:31543/satellite
-          url: jdbc:postgresql://192.168.1.107:5432/satellite
+          url: jdbc:postgresql://192.168.1.103:5432/satellite
           username: postgres
           password: 123456
           driver-class-name: org.postgresql.Driver
