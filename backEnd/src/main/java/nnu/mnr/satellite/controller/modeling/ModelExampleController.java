@@ -56,4 +56,9 @@ public class ModelExampleController {
         return ResponseEntity.ok(modelExampleService.getRasterResultByLine(lineRasterFetchDTO));
     }
 
+    @PostMapping("/superResolution")
+    public ResponseEntity<CommonResultVO> getSRResultByBand(@RequestBody SRBandDTO SRBandDTO) {
+        return ResponseEntity.ok(modelExampleService.getSRResultByBand(SRBandDTO));
+    }
+
 }
