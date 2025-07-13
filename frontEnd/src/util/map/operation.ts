@@ -1097,7 +1097,6 @@ export function map_destroyMultiNoCloudLayer() {
 //////////// 地形
 type TerrainLayerParam = {
     fullTifPath: string
-    gridsBoundary?: any
 }
 export function map_addTerrain(param: TerrainLayerParam): void {
     const terrainSourceUrl = getTerrainRGBUrl(param.fullTifPath)
@@ -1123,176 +1122,9 @@ export function map_destroyTerrain() {
     })
 }
 
-/**
- * 遥感产品可视化
- */
-export function map_addMultiTerrainTileLayer(params: TerrainLayerParam[], cb?: () => void) {
-    const prefix = 'MultiTerrain'
-    let layeridStore: any = null
-    if (!ezStore.get('MultiTerrainLayerIds')) ezStore.set('MultiTerrainLayerIds', [])
-
-    layeridStore = ezStore.get('MultiTerrainLayerIds')
-
-    map_destroyMultiTerrainTileLayer()
-
-    mapManager.withMap((m) => {
-        for (let i = 0; i < params.length; i++) {
-            const id = prefix + uid()
-            const srcId = id + '-source'
-            if (m.getLayer(id) && m.getSource(srcId)) {
-                m.removeLayer(id)
-                m.removeSource(srcId)
-            }
-
-            layeridStore.push(id)
-
-            const tileUrl = getTerrainRGBUrl(params[i].fullTifPath, params[i].gridsBoundary, 0.5)
-
-            m.setTerrain(null)
-            m.addSource(srcId, {
-                type: 'raster-dem',
-                tiles: [tileUrl],
-                tileSize: 256,
-            })
-            m.setTerrain({ source: srcId, exaggeration: 4.0 })
-        }
-
-        setTimeout(() => {
-            cb && cb()
-        }, 3000)
-    })
-}
-export function map_destroyMultiTerrainTileLayer() {
-    if (!ezStore.get('MultiTerrainLayerIds')) return
-
-    const layeridStore = ezStore.get('MultiTerrainLayerIds')
-    console.log(layeridStore)
-    mapManager.withMap((m) => {
-        for (let i = 0; i < layeridStore.length; i++) {
-            const id = layeridStore[i]
-            m.setTerrain(null)
-            m.getLayer(id) && m.removeLayer(id)
-            m.getSource(id + '-source') && m.removeSource(id + '-source')
-        }
-    })
-}
-
-export function map_addMultiOneBandColorLayer(params: OneBandColorLayerParam[], cb?: () => void) {
-    const prefix = 'MultiOneBandColor'
-    let layeridStore: any = null
-    if (!ezStore.get('MultiOneBandColorLayerIds')) ezStore.set('MultiOneBandColorLayerIds', [])
-
-    layeridStore = ezStore.get('MultiOneBandColorLayerIds')
-
-    map_destroyMultiOneBandColorLayer()
-
-    mapManager.withMap((m) => {
-        for (let i = 0; i < params.length; i++) {
-            const id = prefix + uid()
-            const srcId = id + '-source'
-            if (m.getLayer(id) && m.getSource(srcId)) {
-                m.removeLayer(id)
-                m.removeSource(srcId)
-            }
-
-            layeridStore.push(id)
-            const nodata = params[i].nodata
-            const tileUrl = getOneBandColorUrl(params[i].fullTifPath, params[i].gridsBoundary, nodata)
-
-            m.addSource(srcId, {
-                type: 'raster',
-                tiles: [tileUrl],
-            })
-
-            m.addLayer({
-                id: id,
-                type: 'raster',
-                source: srcId,
-            })
-        }
-
-        setTimeout(() => {
-            cb && cb()
-        }, 3000)
-    })
-}
-export function map_destroyMultiOneBandColorLayer() {
-    if (!ezStore.get('MultiOneBandColorLayerIds')) return
-
-    const layeridStore = ezStore.get('MultiOneBandColorLayerIds')
-    console.log(layeridStore)
-    mapManager.withMap((m) => {
-        for (let i = 0; i < layeridStore.length; i++) {
-            const id = layeridStore[i]
-            m.getLayer(id) && m.removeLayer(id)
-            m.getSource(id + '-source') && m.removeSource(id + '-source')
-        }
-    })
-}
-
-/**
- * 矢量图层
- */
-export function map_addMVTLayer(source_layer: string, landId: string, cb?: () => void) {
-    const prefix = 'MVT'
-    let layeridStore: any = null
-    if (!ezStore.get('MVTLayerIds')) ezStore.set('MVTLayerIds', [])
-
-    layeridStore = ezStore.get('MVTLayerIds')
-
-    map_destroyMVTLayer()
-
-    mapManager.withMap((m) => {
-        const id = prefix + uid()
-        const srcId = id + '-source'
-        if (m.getLayer(id) && m.getSource(srcId)) {
-            m.removeLayer(id)
-            m.removeSource(srcId)
-        }
-
-        layeridStore.push(id)
-        const tileUrl = `http://${window.location.host}/api/data/vector/region/${landId}/${source_layer}/{z}/{x}/{y}`
-
-        m.addSource(srcId, {
-            type: 'vector',
-            tiles: [tileUrl],
-        })
-
-        m.addLayer({
-            id: id,
-            type: 'fill',
-            source: srcId,
-            'source-layer': source_layer,
-            paint: {
-                'fill-color': '#0066cc',
-                'fill-opacity': 0.5,
-            }
-        })
-
-        setTimeout(() => {
-            cb && cb()
-        }, 3000)
-    })
-}
-export function map_destroyMVTLayer() {
-    if (!ezStore.get('MVTLayerIds')) return
-
-    const layeridStore = ezStore.get('MVTLayerIds')
-    console.log(layeridStore)
-    mapManager.withMap((m) => {
-        for (let i = 0; i < layeridStore.length; i++) {
-            const id = layeridStore[i]
-            m.getLayer(id) && m.removeLayer(id)
-            m.getSource(id + '-source') && m.removeSource(id + '-source')
-        }
-    })
-}
-
 //////////// 单波段彩色产品 （形变速率）
 type OneBandColorLayerParam = {
-    fullTifPath: string,
-    gridsBoundary?: any,
-    nodata?: number
+    fullTifPath: string
 }
 export function map_addOneBandColorLayer(param: OneBandColorLayerParam): void {
     const sourceUrl = getOneBandColorUrl(param.fullTifPath)
@@ -1461,5 +1293,111 @@ export function map_destroyGridLayer(): void {
         ezStore.delete('grid-layer-highlight-id')
         ezStore.delete('grid-layer-source-id')
         ezStore.delete('grid-layer-cancel-watch')
+    })
+}
+
+
+export const map_addRealtimeTileLayer = async (params: { url: string, sessionId: string }) => {
+    await mapManager.withMap(map => {
+        if (!map) return
+        
+        const sourceId = `realtime-tiles-${params.sessionId}`
+        const layerId = `realtime-tiles-layer-${params.sessionId}`
+        
+        // 移除已存在的实时计算图层
+        if (map.getLayer(layerId)) {
+            map.removeLayer(layerId)
+        }
+        if (map.getSource(sourceId)) {
+            map.removeSource(sourceId)
+        }
+        
+        // 添加时间戳破坏缓存，确保瓦片重新加载
+        const timestamp = Date.now()
+        const tileUrl = `${params.url}?session=${params.sessionId}&t=${timestamp}`
+        
+        // 添加新的瓦片源
+        map.addSource(sourceId, {
+            type: 'raster',
+            tiles: [tileUrl],
+            tileSize: 256,
+            maxzoom: 20
+        })
+        
+        // 添加图层
+        map.addLayer({
+            id: layerId,
+            type: 'raster',
+            source: sourceId,
+            paint: {
+                'raster-opacity': 0.9
+            }
+        })
+        
+        // 监听缩放事件，重新添加图层以强制刷新瓦片
+        const onZoomEnd = () => {
+            // 移除当前图层和源
+            if (map.getLayer(layerId)) {
+                map.removeLayer(layerId)
+            }
+            if (map.getSource(sourceId)) {
+                map.removeSource(sourceId)
+            }
+            
+            // 使用新的时间戳重新添加
+            const newTimestamp = Date.now()
+            const newTileUrl = `${params.url}?session=${params.sessionId}&t=${newTimestamp}`
+            
+            map.addSource(sourceId, {
+                type: 'raster',
+                tiles: [newTileUrl],
+                tileSize: 256,
+                maxzoom: 20
+            })
+            
+            map.addLayer({
+                id: layerId,
+                type: 'raster',
+                source: sourceId,
+                paint: {
+                    'raster-opacity': 0.9
+                }
+            })
+        }
+        
+        // 绑定缩放结束事件
+        map.on('zoomend', onZoomEnd)
+        
+        // 存储事件监听器，用于清理
+        if (!(map as any)._realtimeEventListeners) {
+            (map as any)._realtimeEventListeners = new Map()
+        }
+        (map as any)._realtimeEventListeners.set(sourceId, onZoomEnd)
+    })
+}
+
+export const map_removeRealtimeTileLayer = (sessionId: string) => {
+    mapManager.withMap(map => {
+        if (!map) return
+        
+        const sourceId = `realtime-tiles-${sessionId}`
+        const layerId = `realtime-tiles-layer-${sessionId}`
+        
+        // 移除事件监听器
+        if ((map as any)._realtimeEventListeners) {
+            const eventListener = (map as any)._realtimeEventListeners.get(sourceId)
+            if (eventListener) {
+                map.off('zoomend', eventListener)
+                ;(map as any)._realtimeEventListeners.delete(sourceId)
+            }
+        }
+        
+        // 移除图层和数据源
+        if (map.getLayer(layerId)) {
+            map.removeLayer(layerId)
+        }
+        if (map.getSource(sourceId)) {
+            map.removeSource(sourceId)
+        }
     })
 }

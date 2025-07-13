@@ -4,10 +4,7 @@ import nnu.mnr.satellite.model.dto.modeling.*;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.service.modeling.ModelExampleService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
@@ -32,6 +29,11 @@ public class ModelExampleController {
     @PostMapping("/noCloud")
     public ResponseEntity<CommonResultVO> getNoCloudByRegion(@RequestBody NoCloudFetchDTO noCloudFetchDTO) throws IOException {
         return ResponseEntity.ok(modelExampleService.getNoCloudByRegion(noCloudFetchDTO));
+    }
+
+    @PostMapping("/noCloud/createNoCloudConfig")
+    public ResponseEntity<CommonResultVO> createNoCloudConfig(@RequestBody NoCloudTileDTO noCloudTileDTO) {
+        return ResponseEntity.ok(modelExampleService.createNoCloudConfig(noCloudTileDTO));
     }
 
     @PostMapping("/ndvi/point")
