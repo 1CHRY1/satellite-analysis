@@ -1,6 +1,14 @@
 <template>
     <div class="relative flex flex-1 flex-row bg-black">
         <div class="w-[28vw] p-4 text-gray-200 mb-0 gap-0">
+            <section class="panel-section ml-2 mr-2" style="margin-top: 0rem; margin-bottom: 0.5rem;">
+                <div class="section-header">
+                    <div class="section-icon">
+                        📈
+                    </div>
+                    <span class="page-title">动态展示分析</span>
+                </div>
+            </section>
             <div class="custom-panel px-2 mb-0">
                 <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]">
                     <div class="main-container">
