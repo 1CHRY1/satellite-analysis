@@ -1,7 +1,7 @@
 <template>
     <div class="relative flex flex-1 flex-row bg-black">
-        <div class="w-[28vw] p-4 text-gray-200">
-            <div class="custom-panel px-2">
+        <div class="w-[28vw] p-4 text-gray-200 mb-0 gap-0">
+            <div class="custom-panel px-2 mb-0">
                 <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]">
                     <div class="main-container">
                         <section class="panel-section">
@@ -39,12 +39,12 @@
                                         {{ option.label }}
                                     </option>
                                 </select>
-                                <div class="absolute right-6" @click="clearImages">
+                                <!-- <div class="absolute right-6" @click="clearImages">
                                     <a-tooltip>
                                         <template #title>{{t('datapage.analysis.section2.clear')}}</template>
                                         <Trash2Icon :size="20" />
                                     </a-tooltip>
-                                </div>
+                                </div> -->
 
                             </div>
                         </section>
@@ -57,6 +57,59 @@
         </div>
         <!-- <ImageSearcher class="h-full w-[28vw] mt-10" /> -->
         <MapComp class="flex-1" :style="'local'" :proj="'globe'" :isPicking="isPicking" />
+
+        <div class="absolute right-0 top-0 h-full flex items-center mt-10 ">
+            <!-- Toggle button -->
+            <button 
+                @click="isToolbarOpen = !isToolbarOpen"
+                class="h-12 w-6 bg-gray-800 hover:bg-gray-700 text-white rounded-l-lg shadow-lg flex items-center justify-center transition-all z-10"
+                :class="{ '!bg-blue-600': isToolbarOpen }"
+            >
+                <ChevronLeftIcon 
+                    :size="16" 
+                    class="transition-transform duration-300"
+                    :class="{ 'transform rotate-180': isToolbarOpen }"
+                />
+            </button>
+            <!-- 工具栏内容 -->
+            <div v-show="isToolbarOpen" 
+                 class="h-full bg-gray-800 shadow-lg transition-all duration-300 overflow-hidden flex flex-col"
+                :class="isToolbarOpen ? 'w-64' : 'w-0'">
+                <div class="p-4 text-white border-b border-gray-700">
+                    <h3 class="font-semibold flex items-center gap-2">
+                        <ToolIcon :size="18" />
+                        工具目录
+                    </h3>
+                </div>
+                            <!-- Function Title -->
+                <div class="flex flex-col  flex-wrap  gap-2 mt-4 ml-6 mr-6">
+                        <h3>影像分析</h3>
+                        <button 
+                            v-for="option in optionalTasks" 
+                            :key="option.value"
+                            @click="selectedTask = option.value"
+                            :class="{
+                            'bg-[#1e3a8a] text-white': selectedTask === option.value,
+                            'bg-[#0d1526] text-gray-300 hover:bg-[#1e293b]': selectedTask !== option.value,
+                            'opacity-50 cursor-not-allowed': option.disabled
+                            }"
+                            class="px-3 py-1 border border-[#2c3e50] rounded-lg transition-colors"
+                            :disabled="option.disabled"
+                            >
+                                {{ option.label }}
+                        </button>
+                        <h3>模型分析</h3>
+
+                   <div class="absolute right-6 " @click="clearImages">
+                    <a-tooltip>
+                        <template #title>{{t('datapage.analysis.section2.clear')}}</template>
+                        <Trash2Icon :size="20" />
+                    </a-tooltip>
+                </div>
+                </div>
+                
+            </div>
+        </div>
     </div>
 </template>
 <script setup lang="ts">
@@ -91,7 +144,9 @@ import {
     BoltIcon,
     BanIcon,
     MapIcon,
-    Trash2Icon
+    Trash2Icon,
+    ChevronLeftIcon,
+    ChevronRight
 } from 'lucide-vue-next'
 import { ElMessage } from 'element-plus'
 import { mapManager } from '@/util/map/mapManager'
@@ -100,6 +155,8 @@ const exploreData = useExploreStore()
 
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
+
+const isToolbarOpen = ref(false)
 
 import MapComp from '@/components/feature/map/mapComp.vue'
 const isPicking = ref(false)
@@ -120,12 +177,11 @@ const displayLabel = computed(() => {
 })
 
 const optionalTasks = [
-    { value: 'DSM分析', label: t('datapage.analysis.optionallab.task_DSM'), disabled: false },
-    { value: 'DEM分析', label: t('datapage.analysis.optionallab.task_DEM'), disabled: false },
-    { value: '红绿立体', label: t('datapage.analysis.optionallab.task_red_green'), disabled: false },
-    { value: '形变速率', label: t('datapage.analysis.optionallab.task_rate'), disabled: false },
     { value: 'NDVI时序计算', label: t('datapage.analysis.optionallab.task_NDVI'), disabled: false },
     { value: '光谱分析', label: t('datapage.analysis.optionallab.task_spectral'), disabled: false },
+    { value: '伪彩色分割', label: '伪彩色分割', disabled: false },
+    { value: '指数分析', label: '指数分析', disabled: false },
+    { value: '空间分析', label: '空间分析', disabled: false },
 ]
 
 
@@ -133,10 +189,8 @@ const selectedTask = ref(optionalTasks[0].value)
 
 // 专题组件映射
 const taskComponentMap = {
-    'DSM分析': defineAsyncComponent(() => import('./thematic/dsmPanel.vue')),
-    'DEM分析': defineAsyncComponent(() => import('./thematic/demPanel.vue')),
-    '红绿立体': defineAsyncComponent(() => import('./thematic/RBbandsPanel.vue')),
-    '形变速率': defineAsyncComponent(() => import('./thematic/deformationRate.vue')),
+    '伪彩色分割': defineAsyncComponent(() => import('./thematic/colorThresholdPanel.vue')),
+    '指数分析': defineAsyncComponent(() => import('./thematic/indexPanel.vue')),
     'NDVI时序计算': defineAsyncComponent(() => import('./thematic/ndviPanel.vue')),
     '光谱分析': defineAsyncComponent(() => import('./thematic/spectrumPanel.vue')),
 }
