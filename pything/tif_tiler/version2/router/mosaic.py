@@ -10,7 +10,9 @@ import mercantile
 from rio_tiler.io import COGReader
 from cogeo_mosaic.mosaic import MosaicJSON
 from rio_tiler_mosaic.mosaic import mosaic_tiler
-from rio_tiler_mosaic.methods import defaults
+# from rio_tiler_mosaic.methods import defaults
+# from rio_tiler.mosaic 
+from rio_tiler.mosaic.methods import defaults
 from rio_tiler.utils import render
 
 
