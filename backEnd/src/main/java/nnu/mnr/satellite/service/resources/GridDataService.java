@@ -1,19 +1,24 @@
 package nnu.mnr.satellite.service.resources;
 
+import nnu.mnr.satellite.mapper.resources.IVectorRepo;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerImageDTO;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerSceneDTO;
 import nnu.mnr.satellite.model.dto.resources.GridBasicDTO;
+import nnu.mnr.satellite.model.dto.resources.GridVectorFetchDTO;
 import nnu.mnr.satellite.model.po.geo.GeoLocation;
 import nnu.mnr.satellite.model.po.resources.SceneSP;
+import nnu.mnr.satellite.model.po.resources.Vector;
 import nnu.mnr.satellite.model.vo.resources.GridBoundaryVO;
 import nnu.mnr.satellite.model.vo.resources.GridSceneVO;
 import nnu.mnr.satellite.model.dto.resources.GridSceneFetchDTO;
+import nnu.mnr.satellite.model.vo.resources.VectorInfoVO;
 import nnu.mnr.satellite.service.common.BandMapperGenerator;
 import nnu.mnr.satellite.utils.common.ConcurrentUtil;
 import nnu.mnr.satellite.utils.geom.TileCalculateUtil;
 import org.locationtech.jts.geom.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import nnu.mnr.satellite.model.vo.resources.GridVectorVO;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,6 +49,9 @@ public class GridDataService {
 
     @Autowired
     private LocationService locationService;
+
+    @Autowired
+    private IVectorRepo vectorRepo;
 
     public List<GridBoundaryVO> getGridsByLocationId(String locationId, Integer resolution) throws IOException {
         List<GridBoundaryVO> grids = new ArrayList<>();
@@ -114,6 +122,24 @@ public class GridDataService {
         } catch (IOException e) {
             throw new RuntimeException("Failed to process grids concurrently", e);
         }
+    }
+
+    public List<GridVectorVO> getVectorsFromGrids(GridVectorFetchDTO gridVectorFetchDTO) {
+        List<GridBasicDTO> grids = gridVectorFetchDTO.getGrids();
+        List<String> tableNames = gridVectorFetchDTO.getTableNames();
+        List<GridVectorVO> result = new ArrayList<>();
+        for (GridBasicDTO grid : grids) {
+            Geometry gridPoly = TileCalculateUtil.getTileGeomByIdsAndResolution(grid.getRowId(), grid.getColumnId(), grid.getResolution());
+            String gridPolyText = gridPoly.toText();
+            List<VectorInfoVO> vectorInfoList = vectorRepo.findIntersectingVectors(gridPolyText, tableNames);
+            GridVectorVO gridVectorVO = GridVectorVO.builder()
+                    .rowId(grid.getRowId())
+                    .columnId(grid.getColumnId())
+                    .vectors(vectorInfoList)
+                    .build();
+            result.add(gridVectorVO);
+        }
+        return result;
     }
 
 
