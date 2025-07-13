@@ -1,5 +1,6 @@
 import { ref } from "vue"
 const classifiedScenes = ref({}) // 注意全局变量写在外面
+const classifiedProducts = ref({})
 /**
  * 各数据类型统计信息
  */
@@ -9,7 +10,7 @@ export const useStats = () => {
      */
 
     // 数各种分辨率分别覆盖了多少格网
-    const countResolutionCoverage = (allGridScene: any[]) => {
+    const countResolutionScenesCoverage = (allGridScene: any[]) => {
         const result = {
             '亚米': 0,
             '2米': 0,
@@ -83,6 +84,7 @@ export const useStats = () => {
                 addToCategory('30m', platform)
             } else {
                 addToCategory('500m', platform)
+                // continue
             }
         }
         classifiedScenes.value = result
@@ -169,15 +171,105 @@ export const useStats = () => {
      */
 
     /**
-     * 3. 数字高程模型统计信息
+     * 3. 遥感影像产品统计信息
      */
+    // 数各种产品分别覆盖了多少格网
+    const countProductsCoverage = (allGridScene: any[]) => {
+        const result = {
+            'DEM': 0,
+            '红绿立体影像': 0,
+            '形变速率': 0,
+            'NDVI': 0,
+            '其他': 0,
+        }
+
+        allGridScene.forEach((grid) => {
+            const seen = new Set<string>() // 记录当前 grid 中已统计过的 product 分类
+
+            for (const scene of grid.scenes) {
+                const dataType = scene.dataType
+
+                if (dataType === 'satellite') continue
+
+                let key: string = ''
+                if (dataType === 'dem') {
+                    key = 'DEM'
+                } else if (dataType === '3d') {
+                    key = '红绿立体影像'
+                } else if (dataType === 'svr') {
+                    key = '形变速率'
+                } else if (dataType === 'ndvi') {
+                    key = 'NDVI'
+                } else {
+                    key = '其他'
+                }
+
+                if (!seen.has(key)) {
+                    seen.add(key)
+                    result[key] += 1
+                }
+            }
+
+        })
+
+        return result
+    }
+
+    // 数各种产品分别覆盖了多少景
+    const classifyProducts = (allProducts: any[]) => {
+        const result = {
+            'DEM': [],
+            '红绿立体影像': [],
+            '形变速率': [],
+            'NDVI': [],
+            '其他': [],
+        }
+
+        const addToCategory = (key: string, platform: string) => {
+            if (!result[key].includes(platform)) {
+                result[key].push(platform)
+            }
+        }
+        console.log(allProducts, 'allProducts')
+        for (const scene of allProducts) {
+            const dataType = scene.dataType
+            const platform = scene.platformName
+
+            if (!platform || dataType === 'satellite') continue
+
+            if (dataType === 'dem') {
+                addToCategory('DEM', platform)
+            } else if (dataType === '3d') {
+                addToCategory('红绿立体影像', platform)
+            } else if (dataType === 'svr') {
+                addToCategory('形变速率', platform)
+            } else if (dataType === 'ndvi') {
+                addToCategory('NDVI', platform)
+            } else {
+                // addToCategory('其他', platform)
+                continue
+            }
+        }
+        classifiedProducts.value = result
+        console.log(result, 'result')
+    }
+
+    const getSceneCountByProduct = (product: string, allProducts: any[]) => {
+        let filteredScenes = allProducts.filter(item => item.dataType === product)
+
+        return filteredScenes.length
+    }
 
     return {
-        countResolutionCoverage,
+        countResolutionScenesCoverage,
         classifyScenesByResolution,
         getSceneCountByResolution,
+        getSceneCountByProduct,
         getSceneIdsByPlatformName,
         getSensorNamebyPlatformName,
-        classifiedScenes
+        classifiedScenes,
+        classifiedProducts,
+        classifyProducts,
+        countProductsCoverage,
     }
 }

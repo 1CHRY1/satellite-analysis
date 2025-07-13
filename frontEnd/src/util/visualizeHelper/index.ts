@@ -15,11 +15,10 @@ type RGBTileLayerParams = {
     gridsBoundary: any
 }
 
-const getRGBTileLayerParamFromSceneObject = async (scene): Promise<RGBTileLayerParams> => {
+const getRGBTileLayerParamFromSceneObject = async (scene, gridsBoundary?: any): Promise<RGBTileLayerParams> => {
 
     // const bandMapper = scene.bandMapper;
     const nodata = scene.noData
-    const gridsBoundary = scene?.gridsBoundary
     const partiallyOverlapped = scene?.partiallyOverlapped
     let redPath = '', greenPath = '', bluePath = ''
     for (let img of scene.images) {
@@ -79,20 +78,24 @@ const getRGBTileLayerParamFromSceneObject = async (scene): Promise<RGBTileLayerP
     }
 }
 
-
-const getTerrainParamFromSceneObject = async (scene) => { 
+const getTerrainParamFromSceneObject = async (scene, gridsBoundary?: any) => {
+    const partiallyOverlapped = scene?.partiallyOverlapped
     const terrainImg = scene.images[0]
     const terrainTifPath = terrainImg.bucket + '/' + terrainImg.tifPath
     return {
-        terrainTifPath
+        fullTifPath: terrainTifPath,
+        gridsBoundary: partiallyOverlapped ? gridsBoundary : null,
     }
 }
 
-const getOneBandColorParamFromSceneObject = async (scene) => { 
+const getOneBandColorParamFromSceneObject = async (scene, gridsBoundary?: any) => { 
+    const partiallyOverlapped = scene?.partiallyOverlapped
     const oneBandImage = scene.images[0]
     const fullTifPath = oneBandImage.bucket + '/' + oneBandImage.tifPath
     return {
-        fullTifPath
+        fullTifPath,
+        gridsBoundary: partiallyOverlapped ? gridsBoundary : null,
+        nodata: scene.noData,
     }
 }
 

@@ -8,7 +8,7 @@ def createApp():
     from titiler.core.factory import TilerFactory
     from starlette.middleware.cors import CORSMiddleware
 
-    from router import rgb, terrain, oneband, mosaic
+    from router import rgb, terrain, oneband, mosaic, no_cloud
 
 
 
@@ -32,6 +32,7 @@ def createApp():
     app.include_router(terrain.router, tags=["Terrain RGB Tiler"], prefix="/terrain")
     app.include_router(oneband.router, tags=["One Colorful Band Tiler"], prefix="/oneband")
     app.include_router(mosaic.router, tags=["Mosaic Tiler"], prefix="/mosaic")
+    app.include_router(no_cloud.router, tags=["No Cloud Tiler"], prefix="/no_cloud")
 
     # Add a welcome message for the root endpoint
     @app.get("/")

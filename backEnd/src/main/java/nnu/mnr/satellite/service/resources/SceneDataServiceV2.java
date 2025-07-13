@@ -158,7 +158,7 @@ public class SceneDataServiceV2 {
         Integer regionId = scenesFetchDTO.getRegionId(); Integer cloud = scenesFetchDTO.getCloud();
         Region region = regionDataService.getRegionById(regionId);
         String wkt = region.getBoundary().toText();
-        String dataType = "'satellite', 'dem'";
+        String dataType = "'satellite', 'dem', 'dsm', 'ndvi', 'svr', '3d'";
         return sceneRepo.getScenesDesByTimeCloudAndGeometry(startTime, endTime, cloud, wkt, dataType);
     }
 
@@ -168,7 +168,7 @@ public class SceneDataServiceV2 {
         Integer resolution = scenesFetchDTO.getResolution();
         Geometry boundary = locationService.getLocationBoundary(resolution, locationId);
         String wkt = boundary.toText();
-        String dataType = "'satellite', 'dem'";
+        String dataType = "'satellite', 'dem', 'dsm', 'ndvi', 'svr', '3d'";
         return sceneRepo.getScenesDesByTimeCloudAndGeometry(startTime, endTime, cloud, wkt, dataType);
     }
 

@@ -118,7 +118,9 @@ type ImageInfoType = {
 type MultiImageInfoType = {
     sceneId: string
     time: string
+    sensorName: string
     productName: string
+    dataType: string
     redPath: string
     greenPath: string
     bluePath: string
@@ -137,10 +139,11 @@ const show = defineModel<boolean>()
 // ])
 const singleImages = ref<ImageInfoType[]>([])
 const multiImages = ref<MultiImageInfoType[]>([])
+const productImages = ref<MultiImageInfoType[]>([])
 const scaleRate = ref(50)
 const grid = ref<GridInfoType>({ rowId: 0, columnId: 0, resolution: 0 })
 const activeIndex = ref(-1)
-const visualMode = ref<'single' | 'rgb'>('single')
+const visualMode = ref<'single' | 'rgb' | 'product'>('single')
 const timelineTrack = ref<HTMLElement | null>(null)
 
 const showingImageStrech = reactive({
@@ -174,8 +177,10 @@ const yearOptions:ComputedRef<string[]> = computed(() => {
 const showingImages = computed(() => {
     if (visualMode.value === 'single') {
         return singleImages.value
-    } else {
+    } else if (visualMode.value === 'rgb') {
         return multiImages.value
+    } else {
+        return productImages.value
     }
 })
 
@@ -184,8 +189,10 @@ const filteredImages = computed(() => {
     let images
     if (visualMode.value === 'single') {
         images = singleImages.value as ImageInfoType[]
-    } else {
+    } else if (visualMode.value === 'rgb') {
         images = multiImages.value as MultiImageInfoType[]
+    } else {
+        images = productImages.value as MultiImageInfoType[]
     }
     // console.log('all image', images)
 
@@ -301,20 +308,20 @@ const handleClick = async (index: number) => {
     activeIndex.value = index
 
     // 确保选中的点在视图中居中
-    if (timelineTrack.value) {
-        const items = timelineTrack.value.querySelectorAll('.timeline-item')
-        if (items[index]) {
-            const itemWidth = items[index].clientWidth
-            const trackWidth = timelineTrack.value.clientWidth
-            // @ts-ignore
-            const scrollPosition = items[index].offsetLeft - trackWidth / 2 + itemWidth / 2
+    // if (timelineTrack.value) {
+    //     const items = timelineTrack.value.querySelectorAll('.timeline-item')
+    //     if (items[index]) {
+    //         const itemWidth = items[index].clientWidth
+    //         const trackWidth = timelineTrack.value.clientWidth
+    //         // @ts-ignore
+    //         const scrollPosition = items[index].offsetLeft - trackWidth / 2 + itemWidth / 2
 
-            timelineTrack.value.scrollTo({
-                left: scrollPosition,
-                behavior: 'smooth',
-            })
-        }
-    }
+    //         timelineTrack.value.scrollTo({
+    //             left: scrollPosition,
+    //             behavior: 'smooth',
+    //         })
+    //     }
+    // }
 
     const currentImage = filteredImages.value[index]
 
@@ -435,6 +442,78 @@ const handleClick = async (index: number) => {
             },
             stopLoading,
         )
+    } else if (visualMode.value === 'product') {
+        const img = currentImage as MultiImageInfoType
+
+        let redPath = img.redPath
+        let greenPath = img.greenPath
+        let bluePath = img.bluePath
+        
+        console.log('red, green, blue', redPath, greenPath, bluePath)
+
+        const cache = ezStore.get('statisticCache')
+        const promises: any = []
+        let [min_r, max_r, min_g, max_g, min_b, max_b] = [0, 0, 0, 0, 0, 0]
+
+        if (cache.get(redPath) && cache.get(greenPath) && cache.get(bluePath)) {
+            console.log('cache hit!')
+            ;[min_r, max_r] = cache.get(redPath)
+            ;[min_g, max_g] = cache.get(greenPath)
+            ;[min_b, max_b] = cache.get(bluePath)
+        } else {
+            promises.push(
+                getTifbandMinMax(redPath),
+                getTifbandMinMax(greenPath),
+                getTifbandMinMax(bluePath),
+            )
+            await Promise.all(promises).then((values) => {
+                min_r = values[0][0]
+                max_r = values[0][1]
+                min_g = values[1][0]
+                max_g = values[1][1]
+                min_b = values[2][0]
+                max_b = values[2][1]
+            })
+
+            cache.set(redPath, [min_r, max_r])
+            cache.set(greenPath, [min_g, max_g])
+            cache.set(bluePath, [min_b, max_b])
+        }
+
+        console.log(min_r, max_r, min_g, max_g, min_b, max_b)
+
+        const scale = 1.0 - scaleRate.value / 100
+        console.log(scale)
+        // 基于 scale rate 进行拉伸
+        showingImageStrech.r_min = Math.round(min_r)
+        showingImageStrech.r_max = Math.round(min_r + (max_r - min_r) * scale)
+        showingImageStrech.g_min = Math.round(min_g)
+        showingImageStrech.g_max = Math.round(min_g + (max_g - min_g) * scale)
+        showingImageStrech.b_min = Math.round(min_b)
+        showingImageStrech.b_max = Math.round(min_b + (max_b - min_b) * scale)
+        console.log(showingImageStrech)
+        if (img.dataType === 'dem') {
+            // MapOperation.map_addGridDEMImageTileLayer(
+            //     grid.value,
+            //     {
+            //         demPath: redPath,
+            //         ...showingImageStrech,
+            //         nodata: img.nodata
+            //     },
+            // )
+        } else {
+            MapOperation.map_addGridRGBImageTileLayer(
+                grid.value,
+                {
+                    redPath,
+                    greenPath,
+                    bluePath,
+                    ...showingImageStrech,
+                    nodata: img.nodata
+                },
+                stopLoading,
+            )
+        }
     }
 }
 
@@ -442,7 +521,7 @@ const updateHandler = (
     _data: ImageInfoType[] | MultiImageInfoType[],
     _grid: GridInfoType,
     _scaleRate: number,
-    mode: 'single' | 'rgb',
+    mode: 'single' | 'rgb' | 'product',
 ) => {
     activeIndex.value = -1
     grid.value = _grid
@@ -450,11 +529,14 @@ const updateHandler = (
 
     if (mode === 'single') {
         singleImages.value = _data as ImageInfoType[]
-    } else {
+    } else if (mode === 'rgb') {
         multiImages.value = _data as MultiImageInfoType[]
+    } else {
+        productImages.value = _data as MultiImageInfoType[]
     }
     console.log('single', singleImages.value)
     console.log('multi', multiImages.value)
+    console.log('product', productImages.value)
     console.log('scalerate', _scaleRate)
     scaleRate.value = _scaleRate
 
@@ -470,6 +552,7 @@ onMounted(() => {
         activeIndex.value = -1
         singleImages.value = []
         multiImages.value = []
+        productImages.value = []
         scaleRate.value = 50
     })
 })
