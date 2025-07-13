@@ -579,6 +579,7 @@ export default{
         },
 
         choose: "选择优先使用的传感器",
+        button_choose:"选择",
 
         message:{
             load:"正在加载无云一版图，请稍后...",

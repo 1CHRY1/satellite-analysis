@@ -50,23 +50,21 @@
                                                     {{ t('datapage.nocloud.choose') }}
                                                 </label>
                                                 <select class="max-h-[600px] w-[calc(100%-113px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
-                                                v-model="selectnation"
-                                                >
+                                                    v-model="selectnation">
                                                     <option disabled selected value="">{{ t('datapage.explore.section_interactive.choose') }}</option>
-                                                    <option v-for="platform in groupedLists.national" 
-                                                    :key="platform.platformName" 
-                                                    :value="platform"
-                                                    >
-                                                    {{ platform.platformName }}
-                                                    <span v-if="platform.tags?.includes('national')" style="color: red; margin-left: 5px;">
-                                                        (推荐)
-                                                    </span>
-                                                        </option>
+                                                    <option v-for="(platform, index) in groupedLists.national" 
+                                                        :key="platform.platformName" 
+                                                        :value="platform">
+                                                        {{ platform.platformName }}
+                                                        <span v-if="index === 0 && platform.tags?.includes('national')" style="color: red; margin-left: 5px;">
+                                                            (推荐)
+                                                        </span>
+                                                    </option>
                                                 </select>
 
                                                 <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
                                                         @click="handleShowSensorImage(selectnation)">
-                                                        {{ t('datapage.explore.section_interactive.button') }}
+                                                        {{ t('datapage.nocloud.button_choose') }}
                                                 </a-button>
 
                                                 <div v-if="showProgress[0]"
@@ -201,22 +199,20 @@
                                                     {{ t('datapage.nocloud.choose') }}
                                                 </label>
                                                 <select class="max-h-[600px] w-[calc(100%-113px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
-                                                v-model="selectinternation"
-                                                >
+                                                    v-model="selectnation">
                                                     <option disabled selected value="">{{ t('datapage.explore.section_interactive.choose') }}</option>
-                                                    <option v-for="platform in groupedLists.international" 
-                                                    :key="platform.platformName" 
-                                                    :value="platform"
-                                                    >
-                                                    {{ platform.platformName }}
-                                                    <span v-if="platform.tags?.includes('international')" style="color: red; margin-left: 5px;">
-                                                        (推荐)
-                                                    </span>
+                                                    <option v-for="(platform, index) in groupedLists.international" 
+                                                        :key="platform.platformName" 
+                                                        :value="platform">
+                                                        {{ platform.platformName }}
+                                                        <span v-if="index === 0 && platform.tags?.includes('international')" style="color: red; margin-left: 5px;">
+                                                            (推荐)
+                                                        </span>
                                                     </option>
                                                 </select>
                                                 <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
                                                         @click="handleShowSensorImage(selectinternation)">
-                                                        {{ t('datapage.explore.section_interactive.button') }}
+                                                        {{ t('datapage.nocloud.button_choose') }}
                                                 </a-button>
 
                                                 <div v-if="showProgress[1]"
@@ -283,22 +279,20 @@
                                                     {{ t('datapage.nocloud.choose') }}
                                                 </label>
                                             <select class="max-h-[600px] w-[calc(100%-113px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
-                                                v-model="selectsar"
-                                                >
+                                                    v-model="selectnation">
                                                     <option disabled selected value="">{{ t('datapage.explore.section_interactive.choose') }}</option>
-                                                    <option v-for="platform in groupedLists.sar" 
-                                                    :key="platform.platformName" 
-                                                    :value="platform"
-                                                    >
-                                                    {{ platform.platformName }}
-                                                    <span v-if="platform.tags?.includes('radar')" style="color: red; margin-left: 5px;">
-                                                        (推荐)
-                                                    </span>
+                                                    <option v-for="(platform, index) in groupedLists.sar" 
+                                                        :key="platform.platformName" 
+                                                        :value="platform">
+                                                        {{ platform.platformName }}
+                                                        <span v-if="index === 0 && platform.tags?.includes('radar')" style="color: red; margin-left: 5px;">
+                                                            (推荐)
+                                                        </span>
                                                     </option>
                                                 </select>
                                                 <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
                                                         @click="handleShowSensorImage(selectsar)">
-                                                        {{ t('datapage.explore.section_interactive.button') }}
+                                                        {{ t('datapage.nocloud.button_choose') }}
                                                 </a-button>
 
                                                 <div v-if="showProgress[2]"
@@ -540,16 +534,17 @@ console.log('传感器和类别',platformList)
 // 优先级选项排序
 const groupedLists = computed(() => ({
   national: [
-    ...platformList.filter(item => item.tags?.includes('national')),
-    ...platformList.filter(item => !item.tags?.includes('national')),
+    ...platformList.filter(item => item.tags?.includes('national')&& 
+      parseFloat(item.resolution) == 2) ,
+    // ...platformList.filter(item => !item.tags?.includes('national')),
   ],
   international: [
     ...platformList.filter(item => ['international', 'light'].every(tag => item.tags?.includes(tag))),
-    ...platformList.filter(item => !item.tags?.includes('international')),
+    // ...platformList.filter(item => !item.tags?.includes('international')),
   ],
   sar: [
     ...platformList.filter(item => item.tags?.includes('radar')),
-    ...platformList.filter(item => !item.tags?.includes('radar')),
+    // ...platformList.filter(item => !item.tags?.includes('radar')),
   ],
 }));
 

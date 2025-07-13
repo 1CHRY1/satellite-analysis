@@ -25,7 +25,93 @@
                     <SaveOutlined class="mr-1" />
                     保存
                 </el-button>
+
+                <div style="border-right: 1.5px dashed #5f6477; height: 20px;"></div>
+
+                <el-button link class="toolItem btHover" @click="publishOpen">
+                    <SendOutlined class="mr-1" />
+                    发布
+                </el-button>
             </div>
+
+            <el-dialog title="工具发布" v-model="publishView" width="400px"> 
+                <el-form :model="publishToolData" label-width="100px">
+                    <el-form-item label="工具名称" required>
+                        <el-input v-model="publishToolData.toolName" placeholder="请输入工具名称" />
+                    </el-form-item>
+                    <el-form-item label="运行环境">
+                        <el-select v-model="publishToolData.environment" disabled>
+                            <el-option label="Python 3.9" value="python3.9" />
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="分类" required>
+                        <el-input v-model="publishToolData.category" placeholder="请输入工具分类" />
+                    </el-form-item>
+                    <el-form-item label="描述" required>
+                        <el-input 
+                            v-model="publishToolData.description" 
+                            type="textarea" 
+                            :rows="3" 
+                            placeholder="请输入工具功能描述" 
+                        />
+                    </el-form-item>
+                    <el-form-item label="标签">
+                        <el-tag
+                            v-for="tag in publishToolData.tags"
+                            :key="tag"
+                            closable
+                            @close="removeTag(tag)"
+                            style="margin-right: 8px; margin-bottom: 8px"
+                        >
+                            {{ tag }}
+                        </el-tag>
+                        <el-input
+                            v-if="tagsInput !== undefined"
+                            v-model="tagsInput"
+                            ref="tagInputRef"
+                            size="small"
+                            style="width: 120px"
+                            @keyup.enter="addTag"
+                            @blur="addTag"
+                        />
+                        <el-button 
+                            v-else 
+                            size="small" 
+                            @click="showTagInput"
+                            style="margin-bottom: 8px"
+                        >
+                            + 添加标签
+                        </el-button>
+                    </el-form-item>
+                    
+                    <el-form-item label="参数配置">
+                        <div v-for="(param, index) in publishToolData.parameters" :key="index" class="param-item">
+                            <el-input v-model="param.Name" placeholder="参数名" style="width: 100px" />
+                            <el-input v-model="param.Flags" placeholder="Flags" style="width: 120px; margin-left: 8px" />
+                            <el-select v-model="param.Type" style="width: 100px; margin-left: 8px">
+                                <el-option label="String" value="String" />
+                                <el-option label="Number" value="Number" />
+                                <el-option label="Boolean" value="Boolean" />
+                            </el-select>
+                            <el-input v-model="param.Description" placeholder="描述" style="width: 150px; margin-left: 8px" />
+                            <el-input 
+                                v-model="param.default_value" 
+                                placeholder="默认值" 
+                                style="width: 120px; margin-left: 8px" 
+                                :disabled="param.Type === 'Boolean'"
+                            />
+                            <el-button type="danger" @click="removeParameter(index)" style="margin-left: 8px">删除</el-button>
+                        </div>
+                        <el-button type="primary" @click="addParameter" style="margin-top: 10px">添加参数</el-button>
+                    </el-form-item>
+                </el-form>
+            
+                <template #footer>
+                    <el-button @click="publishView = false">取消</el-button>
+                    <el-button type="primary" @click="publishFunction" :loading="publishLoading">发布</el-button>
+                </template>
+            </el-dialog>
+
             <el-dialog title="依赖管理" v-model="dialogVisible" width="400px">
                 <!-- 表格 -->
                 <el-table :data="packageList" style="width: 100%">
@@ -93,6 +179,7 @@ import {
     CaretRightOutlined,
     SaveOutlined,
     StopOutlined,
+    SendOutlined,
 } from '@ant-design/icons-vue'
 import {
     projectOperating,
@@ -107,6 +194,8 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { Codemirror } from 'vue-codemirror'
 import { python } from '@codemirror/lang-python'
 import { ElMessage } from 'element-plus'
+import { publishTool} from '@/api/http/tool' 
+
 // import type { analysisResponse } from "@/type/analysis";
 // import { oneDarkTheme } from "@codemirror/theme-one-dark";
 
@@ -283,6 +372,126 @@ const onCmReady = (editor: any) => {
 const onCmInput = (value: string) => {
     if (0) {
         console.log('Code updated:', value)
+    }
+}
+
+
+const publishView = ref(false)
+
+const publishOpen = async() =>{
+    publishView.value = true
+}
+
+
+const publishLoading = ref(false)
+// 发布结构
+const publishToolData = ref({
+    toolName: '',
+    environment: 'python3.9',
+    description: '',
+    category: '',
+    tags: [] as string[],
+    parameters: [] as Array<{
+        Name: string
+        Flags: string
+        Type: string
+        Description: string
+        default_value: any
+        Optional: boolean
+    }>
+})
+
+const tagsInput = ref<string>()
+const addParameter = () => {
+    publishToolData.value.parameters.push({
+        Name: '',
+        Flags: '',
+        Type: 'String',
+        Description: '',
+        default_value: null,
+        Optional: false
+    })
+}
+
+const showTagInput = () => {
+    tagsInput.value = ''
+}
+
+const addTag = () => {
+    if (tagsInput.value && tagsInput.value.trim()) {
+        if (!publishToolData.value.tags.includes(tagsInput.value.trim())) {
+            publishToolData.value.tags.push(tagsInput.value.trim())
+        }
+        tagsInput.value = undefined
+    }
+}
+
+const removeTag = (tag: string) => {
+    publishToolData.value.tags = publishToolData.value.tags.filter(t => t !== tag)
+}
+
+const removeParameter = (index) => {
+    publishToolData.value.parameters.splice(index, 1)
+}
+
+
+// 发布工具
+const publishFunction = async () => {
+    if (!publishToolData.value.toolName) {
+        ElMessage.error('工具名称不能为空')
+        return
+    }
+    if (!publishToolData.value.description) {
+        ElMessage.error('工具描述不能为空')
+        return
+    }
+    if (!publishToolData.value.category) {
+        ElMessage.error('工具分类不能为空')
+        return
+    }
+
+    // 验证参数
+    for (const param of publishToolData.value.parameters) {
+        if (!param.Name || !param.Flags) {
+            ElMessage.error('参数名称和Flags不能为空')
+            return
+        }
+    }
+
+    publishLoading.value = true
+    try {
+        
+        const response = await publishTool(
+            props.projectId,
+            publishToolData.value.environment,
+            props.userId,
+            {
+                toolName: publishToolData.value.toolName,
+                description: publishToolData.value.description,
+                category: publishToolData.value.category,
+                tags: publishToolData.value.tags,
+                parameters: publishToolData.value.parameters
+            }
+        )
+        // 提取toolId
+        const toolId = response.toolId
+        console.log('工具发布成功,ID:', toolId)
+
+        ElMessage.success('工具发布成功')
+        publishView.value = false
+        // 重置表单
+        publishToolData.value = {
+            toolName: '',
+            environment: 'python3.9',
+            description: '',
+            category: '',
+            tags: [],
+            parameters: []
+        }
+    } catch (error) {
+        ElMessage.error('工具发布失败: ' + (error as Error).message)
+    } finally {
+        publishLoading.value = false
     }
 }
 

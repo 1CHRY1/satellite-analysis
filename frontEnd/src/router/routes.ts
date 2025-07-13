@@ -21,6 +21,13 @@ export const routes = [
         },
     },
     {
+        path: '/tool',
+        component: () => import('@/views/tool.vue'),
+        meta: {
+            requiresAuth: true,
+        },
+    },
+    {
         path: '/explore',
         component: () => import('@/components/dataCenter/interactiveExplore/interactiveExplore.vue'),
         meta: {

@@ -159,7 +159,12 @@ const currentRoute = computed(() => route.path)
 
 const navItems: ComputedRef<NavItem[]> = computed(() =>[
     { external: false, name: t('nav.home'), path: '/home' },
-    { external: false, name: t('nav.models'), path: '/models' },
+    { external: false, name: t('nav.models'), path: '/models', 
+    children : [
+        {name: t('nav.models'), path: '/models'},
+        {name: '工具中心', path:'/tool'}
+    ]
+    },
     { external: false, name: t('nav.data'), path: '/explore',
     children : [
         {name: t('datapage.title_explore'), path: '/explore'},

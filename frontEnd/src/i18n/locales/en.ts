@@ -580,6 +580,7 @@ export default{
         },
 
         choose: "Select Priority Sensor:",
+        button_choose:"Choose",
 
         message:{
             load:"Loading cloud-free basemap, please wait...",
