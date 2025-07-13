@@ -1,8 +1,8 @@
 def createApp():
     
     # 😋 If some error about PROJ_DATA, you can set environment variable as follows: 
-    # import os
-    # os.environ['PROJ_DATA'] = r'D:\env\miniconda\envs\grid\Lib\site-packages\rasterio\proj_data'
+    import os
+    os.environ['PROJ_DATA'] = r'C:\Users\Jack\.conda\envs\'sat'\Lib\site-packages\rasterio\proj_data'
     
     from fastapi import FastAPI
     from titiler.core.factory import TilerFactory

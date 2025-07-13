@@ -345,15 +345,21 @@
                                             </div>
                                         </div> -->
 
-                                        <button @click="calNoClouds" :disabled="noCloudLoading"
-                                            class="flex justify-center w-full rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
-                                            :class="{
-                                                'cursor-not-allowed': noCloudLoading,
-                                                'cursor-pointer': !noCloudLoading,
-                                            }">
-                                            <span>{{t('datapage.nocloud.section4.button')}} </span>
-                                            <Loader v-if="noCloudLoading" class="ml-2" />
-                                        </button>
+                                        <div class="flex w-full flex-row gap-2">
+                                            <button @click="handleCreateNoCloudTiles"
+                                                class="flex justify-center w-1/2 rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95">
+                                                <span>实时加载</span>
+                                            </button>
+                                            <button @click="calNoClouds" :disabled="noCloudLoading"
+                                                class="flex justify-center w-1/2 rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
+                                                :class="{
+                                                    'cursor-not-allowed': noCloudLoading,
+                                                    'cursor-pointer': !noCloudLoading,
+                                                }">
+                                                <span>重构</span>
+                                                <Loader v-if="noCloudLoading" class="ml-2" />
+                                            </button>
+                                        </div>
                                         <div v-if="showProgress[3]"
                                             class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
                                             <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
@@ -1312,6 +1318,61 @@ const getCoverage = (gridImages: any, gridCount: number) => {
     let coverage = ((nonEmptyScenesCount * 100) / gridCount).toFixed(2) + '%'
     return coverage
 }
+
+const mockSceneIds = [
+  "SCrmtcmrcgp",
+  "SCwaxjagmrv",
+  "SC825032809",
+  "SCl4ad8ul91",
+  "SCa6c4bossr",
+  "SC04u521n84",
+  "SCaj9c7exoq",
+  "SCrsk2g1b1g"
+]
+
+// 创建无云一版图瓦片
+const handleCreateNoCloudTiles = async () => {
+    try {
+        // 1. 准备参数
+        const param = {
+            sceneIds: mockSceneIds,
+        }
+
+        console.log('创建无云一版图配置参数:', param)
+
+        // 2. 创建配置
+        const response = await fetch('/api/modeling/example/noCloud/createNoCloudConfig', {
+            method: 'POST',
+            body: JSON.stringify(param),
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('token'),
+            },
+        })
+        const result = await response.json()
+        const jsonUrl = result.data  // 从CommonResultVO中获取data字段
+        
+        console.log('获取到的jsonUrl:', jsonUrl)
+        
+        // 3. 添加瓦片图层
+        const tileUrl = `http://192.168.1.100:8000/no_cloud/{z}/{x}/{y}?jsonUrl=${encodeURIComponent(jsonUrl)}`
+        //const tileUrl = `http://192.168.1.100:8000/no_cloud/{z}/{x}/{y}.png?jsonUrl=${encodeURIComponent(jsonUrl)}`
+        
+        console.log('瓦片URL模板:', tileUrl)
+        
+        // 清除旧的无云图层
+        MapOperation.map_destroyNoCloudLayer()
+        
+        // 添加新的瓦片图层
+        MapOperation.map_addNoCloudLayer(tileUrl)
+        
+        console.log('无云一版图瓦片图层已添加到地图')
+        
+    } catch (error) {
+        console.error('创建无云一版图瓦片失败:', error)
+    }
+}
+
 
 </script>
 
