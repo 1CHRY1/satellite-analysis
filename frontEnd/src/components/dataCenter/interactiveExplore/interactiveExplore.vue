@@ -265,7 +265,7 @@
                                                     <span class="text-xs text-[#7a899f]">
                                                         {{
                                                             (
-                                                                (allSensorsItems[label] * 100) /
+                                                                (allGridsInResolution[label] * 100) /
                                                                 allGridCount
                                                             ).toFixed(2) + '%'
                                                         }}
@@ -297,7 +297,7 @@
                                                             <div v-else class="result-info-value">
                                                                 {{
                                                                     (
-                                                                        (allSensorsItems[label] * 100) /
+                                                                        (allGridsInResolution[label] * 100) /
                                                                         allGridCount
                                                                     ).toFixed(2) + '%'
                                                                 }}
@@ -320,7 +320,7 @@
                                                     </select>
                                                     <div class="flex flex-row items-center">
                                                         <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
-                                                            @click="handleShowResolutionSensorImage(label)"
+                                                            @click="handleShowImageInBoundary(label)"
                                                             :disabled="!resolutionPlatformSensor[label]">
                                                             {{ t('datapage.explore.section_interactive.button') }}
                                                         </a-button>
@@ -347,25 +347,6 @@
                                         </div>
                                     </div>
                                     <div class="stats-content" v-show="isVectorExpand">
-                                        <div class="stats-item">
-                                            <div class="stats-label">
-                                                <span>矢量数据统计</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="stats">
-                                    <div class="stats-header">
-                                        <div class="config-label relative">
-                                            <BoltIcon :size="16" class="config-icon" />
-                                            <span>DEM统计</span>
-                                        </div>
-                                        <div class="absolute right-2 cursor-pointer">
-                                            <ChevronDown v-if="isDEMExpand" :size="22" @click="isDEMExpand = false" />
-                                            <ChevronUp v-else @click="isDEMExpand = true" :size="22" />
-                                        </div>
-                                    </div>
-                                    <div class="stats-content" v-show="isDEMExpand">
                                         <div class="stats-item">
                                             <div class="config-label relative">
                                                 <BoltIcon :size="16" class="config-icon" />
@@ -415,7 +396,114 @@
                                                         <div class="result-info-content">
                                                             <div class="result-info-label">{{ t('datapage.explore.section_time.search') }}</div>
                                                             <div class="result-info-value">
-                                                                {{ allDEMs.length }}幅DEM
+                                                                <!-- {{ allVectors.length }} -->
+                                                                2条矢量数据
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="result-info-item">
+                                                        <div class="result-info-icon">
+                                                            <CloudIcon :size="16" />
+                                                        </div>
+                                                        <div class="result-info-content">
+                                                            <div class="result-info-label">{{ t('datapage.explore.percent') }}</div>
+                                                            <div class="result-info-value">
+                                                                <!-- {{
+                                                                    coverageVectorRate != 'NaN%'
+                                                                        ? coverageVectorRate
+                                                                        : '待计算'
+                                                                }} -->
+                                                                100.00%
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div v-if="Object.keys(classifiedProducts).length > 0" class="!w-full ml-3">
+                                            <label class="mr-2 text-white">选择数据集：</label>
+                                            <select
+                                                class="max-h-[600px] w-[calc(100%-113px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
+                                                >
+                                                <option disabled selected value="">{{ t('datapage.explore.section_interactive.choose') }}</option>
+                                                <option :value="'all'" class="truncate">山东省土地利用图斑</option>
+                                            </select>
+                                            <div class="flex flex-row items-center">
+                                                <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
+                                                    @click="handleShowVectorInBoundary('shandong')">
+                                                    矢量可视化
+                                                </a-button>
+                                                <a-tooltip>
+                                                    <template #title>{{ t('datapage.explore.section_interactive.clear') }}</template>
+                                                    <Trash2Icon :size="18" class="mt-4! ml-4! cursor-pointer"
+                                                        @click="clearAllShowingSensor" />
+                                                </a-tooltip>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="stats">
+                                    <div class="stats-header">
+                                        <div class="config-label relative">
+                                            <BoltIcon :size="16" class="config-icon" />
+                                            <span>遥感产品统计</span>
+                                        </div>
+                                        <div class="absolute right-2 cursor-pointer">
+                                            <ChevronDown v-if="isProductsExpand" :size="22" @click="isProductsExpand = false" />
+                                            <ChevronUp v-else @click="isProductsExpand = true" :size="22" />
+                                        </div>
+                                    </div>
+                                    <div class="stats-content" v-show="isProductsExpand">
+                                        <div class="stats-item">
+                                            <div class="config-label relative">
+                                                <BoltIcon :size="16" class="config-icon" />
+                                                <span>{{ t('datapage.explore.section_time.subtitle2') }}</span>
+                                            </div>
+                                            <div class="config-control flex-col gap-4">
+                                                <div class="result-info-container">
+                                                    <div class="result-info-item">
+                                                        <div class="result-info-icon">
+                                                            <MapIcon :size="16" />
+                                                        </div>
+                                                        <div class="result-info-content">
+                                                            <div class="result-info-label">{{ t('datapage.explore.section_time.resolution') }}</div>
+                                                            <div class="result-info-value">
+                                                                {{ selectedGrid }}km
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="result-info-item">
+                                                        <div class="result-info-icon">
+                                                            <CalendarIcon :size="16" />
+                                                        </div>
+                                                        <div class="result-info-content">
+                                                            <div class="result-info-label">{{ t('datapage.explore.section_time.time') }}</div>
+                                                            <div class="result-info-value date-range">
+                                                                <div class="date-item">
+                                                                    {{
+                                                                        formatTime(
+                                                                            defaultConfig.dateRange[0],
+                                                                            'day',
+                                                                        )
+                                                                    }}~
+                                                                    {{
+                                                                        formatTime(
+                                                                            defaultConfig.dateRange[1],
+                                                                            'day',
+                                                                        )
+                                                                    }}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="result-info-item">
+                                                        <div class="result-info-icon">
+                                                            <CloudIcon :size="16" />
+                                                        </div>
+                                                        <div class="result-info-content">
+                                                            <div class="result-info-label">{{ t('datapage.explore.section_time.search') }}</div>
+                                                            <div class="result-info-value">
+                                                                {{ allProducts.length }}幅产品
                                                             </div>
                                                         </div>
                                                     </div>
@@ -427,12 +515,101 @@
                                                             <div class="result-info-label">{{ t('datapage.explore.percent') }}</div>
                                                             <div class="result-info-value">
                                                                 {{
-                                                                    coverageDEMRate != 'NaN%'
-                                                                        ? coverageDEMRate
+                                                                    coverageProductsRate != 'NaN%'
+                                                                        ? coverageProductsRate
                                                                         : '待计算'
                                                                 }}
                                                             </div>
                                                         </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="stats-item-tree" v-for="([label, value], index) in productType" :key="value"
+                                            :class="{
+                                                'stats-item-rounded-t': index === 0,
+                                                'stats-item-rounded-b': index === productType.length - 1,
+                                            }"
+                                        >
+                                            <div class="config-label relative">
+                                                <ChevronDown v-if="isProductsItemExpand[index]" :size="22" class="config-icon cursor-pointer" @click="isProductsItemExpand[index] = false" />
+                                                <ChevronRight v-else @click="isProductsItemExpand[index] = true" :size="22" class="config-icon cursor-pointer" />
+                                                <span>{{ label }}产品</span>
+                                            </div>
+                                            <div class="stats-subtitile" v-show="!isProductsItemExpand[index]">
+                                                <div class="flex flex-row gap-2 items-center ml-4">
+                                                    <ImageIcon :size="12" class="text-[#7a899f]" @click="isProductsItemExpand[index] = false" />
+                                                    <span class="text-xs text-[#7a899f]">{{ getSceneCountByProduct(value, allProducts) }} 景</span>
+                                                </div>
+                                                <div class="flex flex-row gap-2 items-center">
+                                                    <ChartColumnBig :size="12" class="text-[#7a899f]" @click="isProductsItemExpand[index] = false" />
+                                                    <span class="text-xs text-[#7a899f]">
+                                                        {{
+                                                            (
+                                                                (allGridsInProduct[label] * 100) /
+                                                                allGridCount
+                                                            ).toFixed(2) + '%'
+                                                        }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="config-control flex w-full flex-col gap-4 h-full" v-show="isProductsItemExpand[index]">
+                                                <div class="result-info-container w-full h-full">
+                                                    <div class="result-info-item">
+                                                        <div class="result-info-icon">
+                                                            <CloudIcon :size="16" />
+                                                        </div>
+                                                        <div class="result-info-content">
+                                                            <div class="result-info-label">包含</div>
+                                                            <div class="result-info-value">
+                                                                {{ getSceneCountByProduct(value, allProducts) }}幅产品
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="result-info-item">
+                                                        <div class="result-info-icon">
+                                                            <CloudIcon :size="16" />
+                                                        </div>
+                                                        <div class="result-info-content">
+                                                            <div class="result-info-label">{{ t('datapage.explore.percent') }}</div>
+                                                            <div v-if="!(allProducts.length > 0)" class="result-info-value">
+                                                                {{ t('datapage.explore.section_interactive.intext1') }}
+                                                            </div>
+                                                            <div v-else class="result-info-value">
+                                                                {{
+                                                                    (
+                                                                        (allGridsInProduct[label] * 100) /
+                                                                        allGridCount
+                                                                    ).toFixed(2) + '%'
+                                                                }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div v-if="Object.keys(classifiedProducts).length > 0" class="!w-full ml-3">
+                                                    <label class="mr-2 text-white">选择产品：</label>
+                                                    <select
+                                                        class="max-h-[600px] w-[calc(100%-113px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
+                                                        v-model="productPlatformSensor[label]">
+                                                        <option disabled selected value="">{{ t('datapage.explore.section_interactive.choose') }}</option>
+                                                        <!-- <option :value="'all'" class="truncate">全选</option> -->
+                                                        <option v-for="platformName in classifiedProducts[
+                                                            label
+                                                        ]" :value="platformName" :key="platformName" class="truncate">
+                                                            {{ platformName }}
+                                                        </option>
+                                                    </select>
+                                                    <div class="flex flex-row items-center">
+                                                        <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
+                                                            @click="handleShowProductInBoundary(label)"
+                                                            :disabled="!productPlatformSensor[label]">
+                                                            产品可视化
+                                                        </a-button>
+                                                        <a-tooltip>
+                                                            <template #title>{{ t('datapage.explore.section_interactive.clear') }}</template>
+                                                            <Trash2Icon :size="18" class="mt-4! ml-4! cursor-pointer"
+                                                                @click="clearAllShowingSensor" />
+                                                        </a-tooltip>
                                                     </div>
                                                 </div>
                                             </div>
@@ -603,27 +780,31 @@ const {
     // 选择空间检索方法
     handleSelectTab,
     // 筛选
-    allScenes, allSensorsItems, allDEMs, filter: applyFilter, filterLoading, isFilterDone,
+    allScenes, allGridsInResolution, allProducts, allGridsInProduct, filter: applyFilter, filterLoading, isFilterDone,
     // 统计信息面板
-    coverageRSRate, coverageDEMRate, handleShowResolutionSensorImage,
+    coverageRSRate, coverageProductsRate, handleShowImageInBoundary, handleShowProductInBoundary, handleShowVectorInBoundary,
     // 影像分辨率相关变量
-    resolutionType, resolutionPlatformSensor
+    resolutionType, resolutionPlatformSensor, productType, productPlatformSensor
 } = useFilter()
-const { classifiedScenes, getSceneCountByResolution } = useStats()
+const { classifiedScenes, getSceneCountByResolution, classifiedProducts, getSceneCountByProduct } = useStats()
 const { clearAllShowingSensor } = useLayer()
 const isExpand = ref<boolean>(true)
 const isRSExpand = ref<boolean>(true)
 const isVectorExpand = ref<boolean>(true)
-const isDEMExpand = ref<boolean>(true)
+const isProductsExpand = ref<boolean>(true)
 const isRSItemExpand = ref<boolean[]>([])
 const isVectorItemExpand = ref<boolean[]>([])
-const isDEMItemExpand = ref<boolean[]>([])
+const isProductsItemExpand = ref<boolean[]>([])
 
 const setInitialListExpand = () => {
     resolutionType.value.forEach(item => {
         isRSItemExpand.value.push(false)
     })
+    productType.value.forEach(item => {
+        isProductsItemExpand.value.push(false)
+    })
     isRSItemExpand.value[0] = true
+    isProductsItemExpand.value[0] = true
 }
 
 const toNoCloud = () => {

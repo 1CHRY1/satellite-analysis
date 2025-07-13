@@ -4,7 +4,7 @@ import type { Marker } from 'mapbox-gl'
 import * as MapOperation from '@/util/map/operation'
 import { mapManager } from '@/util/map/mapManager'
 import mapboxgl from 'mapbox-gl'
-import { getRGBTileLayerParamFromSceneObject } from '@/util/visualizeHelper'
+import { getOneBandColorParamFromSceneObject, getRGBTileLayerParamFromSceneObject, getTerrainParamFromSceneObject } from '@/util/visualizeHelper'
 
 /**
  * 图层可视化
@@ -99,17 +99,59 @@ export const useLayer = () => {
         ])
     }
 
-    const addMultiRGBImageTileLayer = async (coverScenes: any, stopLoading) => {
+    const addMultiRGBImageTileLayer = async (coverScenes: any, gridsBoundary: any, stopLoading) => {
         const promises: Promise<any>[] = []
     
         for (let scene of coverScenes) {
-            promises.push(getRGBTileLayerParamFromSceneObject(scene))
+            promises.push(getRGBTileLayerParamFromSceneObject(scene, gridsBoundary))
         } 
         const rgbTileLayerParamList = await Promise.all(promises)
     
         console.log('可视化参数们', rgbTileLayerParamList)
     
         MapOperation.map_addMultiRGBImageTileLayer(rgbTileLayerParamList, stopLoading)
+    }
+
+    const addMultiTerrainTileLayer = async (coverProducts: any, gridsBoundary: any, stopLoading) => {
+        const promises: Promise<any>[] = []
+
+        for (let scene of coverProducts) {
+            promises.push(getTerrainParamFromSceneObject(scene, gridsBoundary))
+        }
+        const terrainTileLayerParamList = await Promise.all(promises)
+        console.log('可视化参数们', terrainTileLayerParamList)
+
+        MapOperation.map_addMultiTerrainTileLayer(terrainTileLayerParamList, stopLoading)
+    }
+
+    const addMulti3DImageTileLayer = async (coverProducts: any, gridsBoundary: any, stopLoading) => {
+        const promises: Promise<any>[] = []
+    
+        for (let scene of coverProducts) {
+            promises.push(getRGBTileLayerParamFromSceneObject(scene, gridsBoundary))
+        } 
+        const rgbTileLayerParamList = await Promise.all(promises)
+    
+        console.log('可视化参数们', rgbTileLayerParamList)
+    
+        MapOperation.map_addMultiRGBImageTileLayer(rgbTileLayerParamList, stopLoading)
+    }
+
+    const addMultiOneBandColorLayer = async (coverProducts: any, gridsBoundary: any, stopLoading) => {
+        const promises: Promise<any>[] = []
+    
+        for (let scene of coverProducts) {
+            promises.push(getOneBandColorParamFromSceneObject(scene, gridsBoundary))
+        } 
+        const oneBandColorTileLayerParamList = await Promise.all(promises)
+    
+        console.log('可视化参数们', oneBandColorTileLayerParamList)
+    
+        MapOperation.map_addMultiOneBandColorLayer(oneBandColorTileLayerParamList, stopLoading)
+    }
+
+    const addMVTLayer = async(source_layer: string, landId: string) => {
+        MapOperation.map_addMVTLayer(source_layer, landId)
     }
 
     // addGridLayer是初步，这里是根据景的数量更新透明度
@@ -172,6 +214,9 @@ export const useLayer = () => {
         MapOperation.map_destroyRGBImageTileLayer()
         MapOperation.map_destroySceneBoxLayer()
         MapOperation.map_destroyMultiRGBImageTileLayer()
+        MapOperation.map_destroyMultiTerrainTileLayer()
+        MapOperation.map_destroyMultiOneBandColorLayer()
+        MapOperation.map_destroyMVTLayer()
     }
 
     return {
@@ -184,6 +229,10 @@ export const useLayer = () => {
         addGridLayer,
         updateFullSceneGridLayer,
         clearAllShowingSensor,
-        addMultiRGBImageTileLayer
+        addMultiRGBImageTileLayer,
+        addMultiTerrainTileLayer,
+        addMulti3DImageTileLayer,
+        addMultiOneBandColorLayer,
+        addMVTLayer
     }
 }

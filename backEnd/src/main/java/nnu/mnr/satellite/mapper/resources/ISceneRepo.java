@@ -145,7 +145,7 @@ public interface ISceneRepo extends BaseMapper<Scene> {
             "        1=0" +
             "    </otherwise>" +
             "</choose>" +
-            "AND ss.data_type in ('satellite', 'dem') " +
+            "AND ss.data_type in ('satellite', 'dem', 'svr', 'ndvi', 'dsm', '3d') " +
             "ORDER BY sc.scene_time ASC" +
             "</script>")
     @Results({
