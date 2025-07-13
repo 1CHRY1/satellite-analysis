@@ -6,6 +6,7 @@ import nnu.mnr.satellite.model.dto.modeling.*;
 import nnu.mnr.satellite.model.po.resources.Scene;
 import nnu.mnr.satellite.model.po.resources.SceneSP;
 import nnu.mnr.satellite.model.pojo.modeling.ModelServerProperties;
+import nnu.mnr.satellite.model.pojo.modeling.SRModelServerProperties;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.service.resources.*;
 import nnu.mnr.satellite.utils.common.ProcessUtil;
@@ -62,6 +63,9 @@ public class ModelExampleService {
 
     @Autowired
     BandMapperGenerator bandMapperGenerator;
+
+    @Autowired
+    SRModelServerProperties SRModelServerProperties;
 
     private CommonResultVO runModelServerModel(String url, JSONObject param, long expirationTime) {
         try {
@@ -237,4 +241,10 @@ public class ModelExampleService {
         return runModelServerModel(pointRasterUrl, pointRasterParam, expirationTime);
     }
 
+    public CommonResultVO getSRResultByBand(SRBandDTO SRBandDTO){
+        JSONObject bandPath = JSONObject.of("r", SRBandDTO.getR(), "g", SRBandDTO.getG(), "b", SRBandDTO.getB());
+        String SRUrl = SRModelServerProperties.getAddress() + SRModelServerProperties.getApis().get("SR");
+        long expirationTime = 60 * 10;
+        return runModelServerModel(SRUrl, bandPath, expirationTime);
+    }
 }

@@ -125,6 +125,15 @@ modelServer:
   interval:
     status: 2
 
+srmodelServer:
+  address: http://nrspeclib.sasclouds.com:33445
+  apis:
+    status: /v0/task/status
+    result: /v0/task/result
+    SR: /v0/model/superresolution
+  interval:
+    status: 2
+
 tiler:
   end-point: http://127.0.0.1:8000/
 
