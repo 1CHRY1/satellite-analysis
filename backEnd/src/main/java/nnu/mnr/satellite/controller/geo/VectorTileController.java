@@ -58,5 +58,4 @@ public class VectorTileController {
             throw new RuntimeException(e);
         }
     }
-
 }

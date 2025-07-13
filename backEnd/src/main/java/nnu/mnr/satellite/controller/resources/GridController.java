@@ -2,8 +2,10 @@ package nnu.mnr.satellite.controller.resources;
 
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.model.dto.resources.GridSceneFetchDTO;
+import nnu.mnr.satellite.model.dto.resources.GridVectorFetchDTO;
 import nnu.mnr.satellite.model.vo.resources.GridBoundaryVO;
 import nnu.mnr.satellite.model.vo.resources.GridSceneVO;
+import nnu.mnr.satellite.model.vo.resources.GridVectorVO;
 import nnu.mnr.satellite.service.resources.GridDataService;
 import nnu.mnr.satellite.service.resources.RegionDataService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +50,11 @@ public class GridController {
     @PostMapping("/scene/grids")
     public ResponseEntity<List<GridSceneVO>> getScenesFromGrids(@RequestBody GridSceneFetchDTO gridSceneFetchDTO) {
         return ResponseEntity.ok(gridDataService.getScenesFromGrids(gridSceneFetchDTO));
+    }
+
+    @PostMapping("/vector/grids")
+    public ResponseEntity<List<GridVectorVO>> getVectorsFromGrids(@RequestBody GridVectorFetchDTO gridVectorFetchDTO) {
+        return ResponseEntity.ok(gridDataService.getVectorsFromGrids(gridVectorFetchDTO));
     }
 
 }

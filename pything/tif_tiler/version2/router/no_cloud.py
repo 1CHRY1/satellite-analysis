@@ -10,7 +10,8 @@ import math
 
 ####### Helper ########################################################################################
 # MINIO_ENDPOINT = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}"
-MINIO_ENDPOINT = "http://192.168.1.110:30900"
+MINIO_ENDPOINT = "http://192.168.1.110:30900" 
+print('注意改这里')
 TRANSPARENT_PNG = os.path.join(os.path.dirname(__file__), "transparent.png")
 with open(TRANSPARENT_PNG, "rb") as f:
     TRANSPARENT_CONTENT = f.read()
@@ -90,7 +91,7 @@ async def get_tile(
         # 获取scenes数组
         json_data = json_response.get('scenes', [])
         lon_lats = tile_bounds(x, y, z)
-        bbox = lon_lats.get('bbox')
+        # bbox = lon_lats.get('bbox')
         
         ############### Prepare #########################
         # 按分辨率排序，格网的分辨率是以第一个景读到的像素为网格分辨率，所以先按分辨率排序
@@ -159,7 +160,7 @@ async def get_tile(
         
         
         ############### Core #########################################
-        print(f"\n瓦片边界: {bbox}")
+        # print(f"\n瓦片边界: {bbox}")
         print(f"开始处理 {len(sorted_scene)} 个场景...")
         
         processed_scenes = 0
@@ -188,7 +189,7 @@ async def get_tile(
                 print(f"读取红色波段: {full_red_path}")
                 with COGReader(full_red_path, options={'nodata': int(nodata)}) as reader:
                     # 默认全部无云，只考虑nodata
-                    temp_img_data = reader.part(bbox=bbox, indexes=[1], height=target_H, width=target_W)
+                    temp_img_data = reader.tile(x, y, z, tilesize=256)
                     nodata_mask = temp_img_data.mask
                 
                 valid_mask = (nodata_mask.astype(bool))
@@ -203,14 +204,16 @@ async def get_tile(
                 print(f"读取红色波段: {full_red_path}")
                 with COGReader(full_red_path, options={'nodata': int(nodata)}) as reader:
         
-                    temp_img_data = reader.part(bbox=bbox, indexes=[1], height=target_H, width=target_W)
+                    # temp_img_data = reader.part(bbox=bbox, indexes=[1], height=target_H, width=target_W)
+                    temp_img_data = reader.tile(x, y, z, tilesize=256)
                     nodata_mask = temp_img_data.mask
                     
                 # 读云波段获取 cloud_mask
                 cloud_full_path = MINIO_ENDPOINT + "/" + scene['bucket'] + "/" + scene['cloudPath']
                 print(f"读取云掩膜: {cloud_full_path}")
                 with COGReader(cloud_full_path, options={'nodata': int(nodata)}) as reader:
-                    cloud_img_data = reader.part(bbox=bbox, indexes=[1], height=target_H, width=target_W)
+                    # cloud_img_data = reader.part(bbox=bbox, indexes=[1], height=target_H, width=target_W)
+                    cloud_img_data = reader.tile(x, y, z, tilesize=256)
                     img_data = cloud_img_data.data[0] # 存储了QA波段的数据
 
                     sensorName = scene.get('sensorName')
@@ -240,7 +243,8 @@ async def get_tile(
                 def read_band(band_path):
                     full_path = MINIO_ENDPOINT + "/" + scene['bucket'] + "/" + band_path
                     with COGReader(full_path, options={'nodata': int(nodata)}) as reader:
-                        band_data = reader.part(bbox=bbox, indexes=[1], height=target_H, width=target_W)
+                        # band_data = reader.part(bbox=bbox, indexes=[1], height=target_H, width=target_W)
+                        band_data = reader.tile(x, y, z, tilesize=256)
                         original_data = band_data.data[0]
                         original_dtype = original_data.dtype
 
