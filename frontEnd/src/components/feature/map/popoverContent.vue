@@ -5,115 +5,254 @@
                 <p>时空立方体编号: {{ gridID }}</p>
             </div>
 
-            <div class="band-selection">
-                <label for="resolution-select">分辨率:</label>
-                <select id="resolution-select" v-model="selectedResolution" class="band-select">
-                    <option disabled value="">请选择</option>
-                    <option v-for="reso in resolutions" :key="reso" :value="reso">
-                        {{ reso }}
-                    </option>
-                </select>
-            </div>
-
-            <div class="band-selection">
-                <label for="sensor-select">传感器:</label>
-                <select
-                    id="sensor-select"
-                    v-model="selectedSensor"
-                    class="band-select"
-                    @change="handleSensorChange(selectedSensor)"
-                >
-                    <option disabled value="">请选择</option>
-                    <option v-for="sensor in sensors" :key="sensor" :value="sensor">
-                        {{ sensor }}
-                    </option>
-                </select>
-            </div>
-
-            <div class="tabs" v-show="showBandSelector">
+            <div class="tabs">
                 <button
                     class="tab-btn"
-                    :class="{ active: activeTab === 'single' }"
-                    @click="activeTab = 'single'"
+                    :class="{ active: activeTab === 'RS' }"
+                    @click="activeTab = 'RS'"
                 >
-                    单波段
+                    影像
                 </button>
                 <button
                     class="tab-btn"
-                    :class="{ active: activeTab === 'rgb' }"
-                    @click="activeTab = 'rgb'"
+                    :class="{ active: activeTab === 'vector' }"
+                    @click="activeTab = 'vector'"
                 >
-                    三波段合成
+                    矢量
+                </button>
+                <button
+                    class="tab-btn"
+                    :class="{ active: activeTab === 'product' }"
+                    @click="activeTab = 'product'"
+                >
+                    产品
                 </button>
             </div>
 
-            <div v-show="showBandSelector && activeTab === 'single'" class="tab-content">
+            <!-- 影像Tab -->
+            <div v-show="activeTab === 'RS'">
+                <!-- 分辨率选择 -->
                 <div class="band-selection">
-                    <label for="band-select">波段:</label>
-                    <select id="band-select" v-model="selectedBand" class="band-select">
+                    <label for="resolution-select">分辨率:</label>
+                    <select id="resolution-select" v-model="selectedResolution" class="band-select">
                         <option disabled value="">请选择</option>
-                        <option v-for="band in bands" :key="band" :value="band">
-                            {{ band }}
+                        <option v-for="reso in resolutions" :key="reso" :value="reso">
+                            {{ reso }}
                         </option>
                     </select>
+                </div>
+                
+                <!-- 传感器选择 -->
+                <div class="band-selection">
+                    <label for="sensor-select">传感器:</label>
+                    <select
+                        id="sensor-select"
+                        v-model="selectedSensor"
+                        class="band-select"
+                        @change="handleSensorChange(selectedSensor)"
+                    >
+                        <option disabled value="">请选择</option>
+                        <option v-for="sensor in sensors" :key="sensor" :value="sensor">
+                            {{ sensor }}
+                        </option>
+                    </select>
+                </div>
+
+                <!-- 增强方法Tab -->
+                <div class="tabs" v-show="showBandSelector">
+                    <button
+                        class="tab-btn"
+                        :class="{ active: activeMethod === 'single' }"
+                        @click="activeMethod = 'single'"
+                    >
+                        拉伸增强
+                    </button>
+                    <button
+                        class="tab-btn"
+                        :class="{ active: activeMethod === 'rgb' }"
+                        @click="activeMethod = 'rgb'"
+                    >
+                        波段增强
+                    </button>
+                    <button
+                        class="tab-btn"
+                        :class="{ active: activeMethod === 'superresolution' }"
+                        @click="activeMethod = 'superresolution'"
+                    >
+                        超分增强
+                    </button>
+                </div>
+
+                <!-- 拉伸增强Tab -->
+                <div v-show="showBandSelector && activeMethod === 'single'" class="tab-content">
+                    <div class="band-selection">
+                        <label for="band-select">波段:</label>
+                        <select id="band-select" v-model="selectedBand" class="band-select">
+                            <option disabled value="">请选择</option>
+                            <option v-for="band in bands" :key="band" :value="band">
+                                {{ band }}
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 波段增强Tab -->
+                <div v-show="showBandSelector && activeMethod === 'rgb'" class="tab-content">
+                    <div class="band-selection">
+                        <label for="r-band-select">R波段:</label>
+                        <select id="r-band-select" v-model="selectedRBand" class="band-select">
+                            <option disabled value="">请选择</option>
+                            <option v-for="band in bands" :key="band" :value="band">
+                                {{ band }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="band-selection">
+                        <label for="g-band-select">G波段:</label>
+                        <select id="g-band-select" v-model="selectedGBand" class="band-select">
+                            <option disabled value="">请选择</option>
+                            <option v-for="band in bands" :key="band" :value="band">
+                                {{ band }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="band-selection">
+                        <label for="b-band-select">B波段:</label>
+                        <select id="b-band-select" v-model="selectedBBand" class="band-select">
+                            <option disabled value="">请选择</option>
+                            <option v-for="band in bands" :key="band" :value="band">
+                                {{ band }}
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 超分增强Tab -->
+                <div class="btns flex justify-center" v-show="showBandSelector && activeMethod === 'superresolution'">
+                    <button class="visualize-btn">
+                        <span class="btn-icon">
+                            <GalleryHorizontalIcon :size="18" />
+                        </span>
+                        超分增强
+                    </button>
+                </div>
+
+                <!-- 亮度拉伸 -->
+                <div
+                    class="mr-1 grid grid-cols-[2fr_3fr]"
+                    @mousedown="handleMouseDown"
+                    @mouseup="handleMouseUp"
+                    v-show="activeMethod === 'rgb' || activeMethod === 'single'"
+                >
+                    <span class="sp text-white">亮度拉伸:</span>
+                    <a-slider
+                        :tip-formatter="scaleRateFormatter"
+                        v-model:value="scaleRate"
+                        @afterChange="onAfterScaleRateChange"
+                    />
+                </div>
+
+                <!-- 可视化按钮 -->
+                <div class="btns" v-show="activeMethod === 'rgb' || activeMethod === 'single'">
+                    <button class="visualize-btn" @click="handleVisualize" :disabled="!canVisualize">
+                        <span class="btn-icon">
+                            <GalleryHorizontalIcon :size="18" />
+                        </span>
+                        立方体可视化
+                    </button>
+                    <button class="delete-btn" @click="handleRemove">
+                        <span class="btn-icon">
+                            <Trash2Icon :size="18" />
+                        </span>
+                    </button>
                 </div>
             </div>
 
-            <div v-show="showBandSelector && activeTab === 'rgb'" class="tab-content">
+            <!-- 矢量Tab -->
+            <div v-show="activeTab === 'vector'">
                 <div class="band-selection">
-                    <label for="r-band-select">R波段:</label>
-                    <select id="r-band-select" v-model="selectedRBand" class="band-select">
+                    <label for="vector-select">类别:</label>
+                    <select id="vector-select" v-model="selectedProductType" class="band-select">
                         <option disabled value="">请选择</option>
-                        <option v-for="band in bands" :key="band" :value="band">
-                            {{ band }}
-                        </option>
+                        <!-- <option v-for="productType in productTypes" :key="productType" :value="productType">
+                            {{ productType }}
+                        </option> -->
                     </select>
                 </div>
-                <div class="band-selection">
-                    <label for="g-band-select">G波段:</label>
-                    <select id="g-band-select" v-model="selectedGBand" class="band-select">
-                        <option disabled value="">请选择</option>
-                        <option v-for="band in bands" :key="band" :value="band">
-                            {{ band }}
-                        </option>
-                    </select>
+                <div class="btns">
+                    <button class="visualize-btn">
+                        <span class="btn-icon">
+                            <GalleryHorizontalIcon :size="18" />
+                        </span>
+                        立方体可视化
+                    </button>
+                    <button class="delete-btn" @click="handleRemove">
+                        <span class="btn-icon">
+                            <Trash2Icon :size="18" />
+                        </span>
+                    </button>
                 </div>
-                <div class="band-selection">
-                    <label for="b-band-select">B波段:</label>
-                    <select id="b-band-select" v-model="selectedBBand" class="band-select">
-                        <option disabled value="">请选择</option>
-                        <option v-for="band in bands" :key="band" :value="band">
-                            {{ band }}
-                        </option>
-                    </select>
-                </div>
-            </div>
-            <div
-                class="mr-1 grid grid-cols-[2fr_3fr]"
-                @mousedown="handleMouseDown"
-                @mouseup="handleMouseUp"
-            >
-                <span class="sp text-white">亮度拉伸:</span>
-                <a-slider
-                    :tip-formatter="scaleRateFormatter"
-                    v-model:value="scaleRate"
-                    @afterChange="onAfterScaleRateChange"
-                />
             </div>
 
-            <div class="btns">
-                <button class="visualize-btn" @click="handleVisualize" :disabled="!canVisualize">
-                    <span class="btn-icon">
-                        <GalleryHorizontalIcon :size="18" />
-                    </span>
-                    立方体可视化
-                </button>
-                <button class="delete-btn" @click="handleRemove">
-                    <span class="btn-icon">
-                        <Trash2Icon :size="18" />
-                    </span>
-                </button>
+            <!-- 产品Tab -->
+            <div v-show="activeTab === 'product'">
+                <!-- 类别选择 -->
+                <div class="band-selection">
+                    <label for="product-select">类别:</label>
+                    <select id="product-select" v-model="selectedProductType" class="band-select">
+                        <option disabled value="">请选择</option>
+                        <option v-for="productType in productTypes" :key="productType" :value="productType">
+                            {{ productType }}
+                        </option>
+                    </select>
+                </div>
+
+                <!-- 产品选择 -->
+                <div class="band-selection">
+                    <label for="sensor-select">产品名:</label>
+                    <select
+                        id="sensor-select"
+                        v-model="selectedProduct"
+                        class="band-select"
+                        @change="handleSensorChange(selectedProduct)"
+                    >
+                        <option disabled value="">请选择</option>
+                        <option v-for="product in products" :key="product" :value="product">
+                            {{ product }}
+                        </option>
+                    </select>
+                </div>
+
+                <!-- 亮度拉伸 -->
+                <div
+                    class="mr-1 grid grid-cols-[2fr_3fr]"
+                    @mousedown="handleMouseDown"
+                    @mouseup="handleMouseUp"
+                >
+                    <span class="sp text-white">亮度拉伸:</span>
+                    <a-slider
+                        :tip-formatter="scaleRateFormatter"
+                        v-model:value="scaleRate"
+                        @afterChange="onAfterScaleRateChange"
+                    />
+                </div>
+
+                <!-- 可视化按钮 -->
+                <div class="btns">
+                    <button class="visualize-btn" @click="handleVisualize" :disabled="!canVisualize">
+                        <span class="btn-icon">
+                            <GalleryHorizontalIcon :size="18" />
+                        </span>
+                        立方体可视化
+                    </button>
+                    <button class="delete-btn" @click="handleRemove">
+                        <span class="btn-icon">
+                            <Trash2Icon :size="18" />
+                        </span>
+                    </button>
+                </div>
             </div>
+
         </div>
     </Vue3DraggableResizable>
 </template>
@@ -142,6 +281,7 @@ type Scene = {
     sensorName: string
     productName: string
     resolution: string
+    dataType: string
     bandMapper: {
         Red: string
         Green: string
@@ -169,7 +309,9 @@ type ImageInfoType = {
 type MultiImageInfoType = {
     sceneId: string
     time: string
+    sensorName: string
     productName: string
+    dataType: string
     redPath: string
     greenPath: string
     bluePath: string
@@ -183,15 +325,37 @@ type GridInfoType = {
 }
 
 /////// Main //////////////////////////////////
+const activeTab = ref('RS')
+const canVisualize = computed(() => {
+    switch (activeTab.value) {
+        case 'RS':
+            if (showBandSelector.value === false) return true
+            if (activeMethod.value === 'single') {
+                return !!selectedBand.value
+            } else if (activeMethod.value === 'rgb') {
+                return !!selectedRBand.value && !!selectedGBand.value && !!selectedBBand.value
+            }
+            break
+        case 'vector':
+            // return !!selectedResolution.value
+            break
+        case 'product':
+            return !!selectedProductType.value && !!selectedProduct.value
+            break
+    }
+})
 
+/**
+ * 影像相关
+ */
 const gridData = ref<GridData>({
     rowId: 0,
     columnId: 0,
     resolution: 0,
     scenes: [],
 })
+const activeMethod = ref('single')
 
-const activeTab = ref('single')
 const showBandSelector = ref(true)
 const enableDraggable = ref(true)
 const scaleRate = ref(50)
@@ -225,7 +389,9 @@ const resolutions = computed(() => {
     const result = new Set<string>()
     // result.add('all')
     gridData.value.scenes.forEach((scene: Scene) => {
-        result.add(scene.resolution)
+        if (scene.dataType === 'satellite') {
+            result.add(scene.resolution)
+        }
     })
     const arr = Array.from(result)
     arr.sort((a, b) => {
@@ -247,10 +413,12 @@ const sensors = computed(() => {
     let result = new Set<string>()
     result.add('全选')
     gridData.value.scenes.forEach((scene: Scene) => {
-        if (selectedResolution.value != '全选' && scene.resolution == selectedResolution.value) {
-            result.add(scene.sensorName)
-        } else if (selectedResolution.value === '全选') {
-            result.add(scene.sensorName)
+        if (scene.dataType === 'satellite') {
+            if (selectedResolution.value != '全选' && scene.resolution == selectedResolution.value) {
+                result.add(scene.sensorName)
+            } else if (selectedResolution.value === '全选') {
+                result.add(scene.sensorName)
+            }
         }
     })
     return Array.from(result)
@@ -287,15 +455,6 @@ const bands = computed(() => {
     return result
 })
 
-const canVisualize = computed(() => {
-    if (showBandSelector.value === false) return true
-    if (activeTab.value === 'single') {
-        return !!selectedBand.value
-    } else if (activeTab.value === 'rgb') {
-        return !!selectedRBand.value && !!selectedGBand.value && !!selectedBBand.value
-    }
-})
-
 // Form state
 const selectedResolution = ref('')
 const selectedSensor = ref('')
@@ -305,7 +464,7 @@ const selectedGBand = ref('')
 const selectedBBand = ref('')
 
 // Handle visualization
-const handleVisualize = () => {
+const handleRSVisualize = () => {
     const { rowId, columnId, resolution } = gridData.value
     const gridInfo: GridInfoType = {
         rowId,
@@ -350,7 +509,9 @@ const handleVisualize = () => {
             }
             rgbImageData.push({
                 sceneId: sceneInfo.sceneId,
+                sensorName: sceneInfo.sensorName,
                 productName: sceneInfo.productName + '-' + sceneInfo.resolution,
+                dataType: sceneInfo.dataType,
                 time: sceneInfo.sceneTime,
                 redPath: redPath,
                 greenPath: greenPath,
@@ -360,7 +521,7 @@ const handleVisualize = () => {
         }
         bus.emit('cubeVisualize', rgbImageData, gridInfo, scaleRate.value, 'rgb')
     } else {
-        if (activeTab.value === 'single') {
+        if (activeMethod.value === 'single') {
             // Single band visualization
             const imageData: ImageInfoType[] = []
             for (let scene of gridData.value.scenes) {
@@ -413,7 +574,9 @@ const handleVisualize = () => {
                 rgbImageData.push({
                     sceneId: scene.sceneId,
                     time: scene.sceneTime,
+                    sensorName: scene.sensorName,
                     productName: scene.productName + '-' + scene.resolution,
+                    dataType: scene.dataType,
                     redPath: redPath,
                     greenPath: greenPath,
                     bluePath: bluePath,
@@ -427,9 +590,161 @@ const handleVisualize = () => {
     bus.emit('openTimeline')
 }
 
+const handleVectorVisualize = () => {
+
+}
+
+const handleProductVisualize = () => {
+    const { rowId, columnId, resolution } = gridData.value
+    const gridInfo: GridInfoType = {
+        rowId,
+        columnId,
+        resolution,
+    }
+    const imageData: MultiImageInfoType[] = []
+
+    const gridAllScenes: Scene[] = []
+    // 所有的它都想看
+    if (selectedProductType.value === '全选') {
+        if (selectedProduct.value === '全选') {
+            gridAllScenes.push(...gridData.value.scenes)
+        } else {
+            for (const scene of gridData.value.scenes) {
+                if (scene.sensorName === selectedProduct.value) {
+                    gridAllScenes.push(scene)
+                }
+            }
+        }
+    } else {
+        let dataType = ''
+        switch (selectedProductType.value) {
+            case 'DEM':
+                dataType = 'dem'
+                break
+            case '红绿立体影像':
+                dataType = '3d'
+                break
+            case '形变速率':
+                dataType = 'svr'
+                break
+            case 'NDVI':
+                dataType = 'ndvi'
+                break
+            default:
+                dataType = 'others'
+                break
+        }
+        for (const scene of gridData.value.scenes) {
+            if (dataType === scene.dataType && selectedProduct.value === '全选') {
+                gridAllScenes.push(scene)
+            } else if (dataType === scene.dataType && selectedProduct.value === scene.sensorName) {
+                gridAllScenes.push(scene)
+            }
+        }
+    }
+    // Process each band (R, G, B)
+    for (let sceneInfo of gridAllScenes) {
+        let redPath = ''
+        let greenPath = ''
+        let bluePath = ''
+
+        // 这里用bandmapper, 确保bandMapper！！！！！
+        // console.log(sceneInfo.bandMapper)
+        for (let bandImg of sceneInfo.images) {
+            // 后端返回的BandMapper如果是单波段的话，Red Green 和 Blue相同
+            if (sceneInfo.bandMapper.Red === bandImg.band) {
+                redPath = bandImg.bucket + '/' + bandImg.tifPath
+            }
+            if (sceneInfo.bandMapper.Green === bandImg.band) {
+                greenPath = bandImg.bucket + '/' + bandImg.tifPath
+            }
+            if (sceneInfo.bandMapper.Blue === bandImg.band) {
+                bluePath = bandImg.bucket + '/' + bandImg.tifPath
+            }
+        }
+        imageData.push({
+            sceneId: sceneInfo.sceneId,
+            sensorName: sceneInfo.sensorName,
+            productName: sceneInfo.productName + '-' + sceneInfo.resolution,
+            dataType: sceneInfo.dataType,
+            time: sceneInfo.sceneTime,
+            redPath: redPath,
+            greenPath: greenPath,
+            bluePath: bluePath,
+            nodata: sceneInfo.noData,
+        })
+    }
+    bus.emit('cubeVisualize', imageData, gridInfo, scaleRate.value, 'product')
+
+    bus.emit('openTimeline')
+}
+
+const handleVisualize = () => {
+    switch (activeTab.value) {
+        case 'RS':
+            handleRSVisualize()
+            break
+        case 'vector':
+            handleVectorVisualize()
+            break
+        case 'product':
+            handleProductVisualize()
+            break
+    }
+}
+
 const handleRemove = () => {
     map_destroyGridRGBImageTileLayer(gridData.value)
 }
+
+/**
+ * 矢量相关
+ */
+
+/**
+ * 产品相关
+ */
+const selectedProductType = ref('')
+const selectedProduct = ref('')
+const productTypes = computed(() => {
+    return ['全选', 'DEM', '红绿立体影像', '形变速率', 'NDVI', '其他']
+})
+
+const products = computed(() => {
+    let result = new Set<string>()
+    result.add('全选')
+    gridData.value.scenes.forEach((scene: Scene) => {
+        if (scene.dataType !== 'satellite') {
+            if (selectedProductType.value != '全选') {
+                let dataType = 'others'
+                switch (scene.dataType) {
+                    case 'dem':
+                        dataType = 'DEM'
+                        break
+                    case '3d':
+                        dataType = '红绿立体影像'
+                        break
+                    case 'svr':
+                        dataType = '形变速率'
+                        break
+                    case 'ndvi':
+                        dataType = 'NDVI'
+                        break
+                    default:
+                        dataType = '其他'
+                        break
+                }
+                if (dataType === selectedProductType.value) {
+                    result.add(scene.sensorName)
+                }
+            } else if (selectedProductType.value === '全选') {
+                result.add(scene.sensorName)
+            }
+        }
+    })
+    return Array.from(result)
+})
+
 
 bus.on('update:gridPopupData', (info) => {
     gridData.value = info
@@ -462,9 +777,9 @@ onMounted(() => {
 }
 
 .grid-id {
-    margin-bottom: 1rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid #1e3a5f;
+    /* margin-bottom: 1rem; */
+    padding-bottom: 0.5rem;
+    /* border-bottom: 1px solid #1e3a5f; */
     text-align: center;
     cursor: move;
 }

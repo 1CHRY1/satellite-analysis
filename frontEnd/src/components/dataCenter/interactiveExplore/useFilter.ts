@@ -23,13 +23,16 @@ import { useLayer, type POIInfo } from './useLayer'
 import { useStats } from './useStats'
 import { ezStore } from "@/store"
 const { createGeoJSONFromBounds, marker, addPolygonLayer, destroyLayer, removeUniqueLayer,
-    addPOIMarker, addGridLayer, updateFullSceneGridLayer, addMultiRGBImageTileLayer } = useLayer()
-const { countResolutionCoverage, classifyScenesByResolution, getSceneIdsByPlatformName, getSensorNamebyPlatformName } = useStats()
+    addPOIMarker, addGridLayer, updateFullSceneGridLayer, addMultiRGBImageTileLayer, addMultiTerrainTileLayer, addMulti3DImageTileLayer, addMultiOneBandColorLayer, addMVTLayer } = useLayer()
+const { countResolutionScenesCoverage, classifyScenesByResolution, getSceneIdsByPlatformName, getSensorNamebyPlatformName
+    , classifyProducts, countProductsCoverage
+ } = useStats()
 const coverageRSRate = ref('0.00%')
-const coverageDEMRate = ref('0.00%')
+const coverageProductsRate = ref('0.00%')
 import { useExploreStore } from '@/store/exploreStore'
 const exploreData = useExploreStore()
 import { message } from 'ant-design-vue'
+import { parseStyle } from "ant-design-vue/es/_util/cssinjs/hooks/useStyleRegister"
 /**
  * 筛选器
  */
@@ -63,10 +66,8 @@ export const useFilter = () => {
 
     // 过滤出的遥感影像
     const allScenes = ref<any>([])
-    // 过滤出的遥感影像中含有的传感器统计信息
-    const allSensorsItems = ref<any>([])
-    // 过滤出的DEM
-    const allDEMs = ref<any>([])
+    // 按分辨率的格网统计信息{2m： 3个格网}
+    const allGridsInResolution = ref<any>([])
 
     // 影像分辨率类型
     type ResolutionItem = [label: string, value: number]
@@ -84,6 +85,27 @@ export const useFilter = () => {
         [t('datapage.explore.section_interactive.resolutiontype.tenm')]: '',
         [t('datapage.explore.section_interactive.resolutiontype.thirtym')]: '',
         [t('datapage.explore.section_interactive.resolutiontype.others')]: '',
+    })
+
+    // 过滤出的Products
+    const allProducts = ref<any>([])
+    // 按产品的格网统计信息{DEM： 3个格网}
+    const allGridsInProduct = ref<any>([])
+    type ProductItem = [label: string, value: string]
+    const productType = computed<ProductItem[]>(()=>[
+        ['DEM', 'dem'],
+        ['红绿立体影像', '3d'],
+        ['形变速率', 'svr'],
+        ['NDVI', 'ndvi'],
+        ['其他', 'others'],
+    ])
+    // 绑定每个select的选中项
+    const productPlatformSensor = reactive<any>({
+        ['DEM']: '',
+        ['红绿立体影像']: '',
+        ['形变速率']: '',
+        ['NDVI']: '',
+        ['其他']: '',
     })
 
     /**
@@ -249,12 +271,19 @@ export const useFilter = () => {
         }
         // allFilteredImages.value = await getSceneByConfig(filterData)
         if (searchedSpatialFilterMethod.value === 'region') {
-            allScenes.value = (await getSceneByConfig(filterData)).map((image) => {
-                return {
+            const allScenesRes = await getSceneByConfig(filterData)
+            allScenes.value = allScenesRes
+                .filter((image) => image.dataType === 'satellite')
+                .map((image) => ({
                     ...image,
                     tags: [image.tags.source, image.tags.production, image.tags.category],
-                }
-            })
+                }))
+            allProducts.value = allScenesRes
+                .filter((image) => image.dataType !== 'satellite')
+                .map((image) => ({
+                    ...image,
+                    tags: [image.tags.source, image.tags.production, image.tags.category],
+                }))
         } else if (searchedSpatialFilterMethod.value === 'poi') {
             const poiFilter = {
                 startTime: defaultConfig.value.dateRange[0].format('YYYY-MM-DD'),
@@ -263,17 +292,25 @@ export const useFilter = () => {
                 locationId: finalLandId.value,
                 resolution: selectedGrid.value
             }
-            allScenes.value = (await getSceneByPOIConfig(poiFilter)).map((image) => {
-                return {
+            const allScenesRes = await getSceneByPOIConfig(poiFilter)
+            allScenes.value = allScenesRes
+                .filter((image) => image.dataType === 'satellite')
+                .map((image) => ({
                     ...image,
-                    tags: [image.tags.source, image.tags.production, image.tags.category]
-                }
-            })
+                    tags: [image.tags.source, image.tags.production, image.tags.category],
+                }))
+            allProducts.value = allScenesRes
+                .filter((image) => image.dataType !== 'satellite')
+                .map((image) => ({
+                    ...image,
+                    tags: [image.tags.source, image.tags.production, image.tags.category],
+                }))
         }
         console.log('allScenes', allScenes.value)
+        console.log('allProducts', allProducts.value)
     
         // 记录所有景中含有的“传感器+分辨率字段”
-        // allSensorsItems.value = getSensorsAndResolutions(allScenes.value)
+        // allGridsInResolution.value = getSensorsAndResolutions(allScenes.value)
     
         // 请求每个格子的景sceneGridsRes， 计算覆盖率，添加覆盖率格网图层，以及图层右键交互事件
         await makeFullSceneGrid()
@@ -284,14 +321,19 @@ export const useFilter = () => {
             ElMessage.success(t('datapage.explore.message.scene_searched',{ count: allScenes.value.length }) )
         }
     
+        /**
+         * 遥感影像统计
+         */
         // 计算各种分辨率下的格网覆盖情况
-        allSensorsItems.value = countResolutionCoverage(ezStore.get('sceneGridsRes'))
-    
+        allGridsInResolution.value = countResolutionScenesCoverage(ezStore.get('sceneGridsRes'))
         // 获取各分辨率拥有多少种传感器，用来渲染下拉框
         classifyScenesByResolution(allScenes.value)
-    
-        // 刚拿到的时候根据默认tags先分类一次
-        // filterByTags()
+
+        /**
+         * 遥感影像产品统计
+         */
+        allGridsInProduct.value = countProductsCoverage(ezStore.get('sceneGridsRes'))
+        classifyProducts(allProducts.value)
     
         // 恢复状态
         filterLoading.value = false
@@ -307,7 +349,8 @@ export const useFilter = () => {
                     resolution: item.resolution,
                 }
             }),
-            sceneIds: allScenes.value.filter(image => image.tags.includes('ard') || parseFloat(image.resolution) > 1).map((image: any) => image.sceneId),
+            sceneIds: [...allScenes.value.filter(image => image.tags.includes('ard') || parseFloat(image.resolution) > 1).map((image: any) => image.sceneId), 
+                ...allProducts.value.map((image: any) => image.sceneId)],
         }
     
         // Destroy layer
@@ -315,7 +358,7 @@ export const useFilter = () => {
     
         // Get scene grids
         let sceneGridsRes = await getSceneGrids(sceneGridParam)
-        let scenes = allScenes.value
+        let scenes = [...allScenes.value, ...allProducts.value]
     
         const sceneTagMap = new Map<string, string[]>()
         for (let sc of scenes) {
@@ -323,7 +366,6 @@ export const useFilter = () => {
         }
         ezStore.set('sceneTagMap', sceneTagMap)
     
-        console.log(scenes)
         const sceneNodataMap = ezStore.get('sceneNodataMap') as Map<string, number>
         // Plus sceneGridsRes
         for (let i = 0; i < sceneGridsRes.length; i++) {
@@ -349,8 +391,14 @@ export const useFilter = () => {
         ezStore.set('sceneGridsRes', sceneGridsRes)
     
         // 算覆盖率
-        const nonEmptyScenesCount = sceneGridsRes.filter((item) => item.scenes.length > 0).length
+        let nonEmptyScenesCount = 0
+        let nonEmptyProductsCount = 0
+        for (const item of sceneGridsRes) {
+            if (item.scenes.some(scene => scene.dataType === 'satellite')) nonEmptyScenesCount++
+            if (item.scenes.some(scene => scene.dataType !== 'satellite')) nonEmptyProductsCount++
+        }
         coverageRSRate.value = ((nonEmptyScenesCount * 100) / sceneGridsRes.length).toFixed(2) + '%'
+        coverageProductsRate.value = ((nonEmptyProductsCount * 100) / sceneGridsRes.length).toFixed(2) + '%'
     
         updateFullSceneGridLayer(allGrids.value, sceneGridsRes, allScenes.value.length)
     
@@ -368,7 +416,11 @@ export const useFilter = () => {
         });
     }
 
-    const handleShowResolutionSensorImage = async (label: string) => {
+    /**
+     * 6. 影像可视化
+     */
+
+    const handleShowImageInBoundary = async (label: string) => {
         const sceneIds = getSceneIdsByPlatformName(label, resolutionPlatformSensor[label], allScenes.value)
         console.log('选中的景ids', sceneIds)
         console.log('当前所有的景', allScenes.value)
@@ -378,7 +430,7 @@ export const useFilter = () => {
     
         const stopLoading = message.loading(t('datapage.explore.message.load'))
     
-        let coverScenes
+        let coverScenes, gridsBoundary
         if (searchedSpatialFilterMethod.value === 'region') {
             const params = {
                 sensorName,
@@ -386,7 +438,9 @@ export const useFilter = () => {
                 regionId: finalLandId.value,
                 resolution: selectedGrid.value,
             }
-            coverScenes = await getCoverRegionSensorScenes(params)
+            const coverScenesRes = await getCoverRegionSensorScenes(params)
+            coverScenes = coverScenesRes.sceneList
+            gridsBoundary = coverScenesRes.gridsBoundary
         } else if (searchedSpatialFilterMethod.value === 'poi') {
             const params = {
                 sensorName,
@@ -394,10 +448,76 @@ export const useFilter = () => {
                 locationId: finalLandId.value,
                 resolution: selectedGrid.value,
             }
-            coverScenes = await getCoverPOISensorScenes(params)
+            const coverScenesRes = await getCoverRegionSensorScenes(params)
+            coverScenes = coverScenesRes.sceneList
+            gridsBoundary = coverScenesRes.gridsBoundary
         }
         console.log('接口返回：覆盖的景们', coverScenes)
-        await addMultiRGBImageTileLayer(coverScenes, stopLoading)
+        await addMultiRGBImageTileLayer(coverScenes, gridsBoundary, stopLoading)
+    }
+
+    /**
+     * 7. 产品可视化
+     */
+    const handleShowProductInBoundary = async (label: string) => {
+        console.log('label', label)
+        const sceneIds = getSceneIdsByPlatformName(label, productPlatformSensor[label], allProducts.value)
+        console.log('选中的景ids', sceneIds)
+        console.log('当前所有的产品', allProducts.value)
+        const sensorName = getSensorNamebyPlatformName(productPlatformSensor[label], allProducts.value)
+        // 之所以是sensorName，因为后台统一存在sensor表
+        console.log('匹配的sensorName', sensorName)
+
+        const stopLoading = message.loading(t('datapage.explore.message.load'))
+    
+        let coverProducts, gridsBoundary
+        if (searchedSpatialFilterMethod.value === 'region') {
+            const params = {
+                sensorName,
+                sceneIds,
+                regionId: finalLandId.value,
+                resolution: selectedGrid.value,
+            }
+            const coverProductsRes = await getCoverRegionSensorScenes(params)
+            coverProducts = coverProductsRes.sceneList
+            gridsBoundary = coverProductsRes.gridsBoundary
+        } else if (searchedSpatialFilterMethod.value === 'poi') {
+            const params = {
+                sensorName,
+                sceneIds,
+                locationId: finalLandId.value,
+                resolution: selectedGrid.value,
+            }
+            const coverProductsRes = await getCoverRegionSensorScenes(params)
+            coverProducts = coverProductsRes.sceneList
+            gridsBoundary = coverProductsRes.gridsBoundary
+        }
+        console.log('接口返回：覆盖的产品们', coverProducts)
+        switch (label) {
+            case 'DEM':
+                await addMultiTerrainTileLayer(coverProducts, gridsBoundary, stopLoading)
+                break
+            case '红绿立体':
+                await addMulti3DImageTileLayer(coverProducts, gridsBoundary, stopLoading)
+                break
+            case '形变速率':
+                await addMultiOneBandColorLayer(coverProducts, gridsBoundary, stopLoading)
+                break
+            case 'NDVI':
+                await addMultiOneBandColorLayer(coverProducts, gridsBoundary, stopLoading)
+                break
+            default:
+                await addMultiRGBImageTileLayer(coverProducts, gridsBoundary, stopLoading)
+                break
+        }
+    }
+
+    /**
+     * 8. 矢量可视化
+     */
+    const handleShowVectorInBoundary = async (source_layer: string) => {
+        console.log('source_layer', source_layer)
+        await addMVTLayer(source_layer, finalLandId.value)
     }
 
 
@@ -418,12 +538,19 @@ export const useFilter = () => {
         filterLoading,
         isFilterDone,
         makeFullSceneGrid,
-        handleShowResolutionSensorImage,
+        handleShowImageInBoundary,
+        handleShowProductInBoundary,
+        handleShowVectorInBoundary,
         activeSpatialFilterMethod,
         tabs,
         allScenes,
-        allSensorsItems,
+        allProducts,
+        coverageProductsRate,
+        allGridsInResolution,
+        allGridsInProduct,
         coverageRSRate,
         handleSelectTab,
+        productType,
+        productPlatformSensor,
     }
 }
