@@ -70,10 +70,41 @@
                                 </el-select>
                             </div>
                         </div>
-                        <button @click="analysisNDVI"
-                            class="cursor-pointer w-full rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95">
-                            {{$t('datapage.optional_thematic.NDVI.button')}}
-                        </button>
+
+                        <div class="config-item" >
+                            <div class="config-label relative">
+                                <BoltIcon :size="16" class="config-icon" />
+                                <span>分析工具</span>
+                            </div>
+                            <div class="config-control">
+                                <div class="flex flex-wrap gap-2">
+                                    <button @click=""
+                                        class="px-3 py-1 rounded border border-[#247699] bg-[#0d1526] text-white hover:border-[#2bb2ff] hover:bg-[#1a2b4c]">
+                                        平滑滤波
+                                    </button>
+                                    <button @click=""
+                                        class="px-3 py-1 rounded border border-[#247699] bg-[#0d1526] text-white hover:border-[#2bb2ff] hover:bg-[#1a2b4c]">
+                                        一阶导数
+                                    </button>
+                                    <button @click=""
+                                        class="px-3 py-1 rounded border border-[#247699] bg-[#0d1526] text-white hover:border-[#2bb2ff] hover:bg-[#1a2b4c]">
+                                        最大最小值
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button @click="analysisNDVI"
+                                class="cursor-pointer w-full rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95">
+                                {{$t('datapage.optional_thematic.NDVI.button')}}
+                            </button>
+                            <button v-if="analysisData.length > 0" @click=""
+                                class="flex items-center gap-1 cursor-pointer rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95">
+                                <DownloadIcon :size="16" />
+                                导出结果
+                            </button>
+                        </div>
                         <!-- 请确定您要研究的区域： -->
                         <!-- <div class="flex items-center gap-2 mt-2 w-full">
                             <label class="text-white">影像选择：</label>
@@ -128,7 +159,16 @@
                 <SquareDashedMousePointer class="mr-2" />{{$t('datapage.optional_thematic.NDVI.noresult')}}
             </div>
             <div class="config-item" v-for="(item, index) in analysisData" :key="index">
-                <div>第{{ index + 1 }}次计算：{{ item.analysis }}</div>
+                <div class="config-label relative">
+                    <ListFilter :size="22" class="config-icon" />
+                    <span>第{{ index + 1 }}次计算：{{ item.analysis }}</span>
+                    <div class="absolute right-0 cursor-pointer">
+                        <ChevronDown v-if="isExpand[index]" :size="22" @click="isExpand[index] = false" />
+                        <ChevronUp v-else @click="isExpand[index] = true" :size="22" />
+                    </div>
+                </div>
+
+                <div v-show="isExpand[index]" > 
                 <!-- <div>NDVI计算结果为：xxx</div> -->
                 <!-- <div>统计数据-统计数据-统计数据-统计数据</div> -->
                 <div>经纬度：（{{ item.point[0] }},{{ item.point[1] }}）</div>
@@ -137,6 +177,7 @@
                     <div class="chart" :ref="el => setChartRef(el, index)" :id="`chart-${index}`"
                         style="width: 100%; height: 400px;"></div>
                     <button class="!text-[#38bdf8] cursor-pointer" @click="fullscreenChart(index)">{{$t('datapage.optional_thematic.NDVI.fullview')}}</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -172,13 +213,17 @@ import {
     BanIcon,
     MapIcon,
     SquareDashedMousePointer,
-    Bus
+    Bus,
+    ChevronDown,
+    ChevronUp
 } from 'lucide-vue-next'
 import { useGridStore } from '@/store'
 import { mapManager } from '@/util/map/mapManager'
 
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
+
+const isExpand = ref<boolean[]>([])
 
 type ThematicConfig = {
     allImages: any,
@@ -389,6 +434,7 @@ const analysisNDVI = async () => {
             analysis: "定点NDVI时序计算",
             point: [...pickedPoint.value]
         })
+        isExpand.value.push(false)
         console.log(analysisData.value, '结果');
 
         ElMessage.success('NDVI计算完成')
