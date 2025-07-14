@@ -11,6 +11,8 @@ import {
     getBoundary,
     getRegionPosition,
     getSceneByConfig,
+    getVectorsByConfig,
+    getVectorsByPOIConfig,
     getSceneGrids,
     getCoverRegionSensorScenes,
     getPoiInfo,
@@ -18,6 +20,7 @@ import {
     getPOIPosition,
     getSceneByPOIConfig,
     getCoverPOISensorScenes,
+    getVectorGrids,
 } from '@/api/http/satellite-data'
 import { useLayer, type POIInfo } from './useLayer'
 import { useStats } from './useStats'
@@ -29,6 +32,7 @@ const { countResolutionScenesCoverage, classifyScenesByResolution, getSceneIdsBy
  } = useStats()
 const coverageRSRate = ref('0.00%')
 const coverageProductsRate = ref('0.00%')
+const coverageVectorRate = ref('0.00%')
 import { useExploreStore } from '@/store/exploreStore'
 const exploreData = useExploreStore()
 import { message } from 'ant-design-vue'
@@ -107,6 +111,9 @@ export const useFilter = () => {
         ['NDVI']: '',
         ['其他']: '',
     })
+
+    // 过滤出的vectors
+    const allVectors = ref<any[]>([])
 
     /**
      * 1.空间筛选
@@ -284,6 +291,10 @@ export const useFilter = () => {
                     ...image,
                     tags: [image.tags.source, image.tags.production, image.tags.category],
                 }))
+            // 获取矢量数据
+            const vectorsRes = await getVectorsByConfig(filterData)
+            console.log('矢量数据返回', vectorsRes)
+            allVectors.value = vectorsRes
         } else if (searchedSpatialFilterMethod.value === 'poi') {
             const poiFilter = {
                 startTime: defaultConfig.value.dateRange[0].format('YYYY-MM-DD'),
@@ -305,9 +316,14 @@ export const useFilter = () => {
                     ...image,
                     tags: [image.tags.source, image.tags.production, image.tags.category],
                 }))
+            // 获取矢量数据
+            const vectorsRes = await getVectorsByPOIConfig(poiFilter)
+            allVectors.value = vectorsRes
+            console.log('矢量数据返回', vectorsRes)
         }
         console.log('allScenes', allScenes.value)
         console.log('allProducts', allProducts.value)
+        console.log('allVectors', allVectors.value)
     
         // 记录所有景中含有的“传感器+分辨率字段”
         // allGridsInResolution.value = getSensorsAndResolutions(allScenes.value)
@@ -352,6 +368,16 @@ export const useFilter = () => {
             sceneIds: [...allScenes.value.filter(image => image.tags.includes('ard') || parseFloat(image.resolution) > 1).map((image: any) => image.sceneId), 
                 ...allProducts.value.map((image: any) => image.sceneId)],
         }
+        let vectorGridParam = {
+            grids: allGrids.value.map((item: any) => {
+                return {
+                    rowId: item.rowId,
+                    columnId: item.columnId,
+                    resolution: item.resolution,
+                }
+            }),
+            tableNames: allVectors.value.map((item: any) => item.tableName),
+        }
     
         // Destroy layer
         destroyLayer()
@@ -359,6 +385,8 @@ export const useFilter = () => {
         // Get scene grids
         let sceneGridsRes = await getSceneGrids(sceneGridParam)
         let scenes = [...allScenes.value, ...allProducts.value]
+        // Get Vector Grids
+        let vectorGridsRes = await getVectorGrids(vectorGridParam)
     
         const sceneTagMap = new Map<string, string[]>()
         for (let sc of scenes) {
@@ -397,9 +425,14 @@ export const useFilter = () => {
             if (item.scenes.some(scene => scene.dataType === 'satellite')) nonEmptyScenesCount++
             if (item.scenes.some(scene => scene.dataType !== 'satellite')) nonEmptyProductsCount++
         }
+        let nonEmptyVectorCount = 0
+        for (const item of vectorGridsRes) {
+            if (item.vectors.length > 0) nonEmptyVectorCount++
+        }
         coverageRSRate.value = ((nonEmptyScenesCount * 100) / sceneGridsRes.length).toFixed(2) + '%'
         coverageProductsRate.value = ((nonEmptyProductsCount * 100) / sceneGridsRes.length).toFixed(2) + '%'
-    
+        coverageVectorRate.value = ((nonEmptyVectorCount * 100) / vectorGridsRes.length).toFixed(2) + '%'
+
         updateFullSceneGridLayer(allGrids.value, sceneGridsRes, allScenes.value.length)
     
         exploreData.updateFields({
@@ -516,6 +549,10 @@ export const useFilter = () => {
      * 8. 矢量可视化
      */
     const handleShowVectorInBoundary = async (source_layer: string) => {
+        if (source_layer === '') {
+            ElMessage.warning(t('datapage.explore.message.filtererror_choose'))
+            return
+        }
         console.log('source_layer', source_layer)
         await addMVTLayer(source_layer, finalLandId.value)
     }
@@ -545,7 +582,9 @@ export const useFilter = () => {
         tabs,
         allScenes,
         allProducts,
+        allVectors,
         coverageProductsRate,
+        coverageVectorRate,
         allGridsInResolution,
         allGridsInProduct,
         coverageRSRate,
