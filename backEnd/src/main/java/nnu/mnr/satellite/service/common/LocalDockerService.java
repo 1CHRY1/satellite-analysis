@@ -5,13 +5,13 @@ import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.command.ExecCreateCmdResponse;
 import com.github.dockerjava.api.command.RemoveContainerCmd;
 import com.github.dockerjava.api.exception.DockerException;
-import com.github.dockerjava.api.exception.InternalServerErrorException;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.HostConfig;
 import com.github.dockerjava.api.model.Volume;
 import com.github.dockerjava.api.model.PortBinding;
+import com.github.dockerjava.api.model.Ulimit;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
@@ -34,6 +34,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -155,13 +156,34 @@ public class LocalDockerService {
                 log.info("Ray Dashboard port mapping enabled: {}:{}", hostPort, dashboardPort);
             }
 
-            // 创建HostConfig来设置共享内存大小和端口绑定
+            // 创建HostConfig来设置共享内存大小、端口绑定和资源限制
             HostConfig hostConfig = HostConfig.newHostConfig()
-                    .withBinds(bindList);
+                    .withBinds(bindList)
+                    // 添加严格的资源限制
+                    .withMemory(2L * 1024 * 1024 * 1024) // 2GB内存限制
+                    .withMemorySwap(2L * 1024 * 1024 * 1024) // 禁用swap，设置相同值
+                    .withCpuCount(2L) // 限制CPU核数
+                    .withCpuPercent(50L) // 限制CPU使用率50%
+                    .withKernelMemory(512L * 1024 * 1024) // 512MB内核内存限制
+                    .withPidsLimit(100L) // 限制进程数量
+                    .withUlimits(Arrays.asList(
+                        new Ulimit("nofile", 1024L, 1024L), // 文件描述符限制
+                        new Ulimit("nproc", 100L, 100L),    // 进程数量限制
+                        new Ulimit("fsize", 100L * 1024 * 1024, 100L * 1024 * 1024) // 文件大小限制100MB
+                    ))
+                    .withReadonlyRootfs(false) // 允许写入，但会监控
+                    .withNetworkMode("none") // 禁用网络访问以增强安全性
+                    .withCapDrop(com.github.dockerjava.api.model.Capability.ALL) // 移除所有capabilities
+                    .withCapAdd(com.github.dockerjava.api.model.Capability.CHOWN,
+                               com.github.dockerjava.api.model.Capability.SETGID,
+                               com.github.dockerjava.api.model.Capability.SETUID) // 只添加必要的capabilities
+                    .withSecurityOpts(Arrays.asList("no-new-privileges")); // 禁止获取新权限
 
             // 如果有端口绑定，添加到HostConfig
             if (!portBindings.isEmpty()) {
                 hostConfig.withPortBindings(portBindings);
+                // 如果需要端口绑定，允许网络访问但限制为bridge模式
+                hostConfig.withNetworkMode("bridge");
             }
 
             // 如果有额外的Docker运行选项，添加共享内存大小
@@ -170,6 +192,9 @@ public class LocalDockerService {
                 if (shmSize != null) {
                     hostConfig.withShmSize(parseShmSize(shmSize));
                 }
+            } else {
+                // 默认设置较小的共享内存大小
+                hostConfig.withShmSize(128L * 1024 * 1024); // 128MB
             }
 
             // 构建容器创建命令
@@ -183,7 +208,6 @@ public class LocalDockerService {
                     .withEnv(envList)
                     .withHostConfig(hostConfig)
                     .exec();
-
             String containerId = container.getId();
             startPort++;
             

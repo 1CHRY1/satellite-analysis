@@ -6,7 +6,13 @@
                     <div class="section-icon">
                         🗺️
                     </div>
-                    <span class="page-title">无云一版图</span>
+                    <span class="page-title">数据准备</span>
+                    <div class="section-icon absolute right-2 cursor-pointer">
+                        <a-tooltip>
+                            <template #title>{{t('datapage.history.his_recon')}}</template>
+                            <History :size="18" @click="setCurrentPanel('history')"/>
+                        </a-tooltip>
+                    </div>
                 </div>
             </section>
             <div class="custom-panel px-2">
@@ -18,14 +24,14 @@
                                     <CloudIcon :size="18" />
                                 </div>
                                 <h2 class="section-title">{{t('datapage.nocloud.title')}}</h2>
-                                <div class="section-icon absolute right-0 cursor-pointer">
-                                    <a-tooltip>
-                                        <template #title>{{t('datapage.history.his_recon')}}</template>
-                                        <History :size="18" @click="setCurrentPanel('history')"/>
-                                    </a-tooltip>
+                                <div class="absolute right-2 cursor-pointer">
+                                    <ChevronDown v-if="isNoCloudExpand" :size="22" @click="isNoCloudExpand = false" />
+                                    <ChevronUp v-else @click="isNoCloudExpand = true" :size="22" />
                                 </div>
                             </div>
-                            <div class="section-content">
+
+                            
+                            <div v-show="isNoCloudExpand" class="section-content">
                                 <div class="config-container">
                                     <div class="config-item">
                                         <div class="config-label relative">
@@ -369,6 +375,24 @@
                                 </div>
                             </div>
                         </section>
+                        <section class="panel-section">
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <CloudIcon :size="18" />
+                                </div>
+                                <h2 class="section-title">复杂合成</h2>
+                                <div class="absolute right-2 cursor-pointer">
+                                    <ChevronDown v-if="isComplexExpand" :size="22" @click="isComplexExpand = false" />
+                                    <ChevronUp v-else @click="isComplexExpand = true" :size="22" />
+                                </div>
+                            </div>
+                            <div v-show="isComplexExpand" class="section-content">
+                                <div class="config-container">
+                                    <!-- 在这里添加复杂合成的具体内容 -->
+                                    <p>复杂合成内容区域</p>
+                                </div>
+                            </div>
+                        </section>
 
                         <section class="panel-section" v-if="currentPanel === 'history'" key="history">
                             <noCloudHistory @toggle="setCurrentPanel" />
@@ -424,6 +448,8 @@ import {
     MapIcon,
     History,
     CloudOffIcon,
+    ChevronDown,
+    ChevronUp,
 } from 'lucide-vue-next'
 import { FastBackwardFilled } from '@ant-design/icons-vue'
 import bandMergeHelper from '@/util/image/util'
@@ -445,6 +471,10 @@ const exploreData = useExploreStore()
 
 // 地图展示
 const isPicking = ref(false)
+
+// 控制无云一版图内容的折叠状态
+const isNoCloudExpand = ref<boolean>(false)
+const isComplexExpand = ref<boolean>(false)
 
 console.log( exploreData)
 console.log(exploreData.images)
