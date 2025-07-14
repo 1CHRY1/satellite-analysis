@@ -156,6 +156,10 @@ export async function getSceneGrids(param: any): Promise<any> {
     return http.post<any>(`data/grid/scene/grids`, param)
 }
 
+export async function getVectorGrids(param: any): Promise<any> {
+    return http.post<any>(`data/grid/vector/grids`, param)
+}
+
 export async function getNoCloud(param: any): Promise<any> {
     return http.post<any>(`modeling/example/noCloud`, param)
 }
@@ -235,4 +239,12 @@ export async function getCaseById(caseId: string): Promise<Case.CaseResponse> {
 // 注意与getCaseResult的区别
 export async function getResultByCaseId(caseId: string): Promise<any> {
     return http.get<any>(`data/case/result/${caseId}`)
+}
+
+// 获取矢量数据
+export async function getVectorsByConfig(param: any): Promise<any> {
+    return http.post<any>(`data/vector/time/region`, param)
+}
+export async function getVectorsByPOIConfig(param: any): Promise<any> {
+    return http.post<any>(`data/vector/time/location`, param)
 }

@@ -396,8 +396,7 @@
                                                         <div class="result-info-content">
                                                             <div class="result-info-label">{{ t('datapage.explore.section_time.search') }}</div>
                                                             <div class="result-info-value">
-                                                                <!-- {{ allVectors.length }} -->
-                                                                2条矢量数据
+                                                                {{ allVectors.length }}条矢量数据
                                                             </div>
                                                         </div>
                                                     </div>
@@ -408,29 +407,30 @@
                                                         <div class="result-info-content">
                                                             <div class="result-info-label">{{ t('datapage.explore.percent') }}</div>
                                                             <div class="result-info-value">
-                                                                <!-- {{
+                                                                {{
                                                                     coverageVectorRate != 'NaN%'
                                                                         ? coverageVectorRate
                                                                         : '待计算'
-                                                                }} -->
-                                                                100.00%
+                                                                }}
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div v-if="Object.keys(classifiedProducts).length > 0" class="!w-full ml-3">
+                                        <div v-if="Object.keys(allVectors).length > 0" class="!w-full ml-3">
                                             <label class="mr-2 text-white">选择数据集：</label>
                                             <select
                                                 class="max-h-[600px] w-[calc(100%-113px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
-                                                >
+                                                v-model="selectedVectorTableName">
                                                 <option disabled selected value="">{{ t('datapage.explore.section_interactive.choose') }}</option>
-                                                <option :value="'all'" class="truncate">山东省土地利用图斑</option>
+                                                <option v-for="vector in allVectors" :value="vector.tableName" :key="vector.tableName" class="truncate">
+                                                            {{ vector.vectorName }}
+                                                </option>
                                             </select>
                                             <div class="flex flex-row items-center">
                                                 <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
-                                                    @click="handleShowVectorInBoundary('shandong')">
+                                                    @click="handleShowVectorInBoundary(selectedVectorTableName)">
                                                     矢量可视化
                                                 </a-button>
                                                 <a-tooltip>
@@ -765,6 +765,7 @@ import { useFilter } from './useFilter'
 import { useStats } from './useStats'
 import { useLayer } from './useLayer'
 import { message } from 'ant-design-vue';
+const selectedVectorTableName = ref('')
 
 const {
     // 筛选条件默认配置
@@ -780,9 +781,9 @@ const {
     // 选择空间检索方法
     handleSelectTab,
     // 筛选
-    allScenes, allGridsInResolution, allProducts, allGridsInProduct, filter: applyFilter, filterLoading, isFilterDone,
+    allScenes, allGridsInResolution, allProducts, allGridsInProduct, allVectors, filter: applyFilter, filterLoading, isFilterDone,
     // 统计信息面板
-    coverageRSRate, coverageProductsRate, handleShowImageInBoundary, handleShowProductInBoundary, handleShowVectorInBoundary,
+    coverageRSRate, coverageProductsRate, coverageVectorRate, handleShowImageInBoundary, handleShowProductInBoundary, handleShowVectorInBoundary,
     // 影像分辨率相关变量
     resolutionType, resolutionPlatformSensor, productType, productPlatformSensor
 } = useFilter()
