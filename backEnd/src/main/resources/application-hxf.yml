@@ -14,20 +14,20 @@ spring:
         mysql_satellite:
           # k8s
           #          url: jdbc:mysql://223.2.34.8:31036/satellite
-          url: jdbc:mysql://192.168.1.110:3306/satellite
+          url: jdbc:mysql://192.168.1.111:3306/satellite
           username: root
           password: root
 #          password: 123456
           driver-class-name: com.mysql.cj.jdbc.Driver
           hikari:
             connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
-        mysql_tile:
-#          url: jdbc:mysql://223.2.34.8:31036/tile
-          url: jdbc:mysql://192.168.1.110:3306/tile
-          username: root
-          password: root
-#          password: 123456
-          driver-class-name: com.mysql.cj.jdbc.Driver
+#        mysql_tile:
+##          url: jdbc:mysql://223.2.34.8:31036/tile
+#          url: jdbc:mysql://192.168.1.110:3306/tile
+#          username: root
+#          password: root
+##          password: 123456
+#          driver-class-name: com.mysql.cj.jdbc.Driver
 #        pg_space:
 #          url: jdbc:postgresql://223.2.34.8:31543/gis_db
 ##                    url: jdbc:postgresql://127.0.0.1:5431/gis_db
@@ -37,7 +37,7 @@ spring:
 #          driver-class-name: org.postgresql.Driver
         pg_satellite:
 #          url: jdbc:postgresql://223.2.34.8:31543/satellite
-          url: jdbc:postgresql://192.168.1.103:5432/satellite
+          url: jdbc:postgresql://192.168.1.110:5432/satellite
           username: postgres
           password: 123456
           driver-class-name: org.postgresql.Driver
