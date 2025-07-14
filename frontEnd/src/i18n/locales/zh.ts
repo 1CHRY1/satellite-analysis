@@ -525,7 +525,7 @@ export default{
   
 
     nocloud:{
-        title:"无云一版图重构",
+        title:"简单合成",
 
         section_chinese:{
             subtitle:"国产光学影像",
