@@ -215,8 +215,8 @@ export default{
 
   datapage:{
     title_explore:"交互式探索",
-    title_nocloud:"无云一版图",
-    title_analysis:"动态展示分析",
+    title_nocloud:"数据准备",
+    title_analysis:"展示分析",
 
     mapcomp:{
         vector:"矢量底图",
