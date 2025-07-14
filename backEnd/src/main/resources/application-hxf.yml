@@ -14,7 +14,8 @@ spring:
         mysql_satellite:
           # k8s
           #          url: jdbc:mysql://223.2.34.8:31036/satellite
-          url: jdbc:mysql://192.168.1.111:3306/satellite
+#          url: jdbc:mysql://192.168.1.111:3306/satellite
+          url: jdbc:mysql://172.16.92.82:3306/satellite
           username: root
           password: root
 #          password: 123456
@@ -35,12 +36,12 @@ spring:
 #          password: 123456
 #          #          password: ogms250410
 #          driver-class-name: org.postgresql.Driver
-        pg_satellite:
-#          url: jdbc:postgresql://223.2.34.8:31543/satellite
-          url: jdbc:postgresql://192.168.1.110:5432/satellite
-          username: postgres
-          password: 123456
-          driver-class-name: org.postgresql.Driver
+#        pg_satellite:
+##          url: jdbc:postgresql://223.2.34.8:31543/satellite
+#          url: jdbc:postgresql://192.168.1.110:5432/satellite
+#          username: postgres
+#          password: 123456
+#          driver-class-name: org.postgresql.Driver
   servlet:
     multipart:
       max-file-size: 1GB
@@ -70,7 +71,8 @@ minio:
 #  access-key: jTbgNHEqQafOpUxVg7Ol
 #  secret-key: 7UxtrqhSOyN1KUeumbqTRMv1zeluLO69OwJnCC0M
 #  #  url: http://223.2.34.7:9000
-  url: http://192.168.1.110:30900
+#  url: http://192.168.1.110:30900
+  url: http://172.16.92.82:30900
   access-key: minioadmin
   secret-key: minioadmin
 #  url: http://223.2.34.8:30900
