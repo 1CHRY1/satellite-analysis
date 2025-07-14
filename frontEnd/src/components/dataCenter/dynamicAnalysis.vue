@@ -6,7 +6,7 @@
                     <div class="section-icon">
                         📈
                     </div>
-                    <span class="page-title">动态展示分析</span>
+                    <span class="page-title">展示分析</span>
                 </div>
             </section>
             <div class="custom-panel px-2 mb-0">
@@ -86,12 +86,18 @@
                 <div class="p-4 text-white border-b border-gray-700">
                     <h3 class="font-semibold flex items-center gap-2">
                         <ToolIcon :size="18" />
-                        工具目录
+                        工具栏
                     </h3>
                 </div>
                             <!-- Function Title -->
                 <div class="flex flex-col  flex-wrap  gap-2 mt-4 ml-6 mr-6">
                         <h3>影像分析</h3>
+                        <div class="absolute right-6 " @click="clearImages">
+                            <a-tooltip>
+                                <template #title>{{t('datapage.analysis.section2.clear')}}</template>
+                                <Trash2Icon :size="20" />
+                            </a-tooltip>
+                        </div>
                         <button 
                             v-for="option in optionalTasks" 
                             :key="option.value"
@@ -106,14 +112,51 @@
                             >
                                 {{ option.label }}
                         </button>
-                        <h3>模型分析</h3>
-
-                   <div class="absolute right-6 " @click="clearImages">
-                    <a-tooltip>
-                        <template #title>{{t('datapage.analysis.section2.clear')}}</template>
-                        <Trash2Icon :size="20" />
-                    </a-tooltip>
-                </div>
+                        <h3>目录</h3>
+                        <div class="mt-2 relative">
+                            <input
+                                v-model="searchQuery"
+                                placeholder="搜索工具..."
+                                class="w-full bg-gray-700 text-white px-3 py-1 rounded border border-gray-600 focus:outline-none focus:border-blue-500"
+                            />
+                            <SearchIcon :size="16" class="absolute right-3 top-2 text-gray-400" />
+                        </div>
+                    </div>
+                    
+                    <!-- 分类工具列表 -->
+                    <div class="overflow-y-auto flex-1 p-2">
+                        <div v-for="category in filteredCategories" :key="category.name" class="mb-4">
+                            <h3 class="text-gray-300 font-medium px-2 py-1 flex items-center">
+                                <ChevronDownIcon 
+                                    :size="16" 
+                                    class="mr-1 transition-transform duration-200"
+                                    :class="{ 'transform rotate-180': expandedCategories.includes(category.name) }"
+                                    @click="toggleCategory(category.name)"
+                                />
+                                {{ category.name }}
+                            </h3>
+                            
+                            <div 
+                                v-show="expandedCategories.includes(category.name) || searchQuery"
+                                class="ml-6 mt-1 space-y-1"
+                            >
+                                <button 
+                                    v-for="tool in category.tools" 
+                                    :key="tool.value"
+                                    
+                                    :class="{
+                                        'bg-[#1e3a8a] text-white': selectedTask === tool.value,
+                                        'bg-[#0d1526] text-gray-300 hover:bg-[#1e293b]': selectedTask !== tool.value,
+                                        'opacity-50 cursor-not-allowed': tool.disabled
+                                    }"
+                                    class="px-3 py-1 border border-[#2c3e50] rounded-lg transition-colors w-full text-left truncate"
+                                    :disabled="tool.disabled"
+                                >
+                                    {{ tool.label }}
+                                </button>
+                            </div>
+                        </div>
+                        
                 </div>
                 
             </div>
@@ -154,7 +197,9 @@ import {
     MapIcon,
     Trash2Icon,
     ChevronLeftIcon,
-    ChevronRight
+    ChevronRight,
+    SearchIcon,
+    ChevronDownIcon 
 } from 'lucide-vue-next'
 import { ElMessage } from 'element-plus'
 import { mapManager } from '@/util/map/mapManager'
@@ -314,6 +359,60 @@ const addLocalInternalLayer = () => {
         })
     })
 }
+//工具目录
+const searchQuery = ref('')
+const expandedCategories = ref<string[]>(['分析工具扩展', '可视化与交互', '结果导出与共享'])
+
+const toolCategories = [
+    {
+        name: '分析工具拓展',
+        tools: [
+            { value: 'boxSelect', label: '地图框选', disabled: false },
+            { value: 'dbSelect', label: '数据源选择', disabled: false },
+            { value: 'timingPara', label: '时序参数设置', disabled: false }
+        ]
+    },
+    {
+        name: '可视化与交互',
+        tools: [
+            { value: 'mapSwitch', label: '地图切换', disabled: false },
+            { value: 'transparencyEdit', label: '透明度调整', disabled: false },
+            { value: 'multiRegion', label: '多区域对比叠加', disabled: false }
+        ]
+    },
+    {
+        name: '结果导出与共享',
+        tools: [
+            { value: 'highExport', label: '高清图片', disabled: false },
+            { value: 'GeoSpatialData', label: '地理空间数据', disabled: false }
+        ]
+    },
+]
+
+const filteredCategories = computed(() => {
+    if (!searchQuery.value) return toolCategories
+    
+    const query = searchQuery.value.toLowerCase()
+    return toolCategories
+        .map(category => ({
+            ...category,
+            tools: category.tools.filter(tool => 
+                tool.label.toLowerCase().includes(query) || 
+                category.name.toLowerCase().includes(query)
+            )
+        }))
+        .filter(category => category.tools.length > 0)
+})
+
+const toggleCategory = (categoryName: string) => {
+    const index = expandedCategories.value.indexOf(categoryName)
+    if (index >= 0) {
+        expandedCategories.value.splice(index, 1)
+    } else {
+        expandedCategories.value.push(categoryName)
+    }
+}
+
 onMounted(async () => {
     addLocalInternalLayer()
 })

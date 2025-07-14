@@ -1,31 +1,45 @@
 <template>
+    <!-- 数据准备页面主容器 -->
     <div class="relative flex flex-1 flex-row bg-black">
+        <!-- 左侧面板栏 -->
         <div class="w-[28vw] max-h-[calc(100vh-100px)] p-4 text-gray-200">
+            <!--顶部标题+历史记录图标-->
             <section class="panel-section ml-2 mr-2" style="margin-top: 0rem; margin-bottom: 0.5rem;">
                 <div class="section-header">
                     <div class="section-icon">
                         🗺️
                     </div>
-                    <span class="page-title">无云一版图</span>
+                    <span class="page-title">数据准备</span>
+                    <div class="section-icon absolute right-2 cursor-pointer">
+                        <a-tooltip>
+                            <template #title>{{t('datapage.history.his_recon')}}</template>
+                            <History :size="18" @click="setCurrentPanel('history')"/>
+                        </a-tooltip>
+                    </div>
                 </div>
             </section>
+            <!-- 内容区域 -->
             <div class="custom-panel px-2">
                 <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]">
+
+                    <!--简单合成和复杂合成-->
                     <div class="main-container">
+                        <!--简单合成-->
                         <section class="panel-section" v-show="currentPanel === 'noCloud'" key="noCloud">
+                            <!--简单合成标题-->
                             <div class="section-header">
                                 <div class="section-icon">
                                     <CloudIcon :size="18" />
                                 </div>
                                 <h2 class="section-title">{{t('datapage.nocloud.title')}}</h2>
-                                <div class="section-icon absolute right-0 cursor-pointer">
-                                    <a-tooltip>
-                                        <template #title>{{t('datapage.history.his_recon')}}</template>
-                                        <History :size="18" @click="setCurrentPanel('history')"/>
-                                    </a-tooltip>
+                                <div class="absolute right-2 cursor-pointer">
+                                    <ChevronDown v-if="isNoCloudExpand" :size="22" @click="isNoCloudExpand = false" />
+                                    <ChevronUp v-else @click="isNoCloudExpand = true" :size="22" />
                                 </div>
                             </div>
-                            <div class="section-content">
+
+                            <!--简单合成内容区域-->
+                            <div v-show="isNoCloudExpand" class="section-content">
                                 <div class="config-container">
                                     <div class="config-item">
                                         <div class="config-label relative">
@@ -345,15 +359,21 @@
                                             </div>
                                         </div> -->
 
-                                        <button @click="calNoClouds" :disabled="noCloudLoading"
-                                            class="flex justify-center w-full rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
-                                            :class="{
-                                                'cursor-not-allowed': noCloudLoading,
-                                                'cursor-pointer': !noCloudLoading,
-                                            }">
-                                            <span>{{t('datapage.nocloud.section4.button')}} </span>
-                                            <Loader v-if="noCloudLoading" class="ml-2" />
-                                        </button>
+                                        <div class="flex w-full flex-row gap-2">
+                                            <button @click="handleCreateNoCloudTiles"
+                                                class="flex justify-center w-1/2 rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95">
+                                                <span>实时加载</span>
+                                            </button>
+                                            <button @click="calNoClouds" :disabled="noCloudLoading"
+                                                class="flex justify-center w-1/2 rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
+                                                :class="{
+                                                    'cursor-not-allowed': noCloudLoading,
+                                                    'cursor-pointer': !noCloudLoading,
+                                                }">
+                                                <span>重构</span>
+                                                <Loader v-if="noCloudLoading" class="ml-2" />
+                                            </button>
+                                        </div>
                                         <div v-if="showProgress[3]"
                                             class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
                                             <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
@@ -364,6 +384,30 @@
                             </div>
                         </section>
 
+                        <!--复杂合成-->
+                        <section class="panel-section">
+                            <!--复杂合成标题-->
+                            <div class="section-header">
+                                <div class="section-icon">
+                                    <CloudIcon :size="18" />
+                                </div>
+                                <h2 class="section-title">复杂合成</h2>
+                                <div class="absolute right-2 cursor-pointer">
+                                    <ChevronDown v-if="isComplexExpand" :size="22" @click="isComplexExpand = false" />
+                                    <ChevronUp v-else @click="isComplexExpand = true" :size="22" />
+                                </div>
+                            </div>
+                            <!-- 复杂合成内容区域 -->
+                            <div v-show="isComplexExpand" class="section-content">
+                                <div class="config-container">
+                                    <!-- 在这里添加复杂合成的具体内容 -->
+                                    <p>复杂合成内容区域</p>
+                                </div>
+                            </div>
+                        </section>
+
+
+                        <!--历史记录-->
                         <section class="panel-section" v-if="currentPanel === 'history'" key="history">
                             <noCloudHistory @toggle="setCurrentPanel" />
                         </section>
@@ -418,6 +462,8 @@ import {
     MapIcon,
     History,
     CloudOffIcon,
+    ChevronDown,
+    ChevronUp,
 } from 'lucide-vue-next'
 import { FastBackwardFilled } from '@ant-design/icons-vue'
 import bandMergeHelper from '@/util/image/util'
@@ -439,6 +485,10 @@ const exploreData = useExploreStore()
 
 // 地图展示
 const isPicking = ref(false)
+
+// 控制无云一版图内容的折叠状态
+const isNoCloudExpand = ref<boolean>(false)
+const isComplexExpand = ref<boolean>(false)
 
 console.log( exploreData)
 console.log(exploreData.images)
@@ -1312,6 +1362,61 @@ const getCoverage = (gridImages: any, gridCount: number) => {
     let coverage = ((nonEmptyScenesCount * 100) / gridCount).toFixed(2) + '%'
     return coverage
 }
+
+const mockSceneIds = [
+  "SCrmtcmrcgp",
+  "SCwaxjagmrv",
+  "SC825032809",
+  "SCl4ad8ul91",
+  "SCa6c4bossr",
+  "SC04u521n84",
+  "SCaj9c7exoq",
+  "SCrsk2g1b1g"
+]
+
+// 创建无云一版图瓦片
+const handleCreateNoCloudTiles = async () => {
+    try {
+        // 1. 准备参数
+        const param = {
+            sceneIds: mockSceneIds,
+        }
+
+        console.log('创建无云一版图配置参数:', param)
+
+        // 2. 创建配置
+        const response = await fetch('/api/modeling/example/noCloud/createNoCloudConfig', {
+            method: 'POST',
+            body: JSON.stringify(param),
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('token'),
+            },
+        })
+        const result = await response.json()
+        const jsonUrl = result.data  // 从CommonResultVO中获取data字段
+        
+        console.log('获取到的jsonUrl:', jsonUrl)
+        
+        // 3. 添加瓦片图层
+        const tileUrl = `http://192.168.1.100:8000/no_cloud/{z}/{x}/{y}?jsonUrl=${encodeURIComponent(jsonUrl)}`
+        //const tileUrl = `http://192.168.1.100:8000/no_cloud/{z}/{x}/{y}.png?jsonUrl=${encodeURIComponent(jsonUrl)}`
+        
+        console.log('瓦片URL模板:', tileUrl)
+        
+        // 清除旧的无云图层
+        MapOperation.map_destroyNoCloudLayer()
+        
+        // 添加新的瓦片图层
+        MapOperation.map_addNoCloudLayer(tileUrl)
+        
+        console.log('无云一版图瓦片图层已添加到地图')
+        
+    } catch (error) {
+        console.error('创建无云一版图瓦片失败:', error)
+    }
+}
+
 
 </script>
 

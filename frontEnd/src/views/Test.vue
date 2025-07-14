@@ -13,6 +13,8 @@
             <button class="bg-red-500 p-5" @click="addMVTLayer">矢量瓦片测试</button>
 
             <button class="bg-red-500 p-5" @click="addMosaicJsonLayer">MOSAICJSON测试</button>
+
+            <button class="bg-red-500 p-5" @click="handleCreateNoCloudTiles">无云一版图瓦片测试</button>
         </div>
     </div>
 </template>
@@ -31,8 +33,7 @@ const addMVTLayer = () => {
     // const url = baseUrl + '/patch/{z}/{x}/{y}'
 
     // const url = `http://${window.location.host}/chry/patch/{z}/{x}/{y}`
-    // const url = 'http://223.2.47.202:9888/api/v1/geo/vector/tiles/patch/region/370100/type/grass/{z}/{x}/{y}'
-    const url = `http://${window.location.host}/api/data/vector/370102/shandong/{z}/{x}/{y}`
+    const url = 'http://223.2.47.202:9888/api/v1/geo/vector/tiles/patch/region/370100/type/grass/{z}/{x}/{y}'
     // const url = 'http://127.0.0.1:8000/tiles/{z}/{x}/{y}'
 
     console.log(import.meta.env.VITE)
@@ -51,16 +52,69 @@ const addMVTLayer = () => {
             id: 'test-layer',
             type: 'fill',
             source: 't-source',
-            'source-layer': 'shandong', //这个地方要注意,
+            'source-layer': 'patch', //这个地方要注意,
             paint: {
-                'fill-color': '#0066cc',     // 蓝色填充
-                'fill-opacity': 0.6,
-            }
+                'fill-color': '#ffffff',
+            },
         })
         map.on('click','test-layer',(e)=>{
             // console.log(e.features[0] )
         })
     })
+}
+
+const mockSceneIds = [
+  "SCrmtcmrcgp",
+  "SCwaxjagmrv",
+  "SC825032809",
+  "SCl4ad8ul91",
+  "SCa6c4bossr",
+  "SC04u521n84",
+  "SCaj9c7exoq",
+  "SCrsk2g1b1g"
+]
+
+// 创建无云一版图瓦片
+const handleCreateNoCloudTiles = async () => {
+    try {
+        // 1. 准备参数
+        const param = {
+            sceneIds: mockSceneIds,
+        }
+
+        console.log('创建无云一版图配置参数:', param)
+
+        // 2. 创建配置
+        const response = await fetch('/api/modeling/example/noCloud/createNoCloudConfig', {
+            method: 'POST',
+            body: JSON.stringify(param),
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('token'),
+            },
+        })
+        const result = await response.json()
+        const jsonUrl = result.data  // 从CommonResultVO中获取data字段
+        
+        console.log('获取到的jsonUrl:', jsonUrl)
+        
+        // 3. 添加瓦片图层
+        const tileUrl = `http://192.168.1.100:8000/no_cloud/{z}/{x}/{y}?jsonUrl=${encodeURIComponent(jsonUrl)}`
+        //const tileUrl = `http://192.168.1.100:8000/no_cloud/{z}/{x}/{y}.png?jsonUrl=${encodeURIComponent(jsonUrl)}`
+        
+        console.log('瓦片URL模板:', tileUrl)
+        
+        // 清除旧的无云图层
+        MapOperation.map_destroyNoCloudLayer()
+        
+        // 添加新的瓦片图层
+        MapOperation.map_addNoCloudLayer(tileUrl)
+        
+        console.log('无云一版图瓦片图层已添加到地图')
+        
+    } catch (error) {
+        console.error('创建无云一版图瓦片失败:', error)
+    }
 }
 
 const localMvt = () => {
@@ -129,35 +183,6 @@ const addMosaicJsonLayer = () => {
     MapOperation.map_destroyNoCloudLayer()
     MapOperation.map_addNoCloudLayer(fullUrl)
 }
-
-const addMVTLayers = () => {
-    mapManager.withMap((map) => {
-        const sourceId = `test-source`;
-        const layerId = `test-layer`;
-        const tileUrl = `http://${window.location.host}/api/data/vector/370100/shandong/{z}/{x}/{y}`;
-        console.log(tileUrl, 'tileUrl')
-        map.addSource('tile', {
-            "type": "vector",
-            "tiles": [
-                `http://${window.location.host}/api/data/vector/370100/shandong/{z}/{x}/{y}`
-            ],
-            "minZoom": 1,
-            "maxZoom": 22
-        })
-        //添加各图层
-        map.addLayer({
-            "id": "area-layer",
-            "type": "fill",
-            // "source": "tile",// 上一步添加的数据源id
-            "source-layer": "shandong",
-            // "source-layer": "points",// source-layer和mvt服务中的图层名对应
-            //"layout": {"visibility": "visible"},
-            "paint": {"fill-color": '#51bbd6', "fill-opacity": 0.6, "fill-outline-color": '#0000ff'}
-        })
-
-        // }
-    });
-};
 
 onMounted(() => {
  

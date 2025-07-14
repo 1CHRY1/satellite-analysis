@@ -215,8 +215,8 @@ export default{
 
   datapage:{
     title_explore:"交互式探索",
-    title_nocloud:"无云一版图",
-    title_analysis:"动态展示分析",
+    title_nocloud:"数据准备",
+    title_analysis:"展示分析",
 
     mapcomp:{
         vector:"矢量底图",
@@ -525,7 +525,7 @@ export default{
   
 
     nocloud:{
-        title:"无云一版图重构",
+        title:"简单合成",
 
         section_chinese:{
             subtitle:"国产光学影像",
