@@ -55,8 +55,8 @@ mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: nnu.mnr.satellite.model.po
   type-handlers-package: nnu.mnr.satellite.utils.typeHandler
-#  configuration:
-#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 #ca:
 #  dir: D:/1tools/OpenSSL/ca

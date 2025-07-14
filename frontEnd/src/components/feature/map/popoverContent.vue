@@ -169,7 +169,7 @@
             </div>
 
             <!-- 矢量Tab -->
-            <div v-show="activeTab === 'vector'">
+            <div v-if="false" v-show="activeTab === 'vector'">
                 <div class="band-selection">
                     <label for="vector-select">类别:</label>
                     <select id="vector-select" v-model="selectedProductType" class="band-select">
@@ -195,7 +195,7 @@
             </div>
 
             <!-- 产品Tab -->
-            <div v-show="activeTab === 'product'">
+            <div v-if="false" v-show="activeTab === 'product'">
                 <!-- 类别选择 -->
                 <div class="band-selection">
                     <label for="product-select">类别:</label>
