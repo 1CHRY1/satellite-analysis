@@ -1,6 +1,9 @@
 <template>
+    <!-- 数据准备页面主容器 -->
     <div class="relative flex flex-1 flex-row bg-black">
+        <!-- 左侧面板栏 -->
         <div class="w-[28vw] max-h-[calc(100vh-100px)] p-4 text-gray-200">
+            <!--顶部标题+历史记录图标-->
             <section class="panel-section ml-2 mr-2" style="margin-top: 0rem; margin-bottom: 0.5rem;">
                 <div class="section-header">
                     <div class="section-icon">
@@ -15,10 +18,15 @@
                     </div>
                 </div>
             </section>
+            <!-- 内容区域 -->
             <div class="custom-panel px-2">
                 <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]">
+
+                    <!--简单合成和复杂合成-->
                     <div class="main-container">
+                        <!--简单合成-->
                         <section class="panel-section" v-show="currentPanel === 'noCloud'" key="noCloud">
+                            <!--简单合成标题-->
                             <div class="section-header">
                                 <div class="section-icon">
                                     <CloudIcon :size="18" />
@@ -30,7 +38,7 @@
                                 </div>
                             </div>
 
-                            
+                            <!--简单合成内容区域-->
                             <div v-show="isNoCloudExpand" class="section-content">
                                 <div class="config-container">
                                     <div class="config-item">
@@ -375,7 +383,10 @@
                                 </div>
                             </div>
                         </section>
+
+                        <!--复杂合成-->
                         <section class="panel-section">
+                            <!--复杂合成标题-->
                             <div class="section-header">
                                 <div class="section-icon">
                                     <CloudIcon :size="18" />
@@ -386,6 +397,7 @@
                                     <ChevronUp v-else @click="isComplexExpand = true" :size="22" />
                                 </div>
                             </div>
+                            <!-- 复杂合成内容区域 -->
                             <div v-show="isComplexExpand" class="section-content">
                                 <div class="config-container">
                                     <!-- 在这里添加复杂合成的具体内容 -->
@@ -394,6 +406,8 @@
                             </div>
                         </section>
 
+
+                        <!--历史记录-->
                         <section class="panel-section" v-if="currentPanel === 'history'" key="history">
                             <noCloudHistory @toggle="setCurrentPanel" />
                         </section>
