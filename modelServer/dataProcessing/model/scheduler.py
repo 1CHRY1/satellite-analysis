@@ -17,6 +17,7 @@ from dataProcessing.model.calc_raster_point import calc_raster_point
 from dataProcessing.model.calc_raster_line import calc_raster_line
 from dataProcessing.model.calc_no_cloud import calc_no_cloud
 from dataProcessing.model.calc_no_cloud_grid import calc_no_cloud_grid
+from dataProcessing.model.calc_no_cloud_complex import calc_no_cloud_complex
 
 STATUS_RUNNING = CONFIG.STATUS_RUNNING
 STATUS_COMPLETE = CONFIG.STATUS_COMPLETE
@@ -103,7 +104,8 @@ class TaskScheduler:
             'calc_NDVI': calc_NDVI,
             'get_spectral_profile': get_spectral_profile,
             'calc_raster_point': calc_raster_point,
-            'calc_raster_line': calc_raster_line
+            'calc_raster_line': calc_raster_line,
+            'calc_no_cloud_complex': calc_no_cloud_complex,
             # 'test': 
             # 可以在这里扩展其他类型的任务
         }
