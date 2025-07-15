@@ -1,6 +1,6 @@
 <template>
     <div class="relative flex flex-1 flex-row bg-black">
-        <div class="w-[28vw] p-4 text-gray-200 mb-0 gap-0">
+        <div class="w-[28vw] max-h-[calc(100vh-100px)] p-4 text-gray-200 mb-0 gap-0">
             <section class="panel-section ml-2 mr-2" style="margin-top: 0rem; margin-bottom: 0.5rem;">
                 <div class="section-header">
                     <div class="section-icon">
@@ -70,7 +70,8 @@
             <!-- Toggle button -->
             <button 
                 @click="isToolbarOpen = !isToolbarOpen"
-                class="h-12 w-6 bg-gray-800 hover:bg-gray-700 text-white rounded-l-lg shadow-lg flex items-center justify-center transition-all z-10"
+                class="h-12 w-6 bg-gray-800 hover:bg-gray-700 text-white rounded-l-lg shadow-lg 
+                flex items-center justify-center transition-all z-10"
                 :class="{ '!bg-blue-600': isToolbarOpen }"
             >
                 <ChevronLeftIcon 
@@ -81,7 +82,9 @@
             </button>
             <!-- 工具栏内容 -->
             <div v-show="isToolbarOpen" 
-                 class="h-full bg-gray-800 shadow-lg transition-all duration-300 overflow-hidden flex flex-col"
+                 class="h-full bg-gray-800 shadow-lg transition-all duration-300 overflow-hidden 
+                 flex flex-col flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 
+                 mb-20"
                 :class="isToolbarOpen ? 'w-64' : 'w-0'">
                 <div class="p-4 text-white border-b border-gray-700">
                     <h3 class="font-semibold flex items-center gap-2">
@@ -112,19 +115,52 @@
                             >
                                 {{ option.label }}
                         </button>
+                        <!-- 数据集 -->
+                        <h3>数据集</h3>
+                        <div>
+                            <button @click="showHistory = !showHistory"
+                            class="border border-[#2c3e50] rounded-lg px-3 py-1 appearance-none 
+                            hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6] max-w-[calc(100%-90px)] truncate"
+                            >
+                            前序数据
+                            </button>
+                            <el-dialog v-model="showHistory"
+                                        class="max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-[60vw]
+                                         "
+                                         style="background-color: #111827; color: white;">
+                                <div class="mb-6 text-gray-100">前序数据集</div>
+                                
+                                <div v-if="completedCases.length > 0" class="max-h-[500px] overflow-y-auto">
+                                    <div v-for="item in completedCases" 
+                                    :key="item.caseId" 
+                                    class="p-4 mb-3 border border-gray-200 rounded-md 
+                                            cursor-pointer transition-all duration-300
+                                            hover:bg-gray-50 hover:shadow-md"
+                                    @click="handleCaseClick(item)">
+                                        <h3 class="mt-0 text-blue-500">{{ item.address }}无云一版图</h3>
+                                        <p class="my-1 text-blue-300">分辨率: {{ item.resolution }}km</p>
+                                        <p class="my-1 text-blue-300">创建时间: {{ formatTimeToText(item.createTime) }}</p>
+                                        <p class="my-1 text-blue-300">数据集: {{ item.dataSet }}</p>
+                                    </div>
+                                </div>
+                                <div v-else>
+                                    <p class="item-center text-center text-gray-100">暂无数据</p>
+                                </div>
+                            </el-dialog>
                         <h3>目录</h3>
                         <div class="mt-2 relative">
                             <input
                                 v-model="searchQuery"
                                 placeholder="搜索工具..."
-                                class="w-full bg-gray-700 text-white px-3 py-1 rounded border border-gray-600 focus:outline-none focus:border-blue-500"
+                                class="w-full bg-gray-700 text-white px-3 py-1 rounded border border-gray-600 
+                                focus:outline-none focus:border-blue-500"
                             />
                             <SearchIcon :size="16" class="absolute right-3 top-2 text-gray-400" />
                         </div>
                     </div>
                     
                     <!-- 分类工具列表 -->
-                    <div class="overflow-y-auto flex-1 p-2">
+                    <div class="overflow-y-auto flex-1 p-2 mb-6">
                         <div v-for="category in filteredCategories" :key="category.name" class="mb-4">
                             <h3 class="text-gray-300 font-medium px-2 py-1 flex items-center">
                                 <ChevronDownIcon 
@@ -138,7 +174,7 @@
                             
                             <div 
                                 v-show="expandedCategories.includes(category.name) || searchQuery"
-                                class="ml-6 mt-1 space-y-1"
+                                class="ml-6 mt-1 space-y-1 "
                             >
                                 <button 
                                     v-for="tool in category.tools" 
@@ -156,7 +192,7 @@
                                 </button>
                             </div>
                         </div>
-                        
+                    </div>
                 </div>
                 
             </div>
@@ -177,6 +213,7 @@ import type { RegionValues } from 'v-region'
 import { RegionSelects } from 'v-region'
 import { getSceneByConfig, getBoundary } from '@/api/http/satellite-data'
 import { getRGBTileLayerParamFromSceneObject } from '@/util/visualizeHelper'
+import { useViewHistoryModule } from './noCloud/viewHistory'
 import {
     ChartColumn,
     Earth,
@@ -203,8 +240,14 @@ import {
 } from 'lucide-vue-next'
 import { ElMessage } from 'element-plus'
 import { mapManager } from '@/util/map/mapManager'
+import { formatTimeToText } from '@/util/common'; 
+import { ElDialog } from 'element-plus'
+import { type Case } from '@/api/http/satellite-data'
+
 import { useExploreStore } from '@/store'
+import { useTaskStore } from '@/store'
 const exploreData = useExploreStore()
+const taskStore = useTaskStore()
 
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
@@ -213,6 +256,8 @@ const isToolbarOpen = ref(false)
 
 import MapComp from '@/components/feature/map/mapComp.vue'
 const isPicking = ref(false)
+
+
 
 const startTime = '1900-01-01'
 const endTime = '2050-01-01'
@@ -232,6 +277,10 @@ const displayLabel = computed(() => {
 const optionalTasks = [
     { value: 'NDVI时序计算', label: t('datapage.analysis.optionallab.task_NDVI'), disabled: false },
     { value: '光谱分析', label: t('datapage.analysis.optionallab.task_spectral'), disabled: false },
+     { value: 'DSM分析', label: t('datapage.analysis.optionallab.task_DSM'), disabled: false },
+    { value: 'DEM分析', label: t('datapage.analysis.optionallab.task_DEM'), disabled: false },
+    { value: '红绿立体', label: t('datapage.analysis.optionallab.task_red_green'), disabled: false },
+    { value: '形变速率', label: t('datapage.analysis.optionallab.task_rate'), disabled: false },
     { value: '伪彩色分割', label: '伪彩色分割', disabled: false },
     { value: '指数分析', label: '指数分析', disabled: false },
     { value: '空间分析', label: '空间分析', disabled: false },
@@ -246,6 +295,10 @@ const taskComponentMap = {
     '指数分析': defineAsyncComponent(() => import('./thematic/indexPanel.vue')),
     'NDVI时序计算': defineAsyncComponent(() => import('./thematic/ndviPanel.vue')),
     '光谱分析': defineAsyncComponent(() => import('./thematic/spectrumPanel.vue')),
+    'DSM分析': defineAsyncComponent(() => import('./thematic/dsmPanel.vue')),
+    'DEM分析': defineAsyncComponent(() => import('./thematic/demPanel.vue')),
+    '红绿立体': defineAsyncComponent(() => import('./thematic/RBbandsPanel.vue')),
+    '形变速率': defineAsyncComponent(() => import('./thematic/deformationRate.vue')),
 }
 
 const currentTaskComponent = computed(() => taskComponentMap[selectedTask.value] || null)
@@ -361,30 +414,36 @@ const addLocalInternalLayer = () => {
 }
 //工具目录
 const searchQuery = ref('')
-const expandedCategories = ref<string[]>(['分析工具扩展', '可视化与交互', '结果导出与共享'])
+const expandedCategories = ref<string[]>(['图像', '影像集合', '要素集合'])
 
 const toolCategories = [
     {
-        name: '分析工具拓展',
+        name: '图像',
         tools: [
-            { value: 'boxSelect', label: '地图框选', disabled: false },
-            { value: 'dbSelect', label: '数据源选择', disabled: false },
-            { value: 'timingPara', label: '时序参数设置', disabled: false }
+            { value: 'boxSelect', label: '归一化差异', disabled: false },
+            { value: 'hillShade', label: '地形渲染', disabled: false },
+            { value: 'landcoverClean', label: '地表覆盖数据清洗', disabled: false },
+            { value: 'ReduceReg', label: '区域归约', disabled: false },
+            { value: 'PixelArea', label: '像元面积', disabled: false },
+            { value: 'PixelLonLat', label: '像元经纬度坐标', disabled: false }
         ]
     },
     {
-        name: '可视化与交互',
+        name: '影像集合',
         tools: [
-            { value: 'mapSwitch', label: '地图切换', disabled: false },
-            { value: 'transparencyEdit', label: '透明度调整', disabled: false },
-            { value: 'multiRegion', label: '多区域对比叠加', disabled: false }
+            { value: 'Clipped Composite', label: '裁剪合成影像', disabled: false },
+            { value: 'Filtered Composite', label: '滤波合成影像', disabled: false },
+            { value: 'Linear Fit', label: '线性拟合', disabled: false },
+            { value: 'Simple Cloud Score', label: '简易云量评分', disabled: false }
         ]
     },
     {
-        name: '结果导出与共享',
+        name: '要素集合',
         tools: [
-            { value: 'highExport', label: '高清图片', disabled: false },
-            { value: 'GeoSpatialData', label: '地理空间数据', disabled: false }
+            { value: 'Buffer', label: '缓冲区分析', disabled: false },
+            { value: 'Distance', label: '距离计算', disabled: false },
+            { value: 'Join', label: '空间连接', disabled: false },
+            { value: 'Computed Area Filter', label: '基于计算面积的筛选', disabled: false }
         ]
     },
 ]
@@ -413,7 +472,57 @@ const toggleCategory = (categoryName: string) => {
     }
 }
 
+// 数据集
+const historyComponent = ref(null)
+const showHistory = ref(false)
+
+const { 
+  caseList, 
+  currentPage, 
+  pageSize, 
+  total, 
+  getCaseList,
+  activeTab,
+  handleSelectTab
+} = useViewHistoryModule();
+
+const completedCases = ref<Case[]>([]); // 仅存储已完成的任务
+const isLoading = ref(false);
+
+// 加载已完成任务
+const loadCompletedCases = async () => {
+  isLoading.value = true;
+  activeTab.value = 'COMPLETE';
+  
+
+  await getCaseList();
+  
+  completedCases.value = caseList.value;
+  
+  isLoading.value = false;
+};
+
+// 效果测试
+const mockCompletedCases = ref([
+    {
+    caseId: 'mock_003',
+    address: '广州市天河区',
+    resolution: '10',
+    createTime: '2023-10-17 16:45:33',
+    dataSet: 'MODIS'
+  },
+  {
+    caseId: 'mock_002',
+    address: '上海市浦东新区',
+    resolution: '5',
+    createTime: '2023-10-16 09:15:47',
+    dataSet: 'Landsat-8'
+  },
+])
+
+
 onMounted(async () => {
+    loadCompletedCases();
     addLocalInternalLayer()
 })
 onUnmounted(() => {

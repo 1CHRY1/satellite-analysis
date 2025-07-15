@@ -8,7 +8,9 @@ const minioEndPoint = ezStore.get('conf')['minioIpAndPort']
 type GridInfoType = {
     rowId: number
     columnId: number
-    resolution: number
+    resolution: number,
+    opacity?: number,
+    normalize_level?: number
 }
 
 type GridImageParams = {
@@ -139,6 +141,7 @@ type RGBTileLayerParams = {
     b_min: number
     b_max: number
     nodata?: number
+    normalize_level?: number
     gridsBoundary?: any
 }
 export function getSceneRGBCompositeTileUrl(param: RGBTileLayerParams) {
@@ -165,6 +168,24 @@ export function getSceneRGBCompositeTileUrl(param: RGBTileLayerParams) {
     return baseUrl + '?' + requestParams.toString()
 }
 
+export function getGridOneBandColorUrl(grid: GridInfoType, param: any) {
+    let baseUrl = `${titilerEndPoint}/oneband/box/{z}/{x}/{y}.png`
+
+    const bbox = grid2bbox(grid.columnId, grid.rowId, grid.resolution)
+
+    const requestParams = new URLSearchParams()
+    requestParams.append('bbox', bbox.join(','))
+    requestParams.append('url', minioEndPoint + '/' + param.fullTifPath)
+    requestParams.append('b_min', param.min.toString())
+    requestParams.append('b_max', param.max.toString())
+    if (param.nodata !== undefined && param.nodata !== null) {
+        requestParams.append('nodata', param.nodata.toString())
+    }
+    if (grid.normalize_level) requestParams.append('normalize_level', grid.normalize_level.toString())
+
+    return baseUrl + '?' + requestParams.toString()
+}
+
 export function getGridRGBCompositeUrl(grid: GridInfoType, param: RGBTileLayerParams) {
     let baseUrl = `${titilerEndPoint}/rgb/box/{z}/{x}/{y}.png`
 
@@ -181,8 +202,9 @@ export function getGridRGBCompositeUrl(grid: GridInfoType, param: RGBTileLayerPa
     requestParams.append('max_g', param.g_max.toString())
     requestParams.append('min_b', param.b_min.toString())
     requestParams.append('max_b', param.b_max.toString())
+    if (param.normalize_level) requestParams.append('normalize_level', param.normalize_level.toString())
     if (param.nodata) requestParams.append('nodata', param.nodata.toString())
-
+    if (grid.normalize_level) requestParams.append('normalize_level', grid.normalize_level.toString())
     return baseUrl + '?' + requestParams.toString()
 }
 

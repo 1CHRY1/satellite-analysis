@@ -14,6 +14,7 @@ import bus from '@/store/bus'
 import {
     getSceneRGBCompositeTileUrl,
     getGridRGBCompositeUrl,
+    getGridOneBandColorUrl,
     getTerrainRGBUrl,
     getOneBandColorUrl,
     getNoCloudUrl,
@@ -488,6 +489,7 @@ type GridInfoType = {
     rowId: number
     columnId: number
     resolution: number
+    opacity?: number
 }
 type RGBTileLayerParams = {
     redPath: string
@@ -499,6 +501,7 @@ type RGBTileLayerParams = {
     g_max: number
     b_min: number
     b_max: number
+    normalize_level?: number
     nodata?: number
 }
 export function map_addRGBImageTileLayer(param: RGBTileLayerParams, cb?: () => void) {
@@ -628,6 +631,9 @@ export function map_addGridRGBImageTileLayer(
             id: id,
             type: 'raster',
             source: srcId,
+            paint: {
+                'raster-opacity': (100 - (gridInfo.opacity || 0))*0.01   // 设置透明度，值范围 0-1
+            }
         })
 
         gridImageLayerMap.set(id, {
@@ -646,6 +652,79 @@ export function map_destroyGridRGBImageTileLayer(gridInfo: GridInfoType) {
 
     mapManager.withMap((m) => {
         for (let key of gridImageLayerMap.keys()) {
+            if (key.startsWith(prefix)) {
+                const oldId = key
+                const oldSrcId = oldId + '-source'
+                if (m.getLayer(oldId) && m.getSource(oldSrcId)) {
+                    m.removeLayer(oldId)
+                    m.removeSource(oldSrcId)
+                }
+            }
+        }
+    })
+}
+
+export function map_addGridOneBandColorTileLayer(
+    gridInfo: GridInfoType,
+    param: OneBandColorLayerParam,
+    cb?: () => void,
+) {
+    const prefix = '' + gridInfo.rowId + gridInfo.columnId
+    const id = prefix + uid()
+    const srcId = id + '-source'
+    console.log(prefix)
+
+    if (!ezStore.get('grid-oneband-layer-map')) {
+        ezStore.set('grid-oneband-layer-map', new window.Map())
+    }
+
+    map_destroyGridOneBandColorTileLayer(gridInfo)
+
+    mapManager.withMap((m) => {
+        const gridOneBandLayerMap = ezStore.get('grid-oneband-layer-map')
+        for (let key of gridOneBandLayerMap.keys()) {
+            if (key.includes(prefix)) {
+                const oldId = key
+                const oldSrcId = oldId + '-source'
+                if (m.getLayer(oldId) && m.getSource(oldSrcId)) {
+                    m.removeLayer(oldId)
+                    m.removeSource(oldSrcId)
+                }
+            }
+        }
+        
+        const tileUrl = getGridOneBandColorUrl(gridInfo, param)
+
+        m.addSource(srcId, {
+            type: 'raster',
+            tiles: [tileUrl],
+        })
+
+        m.addLayer({
+            id: id,
+            type: 'raster',
+            source: srcId,
+            paint: {
+                'raster-opacity': (100 - (gridInfo.opacity || 0))*0.01   // 设置透明度，值范围 0-1
+            }
+        })
+        gridOneBandLayerMap.set(id, {
+            id: id,
+            source: srcId,
+        })
+
+
+        setTimeout(() => {
+            cb && cb()
+        }, 3000)
+    })
+}
+export function map_destroyGridOneBandColorTileLayer(gridInfo: GridInfoType) {
+    const prefix = '' + gridInfo.rowId + gridInfo.columnId
+    const gridOneBandLayerMap = ezStore.get('grid-oneband-layer-map')
+
+    mapManager.withMap((m) => {
+        for (let key of gridOneBandLayerMap.keys()) {
             if (key.startsWith(prefix)) {
                 const oldId = key
                 const oldSrcId = oldId + '-source'
@@ -738,14 +817,14 @@ function grid_fill_click_handler(e: MapMouseEvent): void {
     if (features.length && features[0].properties && features[0].properties.flag) {
         console.log(features[0].properties)
         const sceneGridsRes = ezStore.get('sceneGridsRes')
-
+        const vectorGridsRes = ezStore.get('vectorGridsRes')
         const gridInfo = sceneGridsRes.find((item: any) => {
             return (
                 item.rowId === features[0].properties!.rowId &&
                 item.columnId === features[0].properties?.columnId
             )
         })
-        bus.emit('update:gridPopupData', gridInfo)
+        bus.emit('update:gridPopupData', gridInfo, vectorGridsRes)
 
         const popup = ezStore.get('gridPopup') as Popup
         popup.setLngLat(e.lngLat).addTo(ezStore.get('map'))
@@ -1096,7 +1175,8 @@ export function map_destroyMultiNoCloudLayer() {
 
 //////////// 地形
 type TerrainLayerParam = {
-    fullTifPath: string
+    fullTifPath: string,
+    gridsBoundary?: any
 }
 export function map_addTerrain(param: TerrainLayerParam): void {
     const terrainSourceUrl = getTerrainRGBUrl(param.fullTifPath)
@@ -1122,9 +1202,280 @@ export function map_destroyTerrain() {
     })
 }
 
+/**
+ * 遥感产品可视化
+ */
+export function map_addBaseTerrainTileLayer(params: TerrainLayerParam[]) {
+    const prefix = 'BaseTerrain'
+    let layeridStore: any = null
+    if (!ezStore.get('BaseTerrainLayerIds')) ezStore.set('BaseTerrainLayerIds', [])
+
+    layeridStore = ezStore.get('BaseTerrainLayerIds')
+
+    map_destroyBaseTerrainTileLayer()
+
+    mapManager.withMap((m) => {
+        for (let i = 0; i < params.length; i++) {
+            const id = prefix + uid()
+            const srcId = id + '-source'
+            if (m.getLayer(id) && m.getSource(srcId)) {
+                m.removeLayer(id)
+                m.removeSource(srcId)
+            }
+
+            layeridStore.push(id)
+
+            const tileUrl = getTerrainRGBUrl(params[i].fullTifPath, params[i].gridsBoundary, 0.5)
+
+            m.setTerrain(null)
+            m.addSource(srcId, {
+                type: 'raster-dem',
+                tiles: [tileUrl],
+                tileSize: 256,
+            })
+            m.setTerrain({ source: srcId, exaggeration: 4.0 })
+        }
+    })
+}
+export function map_destroyBaseTerrainTileLayer() {
+    if (!ezStore.get('BaseTerrainLayerIds')) return
+
+    const layeridStore = ezStore.get('BaseTerrainLayerIds')
+    console.log(layeridStore)
+    mapManager.withMap((m) => {
+        for (let i = 0; i < layeridStore.length; i++) {
+            const id = layeridStore[i]
+            m.setTerrain(null)
+            m.getLayer(id) && m.removeLayer(id)
+            m.getSource(id + '-source') && m.removeSource(id + '-source')
+        }
+    })
+}
+export function map_addMultiTerrainTileLayer(params: TerrainLayerParam[], cb?: () => void) {
+    const prefix = 'MultiTerrain'
+    let layeridStore: any = null
+    if (!ezStore.get('MultiTerrainLayerIds')) ezStore.set('MultiTerrainLayerIds', [])
+
+    layeridStore = ezStore.get('MultiTerrainLayerIds')
+
+    map_destroyMultiTerrainTileLayer()
+
+    mapManager.withMap((m) => {
+        for (let i = 0; i < params.length; i++) {
+            const id = prefix + uid()
+            const srcId = id + '-source'
+            if (m.getLayer(id) && m.getSource(srcId)) {
+                m.removeLayer(id)
+                m.removeSource(srcId)
+            }
+
+            layeridStore.push(id)
+
+            const tileUrl = getTerrainRGBUrl(params[i].fullTifPath, params[i].gridsBoundary, 0.5)
+
+            m.setTerrain(null)
+            m.addSource(srcId, {
+                type: 'raster-dem',
+                tiles: [tileUrl],
+                tileSize: 256,
+            })
+            m.setTerrain({ source: srcId, exaggeration: 4.0 })
+        }
+
+        setTimeout(() => {
+            cb && cb()
+        }, 3000)
+    })
+}
+export function map_destroyMultiTerrainTileLayer() {
+    if (!ezStore.get('MultiTerrainLayerIds')) return
+
+    const layeridStore = ezStore.get('MultiTerrainLayerIds')
+    console.log(layeridStore)
+    mapManager.withMap((m) => {
+        for (let i = 0; i < layeridStore.length; i++) {
+            const id = layeridStore[i]
+            m.setTerrain(null)
+            m.getLayer(id) && m.removeLayer(id)
+            m.getSource(id + '-source') && m.removeSource(id + '-source')
+        }
+    })
+}
+
+export function map_addMultiOneBandColorLayer(params: OneBandColorLayerParam[], cb?: () => void) {
+    const prefix = 'MultiOneBandColor'
+    let layeridStore: any = null
+    if (!ezStore.get('MultiOneBandColorLayerIds')) ezStore.set('MultiOneBandColorLayerIds', [])
+
+    layeridStore = ezStore.get('MultiOneBandColorLayerIds')
+
+    map_destroyMultiOneBandColorLayer()
+
+    mapManager.withMap((m) => {
+        for (let i = 0; i < params.length; i++) {
+            const id = prefix + uid()
+            const srcId = id + '-source'
+            if (m.getLayer(id) && m.getSource(srcId)) {
+                m.removeLayer(id)
+                m.removeSource(srcId)
+            }
+
+            layeridStore.push(id)
+            const nodata = params[i].nodata
+            const tileUrl = getOneBandColorUrl(params[i].fullTifPath, params[i].gridsBoundary, nodata)
+
+            m.addSource(srcId, {
+                type: 'raster',
+                tiles: [tileUrl],
+            })
+
+            m.addLayer({
+                id: id,
+                type: 'raster',
+                source: srcId,
+            })
+        }
+
+        setTimeout(() => {
+            cb && cb()
+        }, 3000)
+    })
+}
+export function map_destroyMultiOneBandColorLayer() {
+    if (!ezStore.get('MultiOneBandColorLayerIds')) return
+
+    const layeridStore = ezStore.get('MultiOneBandColorLayerIds')
+    console.log(layeridStore)
+    mapManager.withMap((m) => {
+        for (let i = 0; i < layeridStore.length; i++) {
+            const id = layeridStore[i]
+            m.getLayer(id) && m.removeLayer(id)
+            m.getSource(id + '-source') && m.removeSource(id + '-source')
+        }
+    })
+}
+
+/**
+ * 矢量图层
+ */
+export function map_addMVTLayer(source_layer: string, landId: string, cb?: () => void) {
+    const prefix = 'MVT'
+    let layeridStore: any = null
+    if (!ezStore.get('MVTLayerIds')) ezStore.set('MVTLayerIds', [])
+
+    layeridStore = ezStore.get('MVTLayerIds')
+
+    map_destroyMVTLayer()
+
+    mapManager.withMap((m) => {
+        const id = prefix + uid()
+        const srcId = id + '-source'
+        if (m.getLayer(id) && m.getSource(srcId)) {
+            m.removeLayer(id)
+            m.removeSource(srcId)
+        }
+
+        layeridStore.push(id)
+        const tileUrl = `http://${window.location.host}/api/data/vector/region/${landId}/${source_layer}/{z}/{x}/{y}`
+
+        m.addSource(srcId, {
+            type: 'vector',
+            tiles: [tileUrl],
+        })
+
+        m.addLayer({
+            id: id,
+            type: 'fill',
+            source: srcId,
+            'source-layer': source_layer,
+            paint: {
+                'fill-color': '#0066cc',
+                'fill-opacity': 0.5,
+            }
+        })
+
+        setTimeout(() => {
+            cb && cb()
+        }, 3000)
+    })
+}
+export function map_destroyMVTLayer() {
+    if (!ezStore.get('MVTLayerIds')) return
+
+    const layeridStore = ezStore.get('MVTLayerIds')
+    console.log(layeridStore)
+    mapManager.withMap((m) => {
+        for (let i = 0; i < layeridStore.length; i++) {
+            const id = layeridStore[i]
+            m.getLayer(id) && m.removeLayer(id)
+            m.getSource(id + '-source') && m.removeSource(id + '-source')
+        }
+    })
+}
+
+export function map_addGridMVTLayer(source_layer: string, columnId: number, rowId: number, resolution: number, cb?: () => void) {
+    const prefix = 'GridMVT'
+    let layeridStore: any = null
+    if (!ezStore.get('GridMVTLayerIds')) ezStore.set('GridMVTLayerIds', [])
+
+    layeridStore = ezStore.get('GridMVTLayerIds')
+
+    map_destroyGridMVTLayer()
+
+    mapManager.withMap((m) => {
+        const id = prefix + uid()
+        const srcId = id + '-source'
+        if (m.getLayer(id) && m.getSource(srcId)) {
+            m.removeLayer(id)
+            m.removeSource(srcId)
+        }
+
+        layeridStore.push(id)
+        const tileUrl = `http://${window.location.host}/api/data/vector/grid/${columnId}/${rowId}/${resolution}/${source_layer}/{z}/{x}/{y}`
+
+        m.addSource(srcId, {
+            type: 'vector',
+            tiles: [tileUrl],
+        })
+
+        m.addLayer({
+            id: id,
+            type: 'fill',
+            source: srcId,
+            'source-layer': source_layer,
+            paint: {
+                'fill-color': '#0066cc',
+                'fill-opacity': 0.5,
+            }
+        })
+
+        setTimeout(() => {
+            cb && cb()
+        }, 3000)
+    })
+}
+export function map_destroyGridMVTLayer() {
+    if (!ezStore.get('GridMVTLayerIds')) return
+
+    const layeridStore = ezStore.get('GridMVTLayerIds')
+    console.log(layeridStore)
+    mapManager.withMap((m) => {
+        for (let i = 0; i < layeridStore.length; i++) {
+            const id = layeridStore[i]
+            m.getLayer(id) && m.removeLayer(id)
+            m.getSource(id + '-source') && m.removeSource(id + '-source')
+        }
+    })
+}
+
 //////////// 单波段彩色产品 （形变速率）
 type OneBandColorLayerParam = {
-    fullTifPath: string
+    fullTifPath: string,
+    min?: number,
+    max?: number,
+    gridsBoundary?: any,
+    nodata?: number,
+    normalize_level?: number
 }
 export function map_addOneBandColorLayer(param: OneBandColorLayerParam): void {
     const sourceUrl = getOneBandColorUrl(param.fullTifPath)
