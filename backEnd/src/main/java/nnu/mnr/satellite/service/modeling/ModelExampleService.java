@@ -20,12 +20,11 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.Map;
 
 import static nnu.mnr.satellite.utils.geom.GeometryUtil.getGridsBoundaryByTilesAndResolution;
+import static nnu.mnr.satellite.utils.geom.TileCalculateUtil.getTileGeomByIdsAndResolution;
 
 import com.alibaba.fastjson2.JSON;
 import nnu.mnr.satellite.utils.dt.MinioUtil;
@@ -34,7 +33,7 @@ import nnu.mnr.satellite.model.dto.modeling.NoCloudTileDTO;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.UUID;
+
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -300,10 +299,14 @@ public class ModelExampleService {
     }
 
     public CommonResultVO getSRResultByBand(SRBandDTO SRBandDTO){
-        JSONObject bandPath = JSONObject.of("r", SRBandDTO.getR(), "g", SRBandDTO.getG(), "b", SRBandDTO.getB());
+        Geometry wkt = getTileGeomByIdsAndResolution(SRBandDTO.getRowId(), SRBandDTO.getColumnId(), SRBandDTO.getResolution());
+        JSONObject band = SRBandDTO.getBand();
+        JSONObject SRJson = new JSONObject();
+        SRJson.put("wkt", wkt.toString());  // Geometry 转 WKT 字符串
+        SRJson.put("band", band);          // 直接放入 JSONObject
         String SRUrl = SRModelServerProperties.getAddress() + SRModelServerProperties.getApis().get("SR");
         long expirationTime = 60 * 10;
-        return runModelServerModel(SRUrl, bandPath, expirationTime);
+        return runModelServerModel(SRUrl, SRJson, expirationTime);
     }
     public CommonResultVO createNoCloudConfig(NoCloudTileDTO noCloudTileDTO) {
         try {
