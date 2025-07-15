@@ -212,7 +212,7 @@ const toolForm = ref({
     description: '',
     parameters: [] as ToolParameter[],
     category:'',
-    tags:'',
+    tags:'' as any,
     toolId: ''
 })
 

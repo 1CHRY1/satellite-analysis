@@ -195,7 +195,8 @@ def rgb_box_tile(
     max_r: int = Query(5000),
     max_g: int = Query(5000),
     max_b: int = Query(5000),
-    nodata: float = Query(0.0, description="No data value")
+    nodata: float = Query(0.0, description="No data value"),
+    normalize_level: int = Query(0, ge=0, le=10, description="归一化分位区间级别，0=全范围，10=50%-50%")
 ):
     try: 
         '''Get the box RGB tile, too many parameters'''
@@ -243,12 +244,22 @@ def rgb_box_tile(
         final_mask = np.logical_and(mask == 255, bbox_mask)
         final_mask_uint8 = final_mask.astype("uint8") * 255
 
-        r = normalize(tile_r.squeeze(), min_r, max_r)
-        g = normalize(tile_g.squeeze(), min_g, max_g)
-        b = normalize(tile_b.squeeze(), min_b, max_b)
+        # Step 5: 分别对每个波段做分位区间拉伸
+        if normalize_level == 0:
+            b_min_r, b_max_r = float(min_r), float(max_r)
+            b_min_g, b_max_g = float(min_g), float(max_g)
+            b_min_b, b_max_b = float(min_b), float(max_b)
+        else:
+            b_min_r, b_max_r = get_percentile_range(min_r, max_r, normalize_level)
+            b_min_g, b_max_g = get_percentile_range(min_g, max_g, normalize_level)
+            b_min_b, b_max_b = get_percentile_range(min_b, max_b, normalize_level)
+
+        r = normalize(tile_r.squeeze(), b_min_r, b_max_r)
+        g = normalize(tile_g.squeeze(), b_min_g, b_max_g)
+        b = normalize(tile_b.squeeze(), b_min_b, b_max_b)
         rgb = np.stack([r,g,b])
 
-        # Step 5: Render the PNG
+        # Step 6: Render the PNG
         content = render(rgb, mask=final_mask_uint8, img_format="png", **img_profiles.get("png"))
 
         return Response(content, media_type="image/png")
@@ -294,3 +305,23 @@ def rgb_preview(
     except Exception as e:
         print(e)
         return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
+    
+
+def get_percentile_range(min_val, max_val, level):
+    """
+    线性区间拉伸，根据level计算min/max的线性插值
+    
+    Args:
+        min_val: 最小值（用户指定的）
+        max_val: 最大值（用户指定的）
+        level: 拉伸级别，0=全范围，10=中点
+        
+    Returns:
+        b_min, b_max: 拉伸后的最小最大值
+    """
+    # 线性区间百分比
+    left = 0.05 * level
+    right = 1 - 0.05 * level
+    b_min = min_val + (max_val - min_val) * left
+    b_max = min_val + (max_val - min_val) * right
+    return float(b_min), float(b_max)

@@ -13,7 +13,7 @@ export const useExploreStore = defineStore('exploreStore',{
             images: [] as any[],
             grids: [] as any[],
             boundary: [] as any[],
-            load:false
+            load:true
         }
     },
     actions: {

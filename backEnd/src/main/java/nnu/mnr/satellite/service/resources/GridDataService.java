@@ -96,6 +96,7 @@ public class GridDataService {
                         .bandMapper(bandMapperGenerator.getSatelliteConfigBySensorName(scene.getSensorName()))
                         .bucket(scene.getBucket())
                         .dataType(scene.getDataType())
+                        .noData(scene.getNoData())
                         .images(imageDTOS)
                         .build();
             };

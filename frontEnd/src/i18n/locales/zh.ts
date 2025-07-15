@@ -17,7 +17,7 @@ export default{
 
     homepage: {
         title: {
-            maintitle: "遥感ARD平台",
+            maintitle: "多源遥感应用支撑云平台",
             subtitle_tool:"一体化集成分析工具",
             subtitle_explore:"交互式数据探索与可视化",
             subtitle_program:"在线编程分析卫星数据",
