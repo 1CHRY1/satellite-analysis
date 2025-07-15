@@ -7,6 +7,8 @@ import os, json, uuid
 import requests
 
 import mercantile
+from rio_tiler.colormap import cmap
+from rio_tiler.profiles import img_profiles
 from rio_tiler.io import COGReader
 from cogeo_mosaic.mosaic import MosaicJSON
 from rio_tiler_mosaic.mosaic import mosaic_tiler
@@ -199,6 +201,64 @@ async def mosaictile(
         print(e)
         raise HTTPException(status_code=500, detail=str(e))
     
+
+# 2025-07-15 以前说无云一版图就是用来计算的，突然说又要加个基于无云一版图的分析计，这里写个NDVI
+# 注：大部分代码拷贝自上面mosaictile，先理解MosaicJSON是什么
+@router.get("/ndvi/{z}/{x}/{y}.png")
+async def ndvi_tile(
+    z: int, x: int, y: int,
+    mosaic_url: str = Query(..., description="Mosaic JSON URL"),
+    pixel_selection: str = Query("first", description="Pixel selection method : first/highest/lowest")
+):
+    try:
+        cm = cmap.get("rdylgn")
+        
+        # Step 1: Fetch mosaic definition 
+        mosaic_def = fetch_mosaic_definition(mosaic_url)
+
+        # Step 2: Get assets list using mercantile and mosaicJSON minzoom
+        quadkey_zoom = mosaic_def["minzoom"]
+        mercator_tile = mercantile.Tile(x=x, y=y, z=z)
+    
+        if mercator_tile.z > quadkey_zoom:
+            depth = mercator_tile.z - quadkey_zoom
+            for _ in range(depth):
+                mercator_tile = mercantile.parent(mercator_tile)
+    
+        quadkey = mercantile.quadkey(*mercator_tile)
+        assets = mosaic_def["tiles"].get(quadkey)
+        if not assets:
+            return Response(content=TRANSPARENT_CONTENT, media_type="image/png", status_code=204)
+       
+        # Step 3: Configure pixel selection method
+        method = pixel_selection.lower()
+        if method == "highest":
+            sel = defaults.HighestMethod()
+        elif method == "lowest":
+            sel = defaults.LowestMethod()
+        else:
+            sel = defaults.FirstMethod()
+        
+        # Step 4: Get tile from mosaic
+        img, mask = mosaic_tiler(assets, x, y, z, tiler, pixel_selection=sel)
+        if img is None:
+            return Response(content=TRANSPARENT_CONTENT, media_type="image/png", status_code=204)
+        
+        # Step 5: Calculate NDVI, 这里得改一下和无云一版图的波段对齐吧。
+        ndvi = (img[1] - img[0]) / (img[1] + img[0])
+        img = ndvi
+        
+        # Step 5: Normalize, render and response
+        min_val = [np.min(arr, axis=(0, 1)) for arr in img]  # 各个波段 min
+        max_val = [np.max(arr, axis=(0, 1)) for arr in img]  # 各个波段 max
+        
+        # Step 6: Render
+        img_uint8 = normalize(img, min_val, max_val)
+        content = render(img_uint8, mask, img_format="png", colormap=cm, **img_profiles.get("png"))
+        return Response(content=content, media_type="image/png")
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # Deprecated
