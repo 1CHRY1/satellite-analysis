@@ -72,7 +72,7 @@
                         :class="{ active: activeMethod === 'superresolution' }"
                         @click="activeMethod = 'superresolution'"
                     >
-                        超分增强
+                        信息增强
                     </button>
                 </div>
 
@@ -127,6 +127,14 @@
                             <GalleryHorizontalIcon :size="18" />
                         </span>
                         超分增强
+                    </button>
+                </div>
+                <div class="btns flex justify-center" v-show="showBandSelector && activeMethod === 'superresolution'">
+                    <button class="visualize-btn">
+                        <span class="btn-icon">
+                            <GalleryHorizontalIcon :size="18" />
+                        </span>
+                        指数增强
                     </button>
                 </div>
 

@@ -19,7 +19,7 @@ from rio_tiler.utils import render
 
 #### Helper functions ##################################################################
 
-MINIO_ENDPOINT = "192.168.1.105:30900"
+MINIO_ENDPOINT = "172.20.10.3:30900"
 MINIO_ACCESS_KEY = "minioadmin"
 MINIO_SECRET_KEY = "minioadmin"
 MINIO_BUCKET = "temp-files"

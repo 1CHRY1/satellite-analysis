@@ -914,15 +914,15 @@ const multiSourceData = reactive({
     blue_band: ''    // 默认B通道显示B波段
     },
 
-    // 波段类型
+    // 波段选择
     selectedBands: computed(() => {
         const bands: string[] = [];
         if (multiSourceData.bands.red) bands.push('Red');
         if (multiSourceData.bands.blue) bands.push('Blue');
         if (multiSourceData.bands.green) bands.push('Green');
-        if (multiSourceData.bands.nir) bands.push('Nir');
-        if (multiSourceData.bands.ndvi) bands.push('Ndvi');
-        if (multiSourceData.bands.evi) bands.push('Evi');
+        if (multiSourceData.bands.nir) bands.push('NIR');
+        if (multiSourceData.bands.ndvi) bands.push('NDVI');
+        if (multiSourceData.bands.evi) bands.push('EVI');
         return bands;
     }),
 
@@ -967,10 +967,7 @@ const handleMultiSourceData = async () => {
     }
 
     // 获取波段列表
-    const bandList = Object.entries(multiSourceData.bands)
-    .filter(([_, value]) => value)
-    .map(([key]) => key.charAt(0).toUpperCase() + key.slice(1).toLowerCase())
-    .slice(0, 4);
+    const bandList = multiSourceData.selectedBands;
 
     const viz_bands = multiSourceData.viz_bands;
 
@@ -1002,6 +999,11 @@ const multiTemporalData = reactive({
     phases: [],
     totalBands: computed(() => multiTemporalData.phases.length * 3)
 })
+
+const handleMultitTemporalData = async () => {
+    console.log('多时相数据合成')
+};
+
 
 
 // 复杂合成进度控制
@@ -1604,7 +1606,8 @@ const calNoClouds = async () => {
         resolution: exploreData.space,
         sceneIds: addedImages.map((image) => image.sceneId),
         dataSet: dataSet,
-        bandList: multiSourceData.bands,
+        // bandList: multiSourceData.bands,
+        bandList: ['Red', 'Green', 'Blue']
     }
 
     // 发送请求
