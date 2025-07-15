@@ -128,7 +128,7 @@ satelliteConfig:
 # Ray优化配置
 ray:
   optimization:
-    enabled: true                    # 是否启用Ray优化
+    enabled: true                   # 是否启用Ray优化
     cpuCount: 4                     # Ray使用的CPU数量
     memoryMB: 2048                  # Ray使用的内存量(MB)
     timeout: 60                     # 优化超时时间(秒)

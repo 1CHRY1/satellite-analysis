@@ -18,7 +18,7 @@ export default defineConfig({
                 // target: 'http://223.2.47.202:8999/api/v1',
                 // target: 'http://223.2.47.202:8999/api/v2',
 
-                target: 'http://172.26.64.1:8999/api/v2',
+                target: 'http://localhost:8999/api/v2',
                 // target: 'http://192.168.1.106:8999/api/v2',
 
                 // target: 'http://223.2.43.228:30899/api/v1',
@@ -50,7 +50,7 @@ export default defineConfig({
                 // target: 'ws://223.2.47.202:8899/model/websocket',
                 // target: 'http://223.2.43.228:30535/api/v1',
 
-                target: 'ws://172.26.64.1:9000/model/websocket',
+                target: 'ws://localhost:9000/model/websocket',
                 // target: 'ws://192.168.1.106:9000/model/websocket',
 
                 ws: true,

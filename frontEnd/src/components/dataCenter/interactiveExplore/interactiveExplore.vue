@@ -134,8 +134,7 @@
                                                     </div>
                                                     <div class="result-info-content">
                                                         <div class="result-info-value">
-                                                            <span style="font-size: 1rem;">无云</span>
-                                                            <span style="font-size: 0.85rem;">一版图</span>
+                                                            <span style="font-size: 1rem;">数据准备</span>
                                                         </div>
                                                     </div>
                                                 </div>
