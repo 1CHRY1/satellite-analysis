@@ -129,7 +129,9 @@ type MultiImageInfoType = {
 type GridInfoType = {
     rowId: number
     columnId: number
-    resolution: number
+    resolution: number,
+    opacity?: number,
+    normalize_level?: number
 }
 
 const show = defineModel<boolean>()
@@ -140,8 +142,8 @@ const show = defineModel<boolean>()
 const singleImages = ref<ImageInfoType[]>([])
 const multiImages = ref<MultiImageInfoType[]>([])
 const productImages = ref<MultiImageInfoType[]>([])
-const scaleRate = ref(50)
-const grid = ref<GridInfoType>({ rowId: 0, columnId: 0, resolution: 0 })
+const scaleRate = ref(0)
+const grid = ref<GridInfoType>({ rowId: 0, columnId: 0, resolution: 0, opacity: 0, normalize_level: 0 })
 const activeIndex = ref(-1)
 const visualMode = ref<'single' | 'rgb' | 'product'>('single')
 const timelineTrack = ref<HTMLElement | null>(null)
@@ -301,6 +303,7 @@ const setDateRange = () => {
 }
 
 const handleClick = async (index: number) => {
+    console.log('nodata',filteredImages.value)
     if (index < 0 || index >= filteredImages.value.length) return
 
     const stopLoading = message.loading('正在加载影像...')
@@ -365,20 +368,25 @@ const handleClick = async (index: number) => {
 
         console.log(min_r, max_r, min_g, max_g, min_b, max_b)
         console.log(scaleRate.value)
-        const scale = 1.0 - scaleRate.value / 100
         // 基于 scale rate 进行拉伸
-        showingImageStrech.r_min = Math.round(min_r)
-        showingImageStrech.r_max = Math.round(min_r + (max_r - min_r) * scale)
-        showingImageStrech.g_min = Math.round(min_g)
-        showingImageStrech.g_max = Math.round(min_g + (max_g - min_g) * scale)
-        showingImageStrech.b_min = Math.round(min_b)
-        showingImageStrech.b_max = Math.round(min_b + (max_b - min_b) * scale)
+        // showingImageStrech.r_min = Math.round(min_r)
+        // showingImageStrech.r_max = Math.round(min_r + (max_r - min_r) * scale)
+        // showingImageStrech.g_min = Math.round(min_g)
+        // showingImageStrech.g_max = Math.round(min_g + (max_g - min_g) * scale)
+        // showingImageStrech.b_min = Math.round(min_b)
+        // showingImageStrech.b_max = Math.round(min_b + (max_b - min_b) * scale)
 
         MapOperation.map_addGridRGBImageTileLayer(grid.value, {
             redPath,
             greenPath,
             bluePath,
-            ...showingImageStrech,
+            r_min: min_r,
+            r_max: max_r,
+            g_min: min_g,
+            g_max: max_g,
+            b_min: min_b,
+            b_max: max_b,
+            normalize_level: scaleRate.value,
             nodata: img.nodata
         })
     } else if (visualMode.value === 'rgb') {
@@ -421,23 +429,27 @@ const handleClick = async (index: number) => {
 
         console.log(min_r, max_r, min_g, max_g, min_b, max_b)
 
-        const scale = 1.0 - scaleRate.value / 100
-        console.log(scale)
         // 基于 scale rate 进行拉伸
-        showingImageStrech.r_min = Math.round(min_r)
-        showingImageStrech.r_max = Math.round(min_r + (max_r - min_r) * scale)
-        showingImageStrech.g_min = Math.round(min_g)
-        showingImageStrech.g_max = Math.round(min_g + (max_g - min_g) * scale)
-        showingImageStrech.b_min = Math.round(min_b)
-        showingImageStrech.b_max = Math.round(min_b + (max_b - min_b) * scale)
-        console.log(showingImageStrech)
+        // showingImageStrech.r_min = Math.round(min_r)
+        // showingImageStrech.r_max = Math.round(min_r + (max_r - min_r) * scale)
+        // showingImageStrech.g_min = Math.round(min_g)
+        // showingImageStrech.g_max = Math.round(min_g + (max_g - min_g) * scale)
+        // showingImageStrech.b_min = Math.round(min_b)
+        // showingImageStrech.b_max = Math.round(min_b + (max_b - min_b) * scale)
+        // console.log(showingImageStrech)
         MapOperation.map_addGridRGBImageTileLayer(
             grid.value,
             {
                 redPath,
                 greenPath,
                 bluePath,
-                ...showingImageStrech,
+                r_min: min_r,
+                r_max: max_r,
+                g_min: min_g,
+                g_max: max_g,
+                b_min: min_b,
+                b_max: max_b,
+                normalize_level: scaleRate.value,
                 nodata: img.nodata
             },
             stopLoading,
@@ -482,16 +494,16 @@ const handleClick = async (index: number) => {
 
         console.log(min_r, max_r, min_g, max_g, min_b, max_b)
 
-        const scale = 1.0 - scaleRate.value / 100
-        console.log(scale)
-        // 基于 scale rate 进行拉伸
-        showingImageStrech.r_min = Math.round(min_r)
-        showingImageStrech.r_max = Math.round(min_r + (max_r - min_r) * scale)
-        showingImageStrech.g_min = Math.round(min_g)
-        showingImageStrech.g_max = Math.round(min_g + (max_g - min_g) * scale)
-        showingImageStrech.b_min = Math.round(min_b)
-        showingImageStrech.b_max = Math.round(min_b + (max_b - min_b) * scale)
-        console.log(showingImageStrech)
+        // const scale = 1.0 - scaleRate.value / 100
+        // console.log(scale)
+        // // 基于 scale rate 进行拉伸
+        // showingImageStrech.r_min = Math.round(min_r)
+        // showingImageStrech.r_max = Math.round(min_r + (max_r - min_r) * scale)
+        // showingImageStrech.g_min = Math.round(min_g)
+        // showingImageStrech.g_max = Math.round(min_g + (max_g - min_g) * scale)
+        // showingImageStrech.b_min = Math.round(min_b)
+        // showingImageStrech.b_max = Math.round(min_b + (max_b - min_b) * scale)
+        // console.log(showingImageStrech)
         if (img.dataType === 'dem') {
             // MapOperation.map_addGridDEMImageTileLayer(
             //     grid.value,
@@ -501,18 +513,37 @@ const handleClick = async (index: number) => {
             //         nodata: img.nodata
             //     },
             // )
-        } else {
+        } else if (img.dataType === '3d') {
             MapOperation.map_addGridRGBImageTileLayer(
                 grid.value,
                 {
                     redPath,
                     greenPath,
                     bluePath,
-                    ...showingImageStrech,
+                    r_min: min_r,
+                    r_max: max_r,
+                    g_min: min_g,
+                    g_max: max_g,
+                    b_min: min_b,
+                    b_max: max_b,
+                    normalize_level: scaleRate.value,
                     nodata: img.nodata
                 },
                 stopLoading,
             )
+        } else if (img.dataType === 'svr' || img.dataType === 'ndvi') {
+            MapOperation.map_addGridOneBandColorTileLayer(
+                grid.value,
+                {
+                    fullTifPath: redPath,
+                    min: min_r,
+                    max: max_r,
+                    normalize_level: scaleRate.value,
+                    nodata: img.nodata
+                },
+                stopLoading,
+            )
+            console.log('nodata',img.nodata,img)
         }
     }
 }
@@ -553,7 +584,7 @@ onMounted(() => {
         singleImages.value = []
         multiImages.value = []
         productImages.value = []
-        scaleRate.value = 50
+        scaleRate.value = 0
     })
 })
 </script>
