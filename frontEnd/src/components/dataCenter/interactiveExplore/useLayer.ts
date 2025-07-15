@@ -114,7 +114,6 @@ export const useLayer = () => {
 
     const addMultiTerrainTileLayer = async (coverProducts: any, gridsBoundary: any, stopLoading) => {
         const promises: Promise<any>[] = []
-
         for (let scene of coverProducts) {
             promises.push(getTerrainParamFromSceneObject(scene, gridsBoundary))
         }
@@ -122,6 +121,17 @@ export const useLayer = () => {
         console.log('可视化参数们', terrainTileLayerParamList)
 
         MapOperation.map_addMultiTerrainTileLayer(terrainTileLayerParamList, stopLoading)
+    }
+
+    const addBaseTerrainTileLayer = async(product: any, gridsBoundary: any) => {
+        const promises: Promise<any>[] = []
+        console.log('product', product)
+        promises.push(getTerrainParamFromSceneObject(product, gridsBoundary))
+        const terrainTileLayerParamList = await Promise.all(promises)
+        console.log('可视化参数们', terrainTileLayerParamList)
+
+        MapOperation.map_addBaseTerrainTileLayer(terrainTileLayerParamList)
+        // MapOperation.map_addMultiTerrainTileLayer(terrainTileLayerParamList)
     }
 
     const addMulti3DImageTileLayer = async (coverProducts: any, gridsBoundary: any, stopLoading) => {
@@ -231,6 +241,7 @@ export const useLayer = () => {
         clearAllShowingSensor,
         addMultiRGBImageTileLayer,
         addMultiTerrainTileLayer,
+        addBaseTerrainTileLayer,
         addMulti3DImageTileLayer,
         addMultiOneBandColorLayer,
         addMVTLayer

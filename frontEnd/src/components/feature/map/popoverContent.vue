@@ -11,21 +11,21 @@
                     :class="{ active: activeTab === 'RS' }"
                     @click="activeTab = 'RS'"
                 >
-                    影像
+                    遥感影像
                 </button>
                 <button
                     class="tab-btn"
                     :class="{ active: activeTab === 'vector' }"
                     @click="activeTab = 'vector'"
                 >
-                    矢量
+                    矢量专题
                 </button>
                 <button
                     class="tab-btn"
                     :class="{ active: activeTab === 'product' }"
                     @click="activeTab = 'product'"
                 >
-                    产品
+                    栅格专题
                 </button>
             </div>
 
@@ -62,13 +62,6 @@
                 <div class="tabs" v-show="showBandSelector">
                     <button
                         class="tab-btn"
-                        :class="{ active: activeMethod === 'single' }"
-                        @click="activeMethod = 'single'"
-                    >
-                        拉伸增强
-                    </button>
-                    <button
-                        class="tab-btn"
                         :class="{ active: activeMethod === 'rgb' }"
                         @click="activeMethod = 'rgb'"
                     >
@@ -84,7 +77,7 @@
                 </div>
 
                 <!-- 拉伸增强Tab -->
-                <div v-show="showBandSelector && activeMethod === 'single'" class="tab-content">
+                <!-- <div v-show="showBandSelector && activeMethod === 'single'" class="tab-content">
                     <div class="band-selection">
                         <label for="band-select">波段:</label>
                         <select id="band-select" v-model="selectedBand" class="band-select">
@@ -94,7 +87,7 @@
                             </option>
                         </select>
                     </div>
-                </div>
+                </div> -->
 
                 <!-- 波段增强Tab -->
                 <div v-show="showBandSelector && activeMethod === 'rgb'" class="tab-content">
@@ -137,17 +130,19 @@
                     </button>
                 </div>
 
-                <!-- 亮度拉伸 -->
+                <!-- 原亮度拉伸，现为拉伸增强 -->
                 <div
                     class="mr-1 grid grid-cols-[2fr_3fr]"
                     @mousedown="handleMouseDown"
                     @mouseup="handleMouseUp"
                     v-show="activeMethod === 'rgb' || activeMethod === 'single'"
                 >
-                    <span class="sp text-white">亮度拉伸:</span>
+                    <span class="sp text-white">拉伸增强:</span>
                     <a-slider
                         :tip-formatter="scaleRateFormatter"
                         v-model:value="scaleRate"
+                        :min="0"
+                        :max="10"
                         @afterChange="onAfterScaleRateChange"
                     />
                 </div>
@@ -169,18 +164,24 @@
             </div>
 
             <!-- 矢量Tab -->
-            <div v-if="false" v-show="activeTab === 'vector'">
-                <div class="band-selection">
-                    <label for="vector-select">类别:</label>
-                    <select id="vector-select" v-model="selectedProductType" class="band-select">
-                        <option disabled value="">请选择</option>
-                        <!-- <option v-for="productType in productTypes" :key="productType" :value="productType">
-                            {{ productType }}
-                        </option> -->
-                    </select>
+            <div v-show="activeTab === 'vector'">
+                <div class="config-container">
+                    <span class="result-info-label">共找到 {{vectors.length}} 条记录</span>
+                    <a-checkable-tag
+                        v-for="(item, index) in vectors"
+                        :key="item.tableName"
+                        :checked="previewIndex === index"
+                        @click="handleSelectVector(index)"
+                        class="vector-tag"
+                    >
+                        <span class="btn-icon">
+                            <DatabaseIcon :size="18" />&nbsp;{{ item.vectorName }}
+                        </span>
+                    </a-checkable-tag>
                 </div>
+
                 <div class="btns">
-                    <button class="visualize-btn">
+                    <button class="visualize-btn" @click="handleVisualize">
                         <span class="btn-icon">
                             <GalleryHorizontalIcon :size="18" />
                         </span>
@@ -195,10 +196,10 @@
             </div>
 
             <!-- 产品Tab -->
-            <div v-if="false" v-show="activeTab === 'product'">
+            <div v-show="activeTab === 'product'">
                 <!-- 类别选择 -->
                 <div class="band-selection">
-                    <label for="product-select">类别:</label>
+                    <label for="product-select">专题:</label>
                     <select id="product-select" v-model="selectedProductType" class="band-select">
                         <option disabled value="">请选择</option>
                         <option v-for="productType in productTypes" :key="productType" :value="productType">
@@ -223,17 +224,17 @@
                     </select>
                 </div>
 
-                <!-- 亮度拉伸 -->
+                <!-- 透明度 -->
                 <div
                     class="mr-1 grid grid-cols-[2fr_3fr]"
                     @mousedown="handleMouseDown"
                     @mouseup="handleMouseUp"
                 >
-                    <span class="sp text-white">亮度拉伸:</span>
+                    <span class="sp text-white">透明度:</span>
                     <a-slider
-                        :tip-formatter="scaleRateFormatter"
-                        v-model:value="scaleRate"
-                        @afterChange="onAfterScaleRateChange"
+                        :tip-formatter="opacityFormatter"
+                        v-model:value="opacity"
+                        @afterChange="onAfterOpacityChange"
                     />
                 </div>
 
@@ -259,13 +260,13 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, type Ref, reactive } from 'vue'
-import { GalleryHorizontalIcon, Trash2Icon } from 'lucide-vue-next'
+import { DatabaseIcon, GalleryHorizontalIcon, RectangleEllipsisIcon, Trash2Icon } from 'lucide-vue-next'
 import bus from '@/store/bus'
 import { map_destroyGridRGBImageTileLayer } from '@/util/map/operation'
 import Vue3DraggableResizable from 'vue3-draggable-resizable'
 import 'vue3-draggable-resizable/dist/Vue3DraggableResizable.css'
 import { ezStore } from '@/store'
-
+import * as MapOperation from '@/util/map/operation'
 /////// Types //////////////////////////////////
 type Image = {
     bucket: string
@@ -297,6 +298,7 @@ export type GridData = {
     columnId: number
     resolution: number
     scenes: Scene[]
+    vectors?: any[]
 }
 
 type ImageInfoType = {
@@ -321,7 +323,8 @@ type MultiImageInfoType = {
 type GridInfoType = {
     rowId: number
     columnId: number
-    resolution: number
+    resolution: number,
+    opacity?: number
 }
 
 /////// Main //////////////////////////////////
@@ -353,13 +356,18 @@ const gridData = ref<GridData>({
     columnId: 0,
     resolution: 0,
     scenes: [],
+    vectors: [],
 })
-const activeMethod = ref('single')
+const activeMethod = ref('rgb')
 
 const showBandSelector = ref(true)
 const enableDraggable = ref(true)
-const scaleRate = ref(50)
+const scaleRate = ref(0)
 const scaleRateFormatter = (value: number) => {
+    return `${value}级`
+}
+const opacity = ref(0)
+const opacityFormatter = (value: number) => {
     return `${value}%`
 }
 const showingImageStrech = reactive({
@@ -377,6 +385,10 @@ const handleMouseDown = () => (enableDraggable.value = false)
 
 const onAfterScaleRateChange = (scale_rate: number) => {
     console.log(scale_rate)
+}
+
+const onAfterOpacityChange = (opacity: number) => {
+    console.log(opacity)
 }
 
 // Select options
@@ -590,8 +602,24 @@ const handleRSVisualize = () => {
     bus.emit('openTimeline')
 }
 
-const handleVectorVisualize = () => {
-
+const previewList = computed<boolean[]>(() => {
+    const list = Array(vectors.value.length).fill(false)
+    if (previewIndex.value !== null) {
+        list[previewIndex.value] = true
+    }
+    return list
+})
+const previewIndex = ref<number | null>(null)
+const handleSelectVector = (index: number) => {
+  previewIndex.value = previewIndex.value === index ? null : index
+}
+const unPreview = () => {
+    
+    MapOperation.map_destroyGridMVTLayer()
+}
+const handleVectorVisualize = (tableName: string) => {
+    previewIndex.value = vectors.value.findIndex((item) => item.tableName === tableName)
+    MapOperation.map_addGridMVTLayer(tableName, gridData.value.columnId, gridData.value.rowId, gridData.value.resolution)
 }
 
 const handleProductVisualize = () => {
@@ -600,6 +628,7 @@ const handleProductVisualize = () => {
         rowId,
         columnId,
         resolution,
+        opacity: opacity.value,
     }
     const imageData: MultiImageInfoType[] = []
 
@@ -685,7 +714,9 @@ const handleVisualize = () => {
             handleRSVisualize()
             break
         case 'vector':
-            handleVectorVisualize()
+            if (previewIndex.value !== null) {
+                handleVectorVisualize(vectors.value[previewIndex.value].tableName)
+            }
             break
         case 'product':
             handleProductVisualize()
@@ -694,7 +725,10 @@ const handleVisualize = () => {
 }
 
 const handleRemove = () => {
-    map_destroyGridRGBImageTileLayer(gridData.value)
+    previewIndex.value = null
+    MapOperation.map_destroyGridRGBImageTileLayer(gridData.value)
+    MapOperation.map_destroyGridMVTLayer()
+    MapOperation.map_destroyGridOneBandColorTileLayer(gridData.value)
 }
 
 /**
@@ -707,7 +741,7 @@ const handleRemove = () => {
 const selectedProductType = ref('')
 const selectedProduct = ref('')
 const productTypes = computed(() => {
-    return ['全选', 'DEM', '红绿立体影像', '形变速率', 'NDVI', '其他']
+    return ['全选', /*'DEM',*/ '红绿立体影像', '形变速率', 'NDVI', '其他']
 })
 
 const products = computed(() => {
@@ -744,10 +778,19 @@ const products = computed(() => {
     })
     return Array.from(result)
 })
+const vectors = ref<any[]>([])
 
 
-bus.on('update:gridPopupData', (info) => {
+bus.on('update:gridPopupData', (info, vectorGridsRes) => {
+    // vectorGridsRes 是附带的矢量数据，只不过过滤放在了这里，不太科学
     gridData.value = info
+    let gridRes = vectorGridsRes.filter((item: any) => {
+        return item.rowId === info.rowId && item.columnId === info.columnId
+    })
+    if (gridRes.length > 0) {
+        vectors.value = gridRes[0].vectors
+    }
+    console.log(vectors.value, 'vectors')
 })
 
 onMounted(() => {
@@ -924,6 +967,65 @@ onMounted(() => {
     margin-right: 0.5rem;
     display: flex;
     align-items: center;
+}
+
+.config-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 0.5rem;
+}
+
+.config-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    background-color: rgba(15, 23, 42, 0.3);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    border: 1px solid rgba(56, 189, 248, 0.15);
+    transition: all 0.3s ease;
+}
+
+.config-item:hover {
+    background-color: rgba(14, 165, 233, 0.1);
+    border-color: rgba(56, 189, 248, 0.3);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.1);
+}
+
+.config-item-no-hover {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    background-color: rgba(15, 23, 42, 0.3);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    border: 1px solid rgba(56, 189, 248, 0.15);
+    transition: all 0.3s ease;
+}
+
+.config-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #e0f2fe;
+    margin-bottom: 0.25rem;
+}
+
+.vector-tag {
+    background-color: #132f4c !important;
+    color: #e6f1ff !important;
+    border: 1px solid #1e3a5f !important;
+    margin-bottom: 6px;
+    padding: 0.75rem;
+    transition: all 0.2s;
+}
+:deep(.vector-tag.ant-tag-checkable-checked) {
+    background-color: #075985 !important;
+    color: #4dabf7 !important;
+    border-color: #4dabf7 !important;
 }
 
 @media (max-width: 640px) {
