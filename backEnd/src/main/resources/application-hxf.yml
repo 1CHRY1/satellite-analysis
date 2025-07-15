@@ -15,7 +15,7 @@ spring:
           # k8s
           #          url: jdbc:mysql://223.2.34.8:31036/satellite
 #          url: jdbc:mysql://192.168.1.111:3306/satellite
-          url: jdbc:mysql://172.16.92.82:3306/satellite
+          url: jdbc:mysql://172.20.25.156:3306/satellite
           username: root
           password: root
 #          password: 123456
