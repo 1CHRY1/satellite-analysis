@@ -42,6 +42,17 @@ public class VectorController {
         sendVectorTileResponse(tile, response);
     }
 
+    @GetMapping("/grid/{columnId}/{rowId}/{resolution}/{tableName}/{z}/{x}/{y}")
+    public void getVectorByGridResolutionAndTableName(@PathVariable Integer columnId,
+                                              @PathVariable Integer rowId,
+                                              @PathVariable Integer resolution,
+                                              @PathVariable String tableName,
+                                              @PathVariable int z, @PathVariable int x,
+                                              @PathVariable int y, HttpServletResponse response) {
+        byte[] tile = vectorDataService.getVectorByGridResolutionAndTableName(columnId, rowId, resolution, tableName, z, x, y);
+        sendVectorTileResponse(tile, response);
+    }
+
     @GetMapping("/location/{locationId}/{resolution}/{tableName}/{z}/{x}/{y}")
     public void getVectorByLocationAndTableName(@PathVariable String locationId,
                                               @PathVariable Integer resolution,
