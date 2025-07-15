@@ -1,6 +1,6 @@
 <template>
     <div class="relative flex flex-1 flex-row bg-black">
-        <div class="w-[28vw] p-4 text-gray-200 mb-0 gap-0">
+        <div class="w-[28vw] max-h-[calc(100vh-100px)] p-4 text-gray-200 mb-0 gap-0">
             <section class="panel-section ml-2 mr-2" style="margin-top: 0rem; margin-bottom: 0.5rem;">
                 <div class="section-header">
                     <div class="section-icon">

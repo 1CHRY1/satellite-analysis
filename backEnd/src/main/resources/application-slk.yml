@@ -34,6 +34,12 @@ spring:
 #          password: 123456
 #          #          password: ogms250410
 #          driver-class-name: org.postgresql.Driver
+        pg_satellite:
+          #          url: jdbc:postgresql://223.2.34.8:31543/satellite
+          url: jdbc:postgresql://localhost:5432/satellite
+          username: postgres
+          password: 123456
+          driver-class-name: org.postgresql.Driver
   servlet:
     multipart:
       max-file-size: 1GB
@@ -55,8 +61,8 @@ mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: nnu.mnr.satellite.model.po
   type-handlers-package: nnu.mnr.satellite.utils.typeHandler
-#  configuration:
-#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 #ca:
 #  dir: D:/1tools/OpenSSL/ca
