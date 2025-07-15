@@ -122,3 +122,10 @@ def get_result():
     task_id = request.args.get('id', type=str)
     result = scheduler.get_result(task_id)
     return api_response(data={'result': result})
+
+@bp.route(CONFIG.API_TIF_calc_no_cloud_complex, methods=['POST'])
+def calc_no_cloud_complex():
+    scheduler = init_scheduler()
+    data = request.json
+    task_id = scheduler.start_task('calc_no_cloud_complex', data)
+    return api_response(data={'taskId': task_id})

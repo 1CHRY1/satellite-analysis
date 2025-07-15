@@ -105,7 +105,11 @@ public class ModelExampleService {
     // 函数重载，无云一版图专用
     private CommonResultVO runModelServerModel(String url, JSONObject param, long expirationTime, JSONObject caseJsonObj) {
         try {
-            JSONObject modelCaseResponse = JSONObject.parseObject(ProcessUtil.runModelCase(url, param));
+//            JSONObject modelCaseResponse = JSONObject.parseObject(ProcessUtil.runModelCase(url, param));
+            String rawResponse = ProcessUtil.runModelCase(url, param);
+            System.out.println("Raw Response: " + rawResponse); // 打印原始返回内容
+            JSONObject modelCaseResponse = JSONObject.parseObject(rawResponse); // 确认是否抛出异常
+
             String caseId = modelCaseResponse.getJSONObject("data").getString("taskId");
             // 在没有相应历史记录的情况下, 持久化记录
             if (caseDataService.selectById(caseId) == null) {
@@ -202,7 +206,12 @@ public class ModelExampleService {
         JSONObject caseJsonObj = JSONObject.of("boundary", boundary, "address", address, "resolution", resolution, "sceneIds", sceneIds, "dataSet", noCloudFetchDTO.getDataSet());
         caseJsonObj.put("regionId", regionId);
         caseJsonObj.put("bandList", bandList);
-        String noCloudUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("noCloud");
+        String noCloudUrl;
+        if ("Red".equals(bandList.get(0)) && "Green".equals(bandList.get(1)) && "Blue".equals(bandList.get(2))) {
+            noCloudUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("noCloud");
+        } else {
+            noCloudUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("noCloud_complex");
+        }
         long expirationTime = 60 * 100;
         return runModelServerModel(noCloudUrl, noCloudParam, expirationTime, caseJsonObj);
     }

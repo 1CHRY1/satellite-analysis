@@ -17,7 +17,7 @@ MINIO_ENDPOINT = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}"
 INFINITY = 999999
 
 # @ray.remote(num_cpus=CONFIG.RAY_NUM_CPUS, memory=CONFIG.RAY_MEMORY_PER_TASK)
-def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper, minio_endpoint, temp_dir_path):
+def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper, minio_endpoint, temp_dir_path, band_num):
     try:
         from rio_tiler.io import COGReader
         import numpy as np
@@ -77,9 +77,7 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
         target_H = None
         target_W = None
 
-        img_1 = None
-        img_2 = None
-        img_3 = None
+        img_list = [None] * band_num
         need_fill_mask = None
         first_shape_set = False
 
@@ -121,9 +119,7 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
                         target_H, target_W = temp_img_data.data[0].shape
                         print(f"{grid_lable}: H={target_H}, W={target_W}")
 
-                        img_1 = np.full((target_H, target_W), 0, dtype=np.uint8)
-                        img_2 = np.full((target_H, target_W), 0, dtype=np.uint8)
-                        img_3 = np.full((target_H, target_W), 0, dtype=np.uint8)
+                        img_list = [np.full((target_H, target_W), 0, dtype=np.uint8) for _ in range(band_num)]
                         need_fill_mask = np.ones((target_H, target_W), dtype=bool) # all true，待填充
                         first_shape_set = True
 
@@ -142,9 +138,8 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
                         target_H, target_W = temp_img_data.data[0].shape
                         print(f"{grid_lable}: H={target_H}, W={target_W}")
 
-                        img_1 = np.full((target_H, target_W), 0, dtype=np.uint8)
-                        img_2 = np.full((target_H, target_W), 0, dtype=np.uint8)
-                        img_3 = np.full((target_H, target_W), 0, dtype=np.uint8)
+                        img_list = [np.full((target_H, target_W), 0, dtype=np.uint8) for _ in range(band_num)]
+
                         need_fill_mask = np.ones((target_H, target_W), dtype=bool) # all true，全都待标记
                         first_shape_set = True
 
@@ -208,14 +203,65 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
 
                         return converted_data
                 ################# NEW END ######################
-                paths = list(paths.values())
-                band_1 = read_band(paths[0])
-                band_2 = read_band(paths[1])
-                band_3 = read_band(paths[2])
+                def calculate_ndvi(nir_band, red_band):
+                    """计算 NDVI 指数"""
+                    # 避免除以零（将分母为零的位置设为 NaN 或 0）
+                    denominator = nir_band.astype(float) + red_band.astype(float)
+                    ndvi = np.divide(
+                        nir_band.astype(float) - red_band.astype(float),
+                        denominator,
+                        where=(denominator != 0)  # 仅在分母非零时计算
+                    )
+                    # 将 NaN 或无效值替换为 0（或其他默认值）
+                    ndvi = np.nan_to_num(ndvi, nan=0, posinf=0, neginf=0)
+                    # 转换为 uint8（范围 0-255）或保持 float32（范围 -1 到 1）
+                    # 如果需要存储为图像，可以缩放到 0-255：
+                    # ndvi_uint8 = ((ndvi + 1) * 127.5).astype(np.uint8)
+                    return ndvi
 
-                img_1[fill_mask] = band_1[fill_mask]
-                img_2[fill_mask] = band_2[fill_mask]
-                img_3[fill_mask] = band_3[fill_mask]
+                def calculate_evi(nir_band, red_band, blue_band=None, C1=6.0, C2=7.5, L=1.0, G=2.5):
+                    """计算 EVI（增强型植被指数）"""
+                    # 确保输入是浮点型，避免整数运算溢出
+                    nir = nir_band.astype(float) * 0.0000275 - 0.2  # 假设是辐射值
+                    red = red_band.astype(float) * 0.0000275 - 0.2
+                    # 如果没有蓝波段，可以省略 C2 * Blue 项（但精度会下降）
+                    if blue_band is not None:
+                        blue = blue_band.astype(float) * 0.0000275 - 0.2
+                        denominator = nir + C1 * red - C2 * blue + L
+                    else:
+                        print("Warning: Blue band not provided, EVI calculation may be less accurate.")
+                        denominator = nir + C1 * red + L  # 简化公式（无蓝波段）
+
+                    # 避免除以零
+                    evi = np.divide(
+                        G * (nir - red),
+                        denominator,
+                        where=(denominator != 0)  # 仅在分母非零时计算
+                    )
+
+                    # 处理无效值（NaN 或无穷大）
+                    evi = np.nan_to_num(evi, nan=0, posinf=0, neginf=0)
+                    return evi
+                band_list = list()
+                for band, band_path in paths.items():
+                    if band == "NDVI":
+                        NIR = read_band(band_path['NIR'])
+                        Red = read_band(band_path['Red'])
+                        NDVI = calculate_ndvi(NIR, Red)
+                        band_list.append(NDVI)
+                    elif band == "EVI":
+                        NIR = read_band(band_path['NIR'])
+                        Red = read_band(band_path['Red'])
+                        # 检查是否有蓝波段（可选）
+                        Blue = read_band(band_path['Blue']) if 'Blue' in band_path else None
+                        # 计算 EVI
+                        EVI = calculate_evi(NIR, Red, Blue)
+                        band_list.append(EVI)
+                    else:
+                        band_list.append(read_band(band_path))
+
+                for i in range(band_num):
+                    img_list[i][fill_mask] = band_list[i][fill_mask]
 
                 need_fill_mask[fill_mask] = False # False if pixel filled
 
@@ -232,8 +278,7 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
         first_shape_set = False
 
         # 读取RGB并保存tif
-        img = np.stack([img_1, img_2, img_3])
-
+        img = np.stack(img_list)
 
         tif_path = os.path.join(temp_dir_path, f"{grid_x}_{grid_y}.tif")
         transform = from_bounds(*bbox, img.shape[2], img.shape[1])
@@ -242,7 +287,7 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
             driver='COG',
             height=img.shape[1],
             width=img.shape[2],
-            count=3,
+            count=band_num,
             # dtype=img.dtype,
             # Very Important!!!!!!!!!!!!!!!!
             # dtype=np.float32,
@@ -344,7 +389,7 @@ def cleanup_temp_files(scenes_json_file, scene_band_paths_json_file):
         print(f"清理临时文件时出错: {e}")
 
 
-class calc_no_cloud(Task):
+class calc_no_cloud_complex(Task):
 
     def __init__(self, task_id, *args, **kwargs):
         super().__init__(task_id, *args, **kwargs)
@@ -363,19 +408,53 @@ class calc_no_cloud(Task):
         gridResolution = self.resolution
         scenes = self.scenes
         bandList = self.bandList
+        band_num = len(bandList)
         # cloud = data.get('cloud') 没啥用
 
         ## Step 2 : Multithread Processing 4 Grids #############################
         grid_helper = GridHelper(gridResolution)
 
-        scene_band_paths = {} # as cache
+        scene_band_paths = {}  # 作为缓存，存储每个 scene 的波段路径
+
+        def find_band_path(images, target_band):
+            """辅助函数：在影像列表中查找目标波段的路径"""
+            for img in images:
+                if img['band'] == target_band:
+                    return img['tifPath']
+            return None
+
         for scene in scenes:
             mapper = scene['bandMapper']
             bands = {band: None for band in bandList}
-            for img in scene['images']:
-                for band in bandList:
-                    if img['band'] == mapper[band]:  # 检查当前图像是否匹配目标波段
-                        bands[band] = img['tifPath']  # 动态赋值
+            # 定义一个字典，键是索引名称，值是对应的波段配置
+            band_configs = {
+                'NDVI': {'NIR': None, 'Red': None},
+                'EVI': {'Blue': None, 'Red': None, 'NIR': None}
+            }
+            # 遍历字典，只有当索引在bandList中时才添加配置
+            for index, config in band_configs.items():
+                if index in bandList:
+                    bands[index] = config
+
+            # 处理普通波段
+            for band in bandList:
+                if band != 'NDVI' and band != 'EVI':
+                    target_band = mapper.get(band)
+                    if target_band is None:
+                        raise ValueError(f"Band '{band}' not found in mapper")
+                    bands[band] = find_band_path(scene['images'], target_band)
+
+            if 'NDVI' in bands:
+                bands['NDVI']['NIR'] = find_band_path(scene['images'], mapper.get('NIR'))
+                bands['NDVI']['Red'] = find_band_path(scene['images'], mapper.get('Red'))
+
+            # 处理 EVI（更灵活的版本）
+            if 'EVI' in bands:
+                bands['EVI']['Blue'] = find_band_path(scene['images'], mapper.get('Blue'))
+                bands['EVI']['Red'] = find_band_path(scene['images'], mapper.get('Red'))
+                bands['EVI']['NIR'] = find_band_path(scene['images'], mapper.get('NIR'))
+
+            # 检查完整性（同上）
             scene_band_paths[scene['sceneId']] = bands
 
         temp_dir_path = os.path.join(CONFIG.TEMP_OUTPUT_DIR, self.task_id)
@@ -400,7 +479,7 @@ class calc_no_cloud(Task):
         # 不使用ray
         results = []
         for g in grids:
-            result = process_grid(g, scenes_json_file, scene_band_paths_json_file, grid_helper, MINIO_ENDPOINT, temp_dir_path)
+            result = process_grid(g, scenes_json_file, scene_band_paths_json_file, grid_helper, MINIO_ENDPOINT, temp_dir_path, band_num)
             results.append(result)
 
 
