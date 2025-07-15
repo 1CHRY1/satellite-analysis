@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import static nnu.mnr.satellite.utils.geom.TileCalculateUtil.getTileGeomByIdsAndResolution;
+
 @Service("VectorDataService")
 public class VectorDataService {
 
@@ -51,6 +53,12 @@ public class VectorDataService {
         String wkt = locationService.getLocationBoundary(resolution, locationId).getBoundary().toText();
         return getMvtTile(tableName, wkt, z, x, y);
     }
+
+    public byte[] getVectorByGridResolutionAndTableName(Integer columnId, Integer rowId, Integer resolution, String tableName, int z, int x, int y){
+        String wkt = getTileGeomByIdsAndResolution(rowId,  columnId, resolution).toString();
+        return getMvtTile(tableName, wkt, z, x, y);
+    }
+
     // 获取矢量数据并发布成瓦片服务
     public byte[] getMvtTile(String tableName, String wkt, int z, int x, int y){
         // 参数校验，防止sql注入
