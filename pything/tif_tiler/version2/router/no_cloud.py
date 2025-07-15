@@ -10,7 +10,7 @@ import math
 
 ####### Helper ########################################################################################
 # MINIO_ENDPOINT = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}"
-MINIO_ENDPOINT = "http://192.168.1.105:30900" 
+MINIO_ENDPOINT = "http://172.20.10.3:30900" 
 print('注意改这里')
 TRANSPARENT_PNG = os.path.join(os.path.dirname(__file__), "transparent.png")
 with open(TRANSPARENT_PNG, "rb") as f:
@@ -168,11 +168,17 @@ async def get_tile(
                 if not red_band_path:
                     continue
                 full_red_path = MINIO_ENDPOINT + "/" + scene['bucket'] + "/" + red_band_path
-                with COGReader(full_red_path, options={'nodata': int(nodata)}) as reader:
-                    # 默认全部无云，只考虑nodata
-                    temp_img_data = reader.tile(x, y, z, tilesize=256)
-                    nodata_mask = temp_img_data.mask
+                print('full_red_path', full_red_path)
+                try:
+                    with COGReader(full_red_path, options={'nodata': int(nodata)}) as reader:
+                        # 默认全部无云，只考虑nodata
+                        temp_img_data = reader.tile(x, y, z, tilesize=256)
+                        nodata_mask = temp_img_data.mask
+                except Exception as e:
+                    print(f"无法读取文件 {full_red_path}: {str(e)}")
+                    continue
                 
+
                 valid_mask = (nodata_mask.astype(bool))
                 
             else:
@@ -181,33 +187,42 @@ async def get_tile(
                 if not red_band_path:
                     continue
                 full_red_path = MINIO_ENDPOINT + "/" + scene['bucket'] + "/" + red_band_path
-                with COGReader(full_red_path, options={'nodata': int(nodata)}) as reader:
+                try:
+                    with COGReader(full_red_path, options={'nodata': int(nodata)}) as reader:
         
-                    # temp_img_data = reader.part(bbox=bbox, indexes=[1], height=target_H, width=target_W)
-                    temp_img_data = reader.tile(x, y, z, tilesize=256)
-                    nodata_mask = temp_img_data.mask
+                        # temp_img_data = reader.part(bbox=bbox, indexes=[1], height=target_H, width=target_W)
+                        temp_img_data = reader.tile(x, y, z, tilesize=256)
+                        nodata_mask = temp_img_data.mask
+                except Exception as e:
+                    print(f"无法读取文件 {full_red_path}: {str(e)}")
+                    continue
                     
                 # 读云波段获取 cloud_mask
                 cloud_full_path = MINIO_ENDPOINT + "/" + scene['bucket'] + "/" + scene['cloudPath']
-                with COGReader(cloud_full_path, options={'nodata': int(nodata)}) as reader:
-                    # cloud_img_data = reader.part(bbox=bbox, indexes=[1], height=target_H, width=target_W)
-                    cloud_img_data = reader.tile(x, y, z, tilesize=256)
-                    img_data = cloud_img_data.data[0] # 存储了QA波段的数据
+                try:
+                    with COGReader(cloud_full_path, options={'nodata': int(nodata)}) as reader:
+                        # cloud_img_data = reader.part(bbox=bbox, indexes=[1], height=target_H, width=target_W)
+                        cloud_img_data = reader.tile(x, y, z, tilesize=256)
+                        img_data = cloud_img_data.data[0] # 存储了QA波段的数据
 
-                    sensorName = scene.get('sensorName')
-                    if "Landsat" in sensorName or "Landset" in sensorName:
-                        cloud_mask = (img_data & (1 << 3)) > 0
+                        sensorName = scene.get('sensorName')
+                        if "Landsat" in sensorName or "Landset" in sensorName:
+                            cloud_mask = (img_data & (1 << 3)) > 0
 
-                    elif "MODIS" in sensorName:
-                        cloud_state = (img_data & 0b11)
-                        cloud_mask = (cloud_state == 0) | (cloud_state == 1)
+                        elif "MODIS" in sensorName:
+                            cloud_state = (img_data & 0b11)
+                            cloud_mask = (cloud_state == 0) | (cloud_state == 1)
 
-                    elif "GF" in sensorName:
-                        cloud_mask = (img_data == 2)
+                        elif "GF" in sensorName:
+                            cloud_mask = (img_data == 2)
 
-                    else:
-                        continue
-                    
+                        else:
+                            continue
+
+                except Exception as e:
+                    print(f"无法读取文件 {cloud_full_path}: {str(e)}")
+                    continue
+                
                 # 非云 & 非nodata <--> 该景有效区域
                 valid_mask = (~cloud_mask) & (nodata_mask.astype(bool))
             
@@ -218,16 +233,21 @@ async def get_tile(
                 
                 def read_band(band_path):
                     full_path = MINIO_ENDPOINT + "/" + scene['bucket'] + "/" + band_path
-                    with COGReader(full_path, options={'nodata': int(nodata)}) as reader:
-                        # band_data = reader.part(bbox=bbox, indexes=[1], height=target_H, width=target_W)
-                        band_data = reader.tile(x, y, z, tilesize=256)
-                        original_data = band_data.data[0]
-                        original_dtype = original_data.dtype
 
-                        # 【新增】自动转换为uint8
-                        converted_data = convert_to_uint8(original_data, original_dtype)
+                    try:
+                        with COGReader(full_path, options={'nodata': int(nodata)}) as reader:
+                            # band_data = reader.part(bbox=bbox, indexes=[1], height=target_H, width=target_W)
+                            band_data = reader.tile(x, y, z, tilesize=256)
+                            original_data = band_data.data[0]
+                            original_dtype = original_data.dtype
 
-                        return converted_data
+                            # 【新增】自动转换为uint8
+                            converted_data = convert_to_uint8(original_data, original_dtype)
+
+                            return converted_data
+                    except Exception as e:
+                        print(f"无法读取文件 {full_path}: {str(e)}")
+                        return None
                     
                 ################# NEW END ######################
 
@@ -235,6 +255,10 @@ async def get_tile(
                 band_1 = read_band(bands['Red'])
                 band_2 = read_band(bands['Green'])
                 band_3 = read_band(bands['Blue'])
+                
+                if band_1 is None or band_2 is None or band_3 is None:
+                    print(f"警告: {scene_label} 读取波段失败")
+                    continue
 
                 img_r[fill_mask] = band_1[fill_mask]
                 img_g[fill_mask] = band_2[fill_mask]
@@ -372,9 +396,13 @@ async def get_submeter_tile(
             if not red_band_path:
                 continue
             full_red_path = MINIO_ENDPOINT + "/" + scene['bucket'] + "/" + red_band_path
-            with COGReader(full_red_path, options={'nodata': int(nodata)}) as reader:
-                temp_img_data = reader.tile(x, y, z, tilesize=256)
-                nodata_mask = temp_img_data.mask
+            try:
+                with COGReader(full_red_path, options={'nodata': int(nodata)}) as reader:
+                    temp_img_data = reader.tile(x, y, z, tilesize=256)
+                    nodata_mask = temp_img_data.mask
+            except Exception as e:
+                print(f"无法读取文件 {full_red_path}: {str(e)}")
+                continue
             
             valid_mask = (nodata_mask.astype(bool))
             
@@ -386,16 +414,20 @@ async def get_submeter_tile(
                 
                 def read_band(band_path):
                     full_path = MINIO_ENDPOINT + "/" + scene['bucket'] + "/" + band_path
-                    with COGReader(full_path, options={'nodata': int(nodata)}) as reader:
-                        band_data = reader.tile(x, y, z, tilesize=256)
-                        original_data = band_data.data[0]
-                        original_dtype = original_data.dtype
+                    try:
+                        with COGReader(full_path, options={'nodata': int(nodata)}) as reader:
+                            band_data = reader.tile(x, y, z, tilesize=256)
+                            original_data = band_data.data[0]
+                            original_dtype = original_data.dtype
 
-                        # 【新增】自动转换为uint8
-                        converted_data = convert_to_uint8(original_data, original_dtype)
-                        print(f"Band data converted from {original_dtype} to uint8")
+                            # 【新增】自动转换为uint8
+                            converted_data = convert_to_uint8(original_data, original_dtype)
+                            print(f"Band data converted from {original_dtype} to uint8")
 
-                        return converted_data
+                            return converted_data
+                    except Exception as e:
+                        print(f"无法读取文件 {full_path}: {str(e)}")
+                        return None
                     
                 ################# NEW END ######################
 
@@ -403,6 +435,10 @@ async def get_submeter_tile(
                 band_1 = read_band(bands['Red'])
                 band_2 = read_band(bands['Green'])
                 band_3 = read_band(bands['Blue'])
+
+                if band_1 is None or band_2 is None or band_3 is None:
+                    print(f"警告: {scene_label} 读取波段失败")
+                    continue
 
                 img_r[fill_mask] = band_1[fill_mask]
                 img_g[fill_mask] = band_2[fill_mask]
