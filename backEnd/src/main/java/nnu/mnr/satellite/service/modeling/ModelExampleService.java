@@ -166,7 +166,10 @@ public class ModelExampleService {
         Integer regionId = noCloudFetchDTO.getRegionId();
         Integer resolution = noCloudFetchDTO.getResolution();
         List<String> sceneIds = noCloudFetchDTO.getSceneIds();
-
+        List<String> bandList = noCloudFetchDTO.getBandList();
+        if (bandList == null || bandList.isEmpty()) {
+            bandList = Arrays.asList("Red", "Green", "Blue");
+        }
         // 构成影像景参数信息
         List<ModelServerSceneDTO> modelServerSceneDTOs = new ArrayList<>();
 
@@ -194,9 +197,10 @@ public class ModelExampleService {
         Geometry boundary = getGridsBoundaryByTilesAndResolution(tileIds, resolution);
 
         // 请求modelServer
-        JSONObject noCloudParam = JSONObject.of("tiles", tileIds, "scenes", modelServerSceneDTOs, "cloud", noCloudFetchDTO.getCloud(), "resolution", resolution);
+        JSONObject noCloudParam = JSONObject.of("tiles", tileIds, "scenes", modelServerSceneDTOs, "cloud", noCloudFetchDTO.getCloud(), "resolution", resolution, "bandList", bandList);
         JSONObject caseJsonObj = JSONObject.of("boundary", boundary, "address", address, "resolution", resolution, "sceneIds", sceneIds, "dataSet", noCloudFetchDTO.getDataSet());
         caseJsonObj.put("regionId", regionId);
+        caseJsonObj.put("bandList", bandList);
         String noCloudUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("noCloud");
         long expirationTime = 60 * 100;
         return runModelServerModel(noCloudUrl, noCloudParam, expirationTime, caseJsonObj);
