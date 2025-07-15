@@ -257,7 +257,7 @@ const showImageBBox = async () => {
     }
 }
 
-const selectedImage = props.thematicConfig.allImages.find(image => image.sceneId = selectedSceneId.value)
+// const selectedImage = props.thematicConfig.allImages.find(image => image.sceneId = selectedSceneId.value)
 
 </script>
 

@@ -84,7 +84,7 @@
                                     </button>
                                     <button @click=""
                                         class="px-3 py-1 rounded border border-[#247699] bg-[#0d1526] text-white hover:border-[#2bb2ff] hover:bg-[#1a2b4c]">
-                                        一阶导数
+                                        导数
                                     </button>
                                     <button @click=""
                                         class="px-3 py-1 rounded border border-[#247699] bg-[#0d1526] text-white hover:border-[#2bb2ff] hover:bg-[#1a2b4c]">
