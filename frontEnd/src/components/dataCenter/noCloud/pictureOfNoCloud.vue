@@ -442,48 +442,104 @@
                                         </div>
                                         <div class="config-control flex-col !items-start">
                                             <div class="flex w-full flex-col gap-2">
-                                                <label class="flex items-center gap-2">
-                                                    <input type="checkbox" v-model="multiSourceData.enabled" 
-                                                        class="h-4 w-4 rounded" />
-                                                    启用多源数据合成
-                                                </label>
-                                                
-                                                <!-- 波段配置 -->
-                                                <div v-if="multiSourceData.enabled" class="ml-4 flex flex-col gap-2">
-                                                    <div class="text-sm text-gray-400">波段配置：</div>
+                                                <!-- 波段选择 -->
+                                                <div class="ml-4 flex flex-row gap-2">
+                                                    <div class="text-sm text-gray-400">波段选择：</div>
                                                     <label class="flex items-center gap-2">
-                                                        <input type="checkbox" v-model="multiSourceData.bands.optical" 
+                                                        <input type="checkbox" v-model="multiSourceData.bands.red" 
                                                             class="h-4 w-4 rounded" />
                                                         R
                                                     </label>
                                                     <label class="flex items-center gap-2">
-                                                        <input type="checkbox" v-model="multiSourceData.bands.thermal" 
+                                                        <input type="checkbox" v-model="multiSourceData.bands.green" 
                                                             class="h-4 w-4 rounded" />
                                                         G
                                                     </label>
                                                     <label class="flex items-center gap-2">
-                                                        <input type="checkbox" v-model="multiSourceData.bands.nearInfrared" 
+                                                        <input type="checkbox" v-model="multiSourceData.bands.blue" 
                                                             class="h-4 w-4 rounded" />
                                                         B
                                                     </label>
                                                     <label class="flex items-center gap-2">
-                                                        <input type="checkbox" v-model="multiSourceData.bands.nearInfrared" 
+                                                        <input type="checkbox" v-model="multiSourceData.bands.nir" 
                                                             class="h-4 w-4 rounded" />
                                                         NIR
                                                     </label>
                                                     <label class="flex items-center gap-2">
-                                                        <input type="checkbox" v-model="multiSourceData.bands.nearInfrared" 
+                                                        <input type="checkbox" v-model="multiSourceData.bands.ndvi" 
                                                             class="h-4 w-4 rounded" />
                                                         NDVI
                                                     </label>
                                                     <label class="flex items-center gap-2">
-                                                        <input type="checkbox" v-model="multiSourceData.bands.nearInfrared" 
+                                                        <input type="checkbox" v-model="multiSourceData.bands.evi" 
                                                             class="h-4 w-4 rounded" />
                                                         EVI
                                                     </label>
 
                                                 </div>
 
+                                                <!-- 可视化波段选择部分 -->
+                                                <div class="ml-4 flex flex-row gap-2">
+                                                    <div class="text-sm text-gray-400">可视化波段：</div>
+                                                    <label class="flex items-center gap-2">
+                                                        <span class="text-sm text-red-400">R:</span>
+                                                        <select 
+                                                            v-model="multiSourceData.visualization.red_band" 
+                                                            name="red_visualization" 
+                                                            class="appearance-none rounded border border-[#2c3e50] bg-[#0d1526] px-2 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
+                                                            :disabled="multiSourceData.selectedBands.length === 0">
+                                                            <option value="">请选择</option>
+                                                            <option 
+                                                                v-for="band in multiSourceData.selectedBands" 
+                                                                :key="band" 
+                                                                :value="band">
+                                                                {{ band }}
+                                                            </option>
+                                                        </select>
+                                                    </label>
+                                                    <label class="flex items-center gap-2">
+                                                        <span class="text-sm text-green-400">G:</span>
+                                                        <select 
+                                                            v-model="multiSourceData.visualization.green_band" 
+                                                            name="green_visualization" 
+                                                            class="appearance-none rounded border border-[#2c3e50] bg-[#0d1526] px-2 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
+                                                            :disabled="multiSourceData.selectedBands.length === 0">
+                                                            <option value="">请选择</option>
+                                                            <option 
+                                                                v-for="band in multiSourceData.selectedBands" 
+                                                                :key="band" 
+                                                                :value="band">
+                                                                {{ band }}
+                                                            </option>
+                                                        </select>
+                                                    </label>
+                                                    <label class="flex items-center gap-2">
+                                                        <span class="text-sm text-blue-400">B:</span>
+                                                        <select 
+                                                            v-model="multiSourceData.visualization.blue_band" 
+                                                            name="blue_visualization" 
+                                                            class="appearance-none rounded border border-[#2c3e50] bg-[#0d1526] px-2 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
+                                                            :disabled="multiSourceData.selectedBands.length === 0">
+                                                            <option value="">请选择</option>
+                                                            <option 
+                                                                v-for="band in multiSourceData.selectedBands" 
+                                                                :key="band" 
+                                                                :value="band">
+                                                                {{ band }}
+                                                            </option>
+                                                        </select>
+                                                    </label>
+                                                </div>
+
+                                                <!-- 显示当前选择的可视化波段组合 -->
+                                                <div class="ml-4 flex flex-row gap-2" v-if="multiSourceData.viz_bands.length > 0">
+                                                    <div class="text-sm text-gray-400">当前组合：</div>
+                                                    <div class="text-sm text-[#38bdf8]">
+                                                        {{ multiSourceData.viz_bands.join(' - ') }}
+                                                    </div>
+                                                </div>
+                                                
+                                                
                                                 <div v-if="showComplexProgress[0]"
                                                     class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
                                                     <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
@@ -516,6 +572,9 @@
                                                     </div>
                                                 </div> -->
                                             </div>
+                                            <button class="w-full rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95" @click="handleMultiSourceData">
+                                                合成
+                                            </button>
                                         </div>
                                     </div>
 
@@ -530,14 +589,14 @@
                                         </div>
                                         <div class="config-control flex-col !items-start">
                                             <div class="flex w-full flex-col gap-2">
-                                                <label class="flex items-center gap-2">
+                                                <!-- <label class="flex items-center gap-2">
                                                     <input type="checkbox" v-model="multiTemporalData.enabled" 
                                                         class="h-4 w-4 rounded" />
                                                     启用多时相数据合成
-                                                </label>
+                                                </label> -->
                                                 
                                                 <!-- 时相配置 -->
-                                                <div v-if="multiTemporalData.enabled" class="ml-4 flex flex-col gap-2">
+                                                <div class="ml-4 flex flex-col gap-2">
                                                     <div class="text-sm text-gray-400">时相配置：</div>
                                                     <div class="flex items-center gap-2">
                                                         <span class="text-sm">时相1：</span>
@@ -553,22 +612,26 @@
                                                             placeholder="选择日期" />
                                                         <span class="text-sm ml-2">波段4-6</span>
                                                     </div>
-                                                    <a-button class="mt-2" size="small" @click="addTimePhase">
+
+                                                    <button class="w-full rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95" @click="handleMultitTemporalData">
+                                                        合成
+                                                    </button>
+                                                    <!-- <a-button class="mt-2" size="small" @click="addTimePhase">
                                                         <FilePlus2Icon :size="14" class="mr-1" />
-                                                        <!-- <span>添加时相</span> -->
-                                                    </a-button> 
+                                                        
+                                                    </a-button>  -->
                                                 </div>
 
-                                                <div v-if="showComplexProgress[1]"
+                                                <!-- <div v-if="showComplexProgress[1]"
                                                     class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
                                                     <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
                                                         :style="{ width: `${complexProgress[1]}%` }"></div>
-                                                </div>
+                                                </div> -->
                                             </div>
                                             
                                             <!-- 结果信息 -->
-                                            <div class="result-info-container w-full">
-                                                <div class="result-info-item">
+                                            <!-- <div class="result-info-container w-full"> -->
+                                                <!-- <div class="result-info-item">
                                                     <div class="result-info-icon">
                                                         <ClockIcon :size="16" />
                                                     </div>
@@ -578,8 +641,8 @@
                                                             {{ multiTemporalData.phases.length }} 个时相
                                                         </div>
                                                     </div>
-                                                </div>
-                                                <div class="result-info-item">
+                                                </div> -->
+                                                <!-- <div class="result-info-item">
                                                     <div class="result-info-icon">
                                                         <LayersIcon :size="16" />
                                                     </div>
@@ -589,8 +652,8 @@
                                                             {{ multiTemporalData.totalBands }} 个波段
                                                         </div>
                                                     </div>
-                                                </div>
-                                            </div>
+                                                </div> -->
+                                            <!-- </div> -->
                                         </div>
                                     </div>
 
@@ -836,27 +899,100 @@ const radarGridFeature: Ref<FeatureCollection | null> = ref(null)
 
 // 多源数据合成
 const multiSourceData = reactive({
-    enabled: false,
     bands: {
-        optical: false,      // 光学波段 1-3
-        thermal: false,      // 热红外波段 4
-        nearInfrared: false  // 近红外波段 5
+        red: false,  
+        blue: false,     
+        green: false,
+        nir: false,
+        ndvi: false,
+        evi: false,
     },
-    bandCount: computed(() => {
-        let count = 0
-        if (multiSourceData.bands.optical) count += 3
-        if (multiSourceData.bands.thermal) count += 1
-        if (multiSourceData.bands.nearInfrared) count += 1
-        return count
+
+    visualization: {
+    red_band: '',    // 默认R通道显示R波段
+    green_band: '',  // 默认G通道显示G波段  
+    blue_band: ''    // 默认B通道显示B波段
+    },
+
+    // 波段类型
+    selectedBands: computed(() => {
+        const bands: string[] = [];
+        if (multiSourceData.bands.red) bands.push('Red');
+        if (multiSourceData.bands.blue) bands.push('Blue');
+        if (multiSourceData.bands.green) bands.push('Green');
+        if (multiSourceData.bands.nir) bands.push('Nir');
+        if (multiSourceData.bands.ndvi) bands.push('Ndvi');
+        if (multiSourceData.bands.evi) bands.push('Evi');
+        return bands;
     }),
+
+    // 波段数量
+    bandCount: computed(() => {
+        return Object.values(multiSourceData.bands).filter(Boolean).length;
+    }),
+
+    // 可视化波段
+    viz_bands: computed(() => {
+        return [
+            multiSourceData.visualization.red_band,
+            multiSourceData.visualization.green_band,
+            multiSourceData.visualization.blue_band
+        ]
+    }),
+    // 波段类型
     sourceTypes: computed(() => {
         const types: string[] = []
-        if (multiSourceData.bands.optical) types.push('光学')
-        if (multiSourceData.bands.thermal) types.push('热红外')
-        if (multiSourceData.bands.nearInfrared) types.push('近红外')
+        if (multiSourceData.bands.red) types.push('红波段')
+        if (multiSourceData.bands.blue) types.push('蓝波段')
+        if (multiSourceData.bands.green) types.push('绿波段')
+        if (multiSourceData.bands.nir) types.push('近红外波段')
+        if (multiSourceData.bands.ndvi) types.push('归一化植被指数')
+        if (multiSourceData.bands.evi) types.push('增强植被指数')
         return types.join('、') || '未选择'
     })
 })
+
+// 多源数据合成
+const handleMultiSourceData = async () => {
+    // 检查是否选择了波段
+    if (multiSourceData.selectedBands.length === 0) {
+        ElMessage.warning('请选择至少一个波段')
+        return
+    }
+
+    // 检查是否选择了可视化波段
+    if (!multiSourceData.visualization.red_band || !multiSourceData.visualization.green_band || !multiSourceData.visualization.blue_band) {
+        ElMessage.warning('请选择可视化波段')
+        return
+    }
+
+    // 获取波段列表
+    const bandList = Object.entries(multiSourceData.bands)
+    .filter(([_, value]) => value)
+    .map(([key]) => key.charAt(0).toUpperCase() + key.slice(1).toLowerCase())
+    .slice(0, 4);
+
+    const viz_bands = multiSourceData.viz_bands;
+
+    try {
+        const response = await fetch("",{  // ###############记得添加接口###############
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                bandList,
+                viz_bands,
+            }),
+        });
+        
+        // const result =                   // ###############记得添加返回值###############
+    } catch (error) {
+        console.error("合成失败：", error)
+        ElMessage.error("合成失败，请重试")
+    }
+    
+};
 
 // 多时相数据合成
 const multiTemporalData = reactive({
@@ -910,73 +1046,73 @@ const controlComplexProgress = (index: number) => {
 }
 
 // 开始复杂合成
-const handleComplexSynthesis = async () => {
-    // 检查是否选择了任何合成类型
-    if (!multiSourceData.enabled && !multiTemporalData.enabled) {
-        ElMessage.warning('请至少选择一种合成类型')
-        return
-    }
+// const handleComplexSynthesis = async () => {
+//     // 检查是否选择了任何合成类型
+//     // if (!multiSourceData.enabled && !multiTemporalData.enabled) {
+//     //     ElMessage.warning('请至少选择一种合成类型')
+//     //     return
+//     // }
 
-    complexSynthesisLoading.value = true
-    showComplexProgress.value[3] = true
-    complexProgress.value[3] = 0
+//     complexSynthesisLoading.value = true
+//     showComplexProgress.value[3] = true
+//     complexProgress.value[3] = 0
 
-    try {
-        // 收集合成参数
-        const synthesisParams = {
-            regionId: exploreData.regionCode,
-            resolution: exploreData.space,
-            multiSource: multiSourceData.enabled ? {
-                optical: multiSourceData.bands.optical,
-                thermal: multiSourceData.bands.thermal,
-                nearInfrared: multiSourceData.bands.nearInfrared
-            } : null,
-            multiTemporal: multiTemporalData.enabled ? {
-                phases: multiTemporalData.phases
-            } : null,
-        }
+//     try {
+//         // 收集合成参数
+//         const synthesisParams = {
+//             regionId: exploreData.regionCode,
+//             resolution: exploreData.space,
+//             multiSource: multiSourceData.enabled ? {
+//                 red: multiSourceData.bands.red,
+//                 blue: multiSourceData.bands.blue,
+//                 green: multiSourceData.bands.green
+//             } : null,
+//             multiTemporal: multiTemporalData.enabled ? {
+//                 phases: multiTemporalData.phases
+//             } : null,
+//         }
 
-        console.log('复杂合成参数：', synthesisParams)
+//         console.log('复杂合成参数：', synthesisParams)
 
-        // 模拟进度
-        const progressTimer = setInterval(() => {
-            if (complexProgress.value[3] < 95) {
-                complexProgress.value[3] += 2
-            } else {
-                clearInterval(progressTimer)
-            }
-        }, 200)
+//         // 模拟进度
+//         const progressTimer = setInterval(() => {
+//             if (complexProgress.value[3] < 95) {
+//                 complexProgress.value[3] += 2
+//             } else {
+//                 clearInterval(progressTimer)
+//             }
+//         }, 200)
 
-        // TODO: 调用实际的API进行复杂合成
-        // const result = await performComplexSynthesis(synthesisParams)
+//         // TODO: 调用实际的API进行复杂合成
+//         // const result = await performComplexSynthesis(synthesisParams)
         
-        // 模拟延迟
-        await new Promise(resolve => setTimeout(resolve, 5000))
+//         // 模拟延迟
+//         await new Promise(resolve => setTimeout(resolve, 5000))
         
-        complexProgress.value[3] = 100
-        hasComplexResult.value = true
-        complexSynthesisLoading.value = false
-        showComplexProgress.value[3] = false
+//         complexProgress.value[3] = 100
+//         hasComplexResult.value = true
+//         complexSynthesisLoading.value = false
+//         showComplexProgress.value[3] = false
         
-        ElMessage.success('复杂合成任务完成')
+//         ElMessage.success('复杂合成任务完成')
         
-        // 跳转到历史记录页面
-        setCurrentPanel('history')
+//         // 跳转到历史记录页面
+//         setCurrentPanel('history')
         
-    } catch (error) {
-        console.error('复杂合成失败：', error)
-        complexSynthesisLoading.value = false
-        showComplexProgress.value[3] = false
-        ElMessage.error('复杂合成失败，请重试')
-    }
-}
+//     } catch (error) {
+//         console.error('复杂合成失败：', error)
+//         complexSynthesisLoading.value = false
+//         showComplexProgress.value[3] = false
+//         ElMessage.error('复杂合成失败，请重试')
+//     }
+// }
 
-// 监听多源数据选择变化
-watch(() => multiSourceData.enabled, (newVal) => {
-    if (newVal) {
-        controlComplexProgress(0)
-    }
-})
+// // 监听多源数据选择变化
+// watch(() => multiSourceData.enabled, (newVal) => {
+//     if (newVal) {
+//         controlComplexProgress(0)
+//     }
+// })
 
 // 监听多时相数据选择变化
 watch(() => multiTemporalData.enabled, (newVal) => {
@@ -1865,7 +2001,7 @@ const handleCreateNoCloudTiles = async () => {
         console.log('获取到的jsonUrl:', jsonUrl)
         
         // 3. 添加瓦片图层
-        const tileUrl = `http://192.168.1.100:8000/no_cloud/{z}/{x}/{y}?jsonUrl=${encodeURIComponent(jsonUrl)}`
+        const tileUrl = `http://localhost:8000/no_cloud/{z}/{x}/{y}?jsonUrl=${encodeURIComponent(jsonUrl)}`
         //const tileUrl = `http://192.168.1.100:8000/no_cloud/{z}/{x}/{y}.png?jsonUrl=${encodeURIComponent(jsonUrl)}`
         
         console.log('瓦片URL模板:', tileUrl)
