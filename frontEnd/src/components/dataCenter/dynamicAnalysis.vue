@@ -89,6 +89,7 @@
                         </section>
 
                         <component :is="currentTaskComponent" :thematicConfig="thematicConfig" />
+                        <ResultComponent @response="handleResultLoaded" />
                     </div>
 
                 </dv-border-box12>
@@ -201,6 +202,7 @@
         </div>
     </div>
 </template>
+
 <script setup lang="ts">
 import { ref, type PropType, computed, type Ref, nextTick, onUpdated, onMounted, reactive, onBeforeUnmount, watch, defineAsyncComponent, type ComponentPublicInstance, onUnmounted } from 'vue'
 import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'
@@ -374,7 +376,11 @@ const taskComponentMap = {
 
 const currentTaskComponent = computed(() => taskComponentMap[selectedTask.value] || null)
 
+const selectedResult = ref(null);
 
+const handleResultLoaded = (result) => {
+  selectedResult.value = result;
+}
 // 获取根据行政区选择的原始数据
 const originImages = ref([])
 const thematicConfig = ref({})
@@ -416,7 +422,7 @@ const getOriginImages = async (newRegion: number | '未选择') => {
         regionId: displayLabel.value,
         endTime,
         startTime,
-        dataset: completedCases.value
+        dataset: selectedResult.value
     }
 }
 
@@ -567,6 +573,7 @@ onUnmounted(() => {
         }
     })
 })
+
 </script>
 
 <style scoped src="./tabStyle.css">
