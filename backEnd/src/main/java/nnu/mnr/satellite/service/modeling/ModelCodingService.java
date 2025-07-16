@@ -22,10 +22,13 @@ import nnu.mnr.satellite.service.common.DockerService;
 import nnu.mnr.satellite.service.common.SftpDataService;
 import nnu.mnr.satellite.service.common.UnifiedDockerService;
 import nnu.mnr.satellite.service.user.UserService;
+// 临时注释掉Ray优化相关的imports
+/*
 import nnu.mnr.satellite.service.optimization.CodeOptimizationFacade;
 import nnu.mnr.satellite.service.optimization.OptimizationRequest;
 import nnu.mnr.satellite.service.optimization.CodeOptimizationOutcome;
 import nnu.mnr.satellite.service.optimization.ExecutionPlan;
+*/
 import nnu.mnr.satellite.utils.common.FileUtil;
 import nnu.mnr.satellite.utils.common.IdUtil;
 import nnu.mnr.satellite.utils.dt.MinioUtil;
@@ -87,8 +90,11 @@ public class ModelCodingService {
     @Autowired
     MinioUtil minioUtil;
 
+    // 临时注释掉Ray优化相关的字段
+    /*
     @Autowired
     CodeOptimizationFacade codeOptimizationFacade;
+    */
 
     // config info
     @Autowired
@@ -512,6 +518,8 @@ public class ModelCodingService {
         }
         
         // ========= Ray优化集成 =========
+        // 临时注释掉Ray优化功能，直接使用原始执行方式
+        /*
         try {
             log.info("Starting Ray optimization for project: {}", projectId);
             
@@ -552,6 +560,12 @@ public class ModelCodingService {
             CompletableFuture.runAsync(() -> dockerService.runCMDInContainer(userId, projectId, containerId, command));
             responseInfo = "Script Executing Successfully (optimization failed, using original code)";
         }
+        */
+        
+        // 直接使用原始执行方式
+        String command = "python " + project.getPyPath();
+        CompletableFuture.runAsync(() -> dockerService.runCMDInContainer(userId, projectId, containerId, command));
+        responseInfo = "Script Executing Successfully";
         
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
     }
