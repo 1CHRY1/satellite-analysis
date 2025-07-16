@@ -511,14 +511,18 @@ class calc_no_cloud_complex(Task):
         # }
 
         ## Step 4 : Generate MosaicJSON as result #######################
-        print([CONFIG.MINIO_TEMP_FILES_BUCKET+item["tifPath"] for item in upload_results])
+        print([CONFIG.MINIO_TEMP_FILES_BUCKET + '/' + item["tifPath"] for item in upload_results])
         response = requests.post(CONFIG.MOSAIC_CREATE_URL, json={
             "files": [f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}/{item['bucket']}/{item['tifPath']}" for item in upload_results],
             "minzoom": 7,
             "maxzoom": 20,
             "max_threads": 20
         }, headers={ "Content-Type": "application/json" })
-
+        # 打印请求的 URL、状态码和响应内容
+        print("Request URL:", CONFIG.MOSAIC_CREATE_URL)
+        print("Status Code:", response.status_code)
+        print("Response Headers:", response.headers)
+        print("Response Text:", response.text)  # 关键：查看服务器实际返回的内容
         print('=============No Cloud Task Has Finally Finished=================')
         cleanup_temp_files(scenes_json_file, scene_band_paths_json_file)
         if os.path.exists(temp_dir_path):
