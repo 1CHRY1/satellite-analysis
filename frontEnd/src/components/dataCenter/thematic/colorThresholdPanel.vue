@@ -21,7 +21,7 @@
                                 <MapIcon :size="16" class="config-icon" />
                                 <span>{{ t('datapage.optional_thematic.spectrum.wait') }}</span>
                             </div>
-                            <div class="config-control justify-center">
+                            <!-- <div class="config-control justify-center">
                                 <div class="flex items-center gap-2 mt-2 w-full">
                                     <label class="text-white">{{ t('datapage.optional_thematic.spectrum.select') }}</label>
                                     <select v-model="selectedSceneId" @change="showImageBBox"
@@ -33,7 +33,7 @@
                                         </option>
                                     </select>
                                 </div>
-                            </div>
+                            </div> -->
                         </div>
                         <button @click=""
                             class="cursor-pointer w-full rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95">
@@ -112,7 +112,7 @@
                     </div>
 
                         <!-- 自定义色带按钮 -->
-                    <div class="custom-palette-item mt-3 cursor-pointer border border-dashed border-[#2c3e50] rounded-md p-2 flex flex-col items-center transition-all duration-200 hover:border-[#38bdf8] hover:-translate-y-0.5 " @click="showCustomPaletteDialog = true">
+                    <div class="custom-palette-item mt-3 cursor-pointer border border-dashed border-[#2c3e50] rounded-md p-2 flex flex-col items-center transition-all duration-200 hover:border-[#38bdf8] hover:-translate-y-0.5 " @click="">
                         
                         <span class="palette-name text-xs mt-1 text-center text-[#94a3b8] group-hover:text-white">自定义色带</span>
                     </div>
@@ -268,6 +268,63 @@ const showImageBBox = async () => {
     }
 }
 
+const chartInstances = ref<(echarts.ECharts | null)[]>([])
+
+const initChart = (el: HTMLElement, data: any, index: number) => {
+    if (!el) return
+    const existingInstance = echarts.getInstanceByDom(el)
+    if (existingInstance) {
+        existingInstance.dispose()
+    }
+    let chart = echarts.init(el)
+    chart.setOption({
+        title: {
+            text: `图表 ${index + 1}`
+        },
+        xAxis: {
+            type: 'category',
+            data: data.xData
+        },
+        yAxis: {
+            type: 'value'
+        },
+        series: [
+            {
+                data: data.yData,
+                type: data.type
+            }
+        ],
+        tooltip: {
+            trigger: 'axis'
+        },
+        responsive: true
+    })
+    chart.resize()
+    chartInstances.value[index] = chart
+}
+// 设置 ref 并初始化图表
+const setChartRef = (el: Element | ComponentPublicInstance | null, index: number) => {
+    if (el instanceof HTMLElement) {
+        nextTick(() => {
+
+            initChart(el, analysisData.value[index], index)
+        })
+    }
+}
+
+// 全屏查看功能
+const fullscreenChart = (index: number) => {
+    const dom = document.getElementById(`chart-${index}`)
+    if (dom?.requestFullscreen) {
+        dom.requestFullscreen()
+    } else if ((dom as any).webkitRequestFullScreen) {
+        (dom as any).webkitRequestFullScreen()
+    } else if ((dom as any).mozRequestFullScreen) {
+        (dom as any).mozRequestFullScreen()
+    } else if ((dom as any).msRequestFullscreen) {
+        (dom as any).msRequestFullscreen()
+    }
+}
 // const selectedImage = props.thematicConfig.allImages.find(image => image.sceneId = selectedSceneId.value)
 
 </script>
