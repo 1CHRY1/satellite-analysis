@@ -31,7 +31,7 @@
                                 <div class="section-icon">
                                     <CloudIcon :size="18" />
                                 </div>
-                                <h2 class="section-title">{{t('datapage.nocloud.title')}}</h2>
+                                <h2 class="section-title">数据筛选</h2>
                                 <div class="absolute right-2 cursor-pointer">
                                     <ChevronDown v-if="isNoCloudExpand" :size="22" @click="isNoCloudExpand = false" />
                                     <ChevronUp v-else @click="isNoCloudExpand = true" :size="22" />
@@ -359,10 +359,11 @@
                                             </div>
                                         </div> -->
 
-                                        <div class="flex w-full flex-row gap-2">
+                                        <!--两个按钮 on-the-fly加载 一版图服务生成-->
+                                        <!-- <div class="flex w-full flex-row gap-2">
                                             <button @click="handleCreateNoCloudTiles"
                                                 class="flex justify-center w-1/2 rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95">
-                                                <span>实时加载</span>
+                                                <span>on-the-fly加载</span>
                                             </button>
                                             <button @click="calNoClouds" :disabled="noCloudLoading"
                                                 class="flex justify-center w-1/2 rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
@@ -370,10 +371,10 @@
                                                     'cursor-not-allowed': noCloudLoading,
                                                     'cursor-pointer': !noCloudLoading,
                                                 }">
-                                                <span>重构</span>
+                                                <span>一版图服务生成</span>
                                                 <Loader v-if="noCloudLoading" class="ml-2" />
                                             </button>
-                                        </div>
+                                        </div> -->
                                         <div v-if="showProgress[3]"
                                             class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
                                             <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
@@ -384,26 +385,401 @@
                             </div>
                         </section>
 
-                        <!--复杂合成-->
-                        <section class="panel-section">
-                            <!--复杂合成标题-->
+                        <!--数据合成 原复杂合成-->
+                        <section class="panel-section" v-show="currentPanel === 'noCloud'" key="complex">
+                            <!--数据合成标题 原复杂合成标题-->
                             <div class="section-header">
                                 <div class="section-icon">
                                     <CloudIcon :size="18" />
                                 </div>
-                                <h2 class="section-title">复杂合成</h2>
+                                <h2 class="section-title">数据合成</h2>
                                 <div class="absolute right-2 cursor-pointer">
                                     <ChevronDown v-if="isComplexExpand" :size="22" @click="isComplexExpand = false" />
                                     <ChevronUp v-else @click="isComplexExpand = true" :size="22" />
                                 </div>
                             </div>
-                            <!-- 复杂合成内容区域 -->
+                            <!-- 数据合成内容区域 原复杂合成内容区域 -->
                             <div v-show="isComplexExpand" class="section-content">
                                 <div class="config-container">
-                                    <!-- 在这里添加复杂合成的具体内容 -->
-                                    <p>复杂合成内容区域</p>
+
+                                    <!--简单数据合成-->
+                                    <div class="config-item">
+                                        <div class="config-label relative">
+                                            <LayersIcon :size="16" class="config-icon" />
+                                            <span>简单数据合成</span>
+                                            <el-tooltip content="合成为无云一版图" placement="top" effect="dark">
+                                                <CircleHelp :size="14" />
+                                            </el-tooltip>
+                                        </div>
+                                        <div class="config-control flex-col !item-start">
+                                            <!--两个按钮 on-the-fly加载 一版图服务生成-->
+                                            <div class="flex w-full flex-row gap-2">
+                                                <button @click="handleCreateNoCloudTiles"
+                                                    class="flex justify-center w-1/2 rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95">
+                                                    <span>on-the-fly加载</span>
+                                                </button>
+                                                <button @click="calNoClouds" :disabled="noCloudLoading"
+                                                    class="flex justify-center w-1/2 rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
+                                                    :class="{
+                                                        'cursor-not-allowed': noCloudLoading,
+                                                        'cursor-pointer': !noCloudLoading,
+                                                    }">
+                                                    <span>一版图服务生成</span>
+                                                    <Loader v-if="noCloudLoading" class="ml-2" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 多源数据合成 -->
+                                    <div class="config-item">
+                                        <div class="config-label relative">
+                                            <LayersIcon :size="16" class="config-icon" />
+                                            <span>多源数据合成</span>
+                                            <el-tooltip content="构建多波段数据集，融合光学、热红外、近红外等多源数据" placement="top" effect="dark">
+                                                <CircleHelp :size="14" />
+                                            </el-tooltip>
+                                        </div>
+                                        <div class="config-control flex-col !items-start">
+                                            <div class="flex w-full flex-col gap-2">
+                                                <!-- 波段选择 -->
+                                                <div class="ml-4 flex flex-row gap-2">
+                                                    <div class="text-sm text-gray-400">波段选择：</div>
+                                                    <label class="flex items-center gap-2">
+                                                        <input type="checkbox" v-model="multiSourceData.bands.red" 
+                                                            class="h-4 w-4 rounded" />
+                                                        R
+                                                    </label>
+                                                    <label class="flex items-center gap-2">
+                                                        <input type="checkbox" v-model="multiSourceData.bands.green" 
+                                                            class="h-4 w-4 rounded" />
+                                                        G
+                                                    </label>
+                                                    <label class="flex items-center gap-2">
+                                                        <input type="checkbox" v-model="multiSourceData.bands.blue" 
+                                                            class="h-4 w-4 rounded" />
+                                                        B
+                                                    </label>
+                                                    <label class="flex items-center gap-2">
+                                                        <input type="checkbox" v-model="multiSourceData.bands.nir" 
+                                                            class="h-4 w-4 rounded" />
+                                                        NIR
+                                                    </label>
+                                                    <label class="flex items-center gap-2">
+                                                        <input type="checkbox" v-model="multiSourceData.bands.ndvi" 
+                                                            class="h-4 w-4 rounded" />
+                                                        NDVI
+                                                    </label>
+                                                    <label class="flex items-center gap-2">
+                                                        <input type="checkbox" v-model="multiSourceData.bands.evi" 
+                                                            class="h-4 w-4 rounded" />
+                                                        EVI
+                                                    </label>
+
+                                                </div>
+
+                                                <!-- 可视化波段选择部分 -->
+                                                <div class="ml-4 flex flex-row gap-2">
+                                                    <div class="text-sm text-gray-400">可视化波段：</div>
+                                                    <label class="flex items-center gap-2">
+                                                        <span class="text-sm text-red-400">R:</span>
+                                                        <select 
+                                                            v-model="multiSourceData.visualization.red_band" 
+                                                            name="red_visualization" 
+                                                            class="appearance-none rounded border border-[#2c3e50] bg-[#0d1526] px-2 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
+                                                            :disabled="multiSourceData.selectedBands.length === 0">
+                                                            <option value="">请选择</option>
+                                                            <option 
+                                                                v-for="band in multiSourceData.selectedBands" 
+                                                                :key="band" 
+                                                                :value="band">
+                                                                {{ band }}
+                                                            </option>
+                                                        </select>
+                                                    </label>
+                                                    <label class="flex items-center gap-2">
+                                                        <span class="text-sm text-green-400">G:</span>
+                                                        <select 
+                                                            v-model="multiSourceData.visualization.green_band" 
+                                                            name="green_visualization" 
+                                                            class="appearance-none rounded border border-[#2c3e50] bg-[#0d1526] px-2 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
+                                                            :disabled="multiSourceData.selectedBands.length === 0">
+                                                            <option value="">请选择</option>
+                                                            <option 
+                                                                v-for="band in multiSourceData.selectedBands" 
+                                                                :key="band" 
+                                                                :value="band">
+                                                                {{ band }}
+                                                            </option>
+                                                        </select>
+                                                    </label>
+                                                    <label class="flex items-center gap-2">
+                                                        <span class="text-sm text-blue-400">B:</span>
+                                                        <select 
+                                                            v-model="multiSourceData.visualization.blue_band" 
+                                                            name="blue_visualization" 
+                                                            class="appearance-none rounded border border-[#2c3e50] bg-[#0d1526] px-2 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
+                                                            :disabled="multiSourceData.selectedBands.length === 0">
+                                                            <option value="">请选择</option>
+                                                            <option 
+                                                                v-for="band in multiSourceData.selectedBands" 
+                                                                :key="band" 
+                                                                :value="band">
+                                                                {{ band }}
+                                                            </option>
+                                                        </select>
+                                                    </label>
+                                                </div>
+
+                                                <!-- 显示当前选择的可视化波段组合 -->
+                                                <div class="ml-4 flex flex-row gap-2" v-if="multiSourceData.viz_bands.length > 0">
+                                                    <div class="text-sm text-gray-400">当前组合：</div>
+                                                    <div class="text-sm text-[#38bdf8]">
+                                                        {{ multiSourceData.viz_bands.join(' - ') }}
+                                                    </div>
+                                                </div>
+                                                
+                                                
+                                                <div v-if="showComplexProgress[0]"
+                                                    class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
+                                                    <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
+                                                        :style="{ width: `${complexProgress[0]}%` }"></div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- 结果信息 -->
+                                            <div class="result-info-container w-full">
+                                                <div class="result-info-item">
+                                                    <div class="result-info-icon">
+                                                        <LayersIcon :size="16" />
+                                                    </div>
+                                                    <div class="result-info-content">
+                                                        <div class="result-info-label">波段数量</div>
+                                                        <div class="result-info-value">
+                                                            {{ multiSourceData.bandCount }} 个波段
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <!-- <div class="result-info-item">
+                                                    <div class="result-info-icon">
+                                                        <DatabaseIcon :size="16" />
+                                                    </div>
+                                                    <div class="result-info-content">
+                                                        <div class="result-info-label">数据源类型</div>
+                                                        <div class="result-info-value">
+                                                            {{ multiSourceData.sourceTypes }}
+                                                        </div>
+                                                    </div>
+                                                </div> -->
+                                            </div>
+                                            <button class="w-full rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95" @click="handleMultiSourceData">
+                                                合成
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- 多时相数据合成 -->
+                                    <div class="config-item">
+                                        <div class="config-label relative">
+                                            <CalendarIcon :size="16" class="config-icon" />
+                                            <span>多时相数据合成</span>
+                                            <el-tooltip content="构建多时相波段数据集，融合不同时间的观测数据" placement="top" effect="dark">
+                                                <CircleHelp :size="14" />
+                                            </el-tooltip>
+                                        </div>
+                                        <div class="config-control flex-col !items-start">
+                                            <div class="flex w-full flex-col gap-2">
+                                                <!-- <label class="flex items-center gap-2">
+                                                    <input type="checkbox" v-model="multiTemporalData.enabled" 
+                                                        class="h-4 w-4 rounded" />
+                                                    启用多时相数据合成
+                                                </label> -->
+                                                
+                                                <!-- 时相配置 -->
+                                                <div class="ml-4 flex flex-col gap-2">
+                                                    <div class="text-sm text-gray-400">时相配置：</div>
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="text-sm">时相1：</span>
+                                                        <a-date-picker v-model:value="multiTemporalData.date1" 
+                                                            size="small" 
+                                                            placeholder="选择日期" />
+                                                        <span class="text-sm ml-2">波段1-3</span>
+                                                    </div>
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="text-sm">时相2：</span>
+                                                        <a-date-picker v-model:value="multiTemporalData.date2" 
+                                                            size="small" 
+                                                            placeholder="选择日期" />
+                                                        <span class="text-sm ml-2">波段4-6</span>
+                                                    </div>
+
+                                                    <button class="w-full rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95" @click="handleMultitTemporalData">
+                                                        合成
+                                                    </button>
+                                                    <!-- <a-button class="mt-2" size="small" @click="addTimePhase">
+                                                        <FilePlus2Icon :size="14" class="mr-1" />
+                                                        
+                                                    </a-button>  -->
+                                                </div>
+
+                                                <!-- <div v-if="showComplexProgress[1]"
+                                                    class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
+                                                    <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
+                                                        :style="{ width: `${complexProgress[1]}%` }"></div>
+                                                </div> -->
+                                            </div>
+                                            
+                                            <!-- 结果信息 -->
+                                            <!-- <div class="result-info-container w-full"> -->
+                                                <!-- <div class="result-info-item">
+                                                    <div class="result-info-icon">
+                                                        <ClockIcon :size="16" />
+                                                    </div>
+                                                    <div class="result-info-content">
+                                                        <div class="result-info-label">时相数量</div>
+                                                        <div class="result-info-value">
+                                                            {{ multiTemporalData.phases.length }} 个时相
+                                                        </div>
+                                                    </div>
+                                                </div> -->
+                                                <!-- <div class="result-info-item">
+                                                    <div class="result-info-icon">
+                                                        <LayersIcon :size="16" />
+                                                    </div>
+                                                    <div class="result-info-content">
+                                                        <div class="result-info-label">总波段数</div>
+                                                        <div class="result-info-value">
+                                                            {{ multiTemporalData.totalBands }} 个波段
+                                                        </div>
+                                                    </div>
+                                                </div> -->
+                                            <!-- </div> -->
+                                        </div>
+                                    </div>
+
+                                    <!-- 高级数据合成 -->
+                                    <!-- <div class="config-item">
+                                        <div class="config-label relative">
+                                            <ApertureIcon :size="16" class="config-icon" />
+                                            <span>高级数据合成</span>
+                                            <el-tooltip content="构建指数波段数据集，如NDVI、EVI等植被指数" placement="top" effect="dark">
+                                                <CircleHelp :size="14" />
+                                            </el-tooltip>
+                                        </div>
+                                        <div class="config-control flex-col !items-start">
+                                            <div class="flex w-full flex-col gap-2">
+                                                <label class="flex items-center gap-2">
+                                                    <input type="checkbox" v-model="advancedData.enabled" 
+                                                        class="h-4 w-4 rounded" />
+                                                    启用高级数据合成
+                                                </label> -->
+                                                
+                                                <!-- 指数配置 -->
+                                                <!-- <div v-if="advancedData.enabled" class="ml-4 flex flex-col gap-2">
+                                                    <div class="text-sm text-gray-400">指数配置：</div>
+                                                    <label class="flex items-center gap-2">
+                                                        <input type="checkbox" v-model="advancedData.indices.ndvi" 
+                                                            class="h-4 w-4 rounded" />
+                                                        波段1：NDVI (归一化植被指数)
+                                                    </label>
+                                                    <label class="flex items-center gap-2">
+                                                        <input type="checkbox" v-model="advancedData.indices.evi" 
+                                                            class="h-4 w-4 rounded" />
+                                                        波段2：EVI (增强植被指数)
+                                                    </label>
+                                                    <label class="flex items-center gap-2">
+                                                        <input type="checkbox" v-model="advancedData.indices.green" 
+                                                            class="h-4 w-4 rounded" />
+                                                        波段3：绿波段
+                                                    </label>
+                                                    <label class="flex items-center gap-2">
+                                                        <input type="checkbox" v-model="advancedData.indices.custom" 
+                                                            class="h-4 w-4 rounded" />
+                                                        自定义指数
+                                                    </label>
+                                                </div>
+
+                                                <div v-if="showComplexProgress[2]"
+                                                    class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
+                                                    <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
+                                                        :style="{ width: `${complexProgress[2]}%` }"></div>
+                                                </div>
+                                            </div> -->
+                                            
+                                            <!-- 结果信息 -->
+                                            <!-- <div class="result-info-container w-full">
+                                                <div class="result-info-item">
+                                                    <div class="result-info-icon">
+                                                        <BoltIcon :size="16" />
+                                                    </div>
+                                                    <div class="result-info-content">
+                                                        <div class="result-info-label">指数类型</div>
+                                                        <div class="result-info-value">
+                                                            {{ advancedData.selectedIndices }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="result-info-item">
+                                                    <div class="result-info-icon">
+                                                        <CalendarIcon :size="16" />
+                                                    </div>
+                                                    <div class="result-info-content">
+                                                        <div class="result-info-label">数据日期</div>
+                                                        <div class="result-info-value">
+                                                            {{ advancedData.dataDate || '未选择' }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div> -->
+
+                                    <!-- 合成任务操作 -->
+                                    <!-- <div class="flex w-full flex-col justify-center mt-4"> -->
+                                        <!-- <div class="flex w-full flex-row gap-2">
+                                            <button @click="handleComplexSynthesis"
+                                                :disabled="complexSynthesisLoading"
+                                                class="flex justify-center w-1/3 rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
+                                                :class="{
+                                                    'cursor-not-allowed': complexSynthesisLoading,
+                                                    'cursor-pointer': !complexSynthesisLoading,
+                                                }">
+                                                <span>开始合成</span>
+                                                <Loader v-if="complexSynthesisLoading" class="ml-2" />
+                                            </button>
+                                            
+                                            <button @click="handlePublishResult"
+                                                :disabled="!hasComplexResult"
+                                                class="flex justify-center w-1/3 rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
+                                                :class="{
+                                                    'cursor-not-allowed': !hasComplexResult,
+                                                    'cursor-pointer': hasComplexResult,
+                                                }">
+                                                <UploadCloudIcon :size="16" class="mr-2" />
+                                                <span>发布结果</span>
+                                            </button>
+                                            
+                                            <button @click="handleDownloadResult"
+                                                :disabled="!hasComplexResult"
+                                                class="flex justify-center w-1/3 rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
+                                                :class="{
+                                                    'cursor-not-allowed': !hasComplexResult,
+                                                    'cursor-pointer': hasComplexResult,
+                                                }">
+                                                <DownloadIcon :size="16" class="mr-2" />
+                                                <span>下载结果</span>
+                                            </button>
+                                        </div> -->
+                                        
+                                        <!-- 总进度条 -->
+                                        <!-- <div v-if="showComplexProgress[3]"
+                                            class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b] mt-2">
+                                            <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
+                                                :style="{ width: `${complexProgress[3]}%` }"></div>
+                                        </div> -->
+                                    <!-- </div> -->
                                 </div>
-                            </div>
+            </div>
                         </section>
 
 
@@ -422,7 +798,7 @@
 
 <script setup lang="ts">
 import MapComp from '@/components/feature/map/mapComp.vue'
-import { inject, computed, onMounted, ref, type PropType, type Ref, reactive } from 'vue'
+import { inject, computed, onMounted, ref, watch, type PropType, type Ref, reactive } from 'vue'
 import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'
 import { type interactiveExplore } from '@/components/dataCenter/type'
 import noCloudHistory from '@/components/dataCenter/noCloud/noCloudHistory.vue'
@@ -488,7 +864,7 @@ const isPicking = ref(false)
 
 // 控制无云一版图内容的折叠状态
 const isNoCloudExpand = ref<boolean>(false)
-const isComplexExpand = ref<boolean>(false)
+const isComplexExpand = ref<boolean>(true)
 
 console.log( exploreData)
 console.log(exploreData.images)
@@ -519,6 +895,233 @@ const demotic2mGridFeature: Ref<FeatureCollection | null> = ref(null)
 const interGridFeature: Ref<FeatureCollection | null> = ref(null)
 const radarGridFeature: Ref<FeatureCollection | null> = ref(null)
 
+// ========== 复杂合成相关数据定义 ==========
+
+// 多源数据合成
+const multiSourceData = reactive({
+    bands: {
+        red: false,  
+        blue: false,     
+        green: false,
+        nir: false,
+        ndvi: false,
+        evi: false,
+    },
+
+    visualization: {
+    red_band: '',    // 默认R通道显示R波段
+    green_band: '',  // 默认G通道显示G波段  
+    blue_band: ''    // 默认B通道显示B波段
+    },
+
+    // 波段选择
+    selectedBands: computed(() => {
+        const bands: string[] = [];
+        if (multiSourceData.bands.red) bands.push('Red');
+        if (multiSourceData.bands.blue) bands.push('Blue');
+        if (multiSourceData.bands.green) bands.push('Green');
+        if (multiSourceData.bands.nir) bands.push('NIR');
+        if (multiSourceData.bands.ndvi) bands.push('NDVI');
+        if (multiSourceData.bands.evi) bands.push('EVI');
+        return bands;
+    }),
+
+    // 波段数量
+    bandCount: computed(() => {
+        return Object.values(multiSourceData.bands).filter(Boolean).length;
+    }),
+
+    // 可视化波段
+    viz_bands: computed(() => {
+        return [
+            multiSourceData.visualization.red_band,
+            multiSourceData.visualization.green_band,
+            multiSourceData.visualization.blue_band
+        ]
+    }),
+    // 波段类型
+    sourceTypes: computed(() => {
+        const types: string[] = []
+        if (multiSourceData.bands.red) types.push('红波段')
+        if (multiSourceData.bands.blue) types.push('蓝波段')
+        if (multiSourceData.bands.green) types.push('绿波段')
+        if (multiSourceData.bands.nir) types.push('近红外波段')
+        if (multiSourceData.bands.ndvi) types.push('归一化植被指数')
+        if (multiSourceData.bands.evi) types.push('增强植被指数')
+        return types.join('、') || '未选择'
+    })
+})
+
+// 多源数据合成
+const handleMultiSourceData = async () => {
+    // 检查是否选择了波段
+    if (multiSourceData.selectedBands.length === 0) {
+        ElMessage.warning('请选择至少一个波段')
+        return
+    }
+
+    // 检查是否选择了可视化波段
+    if (!multiSourceData.visualization.red_band || !multiSourceData.visualization.green_band || !multiSourceData.visualization.blue_band) {
+        ElMessage.warning('请选择可视化波段')
+        return
+    }
+
+    // 获取波段列表
+    const bandList = multiSourceData.selectedBands;
+
+    const viz_bands = multiSourceData.viz_bands;
+
+    try {
+        const response = await fetch("",{  // ###############记得添加接口###############
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                bandList,
+                viz_bands,
+            }),
+        });
+        
+        // const result =                   // ###############记得添加返回值###############
+    } catch (error) {
+        console.error("合成失败：", error)
+        ElMessage.error("合成失败，请重试")
+    }
+    
+};
+
+// 多时相数据合成
+const multiTemporalData = reactive({
+    enabled: false,
+    date1: null,
+    date2: null,
+    phases: [],
+    totalBands: computed(() => multiTemporalData.phases.length * 3)
+})
+
+const handleMultitTemporalData = async () => {
+    console.log('多时相数据合成')
+};
+
+
+
+// 复杂合成进度控制
+const complexProgress = ref([0, 0, 0, 0])
+const showComplexProgress = ref([false, false, false, false])
+const complexSynthesisLoading = ref(false)
+const hasComplexResult = ref(false)
+
+// ========== 复杂合成相关方法 ==========
+
+// 添加时相
+const addTimePhase = () => {
+    if (multiTemporalData.date1 && multiTemporalData.date2) {
+        multiTemporalData.phases.push({
+            date1: multiTemporalData.date1,
+            date2: multiTemporalData.date2,
+            bands: '1-3, 4-6'
+        })
+        // 清空选择
+        multiTemporalData.date1 = null
+        multiTemporalData.date2 = null
+        ElMessage.success('时相添加成功')
+    } else {
+        ElMessage.warning('请选择两个时相日期')
+    }
+}
+
+// 控制复杂合成进度条
+const controlComplexProgress = (index: number) => {
+    showComplexProgress.value[index] = true
+    complexProgress.value[index] = 0
+    
+    const timer = setInterval(() => {
+        if (complexProgress.value[index] < 95) {
+            complexProgress.value[index] += 5
+        } else {
+            complexProgress.value[index] = 100
+            clearInterval(timer)
+            showComplexProgress.value[index] = false
+        }
+    }, 100)
+}
+
+// 开始复杂合成
+// const handleComplexSynthesis = async () => {
+//     // 检查是否选择了任何合成类型
+//     // if (!multiSourceData.enabled && !multiTemporalData.enabled) {
+//     //     ElMessage.warning('请至少选择一种合成类型')
+//     //     return
+//     // }
+
+//     complexSynthesisLoading.value = true
+//     showComplexProgress.value[3] = true
+//     complexProgress.value[3] = 0
+
+//     try {
+//         // 收集合成参数
+//         const synthesisParams = {
+//             regionId: exploreData.regionCode,
+//             resolution: exploreData.space,
+//             multiSource: multiSourceData.enabled ? {
+//                 red: multiSourceData.bands.red,
+//                 blue: multiSourceData.bands.blue,
+//                 green: multiSourceData.bands.green
+//             } : null,
+//             multiTemporal: multiTemporalData.enabled ? {
+//                 phases: multiTemporalData.phases
+//             } : null,
+//         }
+
+//         console.log('复杂合成参数：', synthesisParams)
+
+//         // 模拟进度
+//         const progressTimer = setInterval(() => {
+//             if (complexProgress.value[3] < 95) {
+//                 complexProgress.value[3] += 2
+//             } else {
+//                 clearInterval(progressTimer)
+//             }
+//         }, 200)
+
+//         // TODO: 调用实际的API进行复杂合成
+//         // const result = await performComplexSynthesis(synthesisParams)
+        
+//         // 模拟延迟
+//         await new Promise(resolve => setTimeout(resolve, 5000))
+        
+//         complexProgress.value[3] = 100
+//         hasComplexResult.value = true
+//         complexSynthesisLoading.value = false
+//         showComplexProgress.value[3] = false
+        
+//         ElMessage.success('复杂合成任务完成')
+        
+//         // 跳转到历史记录页面
+//         setCurrentPanel('history')
+        
+//     } catch (error) {
+//         console.error('复杂合成失败：', error)
+//         complexSynthesisLoading.value = false
+//         showComplexProgress.value[3] = false
+//         ElMessage.error('复杂合成失败，请重试')
+//     }
+// }
+
+// // 监听多源数据选择变化
+// watch(() => multiSourceData.enabled, (newVal) => {
+//     if (newVal) {
+//         controlComplexProgress(0)
+//     }
+// })
+
+// 监听多时相数据选择变化
+watch(() => multiTemporalData.enabled, (newVal) => {
+    if (newVal) {
+        controlComplexProgress(1)
+    }
+})
 
 interface CoverageRate {
     demotic1m: string | null
@@ -1003,6 +1606,8 @@ const calNoClouds = async () => {
         resolution: exploreData.space,
         sceneIds: addedImages.map((image) => image.sceneId),
         dataSet: dataSet,
+        // bandList: multiSourceData.bands,
+        bandList: ['Red', 'Green', 'Blue']
     }
 
     // 发送请求
@@ -1399,7 +2004,7 @@ const handleCreateNoCloudTiles = async () => {
         console.log('获取到的jsonUrl:', jsonUrl)
         
         // 3. 添加瓦片图层
-        const tileUrl = `http://192.168.1.100:8000/no_cloud/{z}/{x}/{y}?jsonUrl=${encodeURIComponent(jsonUrl)}`
+        const tileUrl = `http://localhost:8000/no_cloud/{z}/{x}/{y}?jsonUrl=${encodeURIComponent(jsonUrl)}`
         //const tileUrl = `http://192.168.1.100:8000/no_cloud/{z}/{x}/{y}.png?jsonUrl=${encodeURIComponent(jsonUrl)}`
         
         console.log('瓦片URL模板:', tileUrl)

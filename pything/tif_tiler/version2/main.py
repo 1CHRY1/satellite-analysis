@@ -1,9 +1,11 @@
 def createApp():
     
     # 😋 If some error about PROJ_DATA, you can set environment variable as follows: 
-    # import os
-    # os.environ['PROJ_DATA'] = r'~path\to\your\conda\envs\grid\Lib\site-packages\rasterio\proj_data'
-    
+    import os
+    proj_lib_path = os.path.abspath(os.path.join(os.path.dirname(__file__)))
+    os.environ['PROJ_LIB'] = proj_lib_path
+    print(f"PROJ_LIB path: {os.environ['PROJ_LIB']}")
+
     from fastapi import FastAPI
     from titiler.core.factory import TilerFactory
     from starlette.middleware.cors import CORSMiddleware

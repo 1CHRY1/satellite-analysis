@@ -99,7 +99,7 @@ const handleCreateNoCloudTiles = async () => {
         console.log('获取到的jsonUrl:', jsonUrl)
         
         // 3. 添加瓦片图层
-        const tileUrl = `http://192.168.1.100:8000/no_cloud/{z}/{x}/{y}?jsonUrl=${encodeURIComponent(jsonUrl)}`
+        const tileUrl = `http://localhost:8000/no_cloud/{z}/{x}/{y}?jsonUrl=${encodeURIComponent(jsonUrl)}`
         //const tileUrl = `http://192.168.1.100:8000/no_cloud/{z}/{x}/{y}.png?jsonUrl=${encodeURIComponent(jsonUrl)}`
         
         console.log('瓦片URL模板:', tileUrl)

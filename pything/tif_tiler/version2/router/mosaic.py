@@ -7,14 +7,12 @@ import os, json, uuid
 import requests
 
 import mercantile
-from rio_tiler.colormap import cmap
 from rio_tiler.profiles import img_profiles
 from rio_tiler.io import COGReader
 from cogeo_mosaic.mosaic import MosaicJSON
 from rio_tiler_mosaic.mosaic import mosaic_tiler
-# from rio_tiler_mosaic.methods import defaults
-# from rio_tiler.mosaic 
-from rio_tiler.mosaic.methods import defaults
+from rio_tiler_mosaic.methods import defaults
+from rio_tiler.colormap import cmap
 from rio_tiler.utils import render
 
 
@@ -175,7 +173,7 @@ async def mosaictile(
         quadkey = mercantile.quadkey(*mercator_tile)
         assets = mosaic_def["tiles"].get(quadkey)
         if not assets:
-            return Response(content=TRANSPARENT_CONTENT, media_type="image/png", status_code=204)
+            return Response(status_code=204)
        
         # Step 3: Configure pixel selection method
         method = pixel_selection.lower()
@@ -189,30 +187,31 @@ async def mosaictile(
         # Step 4: Get tile from mosaic
         img, mask = mosaic_tiler(assets, x, y, z, tiler, pixel_selection=sel)
         if img is None:
-            return Response(content=TRANSPARENT_CONTENT, media_type="image/png", status_code=204)
+            return Response(status_code=204)
         
         # Step 5: Normalize, render and response
         # min_val = [np.min(arr, axis=(0, 1)) for arr in img]  # 各个波段 min
         # max_val = [np.max(arr, axis=(0, 1)) for arr in img]  # 各个波段 max
         # img_uint8 = normalize(img, min_val, max_val)
         content = render(img, mask)
+        assert isinstance(content, bytes), f"render 返回类型为 {type(content)}"
         return Response(content=content, media_type="image/png")
     except Exception as e:
         print(e)
         raise HTTPException(status_code=500, detail=str(e))
     
 
-# 2025-07-15 以前说无云一版图就是用来计算的，突然说又要加个基于无云一版图的分析计，这里写个NDVI
-# 注：大部分代码拷贝自上面mosaictile，先理解MosaicJSON是什么
-@router.get("/ndvi/{z}/{x}/{y}.png")
-async def ndvi_tile(
+# 针对无云一版图计算结果mosaic进行波段计算分析
+@router.get("/analysis/{z}/{x}/{y}.png")
+async def analysis_tile(
     z: int, x: int, y: int,
     mosaic_url: str = Query(..., description="Mosaic JSON URL"),
-    pixel_selection: str = Query("first", description="Pixel selection method : first/highest/lowest")
+    expression: str = Query(..., description="Expression to calculate (e.g. 'b1/b2+b3')"),
+    pixel_method: str = Query("first", description="Pixel selection method : first/highest/lowest"),
+    color: str = Query("rdylgn", description="Color map"),
+    # colormap Reference: https://cogeotiff.github.io/rio-tiler/colormap/#default-rio-tilers-colormaps
 ):
     try:
-        cm = cmap.get("rdylgn")
-        
         # Step 1: Fetch mosaic definition 
         mosaic_def = fetch_mosaic_definition(mosaic_url)
 
@@ -228,10 +227,10 @@ async def ndvi_tile(
         quadkey = mercantile.quadkey(*mercator_tile)
         assets = mosaic_def["tiles"].get(quadkey)
         if not assets:
-            return Response(content=TRANSPARENT_CONTENT, media_type="image/png", status_code=204)
+            return Response(status_code=204)
        
         # Step 3: Configure pixel selection method
-        method = pixel_selection.lower()
+        method = pixel_method.lower()
         if method == "highest":
             sel = defaults.HighestMethod()
         elif method == "lowest":
@@ -239,50 +238,19 @@ async def ndvi_tile(
         else:
             sel = defaults.FirstMethod()
         
-        # Step 4: Get tile from mosaic
-        img, mask = mosaic_tiler(assets, x, y, z, tiler, pixel_selection=sel)
+        # Step 4: Get tile from mosaic  , expression=expression
+        img, mask = mosaic_tiler(assets, x, y, z, tiler, pixel_selection=sel, expression=expression)
         if img is None:
-            return Response(content=TRANSPARENT_CONTENT, media_type="image/png", status_code=204)
-        
-        # Step 5: Calculate NDVI, 这里得改一下和无云一版图的波段对齐吧。
-        ndvi = (img[1] - img[0]) / (img[1] + img[0])
-        img = ndvi
-        
-        # Step 5: Normalize, render and response
-        min_val = [np.min(arr, axis=(0, 1)) for arr in img]  # 各个波段 min
-        max_val = [np.max(arr, axis=(0, 1)) for arr in img]  # 各个波段 max
-        
-        # Step 6: Render
-        img_uint8 = normalize(img, min_val, max_val)
-        content = render(img_uint8, mask, img_format="png", colormap=cm, **img_profiles.get("png"))
+            return Response(status_code=204)
+ 
+        # Step 5: Render
+        img_uint8 = normalize(img[0], np.min(img[0]), np.max(img[0]))
+        content = render(img_uint8, mask, img_format="png", colormap=cmap.get(color), **img_profiles.get("png"))
         return Response(content=content, media_type="image/png")
     except Exception as e:
         print(e)
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# Deprecated
-# @router.get("/eazytile/{z}/{x}/{y}.png")
-# async def test_mosaic_tile(
-#     z: int, x: int, y: int,
-#     assets: str = Query(..., description="COG paths list split by comma"),
-#     min: float = Query(0, description="Normalization minimum value"),
-#     max: float = Query(255, description="Normalization maximum value"),
-#     pixel_selection: str = Query("first", description="Pixel selection method : first/highest/lowest")
-# ):
-#     try:
-#         asset_list = [a.strip() for a in assets.split(",") if a.strip()]
-#         method = pixel_selection.lower()
-#         if method == "highest":
-#             sel = defaults.HighestMethod()
-#         elif method == "lowest":
-#             sel = defaults.LowestMethod()
-#         else:
-#             sel = defaults.FirstMethod()
-#         img, mask = mosaic_tiler(asset_list, x, y, z, tiler, pixel_selection=sel)
-#         img_uint8 = normalize(img, min, max)
-#         content = render(img_uint8, mask)
-#         return Response(content=content, media_type="image/png")
-#     except Exception as e:
-#         return Response(content=str(e), media_type="text/plain", status_code=500)
-
+# localhost:8000/mosaic/analysis/13/6834/3215.png?mosaic_url=http://192.168.1.105:30900/temp-files/mosaicjson/c6a36030-ae52-4513-8d2f-739895c60c65.json&expression=b1/b2+b3
+# http://localhost:8000/mosaic/analysis/13/6834/3215.png?mosaic_url=http://192.168.1.105:30900/temp-files/mosaicjson/c6a36030-ae52-4513-8d2f-739895c60c65.json&expression=b1-b2
