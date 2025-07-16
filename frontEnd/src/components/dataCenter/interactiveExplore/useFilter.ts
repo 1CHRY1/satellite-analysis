@@ -50,7 +50,7 @@ export const useFilter = () => {
     const defaultConfig = ref({
         useLatestTime: false,
         useMinCloud: false,
-        dateRange: [dayjs('2024-01'), dayjs('2025-05')],
+        dateRange: [dayjs('2025-05-01'), dayjs('2025-06-30')],
         cloudRange: [0, 100],
     })
 
@@ -284,9 +284,7 @@ export const useFilter = () => {
                     ...image,
                     tags: [image.tags.source, image.tags.production, image.tags.category],
                 }))
-            allProducts.value = allScenesRes
-
-                .filter((image) => image.dataType !== 'satellite')
+            allProducts.value = allScenesRes.filter((image) => image.dataType !== 'satellite')
                 .map((image) => ({
                     ...image,
                     tags: [image.tags.source, image.tags.production, image.tags.category],

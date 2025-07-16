@@ -116,6 +116,7 @@ modelServer:
     merge: /v0/tif/merge_v2
     spectrum: /v0/tif/get_spectral_profile
     noCloud: /v0/tif/calc_no_cloud
+    noCloud_complex: /v0/tif/calc_no_cloud_complex
     #    noCloud: /v0/tif/calc_qa_middle
     #    noCloud: /v0/tif/calc_qa_simple
     #    noCloud: /v0/tif/calc_qa

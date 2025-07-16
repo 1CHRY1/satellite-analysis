@@ -211,11 +211,15 @@ public class ModelExampleService {
         caseJsonObj.put("regionId", regionId);
         caseJsonObj.put("bandList", bandList);
         String noCloudUrl;
-        if (bandList == Arrays.asList("Red", "Green", "Blue")) {
+
+
+        if (bandList.equals(Arrays.asList("Red", "Green", "Blue"))) {
             noCloudUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("noCloud");
         } else {
             noCloudUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("noCloud_complex");
         }
+        System.out.println(noCloudUrl);
+
         long expirationTime = 60 * 100;
         return runModelServerModel(noCloudUrl, noCloudParam, expirationTime, caseJsonObj);
     }
