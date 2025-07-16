@@ -21,19 +21,19 @@
                                 <MapIcon :size="16" class="config-icon" />
                                 <span>{{ t('datapage.optional_thematic.spectrum.wait') }}</span>
                             </div>
-                            <div class="config-control justify-center">
+                            <!-- <div class="config-control justify-center">
                                 <div class="flex items-center gap-2 mt-2 w-full">
                                     <label class="text-white">{{ t('datapage.optional_thematic.spectrum.select') }}</label>
                                     <select v-model="selectedSceneId" @change="showImageBBox"
                                         class="bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-3 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6] max-w-[calc(100%-90px)] truncate">
                                         <option disabled selected value="">{{ t('datapage.optional_thematic.spectrum.op_select') }}</option>
-                                        <!-- <option v-for="image in targetImages" :key="image.sceneName"
+                                        <option v-for="image in targetImages" :key="image.sceneName"
                                             :value="image.sceneId" :title="image.sceneName" class="truncate">
                                             {{ image.sceneName }}
-                                        </option> -->
+                                        </option>
                                     </select>
                                 </div>
-                            </div>
+                            </div> -->
                         </div>
                         <button @click=""
                             class="cursor-pointer w-full rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95">
@@ -88,20 +88,20 @@
                         <!-- 预置色带选择 -->
                         <div class="color-palette-selector">
                             <span>选择色带</span>
-                            <select 
+                            <select
                                 v-model="selectedPalette"
                                 class="w-full rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white appearance-none hover:border-[#2bb2ff] hover:bg-[#1a2b4c] focus:outline-none focus:border-[#3b82f6]"
                             >
                                 <option disabled value="">选择色带</option>
-                                <option 
-                                v-for="(palette, index) in presetPalettes" 
+                                <option
+                                v-for="(palette, index) in presetPalettes"
                                 :key="index"
                                 :value="palette.name"
                                 class="bg-[#0d1526] text-white"
                                 >
                                 {{ palette.name }}
                                 </option>
-                                <option 
+                                <option
                                 value="custom"
                                 class="bg-[#0d1526] text-white"
                                 >
@@ -112,11 +112,11 @@
                     </div>
 
                         <!-- 自定义色带按钮 -->
-                    <div class="custom-palette-item mt-3 cursor-pointer border border-dashed border-[#2c3e50] rounded-md p-2 flex flex-col items-center transition-all duration-200 hover:border-[#38bdf8] hover:-translate-y-0.5 " >
-                        
+                    <div class="custom-palette-item mt-3 cursor-pointer border border-dashed border-[#2c3e50] rounded-md p-2 flex flex-col items-center transition-all duration-200 hover:border-[#38bdf8] hover:-translate-y-0.5 " @click="">
+
                         <span class="palette-name text-xs mt-1 text-center text-[#94a3b8] group-hover:text-white">自定义色带</span>
                     </div>
-                
+
                 </div>
             </div>
         </div>
@@ -145,17 +145,17 @@
                     </div>
                 </div>
 
-                <div v-show="isExpand[index]" >  
+                <div v-show="isExpand[index]" >
                     <!-- <div>第{{ index + 1 }}次计算：{{ item.analysis }}</div> -->
                     <!-- <div>NDVI计算结果为：xxx</div> -->
                     <!-- <div>统计数据-统计数据-统计数据-统计数据</div> -->
                     <div>经纬度：（{{ item.point[0] }},{{ item.point[1] }}）</div>
 
-                    <!-- <div class="chart-wrapper flex flex-col items-end">
+                    <div class="chart-wrapper flex flex-col items-end">
                         <div class="chart" :ref="el => setChartRef(el, index)" :id="`chart-${index}`"
                             style="width: 100%; height: 400px;"></div>
                         <button class="!text-[#38bdf8] cursor-pointer" @click="fullscreenChart(index)">{{$t('datapage.optional_thematic.NDVI.fullview')}}</button>
-                    </div> -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -268,6 +268,63 @@ const showImageBBox = async () => {
     }
 }
 
+const chartInstances = ref<(echarts.ECharts | null)[]>([])
+
+const initChart = (el: HTMLElement, data: any, index: number) => {
+    if (!el) return
+    const existingInstance = echarts.getInstanceByDom(el)
+    if (existingInstance) {
+        existingInstance.dispose()
+    }
+    let chart = echarts.init(el)
+    chart.setOption({
+        title: {
+            text: `图表 ${index + 1}`
+        },
+        xAxis: {
+            type: 'category',
+            data: data.xData
+        },
+        yAxis: {
+            type: 'value'
+        },
+        series: [
+            {
+                data: data.yData,
+                type: data.type
+            }
+        ],
+        tooltip: {
+            trigger: 'axis'
+        },
+        responsive: true
+    })
+    chart.resize()
+    chartInstances.value[index] = chart
+}
+// 设置 ref 并初始化图表
+const setChartRef = (el: Element | ComponentPublicInstance | null, index: number) => {
+    if (el instanceof HTMLElement) {
+        nextTick(() => {
+
+            initChart(el, analysisData.value[index], index)
+        })
+    }
+}
+
+// 全屏查看功能
+const fullscreenChart = (index: number) => {
+    const dom = document.getElementById(`chart-${index}`)
+    if (dom?.requestFullscreen) {
+        dom.requestFullscreen()
+    } else if ((dom as any).webkitRequestFullScreen) {
+        (dom as any).webkitRequestFullScreen()
+    } else if ((dom as any).mozRequestFullScreen) {
+        (dom as any).mozRequestFullScreen()
+    } else if ((dom as any).msRequestFullscreen) {
+        (dom as any).msRequestFullscreen()
+    }
+}
 // const selectedImage = props.thematicConfig.allImages.find(image => image.sceneId = selectedSceneId.value)
 
 </script>

@@ -26,12 +26,12 @@ export default defineConfig({
             },
             // 实时计算瓦片API专用代理（更具体的路径必须在前面）
             '/api/api/v1/realtime': {
-                target: 'http://172.20.25.156:5001',
+                target: 'http://localhost:5001',
                 changeOrigin: true,
             },
             // 实时计算会话API
             '/api/realtime': {
-                target: 'http://172.20.25.156:5001',
+                target: 'http://localhost:5001',
                 changeOrigin: true,
             },
             '/api': {
@@ -50,6 +50,8 @@ export default defineConfig({
                 // target: 'http://192.168.1.111:8999/model/websocket',
                 target: 'http://localhost:8999/model/websocket',
 
+                // target: 'http://192.168.1.111:8999/model/websocket',
+                // target: 'http://localhost:8999/model/websocket',
                 ws: true,
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/websocket/, ''),

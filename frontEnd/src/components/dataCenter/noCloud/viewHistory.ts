@@ -6,6 +6,7 @@ import { formatTime } from '@/util/common';
 import { getNoCloudUrl4MosaicJson } from '@/api/http/satellite-data/visualize.api';
 import { message } from 'ant-design-vue';
 import * as MapOperation from '@/util/map/operation'
+import { defineEmits } from 'vue'
 
 type HistoryValueTab = 'RUNNING' | 'COMPLETE'
 type HistoryTab = {
@@ -244,6 +245,8 @@ export function useViewHistoryModule() {
             [window.bounds[2], window.bounds[3]],
         ])
     }
+    const emit = defineEmits(['response']);
+
     const showResult = async (caseId: string, regionId: number) => {
         previewIndex.value = caseList.value.findIndex(item => item.caseId === caseId)
         fitView(regionId)

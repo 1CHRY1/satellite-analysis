@@ -89,6 +89,7 @@
                         </section>
 
                         <component :is="currentTaskComponent" :thematicConfig="thematicConfig" />
+                        <ResultComponent @response="handleResultLoaded" />
                     </div>
 
                 </dv-border-box12>
@@ -201,6 +202,7 @@
         </div>
     </div>
 </template>
+
 <script setup lang="ts">
 import { ref, type PropType, computed, type Ref, nextTick, onUpdated, onMounted, reactive, onBeforeUnmount, watch, defineAsyncComponent, type ComponentPublicInstance, onUnmounted } from 'vue'
 import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'
@@ -284,6 +286,7 @@ const toolCategories = [
     {
         name: '图像',
         tools: [
+            { value: '指数分析', label: '指数分析', disabled: false },
             { value: 'NDVI时序计算', label: t('datapage.analysis.optionallab.task_NDVI'), disabled: false },
             { value: '光谱分析', label: t('datapage.analysis.optionallab.task_spectral'), disabled: false },
             { value: 'DSM分析', label: t('datapage.analysis.optionallab.task_DSM'), disabled: false },
@@ -291,7 +294,6 @@ const toolCategories = [
             { value: '红绿立体', label: t('datapage.analysis.optionallab.task_red_green'), disabled: false },
             { value: '形变速率', label: t('datapage.analysis.optionallab.task_rate'), disabled: false },
             { value: '伪彩色分割', label: '伪彩色分割', disabled: false },
-            { value: '指数分析', label: '指数分析', disabled: false },
             { value: '空间分析', label: '空间分析', disabled: false },
             { value: 'boxSelect', label: '归一化差异', disabled: false },
             { value: 'hillShade', label: '地形渲染', disabled: false },
@@ -374,7 +376,11 @@ const taskComponentMap = {
 
 const currentTaskComponent = computed(() => taskComponentMap[selectedTask.value] || null)
 
+const selectedResult = ref(null);
 
+const handleResultLoaded = (result) => {
+  selectedResult.value = result;
+}
 // 获取根据行政区选择的原始数据
 const originImages = ref([])
 const thematicConfig = ref({})
@@ -415,7 +421,8 @@ const getOriginImages = async (newRegion: number | '未选择') => {
         allImages: originImages.value,
         regionId: displayLabel.value,
         endTime,
-        startTime
+        startTime,
+        dataset: selectedResult.value
     }
 }
 
@@ -488,6 +495,20 @@ const addLocalInternalLayer = () => {
 // 数据集
 const historyComponent = ref(null)
 const showHistory = ref(false)
+interface Case {
+        caseId: string,
+        address: string,
+        regionId: number,
+        resolution: string,
+        sceneList: Array<string>,
+        dataSet: string,
+        status: string,
+        result: {
+            bucket: string,
+            object_path: string
+        },
+        createTime: string
+    }
 
 const { 
   caseList, 
@@ -552,6 +573,7 @@ onUnmounted(() => {
         }
     })
 })
+
 </script>
 
 <style scoped src="./tabStyle.css">
