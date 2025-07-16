@@ -1445,7 +1445,8 @@ const calNoClouds = async () => {
         resolution: exploreData.space,
         sceneIds: addedImages.map((image) => image.sceneId),
         dataSet: dataSet,
-        bandList: multiSourceData.bands,
+        // bandList: multiSourceData.bands,
+        bandList: ['Red', 'Green', 'Blue']
     }
 
     // 发送请求

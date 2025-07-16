@@ -371,7 +371,7 @@ class calc_no_cloud(Task):
         scene_band_paths = {} # as cache
         for scene in scenes:
             mapper = scene['bandMapper']
-            bands = { band: None for band in bandList}
+            bands = {band: None for band in bandList}
             for img in scene['images']:
                 for band in bandList:
                     if img['band'] == mapper[band]:  # 检查当前图像是否匹配目标波段
@@ -417,7 +417,7 @@ class calc_no_cloud(Task):
                 upload_results.append(future.result())
 
         upload_results.sort(key=lambda x: (x["grid"][0], x["grid"][1]))
-        print('end upload ',time.time())
+        print('end upload ', time.time())
 
         ## Step 4 : Deprecated(Merge TIF) #######################
         # print('start merge ',time.time())
@@ -445,5 +445,4 @@ class calc_no_cloud(Task):
         if os.path.exists(temp_dir_path):
             shutil.rmtree(temp_dir_path)
             print('=============No Cloud Origin Data Deleted=================')
-
         return response.json()
