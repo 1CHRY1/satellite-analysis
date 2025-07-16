@@ -75,12 +75,12 @@ minio:
 
 docker:
   # 执行模式：local（本地Docker）或 remote（远程服务器）
-  mode: "local"
-  # 本地Docker配置
-  local:
-    enabled: true
-    localPath: D:/satellite-projects/
-    workDir: /workspace/
+#  mode: "remote"
+#  # 本地Docker配置
+#  local:
+#    enabled: true
+#    localPath: D:/satellite-projects/
+#    workDir: /workspace/
   # 远程服务器配置（保留原有配置）
   defaultServer:
     port: 2375
@@ -124,6 +124,7 @@ modelServer:
     ndvi: /v0/tif/calc_NDVI
   interval:
     status: 2
+
 
 tiler:
   end-point: http://127.0.0.1:8000

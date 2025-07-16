@@ -521,7 +521,7 @@ const {
   showResult
 } = useViewHistoryModule();
 
-const completedCases = ref<Case[]>([]); // 仅存储已完成的任务
+const completedCases = ref<any[]>([]); // 仅存储已完成的任务
 const isLoading = ref(false);
 
 // 加载已完成任务

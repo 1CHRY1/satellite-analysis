@@ -352,7 +352,7 @@ const isPending = computed(() => taskStore._isInitialTaskPending)
 // 新增的响应式变量
 const publishModalVisible = ref(false)
 const downloadModalVisible = ref(false)
-const currentItem = ref(null)
+const currentItem = ref<any>(null)
 
 // 发布表单数据
 const publishForm = reactive({

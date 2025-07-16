@@ -320,6 +320,11 @@ export function getNoCloudUrl(param: NoCloudInfoParam) {
     return fullUrl
 }
 
+export function getOnTheFlyUrl(jsonUrl: string) {
+    let url = `${titilerEndPoint}/no_cloud/{z}/{x}/{y}?jsonUrl=${encodeURIComponent(jsonUrl)}`
+    return url
+}
+
 type MosaicTileParam = {
     mosaicJsonPath: string
 }

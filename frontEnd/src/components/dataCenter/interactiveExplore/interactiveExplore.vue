@@ -125,6 +125,19 @@
                                                         </div>
                                                     </div>
                                                 </div>
+                                                <div class="control-info-item" @click="handleOnTheFly"
+                                                    :class="{ 'cursor-not-allowed': !isFilterDone,
+                                                            'cursor-pointer': isFilterDone,
+                                                    }">
+                                                    <div class="result-info-icon">
+                                                        ⚡
+                                                    </div>
+                                                    <div class="result-info-content" >
+                                                        <div class="result-info-value">
+                                                            <span style="font-size: 1rem;">on-the-fly</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                                 <div class="control-info-item" @click="toNoCloud"
                                                     :class="{ 'cursor-not-allowed': !isFilterDone,
                                                             'cursor-pointer': isFilterDone,
@@ -624,7 +637,9 @@ const {
     // 统计信息面板
     coverageRSRate, coverageProductsRate, handleShowImageInBoundary, handleShowProductInBoundary, handleShowVectorInBoundary,
     // 影像分辨率相关变量
-    resolutionType, resolutionPlatformSensor, productType, productPlatformSensor
+    resolutionType, resolutionPlatformSensor, productType, productPlatformSensor,
+    // on-the-fly
+    handleCreateNoCloudTiles: handleOnTheFly,
 } = useFilter()
 const { classifiedScenes, getSceneCountByResolution, classifiedProducts, getSceneCountByProduct } = useStats()
 const { clearAllShowingSensor } = useLayer()

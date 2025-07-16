@@ -82,15 +82,15 @@
                                 <input type="radio" id="pointTypeLine" value="line" v-model="pointAnalysisType" />
                                 <label for="pointTypeLine">沿线采样</label>
                             </div>
-                            
+
                             <!-- <div v-if="pointAnalysisType === 'line'" class="mt-2">
                                 <label class="block text-sm mb-1">采样点数：</label>
-                                <input type="number" v-model.number="samplePointCount" min="2" max="20" 
+                                <input type="number" v-model.number="samplePointCount" min="2" max="20"
                                     class="bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-3 py-1 w-full" />
                             </div>
                          -->
                     </div>
-                
+
                     <!-- 分析工具 -->
                 <div class="config-item" v-if="analysisData.length > 0">
                     <div class="config-label relative">
@@ -140,7 +140,7 @@
                                   {{ t('datapage.optional_thematic.spectrum.map_point') }}
                             </div>
 
-                            <!-- 划线采点块 
+                            <!-- 划线采点块
                             <div @click="!true && toggleMode('line')"
                                 class="w-24 h-24 flex flex-col items-center justify-center rounded-lg border cursor-pointer transition-all duration-200 text-white relative"
                                 :class="[
@@ -161,7 +161,7 @@
                             </div>
                         </div>
                     </div> -->
-                </div> 
+                </div>
                 <!-- <button @click="analysisSpectrum"
                     class="cursor-pointer rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95">
                     {{ t('datapage.optional_thematic.spectrum.button') }}

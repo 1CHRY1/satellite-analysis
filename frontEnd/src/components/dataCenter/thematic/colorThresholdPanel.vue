@@ -88,20 +88,20 @@
                         <!-- 预置色带选择 -->
                         <div class="color-palette-selector">
                             <span>选择色带</span>
-                            <select 
+                            <select
                                 v-model="selectedPalette"
                                 class="w-full rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white appearance-none hover:border-[#2bb2ff] hover:bg-[#1a2b4c] focus:outline-none focus:border-[#3b82f6]"
                             >
                                 <option disabled value="">选择色带</option>
-                                <option 
-                                v-for="(palette, index) in presetPalettes" 
+                                <option
+                                v-for="(palette, index) in presetPalettes"
                                 :key="index"
                                 :value="palette.name"
                                 class="bg-[#0d1526] text-white"
                                 >
                                 {{ palette.name }}
                                 </option>
-                                <option 
+                                <option
                                 value="custom"
                                 class="bg-[#0d1526] text-white"
                                 >
@@ -113,10 +113,10 @@
 
                         <!-- 自定义色带按钮 -->
                     <div class="custom-palette-item mt-3 cursor-pointer border border-dashed border-[#2c3e50] rounded-md p-2 flex flex-col items-center transition-all duration-200 hover:border-[#38bdf8] hover:-translate-y-0.5 " @click="">
-                        
+
                         <span class="palette-name text-xs mt-1 text-center text-[#94a3b8] group-hover:text-white">自定义色带</span>
                     </div>
-                
+
                 </div>
             </div>
         </div>
@@ -145,7 +145,7 @@
                     </div>
                 </div>
 
-                <div v-show="isExpand[index]" >  
+                <div v-show="isExpand[index]" >
                     <!-- <div>第{{ index + 1 }}次计算：{{ item.analysis }}</div> -->
                     <!-- <div>NDVI计算结果为：xxx</div> -->
                     <!-- <div>统计数据-统计数据-统计数据-统计数据</div> -->
