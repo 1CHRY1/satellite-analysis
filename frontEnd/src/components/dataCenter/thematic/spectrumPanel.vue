@@ -83,11 +83,11 @@
                                 <label for="pointTypeLine">沿线采样</label>
                             </div>
                             
-                            <div v-if="pointAnalysisType === 'line'" class="mt-2">
+                            <!-- <div v-if="pointAnalysisType === 'line'" class="mt-2">
                                 <label class="block text-sm mb-1">采样点数：</label>
                                 <input type="number" v-model.number="samplePointCount" min="2" max="20" 
                                     class="bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-3 py-1 w-full" />
-                            </div>
+                            </div> -->
                         
                     </div>
                 

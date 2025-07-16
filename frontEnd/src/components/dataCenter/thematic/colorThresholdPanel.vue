@@ -27,10 +27,10 @@
                                     <select v-model="selectedSceneId" @change="showImageBBox"
                                         class="bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-3 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6] max-w-[calc(100%-90px)] truncate">
                                         <option disabled selected value="">{{ t('datapage.optional_thematic.spectrum.op_select') }}</option>
-                                        <option v-for="image in targetImages" :key="image.sceneName"
+                                        <!-- <option v-for="image in targetImages" :key="image.sceneName"
                                             :value="image.sceneId" :title="image.sceneName" class="truncate">
                                             {{ image.sceneName }}
-                                        </option>
+                                        </option> -->
                                     </select>
                                 </div>
                             </div>
@@ -112,7 +112,7 @@
                     </div>
 
                         <!-- 自定义色带按钮 -->
-                    <div class="custom-palette-item mt-3 cursor-pointer border border-dashed border-[#2c3e50] rounded-md p-2 flex flex-col items-center transition-all duration-200 hover:border-[#38bdf8] hover:-translate-y-0.5 " @click="showCustomPaletteDialog = true">
+                    <div class="custom-palette-item mt-3 cursor-pointer border border-dashed border-[#2c3e50] rounded-md p-2 flex flex-col items-center transition-all duration-200 hover:border-[#38bdf8] hover:-translate-y-0.5 " >
                         
                         <span class="palette-name text-xs mt-1 text-center text-[#94a3b8] group-hover:text-white">自定义色带</span>
                     </div>
@@ -151,11 +151,11 @@
                     <!-- <div>统计数据-统计数据-统计数据-统计数据</div> -->
                     <div>经纬度：（{{ item.point[0] }},{{ item.point[1] }}）</div>
 
-                    <div class="chart-wrapper flex flex-col items-end">
+                    <!-- <div class="chart-wrapper flex flex-col items-end">
                         <div class="chart" :ref="el => setChartRef(el, index)" :id="`chart-${index}`"
                             style="width: 100%; height: 400px;"></div>
                         <button class="!text-[#38bdf8] cursor-pointer" @click="fullscreenChart(index)">{{$t('datapage.optional_thematic.NDVI.fullview')}}</button>
-                    </div>
+                    </div> -->
                 </div>
             </div>
         </div>
