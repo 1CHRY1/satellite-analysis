@@ -1,6 +1,7 @@
 package nnu.mnr.satellite.service.modeling;
 
 import com.alibaba.fastjson2.JSONObject;
+import io.minio.MinioClient;
 import nnu.mnr.satellite.jobs.QuartzSchedulerManager;
 import nnu.mnr.satellite.model.dto.modeling.*;
 import nnu.mnr.satellite.model.po.resources.Scene;
@@ -49,6 +50,9 @@ import io.minio.PutObjectArgs;
 
 @Service
 public class ModelExampleService {
+
+    @Autowired
+    private MinioClient minioClient;
 
     @Autowired
     ModelServerProperties modelServerProperties;
@@ -207,7 +211,7 @@ public class ModelExampleService {
         caseJsonObj.put("regionId", regionId);
         caseJsonObj.put("bandList", bandList);
         String noCloudUrl;
-        if ("Red".equals(bandList.get(0)) && "Green".equals(bandList.get(1)) && "Blue".equals(bandList.get(2))) {
+        if (bandList == Arrays.asList("Red", "Green", "Blue")) {
             noCloudUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("noCloud");
         } else {
             noCloudUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("noCloud_complex");
@@ -369,9 +373,13 @@ public class ModelExampleService {
     private JSONObject buildNoCloudConfig(NoCloudTileDTO noCloudTileDTO) {
         List<JSONObject> scenesConfig = new ArrayList<>();
 
+
         // 处理所有场景ID
         for (String sceneId : noCloudTileDTO.getSceneIds()) {
+
+            // 不知道为什么，JSON写入会被截断，还有，ZY的波段太多了！！！
             SceneSP scene = sceneDataServiceV2.getSceneByIdWithProductAndSensor(sceneId);
+
             List<ModelServerImageDTO> imageDTO = imageDataService.getModelServerImageDTOBySceneId(sceneId);
 
             JSONObject sceneConfig = new JSONObject();
@@ -389,6 +397,9 @@ public class ModelExampleService {
 
             // 添加波段路径信息
             JSONObject paths = new JSONObject();
+
+            // TODO
+            // 限制最多处理5个波段
             for (ModelServerImageDTO image : imageDTO) {
                 paths.put("band_" + image.getBand(), image.getTifPath());
             }
@@ -405,32 +416,48 @@ public class ModelExampleService {
     }
 
     // 上传JSON到MinIO
+//    private void uploadJsonToMinio(String bucketName, String fileName, String jsonContent) {
+//        try {
+//            // 使用MinioUtil的现有方法，需要先创建一个临时的MultipartFile
+//            ByteArrayInputStream inputStream = new ByteArrayInputStream(jsonContent.getBytes(StandardCharsets.UTF_8));
+//
+//            // 创建一个简单的MultipartFile包装
+//            MultipartFile jsonFile = new MultipartFile() {
+//                @Override
+//                public String getName() { return "json"; }
+//                @Override
+//                public String getOriginalFilename() { return fileName; }
+//                @Override
+//                public String getContentType() { return "application/json"; }
+//                @Override
+//                public boolean isEmpty() { return false; }
+//                @Override
+//                public long getSize() { return jsonContent.length(); }
+//                @Override
+//                public byte[] getBytes() throws IOException { return jsonContent.getBytes(StandardCharsets.UTF_8); }
+//                @Override
+//                public java.io.InputStream getInputStream() throws IOException { return inputStream; }
+//                @Override
+//                public void transferTo(java.io.File dest) throws IOException, IllegalStateException {}
+//            };
+//
+//            minioUtil.upload(jsonFile, fileName, bucketName);
+//        } catch (Exception e) {
+//            throw new RuntimeException("Failed to upload JSON to MinIO: " + e.getMessage(), e);
+//        }
+//    }
+
     private void uploadJsonToMinio(String bucketName, String fileName, String jsonContent) {
         try {
-            // 使用MinioUtil的现有方法，需要先创建一个临时的MultipartFile
-            ByteArrayInputStream inputStream = new ByteArrayInputStream(jsonContent.getBytes(StandardCharsets.UTF_8));
+            byte[] bytes = jsonContent.getBytes(StandardCharsets.UTF_8);
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
 
-            // 创建一个简单的MultipartFile包装
-            MultipartFile jsonFile = new MultipartFile() {
-                @Override
-                public String getName() { return "json"; }
-                @Override
-                public String getOriginalFilename() { return fileName; }
-                @Override
-                public String getContentType() { return "application/json"; }
-                @Override
-                public boolean isEmpty() { return false; }
-                @Override
-                public long getSize() { return jsonContent.length(); }
-                @Override
-                public byte[] getBytes() throws IOException { return jsonContent.getBytes(StandardCharsets.UTF_8); }
-                @Override
-                public java.io.InputStream getInputStream() throws IOException { return inputStream; }
-                @Override
-                public void transferTo(java.io.File dest) throws IOException, IllegalStateException {}
-            };
-
-            minioUtil.upload(jsonFile, fileName, bucketName);
+            minioClient.putObject(PutObjectArgs.builder()
+                    .bucket(bucketName)
+                    .object(fileName)
+                    .stream(inputStream, bytes.length, 5 * 1024 * 1024)
+                    .contentType("application/json")
+                    .build());
         } catch (Exception e) {
             throw new RuntimeException("Failed to upload JSON to MinIO: " + e.getMessage(), e);
         }

@@ -227,6 +227,7 @@ export const useLayer = () => {
         MapOperation.map_destroyMultiTerrainTileLayer()
         MapOperation.map_destroyMultiOneBandColorLayer()
         MapOperation.map_destroyMVTLayer()
+        MapOperation.map_destroyNoCloudLayer()
     }
 
     return {

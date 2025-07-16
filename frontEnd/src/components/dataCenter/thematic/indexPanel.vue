@@ -35,7 +35,7 @@
                                 </div>
                             </div>
                         </div> -->
-                        
+
                         <!-- 请确定您要研究的区域： -->
                         <!-- <div class="flex items-center gap-2 mt-2 w-full">
                             <label class="text-white">影像选择：</label>
@@ -79,8 +79,8 @@
                     <div class="config-control">
                         <!-- 指数类型选择 -->
                         <div class="section-content space-y-3 mb-6 ml-8">
-                            <button 
-                            v-for="(item, index) in presetIndex" 
+                            <button
+                            v-for="(item, index) in presetIndex"
                             :key="index"
                             @click="selectIndex(item)"
                             class="config-button block transition-colors duration-200 hover:bg-[#1a2b4c] hover:border-[#2bb2ff] hover:text-white"
@@ -90,25 +90,25 @@
                         </div>
                         <div class="color-palette-selector mb-6">
                             <span>选择指数</span>
-                            <select 
+                            <select
                                 v-model="selectedIndex"
                                 class="w-full rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white appearance-none hover:border-[#2bb2ff] hover:bg-[#1a2b4c] focus:outline-none focus:border-[#3b82f6]"
                             >
                                 <option disabled value="">选择指数</option>
-                                <option 
-                                v-for="(palette, index) in presetIndex" 
+                                <option
+                                v-for="(palette, index) in presetIndex"
                                 :key="index"
                                 :value="palette.name"
                                 class="bg-[#0d1526] text-white"
                                 >
                                 {{ palette.name }}
                                 </option>
-                                
+
                             </select>
                         </div>
                         <div class="flex items-center gap-2 mt-2 mb-6">
                                 <label class="text-white">配色方案:</label>
-                                <select 
+                                <select
                                     v-model="selectedColorMap"
                                     class="w-full rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white appearance-none hover:border-[#2bb2ff] hover:bg-[#1a2b4c] focus:outline-none focus:border-[#3b82f6]"
                                 >
@@ -127,7 +127,7 @@
         </div>
     </section>
 
-    
+
 </template>
 
 <script setup lang="ts">
@@ -222,7 +222,7 @@ const selectIndex = (item) => {
 // }
 
 const handleCloudTiles = async () => {
-  
+
     try {
         if(!props.thematicConfig.dataset){
             ElMessage.warning('请先从"前序数据"中选择一个数据集')
@@ -239,15 +239,15 @@ const handleCloudTiles = async () => {
         // const tileUrl = `http://localhost:8000/mosaic/analysis/{z}/{x}/{y}.png?mosaic_url=${mosaicUrl}&expression=${encodedExpr}&pixel_method=first&color=rdylgn`
         // const tileUrl = `http://localhost:8000/mosaic/analysis/13/6834/3215.png?mosaic_url=http://192.168.1.135:30900/temp-files/mosaicjson/hello.json&expression=${encodedExpr}&pixel_method=first&color=rdylgn`
         console.log('瓦片URL模板:', tileUrl)
-            
+
         // 清除旧的无云图层
         MapOperation.map_destroyNoCloudLayer()
-            
+
         // 添加新的瓦片图层
         MapOperation.map_addNoCloudLayer(tileUrl)
-            
+
         console.log('无云一版图瓦片图层已添加到地图')
-        
+
     } catch (error) {
         console.error('创建无云一版图瓦片失败:', error)
     }

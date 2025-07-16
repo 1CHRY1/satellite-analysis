@@ -192,6 +192,19 @@ async def mosaictile(
         # min_val = [np.min(arr, axis=(0, 1)) for arr in img]  # 各个波段 min
         # max_val = [np.max(arr, axis=(0, 1)) for arr in img]  # 各个波段 max
         # img_uint8 = normalize(img, min_val, max_val)
+        bands, height, width = img.shape
+
+        if bands == 1:
+            # 单波段 → 伪RGB（重复3次）
+            img = np.repeat(img, 3, axis=0)
+        elif bands == 2:
+            # 两波段 → 伪RGB（重复前两个波段）
+            img = np.tile(img, (2, 1, 1))[:3]
+        elif bands >= 3:
+            # 三波段及以上 → 取前三个波段
+            img = img[:3]
+        else:
+            raise ValueError(f"Unsupported number of bands: {bands}")
         content = render(img, mask)
         assert isinstance(content, bytes), f"render 返回类型为 {type(content)}"
         return Response(content=content, media_type="image/png")

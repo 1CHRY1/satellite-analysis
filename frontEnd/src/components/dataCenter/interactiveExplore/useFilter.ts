@@ -556,6 +556,46 @@ export const useFilter = () => {
         await addMultiRGBImageTileLayer(coverScenes, gridsBoundary, stopLoading)
     }
 
+    // 创建无云一版图瓦片
+    const handleCreateNoCloudTiles = async () => {
+        try {
+            // 1. 准备参数
+            const sceneIds = allScenes.value.map((item: any) => item.sceneId)
+            const param = {
+                sceneIds: sceneIds,
+            }
+
+            console.log('创建无云一版图配置参数:', param)
+
+            // 2. 创建配置
+            const response = await fetch('/api/modeling/example/noCloud/createNoCloudConfig', {
+                method: 'POST',
+                body: JSON.stringify(param),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                },
+            })
+            const result = await response.json()
+            const jsonUrl = result.data  // 从CommonResultVO中获取data字段
+            
+            console.log('获取到的jsonUrl:', jsonUrl)
+            
+            // 3. 添加瓦片图层
+            
+            // 清除旧的无云图层
+            MapOperation.map_destroyNoCloudLayer()
+            
+            // 添加新的瓦片图层
+            MapOperation.map_addNoCloudLayer(jsonUrl)
+            
+            console.log('无云一版图瓦片图层已添加到地图')
+            
+        } catch (error) {
+            console.error('创建无云一版图瓦片失败:', error)
+        }
+    }
+
     /**
      * 7. 产品可视化
      */
@@ -711,5 +751,6 @@ export const useFilter = () => {
         handleSelectTab,
         productType,
         productPlatformSensor,
+        handleCreateNoCloudTiles
     }
 }
