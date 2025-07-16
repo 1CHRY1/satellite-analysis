@@ -407,7 +407,7 @@
                                         <div class="config-label relative">
                                             <LayersIcon :size="16" class="config-icon" />
                                             <span>简单数据合成</span>
-                                            <el-tooltip content="合成为无云一版图" placement="top" effect="dark">
+                                            <el-tooltip content="使用红、绿、蓝三个波段进行无云一版图生成" placement="top" effect="dark">
                                                 <CircleHelp :size="14" />
                                             </el-tooltip>
                                         </div>
@@ -424,7 +424,7 @@
                                                         'cursor-not-allowed': noCloudLoading,
                                                         'cursor-pointer': !noCloudLoading,
                                                     }">
-                                                    <span>一版图服务生成</span>
+                                                    <span>无云一版图生成</span>
                                                     <Loader v-if="noCloudLoading" class="ml-2" />
                                                 </button>
                                             </div>
@@ -435,15 +435,24 @@
                                     <div class="config-item">
                                         <div class="config-label relative">
                                             <LayersIcon :size="16" class="config-icon" />
-                                            <span>多源数据合成</span>
-                                            <el-tooltip content="构建多波段数据集，融合光学、热红外、近红外等多源数据" placement="top" effect="dark">
+                                            <span>复合数据合成</span>
+                                            <el-tooltip content="使用任意数量任意波段进行无云一版图生成，支持计算NDVI、EVI等参数" placement="top" effect="dark">
                                                 <CircleHelp :size="14" />
                                             </el-tooltip>
                                         </div>
                                         <div class="config-control flex-col !items-start">
                                             <div class="flex w-full flex-col gap-2">
-                                                <!-- 波段选择 -->
-                                                <div class="ml-4 flex flex-row gap-2">
+                                                <!-- 波段选择，写成循环格式 -->
+                                                <div class="ml-4 flex flex-col">
+                                                <div class="text-lg text-gray-400 mb-2">合成波段选择：</div>
+                                                <div class="grid grid-cols-3 gap-4">
+                                                    <label v-for="band in ['Red', 'Green', 'Blue', 'NIR', 'NDVI', 'EVI']" :key="band" class="flex items-center gap-2">
+                                                    <input type="checkbox" :value="band" v-model="multiSourceData.selectedBands" class="size-5 rounded" />
+                                                    <span class="text-base">{{ band }}</span>
+                                                    </label>
+                                                </div>
+                                                </div>
+                                                <!-- <div class="ml-4 flex flex-row gap-2">
                                                     <div class="text-sm text-gray-400">波段选择：</div>
                                                     <label class="flex items-center gap-2">
                                                         <input type="checkbox" v-model="multiSourceData.bands.red" 
@@ -476,10 +485,40 @@
                                                         EVI
                                                     </label>
 
-                                                </div>
+                                                </div> -->
 
                                                 <!-- 可视化波段选择部分 -->
-                                                <div class="ml-4 flex flex-row gap-2">
+                                                <div class="ml-4 mt-2 flex flex-row items-center gap-1">
+                                                    <div class="text-lg text-gray-400">可视化波段：</div>
+                                                    
+                                                    <!-- R通道（只读文本） -->
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="text-sm text-red-400">R:</span>
+                                                        <div class="w-17 rounded border border-[#2c3e50] bg-[#0d1526] text-[#38bdf8] 
+                                                        flex items-center justify-center overflow-hidden">
+                                                            {{ multiSourceData.visualization.red_band || "未分配" }}
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- G通道 -->
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="text-sm text-green-400">G:</span>
+                                                        <div class="w-17 rounded border border-[#2c3e50] bg-[#0d1526] text-[#38bdf8] 
+                                                        flex items-center justify-center overflow-hidden">
+                                                            {{ multiSourceData.visualization.green_band || "未分配" }}
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- B通道 -->
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="text-sm text-blue-400">B:</span>
+                                                        <div class="w-17 rounded border border-[#2c3e50] bg-[#0d1526] text-[#38bdf8] 
+                                                        flex items-center justify-center overflow-hidden">
+                                                            {{ multiSourceData.visualization.blue_band || "未分配" }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <!-- <div class="ml-4 flex flex-row gap-2">
                                                     <div class="text-sm text-gray-400">可视化波段：</div>
                                                     <label class="flex items-center gap-2">
                                                         <span class="text-sm text-red-400">R:</span>
@@ -529,15 +568,15 @@
                                                             </option>
                                                         </select>
                                                     </label>
-                                                </div>
+                                                </div> -->
 
                                                 <!-- 显示当前选择的可视化波段组合 -->
-                                                <div class="ml-4 flex flex-row gap-2" v-if="multiSourceData.viz_bands.length > 0">
+                                                <!-- <div class="ml-4 flex flex-row gap-2" v-if="multiSourceData.viz_bands.length > 0">
                                                     <div class="text-sm text-gray-400">当前组合：</div>
                                                     <div class="text-sm text-[#38bdf8]">
                                                         {{ multiSourceData.viz_bands.join(' - ') }}
                                                     </div>
-                                                </div>
+                                                </div> -->
                                                 
                                                 
                                                 <div v-if="showComplexProgress[0]"
@@ -554,10 +593,17 @@
                                                         <LayersIcon :size="16" />
                                                     </div>
                                                     <div class="result-info-content">
-                                                        <div class="result-info-label">波段数量</div>
-                                                        <div class="result-info-value">
-                                                            {{ multiSourceData.bandCount }} 个波段
-                                                        </div>
+                                                    <div class="result-info-label">已选波段</div>
+                                                    <div class="result-info-value">
+                                                        <!-- 如果 selectedBands 为空，显示 "无" -->
+                                                        <template v-if="multiSourceData.selectedBands.length === 0">
+                                                        无
+                                                        </template>
+                                                        <!-- 否则显示具体波段名称（用逗号分隔） -->
+                                                        <template v-else>
+                                                        {{ multiSourceData.selectedBands.join(", ") }}
+                                                        </template>
+                                                    </div>
                                                     </div>
                                                 </div>
                                                 <!-- <div class="result-info-item">
@@ -573,13 +619,13 @@
                                                 </div> -->
                                             </div>
                                             <button class="w-full rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95" @click="handleMultiSourceData">
-                                                合成
+                                                无云一版图生成
                                             </button>
                                         </div>
                                     </div>
 
                                     <!-- 多时相数据合成 -->
-                                    <div class="config-item">
+                                    <div class="config-item" v-show="false">
                                         <div class="config-label relative">
                                             <CalendarIcon :size="16" class="config-icon" />
                                             <span>多时相数据合成</span>
@@ -630,8 +676,8 @@
                                             </div>
                                             
                                             <!-- 结果信息 -->
-                                            <!-- <div class="result-info-container w-full"> -->
-                                                <!-- <div class="result-info-item">
+                                            <!-- <div class="result-info-container w-full"> 
+                                                <div class="result-info-item">
                                                     <div class="result-info-icon">
                                                         <ClockIcon :size="16" />
                                                     </div>
@@ -641,8 +687,8 @@
                                                             {{ multiTemporalData.phases.length }} 个时相
                                                         </div>
                                                     </div>
-                                                </div> -->
-                                                <!-- <div class="result-info-item">
+                                                </div> 
+                                                 <div class="result-info-item">
                                                     <div class="result-info-icon">
                                                         <LayersIcon :size="16" />
                                                     </div>
@@ -652,8 +698,8 @@
                                                             {{ multiTemporalData.totalBands }} 个波段
                                                         </div>
                                                     </div>
-                                                </div> -->
-                                            <!-- </div> -->
+                                                </div> 
+                                            </div> -->
                                         </div>
                                     </div>
 
@@ -863,8 +909,8 @@ const exploreData = useExploreStore()
 const isPicking = ref(false)
 
 // 控制无云一版图内容的折叠状态
-const isNoCloudExpand = ref<boolean>(false)
-const isComplexExpand = ref<boolean>(true)
+const isNoCloudExpand = ref<boolean>(true)
+const isComplexExpand = ref<boolean>(false)
 
 console.log( exploreData)
 console.log(exploreData.images)
@@ -899,14 +945,15 @@ const radarGridFeature: Ref<FeatureCollection | null> = ref(null)
 
 // 多源数据合成
 const multiSourceData = reactive({
-    bands: {
-        red: false,  
-        blue: false,     
-        green: false,
-        nir: false,
-        ndvi: false,
-        evi: false,
-    },
+    // bands: {
+    //     red: false,  
+    //     blue: false,     
+    //     green: false,
+    //     nir: false,
+    //     ndvi: false,
+    //     evi: false,
+    // },
+    selectedBands: [],
 
     visualization: {
     red_band: '',    // 默认R通道显示R波段
@@ -914,22 +961,22 @@ const multiSourceData = reactive({
     blue_band: ''    // 默认B通道显示B波段
     },
 
-    // 波段选择
-    selectedBands: computed(() => {
-        const bands: string[] = [];
-        if (multiSourceData.bands.red) bands.push('Red');
-        if (multiSourceData.bands.blue) bands.push('Blue');
-        if (multiSourceData.bands.green) bands.push('Green');
-        if (multiSourceData.bands.nir) bands.push('NIR');
-        if (multiSourceData.bands.ndvi) bands.push('NDVI');
-        if (multiSourceData.bands.evi) bands.push('EVI');
-        return bands;
-    }),
+    // // 波段选择
+    // selectedBands: computed(() => {
+    //     const bands: string[] = [];
+    //     if (multiSourceData.bands.red) bands.push('Red');
+    //     if (multiSourceData.bands.blue) bands.push('Blue');
+    //     if (multiSourceData.bands.green) bands.push('Green');
+    //     if (multiSourceData.bands.nir) bands.push('NIR');
+    //     if (multiSourceData.bands.ndvi) bands.push('NDVI');
+    //     if (multiSourceData.bands.evi) bands.push('EVI');
+    //     return bands;
+    // }),
 
-    // 波段数量
-    bandCount: computed(() => {
-        return Object.values(multiSourceData.bands).filter(Boolean).length;
-    }),
+    // // 波段数量
+    // bandCount: computed(() => {
+    //     return Object.values(multiSourceData.bands).filter(Boolean).length;
+    // }),
 
     // 可视化波段
     viz_bands: computed(() => {
@@ -950,7 +997,66 @@ const multiSourceData = reactive({
         if (multiSourceData.bands.evi) types.push('增强植被指数')
         return types.join('、') || '未选择'
     })
-})
+});
+
+watch(() => multiSourceData.selectedBands, (newBands) => {
+console.log("当前选中的波段:", newBands);
+}, { deep: true });
+
+// 计算某个通道可选的波段（排除其他通道已选的值）
+const availableBands = (currentChannel) => {
+  const { red_band, green_band, blue_band } = multiSourceData.visualization;
+  const usedBands = [red_band, green_band, blue_band].filter(Boolean);
+  const currentValue = multiSourceData.visualization[currentChannel];
+ 
+  // 返回所有可选波段（包括新增的波段）
+  return multiSourceData.selectedBands.filter(band => {
+    if (band === currentValue) return true; // 保留当前值（允许取消后重新选择）
+    return !usedBands.includes(band); // 过滤掉其他通道已选的值
+  });
+};
+ 
+watch(
+  () => multiSourceData.selectedBands,
+  (newBands, oldBands) => {
+    if (!newBands.length) {
+      multiSourceData.visualization = { red_band: '', green_band: '', blue_band: '' };
+      return;
+    }
+ 
+    // 如果波段数量减少，清空所有通道（避免旧值占用）
+    if (newBands.length < oldBands?.length) {
+      multiSourceData.visualization = { red_band: '', green_band: '', blue_band: '' };
+    }
+ 
+    // 重新分配默认值（包括新增的波段）
+    assignDefaultBands();
+  },
+  { immediate: true, deep: true }
+);
+
+const assignDefaultBands = () => {
+  const { red_band, green_band, blue_band } = multiSourceData.visualization;
+  const channels = ['red_band', 'green_band', 'blue_band'];
+  const usedBands = [red_band, green_band, blue_band].filter(Boolean);
+  let bandIndex = 0;
+ 
+  channels.forEach(channel => {
+    // 如果当前通道已有值，跳过（避免覆盖用户手动选择）
+    if (multiSourceData.visualization[channel]) return;
+ 
+    // 分配未被占用的波段（包括新增的波段）
+    while (bandIndex < multiSourceData.selectedBands.length) {
+      const band = multiSourceData.selectedBands[bandIndex];
+      if (!usedBands.includes(band)) {
+        multiSourceData.visualization[channel] = band;
+        usedBands.push(band); // 标记为已占用
+        break;
+      }
+      bandIndex++;
+    }
+  });
+};
 
 // 多源数据合成
 const handleMultiSourceData = async () => {
@@ -969,25 +1075,70 @@ const handleMultiSourceData = async () => {
     // 获取波段列表
     const bandList = multiSourceData.selectedBands;
 
-    const viz_bands = multiSourceData.viz_bands;
+    taskStore.setIsInitialTaskPending(true)
+    setCurrentPanel('history')
 
-    try {
-        const response = await fetch("",{  // ###############记得添加接口###############
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                bandList,
-                viz_bands,
-            }),
-        });
-        
-        // const result =                   // ###############记得添加返回值###############
-    } catch (error) {
-        console.error("合成失败：", error)
-        ElMessage.error("合成失败，请重试")
+    // 根据勾选情况合并影像
+    // 1、国产亚米
+
+    let addedImages = [...demotic1mImages.value]
+    if (dataReconstruction.value[0] === true) {
+        addedImages = addedImages.concat(demotic2mImages.value)
     }
+    if (dataReconstruction.value[1] === true) {
+        addedImages = addedImages.concat(internationalImages.value)
+    }
+    if (dataReconstruction.value[2] === true) {
+        addedImages = addedImages.concat(radarImages.value)
+    }
+    let dataSet = [
+                '国产亚米影像',
+                dataReconstruction.value[0] ? '国产2m超分影像' : null,
+                dataReconstruction.value[1] ? '国外影像超分数据' : null,
+                dataReconstruction.value[2] ? 'SAR色彩转换数据' : null,
+    ].filter(Boolean).join('、')
+
+    let getNoCloudParam = {
+        regionId: exploreData.regionCode,
+        cloud: exploreData.cloud,
+        resolution: exploreData.space,
+        sceneIds: addedImages.map((image) => image.sceneId),
+        dataSet: dataSet,
+        // bandList: multiSourceData.bands,
+        bandList: bandList
+    }
+
+    // 发送请求
+    console.log(getNoCloudParam, '发起请求')
+    let startCalcRes = await getNoCloud(getNoCloudParam)
+    if (startCalcRes.message !== 'success') {
+        ElMessage.error(t('datapage.nocloud.message.calerror'))
+        console.error(startCalcRes)
+        return
+    }
+    // 更新任务，跳转至历史panel
+    calTask.value.taskId = startCalcRes.data
+    taskStore.setTaskStatus(calTask.value.taskId, 'PENDING')
+    taskStore.setIsInitialTaskPending(false)
+
+    const viz_bands = multiSourceData.viz_bands;
+    // try {
+    //     const response = await fetch("",{  // ###############记得添加接口###############
+    //         method: "POST",
+    //         headers: {
+    //             "Content-Type": "application/json"
+    //         },
+    //         body: JSON.stringify({
+
+    //             bandList
+    //         }),
+    //     });
+        
+    //     // const result =                   // ###############记得添加返回值###############
+    // } catch (error) {
+    //     console.error("合成失败：", error)
+    //     ElMessage.error("合成失败，请重试")
+    // }
     
 };
 
