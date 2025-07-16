@@ -118,7 +118,7 @@
                             </el-form-item>
                             <el-form-item label="参数">
                                 <div v-for="(param, index) in toolForm.parameters" :key="index" class="mb-2 flex items-center">
-                                    <el-input v-model="param.name" placeholder="参数名" class="mr-2" />
+                                    <el-input v-model="param.Name" placeholder="参数名" class="mr-2" />
                                     <!-- <el-select v-model="param.type" placeholder="类型" class="mr-2">
                                         <el-option label="字符串" value="string" />
                                         <el-option label="数字" value="number" />
