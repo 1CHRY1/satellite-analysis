@@ -94,33 +94,8 @@ modelServer:
   interval:
     status: 2
 
-# Ray优化配置
-ray:
-  optimization:
-    enabled: false                   # 是否启用Ray优化
-    cpuCount: 4                     # Ray使用的CPU数量
-    memoryMB: 2048                  # Ray使用的内存量(MB)
-    timeout: 60                     # 优化超时时间(秒)
-    fallbackOnError: true           # 优化失败时是否回退到原始代码
-    analysisMode: "auto"            # 分析模式：auto/conservative/aggressive
-    logLevel: "INFO"                # 日志级别
-    tempDir: "/tmp/ray"             # Ray临时目录
-    enableOptimizationReport: true   # 是否生成优化报告
-    maxRetries: 2                   # 最大重试次数
-    enableCaching: true             # 是否启用优化缓存
-    cacheTtlMinutes: 60             # 缓存过期时间(分钟)
-    # 本地Ray优化模块路径
-    modulePath: D:/satellite-analysis/pything/ray_optimization/
-    # Docker运行时的额外参数（用于解决Ray的shm警告）
-    dockerRunOptions: "--shm-size=1.44gb"
-    # Ray Dashboard配置
-    dashboard:
-      enabled: true                 # 是否启用Ray Dashboard访问
-      port: 8265                    # Ray Dashboard端口
-      hostPort: 8265                # 宿主机映射端口
-
 srmodelServer:
-  address: http://nrspeclib.sasclouds.com:33445
+  address: http://172.16.3.236:8000
   apis:
     status: /v0/task/status
     result: /v0/task/result
