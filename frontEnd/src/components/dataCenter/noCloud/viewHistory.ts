@@ -34,6 +34,7 @@ export function useViewHistoryModule() {
     const pageSize = ref<number>(3)
     const total = ref<number>(0)
     
+    
     const getCaseList = async () => {
         const regionId = getRegionId()
         const res = await getCasePage({
@@ -247,11 +248,17 @@ export function useViewHistoryModule() {
     }
     const emit = defineEmits(['response']);
 
+    const onResultSelected = ref<((result: any) => void) | null>(null)
+
     const showResult = async (caseId: string, regionId: number) => {
         previewIndex.value = caseList.value.findIndex(item => item.caseId === caseId)
         fitView(regionId)
         let res = await getResultByCaseId(caseId)
         console.log(res, '结果')
+
+        if (onResultSelected.value) {
+            onResultSelected.value(res)
+        }
 
         // 预览无云一版图影像
         let data = res.data
@@ -296,6 +303,7 @@ export function useViewHistoryModule() {
         previewList,
         previewIndex,
         showResult,
-        unPreview
+        unPreview,
+        onResultSelected
     }
 }

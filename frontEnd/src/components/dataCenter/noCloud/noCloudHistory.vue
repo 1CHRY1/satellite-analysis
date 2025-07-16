@@ -200,7 +200,7 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- 新增按钮区域 -->
+                        <!-- 下载按钮和发布按钮 -->
                         <div class="flex gap-2 mt-2">
                             <a-button type="primary" size="middle" @click="handlePublish(item)">
                                 <Upload :size="14" class="mr-1" />
@@ -337,6 +337,11 @@ import { RegionSelects } from 'v-region'
 import { useTaskPollModule } from './taskPoll'
 import bus from '@/store/bus'
 import { useTaskStore } from '@/store'
+import { ezStore } from '@/store'
+import { getResultByCaseId } from '@/api/http/satellite-data/satellite.api'
+import { message } from 'ant-design-vue'
+import type { Case } from '@/api/http/satellite-data/satellite.type'
+
 
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
@@ -352,7 +357,7 @@ const isPending = computed(() => taskStore._isInitialTaskPending)
 // 新增的响应式变量
 const publishModalVisible = ref(false)
 const downloadModalVisible = ref(false)
-const currentItem = ref<any>(null)
+const currentItem = ref<Case.Case | null>(null)
 
 // 发布表单数据
 const publishForm = reactive({
@@ -379,22 +384,74 @@ const estimatedFileSize = computed(() => {
 })
 
 // 发布处理函数
-const handlePublish = (item: any) => {
+const handlePublish = (item: Case.Case) => {
     currentItem.value = item
     publishModalVisible.value = true
 }
 
-const handlePublishConfirm = () => {
-    console.log('发布确认', publishForm)
-    // TODO: 实现发布逻辑
-    publishModalVisible.value = false
-    // 重置表单
-    Object.assign(publishForm, {
-        name: '',
-        description: '',
-        scope: 'public',
-        expiryDate: null
-    })
+// 发布确认
+const handlePublishConfirm = async () => {
+    try {
+        if (!currentItem.value) {
+            message.error('请选择要发布的任务')
+            return
+        }
+        // 获取配置
+        const conf = ezStore.get('conf')
+        const titilerEndpoint = conf['titiler']
+        const minioEndpoint = conf['minioIpAndPort']
+
+        // 获取任务结果
+        const result = await getResultByCaseId(currentItem.value.caseId)
+        const resultData = result.data
+
+        if (!resultData) {
+            message.error('无法获取发布数据，请稍后重试')
+            return
+        }
+
+        if (!resultData.bucket) {
+            message.error('无法获取发布数据的bucket，请稍后重试')
+            return
+        }
+        if (!resultData.object_path) {
+            message.error('无法获取发布数据的bucket，请稍后重试')
+            return
+        }
+
+        // 生成发布URL
+        const mosaicJsonPath = `${resultData.bucket}/${resultData.object_path}`
+
+        // 从titilerEndPoint中提取IP和端口
+        let titilerBaseUrl = titilerEndpoint
+        
+        const publishUrl = `${titilerBaseUrl}/mosaic/mosaictile/{z}/{x}/{y}.png?mosaic_url=${minioEndpoint}/${mosaicJsonPath}`
+
+        message.success('发布成功')
+        message.info(`发布地址：${publishUrl}`, 10)
+
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(publishUrl).then(() => {
+                message.success('发布URL已复制到剪贴板')
+            }).catch(() => {
+                message.error('复制失败，请手动复制')
+            })
+        }
+
+        publishModalVisible.value = false
+        
+        // 重置表单
+        Object.assign(publishForm, {
+            name: '',
+            description: '',
+            scope: 'public',
+            expiryDate: null
+        })
+
+    } catch (error) {
+        console.error('发布失败', error)
+        message.error('发布失败，请稍后重试')
+    }
 }
 
 const handlePublishCancel = () => {
@@ -407,10 +464,57 @@ const handleDownload = (item: any) => {
     downloadModalVisible.value = true
 }
 
-const handleDownloadConfirm = () => {
-    console.log('下载确认', downloadForm)
-    // TODO: 实现下载逻辑
-    downloadModalVisible.value = false
+const handleDownloadConfirm = async () => {
+    try {
+        if (!currentItem.value) {
+            message.error('请选择要下载的任务')
+            return
+        }
+
+        // 获取配置
+        const conf = ezStore.get('conf')
+        const minioEndpoint = conf['minioIpAndPort']
+
+        // 获取case结果数据
+        const result = await getResultByCaseId(currentItem.value.caseId)
+        const resultData = result.data
+
+        if (!resultData) {
+            message.error('无法获取下载数据，请稍后重试')
+            return
+        }
+
+        if (!resultData.bucket) {
+            message.error('无法获取下载数据的bucket，请稍后重试')
+            return
+        }
+
+        if (!resultData.object_path) {
+            message.error('无法获取下载数据的object_path，请稍后重试')
+            return
+        }
+
+        // 生成下载URL
+        const downloadUrl = `${minioEndpoint}/${resultData.bucket}/${resultData.object_path}`
+
+        // 弹出下载URL
+        message.success('下载成功')
+        message.info(`下载地址：${downloadUrl}`, 10)
+        downloadModalVisible.value = false
+
+        // 复制到剪贴板
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(downloadUrl).then(() => {
+                message.success('下载URL已复制到剪贴板')
+            }).catch(() => {
+                message.error('复制失败，请手动复制')
+            })
+        }
+
+    } catch (error) {
+        console.error('下载失败', error)
+        message.error('下载失败，请稍后重试')
+    }
 }
 
 const handleDownloadCancel = () => {

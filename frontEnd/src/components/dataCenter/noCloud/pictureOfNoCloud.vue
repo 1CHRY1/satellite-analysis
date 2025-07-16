@@ -627,203 +627,42 @@
                                     <!-- 多时相数据合成 -->
                                     <div class="config-item" v-show="false">
                                         <div class="config-label relative">
-                                            <CalendarIcon :size="16" class="config-icon" />
-                                            <span>多时相数据合成</span>
-                                            <el-tooltip content="构建多时相波段数据集，融合不同时间的观测数据" placement="top" effect="dark">
-                                                <CircleHelp :size="14" />
+                                            <CalendarIcon :size="16" class="config-icon opacity-50" />
+                                            <span class="text-gray-500">多时相数据合成</span>
+                                            <el-tooltip content="构建多时相波段数据集，融合不同时间的观测数据（暂时不可用）" placement="top" effect="dark">
+                                                <CircleHelp :size="14" class="opacity-50" />
                                             </el-tooltip>
                                         </div>
-                                        <div class="config-control flex-col !items-start">
+                                        <div class="config-control flex-col !items-start opacity-50 pointer-events-none">
                                             <div class="flex w-full flex-col gap-2">
-                                                <!-- <label class="flex items-center gap-2">
-                                                    <input type="checkbox" v-model="multiTemporalData.enabled" 
-                                                        class="h-4 w-4 rounded" />
-                                                    启用多时相数据合成
-                                                </label> -->
-                                                
                                                 <!-- 时相配置 -->
                                                 <div class="ml-4 flex flex-col gap-2">
-                                                    <div class="text-sm text-gray-400">时相配置：</div>
+                                                    <div class="text-sm text-gray-500">时相配置：</div>
                                                     <div class="flex items-center gap-2">
-                                                        <span class="text-sm">时相1：</span>
+                                                        <span class="text-sm text-gray-500">时相1：</span>
                                                         <a-date-picker v-model:value="multiTemporalData.date1" 
                                                             size="small" 
-                                                            placeholder="选择日期" />
-                                                        <span class="text-sm ml-2">波段1-3</span>
+                                                            placeholder="选择日期"
+                                                            disabled />
+                                                        <span class="text-sm ml-2 text-gray-500">波段1-3</span>
                                                     </div>
                                                     <div class="flex items-center gap-2">
-                                                        <span class="text-sm">时相2：</span>
+                                                        <span class="text-sm text-gray-500">时相2：</span>
                                                         <a-date-picker v-model:value="multiTemporalData.date2" 
                                                             size="small" 
-                                                            placeholder="选择日期" />
-                                                        <span class="text-sm ml-2">波段4-6</span>
+                                                            placeholder="选择日期"
+                                                            disabled />
+                                                        <span class="text-sm ml-2 text-gray-500">波段4-6</span>
                                                     </div>
 
-                                                    <button class="w-full rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95" @click="handleMultitTemporalData">
+                                                    <button class="w-full rounded-lg border border-gray-500 bg-gray-700 px-4 py-2 text-gray-400 cursor-not-allowed" 
+                                                            disabled>
                                                         合成
                                                     </button>
-                                                    <!-- <a-button class="mt-2" size="small" @click="addTimePhase">
-                                                        <FilePlus2Icon :size="14" class="mr-1" />
-                                                        
-                                                    </a-button>  -->
                                                 </div>
-
-                                                <!-- <div v-if="showComplexProgress[1]"
-                                                    class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
-                                                    <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
-                                                        :style="{ width: `${complexProgress[1]}%` }"></div>
-                                                </div> -->
                                             </div>
-                                            
-                                            <!-- 结果信息 -->
-                                            <!-- <div class="result-info-container w-full"> 
-                                                <div class="result-info-item">
-                                                    <div class="result-info-icon">
-                                                        <ClockIcon :size="16" />
-                                                    </div>
-                                                    <div class="result-info-content">
-                                                        <div class="result-info-label">时相数量</div>
-                                                        <div class="result-info-value">
-                                                            {{ multiTemporalData.phases.length }} 个时相
-                                                        </div>
-                                                    </div>
-                                                </div> 
-                                                 <div class="result-info-item">
-                                                    <div class="result-info-icon">
-                                                        <LayersIcon :size="16" />
-                                                    </div>
-                                                    <div class="result-info-content">
-                                                        <div class="result-info-label">总波段数</div>
-                                                        <div class="result-info-value">
-                                                            {{ multiTemporalData.totalBands }} 个波段
-                                                        </div>
-                                                    </div>
-                                                </div> 
-                                            </div> -->
                                         </div>
                                     </div>
-
-                                    <!-- 高级数据合成 -->
-                                    <!-- <div class="config-item">
-                                        <div class="config-label relative">
-                                            <ApertureIcon :size="16" class="config-icon" />
-                                            <span>高级数据合成</span>
-                                            <el-tooltip content="构建指数波段数据集，如NDVI、EVI等植被指数" placement="top" effect="dark">
-                                                <CircleHelp :size="14" />
-                                            </el-tooltip>
-                                        </div>
-                                        <div class="config-control flex-col !items-start">
-                                            <div class="flex w-full flex-col gap-2">
-                                                <label class="flex items-center gap-2">
-                                                    <input type="checkbox" v-model="advancedData.enabled" 
-                                                        class="h-4 w-4 rounded" />
-                                                    启用高级数据合成
-                                                </label> -->
-                                                
-                                                <!-- 指数配置 -->
-                                                <!-- <div v-if="advancedData.enabled" class="ml-4 flex flex-col gap-2">
-                                                    <div class="text-sm text-gray-400">指数配置：</div>
-                                                    <label class="flex items-center gap-2">
-                                                        <input type="checkbox" v-model="advancedData.indices.ndvi" 
-                                                            class="h-4 w-4 rounded" />
-                                                        波段1：NDVI (归一化植被指数)
-                                                    </label>
-                                                    <label class="flex items-center gap-2">
-                                                        <input type="checkbox" v-model="advancedData.indices.evi" 
-                                                            class="h-4 w-4 rounded" />
-                                                        波段2：EVI (增强植被指数)
-                                                    </label>
-                                                    <label class="flex items-center gap-2">
-                                                        <input type="checkbox" v-model="advancedData.indices.green" 
-                                                            class="h-4 w-4 rounded" />
-                                                        波段3：绿波段
-                                                    </label>
-                                                    <label class="flex items-center gap-2">
-                                                        <input type="checkbox" v-model="advancedData.indices.custom" 
-                                                            class="h-4 w-4 rounded" />
-                                                        自定义指数
-                                                    </label>
-                                                </div>
-
-                                                <div v-if="showComplexProgress[2]"
-                                                    class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
-                                                    <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
-                                                        :style="{ width: `${complexProgress[2]}%` }"></div>
-                                                </div>
-                                            </div> -->
-                                            
-                                            <!-- 结果信息 -->
-                                            <!-- <div class="result-info-container w-full">
-                                                <div class="result-info-item">
-                                                    <div class="result-info-icon">
-                                                        <BoltIcon :size="16" />
-                                                    </div>
-                                                    <div class="result-info-content">
-                                                        <div class="result-info-label">指数类型</div>
-                                                        <div class="result-info-value">
-                                                            {{ advancedData.selectedIndices }}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="result-info-item">
-                                                    <div class="result-info-icon">
-                                                        <CalendarIcon :size="16" />
-                                                    </div>
-                                                    <div class="result-info-content">
-                                                        <div class="result-info-label">数据日期</div>
-                                                        <div class="result-info-value">
-                                                            {{ advancedData.dataDate || '未选择' }}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div> -->
-
-                                    <!-- 合成任务操作 -->
-                                    <!-- <div class="flex w-full flex-col justify-center mt-4"> -->
-                                        <!-- <div class="flex w-full flex-row gap-2">
-                                            <button @click="handleComplexSynthesis"
-                                                :disabled="complexSynthesisLoading"
-                                                class="flex justify-center w-1/3 rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
-                                                :class="{
-                                                    'cursor-not-allowed': complexSynthesisLoading,
-                                                    'cursor-pointer': !complexSynthesisLoading,
-                                                }">
-                                                <span>开始合成</span>
-                                                <Loader v-if="complexSynthesisLoading" class="ml-2" />
-                                            </button>
-                                            
-                                            <button @click="handlePublishResult"
-                                                :disabled="!hasComplexResult"
-                                                class="flex justify-center w-1/3 rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
-                                                :class="{
-                                                    'cursor-not-allowed': !hasComplexResult,
-                                                    'cursor-pointer': hasComplexResult,
-                                                }">
-                                                <UploadCloudIcon :size="16" class="mr-2" />
-                                                <span>发布结果</span>
-                                            </button>
-                                            
-                                            <button @click="handleDownloadResult"
-                                                :disabled="!hasComplexResult"
-                                                class="flex justify-center w-1/3 rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
-                                                :class="{
-                                                    'cursor-not-allowed': !hasComplexResult,
-                                                    'cursor-pointer': hasComplexResult,
-                                                }">
-                                                <DownloadIcon :size="16" class="mr-2" />
-                                                <span>下载结果</span>
-                                            </button>
-                                        </div> -->
-                                        
-                                        <!-- 总进度条 -->
-                                        <!-- <div v-if="showComplexProgress[3]"
-                                            class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b] mt-2">
-                                            <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
-                                                :style="{ width: `${complexProgress[3]}%` }"></div>
-                                        </div> -->
-                                    <!-- </div> -->
                                 </div>
             </div>
                         </section>

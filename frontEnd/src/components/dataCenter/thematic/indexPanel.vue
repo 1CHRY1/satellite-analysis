@@ -224,9 +224,20 @@ const selectIndex = (item) => {
 const handleCloudTiles = async () => {
 
     try {
-        const mosaicUrl = getNoCloudUrl4MosaicJson({mosaicJsonPath : props.thematicConfig.dataset.result.bucket + '/' + props.thematicConfig.dataset.result.object_path})
+        if(!props.thematicConfig.dataset){
+            ElMessage.warning('请先从"前序数据"中选择一个数据集')
+            return
+        }
+        console.log('props.thematicConfig.dataset.result', props.thematicConfig.dataset.result)
+        const mosaicUrl = getNoCloudUrl4MosaicJson({
+            mosaicJsonPath: props.thematicConfig.dataset.bucket + '/' + props.thematicConfig.dataset.object_path
+        })
+
         const encodedExpr = encodeURIComponent('2*b1-b2+b3')
-        const tileUrl = `http://localhost:8000/analysis/{z}/{x}/{y}.png?mosaic_url=${mosaicUrl}&expression=${encodedExpr}&pixel_method=first&color=rdylgn`
+        const tileUrl = `/tiler/mosaic/analysis/{z}/{x}/{y}.png?mosaic_url=${mosaicUrl}&expression=${encodedExpr}&pixel_method=first&color=rdylgn`
+        // const tileUrl = `http://localhost:8000/mosaic/analysis/{z}/{x}/{y}.png?mosaic_url=http://192.168.1.135:30900/temp-files/mosaicjson/hello.json&expression=${encodedExpr}&pixel_method=first&color=rdylgn`
+        // const tileUrl = `http://localhost:8000/mosaic/analysis/{z}/{x}/{y}.png?mosaic_url=${mosaicUrl}&expression=${encodedExpr}&pixel_method=first&color=rdylgn`
+        // const tileUrl = `http://localhost:8000/mosaic/analysis/13/6834/3215.png?mosaic_url=http://192.168.1.135:30900/temp-files/mosaicjson/hello.json&expression=${encodedExpr}&pixel_method=first&color=rdylgn`
         console.log('瓦片URL模板:', tileUrl)
 
         // 清除旧的无云图层
