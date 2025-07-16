@@ -131,7 +131,7 @@ class hxfConfig(BaseConfig):
     MYSQL_PWD                                       =       "123456"
 
     # Titiler Config
-    TITILER_BASE_URL                                =       "http://172.20.10.3:8000"
+    TITILER_BASE_URL                                =       "http://127.0.0.1:8000"
     MOSAIC_CREATE_URL                               =       TITILER_BASE_URL + "/mosaic/create"
 
     TEMP_OUTPUT_DIR                                 =       r"D:/code/test"
