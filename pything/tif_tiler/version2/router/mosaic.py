@@ -76,7 +76,6 @@ def fetch_mosaic_definition(mosaic_url):
     return resp.json()
 
 
-
 #### Router #############################################################################
 router = APIRouter()
 
