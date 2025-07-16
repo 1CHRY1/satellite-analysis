@@ -253,8 +253,6 @@ export function useViewHistoryModule() {
         let res = await getResultByCaseId(caseId)
         console.log(res, '结果')
 
-        emit('response', res);
-
         // 预览无云一版图影像
         let data = res.data
         const getData = async (taskId: string) => {
