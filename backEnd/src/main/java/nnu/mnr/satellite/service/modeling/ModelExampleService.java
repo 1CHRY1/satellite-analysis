@@ -216,6 +216,8 @@ public class ModelExampleService {
         } else {
             noCloudUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("noCloud_complex");
         }
+        System.out.println(noCloudUrl);
+
         long expirationTime = 60 * 100;
         return runModelServerModel(noCloudUrl, noCloudParam, expirationTime, caseJsonObj);
     }

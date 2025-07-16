@@ -166,7 +166,7 @@ import {
 } from 'lucide-vue-next'
 import { useGridStore } from '@/store'
 import { mapManager } from '@/util/map/mapManager'
-import { getNoCloudUrl4MosaicJson } from '@/api/http/satellite-data/visualize.api';
+import { getNoCloudUrl4MosaicJson, getMosaicJsonUrl } from '@/api/http/satellite-data/visualize.api';
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const selectedSceneId = ref('')
@@ -224,17 +224,29 @@ const selectIndex = (item) => {
 const handleCloudTiles = async () => {
 
     try {
+        console.log('props',props.thematicConfig)
         if(!props.thematicConfig.dataset){
             ElMessage.warning('请先从"前序数据"中选择一个数据集')
             return
         }
-        console.log('props.thematicConfig.dataset.result', props.thematicConfig.dataset.result)
-        const mosaicUrl = getNoCloudUrl4MosaicJson({
-            mosaicJsonPath: props.thematicConfig.dataset.bucket + '/' + props.thematicConfig.dataset.object_path
+        let bucket, object_path
+        if (props.thematicConfig.dataset?.data) {
+            bucket = props.thematicConfig.dataset?.data.bucket
+            object_path = props.thematicConfig.dataset?.data.object_path
+        } else if (props.thematicConfig.dataset?.bucket) {
+            bucket = props.thematicConfig.dataset?.bucket
+            object_path = props.thematicConfig.dataset?.object_path
+        }
+        // console.log('props.thematicConfig.dataset.result', props.thematicConfig.dataset.result)
+        let mosaicUrl = getMosaicJsonUrl({
+            mosaicJsonPath: bucket + '/' + object_path
         })
+        console.log('mosaicUrl', mosaicUrl)
 
         const encodedExpr = encodeURIComponent('2*b1-b2+b3')
+        
         const tileUrl = `/tiler/mosaic/analysis/{z}/{x}/{y}.png?mosaic_url=${mosaicUrl}&expression=${encodedExpr}&pixel_method=first&color=rdylgn`
+        console.log('tileUrl', tileUrl)
         // const tileUrl = `http://localhost:8000/mosaic/analysis/{z}/{x}/{y}.png?mosaic_url=http://192.168.1.135:30900/temp-files/mosaicjson/hello.json&expression=${encodedExpr}&pixel_method=first&color=rdylgn`
         // const tileUrl = `http://localhost:8000/mosaic/analysis/{z}/{x}/{y}.png?mosaic_url=${mosaicUrl}&expression=${encodedExpr}&pixel_method=first&color=rdylgn`
         // const tileUrl = `http://localhost:8000/mosaic/analysis/13/6834/3215.png?mosaic_url=http://192.168.1.135:30900/temp-files/mosaicjson/hello.json&expression=${encodedExpr}&pixel_method=first&color=rdylgn`

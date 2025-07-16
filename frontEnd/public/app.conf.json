@@ -3,8 +3,9 @@
     "back_app": "/api",
     "back_app2": "/api2",
     "back_websocket": "",
-    "minioIpAndPort": "http://localhost:30900",
-    "titiler": "http://localhost:8000",
+    "minioIpAndPort": "http://172.20.10.3:30900",
+    "titilerIpAndPort": "http://172.20.10.3:8000",
+    "titiler": "/tiler",
 
     "ndviProjectId": "PRJyxITmCVLn3PMoaeca",
     "spectrumProjectId": "PRJyxITmCVLn3PMoaeca",
