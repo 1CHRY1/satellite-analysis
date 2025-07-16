@@ -430,6 +430,14 @@ const handlePublishConfirm = async () => {
         message.success('发布成功')
         message.info(`发布地址：${publishUrl}`, 10)
 
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(publishUrl).then(() => {
+                message.success('发布URL已复制到剪贴板')
+            }).catch(() => {
+                message.error('复制失败，请手动复制')
+            })
+        }
+
         publishModalVisible.value = false
         
         // 重置表单
@@ -456,10 +464,57 @@ const handleDownload = (item: any) => {
     downloadModalVisible.value = true
 }
 
-const handleDownloadConfirm = () => {
-    console.log('下载确认', downloadForm)
-    // TODO: 实现下载逻辑
-    downloadModalVisible.value = false
+const handleDownloadConfirm = async () => {
+    try {
+        if (!currentItem.value) {
+            message.error('请选择要下载的任务')
+            return
+        }
+
+        // 获取配置
+        const conf = ezStore.get('conf')
+        const minioEndpoint = conf['minioIpAndPort']
+
+        // 获取case结果数据
+        const result = await getResultByCaseId(currentItem.value.caseId)
+        const resultData = result.data
+
+        if (!resultData) {
+            message.error('无法获取下载数据，请稍后重试')
+            return
+        }
+
+        if (!resultData.bucket) {
+            message.error('无法获取下载数据的bucket，请稍后重试')
+            return
+        }
+
+        if (!resultData.object_path) {
+            message.error('无法获取下载数据的object_path，请稍后重试')
+            return
+        }
+
+        // 生成下载URL
+        const downloadUrl = `${minioEndpoint}/${resultData.bucket}/${resultData.object_path}`
+
+        // 弹出下载URL
+        message.success('下载成功')
+        message.info(`下载地址：${downloadUrl}`, 10)
+        downloadModalVisible.value = false
+
+        // 复制到剪贴板
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(downloadUrl).then(() => {
+                message.success('下载URL已复制到剪贴板')
+            }).catch(() => {
+                message.error('复制失败，请手动复制')
+            })
+        }
+
+    } catch (error) {
+        console.error('下载失败', error)
+        message.error('下载失败，请稍后重试')
+    }
 }
 
 const handleDownloadCancel = () => {

@@ -518,7 +518,8 @@ const {
   getCaseList,
   activeTab,
   handleSelectTab,
-  showResult
+  showResult,
+  onResultSelected
 } = useViewHistoryModule();
 
 const completedCases = ref<Case[]>([]); // 仅存储已完成的任务
@@ -556,10 +557,24 @@ const mockCompletedCases = ref([
 ])
 
 
-onMounted(async () => {
+onMounted(() => {
+    // 设置结果选择的回调
+    onResultSelected.value = (result) => {
+        selectedResult.value = result
+        // 立即更新 thematicConfig
+        thematicConfig.value = {
+            ...thematicConfig.value,
+            dataset: result.data  // 注意这里用 result.data
+        }
+        // 关闭弹窗
+        showHistory.value = false
+        ElMessage.success('已选择数据集')
+    }
+    
     loadCompletedCases();
     addLocalInternalLayer()
 })
+
 onUnmounted(() => {
     mapManager.withMap((map) => {
         const sourceId = 'Local-Interal-Source'
