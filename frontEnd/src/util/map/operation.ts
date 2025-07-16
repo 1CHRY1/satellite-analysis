@@ -18,6 +18,7 @@ import {
     getTerrainRGBUrl,
     getOneBandColorUrl,
     getNoCloudUrl,
+    getOnTheFlyUrl,
 } from '@/api/http/satellite-data/visualize.api'
 
 ////////////////////////////////////////////////////////
@@ -1078,7 +1079,9 @@ export function map_destroySceneBoxLayer(): void {
 }
 
 //////////// 无云一版图
-export function map_addNoCloudLayer(url: string) {
+export function map_addNoCloudLayer(jsonUrl: string) {
+    const url = getOnTheFlyUrl(jsonUrl)
+    console.log('On-the-fly url', url)
     const id = 'no-cloud-layer'
     const source = id + '-source'
 

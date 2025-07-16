@@ -1,4 +1,6 @@
 server:
+  tomcat:
+    connection-timeout: 300000
   port: 8999
 
 netty:

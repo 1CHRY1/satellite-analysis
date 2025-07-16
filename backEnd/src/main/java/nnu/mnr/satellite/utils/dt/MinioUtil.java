@@ -71,7 +71,8 @@ public class MinioUtil {
             minioClient.putObject(PutObjectArgs.builder()
                     .bucket(bucket)
                     .object(fileName)
-                    .stream(inputStream, file.getSize(), -1)
+                    // TODO
+                    .stream(inputStream, file.getSize(), 5 * 1024 * 1024)
                     .contentType(file.getContentType())
                     .build());
             inputStream.close();

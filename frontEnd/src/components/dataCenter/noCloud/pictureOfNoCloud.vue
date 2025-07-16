@@ -1968,23 +1968,13 @@ const getCoverage = (gridImages: any, gridCount: number) => {
     return coverage
 }
 
-const mockSceneIds = [
-  "SCrmtcmrcgp",
-  "SCwaxjagmrv",
-  "SC825032809",
-  "SCl4ad8ul91",
-  "SCa6c4bossr",
-  "SC04u521n84",
-  "SCaj9c7exoq",
-  "SCrsk2g1b1g"
-]
-
 // 创建无云一版图瓦片
 const handleCreateNoCloudTiles = async () => {
     try {
         // 1. 准备参数
+        const sceneIds = exploreData.images.map((item: any) => item.sceneId)
         const param = {
-            sceneIds: mockSceneIds,
+            sceneIds: sceneIds,
         }
 
         console.log('创建无云一版图配置参数:', param)
