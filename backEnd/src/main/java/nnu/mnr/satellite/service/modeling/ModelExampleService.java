@@ -211,8 +211,6 @@ public class ModelExampleService {
         caseJsonObj.put("regionId", regionId);
         caseJsonObj.put("bandList", bandList);
         String noCloudUrl;
-
-
         if (bandList.equals(Arrays.asList("Red", "Green", "Blue"))) {
             noCloudUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("noCloud");
         } else {

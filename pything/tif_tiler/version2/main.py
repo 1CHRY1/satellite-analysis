@@ -44,6 +44,5 @@ def createApp():
         return {"message": "Welcome to TiTiler"}
     
     return app
-    
-    
+
 app = createApp()
