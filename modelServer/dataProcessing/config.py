@@ -122,7 +122,7 @@ class hxfConfig(BaseConfig):
     MINIO_TEMP_FILES_BUCKET                         =       "temp-files"
 
     # MySQL Config
-    MYSQL_HOST                                      =       "127.0.0.1"
+    MYSQL_HOST                                      =       "localhost"
     MYSQL_TILE_PORT                                 =       3306
     MYSQL_TILE_DB                                   =       "tile"
     MYSQL_RESOURCE_PORT                             =       3306
@@ -131,7 +131,7 @@ class hxfConfig(BaseConfig):
     MYSQL_PWD                                       =       "123456"
 
     # Titiler Config
-    TITILER_BASE_URL                                =       "http://127.0.0.1:8000"
+    TITILER_BASE_URL                                =       "http://localhost:8000"
     MOSAIC_CREATE_URL                               =       TITILER_BASE_URL + "/mosaic/create"
 
     TEMP_OUTPUT_DIR                                 =       r"D:/code/test"
