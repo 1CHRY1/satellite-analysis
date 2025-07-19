@@ -379,7 +379,7 @@
 
                 <div
                     class="mt-12 flex flex-col items-center justify-between border-t border-slate-800 pt-8 md:flex-row">
-                    <p class="text-sm">© 2025 OpenGMS 遥感ARD平台。 保留所有权利。</p>
+                    <p class="text-sm">© 2025 OpenGMS 多源遥感应用支撑云平台。 保留所有权利。</p>
                     <div class="mt-4 flex space-x-4 md:mt-0">
                         <a href="#" class="text-slate-400 transition-colors hover:text-white">
                             <!-- <twitter class="h-5 w-5" /> -->

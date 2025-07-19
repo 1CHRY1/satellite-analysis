@@ -1,10 +1,10 @@
 export interface ToolParameter {
-  name?; string;
-  flags?: string;
-  type?: 'String' | 'Number' | 'Boolean';
-  description?: string;
+  Name?; string;
+  Flags?: string;
+  Type?: 'String' | 'Number' | 'Boolean';
+  Description?: string;
   default_value?: any;
-  optional?: boolean; // 
+  Optional?: boolean; // 
 }
 
 export interface ToolData {

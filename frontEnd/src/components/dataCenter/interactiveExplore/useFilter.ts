@@ -26,13 +26,12 @@ import { useLayer, type POIInfo } from './useLayer'
 import { useStats } from './useStats'
 import { ezStore } from "@/store"
 const { createGeoJSONFromBounds, marker, addPolygonLayer, destroyLayer, removeUniqueLayer,
-    addPOIMarker, addGridLayer, updateFullSceneGridLayer, addMultiRGBImageTileLayer, addMultiTerrainTileLayer, addMulti3DImageTileLayer, addMultiOneBandColorLayer, addMVTLayer } = useLayer()
+    addPOIMarker, addGridLayer, updateFullSceneGridLayer, addMultiRGBImageTileLayer, addMultiTerrainTileLayer,addBaseTerrainTileLayer, addMulti3DImageTileLayer, addMultiOneBandColorLayer, addMVTLayer } = useLayer()
 const { countResolutionScenesCoverage, classifyScenesByResolution, getSceneIdsByPlatformName, getSensorNamebyPlatformName
     , classifyProducts, countProductsCoverage
  } = useStats()
 const coverageRSRate = ref('0.00%')
 const coverageProductsRate = ref('0.00%')
-const coverageVectorRate = ref('0.00%')
 import { useExploreStore } from '@/store/exploreStore'
 const exploreData = useExploreStore()
 import { message } from 'ant-design-vue'
@@ -51,7 +50,7 @@ export const useFilter = () => {
     const defaultConfig = ref({
         useLatestTime: false,
         useMinCloud: false,
-        dateRange: [dayjs('2024-01'), dayjs('2025-05')],
+        dateRange: [dayjs('2025-05-01'), dayjs('2025-06-30')],
         cloudRange: [0, 100],
     })
 
@@ -285,8 +284,7 @@ export const useFilter = () => {
                     ...image,
                     tags: [image.tags.source, image.tags.production, image.tags.category],
                 }))
-            allProducts.value = allScenesRes
-                .filter((image) => image.dataType !== 'satellite')
+            allProducts.value = allScenesRes.filter((image) => image.dataType !== 'satellite')
                 .map((image) => ({
                     ...image,
                     tags: [image.tags.source, image.tags.production, image.tags.category],
@@ -311,7 +309,7 @@ export const useFilter = () => {
                     tags: [image.tags.source, image.tags.production, image.tags.category],
                 }))
             allProducts.value = allScenesRes
-                .filter((image) => image.dataType !== 'satellite')
+                .filter((image) => image.dataType !== 'satellite' && image.dataType !== 'dem')
                 .map((image) => ({
                     ...image,
                     tags: [image.tags.source, image.tags.production, image.tags.category],
@@ -350,7 +348,44 @@ export const useFilter = () => {
          */
         allGridsInProduct.value = countProductsCoverage(ezStore.get('sceneGridsRes'))
         classifyProducts(allProducts.value)
-    
+
+        /**
+         * 加载DEM底图
+         */
+        let demProducts
+        let productSceneIds: any[] = []
+        let productSensorName = ''
+        let gridsBoundary
+        allProducts.value.forEach(product => {
+            if (product.dataType === 'dem') {
+                productSceneIds.push(product.sceneId)
+                productSensorName = product.sensorName
+            }
+        })
+        if (searchedSpatialFilterMethod.value === 'region') {
+            const params = {
+                sensorName: productSensorName,
+                sceneIds: productSceneIds,
+                regionId: finalLandId.value,
+                resolution: selectedGrid.value,
+            }
+            const coverProductsRes = await getCoverRegionSensorScenes(params)
+            demProducts = coverProductsRes.sceneList
+            gridsBoundary = coverProductsRes.gridsBoundary
+        } else if (searchedSpatialFilterMethod.value === 'poi') {
+            const params = {
+                sensorName: productSensorName,
+                sceneIds: productSceneIds,
+                locationId: finalLandId.value,
+                resolution: selectedGrid.value,
+            }
+            const coverProductsRes = await getCoverRegionSensorScenes(params)
+            demProducts = coverProductsRes.sceneList
+        }
+        if (demProducts.length > 0) {
+            await addTerrainBaseMap(demProducts, gridsBoundary)
+        }
+
         // 恢复状态
         filterLoading.value = false
         isFilterDone.value = true
@@ -384,8 +419,9 @@ export const useFilter = () => {
     
         // Get scene grids
         let sceneGridsRes = await getSceneGrids(sceneGridParam)
+        console.log('sceneGridRes', sceneGridsRes)
         let scenes = [...allScenes.value, ...allProducts.value]
-        // Get Vector Grids
+        // Get vector grids
         let vectorGridsRes = await getVectorGrids(vectorGridParam)
     
         const sceneTagMap = new Map<string, string[]>()
@@ -417,6 +453,7 @@ export const useFilter = () => {
             }
         }
         ezStore.set('sceneGridsRes', sceneGridsRes)
+        ezStore.set('vectorGridsRes', vectorGridsRes)
     
         // 算覆盖率
         let nonEmptyScenesCount = 0
@@ -425,13 +462,8 @@ export const useFilter = () => {
             if (item.scenes.some(scene => scene.dataType === 'satellite')) nonEmptyScenesCount++
             if (item.scenes.some(scene => scene.dataType !== 'satellite')) nonEmptyProductsCount++
         }
-        let nonEmptyVectorCount = 0
-        for (const item of vectorGridsRes) {
-            if (item.vectors.length > 0) nonEmptyVectorCount++
-        }
         coverageRSRate.value = ((nonEmptyScenesCount * 100) / sceneGridsRes.length).toFixed(2) + '%'
         coverageProductsRate.value = ((nonEmptyProductsCount * 100) / sceneGridsRes.length).toFixed(2) + '%'
-        coverageVectorRate.value = ((nonEmptyVectorCount * 100) / vectorGridsRes.length).toFixed(2) + '%'
 
         updateFullSceneGridLayer(allGrids.value, sceneGridsRes, allScenes.value.length)
     
@@ -486,18 +518,91 @@ export const useFilter = () => {
             gridsBoundary = coverScenesRes.gridsBoundary
         }
         console.log('接口返回：覆盖的景们', coverScenes)
+        // 临时做法！！！！！！！！！！！！！！！
+        // 获取DEM的产品作为底图加上来
+        let demProducts
+        let productSceneIds: any[] = []
+        let productSensorName = ''
+        allProducts.value.forEach(product => {
+            if (product.dataType === 'dem') {
+                productSceneIds.push(product.sceneId)
+                productSensorName = product.sensorName
+            }
+        })
+        if (searchedSpatialFilterMethod.value === 'region') {
+            const params = {
+                sensorName: productSensorName,
+                sceneIds: productSceneIds,
+                regionId: finalLandId.value,
+                resolution: selectedGrid.value,
+            }
+            const coverProductsRes = await getCoverRegionSensorScenes(params)
+            demProducts = coverProductsRes.sceneList
+            gridsBoundary = coverProductsRes.gridsBoundary
+        } else if (searchedSpatialFilterMethod.value === 'poi') {
+            const params = {
+                sensorName: productSensorName,
+                sceneIds: productSceneIds,
+                locationId: finalLandId.value,
+                resolution: selectedGrid.value,
+            }
+            const coverProductsRes = await getCoverRegionSensorScenes(params)
+            demProducts = coverProductsRes.sceneList
+        }
+        console.log('scene:demProducts', demProducts)
+        await addTerrainBaseMap(demProducts, gridsBoundary)
         await addMultiRGBImageTileLayer(coverScenes, gridsBoundary, stopLoading)
+    }
+
+    // 创建无云一版图瓦片
+    const handleCreateNoCloudTiles = async () => {
+        try {
+            // 1. 准备参数
+            const sceneIds = allScenes.value.map((item: any) => item.sceneId)
+            const param = {
+                sceneIds: sceneIds,
+            }
+
+            console.log('创建无云一版图配置参数:', param)
+
+            // 2. 创建配置
+            const response = await fetch('/api/modeling/example/noCloud/createNoCloudConfig', {
+                method: 'POST',
+                body: JSON.stringify(param),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                },
+            })
+            const result = await response.json()
+            const jsonUrl = result.data  // 从CommonResultVO中获取data字段
+            
+            console.log('获取到的jsonUrl:', jsonUrl)
+            
+            // 3. 添加瓦片图层
+            
+            // 清除旧的无云图层
+            MapOperation.map_destroyNoCloudLayer()
+            
+            // 添加新的瓦片图层
+            MapOperation.map_addNoCloudLayer(jsonUrl)
+            
+            console.log('无云一版图瓦片图层已添加到地图')
+            
+        } catch (error) {
+            console.error('创建无云一版图瓦片失败:', error)
+        }
     }
 
     /**
      * 7. 产品可视化
      */
-    const handleShowProductInBoundary = async (label: string) => {
+    const handleShowProductInBoundary = async (label: string, platformName: string) => {
         console.log('label', label)
-        const sceneIds = getSceneIdsByPlatformName(label, productPlatformSensor[label], allProducts.value)
+        const sceneIds = getSceneIdsByPlatformName(label, platformName, allProducts.value)
         console.log('选中的景ids', sceneIds)
         console.log('当前所有的产品', allProducts.value)
-        const sensorName = getSensorNamebyPlatformName(productPlatformSensor[label], allProducts.value)
+        const sensorName = getSensorNamebyPlatformName(platformName, allProducts.value)
         // 之所以是sensorName，因为后台统一存在sensor表
         console.log('匹配的sensorName', sensorName)
 
@@ -526,6 +631,38 @@ export const useFilter = () => {
             gridsBoundary = coverProductsRes.gridsBoundary
         }
         console.log('接口返回：覆盖的产品们', coverProducts)
+
+        let demProducts
+        let productSceneIds: any[] = []
+        let productSensorName = ''
+        allProducts.value.forEach(product => {
+            if (product.dataType === 'dem') {
+                productSceneIds.push(product.sceneId)
+                productSensorName = product.sensorName
+            }
+        })
+        if (searchedSpatialFilterMethod.value === 'region') {
+            const params = {
+                sensorName: productSensorName,
+                sceneIds: productSceneIds,
+                regionId: finalLandId.value,
+                resolution: selectedGrid.value,
+            }
+            const coverProductsRes = await getCoverRegionSensorScenes(params)
+            demProducts = coverProductsRes.sceneList
+            gridsBoundary = coverProductsRes.gridsBoundary
+        } else if (searchedSpatialFilterMethod.value === 'poi') {
+            const params = {
+                sensorName: productSensorName,
+                sceneIds: productSceneIds,
+                locationId: finalLandId.value,
+                resolution: selectedGrid.value,
+            }
+            const coverProductsRes = await getCoverRegionSensorScenes(params)
+            demProducts = coverProductsRes.sceneList
+        }
+        
+        await addTerrainBaseMap(demProducts, gridsBoundary)
         switch (label) {
             case 'DEM':
                 await addMultiTerrainTileLayer(coverProducts, gridsBoundary, stopLoading)
@@ -557,6 +694,28 @@ export const useFilter = () => {
         await addMVTLayer(source_layer, finalLandId.value)
     }
 
+    /**
+     * 9. DEM底图可视化
+     */
+    const addTerrainBaseMap = async (demProducts: any[], gridsBoundary: any) => {
+        if (demProducts.length === 0) {
+            return
+        }
+        let targetProduct = demProducts[0]
+        if (!targetProduct)
+            return
+        if (ezStore.get('currentTerrainBaseMap')) {
+            let terrainType = ezStore.get('currentTerrainBaseMap')
+            switch (terrainType) {
+                case 'DEM':
+                    await addBaseTerrainTileLayer(targetProduct, gridsBoundary)
+                    break
+                case 'DSM':
+                    break
+            }
+        }
+    }
+
 
     return {
         gridOptions,
@@ -584,12 +743,12 @@ export const useFilter = () => {
         allProducts,
         allVectors,
         coverageProductsRate,
-        coverageVectorRate,
         allGridsInResolution,
         allGridsInProduct,
         coverageRSRate,
         handleSelectTab,
         productType,
         productPlatformSensor,
+        handleCreateNoCloudTiles
     }
 }

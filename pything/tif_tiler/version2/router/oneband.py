@@ -183,3 +183,83 @@ async def get_tile(
     except Exception as e:
         print(e)
         return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
+    
+
+@router.get("/box/{z}/{x}/{y}.png")
+async def get_box_tile(
+    z: int, x: int, y: int,
+    bbox: str = Query(..., description="Bounding box (WGS84): minx,miny,maxx,maxy"),
+    url: str = Query(...),
+    b_min: float = Query(-1, description="Minimum value of the color band"),
+    b_max: float = Query(1, description="Maximum value of the color band"),
+    color: str = Query("rdylgn", description="Color map"),
+    # colormap Reference: https://cogeotiff.github.io/rio-tiler/colormap/#default-rio-tilers-colormaps
+    normalize_level: int = Query(0, description="The normalize level"),
+    nodata: float = Query(9999.0, description="No data value"),
+):
+    # Step 1: Parse the bbox
+    try:
+        bbox_minx, bbox_miny, bbox_maxx, bbox_maxy = map(float, bbox.split(","))
+    except Exception:
+        return Response(status_code=400, content=b"Invalid bbox format")
+
+    # Step 2: Calculate the intersection of the tile and the bbox
+    tile_wgs_bounds: dict = tile_bounds(x, y, z)
+
+    intersection_minx = max(tile_wgs_bounds["west"], bbox_minx)
+    intersection_miny = max(tile_wgs_bounds["south"], bbox_miny)
+    intersection_maxx = min(tile_wgs_bounds["east"], bbox_maxx)
+    intersection_maxy = min(tile_wgs_bounds["north"], bbox_maxy)
+    
+    if intersection_minx >= intersection_maxx or intersection_miny >= intersection_maxy:
+        return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
+
+    # Step3: 
+    try:
+        cog_path = url
+        cm = cmap.get(color)
+        with COGReader(cog_path, options={"nodata": nodata}) as cog:
+            if(cog.tile_exists(x, y, z)):
+
+                tile_data = cog.tile(x, y, z)
+                img = tile_data.data
+                mask = tile_data.mask
+            else :
+                print("tile not exist", z, x, y)
+                return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
+            
+        H,W = img.squeeze().shape
+        xs = np.linspace(tile_wgs_bounds['west'], tile_wgs_bounds['east'], W)
+        ys = np.linspace(tile_wgs_bounds['north'], tile_wgs_bounds['south'], H)
+        lon, lat = np.meshgrid(xs, ys)  # 每个像素的经纬度坐标，基于此计算掩膜
+        bbox_mask = (lon >= bbox_minx) & (lon <= bbox_maxx) & \
+                    (lat >= bbox_miny) & (lat <= bbox_maxy)
+        final_mask = np.logical_and(mask == 255, bbox_mask)
+        final_mask_uint8 = final_mask.astype("uint8") * 255
+
+        # 拉伸增强
+        b_min, b_max = get_percentile_range(img[0], mask, nodata, normalize_level)
+
+        normed = normalize(img[0], b_min, b_max)
+        
+        content = render(normed, mask=final_mask_uint8, img_format="png", colormap=cm, **img_profiles.get("png"))
+            
+        return Response(content=content, media_type="image/png")
+
+    except Exception as e:
+        print(e)
+        return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
+    
+
+def get_percentile_range(data, mask, nodata, level):
+    # 只考虑有效像素
+    valid = (mask == 255) & (~np.isnan(data)) & (~np.isinf(data)) & (data != nodata)
+    valid_data = data[valid]
+    if len(valid_data) == 0:
+        return float(np.nanmin(data)), float(np.nanmax(data))
+    # 计算分位区间
+    left = 0.5 * level
+    right = 100 - 0.5 * level
+    b_min = float(np.percentile(valid_data, left))
+    b_max = float(np.percentile(valid_data, right))
+    return b_min, b_max

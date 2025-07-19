@@ -125,6 +125,19 @@
                                                         </div>
                                                     </div>
                                                 </div>
+                                                <div class="control-info-item" @click="handleOnTheFly"
+                                                    :class="{ 'cursor-not-allowed': !isFilterDone,
+                                                            'cursor-pointer': isFilterDone,
+                                                    }">
+                                                    <div class="result-info-icon">
+                                                        ⚡
+                                                    </div>
+                                                    <div class="result-info-content" >
+                                                        <div class="result-info-value">
+                                                            <span style="font-size: 1rem;">on-the-fly</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                                 <div class="control-info-item" @click="toNoCloud"
                                                     :class="{ 'cursor-not-allowed': !isFilterDone,
                                                             'cursor-pointer': isFilterDone,
@@ -134,8 +147,7 @@
                                                     </div>
                                                     <div class="result-info-content">
                                                         <div class="result-info-value">
-                                                            <span style="font-size: 1rem;">无云</span>
-                                                            <span style="font-size: 0.85rem;">一版图</span>
+                                                            <span style="font-size: 1rem;">数据准备</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -164,7 +176,7 @@
                                     <div class="stats-header">
                                         <div class="config-label relative">
                                             <BoltIcon :size="16" class="config-icon" />
-                                            <span class="text-sm">遥感影像统计</span>
+                                            <span class="text-sm">遥感影像</span>
                                         </div>
                                         <div class="absolute right-2 cursor-pointer">
                                             <ChevronDown v-if="isRSExpand" :size="22" @click="isRSExpand = false" />
@@ -339,7 +351,7 @@
                                     <div class="stats-header">
                                         <div class="config-label relative">
                                             <BoltIcon :size="16" class="config-icon" />
-                                            <span>矢量数据统计</span>
+                                            <span>矢量数据</span>
                                         </div>
                                         <div class="absolute right-2 cursor-pointer">
                                             <ChevronDown v-if="isVectorExpand" :size="22" @click="isVectorExpand = false" />
@@ -347,78 +359,41 @@
                                         </div>
                                     </div>
                                     <div class="stats-content" v-show="isVectorExpand">
-                                        <div class="stats-item">
+                                        <div class="config-label relative">
+                                            <span class="result-info-label">共找到 {{allVectors.length}} 条记录</span>
+                                        </div>
+                                        <div v-for="(item, index) in allVectors" class="config-item mb-3" :key="item.tableName">
                                             <div class="config-label relative">
-                                                <BoltIcon :size="16" class="config-icon" />
-                                                <span>{{ t('datapage.explore.section_time.subtitle2') }}</span>
+                                                <Image :size="16" class="config-icon" />
+                                                <span>{{ item.vectorName }}</span>
+                                                <div class="absolute right-0 cursor-pointer">
+                                                    <a-tooltip>
+                                                        <template #title>{{t('datapage.history.preview')}}</template>
+                                                        <Eye v-if="previewVectorList[index]" @click="unPreviewVector" :size="16" class="cursor-pointer"/>
+                                                        <EyeOff v-else :size="16" @click="showVectorResult(item.tableName)" class="cursor-pointer"/>
+                                                    </a-tooltip>
+                                                </div>
                                             </div>
-                                            <div class="config-control flex-col gap-4">
-                                                <div class="result-info-container">
-                                                    <div class="result-info-item">
-                                                        <div class="result-info-icon">
-                                                            <MapIcon :size="16" />
-                                                        </div>
-                                                        <div class="result-info-content">
-                                                            <div class="result-info-label">{{ t('datapage.explore.section_time.resolution') }}</div>
-                                                            <div class="result-info-value">
-                                                                {{ selectedGrid }}km
+                                            <!-- <div class="config-control flex-col !items-start">
+                                                <div class="flex w-full flex-col gap-2">
+                                                    <div class="result-info-container">
+                                                        <div class="result-info-item">
+                                                            <div class="result-info-icon">
+                                                                <DatabaseIcon :size="12" />
                                                             </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="result-info-item">
-                                                        <div class="result-info-icon">
-                                                            <CalendarIcon :size="16" />
-                                                        </div>
-                                                        <div class="result-info-content">
-                                                            <div class="result-info-label">{{ t('datapage.explore.section_time.time') }}</div>
-                                                            <div class="result-info-value date-range">
-                                                                <div class="date-item">
-                                                                    {{
-                                                                        formatTime(
-                                                                            defaultConfig.dateRange[0],
-                                                                            'day',
-                                                                        )
-                                                                    }}~
-                                                                    {{
-                                                                        formatTime(
-                                                                            defaultConfig.dateRange[1],
-                                                                            'day',
-                                                                        )
-                                                                    }}
+                                                            <div class="result-info-content">
+                                                                <div class="result-info-label">{{t('datapage.history.data')}}</div>
+                                                                <div>
+                                                                    {{ item.dataSet }}
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div class="result-info-item">
-                                                        <div class="result-info-icon">
-                                                            <CloudIcon :size="16" />
-                                                        </div>
-                                                        <div class="result-info-content">
-                                                            <div class="result-info-label">{{ t('datapage.explore.section_time.search') }}</div>
-                                                            <div class="result-info-value">
-                                                                {{ allVectors.length }}条矢量数据
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="result-info-item">
-                                                        <div class="result-info-icon">
-                                                            <CloudIcon :size="16" />
-                                                        </div>
-                                                        <div class="result-info-content">
-                                                            <div class="result-info-label">{{ t('datapage.explore.percent') }}</div>
-                                                            <div class="result-info-value">
-                                                                {{
-                                                                    coverageVectorRate != 'NaN%'
-                                                                        ? coverageVectorRate
-                                                                        : '待计算'
-                                                                }}
-                                                            </div>
-                                                        </div>
-                                                    </div>
                                                 </div>
-                                            </div>
+                                            </div> -->
                                         </div>
-                                        <div v-if="Object.keys(allVectors).length > 0" class="!w-full ml-3">
+                                        <a-empty v-if="allVectors.length === 0" />
+                                        <!-- <div v-if="Object.keys(allVectors).length > 0" class="!w-full ml-3">
                                             <label class="mr-2 text-white">选择数据集：</label>
                                             <select
                                                 class="max-h-[600px] w-[calc(100%-113px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
@@ -439,14 +414,14 @@
                                                         @click="clearAllShowingSensor" />
                                                 </a-tooltip>
                                             </div>
-                                        </div>
+                                        </div> -->
                                     </div>
                                 </div>
                                 <div class="stats">
                                     <div class="stats-header">
                                         <div class="config-label relative">
                                             <BoltIcon :size="16" class="config-icon" />
-                                            <span>遥感产品统计</span>
+                                            <span>栅格产品</span>
                                         </div>
                                         <div class="absolute right-2 cursor-pointer">
                                             <ChevronDown v-if="isProductsExpand" :size="22" @click="isProductsExpand = false" />
@@ -454,76 +429,8 @@
                                         </div>
                                     </div>
                                     <div class="stats-content" v-show="isProductsExpand">
-                                        <div class="stats-item">
-                                            <div class="config-label relative">
-                                                <BoltIcon :size="16" class="config-icon" />
-                                                <span>{{ t('datapage.explore.section_time.subtitle2') }}</span>
-                                            </div>
-                                            <div class="config-control flex-col gap-4">
-                                                <div class="result-info-container">
-                                                    <div class="result-info-item">
-                                                        <div class="result-info-icon">
-                                                            <MapIcon :size="16" />
-                                                        </div>
-                                                        <div class="result-info-content">
-                                                            <div class="result-info-label">{{ t('datapage.explore.section_time.resolution') }}</div>
-                                                            <div class="result-info-value">
-                                                                {{ selectedGrid }}km
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="result-info-item">
-                                                        <div class="result-info-icon">
-                                                            <CalendarIcon :size="16" />
-                                                        </div>
-                                                        <div class="result-info-content">
-                                                            <div class="result-info-label">{{ t('datapage.explore.section_time.time') }}</div>
-                                                            <div class="result-info-value date-range">
-                                                                <div class="date-item">
-                                                                    {{
-                                                                        formatTime(
-                                                                            defaultConfig.dateRange[0],
-                                                                            'day',
-                                                                        )
-                                                                    }}~
-                                                                    {{
-                                                                        formatTime(
-                                                                            defaultConfig.dateRange[1],
-                                                                            'day',
-                                                                        )
-                                                                    }}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="result-info-item">
-                                                        <div class="result-info-icon">
-                                                            <CloudIcon :size="16" />
-                                                        </div>
-                                                        <div class="result-info-content">
-                                                            <div class="result-info-label">{{ t('datapage.explore.section_time.search') }}</div>
-                                                            <div class="result-info-value">
-                                                                {{ allProducts.length }}幅产品
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="result-info-item">
-                                                        <div class="result-info-icon">
-                                                            <CloudIcon :size="16" />
-                                                        </div>
-                                                        <div class="result-info-content">
-                                                            <div class="result-info-label">{{ t('datapage.explore.percent') }}</div>
-                                                            <div class="result-info-value">
-                                                                {{
-                                                                    coverageProductsRate != 'NaN%'
-                                                                        ? coverageProductsRate
-                                                                        : '待计算'
-                                                                }}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                        <div class="config-label relative">
+                                            <span class="result-info-label">共找到 {{allProducts.length}} 条记录</span>
                                         </div>
                                         <div class="stats-item-tree" v-for="([label, value], index) in productType" :key="value"
                                             :class="{
@@ -535,81 +442,24 @@
                                                 <ChevronDown v-if="isProductsItemExpand[index]" :size="22" class="config-icon cursor-pointer" @click="isProductsItemExpand[index] = false" />
                                                 <ChevronRight v-else @click="isProductsItemExpand[index] = true" :size="22" class="config-icon cursor-pointer" />
                                                 <span>{{ label }}产品</span>
-                                            </div>
-                                            <div class="stats-subtitile" v-show="!isProductsItemExpand[index]">
-                                                <div class="flex flex-row gap-2 items-center ml-4">
+                                                <div class="absolute right-0 flex flex-row gap-2 items-center">
                                                     <ImageIcon :size="12" class="text-[#7a899f]" @click="isProductsItemExpand[index] = false" />
-                                                    <span class="text-xs text-[#7a899f]">{{ getSceneCountByProduct(value, allProducts) }} 景</span>
-                                                </div>
-                                                <div class="flex flex-row gap-2 items-center">
-                                                    <ChartColumnBig :size="12" class="text-[#7a899f]" @click="isProductsItemExpand[index] = false" />
-                                                    <span class="text-xs text-[#7a899f]">
-                                                        {{
-                                                            (
-                                                                (allGridsInProduct[label] * 100) /
-                                                                allGridCount
-                                                            ).toFixed(2) + '%'
-                                                        }}
-                                                    </span>
+                                                    <span class="text-xs text-[#7a899f]">{{ getSceneCountByProduct(value, allProducts) }} 幅</span>
                                                 </div>
                                             </div>
-                                            <div class="config-control flex w-full flex-col gap-4 h-full" v-show="isProductsItemExpand[index]">
-                                                <div class="result-info-container w-full h-full">
-                                                    <div class="result-info-item">
-                                                        <div class="result-info-icon">
-                                                            <CloudIcon :size="16" />
+
+                                            <div v-show="isProductsItemExpand[index]">
+                                                <div v-for="(item, index) in classifiedProducts[label]" class="config-item mt-1 mb-2" :key="index">
+                                                    <div class="config-label relative">
+                                                        <Image :size="16" class="config-icon" />
+                                                        <span>{{ item }}</span>
+                                                        <div class="absolute right-0 cursor-pointer">
+                                                            <a-tooltip>
+                                                                <template #title>{{t('datapage.history.preview')}}</template>
+                                                                <Eye v-if="shouldShowEyeOff(label, index)" @click="toggleEye(label, index, item)" :size="16" class="cursor-pointer"/>
+                                                                <EyeOff v-else :size="16" @click="toggleEye(label, index, item)" class="cursor-pointer"/>
+                                                            </a-tooltip>
                                                         </div>
-                                                        <div class="result-info-content">
-                                                            <div class="result-info-label">包含</div>
-                                                            <div class="result-info-value">
-                                                                {{ getSceneCountByProduct(value, allProducts) }}幅产品
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="result-info-item">
-                                                        <div class="result-info-icon">
-                                                            <CloudIcon :size="16" />
-                                                        </div>
-                                                        <div class="result-info-content">
-                                                            <div class="result-info-label">{{ t('datapage.explore.percent') }}</div>
-                                                            <div v-if="!(allProducts.length > 0)" class="result-info-value">
-                                                                {{ t('datapage.explore.section_interactive.intext1') }}
-                                                            </div>
-                                                            <div v-else class="result-info-value">
-                                                                {{
-                                                                    (
-                                                                        (allGridsInProduct[label] * 100) /
-                                                                        allGridCount
-                                                                    ).toFixed(2) + '%'
-                                                                }}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div v-if="Object.keys(classifiedProducts).length > 0" class="!w-full ml-3">
-                                                    <label class="mr-2 text-white">选择产品：</label>
-                                                    <select
-                                                        class="max-h-[600px] w-[calc(100%-113px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
-                                                        v-model="productPlatformSensor[label]">
-                                                        <option disabled selected value="">{{ t('datapage.explore.section_interactive.choose') }}</option>
-                                                        <!-- <option :value="'all'" class="truncate">全选</option> -->
-                                                        <option v-for="platformName in classifiedProducts[
-                                                            label
-                                                        ]" :value="platformName" :key="platformName" class="truncate">
-                                                            {{ platformName }}
-                                                        </option>
-                                                    </select>
-                                                    <div class="flex flex-row items-center">
-                                                        <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
-                                                            @click="handleShowProductInBoundary(label)"
-                                                            :disabled="!productPlatformSensor[label]">
-                                                            产品可视化
-                                                        </a-button>
-                                                        <a-tooltip>
-                                                            <template #title>{{ t('datapage.explore.section_interactive.clear') }}</template>
-                                                            <Trash2Icon :size="18" class="mt-4! ml-4! cursor-pointer"
-                                                                @click="clearAllShowingSensor" />
-                                                        </a-tooltip>
                                                     </div>
                                                 </div>
                                             </div>
@@ -753,6 +603,8 @@ import {
     ChevronUp,
     Percent,
     ChartColumnBig,
+    EyeOff,
+    Eye,
 } from 'lucide-vue-next'
 const emit = defineEmits(['submitConfig'])
 import { useExploreStore } from '@/store/exploreStore'
@@ -783,9 +635,11 @@ const {
     // 筛选
     allScenes, allGridsInResolution, allProducts, allGridsInProduct, allVectors, filter: applyFilter, filterLoading, isFilterDone,
     // 统计信息面板
-    coverageRSRate, coverageProductsRate, coverageVectorRate, handleShowImageInBoundary, handleShowProductInBoundary, handleShowVectorInBoundary,
+    coverageRSRate, coverageProductsRate, handleShowImageInBoundary, handleShowProductInBoundary, handleShowVectorInBoundary,
     // 影像分辨率相关变量
-    resolutionType, resolutionPlatformSensor, productType, productPlatformSensor
+    resolutionType, resolutionPlatformSensor, productType, productPlatformSensor,
+    // on-the-fly
+    handleCreateNoCloudTiles: handleOnTheFly,
 } = useFilter()
 const { classifiedScenes, getSceneCountByResolution, classifiedProducts, getSceneCountByProduct } = useStats()
 const { clearAllShowingSensor } = useLayer()
@@ -814,6 +668,55 @@ const toNoCloud = () => {
         // TODO 跳转有Bug
         router.push('/nocloud')
     }
+}
+
+const previewVectorList = computed<boolean[]>(() => {
+    const list = Array(allVectors.value.length).fill(false)
+    if (previewVectorIndex.value !== null) {
+        list[previewVectorIndex.value] = true
+    }
+    return list
+})
+const previewVectorIndex = ref<number | null>(null)
+const showVectorResult = async (tableName: string) => {
+    previewVectorIndex.value = allVectors.value.findIndex(item => item.tableName === tableName)
+    handleShowVectorInBoundary(tableName)
+}
+const unPreviewVector = () => {
+    previewVectorIndex.value = null
+    MapOperation.map_destroyMVTLayer()
+}
+
+// 使用一个对象来存储每个 Product Item 的显示状态
+const eyeStates = ref({});
+// 切换显示状态的方法
+const toggleEye = (label: string, index: number, platformName: string) => {
+    const key = `${label}_${index}`;
+    let isShow = eyeStates.value[key];
+    eyeStates.value[key] = !isShow;
+    if (eyeStates.value[key]) {
+        Object.keys(eyeStates.value).forEach(item => {
+            if (item !== key) {
+                eyeStates.value[item] = false
+            }
+        })
+        showProductResult(label, platformName)
+    } else {
+        unPreviewProduct()
+    }
+};
+
+// 判断当前应该显示 Eye 还是 EyeOff
+const shouldShowEyeOff = (label: string, index: number) => {
+  const key = `${label}_${index}`;
+  return eyeStates.value[key];
+};
+const showProductResult = async (label: string, platformName: string) => {
+    clearAllShowingSensor()
+    handleShowProductInBoundary(label, platformName)
+}
+const unPreviewProduct = () => {
+    clearAllShowingSensor()
 }
 
 /**

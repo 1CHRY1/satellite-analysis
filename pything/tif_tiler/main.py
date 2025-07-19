@@ -2,7 +2,8 @@ def createApp():
     
     # 馃構 If some error about PROJ_DATA, you can set environment variable as follows: 
     # import os
-    # os.environ['PROJ_DATA'] = r'D:\env\miniconda\envs\grid\Lib\site-packages\rasterio\proj_data'
+    # os.environ['PROJ_LIB'] = os.path.dirname(__file__)
+    # print("os.environ['PROJ_LIB'] -- ", os.environ['PROJ_LIB'])
     
     from fastapi import FastAPI
     from titiler.core.factory import TilerFactory

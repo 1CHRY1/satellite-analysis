@@ -34,6 +34,12 @@ spring:
 #          password: 123456
 #          #          password: ogms250410
 #          driver-class-name: org.postgresql.Driver
+        pg_satellite:
+          #          url: jdbc:postgresql://223.2.34.8:31543/satellite
+          url: jdbc:postgresql://localhost:5432/satellite
+          username: postgres
+          password: 123456
+          driver-class-name: org.postgresql.Driver
   servlet:
     multipart:
       max-file-size: 1GB
@@ -62,19 +68,19 @@ mybatis-plus:
 #  dir: D:/1tools/OpenSSL/ca
 
 minio:
-  access-key: jTbgNHEqQafOpUxVg7Ol
-  secret-key: 7UxtrqhSOyN1KUeumbqTRMv1zeluLO69OwJnCC0M
-  url: http://localhost:30900
+  access-key: minioadmin
+  secret-key: minioadmin
+  url: http://172.20.10.3:30900
   #url: http://223.2.43.228:30900
 
 docker:
   # 执行模式：local（本地Docker）或 remote（远程服务器）
-  mode: "local"
-  # 本地Docker配置
-  local:
-    enabled: true
-    localPath: D:/satellite-projects/
-    workDir: /workspace/
+#  mode: "remote"
+#  # 本地Docker配置
+#  local:
+#    enabled: true
+#    localPath: D:/satellite-projects/
+#    workDir: /workspace/
   # 远程服务器配置（保留原有配置）
   defaultServer:
     port: 2375
@@ -110,6 +116,7 @@ modelServer:
     merge: /v0/tif/merge_v2
     spectrum: /v0/tif/get_spectral_profile
     noCloud: /v0/tif/calc_no_cloud
+    noCloud_complex: /v0/tif/calc_no_cloud_complex
     #    noCloud: /v0/tif/calc_qa_middle
     #    noCloud: /v0/tif/calc_qa_simple
     #    noCloud: /v0/tif/calc_qa
@@ -119,8 +126,9 @@ modelServer:
   interval:
     status: 2
 
+
 tiler:
-  end-point: http://223.2.43.228:31800
+  end-point: http://127.0.0.1:8000
 
 satelliteConfig:
   path: D:/code/band_config.json

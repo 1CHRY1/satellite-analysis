@@ -1,6 +1,7 @@
 package nnu.mnr.satellite.service.modeling;
 
 import com.alibaba.fastjson2.JSONObject;
+import io.minio.MinioClient;
 import nnu.mnr.satellite.jobs.QuartzSchedulerManager;
 import nnu.mnr.satellite.model.dto.modeling.*;
 import nnu.mnr.satellite.model.po.resources.Scene;
@@ -49,6 +50,9 @@ import io.minio.PutObjectArgs;
 
 @Service
 public class ModelExampleService {
+
+    @Autowired
+    private MinioClient minioClient;
 
     @Autowired
     ModelServerProperties modelServerProperties;
@@ -105,7 +109,11 @@ public class ModelExampleService {
     // 函数重载，无云一版图专用
     private CommonResultVO runModelServerModel(String url, JSONObject param, long expirationTime, JSONObject caseJsonObj) {
         try {
-            JSONObject modelCaseResponse = JSONObject.parseObject(ProcessUtil.runModelCase(url, param));
+//            JSONObject modelCaseResponse = JSONObject.parseObject(ProcessUtil.runModelCase(url, param));
+            String rawResponse = ProcessUtil.runModelCase(url, param);
+            System.out.println("Raw Response: " + rawResponse); // 打印原始返回内容
+            JSONObject modelCaseResponse = JSONObject.parseObject(rawResponse); // 确认是否抛出异常
+
             String caseId = modelCaseResponse.getJSONObject("data").getString("taskId");
             // 在没有相应历史记录的情况下, 持久化记录
             if (caseDataService.selectById(caseId) == null) {
@@ -125,6 +133,7 @@ public class ModelExampleService {
         Integer regionId = noCloudFetchDTO.getRegionId();
         Integer resolution = noCloudFetchDTO.getResolution();
         List<String> sceneIds = noCloudFetchDTO.getSceneIds();
+        List<String> bandList = noCloudFetchDTO.getBandList();
 
         // 构成影像景参数信息
         List<ModelServerSceneDTO> modelServerSceneDTOs = new ArrayList<>();
@@ -153,7 +162,7 @@ public class ModelExampleService {
         Geometry boundary = getGridsBoundaryByTilesAndResolution(tileIds, resolution);
 
         // 请求modelServer
-        JSONObject noCloudParam = JSONObject.of("tiles", tileIds, "scenes", modelServerSceneDTOs, "cloud", noCloudFetchDTO.getCloud(), "resolution", resolution);
+        JSONObject noCloudParam = JSONObject.of("tiles", tileIds, "scenes", modelServerSceneDTOs, "cloud", noCloudFetchDTO.getCloud(), "resolution", resolution, "bandList", bandList);
         JSONObject caseJsonObj = JSONObject.of("boundary", boundary, "address", address, "resolution", resolution, "sceneIds", sceneIds, "dataSet", noCloudFetchDTO.getDataSet());
         caseJsonObj.put("regionId", regionId);
         String noCloudUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("noCloud");
@@ -166,7 +175,10 @@ public class ModelExampleService {
         Integer regionId = noCloudFetchDTO.getRegionId();
         Integer resolution = noCloudFetchDTO.getResolution();
         List<String> sceneIds = noCloudFetchDTO.getSceneIds();
-
+        List<String> bandList = noCloudFetchDTO.getBandList();
+        if (bandList == null || bandList.isEmpty()) {
+            bandList = Arrays.asList("Red", "Green", "Blue");
+        }
         // 构成影像景参数信息
         List<ModelServerSceneDTO> modelServerSceneDTOs = new ArrayList<>();
 
@@ -194,10 +206,18 @@ public class ModelExampleService {
         Geometry boundary = getGridsBoundaryByTilesAndResolution(tileIds, resolution);
 
         // 请求modelServer
-        JSONObject noCloudParam = JSONObject.of("tiles", tileIds, "scenes", modelServerSceneDTOs, "cloud", noCloudFetchDTO.getCloud(), "resolution", resolution);
+        JSONObject noCloudParam = JSONObject.of("tiles", tileIds, "scenes", modelServerSceneDTOs, "cloud", noCloudFetchDTO.getCloud(), "resolution", resolution, "bandList", bandList);
         JSONObject caseJsonObj = JSONObject.of("boundary", boundary, "address", address, "resolution", resolution, "sceneIds", sceneIds, "dataSet", noCloudFetchDTO.getDataSet());
         caseJsonObj.put("regionId", regionId);
-        String noCloudUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("noCloud");
+        caseJsonObj.put("bandList", bandList);
+        String noCloudUrl;
+        if (bandList.equals(Arrays.asList("Red", "Green", "Blue"))) {
+            noCloudUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("noCloud");
+        } else {
+            noCloudUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("noCloud_complex");
+        }
+        System.out.println(noCloudUrl);
+
         long expirationTime = 60 * 100;
         return runModelServerModel(noCloudUrl, noCloudParam, expirationTime, caseJsonObj);
     }
@@ -355,9 +375,13 @@ public class ModelExampleService {
     private JSONObject buildNoCloudConfig(NoCloudTileDTO noCloudTileDTO) {
         List<JSONObject> scenesConfig = new ArrayList<>();
 
+
         // 处理所有场景ID
         for (String sceneId : noCloudTileDTO.getSceneIds()) {
+
+            // 不知道为什么，JSON写入会被截断，还有，ZY的波段太多了！！！
             SceneSP scene = sceneDataServiceV2.getSceneByIdWithProductAndSensor(sceneId);
+
             List<ModelServerImageDTO> imageDTO = imageDataService.getModelServerImageDTOBySceneId(sceneId);
 
             JSONObject sceneConfig = new JSONObject();
@@ -375,6 +399,9 @@ public class ModelExampleService {
 
             // 添加波段路径信息
             JSONObject paths = new JSONObject();
+
+            // TODO
+            // 限制最多处理5个波段
             for (ModelServerImageDTO image : imageDTO) {
                 paths.put("band_" + image.getBand(), image.getTifPath());
             }
@@ -391,32 +418,48 @@ public class ModelExampleService {
     }
 
     // 上传JSON到MinIO
+//    private void uploadJsonToMinio(String bucketName, String fileName, String jsonContent) {
+//        try {
+//            // 使用MinioUtil的现有方法，需要先创建一个临时的MultipartFile
+//            ByteArrayInputStream inputStream = new ByteArrayInputStream(jsonContent.getBytes(StandardCharsets.UTF_8));
+//
+//            // 创建一个简单的MultipartFile包装
+//            MultipartFile jsonFile = new MultipartFile() {
+//                @Override
+//                public String getName() { return "json"; }
+//                @Override
+//                public String getOriginalFilename() { return fileName; }
+//                @Override
+//                public String getContentType() { return "application/json"; }
+//                @Override
+//                public boolean isEmpty() { return false; }
+//                @Override
+//                public long getSize() { return jsonContent.length(); }
+//                @Override
+//                public byte[] getBytes() throws IOException { return jsonContent.getBytes(StandardCharsets.UTF_8); }
+//                @Override
+//                public java.io.InputStream getInputStream() throws IOException { return inputStream; }
+//                @Override
+//                public void transferTo(java.io.File dest) throws IOException, IllegalStateException {}
+//            };
+//
+//            minioUtil.upload(jsonFile, fileName, bucketName);
+//        } catch (Exception e) {
+//            throw new RuntimeException("Failed to upload JSON to MinIO: " + e.getMessage(), e);
+//        }
+//    }
+
     private void uploadJsonToMinio(String bucketName, String fileName, String jsonContent) {
         try {
-            // 使用MinioUtil的现有方法，需要先创建一个临时的MultipartFile
-            ByteArrayInputStream inputStream = new ByteArrayInputStream(jsonContent.getBytes(StandardCharsets.UTF_8));
+            byte[] bytes = jsonContent.getBytes(StandardCharsets.UTF_8);
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
 
-            // 创建一个简单的MultipartFile包装
-            MultipartFile jsonFile = new MultipartFile() {
-                @Override
-                public String getName() { return "json"; }
-                @Override
-                public String getOriginalFilename() { return fileName; }
-                @Override
-                public String getContentType() { return "application/json"; }
-                @Override
-                public boolean isEmpty() { return false; }
-                @Override
-                public long getSize() { return jsonContent.length(); }
-                @Override
-                public byte[] getBytes() throws IOException { return jsonContent.getBytes(StandardCharsets.UTF_8); }
-                @Override
-                public java.io.InputStream getInputStream() throws IOException { return inputStream; }
-                @Override
-                public void transferTo(java.io.File dest) throws IOException, IllegalStateException {}
-            };
-
-            minioUtil.upload(jsonFile, fileName, bucketName);
+            minioClient.putObject(PutObjectArgs.builder()
+                    .bucket(bucketName)
+                    .object(fileName)
+                    .stream(inputStream, bytes.length, 5 * 1024 * 1024)
+                    .contentType("application/json")
+                    .build());
         } catch (Exception e) {
             throw new RuntimeException("Failed to upload JSON to MinIO: " + e.getMessage(), e);
         }

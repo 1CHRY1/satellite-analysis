@@ -1,4 +1,6 @@
 server:
+  tomcat:
+    connection-timeout: 300000
   port: 8999
 
 netty:
@@ -23,6 +25,12 @@ spring:
           driver-class-name: com.mysql.cj.jdbc.Driver
         pg_space:
           url: jdbc:postgresql://172.31.13.21:5432/gis_db
+          username: postgres
+          password: ogms250410
+          driver-class-name: org.postgresql.Driver
+        pg_satellite:
+          #          url: jdbc:postgresql://223.2.34.8:31543/satellite
+          url: jdbc:postgresql://172.31.13.21:5432/satellite
           username: postgres
           password: ogms250410
           driver-class-name: org.postgresql.Driver
@@ -79,12 +87,22 @@ modelServer:
     result: /v0/task/result
     merge: /v0/tif/merge_v2
     noCloud: /v0/tif/calc_no_cloud
-    spectrum: /v0/tif/get_spectral_profilen
+    noCloud_complex: /v0/tif/calc_no_cloud_complex
+    spectrum: /v0/tif/get_spectral_profile
     rasterPoint: /v0/tif/calc_raster_point
     rasterLine: /v0/tif/calc_raster_line
     #    noCloud: /v0/tif/calc_qa_simple
     #    noCloud: /v0/tif/calc_qa
     ndvi: /v0/tif/calc_NDVI
+  interval:
+    status: 2
+
+srmodelServer:
+  address: http://172.16.3.236:8000
+  apis:
+    status: /v0/task/status
+    result: /v0/task/result
+    SR: /v0/model/superresolution
   interval:
     status: 2
 

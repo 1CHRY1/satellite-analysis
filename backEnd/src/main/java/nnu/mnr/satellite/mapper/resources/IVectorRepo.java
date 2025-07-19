@@ -15,7 +15,7 @@ import java.util.List;
 @DS("pg_satellite")
 public interface IVectorRepo  extends BaseMapper<Vector> {
     @Select("SELECT vector_name, table_name, time FROM gis_db.vector_datasets " +
-            "WHERE ST_Intersects(ST_GeomFromEWKT('SRID=4326;' || #{wkt}), gis_db.vector_datasets.boundary) " +
+//            "WHERE ST_Intersects(ST_GeomFromEWKT('SRID=4326;' || #{wkt}), gis_db.vector_datasets.boundary) " +
             "ORDER BY time ASC")
     @Results({
             @Result(property = "vectorName", column = "vector_name"),
@@ -69,7 +69,7 @@ public interface IVectorRepo  extends BaseMapper<Vector> {
             "   </foreach>",
             "</if>",
             // 空间相交判定
-            "   AND ST_Intersects(boundary,  ST_SetSRID(ST_GeomFromText(#{gridPolyText}), 4326))",
+//            "   AND ST_Intersects(boundary,  ST_SetSRID(ST_GeomFromText(#{gridPolyText}), 4326))",
             "</script>"
     })
     List<VectorInfoVO> findIntersectingVectors(@Param("gridPolyText") String gridPolyText, @Param("tableNames") List<String> tableNames);
