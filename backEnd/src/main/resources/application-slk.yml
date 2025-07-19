@@ -70,7 +70,7 @@ mybatis-plus:
 minio:
   access-key: minioadmin
   secret-key: minioadmin
-  url: http://172.20.10.3:30900
+  url: http://192.168.1.100:30900
   #url: http://223.2.43.228:30900
 
 docker:
@@ -95,7 +95,7 @@ docker:
 #docker:
 #  defaultServer:
 #    #    port: 2376
-#    #    host: "223.2.35.208"
+#    #    host: "223.2.35.208"mi
 #    #    username: "vge"
 #    #    password: "3J44.njnu.edu.cn"
 #    #  serverDir: /home/vge/satellite/

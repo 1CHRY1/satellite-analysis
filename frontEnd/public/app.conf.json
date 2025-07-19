@@ -4,7 +4,7 @@
     "back_app2": "/api2",
     "back_websocket": "",
     "minioIpAndPort": "http://192.168.1.100:30900",
-    "titilerIpAndPort": "http://localhost:8000",
+    "titilerIpAndPort": "http://192.168.1.100:8000",
     "titiler": "/tiler",
 
     "ndviProjectId": "PRJyxITmCVLn3PMoaeca",
