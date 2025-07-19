@@ -10,14 +10,9 @@ from shapely.geometry import Polygon, Point
 from shapely.ops import unary_union
 from rasterio.features import geometry_mask
 from rasterio.transform import from_bounds
-
+from config import minio_config, TRANSPARENT_CONTENT
 
 ####### Helper ########################################################################################
-
-TRANSPARENT_PNG = os.path.join(os.path.dirname(__file__), "transparent.png")
-with open(TRANSPARENT_PNG, "rb") as f:
-    TRANSPARENT_CONTENT = f.read()
-
 
 def normalize(arr, min_val = 0 , max_val = 5000):
     arr = np.nan_to_num(arr)

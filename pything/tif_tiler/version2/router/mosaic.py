@@ -5,6 +5,7 @@ import numpy as np
 from io import BytesIO
 import os, json, uuid
 import requests
+from config import minio_config, TRANSPARENT_CONTENT
 
 import mercantile
 from rio_tiler.profiles import img_profiles
@@ -19,15 +20,11 @@ from rio_tiler.utils import render
 
 #### Helper functions ##################################################################
 
-MINIO_ENDPOINT = "192.168.1.100:30900"
-MINIO_ACCESS_KEY = "minioadmin"
-MINIO_SECRET_KEY = "minioadmin"
-MINIO_BUCKET = "temp-files"
-MINIO_DIR = "mosaicjson"
-
-TRANSPARENT_PNG = os.path.join(os.path.dirname(__file__), "transparent.png")
-with open(TRANSPARENT_PNG, "rb") as f:
-    TRANSPARENT_CONTENT = f.read()
+MINIO_ENDPOINT = minio_config['endpoint']
+MINIO_ACCESS_KEY = minio_config['access_key']
+MINIO_SECRET_KEY = minio_config['secret_key']
+MINIO_BUCKET = minio_config['bucket']
+MINIO_DIR = minio_config['dir']
 
 def tiler(src_path: str, *args, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
     with COGReader(src_path) as cog:
