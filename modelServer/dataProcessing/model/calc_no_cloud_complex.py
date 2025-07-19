@@ -471,7 +471,7 @@ class calc_no_cloud_complex(Task):
         #                         scene_band_paths_json_file=scene_band_paths_json_file,
         #                         grid_helper=grid_helper,
         #                         minio_endpoint=MINIO_ENDPOINT,
-        #                         temp_dir_path=temp_dir_path)
+        #                         temp_dir_path=temp_dir_path,band_num=band_num)
         #     for g in grids
         # ]
         # results = ray.get(ray_tasks)
