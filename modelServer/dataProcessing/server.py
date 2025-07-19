@@ -1,3 +1,6 @@
+import os
+if "PROJ_LIB" in os.environ:
+    del os.environ["PROJ_LIB"]
 from dataProcessing.app import create_app
 from dataProcessing.config import current_config as CONFIG
 import ray

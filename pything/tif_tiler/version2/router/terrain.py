@@ -10,10 +10,8 @@ from shapely.geometry import Polygon, Point
 from shapely.ops import unary_union
 from rasterio.features import geometry_mask
 from rasterio.transform import from_bounds
+from config import minio_config, TRANSPARENT_CONTENT
 
-TRANSPARENT_PNG = os.path.join(os.path.dirname(__file__), "transparent.png")
-with open(TRANSPARENT_PNG, "rb") as f:
-    TRANSPARENT_CONTENT = f.read()
 ####### Helper ########################################################################################
 # Terrain-RGB Reference: https://docs.mapbox.com/data/tilesets/reference/mapbox-terrain-rgb-v1/
 

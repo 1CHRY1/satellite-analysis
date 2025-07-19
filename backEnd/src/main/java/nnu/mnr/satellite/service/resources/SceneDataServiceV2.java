@@ -13,7 +13,6 @@ import nnu.mnr.satellite.model.vo.resources.ViewWindowVO;
 import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
 import nnu.mnr.satellite.mapper.resources.ISceneRepo;
 import nnu.mnr.satellite.service.common.BandMapperGenerator;
-import nnu.mnr.satellite.service.common.Generator;
 import nnu.mnr.satellite.utils.geom.GeometryUtil;
 import nnu.mnr.satellite.utils.geom.TileCalculateUtil;
 import org.locationtech.jts.geom.Geometry;

@@ -7,15 +7,11 @@ import numpy as np
 import os
 import requests
 import math
+from config import minio_config, TRANSPARENT_CONTENT
 
 ####### Helper ########################################################################################
 # MINIO_ENDPOINT = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}"
-MINIO_ENDPOINT = "http://172.20.10.3:30900" 
-print('注意改这里')
-TRANSPARENT_PNG = os.path.join(os.path.dirname(__file__), "transparent.png")
-with open(TRANSPARENT_PNG, "rb") as f:
-    TRANSPARENT_CONTENT = f.read()
-
+MINIO_ENDPOINT = minio_config['endpoint']
 
 def normalize(arr, min_val = 0 , max_val = 5000):
     arr = np.nan_to_num(arr)

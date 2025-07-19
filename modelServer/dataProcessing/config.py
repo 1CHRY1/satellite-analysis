@@ -112,7 +112,7 @@ class VmodConfig(BaseConfig):
 class hxfConfig(BaseConfig):
     # MinIO Config
     MINIO_PORT                                      =       30900
-    MINIO_IP                                        =       "172.20.10.3"
+    MINIO_IP                                        =       "192.168.1.100"
     MINIO_ACCESS_KEY                                =       "minioadmin"
     MINIO_SECRET_KEY                                =       "minioadmin"
     MINIO_SECURE                                    =       False
@@ -122,7 +122,7 @@ class hxfConfig(BaseConfig):
     MINIO_TEMP_FILES_BUCKET                         =       "temp-files"
 
     # MySQL Config
-    MYSQL_HOST                                      =       "172.20.10.3"
+    MYSQL_HOST                                      =       "127.0.0.1"
     MYSQL_TILE_PORT                                 =       3306
     MYSQL_TILE_DB                                   =       "tile"
     MYSQL_RESOURCE_PORT                             =       3306
@@ -167,9 +167,9 @@ def get_current_config():
     """获取当前环境的配置类"""
     return get_config(CURRENT_PROFILE)
 
-
+os.environ['APP_PROFILE'] = 'hxf'
 # 获取当前环境配置 - 类似Spring Boot的 spring.profiles.active
-CURRENT_PROFILE = os.getenv('APP_PROFILE', 'hxf')  # 默认使用k8s
+CURRENT_PROFILE = os.getenv('APP_PROFILE', 'k8s')  # 默认使用k8s
 
 # 创建全局配置实例 - 这是关键
 CUR_CONFIG_CLASS = get_current_config()
