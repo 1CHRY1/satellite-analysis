@@ -76,10 +76,10 @@
                                                     </option>
                                                 </select>
 
-                                                <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
+                                                <!-- <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
                                                         @click="handleShowSensorImage(selectnation)">
                                                         {{ t('datapage.nocloud.button_choose') }}
-                                                </a-button>
+                                                </a-button> -->
 
                                                 <div v-if="showProgress[0]"
                                                     class="w-full overflow-hidden rounded-lg border border-[#2c3e50] bg-[#1e293b]">
@@ -414,10 +414,10 @@
                                         <div class="config-control flex-col !item-start">
                                             <!--两个按钮 on-the-fly加载 一版图服务生成-->
                                             <div class="flex w-full flex-row gap-2">
-                                                <button @click="handleCreateNoCloudTiles"
+                                                <!-- <button @click="handleCreateNoCloudTiles"
                                                     class="flex justify-center w-1/2 rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95">
                                                     <span>on-the-fly加载</span>
-                                                </button>
+                                                </button> -->
                                                 <button @click="calNoClouds" :disabled="noCloudLoading"
                                                     class="flex justify-center w-1/2 rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95"
                                                     :class="{

@@ -10,7 +10,7 @@ import math
 
 ####### Helper ########################################################################################
 # MINIO_ENDPOINT = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}"
-MINIO_ENDPOINT = "http://172.20.10.3:30900" 
+MINIO_ENDPOINT = "http://192.168.1.100:30900" 
 print('注意改这里')
 TRANSPARENT_PNG = os.path.join(os.path.dirname(__file__), "transparent.png")
 with open(TRANSPARENT_PNG, "rb") as f:

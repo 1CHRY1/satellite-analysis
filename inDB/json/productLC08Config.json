@@ -1,5 +1,6 @@
 {
     "SCENE_PREFIX": "LC08",
+    "BANDS_FOLDER_PREFIX": "Bands",
     "TEMP_OUTPUT_DIR": "D:\\code\\test",
     "CUR_SENSOR_NAME": "Landsat8_OLI",
     "CUR_PRODUCT_NAME": "L2SP",
