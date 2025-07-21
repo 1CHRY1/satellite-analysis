@@ -15,7 +15,7 @@ spring:
           # k8s
           #          url: jdbc:mysql://223.2.34.8:31036/satellite
 #          url: jdbc:mysql://192.168.1.111:3306/satellite
-          url: jdbc:mysql://localhost:3306/satellite
+          url: jdbc:mysql://192.168.1.127:3306/satellite
           username: root
           password: root
 #          password: 123456
@@ -38,7 +38,7 @@ spring:
 #          driver-class-name: org.postgresql.Driver
         pg_satellite:
 #          url: jdbc:postgresql://223.2.34.8:31543/satellite
-          url: jdbc:postgresql://localhost:5432/satellite
+          url: jdbc:postgresql://192.168.1.127:5432/satellite
           username: postgres
           password: 123456
           driver-class-name: org.postgresql.Driver
@@ -72,7 +72,7 @@ minio:
 #  secret-key: 7UxtrqhSOyN1KUeumbqTRMv1zeluLO69OwJnCC0M
 #  #  url: http://223.2.34.7:9000
 #  url: http://172.16.92.82:30900
-  url: http://192.168.1.100:30900
+  url: http://192.168.1.127:30900
   access-key: minioadmin
   secret-key: minioadmin
 #  url: http://223.2.34.8:30900
@@ -110,7 +110,7 @@ docker:
 #  workDir: /usr/local/coding/
 
 modelServer:
-  address: http://localhost:5000
+  address: http://192.168.1.127:5000
   #  address: http://223.2.43.228:30500
   apis:
     status: /v0/task/status
@@ -135,7 +135,7 @@ srmodelServer:
     status: 2
 
 tiler:
-  end-point: http://127.0.0.1:8000/
+  end-point: http://192.168.1.127:8000/
 
 satelliteConfig:
   path: D:/IdeaProjects/satellite-analysis/backEnd/src/main/resources/config/band_config.json

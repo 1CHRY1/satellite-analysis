@@ -20,11 +20,15 @@ from rio_tiler.utils import render
 
 #### Helper functions ##################################################################
 
-MINIO_ENDPOINT = minio_config['endpoint']
-MINIO_ACCESS_KEY = minio_config['access_key']
-MINIO_SECRET_KEY = minio_config['secret_key']
-MINIO_BUCKET = minio_config['bucket']
-MINIO_DIR = minio_config['dir']
+MINIO_ENDPOINT = minio_config["endpoint"]
+MINIO_ACCESS_KEY = minio_config["access_key"]
+MINIO_SECRET_KEY = minio_config["secret_key"]
+MINIO_BUCKET = minio_config["bucket"]
+MINIO_DIR = minio_config["dir"]
+
+TRANSPARENT_PNG = os.path.join(os.path.dirname(__file__), "transparent.png")
+with open(TRANSPARENT_PNG, "rb") as f:
+    TRANSPARENT_CONTENT = f.read()
 
 def tiler(src_path: str, *args, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
     with COGReader(src_path) as cog:

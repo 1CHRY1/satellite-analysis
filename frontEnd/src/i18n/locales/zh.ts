@@ -592,7 +592,7 @@ export default{
       },
 
       history:{
-        his_recon:"历史记录重构",
+        his_recon:"历史重构记录",
         back:"返回",
         his_noclo:"历史无云一版图",
         wait:"任务初始化中，请稍后...",
