@@ -11,7 +11,7 @@ from config import minio_config, TRANSPARENT_CONTENT
 
 ####### Helper ########################################################################################
 # MINIO_ENDPOINT = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}"
-MINIO_ENDPOINT = minio_config['endpoint']
+MINIO_ENDPOINT = "http://" + minio_config['endpoint']
 
 def normalize(arr, min_val = 0 , max_val = 5000):
     arr = np.nan_to_num(arr)

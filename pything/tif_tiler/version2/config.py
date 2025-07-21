@@ -2,7 +2,7 @@ import os
 
 MINIO_CONFIG = {
     "dev": {
-        "endpoint": "192.168.1.100:30900",
+        "endpoint": "192.168.1.127:30900",
         "access_key": "minioadmin",
         "secret_key": "minioadmin",
         "bucket": "temp-files",
