@@ -1,4 +1,5 @@
 import { ezStore } from '@/store'
+import http from '../clientHttp'
 import { grid2bbox } from '@/util/map/gridMaker'
 
 const titilerEndPoint = ezStore.get('conf')['titiler']
@@ -344,4 +345,27 @@ export function getNoCloudUrl4MosaicJson(param: MosaicTileParam) {
     const fullUrl = baseUrl + '?' + requestParams.toString()
     console.log(fullUrl)
     return fullUrl
+}
+
+//超分接口
+interface bandPara{
+    R: string,
+    G: string,
+    B: string
+}
+interface SuperResParams{
+    columnId : number,
+    rowId: number,
+    resolution: number,
+    band: bandPara,
+}
+
+export async function GetSuperResolution(param:SuperResParams){
+    try{
+        return http.post<any>(`modeling/example/superResolution`, param)
+    }catch (error) {
+        console.error('超分增强失败:', error)
+    }
+
+  
 }

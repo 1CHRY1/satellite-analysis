@@ -88,6 +88,15 @@
                             {{ item.name }}
                             </button>
                         </div>
+                        <el-dialog v-model="showDetail"
+                                    class="max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-[60vw]"
+                                    style="background-color: #111827; color: white;">
+                                    <div class="text-blue-500">指数详情</div>
+                                    <p class="text-blue-300" v-if="selectedItem">指数名称 : {{ selectedItem.name }}</p>
+                                    <p class="text-blue-300" v-if="selectedItem">公式详情 : {{ selectedItem.expression }}</p>
+                                    <p class="text-blue-300" v-if="selectedItem">描述：</p>
+                                    <p class="text-blue-300" v-if="selectedItem">{{ selectedItem.description || '暂无描述' }}</p>
+                                </el-dialog>
                         <div class="color-palette-selector mb-6">
                             <span>选择指数</span>
                             <select
@@ -126,8 +135,7 @@
             </div>
         </div>
     </section>
-
-
+    
 </template>
 
 <script setup lang="ts">
@@ -169,7 +177,10 @@ import { mapManager } from '@/util/map/mapManager'
 import { getNoCloudUrl4MosaicJson, getMosaicJsonUrl } from '@/api/http/satellite-data/visualize.api';
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
+
 const selectedSceneId = ref('')
+const selectedItem = ref(null)
+
 type ThematicConfig = {
     allImages: any,
     regionId: number,
@@ -189,11 +200,14 @@ interface analysisTileParams{
 
 const isExpand = ref<boolean[]>([])
 
+//指数目录
 const selectedIndex = ref();
 const presetIndex = ref([
-    {name:'超绿指数', expression: '2*b1-b2+b3'},
-    {name:'自定义（即将上线）', expression:''}
+    {name:'超绿指数', expression: '2*b1-b2+b3', description:'超绿色提取绿色植物图像效果较好，阴影、枯草和土壤图像均能较明显的被压制，植物图像更为突出'},
+    {name:'自定义', expression:'', description:''}
 ])
+
+const showDetail = ref(false)
 
 //色带选择
 const selectedColorMap = ref('rdylgn')
@@ -202,10 +216,14 @@ const colorMaps = {
     '自定义（即将提供）': 'self-define'
 }
 
+//detail显示
 const selectIndex = (item) => {
-    selectedIndex.value = item.name
-    if (item.name !== '自定义') {
+    // selectedIndex.value = item.name
+    if (item.name == '自定义') {
         ElMessage.error('暂不支持')
+    } else {
+        selectedItem.value = item
+    showDetail.value = true
     }
 }
 
