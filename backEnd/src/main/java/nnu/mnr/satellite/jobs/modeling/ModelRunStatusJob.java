@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSONObject;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.jobs.QuartzSchedulerManager;
+import nnu.mnr.satellite.model.pojo.modeling.BaseModelServerProperties;
 import nnu.mnr.satellite.model.pojo.modeling.ModelServerProperties;
 import nnu.mnr.satellite.service.resources.CaseDataService;
 import nnu.mnr.satellite.utils.common.BeanUtil;
@@ -41,11 +42,23 @@ public class ModelRunStatusJob implements Job {
         String jobName = jobExecutionContext.getJobDetail().getKey().getName();
         String jobGroup = jobExecutionContext.getJobDetail().getKey().getGroup();
         JobDataMap dataMap = jobExecutionContext.getJobDetail().getJobDataMap();
-        ModelServerProperties modelServerProperties = (ModelServerProperties) dataMap.get("modelServerProperties");
+        BaseModelServerProperties modelServerProperties = (BaseModelServerProperties) dataMap.get("serverProperties");
         String caseId = dataMap.getString("caseId");
         String statusUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("status");
         JSONObject statusResponse = JSONObject.parseObject(ProcessUtil.getModelCaseStatus(statusUrl, caseId));
-        String status = statusResponse.getJSONObject("data").getString("status");
+//        String status = statusResponse.getJSONObject("data").getString("status");
+        // 堆一点屎
+        JSONObject statusData = statusResponse.getJSONObject("data");
+        String status;
+        if(statusData == null) {
+            status = statusResponse.getString("status");
+        }else {
+            status = statusResponse.getJSONObject("data").getString("status");
+        }
+//        String status = statusResponse.getJSONObject("data").getString("status");
+//        if(status == null){
+//            status = statusResponse.getString("status");
+//        }
         if (status.equals("COMPLETE")) {
             redisUtil.updateJsonField(caseId, "status", status);
             caseDataService.updateCaseStatusById(caseId, status);
@@ -54,11 +67,22 @@ public class ModelRunStatusJob implements Job {
                 quartzSchedulerManager.deleteJob(jobName, jobGroup);
                 String resultUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("result");
                 JSONObject resultResponse = ProcessUtil.getModelCaseResult(resultUrl, caseId);
-                JSONObject resObj = resultResponse.getJSONObject("data").getJSONObject("result");
+                // 再堆一点屎
+                JSONObject resultData = resultResponse.getJSONObject("data");
+                JSONObject resObj;
                 try {
-                    resObj = resultResponse.getJSONObject("data").getJSONObject("result");
+                    if(resultData == null) {
+                        resObj = resultResponse.getJSONObject("result");
+                    }else {
+                        resObj = resultResponse.getJSONObject("data").getJSONObject("result");
+                    }
+//                    resObj = resultResponse.getJSONObject("data").getJSONObject("result");
+//                    if (resObj == null) {
+//                        resObj = resultResponse.getJSONObject("result");
+//                    }
                 } catch (Exception e) {
-                    resObj.put("ERROR", resultResponse.getJSONObject("data"));
+                    resObj = new JSONObject();
+                    resObj.put("ERROR", "Failed to parse result: " + e.getMessage());
                 }
                 redisUtil.updateJsonField(caseId, "result", resObj);
                 redisUtil.updateJsonField(caseId, "end", LocalDateTime.now());

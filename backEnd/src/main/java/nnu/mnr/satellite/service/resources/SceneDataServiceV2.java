@@ -149,8 +149,13 @@ public class SceneDataServiceV2 {
                 .build();
     }
 
+    //已弃用
     public List<SceneSP> getScenesByIdsWithProductAndSensor(List<String> sceneIds) {
         return sceneRepo.getScenesByIdsWithProductAndSensor(sceneIds);
+    }
+
+    public List<SceneSP> getScenesByIdsAndGridWithProductAndSensor(List<String> sceneIds, String wkt) {
+        return sceneRepo.getScenesByIdsAndGridWithProductAndSensor(sceneIds, wkt);
     }
 
     public List<SceneDesVO> getScenesDesByTimeRegionAndCloud(ScenesFetchDTOV2 scenesFetchDTO) {

@@ -15,6 +15,7 @@ import nnu.mnr.satellite.model.vo.resources.VectorInfoVO;
 import nnu.mnr.satellite.service.common.BandMapperGenerator;
 import nnu.mnr.satellite.utils.common.ConcurrentUtil;
 import nnu.mnr.satellite.utils.geom.TileCalculateUtil;
+import nnu.mnr.satellite.utils.typeHandler.GeometryTypeHandler;
 import org.locationtech.jts.geom.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -71,11 +72,12 @@ public class GridDataService {
         return grids;
     }
 
-    // 获取每个网格中的影像
+    // 获取每个网格中的影像(在后端判断包含，已弃用)
     public List<GridSceneVO> getScenesFromGrids(GridSceneFetchDTO gridSceneFetchDTO) {
         List<GridBasicDTO> grids = gridSceneFetchDTO.getGrids();
         List<String> sceneIds = gridSceneFetchDTO.getSceneIds();
         List<SceneSP> sceneSps = sceneDataService.getScenesByIdsWithProductAndSensor(sceneIds);
+
         Function<GridBasicDTO, GridSceneVO> mapper = grid -> {
             List<ModelServerSceneDTO> sceneDtos;
             Geometry gridPoly = TileCalculateUtil.getTileGeomByIdsAndResolution(grid.getRowId(), grid.getColumnId(), grid.getResolution());
@@ -124,6 +126,55 @@ public class GridDataService {
             throw new RuntimeException("Failed to process grids concurrently", e);
         }
     }
+
+    // 获取每个网格中的影像(在数据库判断包含)
+//    public List<GridSceneVO> getScenesFromGrids(GridSceneFetchDTO gridSceneFetchDTO) {
+//        List<GridBasicDTO> grids = gridSceneFetchDTO.getGrids();
+//        List<String> sceneIds = gridSceneFetchDTO.getSceneIds();
+//        Function<GridBasicDTO, GridSceneVO> mapper = grid -> {
+//            List<ModelServerSceneDTO> sceneDtos;
+//            Geometry gridPoly = TileCalculateUtil.getTileGeomByIdsAndResolution(grid.getRowId(), grid.getColumnId(), grid.getResolution());
+//            String wkt = gridPoly.toText();
+//            List<SceneSP> sceneSps = sceneDataService.getScenesByIdsAndGridWithProductAndSensor(sceneIds, wkt);
+//            // 封装每个 scene 的处理逻辑
+//            Function<SceneSP, ModelServerSceneDTO> sceneMapper = scene -> {
+//                List<ModelServerImageDTO> imageDTOS = imageDataService.getModelServerImageDTOBySceneId(scene.getSceneId());
+//                return ModelServerSceneDTO.builder()
+//                        .sceneId(scene.getSceneId())
+//                        .cloudPath(scene.getCloudPath())
+//                        .sensorName(scene.getSensorName())
+//                        .productName(scene.getProductName())
+//                        .resolution(scene.getResolution())
+//                        .sceneTime(scene.getSceneTime())
+//                        .bandMapper(bandMapperGenerator.getSatelliteConfigBySensorName(scene.getSensorName()))
+//                        .bucket(scene.getBucket())
+//                        .dataType(scene.getDataType())
+//                        .noData(scene.getNoData())
+//                        .images(imageDTOS)
+//                        .build();
+//            };
+//
+//            try {
+//                // 并发处理每个 scene
+//                sceneDtos = ConcurrentUtil.processConcurrently(sceneSps, sceneMapper);
+//            } catch (IOException e) {
+//                throw new RuntimeException("Failed to process scenes concurrently", e);
+//            }
+//
+//            return GridSceneVO.builder()
+//                    .scenes(sceneDtos)
+//                    .rowId(grid.getRowId())
+//                    .columnId(grid.getColumnId())
+//                    .resolution(grid.getResolution())
+//                    .build();
+//        };
+//        try {
+//            // 使用 ConcurrentUtil 进行并发处理
+//            return ConcurrentUtil.processConcurrently(grids, mapper);
+//        } catch (IOException e) {
+//            throw new RuntimeException("Failed to process grids concurrently", e);
+//        }
+//    }
 
     public List<GridVectorVO> getVectorsFromGrids(GridVectorFetchDTO gridVectorFetchDTO) {
         List<GridBasicDTO> grids = gridVectorFetchDTO.getGrids();

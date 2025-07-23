@@ -13,6 +13,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
+import org.locationtech.jts.geom.Geometry;
 
 import java.util.List;
 
@@ -38,9 +39,10 @@ public interface ISceneRepo extends BaseMapper<Scene> {
             "WHERE sc.scene_time BETWEEN #{startTime} AND #{endTime} " +
             "AND sc.cloud < #{cloud} " +
             "AND ss.data_type in (${dataType}) " +
-            "AND ( ST_Intersects(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), sc.bounding_box) OR " +
-            "ST_Contains(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), sc.bounding_box) OR " +
-            "ST_Within(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), sc.bounding_box) )" +
+            "AND ( ST_Intersects(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), sc.bounding_box)) " +
+//            "AND ( ST_Intersects(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), sc.bounding_box) OR " +
+//            "ST_Contains(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), sc.bounding_box) OR " +
+//            "ST_Within(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), sc.bounding_box) )" +
             "ORDER BY sc.scene_time ASC")
     @Results({
             @Result(property = "sceneId", column = "scene_id"),
@@ -126,6 +128,7 @@ public interface ISceneRepo extends BaseMapper<Scene> {
     })
     SceneSP getSceneByIdWithProductAndSensor(@Param("sceneId") String sceneId);
 
+    //已弃用
     @Select("<script>" +
             "SELECT sc.scene_id, sc.scene_name, sc.scene_time, sc.coordinate_system, " +
             "sc.band_num, sc.bands, sc.cloud, sc.tags, sc.no_data, sc.bounding_box, sc.bucket, sc.cloud_path, " +
@@ -169,6 +172,52 @@ public interface ISceneRepo extends BaseMapper<Scene> {
     })
     List<SceneSP> getScenesByIdsWithProductAndSensor(@Param("sceneIds") List<String> sceneIds);
 
+    @Select("<script>" +
+            "SELECT sc.scene_id, sc.scene_name, sc.scene_time, sc.coordinate_system, " +
+            "sc.band_num, sc.bands, sc.cloud, sc.tags, sc.no_data, sc.bounding_box, sc.bucket, sc.cloud_path, " +
+            "ss.sensor_name, ss.platform_name, pd.product_name, pd.resolution, ss.data_type " +
+            "FROM scene_table sc " +
+            "LEFT JOIN sensor_table ss ON sc.sensor_id = ss.sensor_id " +
+            "LEFT JOIN product_table pd ON sc.product_id = pd.product_id " +
+            "WHERE " +
+            "<choose>" +
+            "    <when test='sceneIds != null and !sceneIds.isEmpty()'>" +
+            "        sc.scene_id IN " +
+            "        <foreach item='sceneId' collection='sceneIds' open='(' separator=',' close=')'>" +
+            "            #{sceneId}" +
+            "        </foreach>" +
+            "    </when>" +
+            "    <otherwise>" +
+            "        1=0" +
+            "    </otherwise>" +
+            "</choose>" +
+            "<if test='wkt != null and wkt != \"\"'>" +
+            "    AND ST_Contains(sc.bounding_box, ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'))" +
+            "</if>" +
+            "AND ss.data_type in ('satellite', 'dem', 'svr', 'ndvi', 'dsm', '3d') " +
+            "ORDER BY sc.scene_time ASC" +
+            "</script>")
+    @Results({
+            @Result(property = "sceneId", column = "scene_id"),
+            @Result(property = "sceneName", column = "scene_name"),
+            @Result(property = "sensorName", column = "sensor_name"),
+            @Result(property = "platformName", column = "platform_name"),
+            @Result(property = "productName", column = "product_name"),
+            @Result(property = "resolution", column = "resolution"),
+            @Result(property = "sceneTime", column = "scene_time"),
+            @Result(property = "coordinateSystem", column = "coordinate_system"),
+            @Result(property = "bandNum", column = "band_num"),
+            @Result(property = "bands", column = "bands", typeHandler = SetTypeHandler.class),
+            @Result(property = "cloud", column = "cloud"),
+            @Result(property = "bucket", column = "bucket"),
+            @Result(property = "cloudPath", column = "cloud_path"),
+            @Result(property = "tags", column = "tags", typeHandler = FastJson2TypeHandler.class),
+            @Result(property = "noData", column = "no_data"),
+            @Result(property = "bbox", column = "bounding_box", typeHandler = GeometryTypeHandler.class),
+            @Result(property = "dataType", column = "data_type"),
+    })
+    List<SceneSP> getScenesByIdsAndGridWithProductAndSensor(@Param("sceneIds") List<String> sceneIds, @Param("wkt") String wkt);
+
     @Select("SELECT sc.scene_id, sc.scene_name, sc.scene_time, " +
             "sc.band_num, sc.bands, sc.cloud, sc.tags, sc.no_data, sc.bucket, sc.cloud_path, " +
             "ss.sensor_name, ss.platform_name, pd.product_name, pd.resolution, " +
@@ -196,5 +245,7 @@ public interface ISceneRepo extends BaseMapper<Scene> {
             @Result(property = "images", column = "images", typeHandler = JSONArrayTypeHandler.class)
     })
     SceneImageDTO getSceneWithImages(@Param("sceneId") String sceneId);
+
+
 
 }
