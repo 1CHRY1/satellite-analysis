@@ -122,7 +122,8 @@
 
                 <!-- 超分增强Tab -->
                 <div class="btns flex justify-center" v-show="showBandSelector && activeMethod === 'superresolution'">
-                    <button class="visualize-btn">
+                    <button class="visualize-btn" 
+                        @click="handleSuperResolution">
                         <span class="btn-icon">
                             <GalleryHorizontalIcon :size="18" />
                         </span>
@@ -275,6 +276,8 @@ import Vue3DraggableResizable from 'vue3-draggable-resizable'
 import 'vue3-draggable-resizable/dist/Vue3DraggableResizable.css'
 import { ezStore } from '@/store'
 import * as MapOperation from '@/util/map/operation'
+import { GetSuperResolution } from '@/api/http/satellite-data/visualize.api'
+import { ElMessage } from 'element-plus'
 /////// Types //////////////////////////////////
 type Image = {
     bucket: string
@@ -800,6 +803,54 @@ bus.on('update:gridPopupData', (info, vectorGridsRes) => {
     }
     console.log(vectors.value, 'vectors')
 })
+
+//超分
+type band_path={
+    R: string,
+    G: string,
+    B: string
+}
+
+const handleSuperResolution = async ()=> {
+    try{
+        const currentScene = gridData.value.scenes.find(scene => 
+            scene.sensorName === selectedSensor.value
+        );
+
+        const bands : band_path ={
+            R:'',
+            G:'',
+            B:''
+        }
+        if (!currentScene) {
+            ElMessage.error('未找到对应的数据');
+            return;
+        }
+
+        currentScene.images.forEach((bandImg: Image) => {
+                    if (bandImg.band === selectedRBand.value) {
+                        bands.R = bandImg.bucket + '/' + bandImg.tifPath
+                    }
+                    if (bandImg.band === selectedGBand.value) {
+                        bands.G = bandImg.bucket + '/' + bandImg.tifPath
+                    }
+                    if (bandImg.band === selectedBBand.value) {
+                        bands.B = bandImg.bucket + '/' + bandImg.tifPath
+                    }
+                })
+        const result = await GetSuperResolution({
+            columnId: gridData.value.columnId,
+            rowId: gridData.value.rowId,
+            resolution: gridData.value.resolution,
+            band: bands
+        });
+        ElMessage.success('超分处理成功')
+        console.log(result.value)
+        bus.emit('SuperResTimeLine', result)
+    }catch{
+        ElMessage.error('超分处理失败');
+    }
+}
 
 onMounted(() => {
     if (!ezStore.get('statisticCache')) {
