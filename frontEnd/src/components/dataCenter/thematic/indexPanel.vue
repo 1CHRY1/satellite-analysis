@@ -179,7 +179,12 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
 const selectedSceneId = ref('')
-const selectedItem = ref(null)
+
+interface IndexItem {
+  name: string
+  expression: string
+  description?: string
+}
 
 type ThematicConfig = {
     allImages: any,
@@ -217,13 +222,14 @@ const colorMaps = {
 }
 
 //detail显示
+const selectedItem = ref<IndexItem | null>(null)
 const selectIndex = (item) => {
     // selectedIndex.value = item.name
     if (item.name == '自定义') {
         ElMessage.error('暂不支持')
     } else {
         selectedItem.value = item
-    showDetail.value = true
+        showDetail.value = true
     }
 }
 
