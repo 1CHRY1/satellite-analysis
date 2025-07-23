@@ -78,12 +78,12 @@
                                         {{ option.label }}
                                     </option>
                                 </select> -->
-                                <!-- <div class="absolute right-6" @click="clearImages">
+                                <div class="absolute right-6" @click="clearImages">
                                     <a-tooltip>
                                         <template #title>{{t('datapage.analysis.section2.clear')}}</template>
                                         <Trash2Icon :size="20" />
                                     </a-tooltip>
-                                </div> -->
+                                </div>
 
                             </div>
                         </section>

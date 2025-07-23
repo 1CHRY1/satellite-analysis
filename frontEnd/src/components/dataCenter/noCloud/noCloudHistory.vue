@@ -270,58 +270,49 @@
             </a-form>
         </div>
     </a-modal>
-
-    <!-- 下载弹窗 -->
-    <a-modal 
-        v-model:visible="downloadModalVisible" 
-        title="下载无云一版图"
-        :width="500"
-        @ok="handleDownloadConfirm"
-        @cancel="handleDownloadCancel"
+    
+    <!-- tif文件下载弹窗 -->
+    <a-modal
+        v-model:visible="tifDownloadModalVisible"
+        title="请选择要下载的TIF文件"
+        :width="700"
+        :footer="null"
+        @cancel="handleTifDownloadCancel"
     >
         <div class="space-y-4">
-            <div class="flex items-center gap-2 p-3 bg-gray-50 rounded">
+            <div class="flex items-center gap-2 p-3 bg-blue-50 rounded">
                 <FileDown :size="16" class="text-green-500" />
-                <span>准备下载: {{ currentItem?.address }}无云一版图</span>
+                <span>找到{{ tifFileUrls.length }}个TIF文件</span>
             </div>
-            
-            <a-form :label-col="{ span: 6 }" :wrapper-col="{ span: 18 }">
-                <a-form-item label="文件格式">
-                    <a-select v-model:value="downloadForm.format" placeholder="请选择文件格式">
-                        <a-select-option value="tiff">TIFF</a-select-option>
-                        <a-select-option value="png">PNG</a-select-option>
-                        <a-select-option value="jpg">JPG</a-select-option>
-                        <a-select-option value="geotiff">GeoTIFF</a-select-option>
-                    </a-select>
-                </a-form-item>
-                
-                <a-form-item label="图像质量">
-                    <a-slider 
-                        v-model:value="downloadForm.quality" 
-                        :min="1" 
-                        :max="100"
-                        :marks="{ 1: '低', 50: '中', 100: '高' }"
-                    />
-                </a-form-item>
-                
-                <a-form-item label="包含元数据">
-                    <a-switch v-model:checked="downloadForm.includeMetadata" />
-                </a-form-item>
-                
-                <a-form-item label="坐标系">
-                    <a-select v-model:value="downloadForm.coordinateSystem" placeholder="请选择坐标系">
-                        <a-select-option value="wgs84">WGS84</a-select-option>
-                        <a-select-option value="gcj02">GCJ02</a-select-option>
-                        <a-select-option value="bd09">BD09</a-select-option>
-                    </a-select>
-                </a-form-item>
-            </a-form>
-            
-            <div class="mt-4 p-3 bg-blue-50 rounded">
-                <div class="text-sm text-gray-600">
-                    预计文件大小: <span class="font-bold">~{{ estimatedFileSize }} MB</span>
+            <div class="max-h-96 overflow-y-auto">
+                <div class="space-y-2">
+                    <div
+                        v-for="(url, index) in tifFileUrls"
+                        :key="index"
+                        class="p-3 border border-gray-200 rounded hover:bg-gray-50"
+                    >
+                        <a
+                            :href="url"
+                            @click.prevent="handleFileDownload(url)"
+                            class="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-xs break-all"
+                        >
+                            {{ url }}
+                        </a>
+                    </div>
                 </div>
             </div>
+        </div>
+
+        <div class="flex justify-end gap-2">
+            <a-button @click="handleTifDownloadCancel">
+                关闭
+            </a-button>
+            <a-button
+                type="primary"
+                @click="() => tifFileUrls.forEach(url => handleFileDownload(url))"
+            >
+                全部下载
+            </a-button>
         </div>
     </a-modal>
 </template>
@@ -354,10 +345,12 @@ const taskStore = useTaskStore()
 // 检测由noCloud跳转至history面板时（setCurrentPanel），前端是否还在初始化任务（calNoCloud处理请求参数）
 const isPending = computed(() => taskStore._isInitialTaskPending)
 
-// 新增的响应式变量
+// 发布和下载弹窗的响应式变量
 const publishModalVisible = ref(false)
 const downloadModalVisible = ref(false)
+const tifDownloadModalVisible = ref(false)  // tif文件下载弹窗
 const currentItem = ref<Case.Case | null>(null)
+const tifFileUrls = ref<string[]>([])  // tif文件URL列表
 
 // 发布表单数据
 const publishForm = reactive({
@@ -459,24 +452,16 @@ const handlePublishCancel = () => {
 }
 
 // 下载处理函数
-const handleDownload = (item: any) => {
-    currentItem.value = item
-    downloadModalVisible.value = true
-}
-
-const handleDownloadConfirm = async () => {
+const handleDownload = async (item: any) => {
     try {
-        if (!currentItem.value) {
-            message.error('请选择要下载的任务')
-            return
-        }
-
+        currentItem.value = item
+        
         // 获取配置
         const conf = ezStore.get('conf')
         const minioEndpoint = conf['minioIpAndPort']
 
         // 获取case结果数据
-        const result = await getResultByCaseId(currentItem.value.caseId)
+        const result = await getResultByCaseId(item.caseId)
         const resultData = result.data
 
         if (!resultData) {
@@ -494,22 +479,34 @@ const handleDownloadConfirm = async () => {
             return
         }
 
-        // 生成下载URL
-        const downloadUrl = `${minioEndpoint}/${resultData.bucket}/${resultData.object_path}`
+        // 生成MosaicJSON的URL
+        const mosaicJSON = `${minioEndpoint}/${resultData.bucket}/${resultData.object_path}`
 
-        // 弹出下载URL
-        message.success('下载成功')
-        message.info(`下载地址：${downloadUrl}`, 10)
-        downloadModalVisible.value = false
+        const response = await fetch(`${mosaicJSON}?_t=${Date.now()}`)
 
-        // 复制到剪贴板
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(downloadUrl).then(() => {
-                message.success('下载URL已复制到剪贴板')
-            }).catch(() => {
-                message.error('复制失败，请手动复制')
-            })
+        if (!response.ok) {
+            message.error('无法获取JSON数据，请稍后重试')
+            return
         }
+        const mosaicJSONData = await response.json()
+        
+        // 获取MosaicJSON中的tiles
+        const tiles = mosaicJSONData.tiles
+        const allTifUrls: string[] = []
+        
+        // 遍历tiles，提取所有tif文件的URL
+        Object.keys(tiles).forEach(key => {
+            const urlArray = tiles[key]
+            if (Array.isArray(urlArray)) {
+                allTifUrls.push(...urlArray)
+            }
+        })
+
+        // 存储解析出的URL数组
+        tifFileUrls.value = allTifUrls
+
+        // 直接显示tif文件下载弹窗
+        tifDownloadModalVisible.value = true
 
     } catch (error) {
         console.error('下载失败', error)
@@ -517,8 +514,21 @@ const handleDownloadConfirm = async () => {
     }
 }
 
-const handleDownloadCancel = () => {
-    downloadModalVisible.value = false
+// 处理tif文件下载弹窗关闭
+const handleTifDownloadCancel = () => {
+    tifDownloadModalVisible.value = false
+    tifFileUrls.value = []
+}
+
+// 处理单个文件下载
+const handleFileDownload = (url: string) => {
+    const link = document.createElement('a')
+    link.href = url
+    link.download = url.split('/').pop() || 'nocloud.tif'
+    link.target = '_blank'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
 }
 
 onMounted(() => { 

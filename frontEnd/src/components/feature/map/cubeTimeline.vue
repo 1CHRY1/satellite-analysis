@@ -553,7 +553,10 @@ const updateHandler = (
     _grid: GridInfoType,
     _scaleRate: number,
     mode: 'single' | 'rgb' | 'product',
+    source: 'SuperResTimeLine' | 'cubeVisualize' 
 ) => {
+    console.log('资源来源：', source)
+
     activeIndex.value = -1
     grid.value = _grid
     visualMode.value = mode
@@ -577,8 +580,39 @@ const updateHandler = (
     setDateRange()
 }
 
+// let runningSource: 'SuperResTimeLine' | 'cubeVisualize' | null = null;
+// const clearState = () => {
+//   activeIndex.value = -1;
+//   singleImages.value = [];
+//   multiImages.value = [];
+//   productImages.value = [];
+//   scaleRate.value = 0;
+//   runningSource = null;
+// }
+
 onMounted(() => {
     bus.on('cubeVisualize', updateHandler)
+    // bus.on('cubeVisualize', (data, grid, scaleRate, mode, source) => {
+    //     if (runningSource && runningSource !== 'cubeVisualize') {
+    //     console.log('当前有其他任务运行，cubeVisualize 被阻止');
+    //     return;
+    //     }
+    //     runningSource = 'cubeVisualize';
+    //     clearState();
+    //     updateHandler(data, grid, scaleRate, mode, source);
+    // });
+
+    // bus.on('SuperResTimeLine', (data, grid, scaleRate, mode, source) => {
+    //     if (runningSource && runningSource !== 'SuperResTimeLine') {
+    //     console.log('当前有其他任务运行，SuperResTimeLine 被阻止');
+    //     return;
+    //     }
+    //     runningSource = 'SuperResTimeLine';
+    //     clearState();
+    //     updateHandler(data, grid, scaleRate, mode, source);
+    // });
+
+
     bus.on('closeTimeline', () => {
         activeIndex.value = -1
         singleImages.value = []
