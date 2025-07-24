@@ -6,6 +6,7 @@ from glob import glob
 import xml.etree.ElementTree as ET
 import sys
 import os
+import re
 
 def load_db_config(db_config_path):
     DB_CONFIG = {}
@@ -114,16 +115,65 @@ def process_folder(PRODUCT_CONFIG, scenes_dir):
         # 解析xml文件
         SCENE_CONFIG = parse_xml(xml_path, SCENE_CONFIG)
 
-        # 获取tif文件
+        # 获取tif文件（多波段和cloud）
         for file in os.listdir(folder_path):
             if file.lower().endswith('tif') or file.lower().endswith('tiff'):
                 if "cloud" in file.lower():
                     SCENE_CONFIG["CLOUD_PATH"] = os.path.join(folder_path, file)
                 else:
-                    SCENE_CONFIG["SCENE_PATH"] = os.path.join(folder_path, file)
+                    if SCENE_CONFIG["IS_SINGLE"] is False:
+                        SCENE_CONFIG["SCENE_PATH"] = os.path.join(folder_path, file)
         
         if SCENE_CONFIG["SCENE_PATH"] is None:
-            exit_with_error(f"[ERROR] No scene file found in {folder_path}\r\n")
+            # 尝试单波段获取
+            if not os.path.exists(folder_path):
+                exit_with_error(f"[ERROR]: Path not exist: {folder_path}")
+            
+            # 获取所有子文件夹
+            subfolders = [f for f in os.listdir(folder_path) 
+                        if os.path.isdir(os.path.join(folder_path, f))]
+            if not subfolders:
+                exit_with_error(f"[ERROR] No scene file found in {folder_path}\r\n")
+            # 优先选择名为'bands'的文件夹（不区分大小写）
+            target_folder = None
+            for folder in subfolders:
+                if folder.lower() == 'bands':
+                    target_folder = folder
+                    break
+            # 如果没有找到'bands'文件夹，选择第一个文件夹
+            if target_folder is None:
+                target_folder = subfolders[0]
+
+            target_folder_path = os.path.join(folder_path, target_folder)
+    
+            # 获取所有TIF/TIFF文件
+            tif_files = []
+            for file in os.listdir(target_folder_path):
+                if file.lower().endswith(('.tif', '.tiff')):
+                    tif_files.append(file)
+            if not tif_files:
+                exit_with_error(f"[ERROR]: No tif files found in {target_folder_path}")
+            print(f"Found {len(tif_files)} TIF file in {target_folder_path}")
+
+            band_files = []
+            
+            # 正则表达式匹配B1/Band1等模式
+            pattern = re.compile(r'(B|Band)(\d+)(?:\..+)?$', re.IGNORECASE)
+            for file_path in tif_files:
+                # 获取不带扩展名的文件名
+                file_name = os.path.splitext(os.path.basename(file_path))[0]
+                match = pattern.search(file_name)
+                if match:
+                    band_num = int(match.group(2))
+                    band_files.append((band_num, os.path.join(target_folder_path, file_path)))
+            # 处理有波段信息的文件
+            result = [{'band': band, 'path': path} for band, path in sorted(band_files, key=lambda x: x[0])]
+            # 最后按波段号排序
+            result.sort(key=lambda x: x['band'])
+
+            SCENE_CONFIG["SCENE_PATH"] = result
+            # exit_with_error(f"[ERROR] No scene file found in {folder_path}\r\n")
+        
         # Validate xml file
         field_list = ["TL", "TR", "BR", "BL"]
         for field in field_list:
@@ -152,6 +202,10 @@ def set_initial_scene_info(PRODUCT_CONFIG):
     SCENE_CONFIG["CUR_RESOLUTION"] = PRODUCT_CONFIG["CUR_RESOLUTION"]
     SCENE_CONFIG["CUR_PERIOD"] = PRODUCT_CONFIG["CUR_PERIOD"]
     SCENE_CONFIG["TAGS"] = PRODUCT_CONFIG["TAGS"]
+    if PRODUCT_CONFIG.get("IS_SINGLE") is not None:
+        SCENE_CONFIG["IS_SINGLE"] = PRODUCT_CONFIG["IS_SINGLE"]
+    else:
+        SCENE_CONFIG["IS_SINGLE"] = True
     SCENE_CONFIG["XML_PATH"] = None
     SCENE_CONFIG["SCENE_PATH"] = None
     SCENE_CONFIG["CLOUD_PATH"] = None

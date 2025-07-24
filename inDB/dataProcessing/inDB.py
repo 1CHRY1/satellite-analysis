@@ -84,12 +84,28 @@ def batch_insert(PRODUCT_CONFIGS, DB_CONFIG):
             print(f"  [Scene {j+1}] {SCENE_CONFIG['SCENE_PATH']}")
             append_to_log(args.output_log, f"[Scene {j+1}] {SCENE_CONFIG['SCENE_PATH']}\n")
             try:
-                scene_name = os.path.basename(os.path.dirname(SCENE_CONFIG["SCENE_PATH"]))
+                # 获取scene name
+                scene_name = ""
+                if isinstance(SCENE_CONFIG["SCENE_PATH"], list):
+                    # 单波段
+                    if len(SCENE_CONFIG["SCENE_PATH"]) == 0:
+                        exit_with_error(f"No scenes found in {SCENE_CONFIG["SCENE_PATH"]}")
+                    file_path = SCENE_CONFIG["SCENE_PATH"][0]["path"]
+                    
+                    parent_dir = os.path.dirname(file_path)  # "D:/CODE/BANDS"
+                    grandparent_dir = os.path.dirname(parent_dir)  # "D:/CODE"
+                    grandparent_name = os.path.basename(grandparent_dir)  # "CODE"
+                    scene_name = grandparent_name
+                else:
+                    # 多波段
+                    scene_name = os.path.basename(os.path.dirname(SCENE_CONFIG["SCENE_PATH"]))
+
                 if check_if_scene_exists(scene_name):
                     status = 'NotStarted'
                     print(f"    [NOT STARTED] Scene {j+1} already exists, skipping...")
                     err_info += f"[ERROR] Scene {scene_name} already exists\n"
                     continue
+
                 object_prefix = f'{SCENE_CONFIG["CUR_SENSOR_NAME"]}/{SCENE_CONFIG["CUR_PRODUCT_NAME"]}'
                 set_initial_config(SCENE_CONFIG, DB_CONFIG)
                 try:
