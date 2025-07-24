@@ -8,7 +8,7 @@ import shutil
 from osgeo import gdal, osr
 import json
 from dataProcessing.Utils.minioUtil import uploadLocalFile
-from dataProcessing.Utils.tifUtils import convert_tif2cog, check_tif_cog, convert_bbox_to_4326
+from dataProcessing.Utils.tifUtils import convert_tif2cog, convert_bbox_to_4326
 
 EARTH_RADIUS                                    =       6371008.8
 EARTH_CIRCUMFERENCE                             =       2 * math.pi * EARTH_RADIUS
@@ -318,21 +318,11 @@ def upload_data(scene_info):
     # 上传单波段影像
     image_info_list = scene_info["image_info_list"]
     for image_info in image_info_list:
-        if check_tif_cog(image_info["file_path"]):
-            path = image_info["file_path"]
-        else:
-            print(f"\033[91m[ERROR] Invalid COG file: {image_info['file_path']}\033[0m")
-            return False
-        uploadLocalFile(path, DB_CONFIG["MINIO_IMAGES_BUCKET"], image_info["tif_path"])
+        uploadLocalFile(convert_tif2cog(image_info["file_path"], SCENE_CONFIG), DB_CONFIG["MINIO_IMAGES_BUCKET"], image_info["tif_path"])
     # 上传云量波段
     if SCENE_CONFIG.get("CLOUD_PATH") is not None:
-        if check_tif_cog(SCENE_CONFIG["CLOUD_PATH"]):
-            path = SCENE_CONFIG["CLOUD_PATH"]
-        else:
-            print(f"\033[91m[ERROR] Invalid COG file: {SCENE_CONFIG['CLOUD_PATH']}\033[0m")
-            return False
-        uploadLocalFile(path, DB_CONFIG["MINIO_IMAGES_BUCKET"], scene_info["cloud_path"])
-    return True
+        uploadLocalFile(convert_tif2cog(SCENE_CONFIG["CLOUD_PATH"], SCENE_CONFIG), DB_CONFIG["MINIO_IMAGES_BUCKET"], scene_info["cloud_path"])
+
 
 def main(object_prefix):
     band_list, scene_basic_info_from_ds = preset()
@@ -346,9 +336,7 @@ def main(object_prefix):
             image_info = get_image_info(band_item, scene_info, object_prefix)
             image_info_list.append(image_info)
         scene_info["image_info_list"] = image_info_list
-        success_flag = upload_data(scene_info)
-        if success_flag is False:
-            return None
+        upload_data(scene_info)
     except Exception as e:
         print(f"\033[91m[ERROR] Error processing or uploading image: {e}\033[0m")
         return None

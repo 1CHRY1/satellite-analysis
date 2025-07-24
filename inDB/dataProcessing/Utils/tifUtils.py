@@ -4,11 +4,6 @@ import rasterio
 from rio_cogeo.cogeo import cog_translate, cog_info
 from rio_cogeo.profiles import cog_profiles
 
-def check_tif_cog(tif_path):
-    if cog_info(tif_path)["COG"]:
-        return True
-    else:
-        return False
 
 ########## TIF 转 COG ##########
 def convert_tif2cog(tif_path, SCENE_CONFIG):

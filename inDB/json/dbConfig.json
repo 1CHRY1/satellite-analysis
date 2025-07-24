@@ -1,6 +1,6 @@
 {
     "MINIO_PORT": 30900,
-    "MINIO_IP": "127.0.0.1",
+    "MINIO_IP": "192.168.1.110",
     "MINIO_ACCESS_KEY": "minioadmin",
     "MINIO_SECRET_KEY": "minioadmin",
     "MINIO_SECURE": false,
@@ -8,7 +8,7 @@
     "MINIO_TILES_BUCKET": "test-tiles",
     "MINIO_GRID_BUCKET": "test-tiles",
     "MINIO_TEMP_FILES_BUCKET": "temp-files",
-    "MYSQL_HOST": "127.0.0.1",
+    "MYSQL_HOST": "192.168.1.110",
     "MYSQL_USER": "root",
     "MYSQL_PWD": "root",
     "MYSQL_TILE_PORT": 3306,

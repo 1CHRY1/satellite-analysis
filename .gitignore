@@ -55,7 +55,3 @@ window.build/
 window.dist/
 
 temp/
-
-# mysql geometry converter
-mysql_geometry_converter/sql/
-mysql_geometry_converter/fixed/
