@@ -9,10 +9,8 @@ import java.util.Map;
 @Component
 @Data
 @ConfigurationProperties(prefix = SRModelServerProperties.SRMODELSERVER_PREFIX)
-public class SRModelServerProperties {
+public class SRModelServerProperties extends BaseModelServerProperties {
+
     public static final String SRMODELSERVER_PREFIX = "srmodelserver";
 
-    private String address;
-    private Map<String, String> apis;
-    private Map<String, Integer> interval;
 }

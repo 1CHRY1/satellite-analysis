@@ -6,6 +6,7 @@ import nnu.mnr.satellite.jobs.QuartzSchedulerManager;
 import nnu.mnr.satellite.model.dto.modeling.*;
 import nnu.mnr.satellite.model.po.resources.Scene;
 import nnu.mnr.satellite.model.po.resources.SceneSP;
+import nnu.mnr.satellite.model.pojo.modeling.BaseModelServerProperties;
 import nnu.mnr.satellite.model.pojo.modeling.ModelServerProperties;
 import nnu.mnr.satellite.model.pojo.modeling.SRModelServerProperties;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
@@ -97,7 +98,7 @@ public class ModelExampleService {
         try {
             JSONObject modelCaseResponse = JSONObject.parseObject(ProcessUtil.runModelCase(url, param));
             String caseId = modelCaseResponse.getJSONObject("data").getString("taskId");
-            quartzSchedulerManager.startModelRunningStatusJob(caseId);
+            quartzSchedulerManager.startModelRunningStatusJob(caseId, modelServerProperties);
             JSONObject modelCase = JSONObject.of("status", "RUNNING", "start", LocalDateTime.now());
             redisUtil.addJsonDataWithExpiration(caseId, modelCase, expirationTime);
             return CommonResultVO.builder().status(1).message("success").data(caseId).build();
@@ -122,7 +123,21 @@ public class ModelExampleService {
             JSONObject modelCase = JSONObject.of("status", "RUNNING", "start", LocalDateTime.now());
             redisUtil.addJsonDataWithExpiration(caseId, modelCase, expirationTime);
             // 注意最后再启动任务！！！不然会出现updateJsonField找不到对应键值的情况
-            quartzSchedulerManager.startModelRunningStatusJob(caseId);
+            quartzSchedulerManager.startModelRunningStatusJob(caseId, modelServerProperties);
+            return CommonResultVO.builder().status(1).message("success").data(caseId).build();
+        } catch (Exception e) {
+            return CommonResultVO.builder().status(-1).message("Wrong Because of " + e.getMessage()).build();
+        }
+    }
+    // 除modelServer以外的其他计算（比如超分）都需要多传一个BaseModelServerProperties
+    private CommonResultVO runModelServerModel(String url, JSONObject param, long expirationTime, BaseModelServerProperties modelServerProperties) {
+        try {
+            JSONObject modelCaseResponse = JSONObject.parseObject(ProcessUtil.runModelCase(url, param));
+//            String caseId = modelCaseResponse.getJSONObject("data").getString("taskId");
+            String caseId = modelCaseResponse.getString("taskId");
+            quartzSchedulerManager.startModelRunningStatusJob(caseId, modelServerProperties);
+            JSONObject modelCase = JSONObject.of("status", "RUNNING", "start", LocalDateTime.now());
+            redisUtil.addJsonDataWithExpiration(caseId, modelCase, expirationTime);
             return CommonResultVO.builder().status(1).message("success").data(caseId).build();
         } catch (Exception e) {
             return CommonResultVO.builder().status(-1).message("Wrong Because of " + e.getMessage()).build();
@@ -317,16 +332,16 @@ public class ModelExampleService {
         long expirationTime = 60 * 10;
         return runModelServerModel(pointRasterUrl, pointRasterParam, expirationTime);
     }
-
+    // 超分辨率增强
     public CommonResultVO getSRResultByBand(SRBandDTO SRBandDTO){
         Geometry wkt = getTileGeomByIdsAndResolution(SRBandDTO.getRowId(), SRBandDTO.getColumnId(), SRBandDTO.getResolution());
         JSONObject band = SRBandDTO.getBand();
         JSONObject SRJson = new JSONObject();
-        SRJson.put("wkt", wkt.toString());  // Geometry 转 WKT 字符串
+        SRJson.put("boundary", wkt.toString());  // Geometry 转 WKT 字符串
         SRJson.put("band", band);          // 直接放入 JSONObject
         String SRUrl = SRModelServerProperties.getAddress() + SRModelServerProperties.getApis().get("SR");
         long expirationTime = 60 * 10;
-        return runModelServerModel(SRUrl, SRJson, expirationTime);
+        return runModelServerModel(SRUrl, SRJson, expirationTime, SRModelServerProperties);
     }
     public CommonResultVO createNoCloudConfig(NoCloudTileDTO noCloudTileDTO) {
         try {

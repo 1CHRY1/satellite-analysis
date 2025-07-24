@@ -275,6 +275,7 @@ export const useFilter = () => {
             endTime: defaultConfig.value.dateRange[1].format('YYYY-MM-DD'),
             cloud: defaultConfig.value.cloudRange[1],
             regionId: finalLandId.value,
+            resolution:selectedGrid.value
         }
         // allFilteredImages.value = await getSceneByConfig(filterData)
         if (searchedSpatialFilterMethod.value === 'region') {

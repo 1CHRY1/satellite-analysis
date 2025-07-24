@@ -16,13 +16,9 @@ import java.util.Map;
 @Component
 @Data
 @ConfigurationProperties(prefix = ModelServerProperties.MODELSERVER_PREFIX)
-public class ModelServerProperties {
+public class ModelServerProperties extends BaseModelServerProperties  {
 
     public static final String MODELSERVER_PREFIX = "modelserver";
-
-    private String address;
-    private Map<String, String> apis;
-    private Map<String, Integer> interval;
 
 }
 
