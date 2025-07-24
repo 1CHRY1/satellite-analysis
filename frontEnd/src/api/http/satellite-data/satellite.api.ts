@@ -180,9 +180,14 @@ export async function getCaseTifResult(taskId: string): Promise<any> {
     return http.get<any>(`modeling/case/result/tif/caseId/${taskId}`)
 }
 
+export async function getCaseBandsResult(taskId: string): Promise<any> {
+    return http.get<any>(`modeling/case/result/SRbands/caseId/${taskId}`)
+}
+
 export async function getCaseResult(taskId: string): Promise<any> {
     return http.get<any>(`modeling/case/result/caseId/${taskId}`)
 }
+
 
 export const pollStatus = async (taskId: string) => {
     const interval = 1000 // 每秒轮询一次
