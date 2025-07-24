@@ -262,14 +262,13 @@
                     </button>
                 </div>
             </div>
-
         </div>
     </Vue3DraggableResizable>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, type Ref, reactive } from 'vue'
-import { DatabaseIcon, GalleryHorizontalIcon, RectangleEllipsisIcon, Trash2Icon } from 'lucide-vue-next'
+import { DatabaseIcon, GalleryHorizontalIcon, RectangleEllipsisIcon, Trash2Icon,CircleOff } from 'lucide-vue-next'
 import bus from '@/store/bus'
 import { map_destroyGridRGBImageTileLayer } from '@/util/map/operation'
 import Vue3DraggableResizable from 'vue3-draggable-resizable'
@@ -817,10 +816,12 @@ const calTask: Ref<any> = ref({
     taskId: ''
 })
 
-
+const isSuperRes = ref(false)
 
 const handleSuperResolution = async ()=> {
+    isSuperRes.value = !isSuperRes.value 
     try{
+        handleRemove()
         const currentScene = gridData.value.scenes.find(scene => 
             scene.sensorName === selectedSensor.value
         );
@@ -890,9 +891,8 @@ const handleSuperResolution = async ()=> {
             let bandres = await getCaseBandsResult(calTask.value.taskId)
             console.log(bandres, '结果');
             console.log('超分返回数据',bandres.data)
-            
         // console.log(result.value)
-            bus.emit('SuperResTimeLine', bandres.data)
+            bus.emit('SuperResTimeLine', bandres.data,isSuperRes.value)
             
         } catch (error) {
             calTask.value.calState = 'failed'
