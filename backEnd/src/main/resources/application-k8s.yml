@@ -34,6 +34,12 @@ spring:
           password: 123456
           #          password: ogms250410
           driver-class-name: org.postgresql.Driver
+        pg_satellite:
+          #          url: jdbc:postgresql://223.2.34.8:31543/satellite
+          url: jdbc:postgresql://20.1.19.121:5432/satellite
+          username: postgres
+          password: 123456
+          driver-class-name: org.postgresql.Driver
   servlet:
     multipart:
       max-file-size: 1GB
@@ -86,13 +92,13 @@ modelServer:
     status: /v0/task/status
     result: /v0/task/result
     merge: /v0/tif/merge_v2
-    spectrum: /v0/tif/get_spectral_profile
     noCloud: /v0/tif/calc_no_cloud
-    #    noCloud: /v0/tif/calc_qa_middle
-    #    noCloud: /v0/tif/calc_qa_simple
-    #    noCloud: /v0/tif/calc_qa
+    noCloud_complex: /v0/tif/calc_no_cloud_complex
+    spectrum: /v0/tif/get_spectral_profile
     rasterPoint: /v0/tif/calc_raster_point
     rasterLine: /v0/tif/calc_raster_line
+    #    noCloud: /v0/tif/calc_qa_simple
+    #    noCloud: /v0/tif/calc_qa
     ndvi: /v0/tif/calc_NDVI
   interval:
     status: 2

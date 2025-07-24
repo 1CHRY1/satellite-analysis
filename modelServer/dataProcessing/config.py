@@ -41,7 +41,7 @@ class BaseConfig:
 class DevK8SConfig(BaseConfig):
     # MinIO Config
     MINIO_PORT                                      =       30900
-    MINIO_IP                                        =       "223.2.43.228"
+    MINIO_IP                                        =       "223.2.34.8"
     MINIO_ACCESS_KEY                                =       "jTbgNHEqQafOpUxVg7Ol"
     MINIO_SECRET_KEY                                =       "7UxtrqhSOyN1KUeumbqTRMv1zeluLO69OwJnCC0M"
     MINIO_SECURE                                    =       False
@@ -51,16 +51,16 @@ class DevK8SConfig(BaseConfig):
     MINIO_TEMP_FILES_BUCKET                         =       "temp-files"
 
     # MySQL Config
-    MYSQL_HOST                                      =       "223.2.43.228"
+    MYSQL_HOST                                      =       "223.2.34.8"
     MYSQL_TILE_PORT                                 =       30779
     MYSQL_TILE_DB                                   =       "tile"
-    MYSQL_RESOURCE_PORT                             =       30778
-    MYSQL_RESOURCE_DB                               =       "resource"
+    MYSQL_RESOURCE_PORT                             =       31036
+    MYSQL_RESOURCE_DB                               =       "satllite"
     MYSQL_USER                                      =       "root"
     MYSQL_PWD                                       =       "123456"
 
     # Titiler Config
-    TITILER_BASE_URL                                =       "http://223.2.43.228:31800"
+    TITILER_BASE_URL                                =       "http://223.2.34.8:31800"
     MOSAIC_CREATE_URL                               =       TITILER_BASE_URL + "/mosaic/create"
 
     TEMP_OUTPUT_DIR                                 =       r"/usr/resource/temp"
@@ -167,7 +167,7 @@ def get_current_config():
     """获取当前环境的配置类"""
     return get_config(CURRENT_PROFILE)
 
-os.environ['APP_PROFILE'] = 'hxf'
+os.environ['APP_PROFILE'] = 'k8s'
 # 获取当前环境配置 - 类似Spring Boot的 spring.profiles.active
 CURRENT_PROFILE = os.getenv('APP_PROFILE', 'k8s')  # 默认使用k8s
 
