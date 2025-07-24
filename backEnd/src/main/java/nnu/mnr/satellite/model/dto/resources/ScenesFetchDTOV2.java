@@ -20,5 +20,6 @@ public class ScenesFetchDTOV2 {
     private String endTime;
     private Integer regionId;
     private Integer cloud;
+    private Integer resolution;
 
 }
