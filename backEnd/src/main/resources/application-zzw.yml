@@ -12,23 +12,30 @@ spring:
       strict: false
       datasource:
         mysql_satellite:
+          # k8s
+          #          url: jdbc:mysql://223.2.34.8:31036/satellite
+          #          url: jdbc:mysql://192.168.1.111:3306/satellite
           url: jdbc:mysql://192.168.1.127:3306/satellite
           username: root
           password: root
+          #          password: 123456
           driver-class-name: com.mysql.cj.jdbc.Driver
           hikari:
             connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
-#        mysql_tile:
-#          url: jdbc:mysql://192.168.1.111:3306/tile
-#          username: root
-#          password: root
-#          driver-class-name: com.mysql.cj.jdbc.Driver
-        # PostgreSQL配置 - 请根据实际情况配置
-        # pg_space:
-        #   url: jdbc:postgresql://your-postgres-host:5432/gis_db
-        #   username: postgres
-        #   password: your-password
-        #   driver-class-name: org.postgresql.Driver
+        #        mysql_tile:
+        ##          url: jdbc:mysql://223.2.34.8:31036/tile
+        #          url: jdbc:mysql://192.168.1.110:3306/tile
+        #          username: root
+        #          password: root
+        ##          password: 123456
+        #          driver-class-name: com.mysql.cj.jdbc.Driver
+        #        pg_space:
+        #          url: jdbc:postgresql://223.2.34.8:31543/gis_db
+        ##                    url: jdbc:postgresql://127.0.0.1:5431/gis_db
+        #          username: postgres
+        #          password: 123456
+        #          #          password: ogms250410
+        #          driver-class-name: org.postgresql.Driver
         pg_satellite:
           #          url: jdbc:postgresql://223.2.34.8:31543/satellite
           url: jdbc:postgresql://192.168.1.127:5432/satellite
@@ -44,39 +51,31 @@ spring:
       host: 114.55.142.175
       port: 30379
       database: 0
-    # MongoDB配置 - 请根据实际情况配置
-    # mongodb:
-    #   uri: mongodb://username:password@your-mongo-host:27017/database
-  # Elasticsearch配置 - 请根据实际情况配置
-  # elasticsearch:
-  #   uris: http://your-es-host:9200
+    mongodb:
+      uri: mongodb://OGMSROOT:ogms1qaz2wsx@172.21.252.208:23266/opengmp
+  elasticsearch:
+    uris: http://223.2.32.166:30920
+#    uris: http://127.0.0.1:9200
 
 mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: nnu.mnr.satellite.model.po
   type-handlers-package: nnu.mnr.satellite.utils.typeHandler
-  # 开启SQL日志输出（调试时可以启用）
   configuration:
-     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+#ca:
+#  dir: D:/1tools/OpenSSL/ca
 
 minio:
+  #  access-key: jTbgNHEqQafOpUxVg7Ol
+  #  secret-key: 7UxtrqhSOyN1KUeumbqTRMv1zeluLO69OwJnCC0M
+  #  #  url: http://223.2.34.7:9000
+  #  url: http://172.16.92.82:30900
+  url: http://192.168.1.127:30900
   access-key: minioadmin
   secret-key: minioadmin
-  # url: http://192.168.1.111:30900
-  url: http://localhost:30900
-  # 备用地址: http://223.2.36.238:30901
-
-# Docker配置
-
-#docker:
-#  defaultServer:
-#    port: 2375
-#    host: "223.2.35.153"
-#    username: "root"
-#    password: "dky.njnu.edu.cn"
-#  localPath: D:/satellite/modelDockerVolume/
-#  serverDir: /home/satellite/
-#  workDir: /usr/local/coding/
+#  url: http://223.2.34.8:30900
 
 docker:
   # 执行模式：local（本地Docker）或 remote（远程服务器）
@@ -84,33 +83,35 @@ docker:
   # 本地Docker配置
   local:
     enabled: true
-    localPath: D:/satellite-projects/
+    localPath: D:/satellite-projects
+    #    serverDir: /home/satellite/
     workDir: /workspace/
   # 远程服务器配置（保留原有配置）
   defaultServer:
+    #    port: 2376
+    #    host: "223.2.35.208"
+    #    username: "vge"
+    #    password: "3J44.njnu.edu.cn"
+    #  serverDir: /home/vge/satellite/
+    #    port: 2375
+    #    host: "223.2.35.153"
+    #    username: "root"
+    #    password: "dky.njnu.edu.cn"
     port: 2375
     host: "localhost"
     # 本地Docker不需要SSH，但JSchConnectionManager需要这些配置
     username: "localhost"
     password: "localhost"
-  localPath: D:/satellite-projects/
+  localPath: D:/IdeaProjects/satellite-analysis/backEnd/src/main/resources/modelDockerVolume
+  #  localPath: D:/satellite-projects
   serverDir: /workspace/
   workDir: /workspace/
+#  serverDir: /home/satellite/
+#  workDir: /usr/local/coding/
 
-# # 简化Docker配置 - 全部使用本地路径
-# docker:
-#   defaultServer:
-#     port: 2375
-#     host: "223.2.35.153"
-#     username: "root"
-#     password: "dky.njnu.edu.cn"
-#   localPath: D:/satellite/modelDockerVolume/
-#   serverDir: /home/satellite/
-#   workDir: /usr/local/coding/
-
-# 添加默认的模型服务器配置
 modelServer:
-  address: http://192.168.1.127:500/
+  address: http://192.168.1.127:5000
+  #  address: http://223.2.43.228:30500
   apis:
     status: /v0/task/status
     result: /v0/task/result
@@ -124,9 +125,17 @@ modelServer:
   interval:
     status: 2
 
-# 瓦片服务配置 - 如果没有瓦片服务，请提供默认配置
+srmodelServer:
+  address: http://nrspeclib.sasclouds.com:33445
+  apis:
+    status: /v0/task/status
+    result: /v0/task/result
+    SR: /v0/model/superresolution
+  interval:
+    status: 2
+
 tiler:
-  end-point: http://192.168.1.127:8000
+  end-point: http://192.168.1.127:8000/
 
 # 卫星配置文件路径 - 请根据实际情况配置
 satelliteConfig:
