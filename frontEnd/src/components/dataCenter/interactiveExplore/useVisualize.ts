@@ -3,7 +3,7 @@ import { useLayer } from "./useLayer";
 import { useFilter } from "./useFilter";
 import { useStats } from "./useStats";
 import * as MapOperation from '@/util/map/operation'
-import { getOnTheFlyUrl } from "@/api/http/satellite-data/visualize.api"
+import { getOnTheFlyUrl, getRealtimeNoCloudUrl } from "@/api/http/satellite-data/visualize.api"
 import { ElMessage } from 'element-plus'
 import { message } from 'ant-design-vue'
 import { useI18n } from "vue-i18n";
@@ -27,70 +27,88 @@ export const useVisualize = () => {
      * 1.遥感影像可视化
      */
     // 创建无云一版图瓦片
-    const handleCreateNoCloudTiles = async (sceneIds: any[] | Event) => {
-        try {
-            let finalSceneIds;
-        
-            // 如果没有传入sceneIds，则自己构建
-            if (!sceneIds || 
-                sceneIds instanceof Event || 
-                sceneIds instanceof PointerEvent || 
-                !Array.isArray(sceneIds) || 
-                sceneIds.length === 0) {
-                // 如果不是有效数组，则自己构建
-                finalSceneIds = allScenes.value.map((item: any) => item.sceneId);
-            } else {
-                // 如果是有效数组，直接使用
-                finalSceneIds = sceneIds;
-            }
-            const param = {
-                sceneIds: finalSceneIds,
-            }
-            console.log(param)
+    // const handleCreateNoCloudTiles = async (sceneIds: any[] | Event) => {
+    //     try {
+    //         let finalSceneIds;
 
-            console.log('创建无云一版图配置参数:', param)
+    //         // 如果没有传入sceneIds，则自己构建
+    //         if (!sceneIds || 
+    //             sceneIds instanceof Event || 
+    //             sceneIds instanceof PointerEvent || 
+    //             !Array.isArray(sceneIds) || 
+    //             sceneIds.length === 0) {
+    //             // 如果不是有效数组，则自己构建
+    //             finalSceneIds = allScenes.value.map((item: any) => item.sceneId);
+    //         } else {
+    //             // 如果是有效数组，直接使用
+    //             finalSceneIds = sceneIds;
+    //         }
+    //         const param = {
+    //             sceneIds: finalSceneIds,
+    //         }
+    //         console.log(param)
 
-            // 2. 创建配置
-            const response = await fetch('/api/modeling/example/noCloud/createNoCloudConfig', {
-                method: 'POST',
-                body: JSON.stringify(param),
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + localStorage.getItem('token'),
-                },
-            })
-            const result = await response.json()
-            const jsonUrl = result.data  // 从CommonResultVO中获取data字段
-            
-            console.log('获取到的jsonUrl:', jsonUrl)
-            
-            // 3. 添加瓦片图层
-            
-            // 清除旧的无云图层
-            MapOperation.map_destroyNoCloudLayer()
-            
-            // 添加新的瓦片图层
-            const url = getOnTheFlyUrl(jsonUrl)
-            MapOperation.map_addNoCloudLayer(url)
-            
-            console.log('无云一版图瓦片图层已添加到地图')
-            
-        } catch (error) {
-            console.error('创建无云一版图瓦片失败:', error)
-        }
+    //         console.log('创建无云一版图配置参数:', param)
+
+    //         // 2. 创建配置
+    //         const response = await fetch('/api/modeling/example/noCloud/createNoCloudConfig', {
+    //             method: 'POST',
+    //             body: JSON.stringify(param),
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //                 'Authorization': 'Bearer ' + localStorage.getItem('token'),
+    //             },
+    //         })
+    //         const result = await response.json()
+    //         const jsonUrl = result.data  // 从CommonResultVO中获取data字段
+
+    //         console.log('获取到的jsonUrl:', jsonUrl)
+
+    //         // 3. 添加瓦片图层
+
+    //         // 清除旧的无云图层
+    //         MapOperation.map_destroyNoCloudLayer()
+
+    //         // 添加新的瓦片图层
+    //         const url = getOnTheFlyUrl(jsonUrl)
+    //         MapOperation.map_addNoCloudLayer(url)
+
+    //         console.log('无云一版图瓦片图层已添加到地图')
+
+    //     } catch (error) {
+    //         console.error('创建无云一版图瓦片失败:', error)
+    //     }
+    // }
+
+    const handleCreateNoCloudTiles = async (sensorName: string, startTime: string, endTime: string) => {
+        // 清除旧的无云图层
+        MapOperation.map_destroyNoCloudLayer()
+
+        // 添加新的瓦片图层
+        const url = getRealtimeNoCloudUrl({ sensorName, startTime, endTime })
+        MapOperation.map_addNoCloudLayer(url)
     }
 
-    const handleShowImageInBoundary = async (label: string, platformName: string) => {
-        const sceneIds = getSceneIdsByPlatformName(label, platformName, allScenes.value)
-        handleCreateNoCloudTiles(sceneIds)
+    const handleShowImageInBoundary = async (sensorName: string, dateRange: Array<any>) => {
+        const startTime = dateRange[0].format('YYYY-MM-DD')
+        const endTime = dateRange[1].format('YYYY-MM-DD')
+        handleCreateNoCloudTiles(sensorName, startTime, endTime)
+
+        ////////////// OLD START: Load Image On the Fly //////////////
+        // const sceneIds = getSceneIdsByPlatformName(label, platformName, allScenes.value)
+        // handleCreateNoCloudTiles(sceneIds)
+        ////////////// OLD END //////////////
+
+        ////////////// OLD START: Load Image One By One //////////////
+        // const sceneIds = getSceneIdsByPlatformName(label, platformName, allScenes.value)
         // console.log('选中的景ids', sceneIds)
         // console.log('当前所有的景', allScenes.value)
         // const sensorName = getSensorNamebyPlatformName(resolutionPlatformSensor[label], allScenes.value)
-    
+
         // console.log('匹配的sensorName', sensorName)
-    
+
         // const stopLoading = message.loading(t('datapage.explore.message.load'))
-    
+
         // let coverScenes, gridsBoundary
         // if (searchedSpatialFilterMethod.value === 'region') {
         //     const params = {
@@ -148,6 +166,7 @@ export const useVisualize = () => {
         // console.log('scene:demProducts', demProducts)
         // await addTerrainBaseMap(demProducts, gridsBoundary)
         // await addMultiRGBImageTileLayer(coverScenes, gridsBoundary, stopLoading)
+        ////////////////// OLD END //////////////////////
     }
 
     /**
@@ -194,7 +213,7 @@ export const useVisualize = () => {
         console.log('匹配的sensorName', sensorName)
 
         const stopLoading = message.loading(t('datapage.explore.message.load'))
-    
+
         let coverProducts, gridsBoundary
         if (searchedSpatialFilterMethod.value === 'region') {
             const params = {
@@ -248,7 +267,7 @@ export const useVisualize = () => {
             const coverProductsRes = await getCoverRegionSensorScenes(params)
             demProducts = coverProductsRes.sceneList
         }
-        
+
         await addTerrainBaseMap(demProducts, gridsBoundary)
         switch (label) {
             case 'DEM':
@@ -297,7 +316,7 @@ export const useVisualize = () => {
         console.log('source_layer', source_layer)
         await addMVTLayer(source_layer, finalLandId.value)
     }
-    
+
 
     /**
      * 4.DEM底图可视化

@@ -326,6 +326,23 @@ export function getOnTheFlyUrl(jsonUrl: string) {
     return url
 }
 
+type RealTimeNoCloudParam = {
+    sensorName: string,
+    startTime: string,
+    endTime: string
+}
+
+export function getRealtimeNoCloudUrl(param: RealTimeNoCloudParam) {
+    let baseUrl = `${titilerEndPoint}/no_cloud_with_sensorname/{z}/{x}/{y}`
+    const requestParams = new URLSearchParams()
+    requestParams.append('sensorName', param.sensorName)
+    requestParams.append('startTime', param.startTime)
+    requestParams.append('endTime', param.endTime)
+    const fullUrl = baseUrl + '?' + requestParams.toString()
+    console.log(fullUrl)
+    return fullUrl
+}
+
 type MosaicTileParam = {
     mosaicJsonPath: string
 }

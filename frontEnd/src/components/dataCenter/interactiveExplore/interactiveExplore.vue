@@ -324,15 +324,15 @@
                                                         v-model="resolutionPlatformSensor[label]">
                                                         <option disabled selected value="">{{ t('datapage.explore.section_interactive.choose') }}</option>
                                                         <!-- <option :value="'all'" class="truncate">全选</option> -->
-                                                        <option v-for="platformName in classifiedScenes[
+                                                        <option v-for="platform in classifiedScenes[
                                                             value + 'm'
-                                                        ]" :value="platformName" :key="platformName" class="truncate">
-                                                            {{ platformName }}
+                                                        ]" :value="platform.sensorName" :key="platform.platformName" class="truncate">
+                                                            {{ platform.platformName }}
                                                         </option>
                                                     </select>
                                                     <div class="flex flex-row items-center">
                                                         <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
-                                                            @click="handleShowImageInBoundary(label, resolutionPlatformSensor[label])"
+                                                            @click="handleShowImageInBoundary(resolutionPlatformSensor[label], defaultConfig.dateRange)"
                                                             :disabled="!resolutionPlatformSensor[label]">
                                                             {{ t('datapage.explore.section_interactive.button') }}
                                                         </a-button>
