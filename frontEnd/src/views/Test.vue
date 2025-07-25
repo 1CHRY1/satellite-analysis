@@ -85,21 +85,22 @@ const handleCreateNoCloudTiles = async () => {
         console.log('创建无云一版图配置参数:', param)
 
         // 2. 创建配置
-        const response = await fetch('/api/modeling/example/noCloud/createNoCloudConfig', {
-            method: 'POST',
-            body: JSON.stringify(param),
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + localStorage.getItem('token'),
-            },
-        })
-        const result = await response.json()
-        const jsonUrl = result.data  // 从CommonResultVO中获取data字段
-        
+        // const response = await fetch('/api/modeling/example/noCloud/createNoCloudConfig', {
+        //     method: 'POST',
+        //     body: JSON.stringify(param),
+        //     headers: {
+        //         'Content-Type': 'application/json',
+        //         'Authorization': 'Bearer ' + localStorage.getItem('token'),
+        //     },
+        // })
+        // const result = await response.json()
+        // const jsonUrl = result.data  // 从CommonResultVO中获取data字段，正式版本~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        const jsonUrl = 'http://192.168.1.127:30900/temp-files/zzw/nocloud_005371400fb149c48046bd2b52635d24.json'  // 测试使用，记得改回来~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         console.log('获取到的jsonUrl:', jsonUrl)
         
         // 3. 添加瓦片图层
-        const tileUrl = `http://localhost:8000/no_cloud/{z}/{x}/{y}?jsonUrl=${encodeURIComponent(jsonUrl)}`
+        const tileUrl = `http://localhost:8000/no_cloud_pg/{z}/{x}/{y}?jsonUrl=${encodeURIComponent(jsonUrl)}`
         //const tileUrl = `http://192.168.1.100:8000/no_cloud/{z}/{x}/{y}.png?jsonUrl=${encodeURIComponent(jsonUrl)}`
         
         console.log('瓦片URL模板:', tileUrl)
