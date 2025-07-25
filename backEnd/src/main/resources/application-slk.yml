@@ -14,29 +14,29 @@ spring:
         mysql_satellite:
           # k8s
           #url: jdbc:mysql://223.2.43.228:31136/satellite
-          url: jdbc:mysql://localhost:3306/satellite?useSSL=false&allowPublicKeyRetrieval=true
+          url: jdbc:mysql://223.2.34.8:31036/satellite?useSSL=false&allowPublicKeyRetrieval=true
           username: root
-          #password: 123456
-          password: root
+          password: 123456
+#          password: root
           driver-class-name: com.mysql.cj.jdbc.Driver
           hikari:
             connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
-#        mysql_tile:
-#          #          url: jdbc:mysql://223.2.34.7:3306/tile
-#          url: jdbc:mysql://223.2.43.228:31136/tile?useSSL=false&allowPublicKeyRetrieval=true
-#          username: root
-#          password: 123456
-#          driver-class-name: com.mysql.cj.jdbc.Driver
-#        pg_space:
-#          url: jdbc:postgresql://223.2.43.228:31543/gis_db
-#          #          url: jdbc:postgresql://127.0.0.1:5431/gis_db
-#          username: postgres
-#          password: 123456
-#          #          password: ogms250410
-#          driver-class-name: org.postgresql.Driver
+        mysql_tile:
+          #          url: jdbc:mysql://223.2.34.7:3306/tile
+          url: jdbc:mysql://223.2.34.8:31036/tile?useSSL=false&allowPublicKeyRetrieval=true
+          username: root
+          password: 123456
+          driver-class-name: com.mysql.cj.jdbc.Driver
+        pg_space:
+          url: jdbc:postgresql://223.2.34.8:31543/gis_db
+          #          url: jdbc:postgresql://127.0.0.1:5431/gis_db
+          username: postgres
+          password: 123456
+          #          password: ogms250410
+          driver-class-name: org.postgresql.Driver
         pg_satellite:
           #          url: jdbc:postgresql://223.2.34.8:31543/satellite
-          url: jdbc:postgresql://localhost:5432/satellite
+          url: jdbc:postgresql://192.168.1.127:5432/satellite
           username: postgres
           password: 123456
           driver-class-name: org.postgresql.Driver
@@ -54,7 +54,7 @@ spring:
     mongodb:
       uri: mongodb://OGMSROOT:ogms1qaz2wsx@172.21.252.208:23266/opengmp
   elasticsearch:
-    uris: http://223.2.43.228:30920
+    uris: http://223.2.34.8:30920
 #    uris: http://127.0.0.1:9200
 
 mybatis-plus:
@@ -70,46 +70,27 @@ mybatis-plus:
 minio:
   access-key: minioadmin
   secret-key: minioadmin
-  url: http://192.168.1.100:30900
-  #url: http://223.2.43.228:30900
+#  url: http://192.168.1.100:30900
+  url: http://223.2.34.8:30900
 
 docker:
-  # 执行模式：local（本地Docker）或 remote（远程服务器）
-#  mode: "remote"
-#  # 本地Docker配置
-#  local:
-#    enabled: true
-#    localPath: D:/satellite-projects/
-#    workDir: /workspace/
-  # 远程服务器配置（保留原有配置）
   defaultServer:
+    #    port: 2376
+    #    host: "223.2.35.208"mi
+    #    username: "vge"
+    #    password: "3J44.njnu.edu.cn"
+    #  serverDir: /home/vge/satellite/
     port: 2375
-    host: "localhost"
-    # 本地Docker不需要SSH，但JSchConnectionManager需要这些配置
-    username: "localhost"
-    password: "localhost"
-  localPath: D:/satellite-projects/
-  serverDir: /workspace/
-  workDir: /workspace/
-
-#docker:
-#  defaultServer:
-#    #    port: 2376
-#    #    host: "223.2.35.208"mi
-#    #    username: "vge"
-#    #    password: "3J44.njnu.edu.cn"
-#    #  serverDir: /home/vge/satellite/
-#    port: 2375
-#    host: "223.2.35.153"
-#    username: "root"
-#    password: "dky.njnu.edu.cn"
-#  localPath: D:/code/modelDockerVolume
-#  serverDir: /home/satellite/
-#  workDir: /usr/local/coding/
+    host: "223.2.35.153"
+    username: "root"
+    password: "dky.njnu.edu.cn"
+  localPath: /Users/paxton/Documents/Code/modelDockerVolume
+  serverDir: /home/satellite/
+  workDir: /usr/local/coding/
 
 modelServer:
-  address: http://127.0.0.1:5000
-  #address: http://223.2.43.228:30500
+#  address: http://127.0.0.1:5000
+  address: http://223.2.34.8:30500
   apis:
     status: /v0/task/status
     result: /v0/task/result
@@ -128,7 +109,7 @@ modelServer:
 
 
 tiler:
-  end-point: http://127.0.0.1:8000
-
+#  end-point: http://127.0.0.1:8000
+  end-point: http://223.2.34.8:31800
 satelliteConfig:
-  path: D:/code/band_config.json
+  path: /Users/paxton/Documents/Code/satellite-analysis/backEnd/src/main/resources/config/band_config.json

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerImageDTO;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerSceneDTO;
 import nnu.mnr.satellite.model.dto.resources.*;
+import nnu.mnr.satellite.model.po.geo.GeoLocation;
 import nnu.mnr.satellite.model.po.resources.Region;
 import nnu.mnr.satellite.model.po.resources.Scene;
 import nnu.mnr.satellite.model.po.resources.SceneSP;
@@ -149,21 +150,25 @@ public class SceneDataServiceV2 {
                 .build();
     }
 
-    //已弃用
+    // 联合查询
     public List<SceneSP> getScenesByIdsWithProductAndSensor(List<String> sceneIds) {
         return sceneRepo.getScenesByIdsWithProductAndSensor(sceneIds);
     }
-
-    public List<SceneSP> getScenesByIdsAndGridWithProductAndSensor(List<String> sceneIds, String wkt) {
-        return sceneRepo.getScenesByIdsAndGridWithProductAndSensor(sceneIds, wkt);
-    }
+    // 数据库中求相交
+//    public List<SceneSP> getScenesByIdsAndGridWithProductAndSensor(List<String> sceneIds, String wkt) {
+//        return sceneRepo.getScenesByIdsAndGridWithProductAndSensor(sceneIds, wkt);
+//    }
 
     public List<SceneDesVO> getScenesDesByTimeRegionAndCloud(ScenesFetchDTOV2 scenesFetchDTO) {
         String startTime = scenesFetchDTO.getStartTime(); String endTime = scenesFetchDTO.getEndTime();
         Integer regionId = scenesFetchDTO.getRegionId(); Integer cloud = scenesFetchDTO.getCloud();
-        Region region = regionDataService.getRegionById(regionId);
-        String wkt = region.getBoundary().toText();
+        Integer resolution = scenesFetchDTO.getResolution();
+        Geometry boundary = regionDataService.getRegionById(regionId).getBoundary();
+        List<Integer[]> tileIds = TileCalculateUtil.getRowColByRegionAndResolution(boundary, resolution);
+        Geometry gridsBoundary = GeometryUtil.getGridsBoundaryByTilesAndResolution(tileIds, resolution);
+        String wkt = gridsBoundary.toText();
         String dataType = "'satellite', 'dem', 'dsm', 'ndvi', 'svr', '3d'";
+
         return sceneRepo.getScenesDesByTimeCloudAndGeometry(startTime, endTime, cloud, wkt, dataType);
     }
 

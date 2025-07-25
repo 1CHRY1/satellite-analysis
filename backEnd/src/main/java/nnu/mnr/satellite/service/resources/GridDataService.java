@@ -72,7 +72,7 @@ public class GridDataService {
         return grids;
     }
 
-    // 获取每个网格中的影像(在后端判断包含，已弃用)
+    // 获取每个网格中的影像(在后端判断包含)
     public List<GridSceneVO> getScenesFromGrids(GridSceneFetchDTO gridSceneFetchDTO) {
         List<GridBasicDTO> grids = gridSceneFetchDTO.getGrids();
         List<String> sceneIds = gridSceneFetchDTO.getSceneIds();

@@ -392,9 +392,17 @@ const handleClick = async (index: number) => {
     } else if (visualMode.value === 'rgb') {
         const img = currentImage as MultiImageInfoType
 
-        let redPath = img.redPath
-        let greenPath = img.greenPath
-        let bluePath = img.bluePath
+        let redPath,greenPath,bluePath
+
+        if(superResOverride.value?.load == true){
+             redPath = superResOverride.value?.redPath 
+             greenPath = superResOverride.value?.greenPath 
+             bluePath = superResOverride.value?.bluePath 
+        } else {
+            redPath =  img.redPath
+            greenPath =  img.greenPath
+            bluePath = img.bluePath
+        }
         
         console.log('red, green, blue', redPath, greenPath, bluePath)
 
@@ -553,9 +561,8 @@ const updateHandler = (
     _grid: GridInfoType,
     _scaleRate: number,
     mode: 'single' | 'rgb' | 'product',
-    source: 'SuperResTimeLine' | 'cubeVisualize' 
+
 ) => {
-    console.log('资源来源：', source)
 
     activeIndex.value = -1
     grid.value = _grid
@@ -581,37 +588,39 @@ const updateHandler = (
 }
 
 // let runningSource: 'SuperResTimeLine' | 'cubeVisualize' | null = null;
-// const clearState = () => {
-//   activeIndex.value = -1;
-//   singleImages.value = [];
-//   multiImages.value = [];
-//   productImages.value = [];
-//   scaleRate.value = 0;
-//   runningSource = null;
-// }
+const clearState = () => {
+  activeIndex.value = -1;
+  singleImages.value = [];
+  multiImages.value = [];
+  productImages.value = [];
+  scaleRate.value = 0;
+}
+
+const superResOverride = ref<{
+  redPath: string
+  greenPath: string
+  bluePath: string
+  load: boolean
+} | null>(null)
 
 onMounted(() => {
+    clearState()
     bus.on('cubeVisualize', updateHandler)
-    // bus.on('cubeVisualize', (data, grid, scaleRate, mode, source) => {
-    //     if (runningSource && runningSource !== 'cubeVisualize') {
-    //     console.log('当前有其他任务运行，cubeVisualize 被阻止');
-    //     return;
-    //     }
-    //     runningSource = 'cubeVisualize';
-    //     clearState();
-    //     updateHandler(data, grid, scaleRate, mode, source);
-    // });
 
-    // bus.on('SuperResTimeLine', (data, grid, scaleRate, mode, source) => {
-    //     if (runningSource && runningSource !== 'SuperResTimeLine') {
-    //     console.log('当前有其他任务运行，SuperResTimeLine 被阻止');
-    //     return;
-    //     }
-    //     runningSource = 'SuperResTimeLine';
-    //     clearState();
-    //     updateHandler(data, grid, scaleRate, mode, source);
-    // });
+    bus.on('SuperResTimeLine', (SuperData: { R: string, G: string, B: string }, loadSuper : boolean) => {
+    console.log('收到 SuperResTimeLine 数据:', SuperData,loadSuper)
+    superResOverride.value = {
+        redPath: SuperData.R,
+        greenPath: SuperData.G,
+        bluePath: SuperData.B,
+        load: loadSuper
+  }
 
+  // 强制重新加载当前图像（如果有）
+  if (activeIndex.value >= 0) {
+    handleClick(activeIndex.value)
+  }
+})
 
     bus.on('closeTimeline', () => {
         activeIndex.value = -1
