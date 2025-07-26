@@ -246,6 +246,10 @@ export async function getResultByCaseId(caseId: string): Promise<any> {
     return http.get<any>(`data/case/result/${caseId}`)
 }
 
+export async function getAllInfoByCaseId(caseId: string): Promise<any>{
+    return http.get<any>(`data/case/allInfo/${caseId}`)
+}
+
 // 获取矢量数据
 export async function getVectorsByConfig(param: any): Promise<any> {
     return http.post<any>(`data/vector/time/region`, param)
