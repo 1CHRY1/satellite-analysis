@@ -1,4 +1,4 @@
-import http from '../clientHttp'
+import http from '../../axiosClient/clientHttp'
 import type { analysisResponse } from './analysis.type'
 // import type { Sensor, Product, SensorImage, ImageTile } from './satellite.type'
 

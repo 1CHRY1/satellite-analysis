@@ -1,5 +1,5 @@
 import { ezStore } from '@/store'
-import http from '../clientHttp'
+import http from '../../axiosClient/clientHttp'
 import { grid2bbox } from '@/util/map/gridMaker'
 
 const titilerEndPoint = ezStore.get('conf')['titiler']

@@ -272,7 +272,7 @@ import { ElMessage } from 'element-plus'
 import bus from '@/store/bus'
 import mapboxgl from 'mapbox-gl'
 import * as echarts from 'echarts'
-import http from '@/api/http/clientHttp'
+import http from '@/api/axiosClient/clientHttp'
 
 import {
     ChartColumn,
