@@ -2,6 +2,91 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
 import tailwindcss from '@tailwindcss/vite'
+import { ENV_CONFIG, FIXED_CONFIG } from './env.config'
+
+// 环境配置
+// const ENV = process.env.NODE_ENV || 'development'
+const ENV_TARGET = 'hxf' // 一键切换配置环境，使用集群则改为cluster，使用本地则改为local
+
+// 获取当前环境配置
+const currentEnv = ENV_CONFIG[ENV_TARGET as keyof typeof ENV_CONFIG] || ENV_CONFIG.hxf
+
+// 代理配置生成器
+const createProxyConfig = () => {
+    return {
+        // API v3
+        '/api3': {
+            target: `${currentEnv.api}/api/v3`,
+            changeOrigin: true,
+            rewrite: (path: string) => path.replace(/^\/api3/, ''),
+        },
+        // API v2
+        '/api2': {
+            target: `${currentEnv.api}/api/v2`,
+            changeOrigin: true,
+            rewrite: (path: string) => path.replace(/^\/api2/, ''),
+        },
+        // 实时计算瓦片API专用代理（更具体的路径必须在前面）
+        '/api/api/v1/realtime': {
+            target: currentEnv.realtime,
+            changeOrigin: true,
+        },
+        // 实时计算会话API
+        '/api/realtime': {
+            target: currentEnv.realtime,
+            changeOrigin: true,
+        },
+        // API v1
+        '/api': {
+            target: `${currentEnv.api}/api/v1`,
+            changeOrigin: true,
+            rewrite: (path: string) => path.replace(/^\/api/, ''),
+        },
+        // WebSocket
+        '/websocket': {
+            target: currentEnv.websocket,
+            ws: true,
+            changeOrigin: true,
+            rewrite: (path: string) => path.replace(/^\/websocket/, ''),
+        },
+        // Tiler
+        '/tiler': {
+            target: currentEnv.tiler,
+            changeOrigin: true,
+            rewrite: (path: string) => path.replace(/^\/tiler/, ''),
+        },
+        // 固定配置（不随环境变化）
+        // '/hytemp': {
+        //     target: currentEnv.hytemp,
+        //     changeOrigin: true,
+        //     rewrite: (path: string) => path.replace(/^\/hytemp/, ''),
+        // },
+        '/basemap': {
+            target: FIXED_CONFIG.basemap,
+            changeOrigin: true,
+            rewrite: (path: string) => path.replace(/^\/basemap/, ''),
+        },
+        '/mvtbasemap': {
+            target: FIXED_CONFIG.mvtbasemap,
+            changeOrigin: true,
+            rewrite: (path: string) => path.replace(/^\/mvtbasemap/, ''),
+        },
+        '/proxymap': {
+            target: currentEnv.proxymap,
+            changeOrigin: true,
+            rewrite: (path: string) => path.replace(/^\/proxymap/, ''),
+        },
+        // '/chry': {
+        //     target: FIXED_CONFIG.chry,
+        //     changeOrigin: true,
+        //     rewrite: (path: string) => path.replace(/^\/chry/, ''),
+        // },
+    }
+}
+
+// 打印当前环境信息
+console.log(`🚀 当前环境: ${ENV_TARGET.toUpperCase()}`)
+console.log(`📡 API基础URL: ${currentEnv.api}`)
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -13,79 +98,6 @@ export default defineConfig({
     },
     server: {
         host: '0.0.0.0',
-        proxy: {
-            '/api3': {
-                // target: 'http://localhost:8999/api/v3', // 本地开发
-                // target: 'http://223.2.34.8:31584/api/v3', // 集群环境
-                target: 'http://192.168.1.127:8999/api/v3', // HXF开发环境
-                changeOrigin: true,
-                rewrite: (path) => path.replace(/^\/api3/, ''),
-            },
-            '/api2': {
-                // target: 'http://localhost:8999/api/v2', // 本地开发
-                // target: 'http://223.2.34.8:31584/api/v2', // 集群环境
-                target: 'http://192.168.1.127:8999/api/v2', // HXF开发环境
-                changeOrigin: true,
-                rewrite: (path) => path.replace(/^\/api2/, ''),
-            },
-            // TODO: Improvement
-            // 实时计算瓦片API专用代理（更具体的路径必须在前面）
-            '/api/api/v1/realtime': {
-                target: 'http://192.168.1.127:5001',
-                changeOrigin: true,
-            },
-            // 实时计算会话API
-            '/api/realtime': {
-                target: 'http://192.168.1.127:5001',
-                changeOrigin: true,
-            },
-            '/api': {
-                // target: 'http://localhost:8999/api/v1', // 本地开发
-                // target: 'http://223.2.34.8:31584/api/v1', // 集群环境
-                target: 'http://192.168.1.127:8999/api/v1', // HXF开发环境
-                changeOrigin: true,
-                rewrite: (path) => path.replace(/^\/api/, ''),
-            },
-            '/websocket': {
-                // target: 'http://localhost:8999/model/websocket', // 本地开发
-                // target: 'http://223.2.34.8:30394/model/websocket', // 集群环境
-                target: 'http://192.168.1.127:8999/model/websocket', // HXF开发环境
-                ws: true,
-                changeOrigin: true,
-                rewrite: (path) => path.replace(/^\/websocket/, ''),
-            },
-            '/tiler': {
-                // target: 'http://127.0.0.1:8000', // 本地开发
-                // target: 'http://223.2.34.8:31800', // 集群环境(稳定版)
-                target: 'http://192.168.1.127:31800', // HXF开发环境
-                changeOrigin: true,
-                rewrite: (path) => path.replace(/^\/tiler/, ''),
-            },
-            '/hytemp': {
-                target: 'http://localhost:8000',
-                changeOrigin: true,
-                rewrite: (path) => path.replace(/^\/hytemp/, ''),
-            },
-            '/basemap': {
-                target: 'http://172.31.13.21:5001/tiles',
-                changeOrigin: true,
-                rewrite: (path) => path.replace(/^\/basemap/, ''),
-            },
-            '/mvtbasemap': {
-                target: 'http://172.31.13.21:5002/tiles',
-                changeOrigin: true,
-                rewrite: (path) => path.replace(/^\/mvtbasemap/, ''),
-            },
-            '/proxymap': {
-                target: 'http://localhost:5003',
-                changeOrigin: true,
-                rewrite: (path) => path.replace(/^\/proxymap/, ''),
-            },
-            '/chry': {
-                target: 'http://223.2.47.202:8999/api/v1/geo/vector/tiles',
-                changeOrigin: true,
-                rewrite: (path) => path.replace(/^\/chry/, ''),
-            },
-        },
+        proxy: createProxyConfig(),
     },
 })
