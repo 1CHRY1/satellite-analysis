@@ -1,4 +1,4 @@
-import { getAddress, getCasePage, getRegionPosition, getResultByCaseId } from '@/api/http/satellite-data/satellite.api';
+import { getAddress, getCasePage, getRegionPosition, getResultByCaseId,getCaseById } from '@/api/http/satellite-data/satellite.api';
 import { ref, computed, nextTick } from 'vue';
 import type { Case } from '@/api/http/satellite-data/satellite.type';
 import type { RegionValues } from 'v-region'
@@ -7,7 +7,9 @@ import { getNoCloudUrl4MosaicJson } from '@/api/http/satellite-data/visualize.ap
 import { message } from 'ant-design-vue';
 import * as MapOperation from '@/util/map/operation'
 import { defineEmits } from 'vue'
+import { useAnalysisStore } from '@/store';
 
+const dbValue = useAnalysisStore()
 type HistoryValueTab = 'RUNNING' | 'COMPLETE'
 type HistoryTab = {
     label: string
@@ -253,18 +255,24 @@ export function useViewHistoryModule() {
     const showResult = async (caseId: string, regionId: number) => {
         previewIndex.value = caseList.value.findIndex(item => item.caseId === caseId)
         fitView(regionId)
-        let res = await getResultByCaseId(caseId)
+        let res = await getCaseById(caseId)
         console.log(res, '结果')
 
         if (onResultSelected.value) {
             onResultSelected.value(res)
         }
 
+        dbValue.updateFields({
+            mosaicBucket: res.data.result.bucket,
+            mosaicPath: res.data.result.object_path,
+            bandList: res.data.bandList
+        })
+
         // 预览无云一版图影像
         let data = res.data
         const getData = async (taskId: string) => {
             let res:any
-            while (!(res = await getResultByCaseId(taskId)).data) {
+            while (!(res = await getCaseById(taskId)).data) {
                 console.log('Retrying...')
                 await new Promise(resolve => setTimeout(resolve, 1000));
             }

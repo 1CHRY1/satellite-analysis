@@ -1,4 +1,4 @@
-import http from '../clientHttp'
+import http from '../../axiosClient/clientHttp'
 import type { Sensor, Product, SensorImage, ImageTile, Project, Case, Common } from './satellite.type'
 import { blobDownload } from '../../util'
 
@@ -244,6 +244,10 @@ export async function getCaseById(caseId: string): Promise<Case.CaseResponse> {
 // 注意与getCaseResult的区别
 export async function getResultByCaseId(caseId: string): Promise<any> {
     return http.get<any>(`data/case/result/${caseId}`)
+}
+
+export async function getAllInfoByCaseId(caseId: string): Promise<any>{
+    return http.get<any>(`data/case/allInfo/${caseId}`)
 }
 
 // 获取矢量数据

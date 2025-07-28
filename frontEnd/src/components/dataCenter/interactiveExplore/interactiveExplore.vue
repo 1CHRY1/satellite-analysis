@@ -324,15 +324,15 @@
                                                         v-model="resolutionPlatformSensor[label]">
                                                         <option disabled selected value="">{{ t('datapage.explore.section_interactive.choose') }}</option>
                                                         <!-- <option :value="'all'" class="truncate">全选</option> -->
-                                                        <option v-for="platformName in classifiedScenes[
+                                                        <option v-for="platform in classifiedScenes[
                                                             value + 'm'
-                                                        ]" :value="platformName" :key="platformName" class="truncate">
-                                                            {{ platformName }}
+                                                        ]" :value="platform.sensorName" :key="platform.platformName" class="truncate">
+                                                            {{ platform.platformName }}
                                                         </option>
                                                     </select>
                                                     <div class="flex flex-row items-center">
                                                         <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
-                                                            @click="handleShowImageInBoundary(label)"
+                                                            @click="handleShowImageInBoundary(resolutionPlatformSensor[label], defaultConfig.dateRange)"
                                                             :disabled="!resolutionPlatformSensor[label]">
                                                             {{ t('datapage.explore.section_interactive.button') }}
                                                         </a-button>
@@ -616,6 +616,7 @@ const { t } = useI18n()
 import { useFilter } from './useFilter'
 import { useStats } from './useStats'
 import { useLayer } from './useLayer'
+import { useVisualize } from './useVisualize'
 import { message } from 'ant-design-vue';
 const selectedVectorTableName = ref('')
 
@@ -635,12 +636,12 @@ const {
     // 筛选
     allScenes, allGridsInResolution, allProducts, allGridsInProduct, allVectors, filter: applyFilter, filterLoading, isFilterDone,
     // 统计信息面板
-    coverageRSRate, coverageProductsRate, handleShowImageInBoundary, handleShowProductInBoundary, handleShowVectorInBoundary,
+    coverageRSRate, coverageProductsRate,
     // 影像分辨率相关变量
     resolutionType, resolutionPlatformSensor, productType, productPlatformSensor,
-    // on-the-fly
-    handleCreateNoCloudTiles: handleOnTheFly,
+    
 } = useFilter()
+const { handleShowImageInBoundary, handleCreateNoCloudTiles: handleOnTheFly, toggleEye, shouldShowEyeOff, previewVectorList, showVectorResult, unPreviewVector } = useVisualize()
 const { classifiedScenes, getSceneCountByResolution, classifiedProducts, getSceneCountByProduct } = useStats()
 const { clearAllShowingSensor } = useLayer()
 const isExpand = ref<boolean>(true)
@@ -670,54 +671,54 @@ const toNoCloud = () => {
     }
 }
 
-const previewVectorList = computed<boolean[]>(() => {
-    const list = Array(allVectors.value.length).fill(false)
-    if (previewVectorIndex.value !== null) {
-        list[previewVectorIndex.value] = true
-    }
-    return list
-})
-const previewVectorIndex = ref<number | null>(null)
-const showVectorResult = async (tableName: string) => {
-    previewVectorIndex.value = allVectors.value.findIndex(item => item.tableName === tableName)
-    handleShowVectorInBoundary(tableName)
-}
-const unPreviewVector = () => {
-    previewVectorIndex.value = null
-    MapOperation.map_destroyMVTLayer()
-}
+// const previewVectorList = computed<boolean[]>(() => {
+//     const list = Array(allVectors.value.length).fill(false)
+//     if (previewVectorIndex.value !== null) {
+//         list[previewVectorIndex.value] = true
+//     }
+//     return list
+// })
+// const previewVectorIndex = ref<number | null>(null)
+// const showVectorResult = async (tableName: string) => {
+//     previewVectorIndex.value = allVectors.value.findIndex(item => item.tableName === tableName)
+//     handleShowVectorInBoundary(tableName)
+// }
+// const unPreviewVector = () => {
+//     previewVectorIndex.value = null
+//     MapOperation.map_destroyMVTLayer()
+// }
 
-// 使用一个对象来存储每个 Product Item 的显示状态
-const eyeStates = ref({});
-// 切换显示状态的方法
-const toggleEye = (label: string, index: number, platformName: string) => {
-    const key = `${label}_${index}`;
-    let isShow = eyeStates.value[key];
-    eyeStates.value[key] = !isShow;
-    if (eyeStates.value[key]) {
-        Object.keys(eyeStates.value).forEach(item => {
-            if (item !== key) {
-                eyeStates.value[item] = false
-            }
-        })
-        showProductResult(label, platformName)
-    } else {
-        unPreviewProduct()
-    }
-};
+// // 使用一个对象来存储每个 Product Item 的显示状态
+// const eyeStates = ref({});
+// // 切换显示状态的方法
+// const toggleEye = (label: string, index: number, platformName: string) => {
+//     const key = `${label}_${index}`;
+//     let isShow = eyeStates.value[key];
+//     eyeStates.value[key] = !isShow;
+//     if (eyeStates.value[key]) {
+//         Object.keys(eyeStates.value).forEach(item => {
+//             if (item !== key) {
+//                 eyeStates.value[item] = false
+//             }
+//         })
+//         showProductResult(label, platformName)
+//     } else {
+//         unPreviewProduct()
+//     }
+// };
 
-// 判断当前应该显示 Eye 还是 EyeOff
-const shouldShowEyeOff = (label: string, index: number) => {
-  const key = `${label}_${index}`;
-  return eyeStates.value[key];
-};
-const showProductResult = async (label: string, platformName: string) => {
-    clearAllShowingSensor()
-    handleShowProductInBoundary(label, platformName)
-}
-const unPreviewProduct = () => {
-    clearAllShowingSensor()
-}
+// // 判断当前应该显示 Eye 还是 EyeOff
+// const shouldShowEyeOff = (label: string, index: number) => {
+//   const key = `${label}_${index}`;
+//   return eyeStates.value[key];
+// };
+// const showProductResult = async (label: string, platformName: string) => {
+//     clearAllShowingSensor()
+//     handleShowProductInBoundary(label, platformName)
+// }
+// const unPreviewProduct = () => {
+//     clearAllShowingSensor()
+// }
 
 /**
  * !!!!!!!!!

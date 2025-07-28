@@ -30,8 +30,58 @@ const { createGeoJSONFromBounds, marker, addPolygonLayer, destroyLayer, removeUn
 const { countResolutionScenesCoverage, classifyScenesByResolution, getSceneIdsByPlatformName, getSensorNamebyPlatformName
     , classifyProducts, countProductsCoverage
  } = useStats()
+
+// 一些全局变量，为多个模块调用
 const coverageRSRate = ref('0.00%')
 const coverageProductsRate = ref('0.00%')
+// 过滤出的遥感影像
+const allScenes = ref<any>([])
+// 过滤出的Products
+const allProducts = ref<any>([])
+// 过滤出的vectors
+const allVectors = ref<any[]>([])
+
+// 空间筛选方法
+type SpatialFilterMethod = 'region' | 'poi'
+// 选中的空间筛选方法(用于实际检索)
+const searchedSpatialFilterMethod = ref<SpatialFilterMethod>('region')
+// 激活的空间筛选方法(用于展示)
+const activeSpatialFilterMethod = ref<SpatialFilterMethod>('region')
+const selectedPOI = ref<POIInfo>()
+const selectedGrid = ref<number>(20)
+// 获取region/poi的id的计算属性，称为最终的地物id
+const finalLandId = computed(() => {
+    let curSpatialFilterMethod: SpatialFilterMethod
+    if (searchedSpatialFilterMethod.value === 'poi') {
+        curSpatialFilterMethod = 'poi'
+    } else if (searchedSpatialFilterMethod.value === 'region') {
+        curSpatialFilterMethod = 'region'
+    } else if (activeSpatialFilterMethod.value === 'poi') {
+        curSpatialFilterMethod = 'poi'
+    } else {
+        curSpatialFilterMethod = 'region'
+    }
+
+    if (curSpatialFilterMethod === 'poi') {
+        if (!selectedPOI.value) return '未选择'
+        return selectedPOI.value?.id
+    }
+    let info = region.value
+    if (info.area) return `${info.area}`
+    if (info.city) return `${info.city}`
+    if (info.province) return `${info.province}`
+    return '未选择'
+})
+
+
+
+// 行政区划筛选默认配置: 山东济南
+const region = ref<RegionValues>({
+    province: '370000',
+    city: '370100',
+    area: '',
+})
+
 import { useExploreStore } from '@/store/exploreStore'
 const exploreData = useExploreStore()
 import { message } from 'ant-design-vue'
@@ -42,7 +92,6 @@ import { getOnTheFlyUrl } from "@/api/http/satellite-data/visualize.api"
  */
 export const useFilter = () => {
     const { t } = useI18n()
-
     /**
      * 筛选器变量
      */
@@ -68,8 +117,7 @@ export const useFilter = () => {
         label: 'POI'
     }])
 
-    // 过滤出的遥感影像
-    const allScenes = ref<any>([])
+    
     // 按分辨率的格网统计信息{2m： 3个格网}
     const allGridsInResolution = ref<any>([])
 
@@ -91,8 +139,7 @@ export const useFilter = () => {
         [t('datapage.explore.section_interactive.resolutiontype.others')]: '',
     })
 
-    // 过滤出的Products
-    const allProducts = ref<any>([])
+    
     // 按产品的格网统计信息{DEM： 3个格网}
     const allGridsInProduct = ref<any>([])
     type ProductItem = [label: string, value: string]
@@ -112,19 +159,14 @@ export const useFilter = () => {
         ['其他']: '',
     })
 
-    // 过滤出的vectors
-    const allVectors = ref<any[]>([])
+    
 
     /**
      * 1.空间筛选
      */
-    // 空间筛选方法
-    type SpatialFilterMethod = 'region' | 'poi'
+    
     const spatialFilterMethods = ref<SpatialFilterMethod[]>(['region', 'poi'])
-    // 选中的空间筛选方法(用于实际检索)
-    const searchedSpatialFilterMethod = ref<SpatialFilterMethod>('region')
-    // 激活的空间筛选方法(用于展示)
-    const activeSpatialFilterMethod = ref<SpatialFilterMethod>('region')
+    
     // 获取格网阶段所用的region/poi的id，称为临时的地物id
     const tempLandId = computed(() => {
         if (activeSpatialFilterMethod.value === 'poi') {
@@ -137,29 +179,7 @@ export const useFilter = () => {
         if (info.province) return `${info.province}`
         return '未选择'
     })
-    // 获取region/poi的id的计算属性，称为最终的地物id
-    const finalLandId = computed(() => {
-        let curSpatialFilterMethod: SpatialFilterMethod
-        if (searchedSpatialFilterMethod.value === 'poi') {
-            curSpatialFilterMethod = 'poi'
-        } else if (searchedSpatialFilterMethod.value === 'region') {
-            curSpatialFilterMethod = 'region'
-        } else if (activeSpatialFilterMethod.value === 'poi') {
-            curSpatialFilterMethod = 'poi'
-        } else {
-            curSpatialFilterMethod = 'region'
-        }
     
-        if (curSpatialFilterMethod === 'poi') {
-            if (!selectedPOI.value) return '未选择'
-            return selectedPOI.value?.id
-        }
-        let info = region.value
-        if (info.area) return `${info.area}`
-        if (info.city) return `${info.city}`
-        if (info.province) return `${info.province}`
-        return '未选择'
-    })
     // 用户选择空间筛选方法
     const handleSelectTab = (value: SpatialFilterMethod) => {
         activeSpatialFilterMethod.value = value
@@ -168,18 +188,13 @@ export const useFilter = () => {
     /**
      * 1.1 Region行政区划筛选
      */
-    // 行政区划筛选默认配置: 山东济南
-    const region = ref<RegionValues>({
-        province: '370000',
-        city: '370100',
-        area: '',
-    })
+    
     const curRegionBounds = ref([])
 
     /**
      * 1.2 POI筛选
      */
-    const selectedPOI = ref<POIInfo>()
+    
     const poiOptions = ref<POIInfo[]>([])
     // 根据输入内容远程获取
     const fetchPOIOptions = async (query: string) => {
@@ -197,7 +212,7 @@ export const useFilter = () => {
      * 2.格网筛选
      */
     const gridOptions = [1, 2, 5, 10, 15, 20, 25, 30, 40, 50]
-    const selectedGrid = ref<number>(20)
+    
     const allGrids = ref([])
     const allGridCount = ref(0)
 
@@ -483,236 +498,9 @@ export const useFilter = () => {
         });
     }
 
-    /**
-     * 6. 影像可视化
-     */
-
-    const handleShowImageInBoundary = async (label: string) => {
-        const sceneIds = getSceneIdsByPlatformName(label, resolutionPlatformSensor[label], allScenes.value)
-        handleCreateNoCloudTiles(sceneIds)
-        // console.log('选中的景ids', sceneIds)
-        // console.log('当前所有的景', allScenes.value)
-        // const sensorName = getSensorNamebyPlatformName(resolutionPlatformSensor[label], allScenes.value)
-    
-        // console.log('匹配的sensorName', sensorName)
-    
-        // const stopLoading = message.loading(t('datapage.explore.message.load'))
-    
-        // let coverScenes, gridsBoundary
-        // if (searchedSpatialFilterMethod.value === 'region') {
-        //     const params = {
-        //         sensorName,
-        //         sceneIds,
-        //         regionId: finalLandId.value,
-        //         resolution: selectedGrid.value,
-        //     }
-        //     const coverScenesRes = await getCoverRegionSensorScenes(params)
-        //     coverScenes = coverScenesRes.sceneList
-        //     gridsBoundary = coverScenesRes.gridsBoundary
-        // } else if (searchedSpatialFilterMethod.value === 'poi') {
-        //     const params = {
-        //         sensorName,
-        //         sceneIds,
-        //         locationId: finalLandId.value,
-        //         resolution: selectedGrid.value,
-        //     }
-        //     const coverScenesRes = await getCoverRegionSensorScenes(params)
-        //     coverScenes = coverScenesRes.sceneList
-        //     gridsBoundary = coverScenesRes.gridsBoundary
-        // }
-        // console.log('接口返回：覆盖的景们', coverScenes)
-        // // 临时做法！！！！！！！！！！！！！！！
-        // // 获取DEM的产品作为底图加上来
-        // let demProducts
-        // let productSceneIds: any[] = []
-        // let productSensorName = ''
-        // allProducts.value.forEach(product => {
-        //     if (product.dataType === 'dem') {
-        //         productSceneIds.push(product.sceneId)
-        //         productSensorName = product.sensorName
-        //     }
-        // })
-        // if (searchedSpatialFilterMethod.value === 'region') {
-        //     const params = {
-        //         sensorName: productSensorName,
-        //         sceneIds: productSceneIds,
-        //         regionId: finalLandId.value,
-        //         resolution: selectedGrid.value,
-        //     }
-        //     const coverProductsRes = await getCoverRegionSensorScenes(params)
-        //     demProducts = coverProductsRes.sceneList
-        //     gridsBoundary = coverProductsRes.gridsBoundary
-        // } else if (searchedSpatialFilterMethod.value === 'poi') {
-        //     const params = {
-        //         sensorName: productSensorName,
-        //         sceneIds: productSceneIds,
-        //         locationId: finalLandId.value,
-        //         resolution: selectedGrid.value,
-        //     }
-        //     const coverProductsRes = await getCoverRegionSensorScenes(params)
-        //     demProducts = coverProductsRes.sceneList
-        // }
-        // console.log('scene:demProducts', demProducts)
-        // await addTerrainBaseMap(demProducts, gridsBoundary)
-        // await addMultiRGBImageTileLayer(coverScenes, gridsBoundary, stopLoading)
-    }
-
-    // 创建无云一版图瓦片
-    const handleCreateNoCloudTiles = async (sceneIds: any[] | Event) => {
-        try {
-            let finalSceneIds;
-        
-            // 如果没有传入sceneIds，则自己构建
-            if (!sceneIds || 
-                sceneIds instanceof Event || 
-                sceneIds instanceof PointerEvent || 
-                !Array.isArray(sceneIds) || 
-                sceneIds.length === 0) {
-                // 如果不是有效数组，则自己构建
-                finalSceneIds = allScenes.value.map((item: any) => item.sceneId);
-            } else {
-                // 如果是有效数组，直接使用
-                finalSceneIds = sceneIds;
-            }
-            const param = {
-                sceneIds: finalSceneIds,
-            }
-            console.log(param)
-
-            console.log('创建无云一版图配置参数:', param)
-
-            // 2. 创建配置
-            const response = await fetch('/api/modeling/example/noCloud/createNoCloudConfig', {
-                method: 'POST',
-                body: JSON.stringify(param),
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + localStorage.getItem('token'),
-                },
-            })
-            const result = await response.json()
-            const jsonUrl = result.data  // 从CommonResultVO中获取data字段
-            
-            console.log('获取到的jsonUrl:', jsonUrl)
-            
-            // 3. 添加瓦片图层
-            
-            // 清除旧的无云图层
-            MapOperation.map_destroyNoCloudLayer()
-            
-            // 添加新的瓦片图层
-            const url = getOnTheFlyUrl(jsonUrl)
-            MapOperation.map_addNoCloudLayer(url)
-            
-            console.log('无云一版图瓦片图层已添加到地图')
-            
-        } catch (error) {
-            console.error('创建无云一版图瓦片失败:', error)
-        }
-    }
 
     /**
-     * 7. 产品可视化
-     */
-    const handleShowProductInBoundary = async (label: string, platformName: string) => {
-        console.log('label', label)
-        const sceneIds = getSceneIdsByPlatformName(label, platformName, allProducts.value)
-        console.log('选中的景ids', sceneIds)
-        console.log('当前所有的产品', allProducts.value)
-        const sensorName = getSensorNamebyPlatformName(platformName, allProducts.value)
-        // 之所以是sensorName，因为后台统一存在sensor表
-        console.log('匹配的sensorName', sensorName)
-
-        const stopLoading = message.loading(t('datapage.explore.message.load'))
-    
-        let coverProducts, gridsBoundary
-        if (searchedSpatialFilterMethod.value === 'region') {
-            const params = {
-                sensorName,
-                sceneIds,
-                regionId: finalLandId.value,
-                resolution: selectedGrid.value,
-            }
-            const coverProductsRes = await getCoverRegionSensorScenes(params)
-            coverProducts = coverProductsRes.sceneList
-            gridsBoundary = coverProductsRes.gridsBoundary
-        } else if (searchedSpatialFilterMethod.value === 'poi') {
-            const params = {
-                sensorName,
-                sceneIds,
-                locationId: finalLandId.value,
-                resolution: selectedGrid.value,
-            }
-            const coverProductsRes = await getCoverRegionSensorScenes(params)
-            coverProducts = coverProductsRes.sceneList
-            gridsBoundary = coverProductsRes.gridsBoundary
-        }
-        console.log('接口返回：覆盖的产品们', coverProducts)
-
-        let demProducts
-        let productSceneIds: any[] = []
-        let productSensorName = ''
-        allProducts.value.forEach(product => {
-            if (product.dataType === 'dem') {
-                productSceneIds.push(product.sceneId)
-                productSensorName = product.sensorName
-            }
-        })
-        if (searchedSpatialFilterMethod.value === 'region') {
-            const params = {
-                sensorName: productSensorName,
-                sceneIds: productSceneIds,
-                regionId: finalLandId.value,
-                resolution: selectedGrid.value,
-            }
-            const coverProductsRes = await getCoverRegionSensorScenes(params)
-            demProducts = coverProductsRes.sceneList
-            gridsBoundary = coverProductsRes.gridsBoundary
-        } else if (searchedSpatialFilterMethod.value === 'poi') {
-            const params = {
-                sensorName: productSensorName,
-                sceneIds: productSceneIds,
-                locationId: finalLandId.value,
-                resolution: selectedGrid.value,
-            }
-            const coverProductsRes = await getCoverRegionSensorScenes(params)
-            demProducts = coverProductsRes.sceneList
-        }
-        
-        await addTerrainBaseMap(demProducts, gridsBoundary)
-        switch (label) {
-            case 'DEM':
-                await addMultiTerrainTileLayer(coverProducts, gridsBoundary, stopLoading)
-                break
-            case '红绿立体':
-                await addMulti3DImageTileLayer(coverProducts, gridsBoundary, stopLoading)
-                break
-            case '形变速率':
-                await addMultiOneBandColorLayer(coverProducts, gridsBoundary, stopLoading)
-                break
-            case 'NDVI':
-                await addMultiOneBandColorLayer(coverProducts, gridsBoundary, stopLoading)
-                break
-            default:
-                await addMultiRGBImageTileLayer(coverProducts, gridsBoundary, stopLoading)
-                break
-        }
-    }
-
-    /**
-     * 8. 矢量可视化
-     */
-    const handleShowVectorInBoundary = async (source_layer: string) => {
-        if (source_layer === '') {
-            ElMessage.warning(t('datapage.explore.message.filtererror_choose'))
-            return
-        }
-        console.log('source_layer', source_layer)
-        await addMVTLayer(source_layer, finalLandId.value)
-    }
-
-    /**
-     * 9. DEM底图可视化
+     * DEM底图可视化
      */
     const addTerrainBaseMap = async (demProducts: any[], gridsBoundary: any) => {
         if (demProducts.length === 0) {
@@ -751,9 +539,6 @@ export const useFilter = () => {
         filterLoading,
         isFilterDone,
         makeFullSceneGrid,
-        handleShowImageInBoundary,
-        handleShowProductInBoundary,
-        handleShowVectorInBoundary,
         activeSpatialFilterMethod,
         tabs,
         allScenes,
@@ -766,6 +551,7 @@ export const useFilter = () => {
         handleSelectTab,
         productType,
         productPlatformSensor,
-        handleCreateNoCloudTiles
+        searchedSpatialFilterMethod,
+        finalLandId
     }
 }

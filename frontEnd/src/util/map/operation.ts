@@ -1078,7 +1078,7 @@ export function map_destroySceneBoxLayer(): void {
     })
 }
 
-//////////// 无云一版图
+// 无云一版图
 export function map_addNoCloudLayer(jsonUrl: string) {
     const url = jsonUrl
     console.log('On-the-fly url', url)
@@ -1093,7 +1093,7 @@ export function map_addNoCloudLayer(jsonUrl: string) {
             type: 'raster',
             tiles: [url],
             tileSize: 256,
-            minzoom: 0,
+            minzoom: 10,
             maxzoom: 22,
         })
 

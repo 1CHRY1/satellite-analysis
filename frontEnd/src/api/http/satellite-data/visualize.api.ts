@@ -1,5 +1,5 @@
 import { ezStore } from '@/store'
-import http from '../clientHttp'
+import http from '../../axiosClient/clientHttp'
 import { grid2bbox } from '@/util/map/gridMaker'
 
 const titilerEndPoint = ezStore.get('conf')['titiler']
@@ -324,6 +324,23 @@ export function getNoCloudUrl(param: NoCloudInfoParam) {
 export function getOnTheFlyUrl(jsonUrl: string) {
     let url = `${titilerEndPoint}/no_cloud/{z}/{x}/{y}?jsonUrl=${encodeURIComponent(jsonUrl)}`
     return url
+}
+
+type RealTimeNoCloudParam = {
+    sensorName: string,
+    startTime: string,
+    endTime: string
+}
+
+export function getRealtimeNoCloudUrl(param: RealTimeNoCloudParam) {
+    let baseUrl = `${titilerEndPoint}/no_cloud_with_sensorname/{z}/{x}/{y}`
+    const requestParams = new URLSearchParams()
+    requestParams.append('sensorName', param.sensorName)
+    requestParams.append('startTime', param.startTime)
+    requestParams.append('endTime', param.endTime)
+    const fullUrl = baseUrl + '?' + requestParams.toString()
+    console.log(fullUrl)
+    return fullUrl
 }
 
 type MosaicTileParam = {

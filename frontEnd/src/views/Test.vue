@@ -15,6 +15,8 @@
             <button class="bg-red-500 p-5" @click="addMosaicJsonLayer">MOSAICJSON测试</button>
 
             <button class="bg-red-500 p-5" @click="handleCreateNoCloudTiles">无云一版图瓦片测试</button>
+
+            <button class="bg-red-500 p-5" @click="handleCreateMosaicJSONTiles">新交互式探索瓦片测试</button>
         </div>
     </div>
 </template>
@@ -25,7 +27,7 @@ import MapComp from '@/components/feature/map/mapComp.vue'
 import { mapManager } from '@/util/map/mapManager'
 import { StyleMap } from '@/util/map/tianMapStyle'
 import { ezStore } from '@/store'
-import http from '@/api/http/clientHttp'
+import http from '@/api/axiosClient/clientHttp'
 import * as MapOperation from '@/util/map/operation'
 
 const addMVTLayer = () => {
@@ -116,6 +118,20 @@ const handleCreateNoCloudTiles = async () => {
     } catch (error) {
         console.error('创建无云一版图瓦片失败:', error)
     }
+}
+
+const handleCreateMosaicJSONTiles = async() => {
+    let mosaic_url = 'http://223.2.34.8:30900/temp-files/mosaicjson/3bda2f83-54fd-4c6c-9839-816339775ad2_red.json'
+    let green_mosaic_url = 'http://223.2.34.8:30900/temp-files/mosaicjson/829b1e89-c9f7-4461-89dc-256b1450cff1_green.json'
+    let blue_mosaic_url = 'http://223.2.34.8:30900/temp-files/mosaicjson/86fb4f2e-aab2-4ea9-b581-0fed03cfc4cc_blue.json'
+    let titilerEndPoint = 'http://localhost:5173/tiler'
+    let baseUrl = `${titilerEndPoint}/mosaic/mosaictile/{z}/{x}/{y}.png`
+    const requestParams = new URLSearchParams()
+    requestParams.append('mosaic_url', mosaic_url)
+    const fullUrl = baseUrl + '?' + requestParams.toString()
+    MapOperation.map_removeNocloudGridPreviewLayer()
+    MapOperation.map_destroyNoCloudLayer()
+    MapOperation.map_addNoCloudLayer(fullUrl)
 }
 
 const localMvt = () => {
