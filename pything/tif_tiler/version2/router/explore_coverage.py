@@ -57,7 +57,6 @@ def calc_tile_bounds(x, y, z):
     
     return result
 
-
 ####### Router ########################################################################################
 router = APIRouter()
 
@@ -68,46 +67,53 @@ async def get_tile(
     startTime: str = Query(...),
     endTime: str = Query(...),
 ):
-    start_time = time.time()
-
     try:
-        t1 = time.time()
-
-        # 计算tile的边界
-        tile_bound = calc_tile_bounds(x, y, z)
-        points = tile_bound['bbox']
-        print(f"[⏱] 计算 tile 边界耗时: {time.time() - t1:.3f} 秒")
-
-        # spring boot 接口
-        t2 = time.time()
-        url = "http://192.168.1.127:8999/api/v1/modeling/example/noCloud/createNoCloudConfig"  # 测试使用，记得修改~~~~~~~~~~~~~~~
+        points = calc_tile_bounds(x, y, z)
+        url = "http://192.168.1.127:8999/api/v1/modeling/example/noCloud/createNoCloudConfig"
         data = {
-        "sensorName": sensorName,
-        "startTime": startTime,
-        "endTime": endTime,
-        "points": points
+            "sensorName": sensorName,
+            "startTime": startTime,
+            "endTime": endTime,
+            "points": points
         }
         json_response = requests.post(url, json=data).json()
-        print(f"[⏱] SpringBoot 请求耗时: {time.time() - t2:.3f} 秒")
 
-        t3 = time.time()
-        # 获取bandMapper
         mapper = json_response.get('data', {}).get('bandMapper', {})
-        # 获取scenesConfig数组
         json_data = json_response.get('data', {}).get('scenesConfig', [])
-        
-        # 按分辨率排序
-        sorted_scene = sorted(json_data, key = lambda obj: float(obj["resolution"].replace("m", "")), reverse=False)
-        print(len(sorted_scene))
+
+        full_coverage_scenes = [scene for scene in json_data if scene.get('coverage', 0) >= 0.999]
+
+        if full_coverage_scenes:
+            print(f"找到 {len(full_coverage_scenes)} 个全覆盖场景")
+
+            def cloud_sort_key(scene):
+                cloud_value = scene.get('cloud', 0)
+
+                if cloud_value == 0:
+                    return float('inf')
+                return cloud_value
+            sorted_full_coverage = sorted(full_coverage_scenes, key=cloud_sort_key)
+            scenes_to_process = [sorted_full_coverage[0]]
+            use_single_scene = True
+        else:
+            print("没有找到全覆盖场景，将使用前5个覆盖率最高的scene")
+            scenes_to_process = json_data[:5]
+            use_single_scene = False
+
+        print(f"将处理 {len(scenes_to_process)} 个场景")
+        for i, scene in enumerate(scenes_to_process):
+            cloud_value = scene.get('cloud', 0)
+            cloud_desc = "无云" if cloud_value == 0 else "全云" if cloud_value == 1 else "无云量数据" if cloud_value == -1 else f"{cloud_value:.1%}"
+            print(f"  场景{i+1}: {scene.get('sceneId')}, 覆盖率: {scene.get('coverage'):.2%}, 云量: {cloud_desc}")
 
         # 处理bandMapper
         scene_band_paths = {}
         bandList = ['Red', 'Green', 'Blue']
 
-        for scene in sorted_scene:
+        for scene in scenes_to_process:
             bands = {band: None for band in bandList}
-            paths = scene.get('path', {})  
-            
+            paths = scene.get('path', {})
+
             if sensorName == 'ZY1_AHSI':
                 # ZY1_AHSI 特殊处理
                 default_mapping = {'Red': '4', 'Green': '3', 'Blue': '2'}
@@ -135,24 +141,21 @@ async def get_tile(
                             bands[band] = paths['band_3']
             
             scene_band_paths[scene['sceneId']] = bands
-
-        print(f"[⏱] 处理 bandMapper 耗时: {time.time() - t3:.3f} 秒")
-
-        t4 = time.time()
+        
         # 格网 target_H, target_W 固定为256x256
         target_H, target_W = 256, 256
         img_r = np.full((target_H, target_W), 0, dtype=np.uint8)
         img_g = np.full((target_H, target_W), 0, dtype=np.uint8)
         img_b = np.full((target_H, target_W), 0, dtype=np.uint8)
-        need_fill_mask = np.ones((target_H, target_W), dtype=bool) # all true，待填充
-        print(f"[⏱] 初始化图像数组耗时: {time.time() - t4:.3f} 秒")
+        need_fill_mask = np.ones((target_H, target_W), dtype=bool)  # all true，待填充
 
+        # 记录所有云的位置
+        total_cloud_mask = np.zeros((target_H, target_W), dtype=bool)  # all false，无云
 
         processed_scenes = 0
         filled_ratio = 0.0
 
-        t5 = time.time()
-        for scene in sorted_scene:
+        for scene in scenes_to_process:
             scene_start = time.time()
             if 'SAR' in scene.get('sensorName'):
                 continue
@@ -173,76 +176,69 @@ async def get_tile(
             processed_scenes += 1
 
             cloud_band_path = scene.get('cloudPath')
+            
+            # 读取red波段获取nodata_mask
+            red_band_path = scene_band_paths[scene['sceneId']]['Red']
+            if not red_band_path:
+                continue
+            full_red_path = MINIO_ENDPOINT + "/" + scene['bucket'] + "/" + red_band_path
+            try:
+                with COGReader(full_red_path, options={'nodata': int(nodata_int)}) as reader:
+                    temp_img_data = reader.tile(x, y, z, tilesize=256)
+                    nodata_mask = temp_img_data.mask.astype(bool)
+            except Exception as e:
+                print(f"无法读取文件 {full_red_path}: {str(e)}")
+                continue
 
-            if not cloud_band_path:
-                red_band_path = scene_band_paths[scene['sceneId']]['Red']
-                if not red_band_path:
-                    continue
-                full_red_path = MINIO_ENDPOINT + "/" + scene['bucket'] + "/" + red_band_path
-                try:
-                    with COGReader(full_red_path, options={'nodata': int(nodata_int)}) as reader:
-                        temp_img_data = reader.tile(x, y, z, tilesize=256)
-                        nodata_mask = temp_img_data.mask
-                except Exception as e:
-                    print(f"无法读取文件 {full_red_path}: {str(e)}")
-                    continue
-                
-                valid_mask = (nodata_mask.astype(bool))
-            else:
-                red_band_path = scene_band_paths[scene['sceneId']]['Red']
-                if not red_band_path:
-                    continue
-                full_red_path = MINIO_ENDPOINT + "/" + scene['bucket'] + "/" + red_band_path
-                try:
-                    with COGReader(full_red_path, options={'nodata': int(nodata_int)}) as reader:
-        
-                        # temp_img_data = reader.part(bbox=bbox, indexes=[1], height=target_H, width=target_W)
-                        temp_img_data = reader.tile(x, y, z, tilesize=256)
-                        nodata_mask = temp_img_data.mask
-                except Exception as e:
-                    print(f"无法读取文件 {full_red_path}: {str(e)}")
-                    continue
-                    
-                # 读云波段获取 cloud_mask
+            # 填充时只考虑nodata，不考虑云
+            valid_mask = nodata_mask
+            
+            # 如果有云波段，读取云信息并更新total_cloud_mask
+            if cloud_band_path:
                 cloud_full_path = MINIO_ENDPOINT + "/" + scene['bucket'] + "/" + scene['cloudPath']
                 try:
                     with COGReader(cloud_full_path, options={'nodata': int(nodata_int)}) as reader:
-                        # cloud_img_data = reader.part(bbox=bbox, indexes=[1], height=target_H, width=target_W)
                         cloud_img_data = reader.tile(x, y, z, tilesize=256)
-                        img_data = cloud_img_data.data[0] # 存储了QA波段的数据
+                        img_data = cloud_img_data.data[0]  # 存储了QA波段的数据
 
-                        sensorName = scene.get('sensorName')
-                        if "Landsat" in sensorName or "Landset" in sensorName:
+                        sensorName_type = scene.get('sensorName')
+                        if "Landsat" in sensorName_type or "Landset" in sensorName_type:
                             cloud_mask = (img_data & (1 << 3)) > 0
 
-                        elif "MODIS" in sensorName:
+                        elif "MODIS" in sensorName_type:
                             cloud_state = (img_data & 0b11)
                             cloud_mask = (cloud_state == 0) | (cloud_state == 1)
 
-                        elif "GF" in sensorName:    
+                        elif "GF" in sensorName_type:    
                             cloud_mask = (img_data == 2)
 
                         else:
-                            continue
+                            cloud_mask = np.zeros((target_H, target_W), dtype=bool)
+                        
+                        # 更新总的云掩膜
+                        if use_single_scene:
+                            # 如果是单景模式，直接使用这个云掩膜
+                            total_cloud_mask = cloud_mask
+                        else:
+                            # 如果是多景填充模式，只在需要填充的区域记录云
+                            total_cloud_mask[need_fill_mask & valid_mask] |= cloud_mask[need_fill_mask & valid_mask]
 
                 except Exception as e:
-                    print(f"无法读取文件 {cloud_full_path}: {str(e)}")
-                    continue
-                
-                # 非云 & 非nodata <--> 该景有效区域
-                valid_mask = (~cloud_mask) & (nodata_mask.astype(bool))
+                    print(f"无法读取云文件 {cloud_full_path}: {str(e)}")
+                    # 如果读取失败，假设无云
             
-            # 待填充的区域 & 该景有效区域 <--> 该景应填充的区域
+            # 待填充的区域 & 该景有效区域（只考虑nodata）
             fill_mask = need_fill_mask & valid_mask
+            
             print(f"[⏱] 处理场景 {scene.get('sceneId')} 耗时: {time.time() - scene_start:.3f} 秒")
-            if np.any(fill_mask):
+            
+            if np.any(fill_mask) or use_single_scene:
                 
                 def read_band(band_path):
                     full_path = MINIO_ENDPOINT + "/" + scene['bucket'] + "/" + band_path
 
                     try:
                         with COGReader(full_path, options={'nodata': int(nodata_int)}) as reader:
-                            # band_data = reader.part(bbox=bbox, indexes=[1], height=target_H, width=target_W)
                             band_data = reader.tile(x, y, z, tilesize=256)
                             original_data = band_data.data[0]
                             original_dtype = original_data.dtype
@@ -254,8 +250,6 @@ async def get_tile(
                     except Exception as e:
                         print(f"无法读取文件 {full_path}: {str(e)}")
                         return None
-                    
-                ################# NEW END ######################
 
                 bands = scene_band_paths[scene['sceneId']]
                 band_1 = read_band(bands['Red'])
@@ -266,36 +260,38 @@ async def get_tile(
                     print(f"警告: {scene_label} 读取波段失败")
                     continue
 
-                img_r[fill_mask] = band_1[fill_mask]
-                img_g[fill_mask] = band_2[fill_mask]
-                img_b[fill_mask] = band_3[fill_mask]
+                if use_single_scene:
+                    # 单景模式：直接使用整个影像（除了nodata区域）
+                    img_r[valid_mask] = band_1[valid_mask]
+                    img_g[valid_mask] = band_2[valid_mask]
+                    img_b[valid_mask] = band_3[valid_mask]
+                    need_fill_mask[valid_mask] = False
+                else:
+                    # 多景填充模式：只填充还需要填充的区域
+                    img_r[fill_mask] = band_1[fill_mask]
+                    img_g[fill_mask] = band_2[fill_mask]
+                    img_b[fill_mask] = band_3[fill_mask]
+                    need_fill_mask[fill_mask] = False
 
-                need_fill_mask[fill_mask] = False # False if pixel filled
                 filled_ratio = 1.0 - (np.count_nonzero(need_fill_mask) / need_fill_mask.size)
                 
-            if not np.any(need_fill_mask):
+            if use_single_scene:
+                # 单景模式处理完就退出
+                print(f"单景模式：已使用场景 {scene.get('sceneId')} 完成处理")
                 break
-        print(f"[⏱] 所有场景处理耗时: {time.time() - t5:.3f} 秒")
-        
-        t6 = time.time()
         img = np.stack([img_r, img_g, img_b])
 
-        alpha_mask = (~need_fill_mask).astype(np.uint8) * 255
+        # 最终的透明度掩膜：未填充的区域和有云的区域都设为透明
+        # need_fill_mask为True表示未填充，total_cloud_mask为True表示有云
+        transparent_mask = need_fill_mask | total_cloud_mask
+        alpha_mask = (~transparent_mask).astype(np.uint8) * 255
 
         content = render(img, mask=alpha_mask, img_format="png", **img_profiles.get("png"))
-        print(f"[⏱] 图像渲染耗时: {time.time() - t6:.3f} 秒")
 
-        print(f"[⏱] 总耗时: {time.time() - start_time:.3f} 秒")
+        print(f" 填充率: {filled_ratio:.2%}, 云覆盖率: {np.count_nonzero(total_cloud_mask) / total_cloud_mask.size:.2%}")
         
-        return Response(content=content, media_type="image/png")
-
-
-        
+        return Response(content=content, media_type="image/png") 
 
     except Exception as e:
-        print(f"错误类型: {type(e).__name__}")
+        print(f"错误类型：{type(e).__name__}")
         print(f"错误信息: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
-    

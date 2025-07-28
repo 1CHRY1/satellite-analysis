@@ -8,6 +8,7 @@ import os
 import requests
 import math
 from config import minio_config, TRANSPARENT_CONTENT
+import time
 
 ####### Helper ########################################################################################
 # MINIO_ENDPOINT = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}"
@@ -74,6 +75,7 @@ async def get_tile(
     z: int, x: int, y: int,
     jsonUrl: str = Query(...),
 ):
+    start_time = time.time()
     
     try:
         json_response = requests.get(jsonUrl).json()
@@ -275,6 +277,7 @@ async def get_tile(
         # 使用rio_tiler的render函数将numpy数组转换为PNG
         content = render(img, mask=alpha_mask, img_format="png", **img_profiles.get("png"))
         
+        print(f"[⏱] 总耗时: {time.time() - start_time:.3f} 秒")
         return Response(content=content, media_type="image/png")
 
     except Exception as e:
