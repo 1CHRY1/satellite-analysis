@@ -168,7 +168,6 @@ public class SceneDataServiceV2 {
         Geometry gridsBoundary = GeometryUtil.getGridsBoundaryByTilesAndResolution(tileIds, resolution);
         String wkt = gridsBoundary.toText();
         String dataType = "'satellite', 'dem', 'dsm', 'ndvi', 'svr', '3d'";
-
         return sceneRepo.getScenesDesByTimeCloudAndGeometry(startTime, endTime, cloud, wkt, dataType);
     }
 

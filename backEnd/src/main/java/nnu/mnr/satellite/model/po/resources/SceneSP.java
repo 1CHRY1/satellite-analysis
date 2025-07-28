@@ -46,7 +46,7 @@ public class SceneSP {
     @TableField(value = "bands", typeHandler = SetTypeHandler.class)
     private HashSet<String> bands;
 
-    private Integer cloud;
+    private Float cloud;
     private String cloudPath;
     private String bucket;
     private String resolution;

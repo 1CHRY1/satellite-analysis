@@ -8,6 +8,7 @@ import nnu.mnr.satellite.model.dto.modeling.ModelServerImageDTO;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerSceneDTO;
 import nnu.mnr.satellite.utils.typeHandler.FastJson2TypeHandler;
 import nnu.mnr.satellite.utils.typeHandler.JSONArrayTypeHandler;
+import org.locationtech.jts.geom.Geometry;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -34,7 +35,7 @@ public class SceneDesVO {
     private String description;
     private Integer bandNum;
     private HashSet<String> bands;
-    private Integer cloud;
+    private Float cloud;
 
     @TableField(typeHandler = FastJson2TypeHandler.class)
     private JSONObject tags;
@@ -46,6 +47,10 @@ public class SceneDesVO {
     private String platformName;
     private String resolution;
     private String dataType;
+
+    private Geometry boundingBox;
+    private String cloudPath;
+    private String bucket;
 //    @TableField(typeHandler = JSONArrayTypeHandler.class)
 //    private JSONArray images;
 

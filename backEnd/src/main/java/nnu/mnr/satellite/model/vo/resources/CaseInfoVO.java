@@ -19,4 +19,5 @@ public class CaseInfoVO {
     private JSONObject result;
     private LocalDateTime createTime;
     private Integer regionId;
+    private String bandList;
 }
