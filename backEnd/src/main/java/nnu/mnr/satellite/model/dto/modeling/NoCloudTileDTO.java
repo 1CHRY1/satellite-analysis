@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -17,7 +18,10 @@ import java.util.List;
 public class NoCloudTileDTO {
     
     /**
-     * 影像场景ID列表
+     * 传感器名称
      */
-    private List<String> sceneIds;
-} 
+    private String sensorName;
+    private String startTime;
+    private String endTime;
+    private List<Float> points;
+}

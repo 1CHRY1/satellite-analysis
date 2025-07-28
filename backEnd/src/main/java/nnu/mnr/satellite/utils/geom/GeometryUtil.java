@@ -246,4 +246,26 @@ public class GeometryUtil {
         }
         return gridsBoundary;
     }
+
+    public static Polygon pointsConvertToPolygon(List<Float> points) {
+        GeometryFactory geometryFactory = new GeometryFactory();
+        // 左下
+        Float minLon = points.get(0);
+        Float minLat = points.get(1);
+        // 右上
+        Float maxLon = points.get(2);
+        Float maxLat = points.get(3);
+        // 按顺时针或逆时针顺序定义多边形顶点（闭合环）
+        Coordinate[] coordinates = new Coordinate[] {
+                new Coordinate(minLon, minLat), // 左下角
+                new Coordinate(minLon, maxLat), // 左上角
+                new Coordinate(maxLon, maxLat), // 右上角
+                new Coordinate(maxLon, minLat), // 右下角
+                new Coordinate(minLon, minLat)  // 闭合回起点
+        };
+
+        return geometryFactory.createPolygon(coordinates);
+    }
+
+
 }
