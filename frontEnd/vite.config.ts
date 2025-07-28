@@ -14,16 +14,21 @@ export default defineConfig({
     server: {
         host: '0.0.0.0',
         proxy: {
+            '/api3': {
+                // target: 'http://localhost:8999/api/v3', // 本地开发
+                // target: 'http://223.2.34.8:31584/api/v3', // 集群环境
+                target: 'http://192.168.1.127:8999/api/v3', // HXF开发环境
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/api3/, ''),
+            },
             '/api2': {
-                // target: 'http://223.2.47.202:8999/api/v1',
-                // target: 'http://223.2.47.202:8999/api/v2',
-                // target: 'http://192.168.1.111:8999/api/v2',
-                target: 'http://192.168.1.127:8999/api/v2',
-
-                // target: 'http://223.2.43.228:30899/api/v1',
+                // target: 'http://localhost:8999/api/v2', // 本地开发
+                // target: 'http://223.2.34.8:31584/api/v2', // 集群环境
+                target: 'http://192.168.1.127:8999/api/v2', // HXF开发环境
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/api2/, ''),
             },
+            // TODO: Improvement
             // 实时计算瓦片API专用代理（更具体的路径必须在前面）
             '/api/api/v1/realtime': {
                 target: 'http://192.168.1.127:5001',
@@ -35,33 +40,24 @@ export default defineConfig({
                 changeOrigin: true,
             },
             '/api': {
-                // target: 'http://223.2.47.202:8999/api/v1',
-                // target: 'http://223.2.47.202:8999/api/v1',
-                // target: 'http://192.168.1.111:8999/api/v1',
-                target: 'http://192.168.1.127:8999/api/v1',
-                // target: 'http://223.2.43.228:30899/api/v1',
+                // target: 'http://localhost:8999/api/v1', // 本地开发
+                // target: 'http://223.2.34.8:31584/api/v1', // 集群环境
+                target: 'http://192.168.1.127:8999/api/v1', // HXF开发环境
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/api/, ''),
             },
             '/websocket': {
-                // target: 'ws://223.2.47.202:8899/model/websocket',
-                // target: 'http://223.2.43.228:30535/api/v1',
-
-                // target: 'http://192.168.1.111:8999/model/websocket',
-                target: 'http://192.168.1.127:8999/model/websocket',
-
-                // target: 'http://192.168.1.111:8999/model/websocket',
-                // target: 'http://localhost:8999/model/websocket',
+                // target: 'http://localhost:8999/model/websocket', // 本地开发
+                // target: 'http://223.2.34.8:30394/model/websocket', // 集群环境
+                target: 'http://192.168.1.127:8999/model/websocket', // HXF开发环境
                 ws: true,
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/websocket/, ''),
             },
             '/tiler': {
-                // target: 'http://192.168.1.111:8000',
-                target: 'http://192.168.1.127:31800',
-                // target: 'http://192.168.1.100:8000',
-                // target: 'http://127.0.0.1:8000',
-                target: 'http://223.2.34.8:31800',
+                // target: 'http://127.0.0.1:8000', // 本地开发
+                // target: 'http://223.2.34.8:31800', // 集群环境(稳定版)
+                target: 'http://192.168.1.127:31800', // HXF开发环境
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/tiler/, ''),
             },

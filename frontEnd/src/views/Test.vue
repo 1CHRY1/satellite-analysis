@@ -27,7 +27,7 @@ import MapComp from '@/components/feature/map/mapComp.vue'
 import { mapManager } from '@/util/map/mapManager'
 import { StyleMap } from '@/util/map/tianMapStyle'
 import { ezStore } from '@/store'
-import http from '@/api/http/clientHttp'
+import http from '@/api/axiosClient/clientHttp'
 import * as MapOperation from '@/util/map/operation'
 
 const addMVTLayer = () => {
