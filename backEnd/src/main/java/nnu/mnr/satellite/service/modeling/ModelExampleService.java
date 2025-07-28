@@ -2,7 +2,9 @@ package nnu.mnr.satellite.service.modeling;
 
 import com.alibaba.fastjson2.JSONObject;
 import io.minio.MinioClient;
+import javassist.expr.NewArray;
 import nnu.mnr.satellite.jobs.QuartzSchedulerManager;
+import nnu.mnr.satellite.mapper.resources.ISceneRepo;
 import nnu.mnr.satellite.model.dto.modeling.*;
 import nnu.mnr.satellite.model.po.resources.Scene;
 import nnu.mnr.satellite.model.po.resources.SceneSP;
@@ -10,6 +12,7 @@ import nnu.mnr.satellite.model.pojo.modeling.BaseModelServerProperties;
 import nnu.mnr.satellite.model.pojo.modeling.ModelServerProperties;
 import nnu.mnr.satellite.model.pojo.modeling.SRModelServerProperties;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
+import nnu.mnr.satellite.model.vo.modeling.NoCloudConfigVO;
 import nnu.mnr.satellite.service.resources.*;
 import nnu.mnr.satellite.utils.common.ProcessUtil;
 import nnu.mnr.satellite.service.common.BandMapperGenerator;
@@ -87,6 +90,9 @@ public class ModelExampleService {
 
     @Autowired
     MinioProperties minioProperties;
+
+    @Autowired
+    ISceneRepo sceneRepo;
 
     // 用于缓存配置ID到JSON URL的映射
     private final Map<String, String> configCache = new ConcurrentHashMap<>();
@@ -357,16 +363,16 @@ public class ModelExampleService {
 
             // 构建JSON配置
             JSONObject configJson = buildNoCloudConfig(noCloudTileDTO);
-            String jsonContent = configJson.toJSONString();
+//            String jsonContent = configJson.toJSONString();
+//
+//            // 上传JSON到MinIO
+//            uploadJsonToMinio(bucketName, jsonFileName, jsonContent);
+//
+//            // 3. 构建JSON的访问URL并缓存
+//            String jsonUrl = minioProperties.getUrl() + "/" + bucketName + "/" + jsonFileName;
+//            // configCache.put(configId, jsonUrl);
 
-            // 上传JSON到MinIO
-            uploadJsonToMinio(bucketName, jsonFileName, jsonContent);
-
-            // 3. 构建JSON的访问URL并缓存
-            String jsonUrl = minioProperties.getUrl() + "/" + bucketName + "/" + jsonFileName;
-            // configCache.put(configId, jsonUrl);
-
-            return CommonResultVO.builder().status(1).message("success").data(jsonUrl).build();
+            return CommonResultVO.builder().status(1).message("success").data(configJson).build();
 
         } catch (Exception e) {
             return CommonResultVO.builder().status(-1).message("Error creating no-cloud config: " + e.getMessage()).build();
@@ -388,48 +394,80 @@ public class ModelExampleService {
 
     // 构建无云一版图配置JSON
     private JSONObject buildNoCloudConfig(NoCloudTileDTO noCloudTileDTO) {
-        List<JSONObject> scenesConfig = new ArrayList<>();
-
-
-        // 处理所有场景ID
-        for (String sceneId : noCloudTileDTO.getSceneIds()) {
-
-            // 不知道为什么，JSON写入会被截断，还有，ZY的波段太多了！！！
-            SceneSP scene = sceneDataServiceV2.getSceneByIdWithProductAndSensor(sceneId);
-
-            List<ModelServerImageDTO> imageDTO = imageDataService.getModelServerImageDTOBySceneId(sceneId);
-
-            JSONObject sceneConfig = new JSONObject();
-            sceneConfig.put("sceneId", sceneId);
-            sceneConfig.put("sensorName", scene.getSensorName());
-            sceneConfig.put("resolution", scene.getResolution());
-            sceneConfig.put("noData", scene.getNoData());
-            sceneConfig.put("bucket", scene.getBucket());
-            sceneConfig.put("cloudPath", scene.getCloudPath());
-            try {
-                sceneConfig.put("bbox", GeometryUtil.geometry2Geojson(scene.getBbox()));
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to convert geometry to GeoJSON", e);
-            }
-
-            // 添加波段路径信息
+        String sensorName = noCloudTileDTO.getSensorName();
+        String startTime = noCloudTileDTO.getStartTime();
+        String endTime = noCloudTileDTO.getEndTime();
+        List<Float> points = noCloudTileDTO.getPoints();
+        String wkt = GeometryUtil.pointsConvertToPolygon(points).toText();
+        JSONObject bandMapper = bandMapperGenerator.getSatelliteConfigBySensorName(sensorName);
+        List<SceneSP> scenes = sceneRepo.getSceneBySensorNameWithProductAndSensor(sensorName, startTime, endTime, wkt);
+        List<NoCloudConfigVO> scenesConfig = new ArrayList<>();
+        for (SceneSP scene : scenes) {
+            List<ModelServerImageDTO> imageDTO = imageDataService.getModelServerImageDTOBySceneId(scene.getSceneId());
             JSONObject paths = new JSONObject();
-
-            // TODO
-            // 限制最多处理5个波段
             for (ModelServerImageDTO image : imageDTO) {
                 paths.put("band_" + image.getBand(), image.getTifPath());
             }
-            sceneConfig.put("paths", paths);
-
-            // 添加波段映射配置信息
-            JSONObject bandMapper = bandMapperGenerator.getSatelliteConfigBySensorName(scene.getSensorName());
-            sceneConfig.put("bandMapper", bandMapper);
-
-            scenesConfig.add(sceneConfig);
+            NoCloudConfigVO noCloudConfigVO = new NoCloudConfigVO();
+            noCloudConfigVO.setSensorName(sensorName);
+            noCloudConfigVO.setSceneId(scene.getSceneId());
+            noCloudConfigVO.setCloudPath(scene.getCloudPath());
+            noCloudConfigVO.setBucket(scene.getBucket());
+            noCloudConfigVO.setPath(paths);
+            noCloudConfigVO.setResolution(scene.getResolution());
+            noCloudConfigVO.setNoData(scene.getNoData().toString());
+            noCloudConfigVO.setCloud(scene.getCloud());
+            try {
+                noCloudConfigVO.setBbox(GeometryUtil.geometry2Geojson(scene.getBbox()));
+            }catch (IOException e) {
+                throw new RuntimeException("Failed to convert geometry to GeoJSON", e);
+            }
+            scenesConfig.add(noCloudConfigVO);
         }
+        JSONObject result = new JSONObject();
+        result.put("bandMapper", bandMapper);
+        result.put("scenesConfig", scenesConfig);
+        return result;
 
-        return new JSONObject().fluentPut("scenes", scenesConfig);
+
+        // 处理所有场景ID
+//        for (String sceneId : noCloudTileDTO.getSceneIds()) {
+//
+//            // 不知道为什么，JSON写入会被截断，还有，ZY的波段太多了！！！
+//            SceneSP scene = sceneDataServiceV2.getSceneByIdWithProductAndSensor(sceneId);
+//
+//            List<ModelServerImageDTO> imageDTO = imageDataService.getModelServerImageDTOBySceneId(sceneId);
+//
+//            JSONObject sceneConfig = new JSONObject();
+//            sceneConfig.put("sceneId", sceneId);
+//            sceneConfig.put("sensorName", scene.getSensorName());
+//            sceneConfig.put("resolution", scene.getResolution());
+//            sceneConfig.put("noData", scene.getNoData());
+//            sceneConfig.put("bucket", scene.getBucket());
+//            sceneConfig.put("cloudPath", scene.getCloudPath());
+//            try {
+//                sceneConfig.put("bbox", GeometryUtil.geometry2Geojson(scene.getBbox()));
+//            } catch (IOException e) {
+//                throw new RuntimeException("Failed to convert geometry to GeoJSON", e);
+//            }
+//
+//            // 添加波段路径信息
+//            JSONObject paths = new JSONObject();
+//
+//            // TODO
+//            // 限制最多处理5个波段
+//            for (ModelServerImageDTO image : imageDTO) {
+//                paths.put("band_" + image.getBand(), image.getTifPath());
+//            }
+//            sceneConfig.put("paths", paths);
+//
+//            // 添加波段映射配置信息
+//            JSONObject bandMapper = bandMapperGenerator.getSatelliteConfigBySensorName(scene.getSensorName());
+//            sceneConfig.put("bandMapper", bandMapper);
+//
+//            scenesConfig.add(sceneConfig);
+//        }
+//        return new JSONObject().fluentPut("scenes", scenesConfig);
     }
 
     // 上传JSON到MinIO

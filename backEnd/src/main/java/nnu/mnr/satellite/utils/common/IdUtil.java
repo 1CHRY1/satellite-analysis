@@ -1,5 +1,7 @@
 package nnu.mnr.satellite.utils.common;
 
+import nnu.mnr.satellite.utils.security.JwtUtil;
+
 import java.util.Random;
 
 /**
@@ -45,6 +47,23 @@ public class IdUtil {
             sb.append(CHARACTERS.charAt(index));
         }
         return sb.toString();
+    }
+
+    public static String parseUserIdFromAuthHeader(String authorizationHeader) {
+        // 1. 检查 Token 是否存在
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            throw new IllegalArgumentException("Authorization header is missing or invalid");
+        }
+
+        // 2. 分割字符串并提取 Token
+        String[] parts = authorizationHeader.split(" ");
+        if (parts.length != 2 || !"Bearer".equals(parts[0])) {
+            throw new IllegalArgumentException("Invalid Authorization header format");
+        }
+        String token = parts[1];
+
+        // 3. 解析 Token 获取 userId
+        return JwtUtil.getUserIdFromToken(token); // 假设 JwtUtil 已存在
     }
 
 }

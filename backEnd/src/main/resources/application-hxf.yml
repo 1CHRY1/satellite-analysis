@@ -13,12 +13,12 @@ spring:
       datasource:
         mysql_satellite:
           # k8s
-          #          url: jdbc:mysql://223.2.34.8:31036/satellite
+          url: jdbc:mysql://223.2.34.8:31036/satellite
 #          url: jdbc:mysql://192.168.1.111:3306/satellite
-          url: jdbc:mysql://192.168.1.127:3306/satellite
+#          url: jdbc:mysql://192.168.1.127:3306/satellite
           username: root
-          password: root
-#          password: 123456
+#          password: root
+          password: 123456
           driver-class-name: com.mysql.cj.jdbc.Driver
           hikari:
             connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
@@ -72,10 +72,10 @@ minio:
 #  secret-key: 7UxtrqhSOyN1KUeumbqTRMv1zeluLO69OwJnCC0M
 #  #  url: http://223.2.34.7:9000
 #  url: http://172.16.92.82:30900
-  url: http://192.168.1.127:30900
+#  url: http://192.168.1.127:30900
   access-key: minioadmin
   secret-key: minioadmin
-#  url: http://223.2.34.8:30900
+  url: http://223.2.34.8:30900
 
 docker:
   # 执行模式：local（本地Docker）或 remote（远程服务器）
