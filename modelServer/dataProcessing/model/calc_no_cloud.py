@@ -237,6 +237,7 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
 
         tif_path = os.path.join(temp_dir_path, f"{grid_x}_{grid_y}.tif")
         transform = from_bounds(*bbox, img.shape[2], img.shape[1])
+        # Important Reference: https://gdal.org/en/stable/drivers/raster/cog.html
         with rasterio.open(
             tif_path, 'w',
             driver='COG',
@@ -247,9 +248,16 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
             # Very Important!!!!!!!!!!!!!!!!
             # dtype=np.float32,
             dtype=np.uint8,
+            nodata=0,
             crs='EPSG:4326',
             transform=transform,
-            BIGTIFF='YES'
+            BIGTIFF='YES',
+            NUM_THREADS="ALL_CPUS",
+            # COG 专用选项：强制块大小为 256x256
+            BLOCKSIZE=256,
+            COMPRESS='LZW',  # 压缩算法
+            OVERVIEWS='AUTO',  # 自动生成金字塔
+            OVERVIEW_RESAMPLING='NEAREST'  # 金字塔重采样方法
         ) as dst:
             dst.write(img)
 
@@ -281,6 +289,8 @@ def merge_tifs(temp_dir_path: str, task_id: str) -> str:
     mosaic, out_trans = merge(src_files, mem_limit = 20480, use_highest_res = True) # use_highes_resolution，最终tif统一为最精细分辨率
 
     out_meta = src_files[0].meta.copy()
+
+    # TODO：直接在这里写入cog
     out_meta.update({
         "driver": "GTiff",
         "height": mosaic.shape[1],
@@ -302,6 +312,7 @@ def merge_tifs(temp_dir_path: str, task_id: str) -> str:
     else:
         with rasterio.open(temp_merge_path) as src:
             profile = cog_profiles.get("deflate")
+            # Important Reference: https://gdal.org/en/stable/user/configoptions.html
             cog_translate(src, final_merge_path, profile, in_memory=True, overview_resampling="nearest", resampling="nearest", allow_intermediate_compression=False, temporary_compression="LZW", config={"GDAL_NUM_THREADS": "ALL_CPUS"})
 
         return final_merge_path

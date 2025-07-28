@@ -294,7 +294,13 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
             dtype=np.uint8,
             crs='EPSG:4326',
             transform=transform,
-            BIGTIFF='YES'
+            BIGTIFF='YES',
+            NUM_THREADS="ALL_CPUS",
+            # COG 专用选项：强制块大小为 256x256
+            BLOCKSIZE=256,
+            COMPRESS='LZW',  # 压缩算法
+            OVERVIEWS='AUTO',  # 自动生成金字塔
+            OVERVIEW_RESAMPLING='NEAREST'  # 金字塔重采样方法
         ) as dst:
             dst.write(img)
 
@@ -312,44 +318,6 @@ def upload_one(tif_path, grid_x, grid_y, task_id):
         "bucket": CONFIG.MINIO_TEMP_FILES_BUCKET,
         "tifPath": minio_key
     }
-
-
-# -------------------- DeprecationWarning --------------------
-def merge_tifs(temp_dir_path: str, task_id: str) -> str:
-
-    tif_files = glob.glob(os.path.join(temp_dir_path, "*.tif"))
-    if not tif_files:
-        raise ValueError("No .tif files found in the directory")
-
-    src_files = [rasterio.open(fp) for fp in tif_files]
-
-    mosaic, out_trans = merge(src_files, mem_limit = 20480, use_highest_res = True) # use_highes_resolution，最终tif统一为最精细分辨率
-
-    out_meta = src_files[0].meta.copy()
-    out_meta.update({
-        "driver": "GTiff",
-        "height": mosaic.shape[1],
-        "width": mosaic.shape[2],
-        "transform": out_trans,
-        "count": out_meta.get("count", 1),
-        "crs": src_files[0].crs
-    })
-
-    # 路径设置
-    temp_merge_path = os.path.join(temp_dir_path, f"{task_id}_temp_merge.tif")
-    final_merge_path = os.path.join(temp_dir_path, f"{task_id}_merge_cog.tif")
-
-    with rasterio.open(temp_merge_path, "w", **out_meta) as dest:
-        dest.write(mosaic)
-
-    if cog_info(temp_merge_path)["COG"]:
-        return temp_merge_path
-    else:
-        with rasterio.open(temp_merge_path) as src:
-            profile = cog_profiles.get("deflate")
-            cog_translate(src, final_merge_path, profile, in_memory=True, overview_resampling="nearest", resampling="nearest", allow_intermediate_compression=False, temporary_compression="LZW", config={"GDAL_NUM_THREADS": "ALL_CPUS"})
-
-        return final_merge_path
 
 # 序列化数据到临时文件
 def serialize_data_to_temp_files(scenes, scene_band_paths):
@@ -497,18 +465,6 @@ class calc_no_cloud_complex(Task):
 
         upload_results.sort(key=lambda x: (x["grid"][0], x["grid"][1]))
         print('end upload ', time.time())
-
-        ## Step 4 : Deprecated(Merge TIF) #######################
-        # print('start merge ',time.time())
-        # result_path = merge_tifs(temp_dir_path, task_id=self.task_id)
-        # print('end merge ',time.time())
-        # minio_path = f"{self.task_id}/noCloud_merge.tif"
-        # uploadLocalFile(result_path, config.MINIO_TEMP_FILES_BUCKET, minio_path)
-
-        # return {
-        #     "grids": upload_results,
-        #     "statistic": stats
-        # }
 
         ## Step 4 : Generate MosaicJSON as result #######################
         print([CONFIG.MINIO_TEMP_FILES_BUCKET + '/' + item["tifPath"] for item in upload_results])
