@@ -1,4 +1,4 @@
-import http from '../clientHttp'
+import http from '../../axiosClient/clientHttp'
 
 //----------------------------- user API -----------------------------//
 export async function createUser(userInfo: any): Promise<any> {

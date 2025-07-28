@@ -14,8 +14,8 @@ def createApp():
     from fastapi import FastAPI
     from titiler.core.factory import TilerFactory
     from starlette.middleware.cors import CORSMiddleware
+    from router import rgb, terrain, oneband, mosaic, no_cloud, no_cloud_with_sensorname, image_visualization, on_the_fly_exploration_mosaic
 
-    from router import rgb, terrain, oneband, mosaic, no_cloud
 
 
 
@@ -40,6 +40,10 @@ def createApp():
     app.include_router(oneband.router, tags=["One Colorful Band Tiler"], prefix="/oneband")
     app.include_router(mosaic.router, tags=["Mosaic Tiler"], prefix="/mosaic")
     app.include_router(no_cloud.router, tags=["No Cloud Tiler"], prefix="/no_cloud")
+    app.include_router(no_cloud_with_sensorname.router, tags=["No Cloud Tiler with SensorName"], prefix="/no_cloud_with_sensorname")
+    app.include_router(image_visualization.router, tags=["Image Visualization Tiler"], prefix="/image_visualization")
+    app.include_router(on_the_fly_exploration_mosaic.router, tags=["On the Fly Exploration Mosaic Tiler"], prefix="/on_the_fly_exploration_mosaic")
+    app.include_router(mosaic_single.router, prefix="/mosaic2")
 
     # Add a welcome message for the root endpoint
     @app.get("/")

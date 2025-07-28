@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Query, Response, HTTPException, Body
-from typing import Tuple, List
+from typing import Tuple, List, Optional, Union
 from minio import Minio
 import numpy as np
 from io import BytesIO
@@ -26,8 +26,8 @@ MINIO_SECRET_KEY = minio_config['secret_key']
 MINIO_BUCKET = minio_config['bucket']
 MINIO_DIR = minio_config['dir']
 
-def tiler(src_path: str, *args, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
-    with COGReader(src_path) as cog:
+def tiler(src_path: str, *args, nodata: Optional[Union[float, int]] = None, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
+    with COGReader(src_path, options={"nodata": nodata}) as cog:
         return cog.tile(*args, **kwargs)
 
 def normalize(arr, min_val=0, max_val=5000):
@@ -181,7 +181,8 @@ async def mosaictile(
             sel = defaults.FirstMethod()
         
         # Step 4: Get tile from mosaic
-        img, mask = mosaic_tiler(assets, x, y, z, tiler, pixel_selection=sel)
+        img, mask = mosaic_tiler(assets, x, y, z, tiler, pixel_selection=sel, nodata=0)
+        img = img.astype(np.uint8)
         if img is None:
             return Response(status_code=204)
         
@@ -248,7 +249,7 @@ async def analysis_tile(
             sel = defaults.FirstMethod()
         
         # Step 4: Get tile from mosaic  , expression=expression
-        img, mask = mosaic_tiler(assets, x, y, z, tiler, pixel_selection=sel, expression=expression)
+        img, mask = mosaic_tiler(assets, x, y, z, tiler, pixel_selection=sel, expression=expression, nodata=0)
         if img is None:
             return Response(status_code=204)
  

@@ -262,14 +262,13 @@
                     </button>
                 </div>
             </div>
-
         </div>
     </Vue3DraggableResizable>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, type Ref, reactive } from 'vue'
-import { DatabaseIcon, GalleryHorizontalIcon, RectangleEllipsisIcon, Trash2Icon } from 'lucide-vue-next'
+import { DatabaseIcon, GalleryHorizontalIcon, RectangleEllipsisIcon, Trash2Icon,CircleOff } from 'lucide-vue-next'
 import bus from '@/store/bus'
 import { map_destroyGridRGBImageTileLayer } from '@/util/map/operation'
 import Vue3DraggableResizable from 'vue3-draggable-resizable'
@@ -489,6 +488,7 @@ const selectedGBand = ref('')
 const selectedBBand = ref('')
 
 // Handle visualization
+const visualLoad = ref(false)
 const handleRSVisualize = () => {
     const { rowId, columnId, resolution } = gridData.value
     const gridInfo: GridInfoType = {
@@ -613,6 +613,7 @@ const handleRSVisualize = () => {
     }
 
     bus.emit('openTimeline')
+    visualLoad.value = true
 }
 
 const previewList = computed<boolean[]>(() => {
@@ -817,93 +818,98 @@ const calTask: Ref<any> = ref({
     taskId: ''
 })
 
-
+const isSuperRes = ref(false)
 
 const handleSuperResolution = async ()=> {
-    try{
-        const currentScene = gridData.value.scenes.find(scene => 
-            scene.sensorName === selectedSensor.value
-        );
+    if (visualLoad.value){
+        isSuperRes.value = !isSuperRes.value 
+        try{
+            handleRemove()
+            const currentScene = gridData.value.scenes.find(scene => 
+                scene.sensorName === selectedSensor.value
+            );
 
-        const bands : band_path ={
-            R:'',
-            G:'',
-            B:''
-        }
-        if (!currentScene) {
-            ElMessage.error('未找到对应的数据');
-            return;
-        }
+            const bands : band_path ={
+                R:'',
+                G:'',
+                B:''
+            }
+            if (!currentScene) {
+                ElMessage.error('未找到对应的数据');
+                return;
+            }
 
-        currentScene.images.forEach((bandImg: Image) => {
-                    if (bandImg.band === selectedRBand.value) {
-                        bands.R = bandImg.bucket + '/' + bandImg.tifPath
-                    }
-                    if (bandImg.band === selectedGBand.value) {
-                        bands.G = bandImg.bucket + '/' + bandImg.tifPath
-                    }
-                    if (bandImg.band === selectedBBand.value) {
-                        bands.B = bandImg.bucket + '/' + bandImg.tifPath
-                    }
-                })
-        const result = await GetSuperResolution({
-            columnId: gridData.value.columnId,
-            rowId: gridData.value.rowId,
-            resolution: gridData.value.resolution,
-            band: bands
-        });
-        
-        calTask.value.taskId = result.data
-        // 2、轮询运行状态，直到运行完成
-        // ✅ 轮询函数，直到 data === 'COMPLETE'
-        const pollStatus = async (taskId: string) => {
-            console.log('查询报错')
-            const interval = 1000 // 每秒轮询一次
-            return new Promise<void>((resolve, reject) => {
-                const timer = setInterval(async () => {
-                    try {
-                        const res = await getCaseStatus(taskId)
-                        console.log('轮询结果:', res)
-
-                        if (res?.data === 'COMPLETE') {
-                            clearInterval(timer)
-                            resolve()
-                        } else if (res?.data === 'ERROR') {
-                            console.log(res, res.data, 15616);
-
-                            clearInterval(timer)
-                            reject(new Error('任务失败'))
+            currentScene.images.forEach((bandImg: Image) => {
+                        if (bandImg.band === selectedRBand.value) {
+                            bands.R = bandImg.bucket + '/' + bandImg.tifPath
                         }
-                    } catch (err) {
-                        clearInterval(timer)
-                        reject(err)
-                    }
-                }, interval)
-            })
-        }
-        
-        try {
-            console.log("开始")
-            await pollStatus(calTask.value.taskId)
-            // ✅ 成功后设置状态
-            calTask.value.calState = 'success'
-            let bandres = await getCaseBandsResult(calTask.value.taskId)
-            console.log(bandres, '结果');
-            console.log('超分返回数据',bandres.data)
+                        if (bandImg.band === selectedGBand.value) {
+                            bands.G = bandImg.bucket + '/' + bandImg.tifPath
+                        }
+                        if (bandImg.band === selectedBBand.value) {
+                            bands.B = bandImg.bucket + '/' + bandImg.tifPath
+                        }
+                    })
+            const result = await GetSuperResolution({
+                columnId: gridData.value.columnId,
+                rowId: gridData.value.rowId,
+                resolution: gridData.value.resolution,
+                band: bands
+            });
             
-        // console.log(result.value)
-            bus.emit('SuperResTimeLine', bandres.data)
-            
-        } catch (error) {
-            calTask.value.calState = 'failed'
+            calTask.value.taskId = result.data
+            // 2、轮询运行状态，直到运行完成
+            // ✅ 轮询函数，直到 data === 'COMPLETE'
+            const pollStatus = async (taskId: string) => {
+                console.log('查询报错')
+                const interval = 1000 // 每秒轮询一次
+                return new Promise<void>((resolve, reject) => {
+                    const timer = setInterval(async () => {
+                        try {
+                            const res = await getCaseStatus(taskId)
+                            console.log('轮询结果:', res)
 
-            console.error('有问题');
-            console.error('问题double')
-        }
-        ElMessage.success('超分处理成功')
+                            if (res?.data === 'COMPLETE') {
+                                clearInterval(timer)
+                                resolve()
+                            } else if (res?.data === 'ERROR') {
+                                console.log(res, res.data, 15616);
+
+                                clearInterval(timer)
+                                reject(new Error('任务失败'))
+                            }
+                        } catch (err) {
+                            clearInterval(timer)
+                            reject(err)
+                        }
+                    }, interval)
+                })
+            }
             
-    }catch{
-        ElMessage.error('超分处理失败');
+            try {
+                console.log("开始")
+                await pollStatus(calTask.value.taskId)
+                // ✅ 成功后设置状态
+                calTask.value.calState = 'success'
+                let bandres = await getCaseBandsResult(calTask.value.taskId)
+                console.log(bandres, '结果');
+                console.log('超分返回数据',bandres.data)
+            // console.log(result.value)
+                bus.emit('SuperResTimeLine', bandres.data,isSuperRes.value)
+                
+            } catch (error) {
+                calTask.value.calState = 'failed'
+
+                console.error('有问题');
+                console.error('问题double')
+            }
+            ElMessage.success('超分处理成功')
+                
+        }catch{
+            ElMessage.error('超分处理失败');
+        }
+    } else{
+        ElMessage.error('请先完成立方体可视化')
     }
 }
 

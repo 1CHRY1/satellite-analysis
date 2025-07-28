@@ -59,31 +59,53 @@ export const useStats = () => {
             '500m': [],
         }
 
-        const addToCategory = (key: string, platform: string) => {
-            if (!result[key].includes(platform)) {
-                result[key].push(platform)
+        // const addToCategory = (key: string, platform: any) => {
+        //     if (!result[key].includes(platform)) {
+        //         result[key].push(platform)
+        //     }
+        // }
+
+        const addToCategory = (key: string, platform: string | any) => {
+            const categoryItems = result[key] || []; // 确保数组存在
+            
+            // 如果是字符串，直接比较
+            if (typeof platform === 'string') {
+              if (!categoryItems.includes(platform)) {
+                result[key] = [...categoryItems, platform];
+              }
+            } 
+            // 如果是对象，比较 sensorName
+            else if (typeof platform === 'object' && platform !== null) {
+              const alreadyExists = categoryItems.some(
+                (item) => typeof item === 'object' && item.sensorName === platform.sensorName
+              );
+              if (!alreadyExists) {
+                result[key] = [...categoryItems, platform];
+              }
             }
-        }
+        };
+
 
         for (const scene of allScenes) {
             const resStr = scene.resolution?.toString().replace('m', '')
             const res = parseFloat(resStr)
-            const platform = scene.platformName
+            const platformName = scene.platformName
+            const sensorName = scene.sensorName
 
-            if (!platform || isNaN(res)) continue
+            if (!platformName || isNaN(res)) continue
 
             if (res <= 1) {
                 if (scene.tags.includes('ard')) {
-                    addToCategory('1m', platform)
+                    addToCategory('1m', {sensorName, platformName})
                 }
             } else if (res === 2) {
-                addToCategory('2m', platform)
+                addToCategory('2m', {sensorName, platformName})
             } else if (res === 10) {
-                addToCategory('10m', platform)
+                addToCategory('10m', {sensorName, platformName})
             } else if (res === 30) {
-                addToCategory('30m', platform)
+                addToCategory('30m', {sensorName, platformName})
             } else {
-                addToCategory('500m', platform)
+                addToCategory('500m', {sensorName, platformName})
                 // continue
             }
         }

@@ -2,6 +2,7 @@
     "mock": false,
     "back_app": "/api",
     "back_app2": "/api2",
+    "back_app3": "/api3",
     "back_websocket": "",
     "minioIpAndPort": "http://223.2.34.8:30900",
     "titilerIpAndPort": "http://192.168.1.127:8000",

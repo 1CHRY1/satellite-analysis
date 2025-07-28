@@ -392,10 +392,17 @@ const handleClick = async (index: number) => {
     } else if (visualMode.value === 'rgb') {
         const img = currentImage as MultiImageInfoType
 
-        let redPath = superResOverride.value?.redPath || img.redPath
-        let greenPath = superResOverride.value?.greenPath || img.greenPath
-        let bluePath = superResOverride.value?.bluePath || img.bluePath
+        let redPath,greenPath,bluePath
 
+        if(superResOverride.value?.load == true){
+             redPath = superResOverride.value?.redPath 
+             greenPath = superResOverride.value?.greenPath 
+             bluePath = superResOverride.value?.bluePath 
+        } else {
+            redPath =  img.redPath
+            greenPath =  img.greenPath
+            bluePath = img.bluePath
+        }
         
         console.log('red, green, blue', redPath, greenPath, bluePath)
 
@@ -593,18 +600,20 @@ const superResOverride = ref<{
   redPath: string
   greenPath: string
   bluePath: string
+  load: boolean
 } | null>(null)
 
 onMounted(() => {
-    
+    clearState()
     bus.on('cubeVisualize', updateHandler)
 
-    bus.on('SuperResTimeLine', (SuperData: { R: string, G: string, B: string }) => {
-    console.log('收到 SuperResTimeLine 数据:', SuperData)
+    bus.on('SuperResTimeLine', (SuperData: { R: string, G: string, B: string }, loadSuper : boolean) => {
+    console.log('收到 SuperResTimeLine 数据:', SuperData,loadSuper)
     superResOverride.value = {
         redPath: SuperData.R,
         greenPath: SuperData.G,
-        bluePath: SuperData.B
+        bluePath: SuperData.B,
+        load: loadSuper
   }
 
   // 强制重新加载当前图像（如果有）

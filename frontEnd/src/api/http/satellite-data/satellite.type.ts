@@ -220,6 +220,7 @@ export namespace Case {
     }
 
     export interface Case {
+        bandList: string,
         caseId: string,
         address: string,
         regionId: number,
