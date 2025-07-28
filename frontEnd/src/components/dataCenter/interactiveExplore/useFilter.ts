@@ -4,15 +4,13 @@ import type { RegionValues } from 'v-region'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 
-import * as MapOperation from '@/util/map/operation'
-import { mapManager } from '@/util/map/mapManager'
 import {
     getGridByRegionAndResolution,
     getBoundary,
     getRegionPosition,
     getSceneByConfig,
-    getVectorsByConfig,
-    getVectorsByPOIConfig,
+    getVectorsByRegionFilter,
+    getVectorsByPOIFilter,
     getSceneGrids,
     getCoverRegionSensorScenes,
     getPoiInfo,
@@ -307,7 +305,7 @@ export const useFilter = () => {
                     tags: [image.tags.source, image.tags.production, image.tags.category],
                 }))
             // 获取矢量数据
-            const vectorsRes = await getVectorsByConfig(filterData)
+            const vectorsRes = await getVectorsByRegionFilter(filterData)
             console.log('矢量数据返回', vectorsRes)
             allVectors.value = vectorsRes
         } else if (searchedSpatialFilterMethod.value === 'poi') {
@@ -332,7 +330,7 @@ export const useFilter = () => {
                     tags: [image.tags.source, image.tags.production, image.tags.category],
                 }))
             // 获取矢量数据
-            const vectorsRes = await getVectorsByPOIConfig(poiFilter)
+            const vectorsRes = await getVectorsByPOIFilter(poiFilter)
             allVectors.value = vectorsRes
             console.log('矢量数据返回', vectorsRes)
         }

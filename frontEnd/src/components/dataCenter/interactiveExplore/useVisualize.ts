@@ -1,6 +1,6 @@
 import { computed, ref } from "vue";
 import { useLayer } from "./useLayer";
-import { useFilter } from "./useFilter";
+import { useFilter } from "./useFilterV3";
 import { useStats } from "./useStats";
 import * as MapOperation from '@/util/map/operation'
 import { getOnTheFlyUrl, getRealtimeNoCloudUrl } from "@/api/http/satellite-data/visualize.api"
@@ -20,7 +20,7 @@ const { addMultiTerrainTileLayer, addMulti3DImageTileLayer, addMultiOneBandColor
 
 export const useVisualize = () => {
     // 使用useFilter中的模块作用域变量，注意避免循环依赖
-    const { allScenes, allProducts, searchedSpatialFilterMethod, finalLandId, selectedGrid, allVectors } = useFilter()
+    const { sceneStats, vectorStats, themeStats, searchedSpatialFilterMethod, finalLandId, selectedGridResolution } = useFilter()
     const { t } = useI18n()
 
     /**
@@ -89,6 +89,7 @@ export const useVisualize = () => {
         MapOperation.map_addNoCloudLayer(url)
     }
 
+    const selectedSensorName = ref('')
     const handleShowImageInBoundary = async (sensorName: string, dateRange: Array<any>) => {
         const startTime = dateRange[0].format('YYYY-MM-DD')
         const endTime = dateRange[1].format('YYYY-MM-DD')
@@ -205,106 +206,108 @@ export const useVisualize = () => {
 
     const handleShowProductInBoundary = async (label: string, platformName: string) => {
         console.log('label', label)
-        const sceneIds = getSceneIdsByPlatformName(label, platformName, allProducts.value)
-        console.log('选中的景ids', sceneIds)
-        console.log('当前所有的产品', allProducts.value)
-        const sensorName = getSensorNamebyPlatformName(platformName, allProducts.value)
+        // const sceneIds = getSceneIdsByPlatformName(label, platformName, allProducts.value)
+        // console.log('选中的景ids', sceneIds)
+        // console.log('当前所有的产品', allProducts.value)
+        // const sensorName = getSensorNamebyPlatformName(platformName, allProducts.value)
         // 之所以是sensorName，因为后台统一存在sensor表
-        console.log('匹配的sensorName', sensorName)
+        // console.log('匹配的sensorName', sensorName)
 
-        const stopLoading = message.loading(t('datapage.explore.message.load'))
+        // const stopLoading = message.loading(t('datapage.explore.message.load'))
 
-        let coverProducts, gridsBoundary
-        if (searchedSpatialFilterMethod.value === 'region') {
-            const params = {
-                sensorName,
-                sceneIds,
-                regionId: finalLandId.value,
-                resolution: selectedGrid.value,
-            }
-            const coverProductsRes = await getCoverRegionSensorScenes(params)
-            coverProducts = coverProductsRes.sceneList
-            gridsBoundary = coverProductsRes.gridsBoundary
-        } else if (searchedSpatialFilterMethod.value === 'poi') {
-            const params = {
-                sensorName,
-                sceneIds,
-                locationId: finalLandId.value,
-                resolution: selectedGrid.value,
-            }
-            const coverProductsRes = await getCoverRegionSensorScenes(params)
-            coverProducts = coverProductsRes.sceneList
-            gridsBoundary = coverProductsRes.gridsBoundary
-        }
-        console.log('接口返回：覆盖的产品们', coverProducts)
+        // let coverProducts, gridsBoundary
+        // if (searchedSpatialFilterMethod.value === 'region') {
+        //     const params = {
+        //         sensorName,
+        //         sceneIds,
+        //         regionId: finalLandId.value,
+        //         resolution: selectedGridResolution.value,
+        //     }
+        //     const coverProductsRes = await getCoverRegionSensorScenes(params)
+        //     coverProducts = coverProductsRes.sceneList
+        //     gridsBoundary = coverProductsRes.gridsBoundary
+        // } else if (searchedSpatialFilterMethod.value === 'poi') {
+        //     const params = {
+        //         sensorName,
+        //         sceneIds,
+        //         locationId: finalLandId.value,
+        //         resolution: selectedGridResolution.value,
+        //     }
+        //     const coverProductsRes = await getCoverRegionSensorScenes(params)
+        //     coverProducts = coverProductsRes.sceneList
+        //     gridsBoundary = coverProductsRes.gridsBoundary
+        // }
+        // console.log('接口返回：覆盖的产品们', coverProducts)
 
-        let demProducts
-        let productSceneIds: any[] = []
-        let productSensorName = ''
-        allProducts.value.forEach(product => {
-            if (product.dataType === 'dem') {
-                productSceneIds.push(product.sceneId)
-                productSensorName = product.sensorName
-            }
-        })
-        if (searchedSpatialFilterMethod.value === 'region') {
-            const params = {
-                sensorName: productSensorName,
-                sceneIds: productSceneIds,
-                regionId: finalLandId.value,
-                resolution: selectedGrid.value,
-            }
-            const coverProductsRes = await getCoverRegionSensorScenes(params)
-            demProducts = coverProductsRes.sceneList
-            gridsBoundary = coverProductsRes.gridsBoundary
-        } else if (searchedSpatialFilterMethod.value === 'poi') {
-            const params = {
-                sensorName: productSensorName,
-                sceneIds: productSceneIds,
-                locationId: finalLandId.value,
-                resolution: selectedGrid.value,
-            }
-            const coverProductsRes = await getCoverRegionSensorScenes(params)
-            demProducts = coverProductsRes.sceneList
-        }
+        // let demProducts
+        // let productSceneIds: any[] = []
+        // let productSensorName = ''
+        // allProducts.value.forEach(product => {
+        //     if (product.dataType === 'dem') {
+        //         productSceneIds.push(product.sceneId)
+        //         productSensorName = product.sensorName
+        //     }
+        // })
+        // if (searchedSpatialFilterMethod.value === 'region') {
+        //     const params = {
+        //         sensorName: productSensorName,
+        //         sceneIds: productSceneIds,
+        //         regionId: finalLandId.value,
+        //         resolution: selectedGrid.value,
+        //     }
+        //     const coverProductsRes = await getCoverRegionSensorScenes(params)
+        //     demProducts = coverProductsRes.sceneList
+        //     gridsBoundary = coverProductsRes.gridsBoundary
+        // } else if (searchedSpatialFilterMethod.value === 'poi') {
+        //     const params = {
+        //         sensorName: productSensorName,
+        //         sceneIds: productSceneIds,
+        //         locationId: finalLandId.value,
+        //         resolution: selectedGrid.value,
+        //     }
+        //     const coverProductsRes = await getCoverRegionSensorScenes(params)
+        //     demProducts = coverProductsRes.sceneList
+        // }
 
-        await addTerrainBaseMap(demProducts, gridsBoundary)
-        switch (label) {
-            case 'DEM':
-                await addMultiTerrainTileLayer(coverProducts, gridsBoundary, stopLoading)
-                break
-            case '红绿立体':
-                await addMulti3DImageTileLayer(coverProducts, gridsBoundary, stopLoading)
-                break
-            case '形变速率':
-                await addMultiOneBandColorLayer(coverProducts, gridsBoundary, stopLoading)
-                break
-            case 'NDVI':
-                await addMultiOneBandColorLayer(coverProducts, gridsBoundary, stopLoading)
-                break
-            default:
-                await addMultiRGBImageTileLayer(coverProducts, gridsBoundary, stopLoading)
-                break
-        }
+        // await addTerrainBaseMap(demProducts, gridsBoundary)
+        // switch (label) {
+        //     case 'DEM':
+        //         await addMultiTerrainTileLayer(coverProducts, gridsBoundary, stopLoading)
+        //         break
+        //     case '红绿立体':
+        //         await addMulti3DImageTileLayer(coverProducts, gridsBoundary, stopLoading)
+        //         break
+        //     case '形变速率':
+        //         await addMultiOneBandColorLayer(coverProducts, gridsBoundary, stopLoading)
+        //         break
+        //     case 'NDVI':
+        //         await addMultiOneBandColorLayer(coverProducts, gridsBoundary, stopLoading)
+        //         break
+        //     default:
+        //         await addMultiRGBImageTileLayer(coverProducts, gridsBoundary, stopLoading)
+        //         break
+        // }
     }
 
     /**
      * 3.矢量可视化
      */
     const previewVectorList = computed<boolean[]>(() => {
-        const list = Array(allVectors.value.length).fill(false)
+        const list = Array(vectorStats.value.length).fill(false)
         if (previewVectorIndex.value !== null) {
             list[previewVectorIndex.value] = true
         }
         return list
     })
     const previewVectorIndex = ref<number | null>(null)
-    const showVectorResult = async (tableName: string) => {
-        previewVectorIndex.value = allVectors.value.findIndex(item => item.tableName === tableName)
+    const showVectorResult = async (tableName: string, index: number) => {
+        previewVectorIndex.value = index
+        previewVectorList.value[index] = true
         handleShowVectorInBoundary(tableName)
     }
-    const unPreviewVector = () => {
+    const unPreviewVector = (index: number) => {
         previewVectorIndex.value = null
+        previewVectorList.value[index] = false
         MapOperation.map_destroyMVTLayer()
     }
 
@@ -353,6 +356,7 @@ export const useVisualize = () => {
         shouldShowEyeOff,
         previewVectorList,
         showVectorResult,
-        unPreviewVector
+        unPreviewVector,
+        selectedSensorName
     }
 }

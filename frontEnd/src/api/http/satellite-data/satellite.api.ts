@@ -251,9 +251,9 @@ export async function getAllInfoByCaseId(caseId: string): Promise<any>{
 }
 
 // 获取矢量数据
-export async function getVectorsByConfig(param: any): Promise<any> {
+export async function getVectorsByRegionFilter(param: any): Promise<any> {
     return http.post<any>(`data/vector/time/region`, param)
 }
-export async function getVectorsByPOIConfig(param: any): Promise<any> {
+export async function getVectorsByPOIFilter(param: any): Promise<any> {
     return http.post<any>(`data/vector/time/location`, param)
 }
