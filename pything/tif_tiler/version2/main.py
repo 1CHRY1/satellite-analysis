@@ -15,7 +15,7 @@ def createApp():
     from titiler.core.factory import TilerFactory
     from starlette.middleware.cors import CORSMiddleware
 
-    from router import rgb, terrain, oneband, mosaic, no_cloud, no_cloud_with_sensorname
+    from router import rgb, terrain, oneband, mosaic, no_cloud, no_cloud_with_sensorname, mosaic_single
 
 
 
@@ -41,7 +41,7 @@ def createApp():
     app.include_router(mosaic.router, tags=["Mosaic Tiler"], prefix="/mosaic")
     app.include_router(no_cloud.router, tags=["No Cloud Tiler"], prefix="/no_cloud")
     app.include_router(no_cloud_with_sensorname.router, tags=["No Cloud Tiler with SensorName"], prefix="/no_cloud_with_sensorname")
-
+    app.include_router(mosaic_single.router, prefix="/mosaic2")
     # Add a welcome message for the root endpoint
     @app.get("/")
     def read_index():

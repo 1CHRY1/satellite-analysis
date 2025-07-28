@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query, Response
+from fastapi import APIRouter, Query, Request, Response
 from rio_tiler.io import COGReader
 from rio_tiler.utils import render
 from rio_tiler.colormap import cmap
@@ -8,6 +8,7 @@ import os
 import requests
 import math
 from config import minio_config, TRANSPARENT_CONTENT
+import time
 
 ####### Helper ########################################################################################
 # MINIO_ENDPOINT = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}"
@@ -66,9 +67,12 @@ async def get_tile(
     sensorName: str = Query(...),
     startTime: str = Query(...),
     endTime: str = Query(...),
+    request: Request = None
 ):
     
     try:
+        
+        start_time = time.time()
         # 计算tile的边界
         tile_bound = calc_tile_bounds(x, y, z)
         points = tile_bound['bbox']
@@ -94,9 +98,17 @@ async def get_tile(
         scene_band_paths = {}
         bandList = ['Red', 'Green', 'Blue']
 
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"请求操作耗时：{elapsed_time:.6f} 秒")
+
+        if await request.is_disconnected():
+            print("disconnected")
+            return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
+
         for scene in sorted_scene:
             bands = {band: None for band in bandList}
-            paths = scene.get('path', {})  
+            paths = scene.get('path', {})
             
             if sensorName == 'ZY1_AHSI':
                 # ZY1_AHSI 特殊处理
@@ -126,18 +138,28 @@ async def get_tile(
             
             scene_band_paths[scene['sceneId']] = bands
 
-
         # 格网 target_H, target_W 固定为256x256
         target_H, target_W = 256, 256
         img_r = np.full((target_H, target_W), 0, dtype=np.uint8)
         img_g = np.full((target_H, target_W), 0, dtype=np.uint8)
         img_b = np.full((target_H, target_W), 0, dtype=np.uint8)
         need_fill_mask = np.ones((target_H, target_W), dtype=bool) # all true，待填充
-
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"整理操作耗时：{elapsed_time:.6f} 秒")
 
         processed_scenes = 0
         filled_ratio = 0.0
+
+        if await request.is_disconnected():
+            print("disconnected")
+            return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
+
         for scene in sorted_scene:
+            if await request.is_disconnected():
+                print("disconnected")
+                return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
+            
             if 'SAR' in scene.get('sensorName'):
                 continue
 
@@ -259,12 +281,17 @@ async def get_tile(
                 
             if not np.any(need_fill_mask):
                 break
-        
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"计算操作耗时：{elapsed_time:.6f} 秒")
         img = np.stack([img_r, img_g, img_b])
 
         alpha_mask = (~need_fill_mask).astype(np.uint8) * 255
 
         content = render(img, mask=alpha_mask, img_format="png", **img_profiles.get("png"))
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"总操作耗时：{elapsed_time:.6f} 秒")
         
         return Response(content=content, media_type="image/png")
 
