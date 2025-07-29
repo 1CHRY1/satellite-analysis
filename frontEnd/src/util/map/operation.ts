@@ -817,15 +817,11 @@ function grid_fill_click_handler(e: MapMouseEvent): void {
 
     if (features.length && features[0].properties && features[0].properties.flag) {
         console.log(features[0].properties)
-        const sceneGridsRes = ezStore.get('sceneGridsRes')
-        const vectorGridsRes = ezStore.get('vectorGridsRes')
-        const gridInfo = sceneGridsRes.find((item: any) => {
-            return (
-                item.rowId === features[0].properties!.rowId &&
-                item.columnId === features[0].properties?.columnId
-            )
-        })
-        bus.emit('update:gridPopupData', gridInfo, vectorGridsRes)
+        const gridInfo = {
+            rowId: features[0].properties!.rowId,
+            columnId: features[0].properties!.columnId
+        }
+        // bus.emit('update:gridPopupData', gridInfo)
 
         const popup = ezStore.get('gridPopup') as Popup
         popup.setLngLat(e.lngLat).addTo(ezStore.get('map'))

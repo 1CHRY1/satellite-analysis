@@ -20,11 +20,12 @@ import {
     getCoverPOISensorScenes,
     getVectorGrids,
 } from '@/api/http/satellite-data'
-import { useLayer, type POIInfo } from './useLayer'
+import type { POIInfo } from '@/type/interactive-explore/filter'
+import { useLayer } from './useLayer'
 import { useStats } from './useStats'
 import { ezStore } from "@/store"
 const { createGeoJSONFromBounds, marker, addPolygonLayer, destroyLayer, removeUniqueLayer,
-    addPOIMarker, addGridLayer, updateFullSceneGridLayer, addMultiRGBImageTileLayer, addMultiTerrainTileLayer,addBaseTerrainTileLayer, addMulti3DImageTileLayer, addMultiOneBandColorLayer, addMVTLayer } = useLayer()
+    addPOIMarker, addGridLayer, updateGridLayer, addMultiRGBImageTileLayer, addMultiTerrainTileLayer,addBaseTerrainTileLayer, addMulti3DImageTileLayer, addMultiOneBandColorLayer, addMVTLayer } = useLayer()
 const { countResolutionScenesCoverage, classifyScenesByResolution, getSceneIdsByPlatformName, getSensorNamebyPlatformName
     , classifyProducts, countProductsCoverage
  } = useStats()
@@ -480,7 +481,7 @@ export const useFilter = () => {
         coverageRSRate.value = ((nonEmptyScenesCount * 100) / sceneGridsRes.length).toFixed(2) + '%'
         coverageProductsRate.value = ((nonEmptyProductsCount * 100) / sceneGridsRes.length).toFixed(2) + '%'
 
-        updateFullSceneGridLayer(allGrids.value, sceneGridsRes, allScenes.value.length)
+        updateGridLayer(allGrids.value)
     
         exploreData.updateFields({
             searchtab: searchedSpatialFilterMethod.value,

@@ -25,8 +25,9 @@ import {
 } from '@/api/http/interactive-explore/filter.api'
 import type { SceneStats, VectorStats, ThemeStats } from '@/api/http/interactive-explore/filter.type'
 import { useLayer } from './useLayer'
+import { ezStore } from "@/store"
 const { createGeoJSONFromBounds, marker, addPolygonLayer, destroyLayer, removeUniqueLayer,
-    addPOIMarker, addGridLayer } = useLayer()
+    addPOIMarker, addGridLayer, updateGridLayer } = useLayer()
 
 
 const exploreData = useExploreStore()
@@ -65,7 +66,7 @@ const finalLandId = computed(() => {
     if (info.area) return `${info.area}`
     if (info.city) return `${info.city}`
     if (info.province) return `${info.province}`
-    return 'None'
+    return '100000' // 默认中国
 })
 
 /**
@@ -141,13 +142,13 @@ export const useFilter = () => {
         if (info.area) return `${info.area}`
         if (info.city) return `${info.city}`
         if (info.province) return `${info.province}`
-        return 'None'
+        return '100000' // 默认中国
     })
 
     /**
      * 数据检索变量 - 2.格网分辨率
      */
-    const gridOptions = [1, 2, 5, 10, 15, 20, 25, 30, 40, 50, 100]
+    const gridOptions = [1, 2, 5, 10, 15, 20, 25, 30, 40, 50, 100, 200, 500, 1000]
     const curGridsBoundary = ref()
     const allGrids = ref([])
     const allGridCount = ref(0)
@@ -209,7 +210,7 @@ export const useFilter = () => {
     const filterLoading = ref(false)
     // 筛选是否完成
     const isFilterDone = ref(false)
-    const filter = async () => {
+    const doFilter = async () => {
         if (finalLandId.value === 'None') {
             ElMessage.warning(t('datapage.explore.message.filtererror_choose'))
             return
@@ -245,9 +246,9 @@ export const useFilter = () => {
         vectorStats.value = vectorsRes
         // themeStats.value = themeStatsRes
 
-        // 请求每个格子的景sceneGridsRes， 计算覆盖率，添加覆盖率格网图层，以及图层右键交互事件
-        // await makeFullSceneGrid()
-    
+        syncToGridExplore()
+        syncToDataPrepare()
+
         if (sceneStats.value.total === 0) {
             ElMessage.warning(t('datapage.explore.message.sceneerror_recondition'))
         } else {
@@ -257,6 +258,33 @@ export const useFilter = () => {
         // 恢复状态
         filterLoading.value = false
         isFilterDone.value = true
+    }
+
+    /**
+     * 同步到网格图层: 添加格网图层，同步格网探查所需的变量，以及图层右键交互事件
+     */
+    const syncToGridExplore = () => {
+        updateGridLayer(allGrids.value)
+        ezStore.set('sceneStats', sceneStats.value)
+        ezStore.set('vectorStats', vectorStats.value)
+        // ezStore.set('themeStats', themeStats.value)
+    }
+
+    /**
+     * 同步到数据准备: 同步数据准备所需的变量
+     */
+    const syncToDataPrepare = () => {
+        exploreData.updateFields({
+            searchtab: searchedSpatialFilterMethod.value,
+            regionCode: finalLandId.value,
+            dataRange: [...selectedDateRange.value],
+            gridResolution: selectedGridResolution.value, // 原space
+            coverage: sceneStats.value.coverage,
+            // images: allScenes.value,
+            grids: allGrids.value,
+            boundary: curRegionBounds.value,
+            load: true
+        });
     }
 
     return {
@@ -275,7 +303,7 @@ export const useFilter = () => {
         handleSelectTab,
         searchedSpatialFilterMethod,
         finalLandId,
-        filter,
+        doFilter,
         filterLoading,
         isFilterDone,
         sceneStats,

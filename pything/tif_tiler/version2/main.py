@@ -43,7 +43,6 @@ def createApp():
     app.include_router(no_cloud_with_sensorname.router, tags=["No Cloud Tiler with SensorName"], prefix="/no_cloud_with_sensorname")
     app.include_router(image_visualization.router, tags=["Image Visualization Tiler"], prefix="/image_visualization")
     app.include_router(on_the_fly_exploration_mosaic.router, tags=["On the Fly Exploration Mosaic Tiler"], prefix="/on_the_fly_exploration_mosaic")
-    app.include_router(mosaic_single.router, prefix="/mosaic2")
 
     # Add a welcome message for the root endpoint
     @app.get("/")

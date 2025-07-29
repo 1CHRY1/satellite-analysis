@@ -305,7 +305,7 @@
                                                     </select>
                                                     <div class="flex flex-row items-center">
                                                         <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
-                                                            @click="handleShowImageInBoundary(selectedSensorName, selectedDateRange)"
+                                                            @click="handleShowImage(selectedSensorName)"
                                                             :disabled="!selectedSensorName">
                                                             {{ t('datapage.explore.section_interactive.button') }}
                                                         </a-button>
@@ -472,10 +472,10 @@ const {
     // ------------------------ 数据检索 3.时间范围 -------------------------- //
     selectedDateRange,
     // ------------------------ 数据检索 4.筛选 -------------------------- //
-    filter: applyFilter, filterLoading, isFilterDone, sceneStats, vectorStats, themeStats
+    doFilter: applyFilter, filterLoading, isFilterDone, sceneStats, vectorStats, themeStats
 } = useFilter()
 
-const { handleShowImageInBoundary, handleCreateNoCloudTiles: handleOnTheFly, toggleEye, shouldShowEyeOff, previewVectorList, showVectorResult, unPreviewVector, selectedSensorName } = useVisualize()
+const { handleShowImage, handleShowImageInBoundary, handleCreateNoCloudTiles: handleOnTheFly, toggleEye, shouldShowEyeOff, previewVectorList, showVectorResult, unPreviewVector, selectedSensorName } = useVisualize()
 const { clearAllShowingSensor } = useLayer()
 const isExpand = ref<boolean>(true)
 const isRSExpand = ref<boolean>(true)
