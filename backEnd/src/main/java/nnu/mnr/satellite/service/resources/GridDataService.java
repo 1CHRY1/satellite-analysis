@@ -1,5 +1,6 @@
 package nnu.mnr.satellite.service.resources;
 
+import com.alibaba.fastjson2.JSONObject;
 import nnu.mnr.satellite.mapper.resources.IVectorRepo;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerImageDTO;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerSceneDTO;
@@ -8,18 +9,16 @@ import nnu.mnr.satellite.model.dto.resources.GridVectorFetchDTO;
 import nnu.mnr.satellite.model.po.geo.GeoLocation;
 import nnu.mnr.satellite.model.po.resources.SceneSP;
 import nnu.mnr.satellite.model.po.resources.Vector;
-import nnu.mnr.satellite.model.vo.resources.GridBoundaryVO;
-import nnu.mnr.satellite.model.vo.resources.GridSceneVO;
+import nnu.mnr.satellite.model.vo.resources.*;
 import nnu.mnr.satellite.model.dto.resources.GridSceneFetchDTO;
-import nnu.mnr.satellite.model.vo.resources.VectorInfoVO;
 import nnu.mnr.satellite.service.common.BandMapperGenerator;
 import nnu.mnr.satellite.utils.common.ConcurrentUtil;
+import nnu.mnr.satellite.utils.geom.GeometryUtil;
 import nnu.mnr.satellite.utils.geom.TileCalculateUtil;
 import nnu.mnr.satellite.utils.typeHandler.GeometryTypeHandler;
 import org.locationtech.jts.geom.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import nnu.mnr.satellite.model.vo.resources.GridVectorVO;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -54,22 +53,37 @@ public class GridDataService {
     @Autowired
     private IVectorRepo vectorRepo;
 
-    public List<GridBoundaryVO> getGridsByLocationId(String locationId, Integer resolution) throws IOException {
+    public GridsAndGridsBoundary getGridsByLocationId(String locationId, Integer resolution) throws IOException {
         List<GridBoundaryVO> grids = new ArrayList<>();
         GeoLocation location = locationService.searchById(locationId);
+
         double lon = Double.parseDouble(location.getWgs84Lon());
         double lat = Double.parseDouble(location.getGcj02Lat());
+
         int[] grid = TileCalculateUtil.getGridXYByLngLatAndResolution(lon, lat, resolution);
-        grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(grid[1]-1, grid[0]-1, resolution));
-        grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(grid[1]-1, grid[0], resolution));
-        grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(grid[1]-1, grid[0]+1, resolution));
-        grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(grid[1], grid[0]-1, resolution));
-        grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(grid[1], grid[0], resolution));
-        grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(grid[1], grid[0]+1, resolution));
-        grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(grid[1]+1, grid[0]-1, resolution));
-        grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(grid[1]+1, grid[0], resolution));
-        grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(grid[1]+1, grid[0]+1, resolution));
-        return grids;
+        int centerX = grid[0];  // 当前网格的 x 坐标
+        int centerY = grid[1];  // 当前网格的 y 坐标
+
+        // 存储 9 个网格的坐标 (x, y)
+        List<Integer[]> gridCoordinates = new ArrayList<>();
+        for (int dy = -1; dy <= 1; dy++) {
+            for (int dx = -1; dx <= 1; dx++) {
+                gridCoordinates.add(new Integer[]{centerY + dy, centerX + dx});
+            }
+        }
+
+        Geometry gridsBoundary = GeometryUtil.getGridsBoundaryByTilesAndResolution(gridCoordinates, resolution);
+        JSONObject geoJson = GeometryUtil.geometry2Geojson(gridsBoundary);
+
+        // 计算每个网格的边界并加入结果列表
+        for (Integer[] coord : gridCoordinates) {
+            grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(coord[0], coord[1], resolution));
+        }
+
+        return GridsAndGridsBoundary.builder()
+                .grids(grids)
+                .geoJson(geoJson)
+                .build();
     }
 
     // 获取每个网格中的影像(在后端判断包含)
