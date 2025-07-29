@@ -88,7 +88,7 @@ def get_cache_key(sensor_name: str, start_time: str, end_time: str, x: int, y: i
 router = APIRouter()
 
 @router.get("/{z}/{x}/{y}")
-async def get_tile(
+def get_tile(
     z: int, x: int, y: int,
     sensorName: str = Query(...),
     startTime: str = Query(...),

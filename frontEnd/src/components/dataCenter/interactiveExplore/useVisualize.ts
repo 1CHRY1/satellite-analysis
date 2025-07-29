@@ -3,12 +3,14 @@ import { useLayer } from "./useLayer";
 import { useFilter } from "./useFilterV3";
 import { useStats } from "./useStats";
 import * as MapOperation from '@/util/map/operation'
+import * as InteractiveExploreMapOps from '@/util/map/operation/interactive-explore'
 import { getOnTheFlyUrl, getRealtimeNoCloudUrl } from "@/api/http/satellite-data/visualize.api"
 import { ElMessage } from 'element-plus'
 import { message } from 'ant-design-vue'
 import { useI18n } from "vue-i18n";
 import { getCoverRegionSensorScenes } from "@/api/http/satellite-data";
 import { ezStore } from "@/store"
+import { getImageUrl } from "@/api/http/interactive-explore/visualize.api";
 
 
 // 使用一个对象来存储每个 Product Item 的显示状态
@@ -90,6 +92,10 @@ export const useVisualize = () => {
     }
 
     const selectedSensorName = ref('')
+    const handleShowImage = async (sensorName: string) => {
+        const url = getImageUrl(sensorName)
+        InteractiveExploreMapOps.map_addImageLayer(url)
+    }
     const handleShowImageInBoundary = async (sensorName: string, dateRange: Array<any>) => {
         const startTime = dateRange[0].format('YYYY-MM-DD')
         const endTime = dateRange[1].format('YYYY-MM-DD')
@@ -308,7 +314,7 @@ export const useVisualize = () => {
     const unPreviewVector = (index: number) => {
         previewVectorIndex.value = null
         previewVectorList.value[index] = false
-        MapOperation.map_destroyMVTLayer()
+        InteractiveExploreMapOps.map_destroyMVTLayer()
     }
 
     const handleShowVectorInBoundary = async (source_layer: string) => {
@@ -346,6 +352,7 @@ export const useVisualize = () => {
     return {
         eyeStates,
         addTerrainBaseMap,
+        handleShowImage,
         handleShowImageInBoundary,
         handleShowProductInBoundary,
         handleShowVectorInBoundary,

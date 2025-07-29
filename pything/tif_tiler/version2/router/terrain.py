@@ -99,7 +99,7 @@ router = APIRouter()
 
 # 修改主要的路由函数中的掩膜处理部分
 @router.get("/terrainRGB/{z}/{x}/{y}.png")
-async def get_tile(
+def get_tile(
     z: int, x: int, y: int,
     url: str = Query(...),
     grids_boundary: str = Query(None, description="GeoJSON polygon string (JSON.stringify from frontend)"),

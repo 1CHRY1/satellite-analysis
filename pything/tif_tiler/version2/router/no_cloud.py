@@ -71,7 +71,7 @@ def is_tile_covered(scene, lon_lats):
 router = APIRouter()
 
 @router.get("/{z}/{x}/{y}")
-async def get_tile(
+def get_tile(
     z: int, x: int, y: int,
     jsonUrl: str = Query(...),
 ):
@@ -292,7 +292,7 @@ async def get_tile(
 # # 2025-07-15 突然说要加什么全国亚米的，这里采用和上面相似的jsonUrl结构实现
 # # 注：大部分拷贝自无云一版图代码，只不过这里不用考虑云了，只考虑nodata
 # @router.get("/submeter/{z}/{x}/{y}")
-# async def get_submeter_tile(
+# def get_submeter_tile(
 #     z: int, x: int, y: int,
 #     jsonUrl: str = Query(...),
 # ):

@@ -2,28 +2,17 @@ import { ref } from 'vue'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import type { Marker } from 'mapbox-gl'
 import * as MapOperation from '@/util/map/operation'
+import * as InteractiveExploreMapOps from '@/util/map/operation/interactive-explore'
 import { mapManager } from '@/util/map/mapManager'
 import mapboxgl from 'mapbox-gl'
 import { getOneBandColorParamFromSceneObject, getRGBTileLayerParamFromSceneObject, getTerrainParamFromSceneObject } from '@/util/visualizeHelper'
+import type { POIInfo } from '@/type/interactive-explore/filter'
+import * as CommonMapOps from '@/util/map/operation/common'
 
 /**
  * 图层可视化
  * @returns 
  */
-
-export type POIInfo = {
-    // adcode: string,
-    // adname: string,
-    gcj02Lat: string,
-    gcj02Lon: string,
-    geometry: any,
-    id: string,
-    name: string,
-    address: string
-    pname: string
-    cityname: string
-    adname: string
-}
 
 export const useLayer = () => {
     
@@ -52,11 +41,11 @@ export const useLayer = () => {
     }
 
     /**
-     * 交互式探索中用到的图层操作函数
+     * 添加多边形边界图层
+     * @param boundary 边界
      */
-
     const addPolygonLayer = (boundary: any) => {
-        MapOperation.map_addPolygonLayer({
+        InteractiveExploreMapOps.map_addPolygonLayer({
             geoJson: boundary,
             id: 'UniqueLayer',
             lineColor: '#8fffff',
@@ -65,6 +54,10 @@ export const useLayer = () => {
         })
     }
 
+    /**
+     * 添加POI标记点
+     * @param selectedPOI 选中的POI
+     */
     const addPOIMarker = (selectedPOI: POIInfo) => {
         mapManager.withMap((m) => {
             marker.value = new mapboxgl.Marker()
@@ -73,7 +66,11 @@ export const useLayer = () => {
         })
     }
 
-    // addGridLayer是初步，这里是根据景的数量更新透明度
+    /**
+     * 添加网格图层
+     * @param gridRes 网格数据
+     * @param window 窗口
+     */
     const addGridLayer = (gridRes: any, window: any) => {
         // 渲染网格数据
         let gridFeature: FeatureCollection = {
@@ -90,10 +87,10 @@ export const useLayer = () => {
             }),
         }
     
-        MapOperation.map_addGridLayer(gridFeature)
-        MapOperation.draw_deleteAll()
+        InteractiveExploreMapOps.map_addGridLayer(gridFeature)
+        InteractiveExploreMapOps.draw_deleteAll()
         // fly to
-        MapOperation.map_fitView([
+        CommonMapOps.map_fitView([
             [window.bounds[0], window.bounds[1]],
             [window.bounds[2], window.bounds[3]],
         ])
@@ -165,7 +162,7 @@ export const useLayer = () => {
     }
 
     // addGridLayer是初步，这里是根据景的数量更新透明度
-    const updateFullSceneGridLayer = (allGrids: any, sceneGridsRes: any, totalImg: number) => {
+    const updateGridLayer = (allGrids: any) => {
         let gridFeature: FeatureCollection = {
             type: 'FeatureCollection',
             features: allGrids.map((item: any, index: number) => {
@@ -175,38 +172,32 @@ export const useLayer = () => {
                     properties: {
                         ...(item.properties || {}),
                         id: item.properties?.id ?? index, // 确保每个都有 id
-                        opacity: judgeGridOpacity(index, sceneGridsRes, totalImg),
+                        // opacity: judgeGridOpacity(index, sceneGridsRes, totalImg),
+                        opacity: 0.3,
                         rowId: item.rowId,
                         columnId: item.columnId,
                         resolution: item.resolution,
                         flag: true, // flag means its time to trigger the visual effect
-                        international: sceneGridsRes[index].international,
-                        national: sceneGridsRes[index].national,
-                        light: sceneGridsRes[index].light,
-                        radar: sceneGridsRes[index].radar,
-                        traditional: sceneGridsRes[index].traditional,
-                        ard: sceneGridsRes[index].ard,
+                        // international: sceneGridsRes[index].international,
+                        // national: sceneGridsRes[index].national,
+                        // light: sceneGridsRes[index].light,
+                        // radar: sceneGridsRes[index].radar,
+                        // traditional: sceneGridsRes[index].traditional,
+                        // ard: sceneGridsRes[index].ard,
                     },
                 }
             }),
         }
-        MapOperation.map_destroyGridLayer()
-        MapOperation.map_addGridLayer_coverOpacity(gridFeature)
-        MapOperation.draw_deleteAll()
-    }
-
-    // 基于覆盖度返回opacity
-    const judgeGridOpacity = (index: number, sceneGridsRes: any, totalImg: number) => {
-        let opacity = 0.01
-        opacity = (sceneGridsRes[index].scenes.length / totalImg) * 0.3
-        return opacity
+        InteractiveExploreMapOps.map_destroyGridLayer()
+        InteractiveExploreMapOps.map_addGridLayer(gridFeature)
+        // InteractiveExploreMapOps.draw_deleteAll()
     }
 
     const destroyLayer = async () => {
         try {
-            await MapOperation.map_destroyImagePolygon();
-            await MapOperation.map_destroyImagePreviewLayer();
-            await MapOperation.map_destroyGridLayer();
+            // await MapOperation.map_destroyImagePolygon();
+            // await MapOperation.map_destroyImagePreviewLayer();
+            await InteractiveExploreMapOps.map_destroyGridLayer();
         } catch (error) {
             console.warn('清理操作遇到问题:', error);
         }
@@ -221,13 +212,14 @@ export const useLayer = () => {
     }
 
     const clearAllShowingSensor = () => {
-        MapOperation.map_destroyRGBImageTileLayer()
-        MapOperation.map_destroySceneBoxLayer()
-        MapOperation.map_destroyMultiRGBImageTileLayer()
-        MapOperation.map_destroyMultiTerrainTileLayer()
-        MapOperation.map_destroyMultiOneBandColorLayer()
-        MapOperation.map_destroyMVTLayer()
-        MapOperation.map_destroyNoCloudLayer()
+        // MapOperation.map_destroyRGBImageTileLayer()
+        // MapOperation.map_destroySceneBoxLayer()
+        // MapOperation.map_destroyMultiRGBImageTileLayer()
+        // MapOperation.map_destroyMultiTerrainTileLayer()
+        // MapOperation.map_destroyMultiOneBandColorLayer()
+        InteractiveExploreMapOps.map_destroyImageLayer()
+        InteractiveExploreMapOps.map_destroyMVTLayer()
+        // MapOperation.map_destroyNoCloudLayer()
     }
 
     return {
@@ -238,7 +230,7 @@ export const useLayer = () => {
         removeUniqueLayer,
         addPOIMarker,
         addGridLayer,
-        updateFullSceneGridLayer,
+        updateGridLayer,
         clearAllShowingSensor,
         addMultiRGBImageTileLayer,
         addMultiTerrainTileLayer,

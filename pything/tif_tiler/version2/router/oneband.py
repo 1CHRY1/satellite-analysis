@@ -49,7 +49,7 @@ def tile_bounds(x, y, z):
 router = APIRouter()
 
 @router.get("/colorband/{z}/{x}/{y}.png")
-async def get_tile(
+def get_tile(
     z: int, x: int, y: int,
     url: str = Query(...),
     min: float = Query(-1, description="Minimum value of the color band"),
@@ -182,7 +182,7 @@ async def get_tile(
     
 
 @router.get("/box/{z}/{x}/{y}.png")
-async def get_box_tile(
+def get_box_tile(
     z: int, x: int, y: int,
     bbox: str = Query(..., description="Bounding box (WGS84): minx,miny,maxx,maxy"),
     url: str = Query(...),

@@ -62,7 +62,7 @@ def calc_tile_bounds(x, y, z):
 router = APIRouter()
 
 @router.get("/{z}/{x}/{y}")
-async def get_tile(
+def get_tile(
     z: int, x: int, y: int,
     sensorName: str = Query(...),
     startTime: str = Query(...),
@@ -111,7 +111,7 @@ async def get_tile(
         elapsed_time = end_time - start_time
         print(f"请求操作耗时：{elapsed_time:.6f} 秒")
 
-        if await request.is_disconnected():
+        if request.is_disconnected():
             print("disconnected")
             return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
 
@@ -175,12 +175,12 @@ async def get_tile(
         for scene in sorted_scene:
             scene_start = time.time()
 
-        if await request.is_disconnected():
+        if request.is_disconnected():
             print("disconnected")
             return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
 
         for scene in sorted_scene:
-            if await request.is_disconnected():
+            if request.is_disconnected():
                 print("disconnected")
                 return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
             

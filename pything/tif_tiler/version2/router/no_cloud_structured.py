@@ -83,7 +83,7 @@ def resolve_band_paths(scene):
 router = APIRouter()
 
 @router.get("/{z}/{x}/{y}")
-async def get_tile(z: int, x: int, y: int, jsonUrl: str = Query(...)):
+def get_tile(z: int, x: int, y: int, jsonUrl: str = Query(...)):
     start_time = time.time()
     try:
         json_data = requests.get(jsonUrl).json().get('scenes', [])
