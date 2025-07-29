@@ -77,7 +77,7 @@ def fetch_mosaic_definition(mosaic_url):
 router = APIRouter()
 
 @router.post("/create", summary="Create a mosaicJSON object based on the list of COG files")
-async def create_mosaic(
+def create_mosaic(
     files: List[str] = Body(..., description="COG paths list"),
     minzoom: int = Body(4, description="Minimum zoom level"),
     maxzoom: int = Body(20, description="Maximum zoom level"),
@@ -106,7 +106,7 @@ async def create_mosaic(
 
 
 @router.put("/update", summary="Update the mosaicJSON object based on the list of additional COG files")
-async def update_mosaicjson(
+def update_mosaicjson(
     files: List[str] = Body(..., description="COG paths list"),
     mosaic_url: str = Body(..., description="mosaicjson full path"),
     max_threads: int = Body(20, description="Maximum number of threads")
@@ -146,7 +146,7 @@ async def update_mosaicjson(
 
 
 @router.get("/mosaictile/{z}/{x}/{y}.png")
-async def mosaictile(
+def mosaictile(
     z: int, x: int, y: int,
     mosaic_url: str = Query(..., description="Mosaic JSON URL"),
     min: float = Query(0, description="Normalization minimum value"),
@@ -213,7 +213,7 @@ async def mosaictile(
 
 # 针对无云一版图计算结果mosaic进行波段计算分析
 @router.get("/analysis/{z}/{x}/{y}.png")
-async def analysis_tile(
+def analysis_tile(
     z: int, x: int, y: int,
     mosaic_url: str = Query(..., description="Mosaic JSON URL"),
     expression: str = Query(..., description="Expression to calculate (e.g. 'b1/b2+b3')"),

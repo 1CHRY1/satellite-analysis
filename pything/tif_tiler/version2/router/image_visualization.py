@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query, Response
+from fastapi import APIRouter, Query, Response, Request
 from rio_tiler.io import COGReader
 from rio_tiler.utils import render
 from rio_tiler.colormap import cmap
@@ -7,7 +7,7 @@ import numpy as np
 import os
 import requests
 import math
-from config import minio_config, TRANSPARENT_CONTENT
+from config import minio_config, common_config, TRANSPARENT_CONTENT
 import time
 
 ####### Helper ########################################################################################
@@ -61,8 +61,9 @@ def calc_tile_bounds(x, y, z):
 ####### Router ########################################################################################
 router = APIRouter()
 
-@router.get("/{z}/{x}/{y}")
-async def get_tile(
+@router.get("/{z}/{x}/{y}.png")
+def get_tile(
+    request: Request,
     z: int, x: int, y: int,
     sensorName: str = Query(...),
 ):
@@ -78,12 +79,23 @@ async def get_tile(
 
         # spring boot 接口
         t2 = time.time()
-        url = "http://192.168.1.127:8999/api/v1/modeling/example/noCloud/createNoCloudConfig"  # 测试使用，记得修改~~~~~~~~~~~~~~~
+        url = common_config['create_no_cloud_config_url']
         data = {
-        "sensorName": sensorName,
-        "points": points
+            "sensorName": sensorName,
+            "points": points
         }
-        json_response = requests.post(url, json=data).json()
+        
+        # 获取请求头中的认证信息
+        headers = {}
+        authorization = request.headers.get('Authorization')
+        if authorization:
+            headers['Authorization'] = authorization
+            
+        cookie = request.headers.get('Cookie')
+        if cookie:
+            headers['Cookie'] = cookie
+            
+        json_response = requests.post(url, json=data, headers=headers).json()
         print(f"[⏱] SpringBoot 请求耗时: {time.time() - t2:.3f} 秒")
 
         t3 = time.time()

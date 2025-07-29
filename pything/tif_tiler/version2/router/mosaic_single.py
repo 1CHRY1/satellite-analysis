@@ -78,7 +78,7 @@ def fetch_mosaic_definition(mosaic_url):
 router = APIRouter()
 
 @router.post("/create_rgb_mosaics", summary="为RGB三个波段分别创建mosaicJSON")
-async def create_rgb_mosaics(
+def create_rgb_mosaics(
     red_files: List[str] = Body(..., description="红波段COG文件列表"),
     green_files: List[str] = Body(..., description="绿波段COG文件列表"), 
     blue_files: List[str] = Body(..., description="蓝波段COG文件列表"),
@@ -119,7 +119,7 @@ def get_mosaic_definition(mosaic_url: str) -> Dict[str, Any]:
     cached = fetch_mosaic_definition_cached(mosaic_url)
     return json.loads(cached)
 
-async def get_rgb_tiles(
+def get_rgb_tiles(
     red_url: str, 
     green_url: str, 
     blue_url: str, 
@@ -133,13 +133,13 @@ async def get_rgb_tiles(
     # 并行获取三个mosaic定义
     # 使用安全的获取方式
     
-    red_def, green_def, blue_def = await asyncio.gather(
+    red_def, green_def, blue_def = asyncio.gather(
         asyncio.to_thread(get_mosaic_definition, red_url),
         asyncio.to_thread(get_mosaic_definition, green_url),
         asyncio.to_thread(get_mosaic_definition, blue_url)
     )
     
-    def_list = [red_def]
+    def_list = [red_def, green_def, blue_def]
     data_list = []
     for item in def_list:
         quadkey_zoom = item["minzoom"]
@@ -180,12 +180,12 @@ async def get_rgb_tiles(
     # green_task = mosaic_tiler(green_assets, x, y, z, tiler, pixel_selection=sel, nodata=0)
     # blue_task = mosaic_tiler(blue_assets, x, y, z, tiler, pixel_selection=sel, nodata=0)
     
-    # red_data, green_data, blue_data = await asyncio.gather(red_task, green_task, blue_task)
+    # red_data, green_data, blue_data = asyncio.gather(red_task, green_task, blue_task)
     
     return data_list[0]
 
 @router.get("/rgb_mosaictile/{z}/{x}/{y}.png")
-async def rgb_mosaictile(
+def rgb_mosaictile(
     z: int, x: int, y: int,
     red_mosaic_url: str = Query(..., description="红波段Mosaic JSON URL"),
     green_mosaic_url: str = Query(..., description="绿波段Mosaic JSON URL"),
@@ -202,7 +202,7 @@ async def rgb_mosaictile(
     try:
         # 并行获取三个波段数据
         start_time = time.time()
-        red_data = await get_rgb_tiles(
+        red_data = get_rgb_tiles(
             red_mosaic_url,
             green_mosaic_url,
             blue_mosaic_url,
@@ -236,7 +236,7 @@ async def rgb_mosaictile(
 
 
 # @router.get("/rgb_mosaictile/{z}/{x}/{y}.png")
-# async def rgb_mosaictile(
+# def rgb_mosaictile(
 #     z: int, x: int, y: int,
 #     red_mosaic_url: str = Query(..., description="红波段Mosaic JSON URL"),
 #     green_mosaic_url: str = Query(..., description="绿波段Mosaic JSON URL"),
@@ -253,9 +253,9 @@ async def rgb_mosaictile(
 #     try:
 #         start_time = time.time()
 #         # 获取三个波段的数据
-#         red_data = await get_single_band_tile(red_mosaic_url, z, x, y, pixel_selection)
-#         green_data = await get_single_band_tile(green_mosaic_url, z, x, y, pixel_selection)
-#         blue_data = await get_single_band_tile(blue_mosaic_url, z, x, y, pixel_selection)
+#         red_data = get_single_band_tile(red_mosaic_url, z, x, y, pixel_selection)
+#         green_data = get_single_band_tile(green_mosaic_url, z, x, y, pixel_selection)
+#         blue_data = get_single_band_tile(blue_mosaic_url, z, x, y, pixel_selection)
 #         end_time = time.time()
 #         elapsed_time = end_time - start_time
 #         print(f"get band tile操作耗时：{elapsed_time:.6f} 秒", flush=True)
@@ -291,7 +291,7 @@ async def rgb_mosaictile(
 #     except Exception as e:
 #         raise HTTPException(status_code=500, detail=str(e))
 
-# async def get_single_band_tile(mosaic_url: str, z: int, x: int, y: int, pixel_selection: str):
+# def get_single_band_tile(mosaic_url: str, z: int, x: int, y: int, pixel_selection: str):
 #     """从单个mosaicJSON获取瓦片数据"""
 #     mosaic_def = fetch_mosaic_definition(mosaic_url)
     

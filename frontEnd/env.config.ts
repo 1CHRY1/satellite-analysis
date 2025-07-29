@@ -41,6 +41,13 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
         tiler: 'http://192.168.1.127:31800',
         proxymap: 'http://localhost:5003',
     },
+    slk: {
+        api: 'http://192.168.1.127:8999',
+        realtime: 'http://192.168.1.127:5001',
+        websocket: 'http://192.168.1.127:8999/model/websocket',
+        tiler: 'http://localhost:8000',
+        proxymap: 'http://localhost:5003',
+    }
 }
 
 // 固定配置（不随环境变化）

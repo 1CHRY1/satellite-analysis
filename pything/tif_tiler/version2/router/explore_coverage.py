@@ -61,7 +61,7 @@ def calc_tile_bounds(x, y, z):
 router = APIRouter()
 
 @router.get("/{z}/{x}/{y}")
-async def get_tile(
+def get_tile(
     z: int, x: int, y: int,
     sensorName: str = Query(...),
     startTime: str = Query(...),
