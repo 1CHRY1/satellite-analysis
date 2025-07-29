@@ -9,7 +9,7 @@
             <button @click="handleLeftRotate" class="map-button">↪️</button>
             <div class="basemap-toggle-group">
                 <button
-                    class="basemap-toggle-btn"
+                    class="basemap-toggle-btn right-border"
                     :class="{ active: currentBasemap === 'DEM' }"
                     @click="switchBasemap('DEM')"
                 >
@@ -62,15 +62,17 @@ const props = defineProps({
 
 const cubeTimelineShow = ref(false)
 
-const currentBasemap = ref<'DEM' | 'DSM'>('DEM')
+const currentBasemap = ref<'DEM' | 'DSM' | 'None'>('None')
 
 function switchBasemap(type: 'DEM' | 'DSM') {
-  if (currentBasemap.value !== type) {
-    currentBasemap.value = type
-    // 这里调用你的底图切换方法，比如
-    // mapOperation.switchBasemap(type)
-    // 或者 emit('basemap-change', type)
-  }
+    if (currentBasemap.value === type) {
+        currentBasemap.value = 'None'
+    } else {
+        currentBasemap.value = type
+        // 这里调用你的底图切换方法，比如
+        // mapOperation.switchBasemap(type)
+        // 或者 emit('basemap-change', type)
+    }
 }
 
 const handleFitView = () => {
@@ -195,6 +197,10 @@ onUnmounted(() => {
 .basemap-toggle-btn:not(.active):hover {
   background: #f1f5f9;
   color: #2563eb;
+}
+
+.right-border {
+  border-right: 1px solid #e5e7eb;
 }
 
 :deep(.mapboxgl-popup-content) {
