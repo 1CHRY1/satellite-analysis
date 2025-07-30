@@ -100,7 +100,7 @@ const handleMenuClick = (item: menuItem) => {
 const router = useRouter()
 const handleLogout = () => {
     userStore.logout()
-    router.push('/login')
+    router.push('/home')
 }
 
 const handleClickOutside = (event: MouseEvent) => {

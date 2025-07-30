@@ -27,11 +27,11 @@
             <el-col :span="18" class="h-full">
                 <main class="border-box mx-[2vw] mt-[3vh] h-[calc(100%-3vh)] px-6">
                     <el-row class="mb-[30px] h-[60px]">
-                        <div class="mb-4 flex space-x-2">
+                        <div class="mb-4 flex space-x-2 gap-5">
                             <button @click="showMode='models'" :class="{'bg-blue-600': showMode==='models'}">
                                 全部工具
                             </button>
-                            <button @click="showMyTools" :class="{'bg-green-600': showMode==='myTools'}">
+                            <button @click="showMyTools" :class="{'bg-blue-600': showMode==='myTools'}">
                                 我的工具
                             </button>
                         </div>
