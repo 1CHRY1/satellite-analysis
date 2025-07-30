@@ -5,14 +5,14 @@ import { getRealtimeNoCloudUrl } from "@/api/http/satellite-data/visualize.api"
 import { ElMessage } from 'element-plus'
 import { useI18n } from "vue-i18n";
 import { ezStore } from "@/store"
-import { getDEMUrl, getSceneUrl, getVectorUrl } from "@/api/http/interactive-explore/visualize.api";
+import { getDEMUrl, getNDVIOrSVRUrl, getSceneUrl, getVectorUrl, get3DUrl } from "@/api/http/interactive-explore/visualize.api";
 import type { Marker } from 'mapbox-gl'
-import type { POIInfo } from '@/type/interactive-explore/filter'
+import type { POIInfo, ProductType } from '@/type/interactive-explore/filter'
 import * as CommonMapOps from '@/util/map/operation/common'
 import mapboxgl from 'mapbox-gl'
 import { mapManager } from '@/util/map/mapManager'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
-import { searchedSpatialFilterMethod, finalLandId, curGridsBoundary, vectorStats } from "./shared"
+import { searchedSpatialFilterMethod, finalLandId, curGridsBoundary, vectorStats, selectedGridResolution } from "./shared"
 // 使用一个对象来存储每个 Product Item 的显示状态
 const eyeStates = ref({});
 
@@ -139,9 +139,12 @@ export const useVisualize = () => {
                 }
             }),
         }
-        InteractiveExploreMapOps.map_destroyGridLayer()
+        destroyGridLayer()
         InteractiveExploreMapOps.map_addGridLayer(gridFeature)
         // InteractiveExploreMapOps.draw_deleteAll()
+    }
+    const destroyGridLayer = () => {
+        InteractiveExploreMapOps.map_destroyGridLayer()
     }
 
 
@@ -160,7 +163,7 @@ export const useVisualize = () => {
     const destroyExploreLayers = () => {
         destroyScene()
         destroyVector()
-        destroyDEM()
+        destroyProduct()
     }
     const destroyScene = () => {
         InteractiveExploreMapOps.map_destroySceneLayer()
@@ -193,6 +196,7 @@ export const useVisualize = () => {
             landId,
             source_layer,
             spatialFilterMethod: searchedSpatialFilterMethod.value,
+            resolution: selectedGridResolution.value,
         })
         InteractiveExploreMapOps.map_addMVTLayer(source_layer, url)
     }
@@ -208,8 +212,8 @@ export const useVisualize = () => {
     /**
      * 5. 交互探索 - 栅格专题可视化
      */
-    const showProductResult = async (dataType: string, themeName: string) => {
-        destroyProduct()
+    const showProductResult = async (dataType: ProductType, themeName: string) => {
+        destroyProduct(dataType)
         handleShowProduct(themeName, dataType)
     }
     const handleShowProduct = (themeName: string, dataType: string) => {
@@ -218,21 +222,73 @@ export const useVisualize = () => {
                 handleShowDEM(themeName)
                 break
             case 'dsm':
+                handleShowDEM(themeName)
+                break
+            case 'ndvi':
+                handleShowNDVIOrSVR(themeName)
+                break
+            case '3d':
+                handleShow3D(themeName)
+                break
+            case 'svr':
+                handleShowNDVIOrSVR(themeName)
                 break
         }
     }
     const handleShowDEM = async(themeName: string) => {
-        const url = getDEMUrl(themeName, curGridsBoundary.value)
+        const url = await getDEMUrl(themeName, curGridsBoundary.value)
         InteractiveExploreMapOps.map_addDEMLayer(url)
     }
-    const destroyProduct = () => {
-        destroyDEM()
-        // TODO: 删除其他产品图层
+    const handleShowNDVIOrSVR = async(themeName: string) => {
+        const url = await getNDVIOrSVRUrl(themeName, curGridsBoundary.value)
+        InteractiveExploreMapOps.map_addNDVIOrSVRLayer(url)
+    }
+    const handleShow3D = async(themeName: string) => {
+        const url = await get3DUrl(themeName, curGridsBoundary.value)
+        InteractiveExploreMapOps.map_add3DLayer(url)
+    }
+    const destroyProduct = (dataType?: ProductType) => {
+        if (dataType === undefined) {
+            destroyDEM()
+            destroy3D()
+            destroyNDVIOrSVR()
+            // TODO: 删除其他产品图层
+        } else {
+            switch (dataType) {
+                case 'dem':
+                    destroyDEM()
+                    break
+                case 'dsm':
+                    destroyDEM()
+                    break
+                case 'ndvi':
+                    destroyNDVIOrSVR()
+                    break
+                case '3d':
+                    destroy3D()
+                    break
+                case 'svr': 
+                    destroyNDVIOrSVR()
+                    break
+            }
+        }
     }
     const destroyDEM = () => {
         InteractiveExploreMapOps.map_destroyDEMLayer()
     }
+    const destroyNDVIOrSVR = () => {
+        InteractiveExploreMapOps.map_destroyNDVIOrSVRLayer()
+    }
+    const destroy3D = () => {
+        InteractiveExploreMapOps.map_destroy3DLayer()
+    }
 
+    /**
+     * 交互探索 - 栅格专题可视化 - 切换显示
+     * @param category 产品类型
+     * @param index 产品索引
+     * @param themeName 产品名称
+     */
     const toggleEye = (category: string, index: number, themeName: string) => {
         const label = category
         const key = `${label}_${index}`;
@@ -244,9 +300,9 @@ export const useVisualize = () => {
                     eyeStates.value[item] = false
                 }
             })
-            showProductResult(category, themeName)
+            showProductResult(category as ProductType, themeName)
         } else {
-            destroyProduct()
+            destroyProduct(category as ProductType)
         }
     };
     // 判断当前应该显示 Eye 还是 EyeOff
@@ -532,6 +588,7 @@ export const useVisualize = () => {
         showVectorResult,
         selectedSensorName,
         destroyExploreLayers,
+        destroyGridLayer,
         destroyScene,
         destroyVector,
         destroyDEM,
@@ -542,5 +599,6 @@ export const useVisualize = () => {
         addPolygonLayer,
         createGeoJSONFromBounds,
         marker,
+        destroyProduct,
     }
 }

@@ -152,7 +152,7 @@
                                     <DatabaseIcon :size="18" />
                                 </div>
                                 <h2 class="section-title">{{ t('datapage.explore.section_interactive.sectiontitle') }}</h2>
-                                <div class="section-icon absolute right-0 cursor-pointer" @click="clearAllShowingSensor">
+                                <div class="section-icon absolute right-0 cursor-pointer" @click="destroyExploreLayers">
                                     <a-tooltip>
                                         <template #title>{{ t('datapage.explore.section_interactive.clear') }}</template>
                                         <Trash2Icon :size="18" />
@@ -312,7 +312,7 @@
                                                         <a-tooltip>
                                                             <template #title>{{ t('datapage.explore.section_interactive.clear') }}</template>
                                                             <Trash2Icon :size="18" class="mt-4! ml-4! cursor-pointer"
-                                                                @click="clearAllShowingSensor" />
+                                                                @click="destroyScene" />
                                                         </a-tooltip>
                                                     </div>
                                                 </div>
@@ -451,13 +451,18 @@ import router from '@/router'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
-import { useFilter } from './useFilterV3'
-import { useStats } from './useStats'
-import { useLayer } from './useLayer'
+import { useFilter } from './useFilter'
 import { useVisualize } from './useVisualize'
 import { message } from 'ant-design-vue';
 const selectedVectorTableName = ref('')
-const { showSceneResult, toggleEye, shouldShowEyeOff, previewVectorList, showVectorResult, destroyVector, selectedSensorName } = useVisualize()
+const { 
+    // ------------------------ 数据检索 1.遥感影像可视化 -------------------------- //
+    showSceneResult,   selectedSensorName, destroyScene, destroyExploreLayers,
+    // ------------------------ 数据检索 2.矢量可视化 -------------------------- //
+    previewVectorList, showVectorResult, destroyVector,
+    // ------------------------ 数据检索 3.栅格产品可视化 -------------------------- //
+    toggleEye, shouldShowEyeOff,
+} = useVisualize()
 import {
     // ------------------------ 数据检索 1.空间位置 -------------------------- //
     selectedRegion, activeSpatialFilterMethod as activeTab, selectedPOI,
@@ -474,11 +479,10 @@ const {
     tabs, poiOptions, fetchPOIOptions, handleSelectTab,
     // ------------------------ 数据检索 2.格网分辨率 -------------------------- //
     gridOptions, allGrids, allGridCount, getAllGrid,
-    // ------------------------ 数据检索 4.筛选 -------------------------- //
+    // ------------------------ 数据检索 3.筛选 -------------------------- //
     doFilter: applyFilter, filterLoading, isFilterDone,
 } = useFilter()
 
-const { clearAllShowingSensor } = useLayer()
 const isExpand = ref<boolean>(true)
 const isRSExpand = ref<boolean>(true)
 const isVectorExpand = ref<boolean>(true)
