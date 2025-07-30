@@ -6,6 +6,7 @@ import nnu.mnr.satellite.model.dto.resources.GridVectorFetchDTO;
 import nnu.mnr.satellite.model.vo.resources.GridBoundaryVO;
 import nnu.mnr.satellite.model.vo.resources.GridSceneVO;
 import nnu.mnr.satellite.model.vo.resources.GridVectorVO;
+import nnu.mnr.satellite.model.vo.resources.GridsAndGridsBoundary;
 import nnu.mnr.satellite.service.resources.GridDataService;
 import nnu.mnr.satellite.service.resources.RegionDataService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,12 +39,12 @@ public class GridController {
     }
 
     @GetMapping("/grids/region/{regionId}/resolution/{resolution}")
-    public ResponseEntity<List<GridBoundaryVO>> getGridsByRegionAndResolution(@PathVariable Integer regionId, @PathVariable Integer resolution) throws IOException {
+    public ResponseEntity<GridsAndGridsBoundary> getGridsByRegionAndResolution(@PathVariable Integer regionId, @PathVariable Integer resolution) throws IOException {
         return ResponseEntity.ok(regionDataService.getGridsByRegionAndResolution(regionId, resolution));
     }
 
     @GetMapping("/grids/location/{locationId}/resolution/{resolution}")
-    public ResponseEntity<List<GridBoundaryVO>> getGridsFromLocation(@PathVariable String locationId, @PathVariable Integer resolution) throws IOException {
+    public ResponseEntity<GridsAndGridsBoundary> getGridsFromLocation(@PathVariable String locationId, @PathVariable Integer resolution) throws IOException {
         return ResponseEntity.ok(gridDataService.getGridsByLocationId(locationId, resolution));
     }
 

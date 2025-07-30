@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.model.vo.resources.GridBoundaryVO;
 import nnu.mnr.satellite.model.po.resources.Region;
+import nnu.mnr.satellite.model.vo.resources.GridsAndGridsBoundary;
 import nnu.mnr.satellite.model.vo.resources.RegionInfoVO;
 import nnu.mnr.satellite.model.vo.resources.ViewWindowVO;
 import nnu.mnr.satellite.mapper.resources.IRegionRepo;
@@ -90,9 +91,18 @@ public class RegionDataService {
                 .center(region.getCenter()).bounds(GeometryUtil.getGeometryBounds(region.getBoundary())).build();
     }
 
-    public List<GridBoundaryVO> getGridsByRegionAndResolution(Integer regionId, Integer resolution) throws IOException {
+    public GridsAndGridsBoundary getGridsByRegionAndResolution(Integer regionId, Integer resolution) throws IOException {
         Region region = getRegionById(regionId);
-        return TileCalculateUtil.getStrictlyCoveredRowColByRegionAndResolution(region.getBoundary(), resolution);
+        List<Integer[]> tileIds = TileCalculateUtil.getRowColByRegionAndResolution(region.getBoundary(), resolution);
+        Geometry gridsBoundary = GeometryUtil.getGridsBoundaryByTilesAndResolution(tileIds, resolution);
+        JSONObject geoJson = GeometryUtil.geometry2Geojson(gridsBoundary);
+        List<GridBoundaryVO> grids = TileCalculateUtil.getStrictlyCoveredRowColByRegionAndResolution(region.getBoundary(), resolution);
+
+
+        return GridsAndGridsBoundary.builder()
+                .grids(grids)
+                .geoJson(geoJson)
+                .build();
     }
 
     public String getAddressById(Integer regionId) {

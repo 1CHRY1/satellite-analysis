@@ -7,8 +7,8 @@ export const routes = [
         path: '/',
         redirect: '/home',
     },
-    {
-        path: '/home',
+    {   
+        path:'/home',
         // component: () => import('@/views/HomeView.vue'),
         // @ts-ignore
         component: () => import('@/views/home.vue'),
@@ -76,17 +76,17 @@ export const routes = [
     {
         path: '/login',
         // @ts-ignore
-        component: () => import('@/components/login/login.vue'),
+        component: () => import('@/components/login/login_window.vue'),
         meta: {
             requiresGuest: true,
         },
     },
-    {
-        path: '/register',
-        // @ts-ignore
-        component: () => import('@/components/login/register.vue'),
-        meta: {
-            requiresGuest: true,
-        },
-    },
+    // {
+    //     path: '/register',
+    //     // @ts-ignore
+    //     component: () => import('@/components/login/register.vue'),
+    //     meta: {
+    //         requiresGuest: true,
+    //     },
+    // },
 ]

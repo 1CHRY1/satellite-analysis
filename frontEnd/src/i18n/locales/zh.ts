@@ -183,7 +183,7 @@ export default{
   },
 
   signup:{
-    PaymentMethodChangeEventtitle:"注 册",
+    pagetitle:"注 册",
     descript:"请填写以下信息完成注册！",
     email:"邮 箱",
     intext_email:"请输入您的邮箱",

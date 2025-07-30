@@ -51,7 +51,7 @@ class HttpClient {
                     if (!refreshToken) {
                         // 没有 refreshToken，跳转登录页
                         userStore.logout()
-                        router.push('/login')
+                        router.push('/home')
                         return Promise.reject(error)
                     }
                     try {
@@ -78,7 +78,7 @@ class HttpClient {
                         }
                     } catch (err) {
                         console.error('刷新 Token 失败', err)
-                        router.push('/login')
+                        router.push('/home')
                         return Promise.reject(err)
                     }
                 }

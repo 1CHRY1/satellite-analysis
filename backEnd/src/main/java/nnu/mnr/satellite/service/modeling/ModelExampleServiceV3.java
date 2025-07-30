@@ -39,7 +39,7 @@ public class ModelExampleServiceV3 {
         SceneDataCache.UserSceneCache userSceneCache = SceneDataCache.getUserSceneCacheMap(cacheKey);
         if (userSceneCache == null) {
             return CommonResultVO.builder()
-                    .message("No corresponding data found, please log in again and retrieve the data")
+                    .message("No corresponding data found, please log in again or retrieve the data")
                     .data(cacheKey.split("_")[1])
                     .status(-1)
                     .build();
@@ -47,7 +47,7 @@ public class ModelExampleServiceV3 {
         List<SceneDesVO> scenesInfo = userSceneCache.scenesInfo;
         try {
             // 1. 生成配置ID
-            String configId = "nocloud_" + UUID.randomUUID().toString().replace("-", "");
+            String configId = "Visualization" + UUID.randomUUID().toString().replace("-", "");
             // 2. 将影像信息转换为JSON并上传到MinIO
             String jsonFileName = "VisualizationConfig/" + configId + ".json";
             String bucketName = "temp-files";
@@ -59,7 +59,7 @@ public class ModelExampleServiceV3 {
             return CommonResultVO.builder().status(1).message("success").data(configJson).build();
 
         } catch (Exception e) {
-            return CommonResultVO.builder().status(-1).message("Error creating no-cloud config: " + e.getMessage()).build();
+            return CommonResultVO.builder().status(-1).message("Error creating visualization config: " + e.getMessage()).build();
         }
     }
 

@@ -29,6 +29,8 @@
                 </div>
             </div>
         </section> -->
+        <login_window v-if="showLogin" @close="closeWindow" @switch="switchWindow"/>
+        <register_window v-if="showRegister" @close="closeWindow" @switch="switchWindow"/>
         <!-- Hero Section -->
         <section class="relative h-[calc(100vh-56px)] w-full bg-cover bg-center bg-no-repeat"
             :style="{ backgroundImage: `url(${banner})` }">
@@ -54,10 +56,6 @@
                 </div>
             </div>
         </section>
-
-
-
-
 
         <!-- Features Section -->
         <section class="bg-white py-16">
@@ -398,6 +396,9 @@
 </template>
 
 <script setup lang="ts">
+import login_window from '@/components/login/login_window.vue';
+import register_window from '@/components/login/register_window.vue';
+import { ref,computed } from 'vue';
 import {
     Satellite,
     // MenuIcon,
@@ -416,10 +417,40 @@ import {
 import { useRouter } from 'vue-router';
 import logo from '@/assets/image/logo2.png'
 import banner from "@/assets/image/home/banner.jpeg"
+import { useUserStore } from '@/store';
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
 const router = useRouter();
+// 获取用户数据
+const userData = useUserStore()
+
+const showLogin = ref(false)
+
+const updateShowLogin = () => {
+  showLogin.value = !userData.user || !userData.user.id || userData.user.id === '???'
+}
+
+// 调用此方法来更新 showLogin
+updateShowLogin()
+
+const showRegister = ref(false)
+
+const switchWindow = () =>{
+    showLogin.value = !showLogin.value
+    console.log(showRegister.value)
+    showRegister.value = !showRegister.value
+    console.log('切换成功',showRegister.value)
+}
+
+// 关闭弹窗的函数
+const closeWindow = () => {
+  console.log('弹窗已关闭')
+  showLogin.value = false 
+  showRegister.value = false
+}
+
+
 
 const jumpToOGMS = () => {
     const OGMS_URL = 'https://geomodeling.njnu.edu.cn/'
