@@ -133,11 +133,14 @@ def get_rgb_tiles(
     # 并行获取三个mosaic定义
     # 使用安全的获取方式
     
-    red_def, green_def, blue_def = asyncio.gather(
-        asyncio.to_thread(get_mosaic_definition, red_url),
-        asyncio.to_thread(get_mosaic_definition, green_url),
-        asyncio.to_thread(get_mosaic_definition, blue_url)
-    )
+    red_def = get_mosaic_definition(red_url)
+    green_def = get_mosaic_definition(green_url)
+    blue_def = get_mosaic_definition(blue_url)
+    # red_def, green_def, blue_def = asyncio.gather(
+    #     asyncio.to_thread(get_mosaic_definition, red_url),
+    #     asyncio.to_thread(get_mosaic_definition, green_url),
+    #     asyncio.to_thread(get_mosaic_definition, blue_url)
+    # )
     
     def_list = [red_def, green_def, blue_def]
     data_list = []
@@ -176,13 +179,8 @@ def get_rgb_tiles(
     # print(red_assets)
     # print(green_assets)
     # print(blue_assets)
-    # red_task = mosaic_tiler(red_assets, x, y, z, tiler, pixel_selection=sel, nodata=0)
-    # green_task = mosaic_tiler(green_assets, x, y, z, tiler, pixel_selection=sel, nodata=0)
-    # blue_task = mosaic_tiler(blue_assets, x, y, z, tiler, pixel_selection=sel, nodata=0)
     
-    # red_data, green_data, blue_data = asyncio.gather(red_task, green_task, blue_task)
-    
-    return data_list[0]
+    return data_list
 
 @router.get("/rgb_mosaictile/{z}/{x}/{y}.png")
 def rgb_mosaictile(
@@ -202,7 +200,7 @@ def rgb_mosaictile(
     try:
         # 并行获取三个波段数据
         start_time = time.time()
-        red_data = get_rgb_tiles(
+        data_list = get_rgb_tiles(
             red_mosaic_url,
             green_mosaic_url,
             blue_mosaic_url,
@@ -214,10 +212,18 @@ def rgb_mosaictile(
         print(f"请求操作耗时：{elapsed_time:.6f} 秒")
         
         
-        red_img, red_mask = red_data
+        red_img, red_mask = data_list[0]
+        green_img, green_mask = data_list[1]
+        blue_img, blue_mask = data_list[2]
+        
         
         
         red_normalized = normalize(red_img, min_red, max_red)
+        green_normalized = normalize(green_img, min_green, max_green)
+        blue_normalized = normalize(blue_img, min_blue, max_blue)
+        
+        rgb_img = np.stack([red_normalized[0], green_normalized[0], blue_normalized[0]])
+        combined_mask = red_mask & green_mask & blue_mask
         
         # 合成RGB图像
         
@@ -228,7 +234,7 @@ def rgb_mosaictile(
         # 调试日志（生产环境可移除）
         print(f"Processed tile z={z} x={x} y={y}")
         
-        content = render(red_normalized[0], mask=red_mask)
+        content = render(rgb_img, mask=combined_mask)
         return Response(content=content, media_type="image/png")
         
     except Exception as e:

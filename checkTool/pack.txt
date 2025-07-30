@@ -1,0 +1,1 @@
+nuitka --standalone --jobs=14 --remove-output ./check.py

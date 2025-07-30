@@ -1,7 +1,5 @@
 import { ref, computed } from 'vue'
 import { type SpatialFilterMethod, type POIInfo, type FilterTab } from '@/type/interactive-explore/filter'
-import type { RegionValues } from 'v-region'
-import dayjs, { Dayjs } from 'dayjs'
 import { useExploreStore } from '@/store/exploreStore'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
@@ -23,61 +21,25 @@ import {
     getThemeStatsByRegionFilter,
     getThemeStatsByPOIFilter
 } from '@/api/http/interactive-explore/filter.api'
-import type { SceneStats, VectorStats, ThemeStats } from '@/api/http/interactive-explore/filter.type'
 import { useLayer } from './useLayer'
+import { useVisualize } from './useVisualize'
 import { ezStore } from "@/store"
-const { createGeoJSONFromBounds, marker, addPolygonLayer, destroyLayer, removeUniqueLayer,
-    addPOIMarker, addGridLayer, updateGridLayer } = useLayer()
-
+import {
+    searchedSpatialFilterMethod,
+    activeSpatialFilterMethod,
+    selectedRegion,
+    selectedPOI,
+    finalLandId,
+    selectedGridResolution,
+    selectedDateRange,
+    curGridsBoundary,
+    sceneStats,
+    vectorStats,
+    themeStats
+} from './shared'
+const { destroyLayer } = useLayer()
 
 const exploreData = useExploreStore()
-
-/**
- * 数据检索全局变量 - 1.空间位置
- */
-// 选中的空间筛选方法(用于实际检索)
-const searchedSpatialFilterMethod = ref<SpatialFilterMethod>('region')
-// 激活的空间筛选方法(用于展示)
-const activeSpatialFilterMethod = ref<SpatialFilterMethod>('region')
-const selectedRegion = ref<RegionValues>({
-    province: '370000',
-    city: '370100',
-    area: '',
-})
-const selectedPOI = ref<POIInfo>()
-// 获取region/poi的id的计算属性，称为最终的地物id
-const finalLandId = computed(() => {
-    let curSpatialFilterMethod: SpatialFilterMethod
-    if (searchedSpatialFilterMethod.value === 'poi') {
-        curSpatialFilterMethod = 'poi'
-    } else if (searchedSpatialFilterMethod.value === 'region') {
-        curSpatialFilterMethod = 'region'
-    } else if (activeSpatialFilterMethod.value === 'poi') {
-        curSpatialFilterMethod = 'poi'
-    } else {
-        curSpatialFilterMethod = 'region'
-    }
-
-    if (curSpatialFilterMethod === 'poi') {
-        if (!selectedPOI.value) return 'None'
-        return selectedPOI.value?.id
-    }
-    let info = selectedRegion.value
-    if (info.area) return `${info.area}`
-    if (info.city) return `${info.city}`
-    if (info.province) return `${info.province}`
-    return '100000' // 默认中国
-})
-
-/**
- * 数据检索全局变量 - 2.格网分辨率
- */
-const selectedGridResolution = ref<number>(20)
-
-/**
- * 数据检索全局变量 - 3.时间范围
- */
-const selectedDateRange = ref([dayjs('2025-05-01'), dayjs('2025-06-30')])
 
 
 /**
@@ -85,6 +47,8 @@ const selectedDateRange = ref([dayjs('2025-05-01'), dayjs('2025-06-30')])
  */
 export const useFilter = () => {
     const { t } = useI18n()
+    const { createGeoJSONFromBounds, marker, addPolygonLayer, addPOIMarker, addGridLayer, updateGridLayer, destroyUniqueLayer } = useVisualize()
+
     
     /**
      * 数据检索变量 - 1.空间位置
@@ -149,7 +113,6 @@ export const useFilter = () => {
      * 数据检索变量 - 2.格网分辨率
      */
     const gridOptions = [1, 2, 5, 10, 15, 20, 25, 30, 40, 50, 100, 200, 500, 1000]
-    const curGridsBoundary = ref()
     const allGrids = ref([])
     const allGridCount = ref(0)
 
@@ -177,7 +140,7 @@ export const useFilter = () => {
             window = await getRegionPosition(tempLandId.value)
         } else if (activeSpatialFilterMethod.value === 'poi') {
             gridRes = await getGridByPOIAndResolution(tempLandId.value, selectedGridResolution.value)
-            removeUniqueLayer()
+            destroyUniqueLayer()
             allGrids.value = gridRes.grids
             allGridCount.value = gridRes.grids.length
             curGridsBoundary.value = gridRes.geoJson
@@ -195,17 +158,6 @@ export const useFilter = () => {
     /**
      * 数据检索函数及统计信息获取
      */
-    // 统计信息
-    const sceneStats = ref<SceneStats.SceneStatsResponse>({
-        total: 0,
-        coverage: '0.00%',
-        category: []
-    })
-    const vectorStats = ref<VectorStats.VectorStatsResponse>([])
-    const themeStats = ref<ThemeStats.ThemeStatsResponse>({
-        total: 0,
-        category: []
-    })
     // 筛选loading状态
     const filterLoading = ref(false)
     // 筛选是否完成
@@ -236,7 +188,7 @@ export const useFilter = () => {
         if (searchedSpatialFilterMethod.value === 'region') {
             sceneStatsRes = await getSceneStatsByRegionFilter(regionFilter)
             vectorsRes = await getVectorsByRegionFilter(regionFilter)
-            // themeStatsRes = await getThemeStatsByRegionFilter(regionFilter)
+            themeStatsRes = await getThemeStatsByRegionFilter(regionFilter)
         } else if (searchedSpatialFilterMethod.value === 'poi') {
             sceneStatsRes = await getSceneStatsByPOIFilter(poiFilter)
             vectorsRes = await getVectorsByPOIFilter(poiFilter)
@@ -244,7 +196,7 @@ export const useFilter = () => {
         }
         sceneStats.value = sceneStatsRes
         vectorStats.value = vectorsRes
-        // themeStats.value = themeStatsRes
+        themeStats.value = themeStatsRes
 
         syncToGridExplore()
         syncToDataPrepare()
@@ -267,7 +219,8 @@ export const useFilter = () => {
         updateGridLayer(allGrids.value)
         ezStore.set('sceneStats', sceneStats.value)
         ezStore.set('vectorStats', vectorStats.value)
-        // ezStore.set('themeStats', themeStats.value)
+        ezStore.set('themeStats', themeStats.value)
+        ezStore.set('curGridsBoundary', curGridsBoundary.value)
     }
 
     /**
@@ -289,25 +242,15 @@ export const useFilter = () => {
 
     return {
         gridOptions,
-        selectedGridResolution,
-        selectedRegion,
-        selectedDateRange,
         allGrids,
         allGridCount,
-        selectedPOI,
         poiOptions,
         fetchPOIOptions,
         getAllGrid,
-        activeSpatialFilterMethod,
         tabs,
         handleSelectTab,
-        searchedSpatialFilterMethod,
-        finalLandId,
         doFilter,
         filterLoading,
         isFilterDone,
-        sceneStats,
-        vectorStats,
-        themeStats
     }
 }

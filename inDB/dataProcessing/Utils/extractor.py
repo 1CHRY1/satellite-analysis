@@ -4,7 +4,7 @@ import uuid
 from types import SimpleNamespace
 import sys
 import shutil
-
+import time
 from osgeo import gdal, osr
 import json
 from dataProcessing.Utils.minioUtil import uploadLocalFile
@@ -323,7 +323,15 @@ def upload_data(scene_info):
         else:
             print(f"\033[91m[ERROR] Invalid COG file: {image_info['file_path']}\033[0m")
             return False
-        uploadLocalFile(path, DB_CONFIG["MINIO_IMAGES_BUCKET"], image_info["tif_path"])
+        retry_count = 0
+        while not uploadLocalFile(path, DB_CONFIG["MINIO_IMAGES_BUCKET"], image_info["tif_path"]):
+            print(f"\033[91m[ERROR] Failed to upload image file: {path}\033[0m")
+            print(f"\033[91m[ERROR] Retrying ...\033[0m")
+            retry_count += 1
+            time.sleep(1)
+            if retry_count > 3:
+                print(f"\033[91m[ERROR] Retry 3 times, skipping...\033[0m")
+                return False
     # 上传云量波段
     if SCENE_CONFIG.get("CLOUD_PATH") is not None:
         if check_tif_cog(SCENE_CONFIG["CLOUD_PATH"]):
@@ -331,7 +339,15 @@ def upload_data(scene_info):
         else:
             print(f"\033[91m[ERROR] Invalid COG file: {SCENE_CONFIG['CLOUD_PATH']}\033[0m")
             return False
-        uploadLocalFile(path, DB_CONFIG["MINIO_IMAGES_BUCKET"], scene_info["cloud_path"])
+        retry_count = 0
+        while not uploadLocalFile(path, DB_CONFIG["MINIO_IMAGES_BUCKET"], scene_info["cloud_path"]):
+            print(f"\033[91m[ERROR] Failed to upload cloud file: {path}\033[0m")
+            print(f"\033[91m[ERROR] Retrying ...\033[0m")
+            retry_count += 1
+            time.sleep(1)
+            if retry_count > 3:
+                print(f"\033[91m[ERROR] Retry 3 times, skipping...\033[0m")
+                return False
     return True
 
 def main(object_prefix):

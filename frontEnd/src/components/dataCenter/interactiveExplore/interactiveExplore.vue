@@ -305,7 +305,7 @@
                                                     </select>
                                                     <div class="flex flex-row items-center">
                                                         <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
-                                                            @click="handleShowImage(selectedSensorName)"
+                                                            @click="showSceneResult(selectedSensorName)"
                                                             :disabled="!selectedSensorName">
                                                             {{ t('datapage.explore.section_interactive.button') }}
                                                         </a-button>
@@ -342,7 +342,7 @@
                                                 <div class="absolute right-0 cursor-pointer">
                                                     <a-tooltip>
                                                         <template #title>{{t('datapage.history.preview')}}</template>
-                                                        <Eye v-if="previewVectorList[index]" @click="unPreviewVector(index)" :size="16" class="cursor-pointer"/>
+                                                        <Eye v-if="previewVectorList[index]" @click="destroyVector(index)" :size="16" class="cursor-pointer"/>
                                                         <EyeOff v-else :size="16" @click="showVectorResult(item.tableName, index)" class="cursor-pointer"/>
                                                     </a-tooltip>
                                                 </div>
@@ -383,22 +383,16 @@
                                             </div>
 
                                             <div v-show="isProductsItemExpand[index]">
-                                                <div v-for="(item, index) in themeStats.category" class="config-item mt-1 mb-2" :key="index">
+                                                <div v-for="(themeName, idx) in themeStats?.dataset?.[category]?.dataList" class="config-item mt-1 mb-2" :key="idx">
                                                     <div class="config-label relative">
                                                         <Image :size="16" class="config-icon" />
-                                                        <span>{{ themeStats?.dataset?.[category]?.label }}</span>
-                                                    </div>
-                                                    <div v-for="(item, index) in themeStats?.dataset?.[category]?.dataList" class="config-item mt-1 mb-2" :key="index">
-                                                        <div class="config-label relative">
-                                                            <Image :size="16" class="config-icon" />
-                                                            <span>{{ item }}</span>
-                                                            <div class="absolute right-0 cursor-pointer">
-                                                                <a-tooltip>
-                                                                    <template #title>{{t('datapage.history.preview')}}</template>
-                                                                    <Eye v-if="shouldShowEyeOff(category, index)" @click="toggleEye(category, index, item)" :size="16" class="cursor-pointer"/>
-                                                                    <EyeOff v-else :size="16" @click="toggleEye(category, index, item)" class="cursor-pointer"/>
-                                                                </a-tooltip>
-                                                            </div>
+                                                        <span>{{ themeName }}</span>
+                                                        <div class="absolute right-0 cursor-pointer">
+                                                            <a-tooltip>
+                                                                <template #title>{{t('datapage.history.preview')}}</template>
+                                                                <Eye v-if="shouldShowEyeOff(category, idx)" @click="toggleEye(category, idx, themeName)" :size="16" class="cursor-pointer"/>
+                                                                <EyeOff v-else :size="16" @click="toggleEye(category, idx, themeName)" class="cursor-pointer"/>
+                                                            </a-tooltip>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -463,19 +457,27 @@ import { useLayer } from './useLayer'
 import { useVisualize } from './useVisualize'
 import { message } from 'ant-design-vue';
 const selectedVectorTableName = ref('')
-
-const {
+const { showSceneResult, toggleEye, shouldShowEyeOff, previewVectorList, showVectorResult, destroyVector, selectedSensorName } = useVisualize()
+import {
     // ------------------------ 数据检索 1.空间位置 -------------------------- //
-    selectedRegion, activeSpatialFilterMethod: activeTab, tabs, selectedPOI, poiOptions, fetchPOIOptions, handleSelectTab,
+    selectedRegion, activeSpatialFilterMethod as activeTab, selectedPOI,
     // ------------------------ 数据检索 2.格网分辨率 -------------------------- //
-    gridOptions, selectedGridResolution, allGrids, allGridCount, getAllGrid,
+    selectedGridResolution, curGridsBoundary,
     // ------------------------ 数据检索 3.时间范围 -------------------------- //
     selectedDateRange,
     // ------------------------ 数据检索 4.筛选 -------------------------- //
-    doFilter: applyFilter, filterLoading, isFilterDone, sceneStats, vectorStats, themeStats
+    sceneStats, vectorStats, themeStats
+} from './shared'
+
+const {
+    // ------------------------ 数据检索 1.空间位置 -------------------------- //
+    tabs, poiOptions, fetchPOIOptions, handleSelectTab,
+    // ------------------------ 数据检索 2.格网分辨率 -------------------------- //
+    gridOptions, allGrids, allGridCount, getAllGrid,
+    // ------------------------ 数据检索 4.筛选 -------------------------- //
+    doFilter: applyFilter, filterLoading, isFilterDone,
 } = useFilter()
 
-const { handleShowImage, handleShowImageInBoundary, handleCreateNoCloudTiles: handleOnTheFly, toggleEye, shouldShowEyeOff, previewVectorList, showVectorResult, unPreviewVector, selectedSensorName } = useVisualize()
 const { clearAllShowingSensor } = useLayer()
 const isExpand = ref<boolean>(true)
 const isRSExpand = ref<boolean>(true)
