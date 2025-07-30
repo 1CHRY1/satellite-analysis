@@ -26,9 +26,7 @@ def uploadFileToMinio(buffer, dataLength, bucketName, objectName):
         found = client.bucket_exists(bucketName)
         if not found:
             client.make_bucket(bucketName)
-        else:
-            print(f"[INFO] Bucket '{bucketName}' already exists.")
-
+        print(f"[INFO] Uploading file to bucket '{bucketName}' as '{objectName}'.")
         client.put_object(
             bucketName,
             objectName,
@@ -36,17 +34,35 @@ def uploadFileToMinio(buffer, dataLength, bucketName, objectName):
             dataLength
         )
         print(f"[SUCCESS] File has been successfully uploaded to bucket '{bucketName}' as '{objectName}'.")
+        return True
 
     except S3Error as e:
         print(f"\033[91m[ERROR] Error occurred: {e}\033[0m")
-
+        # ✅ CHANGED: fallback when incomplete body or other stream-related issues occur
+        if "IncompleteBody" in str(e) or "not enough data" in str(e):
+            try:
+                print("[INFO] Retrying with length=-1 and stream mode...")  # ✅ CHANGED
+                buffer.seek(0)  # ✅ CHANGED
+                client.put_object(
+                    bucketName,
+                    objectName,
+                    data=buffer,
+                    length=-1,
+                    part_size=64 * 1024 * 1024  # 64MB，最多支持64G左右文件
+                )
+                print(f"[SUCCESS] Fallback upload successful for '{objectName}'.")  # ✅ CHANGED
+                return True
+            except Exception as retry_e:
+                print(f"\033[91m[ERROR] Fallback upload failed: {retry_e}\033[0m")  # ✅ CHANGED
+        return False
 
 def uploadLocalFile(filePath: str, bucketName: str, objectName: str):
     with open(filePath, "rb") as file_data:
         file_bytes = file_data.read()
         dataLength = len(file_bytes)
         buffer_stream = io.BytesIO(file_bytes)
-        uploadFileToMinio(buffer_stream, dataLength, bucketName, objectName)
+        buffer_stream.seek(0)
+        return uploadFileToMinio(buffer_stream, dataLength, bucketName, objectName)
 
 
 def upload_file_by_mc(file_path, bucket, object_prefix):

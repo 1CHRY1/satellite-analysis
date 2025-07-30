@@ -182,7 +182,7 @@ def mosaictile(
         
         # Step 4: Get tile from mosaic
         img, mask = mosaic_tiler(assets, x, y, z, tiler, pixel_selection=sel, nodata=0)
-        img = img.astype(np.uint8)
+        # img = img.astype(np.uint8)
         if img is None:
             return Response(status_code=204)
         
