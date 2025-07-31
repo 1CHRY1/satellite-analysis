@@ -234,7 +234,7 @@ def get_box_tile(
         final_mask_uint8 = final_mask.astype("uint8") * 255
 
         # 拉伸增强
-        b_min, b_max = get_percentile_range(img[0], mask, nodata, normalize_level)
+        # b_min, b_max = get_percentile_range(img[0], mask, nodata, normalize_level)
 
         normed = normalize(img[0], b_min, b_max)
         

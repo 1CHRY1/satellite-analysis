@@ -432,7 +432,7 @@ import { ref, computed, type Ref, watch, reactive, onMounted, provide,inject } f
 import { RegionSelects } from 'v-region'
 import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'
 import { formatTime } from '@/util/common'
-import * as MapOperation from '@/util/map/operation'
+import * as InteractiveExploreMapOps from '@/util/map/operation/interactive-explore'
 import { mapManager } from '@/util/map/mapManager'
 import subtitle from '../subtitle.vue';
 import { ezStore } from '@/store'
@@ -544,7 +544,7 @@ onMounted(async() => {
     // 最后添加边界（确保在最上层）
     setTimeout(() => {
         if (exploreData.load){
-            MapOperation.map_addPolygonLayer({
+            InteractiveExploreMapOps.map_addPolygonLayer({
                 geoJson: exploreData.boundary,
                 id: 'UniqueLayer',
                 lineColor: '#8fffff'
