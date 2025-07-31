@@ -154,10 +154,12 @@ export const useVisualize = () => {
      */
     const selectedSensorName = ref('')
     const showSceneResult = async (sensorName: string) => {
-        const stopLoading = message.loading(t('datapage.explore.message.loading'))
+        const stopLoading = message.loading('正在加载，请稍后...', 0)
         destroyScene()
         handleShowScene(sensorName)
-        stopLoading()
+        setTimeout(() => {
+            stopLoading()
+        }, 5000)
     }
     const handleShowScene = async (sensorName: string) => {
         const url = getSceneUrl(sensorName)
@@ -190,9 +192,13 @@ export const useVisualize = () => {
             ElMessage.warning(t('datapage.explore.message.filtererror_choose'))
             return
         }
+        const stopLoading = message.loading('正在加载，请稍后...', 0)
         previewVectorIndex.value = index
         previewVectorList.value[index] = true
         handleShowVector(tableName, finalLandId.value)
+        setTimeout(() => {
+            stopLoading()
+        }, 5000)
     }
     const handleShowVector = async(source_layer: string, landId: string) => {
         const url = getVectorUrl({
@@ -216,8 +222,12 @@ export const useVisualize = () => {
      * 5. 交互探索 - 栅格专题可视化
      */
     const showProductResult = async (dataType: ProductType, themeName: string) => {
+        const stopLoading = message.loading('正在加载，请稍后...', 0)
         destroyProduct(dataType)
         handleShowProduct(themeName, dataType)
+        setTimeout(() => {
+            stopLoading()
+        }, 5000)
     }
     const handleShowProduct = (themeName: string, dataType: string) => {
         switch (dataType) {

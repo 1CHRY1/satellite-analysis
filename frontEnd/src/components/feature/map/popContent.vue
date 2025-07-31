@@ -260,7 +260,6 @@ import bus from '@/store/bus'
 import Vue3DraggableResizable from 'vue3-draggable-resizable'
 import 'vue3-draggable-resizable/dist/Vue3DraggableResizable.css'
 import { ezStore } from '@/store'
-import * as MapOperation from '@/util/map/operation'
 import { GetSuperResolution } from '@/api/http/satellite-data/visualize.api'
 import { ElMessage } from 'element-plus'
 import { getCaseStatus, getCaseBandsResult} from '@/api/http/satellite-data'
@@ -268,7 +267,8 @@ import type { GridData, MultiImageInfoType, PopupTab, SceneMethod } from '@/type
 import type { Grid } from '@/api/http/interactive-explore/grid.type'
 import { getThemesInGrid } from '@/api/http/interactive-explore/grid.api'
 import { getScenesInGrid } from '@/api/http/interactive-explore/grid.api'
-
+import * as GridExploreMapOps from '@/util/map/operation/grid-explore'
+import { getGridVectorUrl } from '@/api/http/interactive-explore/visualize.api'
 /**
  * 1. 公共变量
  */
@@ -339,9 +339,10 @@ const handleVisualize = () => {
  */
 const handleRemove = () => {
     previewIndex.value = null
-    MapOperation.map_destroyGridRGBImageTileLayer(gridData.value)
-    MapOperation.map_destroyGridMVTLayer()
-    MapOperation.map_destroyGridOneBandColorTileLayer(gridData.value)
+    GridExploreMapOps.map_destroyGridDEMLayer(gridData.value)
+    GridExploreMapOps.map_destroyGridMVTLayer()
+    GridExploreMapOps.map_destroyGrid3DLayer(gridData.value)
+    GridExploreMapOps.map_destroyGridNDVIOrSVRLayer(gridData.value)
 }
 /**
  * 初始化网格
@@ -627,7 +628,8 @@ const handleSelectVector = (index: number) => {
 }
 const handleVectorVisualize = (tableName: string) => {
     previewIndex.value = gridData.value.vectors.findIndex((item) => item.tableName === tableName)
-    MapOperation.map_addGridMVTLayer(tableName, gridData.value.columnId, gridData.value.rowId, gridData.value.resolution)
+    const url = getGridVectorUrl(gridData.value, tableName)
+    GridExploreMapOps.map_addGridMVTLayer(tableName, url)
 }
 
 /**
@@ -675,8 +677,9 @@ const handleProductVisualize = () => {
     }
 
     // 所有的它都想看
-    if (selectedProductType.value === '全选') {
-        if (selectedProduct.value === '全选') {
+    if (selectedProduct.value === '全选') {
+        // 所有专题、所有产品
+        if (selectedProductType.value === '全选') {
             for (const category of gridData.value.themeRes.category) {
                 for (const theme of gridData.value.themeRes.dataset[category].dataList) {
                     theme.dataType = category
@@ -684,6 +687,19 @@ const handleProductVisualize = () => {
                 }
             }
         } else {
+            // 指定专题、所有产品
+            for (const category of gridData.value.themeRes.category) {
+                for (const theme of gridData.value.themeRes.dataset[category].dataList) {
+                    theme.dataType = category
+                    if (gridData.value.themeRes.dataset[category].label === selectedProductType.value) {
+                        gridAllThemes.push(theme)
+                    }
+                }
+            }
+        }
+    } else {
+        // 所有专题、指定产品
+        if (selectedProductType.value === '全选') {
             for (const category of gridData.value.themeRes.category) {
                 for (const theme of gridData.value.themeRes.dataset[category].dataList) {
                     theme.dataType = category
@@ -692,21 +708,14 @@ const handleProductVisualize = () => {
                     }
                 }
             }
-        }
-    } else {
-        let dataType = ''
-        for (const category of gridData.value.themeRes.category) {
-            if (gridData.value.themeRes.dataset[category].label === selectedProductType.value) {
-                dataType = category
-                break
-            }
-        }
-        for (const category of gridData.value.themeRes.category) {
-            for (const theme of gridData.value.themeRes.dataset[category].dataList) {
-                if (dataType === theme.dataType && selectedProduct.value === '全选') {
-                    gridAllThemes.push(theme)
-                } else if (dataType === theme.dataType && selectedProduct.value === theme.sensorName) {
-                    gridAllThemes.push(theme)
+        } else {
+            // 指定专题、指定产品
+            for (const category of gridData.value.themeRes.category) {
+                for (const theme of gridData.value.themeRes.dataset[category].dataList) {
+                    theme.dataType = category
+                    if (theme.sensorName === selectedProduct.value) {
+                        gridAllThemes.push(theme)
+                    }
                 }
             }
         }

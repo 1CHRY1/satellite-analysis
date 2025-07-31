@@ -9,6 +9,7 @@ export type GridData = {
     columnId: number,
     resolution: number,
     opacity?: number,
+    normalize_level?: number,
     sceneRes: Grid.SceneDetailStatsResponse,
     vectors: VectorStats.VectorStatsResponse,
     themeRes: Grid.ThemeDetailStatsResponse,

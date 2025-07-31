@@ -73,11 +73,12 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch, reactive, type ComputedRef } from 'vue'
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-vue-next'
-import { getSceneGeojson, getTifbandMinMax } from '@/api/http/satellite-data/visualize.api'
+import { getGrid3DUrl, getGridDEMUrl, getGridNDVIOrSVRUrl, getGridSceneUrl, getImgStats, getMinIOUrl } from '@/api/http/interactive-explore/visualize.api'
 import bus from '@/store/bus'
 import { ezStore } from '@/store'
-import * as MapOperation from '@/util/map/operation'
+import * as GridExploreMapOps from '@/util/map/operation/grid-explore'
 import { message } from 'ant-design-vue'
+import type { GridData } from '@/type/interactive-explore/grid'
 
 type ImageInfoType = {
     sceneId: string
@@ -97,19 +98,12 @@ type MultiImageInfoType = {
     bluePath: string
     nodata: number
 }
-type GridInfoType = {
-    rowId: number
-    columnId: number
-    resolution: number,
-    opacity?: number,
-    normalize_level?: number
-}
 
 const show = defineModel<boolean>()
 const multiImages = ref<MultiImageInfoType[]>([])
 const productImages = ref<MultiImageInfoType[]>([])
 const scaleRate = ref(0)
-const grid = ref<GridInfoType>({ rowId: 0, columnId: 0, resolution: 0, opacity: 0, normalize_level: 0 })
+const grid = ref<GridData>({ rowId: 0, columnId: 0, resolution: 0, opacity: 0, normalize_level: 0, sceneRes: { total: 0, category: [] }, vectors: [], themeRes: { total: 0, category: [] } })
 const activeIndex = ref(-1)
 const visualMode = ref<'rgb' | 'product'>('rgb')
 const timelineTrack = ref<HTMLElement | null>(null)
@@ -123,7 +117,9 @@ const showingImageStrech = reactive({
     b_max: 5000,
 })
 
-// 日期筛选
+/**
+ * 日期筛选
+ */
 const startDateFilter = ref('')
 const endDateFilter = ref('')
 const minDate = ref('')
@@ -141,39 +137,6 @@ const yearOptions:ComputedRef<string[]> = computed(() => {
     }
     return Array.from(years)
 })
-
-const showingImages = computed(() => {
-    if (visualMode.value === 'rgb') {
-        return multiImages.value
-    } else {
-        return productImages.value
-    }
-})
-
-// 筛选后的图像数据
-const filteredImages = computed(() => {
-    let images
-    if (visualMode.value === 'rgb') {
-        images = multiImages.value as MultiImageInfoType[]
-    } else {
-        images = productImages.value as MultiImageInfoType[]
-    }
-    // console.log('all image', images)
-
-    if (startDateFilter.value) {
-        images = images.filter((item) => new Date(item.time) >= new Date(startDateFilter.value))
-    }
-
-    if (endDateFilter.value) {
-        images = images.filter((item) => new Date(item.time) <= new Date(endDateFilter.value))
-    }
-
-    // console.log('filteredImages', images, images[0].time)
-    images.sort((a, b) => a.time.localeCompare(b.time))
-
-    return images
-})
-
 const handleDataRange = () => {
     if (selectedYear.value && !selectedMonth.value) {
     // 年份已选，月份未选：整年
@@ -192,33 +155,6 @@ const handleDataRange = () => {
     endDateFilter.value = '2030-12-31'
   } 
 }
-
-// 监听筛选后的数据变化，重置活动索引
-watch(
-    filteredImages,
-    () => {
-        if (activeIndex.value >= filteredImages.value.length) {
-            activeIndex.value = filteredImages.value.length > 0 ? 0 : -1
-        }
-    },
-    { deep: true },
-)
-
-const timeFormat = (timeString: string) => {
-    const date = new Date(timeString)
-
-    if (isNaN(date.getTime())) {
-        console.error(`Invalid date string: ${timeString}`)
-        return 'unknown'
-    }
-
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-
-    return `${year}-${month}-${day}`
-}
-
 // 应用日期筛选
 const applyDateFilter = () => {
     handleDataRange()
@@ -264,6 +200,69 @@ const setDateRange = () => {
     }
 }
 
+/**
+ * 筛选后的图像数据
+ */
+const showingImages = computed(() => {
+    if (visualMode.value === 'rgb') {
+        return multiImages.value
+    } else {
+        return productImages.value
+    }
+})
+const filteredImages = computed(() => {
+    let images
+    if (visualMode.value === 'rgb') {
+        images = multiImages.value as MultiImageInfoType[]
+    } else {
+        images = productImages.value as MultiImageInfoType[]
+    }
+    // console.log('all image', images)
+
+    if (startDateFilter.value) {
+        images = images.filter((item) => new Date(item.time) >= new Date(startDateFilter.value))
+    }
+
+    if (endDateFilter.value) {
+        images = images.filter((item) => new Date(item.time) <= new Date(endDateFilter.value))
+    }
+
+    // console.log('filteredImages', images, images[0].time)
+    images.sort((a, b) => a.time.localeCompare(b.time))
+
+    return images
+})
+
+// 监听筛选后的数据变化，重置活动索引
+watch(
+    filteredImages,
+    () => {
+        if (activeIndex.value >= filteredImages.value.length) {
+            activeIndex.value = filteredImages.value.length > 0 ? 0 : -1
+        }
+    },
+    { deep: true },
+)
+
+const timeFormat = (timeString: string) => {
+    const date = new Date(timeString)
+
+    if (isNaN(date.getTime())) {
+        console.error(`Invalid date string: ${timeString}`)
+        return 'unknown'
+    }
+
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+
+    return `${year}-${month}-${day}`
+}
+
+
+/**
+ * 影像可视化
+ */
 const handleClick = async (index: number) => {
     console.log(filteredImages.value, 'filteredImages')
     if (index < 0 || index >= filteredImages.value.length) return
@@ -300,19 +299,19 @@ const handleClick = async (index: number) => {
             ;[min_r, max_r] = cache.get(redPath)
             ;[min_g, max_g] = cache.get(greenPath)
             ;[min_b, max_b] = cache.get(bluePath)
-        } else {
+        } else if (img.dataType !== 'dem' && img.dataType !== 'dsm') {
             promises.push(
-                getTifbandMinMax(redPath),
-                getTifbandMinMax(greenPath),
-                getTifbandMinMax(bluePath),
+                getImgStats(getMinIOUrl(redPath)),
+                getImgStats(getMinIOUrl(greenPath)),
+                getImgStats(getMinIOUrl(bluePath)),
             )
             await Promise.all(promises).then((values) => {
-                min_r = values[0][0]
-                max_r = values[0][1]
-                min_g = values[1][0]
-                max_g = values[1][1]
-                min_b = values[2][0]
-                max_b = values[2][1]
+                min_r = values[0].b1.min
+                max_r = values[0].b1.max
+                min_g = values[1].b1.min
+                max_g = values[1].b1.max
+                min_b = values[2].b1.min
+                max_b = values[2].b1.max
             })
 
             cache.set(redPath, [min_r, max_r])
@@ -321,22 +320,22 @@ const handleClick = async (index: number) => {
         }
 
         console.log(min_r, max_r, min_g, max_g, min_b, max_b)
-
-        MapOperation.map_addGridRGBImageTileLayer(
+        const url = getGridSceneUrl(grid.value, {
+            redPath,
+            greenPath,
+            bluePath,
+            r_min: min_r,
+            r_max: max_r,
+            g_min: min_g,
+            g_max: max_g,
+            b_min: min_b,   
+            b_max: max_b,
+            normalize_level: scaleRate.value,
+            nodata: img.nodata
+        })
+        GridExploreMapOps.map_addGridSceneLayer(
             grid.value,
-            {
-                redPath,
-                greenPath,
-                bluePath,
-                r_min: min_r,
-                r_max: max_r,
-                g_min: min_g,
-                g_max: max_g,
-                b_min: min_b,
-                b_max: max_b,
-                normalize_level: scaleRate.value,
-                nodata: img.nodata
-            },
+            url,
             stopLoading,
         )
     } else if (visualMode.value === 'product') {
@@ -357,19 +356,19 @@ const handleClick = async (index: number) => {
             ;[min_r, max_r] = cache.get(redPath)
             ;[min_g, max_g] = cache.get(greenPath)
             ;[min_b, max_b] = cache.get(bluePath)
-        } else {
+        } else if (img.dataType !== 'dem' && img.dataType !== 'dsm') {
             promises.push(
-                getTifbandMinMax(redPath),
-                getTifbandMinMax(greenPath),
-                getTifbandMinMax(bluePath),
+                getImgStats(getMinIOUrl(redPath)),
+                getImgStats(getMinIOUrl(greenPath)),
+                getImgStats(getMinIOUrl(bluePath)),
             )
             await Promise.all(promises).then((values) => {
-                min_r = values[0][0]
-                max_r = values[0][1]
-                min_g = values[1][0]
-                max_g = values[1][1]
-                min_b = values[2][0]
-                max_b = values[2][1]
+                min_r = values[0].b1.min
+                max_r = values[0].b1.max
+                min_g = values[1].b1.min
+                max_g = values[1].b1.max
+                min_b = values[2].b1.min
+                max_b = values[2].b1.max
             })
 
             cache.set(redPath, [min_r, max_r])
@@ -381,42 +380,45 @@ const handleClick = async (index: number) => {
 
         
         if (img.dataType === 'dem') {
-            // MapOperation.map_addGridDEMImageTileLayer(
-            //     grid.value,
-            //     {
-            //         demPath: redPath,
-            //         ...showingImageStrech,
-            //         nodata: img.nodata
-            //     },
-            // )
-        } else if (img.dataType === '3d') {
-            MapOperation.map_addGridRGBImageTileLayer(
+            const url = getGridDEMUrl(grid.value, redPath)
+            GridExploreMapOps.map_addGridDEMLayer(
                 grid.value,
-                {
-                    redPath,
-                    greenPath,
-                    bluePath,
-                    r_min: min_r,
-                    r_max: max_r,
-                    g_min: min_g,
-                    g_max: max_g,
-                    b_min: min_b,
-                    b_max: max_b,
-                    normalize_level: scaleRate.value,
-                    nodata: img.nodata
-                },
+                url,
+                stopLoading,
+            )
+
+        } else if (img.dataType === '3d') {
+            const url = getGrid3DUrl(grid.value, {
+                redPath,
+                greenPath,
+                bluePath,
+                r_min: min_r,
+                r_max: max_r,
+                g_min: min_g,
+                g_max: max_g,
+                b_min: min_b,
+                b_max: max_b,
+                normalize_level: scaleRate.value,
+                nodata: img.nodata
+            })
+            GridExploreMapOps.map_addGrid3DLayer(
+                grid.value,
+                url,
                 stopLoading,
             )
         } else if (img.dataType === 'svr' || img.dataType === 'ndvi') {
-            MapOperation.map_addGridOneBandColorTileLayer(
+            const url = getGridNDVIOrSVRUrl(grid.value, {
+                fullTifPath: redPath,
+                // min: min_r,
+                // max: max_r,
+                min: -1,
+                max: 1,
+                normalize_level: scaleRate.value,
+                nodata: img.nodata
+            })
+            GridExploreMapOps.map_addGridNDVIOrSVRLayer(
                 grid.value,
-                {
-                    fullTifPath: redPath,
-                    min: min_r,
-                    max: max_r,
-                    normalize_level: scaleRate.value,
-                    nodata: img.nodata
-                },
+                url,
                 stopLoading,
             )
             console.log('nodata',img.nodata,img)
@@ -424,9 +426,12 @@ const handleClick = async (index: number) => {
     }
 }
 
+/**
+ * 更新数据
+ */
 const updateHandler = (
     _data: ImageInfoType[] | MultiImageInfoType[],
-    _grid: GridInfoType,
+    _grid: GridData,
     _scaleRate: number,
     mode: 'rgb' | 'product',
 
