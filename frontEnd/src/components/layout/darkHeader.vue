@@ -5,8 +5,11 @@
                 <!-- <img :src="logo" alt="Logo" class="h-10 w-auto -translate-x-3 cursor-pointer" @click="jumpToOGMS" /> -->
                 <satellite class="!text-[#3b82f6] h-8 w-8 mr-2" />
 
-                <span
-                    class="bg-gradient-to-r from-sky-100 to-white bg-clip-text font-semibold whitespace-nowrap text-transparent sm:text-lg md:text-xl lg:text-2xl">{{ t('nav.title') }}</span>
+                <a
+                    class="bg-gradient-to-r from-sky-100 to-white bg-clip-text font-semibold whitespace-nowrap text-transparent sm:text-lg md:text-xl lg:text-2xl"
+                    href="home"
+                    >
+                    {{ t('nav.title') }}</a>
             </div>
 
             <nav class="ml-[5vw] flex items-center">
@@ -25,7 +28,9 @@
                     @mouseleave="closeSubMenu"
                     
                     >
-                    {{ item.name }}
+                    <a :href="item.path">
+                        {{ item.name }}
+                    </a>
                     <!-- <svg class="w-4 h-4 ml-1 transition-transform" :class="{ 'rotate-180': activeSubMenu === index }">
                         <path d="M5 8l5 5 5-5" stroke="currentColor" fill="none"/>
                     </svg> -->
@@ -96,14 +101,22 @@
 
         <!-- login or register -->
         <div v-else class="flex items-center gap-4">
-            <router-link to="/login"
+            <!-- <router-link to="homePath"
                 class="text-md cursor-pointer rounded-md border-2 border-sky-600 px-4 py-1 text-sky-300 transition-colors hover:bg-gray-800 hover:font-bold hover:text-sky-200">
                 {{ t('nav.button.login') }}
             </router-link>
-            <button @click="router.push('/register')"
+            <button @click="router.push('/home')"
                 class="text-md cursor-pointer rounded-md border-2 border-sky-600 bg-sky-800 px-4 py-1 text-white transition-colors hover:bg-sky-700 hover:font-bold">
                 {{ t('nav.button.signup') }}
-            </button>
+            </button> -->
+            <a class="text-md cursor-pointer rounded-md border-2 border-sky-600 px-4 py-1 text-sky-300 transition-colors hover:bg-gray-800 hover:font-bold hover:text-sky-200"
+            href="home">
+            {{ t('nav.button.login') }}
+            </a>
+            <a class="text-md cursor-pointer rounded-md border-2 border-sky-600 px-4 py-1 text-sky-300 transition-colors hover:bg-gray-800 hover:font-bold hover:text-sky-200"
+            href="home">
+            {{ t('nav.button.signup') }}
+            </a>
         </div>
     </header>
 </template>
@@ -157,9 +170,10 @@ const route = useRoute()
 const router = useRouter()
 const currentRoute = computed(() => route.path)
 
+const homePath = '/home'
 const navItems: ComputedRef<NavItem[]> = computed(() =>[
-    { external: false, name: t('nav.home'), path: '/home' },
-    { external: false, name: t('nav.models'), path: '/models', 
+    //{ external: false, name: t('nav.home'), path: '/home' },
+    { external: false, name: '资源中心', path: '/models', 
     children : [
         {name: t('nav.models'), path: '/models'},
         {name: '工具中心', path:'/tool'}
@@ -193,7 +207,7 @@ const userStore = useUserStore()
 
 const handleLogout = () => {
     userStore.logout()
-    router.push('/login')
+    router.push('/home')
 }
 </script>
 

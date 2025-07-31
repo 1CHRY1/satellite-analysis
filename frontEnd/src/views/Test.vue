@@ -121,13 +121,15 @@ const handleCreateNoCloudTiles = async () => {
 }
 
 const handleCreateMosaicJSONTiles = async() => {
-    let mosaic_url = 'http://223.2.34.8:30900/temp-files/mosaicjson/3bda2f83-54fd-4c6c-9839-816339775ad2_red.json'
+    let red_mosaic_url = 'http://223.2.34.8:30900/temp-files/mosaicjson/3bda2f83-54fd-4c6c-9839-816339775ad2_red.json'
     let green_mosaic_url = 'http://223.2.34.8:30900/temp-files/mosaicjson/829b1e89-c9f7-4461-89dc-256b1450cff1_green.json'
     let blue_mosaic_url = 'http://223.2.34.8:30900/temp-files/mosaicjson/86fb4f2e-aab2-4ea9-b581-0fed03cfc4cc_blue.json'
     let titilerEndPoint = 'http://localhost:5173/tiler'
-    let baseUrl = `${titilerEndPoint}/mosaic/mosaictile/{z}/{x}/{y}.png`
+    let baseUrl = `${titilerEndPoint}/mosaic2/rgb_mosaictile/{z}/{x}/{y}.png`
     const requestParams = new URLSearchParams()
-    requestParams.append('mosaic_url', mosaic_url)
+    requestParams.append('red_mosaic_url', red_mosaic_url)
+    requestParams.append('green_mosaic_url', green_mosaic_url)
+    requestParams.append('blue_mosaic_url', blue_mosaic_url)
     const fullUrl = baseUrl + '?' + requestParams.toString()
     MapOperation.map_removeNocloudGridPreviewLayer()
     MapOperation.map_destroyNoCloudLayer()

@@ -272,7 +272,7 @@ import { ElMessage } from 'element-plus'
 import bus from '@/store/bus'
 import mapboxgl from 'mapbox-gl'
 import * as echarts from 'echarts'
-import http from '@/api/axiosClient/clientHttp'
+
 
 import {
     ChartColumn,
@@ -297,7 +297,7 @@ import {
     ChevronDown,
     ChevronUp
 } from 'lucide-vue-next'
-import { useAnalysisStore, useGridStore } from '@/store'
+import { useAnalysisStore, useGridStore, useUserStore } from '@/store'
 import { mapManager } from '@/util/map/mapManager'
 import { getNoCloudUrl4MosaicJson, getMosaicJsonUrl } from '@/api/http/satellite-data/visualize.api';
 import { useI18n } from 'vue-i18n'
@@ -305,6 +305,8 @@ import { Item } from 'ant-design-vue/es/menu'
 const { t } = useI18n()
 const dbData = useAnalysisStore()
 const selectedSceneId = ref('')
+const userStore = useUserStore()
+const userId = computed(() => userStore.user?.id || '')
 
 interface IndexItem {
   name: string
@@ -372,7 +374,7 @@ const selectIndexDetail = (item) => {
         })
         showDefine.value = true
     } else {
-        // 系统预设的指数，只显示详情
+        
         selectedItem.value = item
         showDetail.value = true
     }
@@ -406,37 +408,31 @@ const saveLocal = async() => {
         : []
     
     // 检查是否为编辑模式
-    const existingIndex = existingCustomIndexes.find(item => item.name === form.name)
+    const existingIndex = existingCustomIndexes.find(item => item.name === form.name && item.userId === userId.value)
     const isEditing = selectedItem.value && selectedItem.value.basisIndex === false
     
     if (existingIndex && !isEditing) {
         ElMessage.warning('已存在同名指数，请使用不同的名称')
         return
     }
-    
+
     if (isEditing) {
         // 更新现有指数
-        const indexToUpdate = existingCustomIndexes.findIndex(item => item.name === selectedItem.value?.name)
+        const indexToUpdate = existingCustomIndexes.findIndex(item => item.name === selectedItem.value?.name && item.userId === userId.value)
         if (indexToUpdate !== -1) {
-            existingCustomIndexes[indexToUpdate] = { ...form }
+            existingCustomIndexes[indexToUpdate] = { ...form, userId: userId.value }
             ElMessage.success('已成功更新自定义指数')
         }
     } else {
-        
-        const newCustomIndex = { ...form }
+        const newCustomIndex = { ...form, userId: userId.value }
         existingCustomIndexes.push(newCustomIndex)
         ElMessage.success('已成功保存自定义指数')
     }
     
-    
     localStorage.setItem('custom_indexes', JSON.stringify(existingCustomIndexes))
-    
-    
     localStorage.setItem(STORAGE_KEY, JSON.stringify(form))
     
-   
     loadAllCustomIndexes()
-    
     
     showDefine.value = false
     selectedItem.value = null
@@ -449,14 +445,14 @@ const mergeList = async() => {
 
 // 加载所有自定义指数
 const loadAllCustomIndexes = () => {
-
     const customIndexesStr = localStorage.getItem('custom_indexes')
     const customIndexes = customIndexesStr 
         ? JSON.parse(customIndexesStr) 
         : []
-    
-    // 更新
-    customIndexesList.value = customIndexes
+
+    // 只显示当前用户的自定义指数
+    const userCustomIndexes = customIndexes.filter((item: any) => item.userId === userId.value)
+    customIndexesList.value = userCustomIndexes
     
     // 获取单个
     const cached = localStorage.getItem(STORAGE_KEY)
@@ -467,8 +463,8 @@ const loadAllCustomIndexes = () => {
 
     presetIndex.value = presetIndex.value.filter(item => item.basisIndex === true)
     
-    // 添加所有自定义指数
-    customIndexes.forEach((customIndex: any) => {
+    // 只添加当前用户的自定义指数
+    userCustomIndexes.forEach((customIndex: any) => {
         presetIndex.value.splice(presetIndex.value.length - 1, 0, { 
             ...customIndex,
             isAble: false,
@@ -476,9 +472,7 @@ const loadAllCustomIndexes = () => {
         })
     })
     
-    
     presetIndex.value.push({name:'自定义', expression:'', description:'', isAble:false, basisIndex:false})
-    
     
     if (!selectedItem.value || selectedItem.value.basisIndex !== false) {
         form.description = ''
@@ -495,10 +489,16 @@ const deleteCustomIndex = (index: number) => {
         ? JSON.parse(customIndexesStr) 
         : []
     
-    customIndexes.splice(index, 1)
-    localStorage.setItem('custom_indexes', JSON.stringify(customIndexes))
-    
+    // 只删除当前用户的指定指数
+    const userCustomIndexes = customIndexes.filter((item: any) => item.userId === userId.value)
+    userCustomIndexes.splice(index, 1)
 
+    // 重新合并所有用户的指数
+    const otherUsersIndexes = customIndexes.filter((item: any) => item.userId !== userId.value)
+    const newIndexes = [...otherUsersIndexes, ...userCustomIndexes]
+
+    localStorage.setItem('custom_indexes', JSON.stringify(newIndexes))
+    
     loadAllCustomIndexes()
     
     ElMessage.success('已删除自定义指数')

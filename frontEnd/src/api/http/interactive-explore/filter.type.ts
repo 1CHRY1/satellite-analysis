@@ -64,3 +64,25 @@ export namespace ThemeStats {
         },
     }
 }
+
+export type BandMapper = {
+    Red: string,
+    Green: string,
+    Blue: string,
+    NIR: string,
+}
+
+export type Image = {
+    bucket: string,
+    tifPath: string,
+    band: string,
+}
+
+export namespace Theme {
+    export interface ThemeResponse {
+        sceneId: string,
+        images: Array<Image>,
+        noData: string,
+        bandMapper: BandMapper,
+    }
+}

@@ -23,10 +23,6 @@ class HttpClient {
         /////// Request Interceptor //////////////////////////////////
         this.instance.interceptors.request.use(
             (config) => {
-                const token = localStorage.getItem('token')
-                if (token) {
-                    config.headers['Authorization'] = `Bearer ${token}`
-                }
                 return config
             },
             (error) => {
@@ -101,4 +97,4 @@ class HttpClient {
     }
 }
 
-export default new HttpClient(ezStore.get('conf')['back_app'])
+export default new HttpClient(ezStore.get('conf')['titiler'])

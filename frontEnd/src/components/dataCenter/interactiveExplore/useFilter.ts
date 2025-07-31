@@ -1,197 +1,81 @@
-import { computed, reactive, ref } from "vue"
-import dayjs from 'dayjs'
-import type { RegionValues } from 'v-region'
-import { ElMessage } from 'element-plus'
+import { ref, computed } from 'vue'
+import { type SpatialFilterMethod, type POIInfo, type FilterTab } from '@/type/interactive-explore/filter'
+import { useExploreStore } from '@/store/exploreStore'
 import { useI18n } from 'vue-i18n'
-
+import { ElMessage } from 'element-plus'
 import {
+    // ------------------------ V1/V2版本API ------------------------ //
     getGridByRegionAndResolution,
     getBoundary,
     getRegionPosition,
-    getSceneByConfig,
-    getVectorsByRegionFilter,
-    getVectorsByPOIFilter,
-    getSceneGrids,
-    getCoverRegionSensorScenes,
     getPoiInfo,
     getGridByPOIAndResolution,
     getPOIPosition,
-    getSceneByPOIConfig,
-    getCoverPOISensorScenes,
-    getVectorGrids,
+    getVectorsByRegionFilter,
+    getVectorsByPOIFilter
 } from '@/api/http/satellite-data'
-import type { POIInfo } from '@/type/interactive-explore/filter'
-import { useLayer } from './useLayer'
-import { useStats } from './useStats'
+import {
+    // ------------------------ V3版本API ------------------------ //
+    getSceneStatsByRegionFilter,
+    getSceneStatsByPOIFilter,
+    getThemeStatsByRegionFilter,
+    getThemeStatsByPOIFilter
+} from '@/api/http/interactive-explore/filter.api'
+import { useVisualize } from './useVisualize'
 import { ezStore } from "@/store"
-const { createGeoJSONFromBounds, marker, addPolygonLayer, destroyLayer, removeUniqueLayer,
-    addPOIMarker, addGridLayer, updateGridLayer, addMultiRGBImageTileLayer, addMultiTerrainTileLayer,addBaseTerrainTileLayer, addMulti3DImageTileLayer, addMultiOneBandColorLayer, addMVTLayer } = useLayer()
-const { countResolutionScenesCoverage, classifyScenesByResolution, getSceneIdsByPlatformName, getSensorNamebyPlatformName
-    , classifyProducts, countProductsCoverage
- } = useStats()
+import {
+    searchedSpatialFilterMethod,
+    activeSpatialFilterMethod,
+    selectedRegion,
+    selectedPOI,
+    finalLandId,
+    selectedGridResolution,
+    selectedDateRange,
+    curGridsBoundary,
+    sceneStats,
+    vectorStats,
+    themeStats
+} from './shared'
 
-// 一些全局变量，为多个模块调用
-const coverageRSRate = ref('0.00%')
-const coverageProductsRate = ref('0.00%')
-// 过滤出的遥感影像
-const allScenes = ref<any>([])
-// 过滤出的Products
-const allProducts = ref<any>([])
-// 过滤出的vectors
-const allVectors = ref<any[]>([])
-
-// 空间筛选方法
-type SpatialFilterMethod = 'region' | 'poi'
-// 选中的空间筛选方法(用于实际检索)
-const searchedSpatialFilterMethod = ref<SpatialFilterMethod>('region')
-// 激活的空间筛选方法(用于展示)
-const activeSpatialFilterMethod = ref<SpatialFilterMethod>('region')
-const selectedPOI = ref<POIInfo>()
-const selectedGrid = ref<number>(20)
-// 获取region/poi的id的计算属性，称为最终的地物id
-const finalLandId = computed(() => {
-    let curSpatialFilterMethod: SpatialFilterMethod
-    if (searchedSpatialFilterMethod.value === 'poi') {
-        curSpatialFilterMethod = 'poi'
-    } else if (searchedSpatialFilterMethod.value === 'region') {
-        curSpatialFilterMethod = 'region'
-    } else if (activeSpatialFilterMethod.value === 'poi') {
-        curSpatialFilterMethod = 'poi'
-    } else {
-        curSpatialFilterMethod = 'region'
-    }
-
-    if (curSpatialFilterMethod === 'poi') {
-        if (!selectedPOI.value) return '未选择'
-        return selectedPOI.value?.id
-    }
-    let info = region.value
-    if (info.area) return `${info.area}`
-    if (info.city) return `${info.city}`
-    if (info.province) return `${info.province}`
-    return '未选择'
-})
-
-
-
-// 行政区划筛选默认配置: 山东济南
-const region = ref<RegionValues>({
-    province: '370000',
-    city: '370100',
-    area: '',
-})
-
-import { useExploreStore } from '@/store/exploreStore'
 const exploreData = useExploreStore()
-import { message } from 'ant-design-vue'
-import { parseStyle } from "ant-design-vue/es/_util/cssinjs/hooks/useStyleRegister"
-import { getOnTheFlyUrl } from "@/api/http/satellite-data/visualize.api"
+
+
 /**
  * 筛选器
  */
 export const useFilter = () => {
     const { t } = useI18n()
+    const { createGeoJSONFromBounds, marker, addPolygonLayer, addPOIMarker, addGridLayer, updateGridLayer, destroyUniqueLayer, destroyGridLayer } = useVisualize()
+
+    
     /**
-     * 筛选器变量
+     * 数据检索变量 - 1.空间位置
      */
 
-    // 默认筛选配置
-    const defaultConfig = ref({
-        useLatestTime: false,
-        useMinCloud: false,
-        dateRange: [dayjs('2025-05-01'), dayjs('2025-06-30')],
-        cloudRange: [0, 100],
-    })
-
-    interface Tab {
-        value: SpatialFilterMethod
-        label: string
-    }
-
-    const tabs = computed<Tab[]>(() =>  [{
+    /**
+     * 1.1 Tab变量
+     */
+    const tabs = computed<FilterTab[]>(() =>  [{
         value: 'region',
         label: t('datapage.explore.section1.admin')
     }, {
         value: 'poi',
         label: 'POI'
     }])
-
-    
-    // 按分辨率的格网统计信息{2m： 3个格网}
-    const allGridsInResolution = ref<any>([])
-
-    // 影像分辨率类型
-    type ResolutionItem = [label: string, value: number]
-    const resolutionType = computed<ResolutionItem[]>(()=>[
-        [t('datapage.explore.section_interactive.resolutiontype.yami'), 1],
-        [t('datapage.explore.section_interactive.resolutiontype.twom'), 2],
-        [t('datapage.explore.section_interactive.resolutiontype.tenm'), 10],
-        [t('datapage.explore.section_interactive.resolutiontype.thirtym'), 30],
-        [t('datapage.explore.section_interactive.resolutiontype.others'), 500],
-    ])
-    // 绑定每个select的选中项
-    const resolutionPlatformSensor = reactive<any>({
-        [t('datapage.explore.section_interactive.resolutiontype.yami')]: '',
-        [t('datapage.explore.section_interactive.resolutiontype.twom')]: '',
-        [t('datapage.explore.section_interactive.resolutiontype.tenm')]: '',
-        [t('datapage.explore.section_interactive.resolutiontype.thirtym')]: '',
-        [t('datapage.explore.section_interactive.resolutiontype.others')]: '',
-    })
-
-    
-    // 按产品的格网统计信息{DEM： 3个格网}
-    const allGridsInProduct = ref<any>([])
-    type ProductItem = [label: string, value: string]
-    const productType = computed<ProductItem[]>(()=>[
-        ['DEM', 'dem'],
-        ['红绿立体影像', '3d'],
-        ['形变速率', 'svr'],
-        ['NDVI', 'ndvi'],
-        ['其他', 'others'],
-    ])
-    // 绑定每个select的选中项
-    const productPlatformSensor = reactive<any>({
-        ['DEM']: '',
-        ['红绿立体影像']: '',
-        ['形变速率']: '',
-        ['NDVI']: '',
-        ['其他']: '',
-    })
-
-    
-
-    /**
-     * 1.空间筛选
-     */
-    
-    const spatialFilterMethods = ref<SpatialFilterMethod[]>(['region', 'poi'])
-    
-    // 获取格网阶段所用的region/poi的id，称为临时的地物id
-    const tempLandId = computed(() => {
-        if (activeSpatialFilterMethod.value === 'poi') {
-            if (!selectedPOI.value) return '未选择'
-            return selectedPOI.value?.id
-        }
-        let info = region.value
-        if (info.area) return `${info.area}`
-        if (info.city) return `${info.city}`
-        if (info.province) return `${info.province}`
-        return '未选择'
-    })
     
     // 用户选择空间筛选方法
     const handleSelectTab = (value: SpatialFilterMethod) => {
         activeSpatialFilterMethod.value = value
     }
-    
+
     /**
-     * 1.1 Region行政区划筛选
+     * 1.2 Region行政区划筛选
      */
     
     const curRegionBounds = ref([])
 
     /**
-     * 1.2 POI筛选
+     * 1.3 POI筛选
      */
     
     const poiOptions = ref<POIInfo[]>([])
@@ -208,74 +92,76 @@ export const useFilter = () => {
     }
 
     /**
-     * 2.格网筛选
+     * 1.4 Region ｜ POI 临时选择
      */
-    const gridOptions = [1, 2, 5, 10, 15, 20, 25, 30, 40, 50]
-    
+    // 获取格网阶段所用的region/poi的id，称为临时的地物id
+    const tempLandId = computed(() => {
+        if (activeSpatialFilterMethod.value === 'poi') {
+            if (!selectedPOI.value) return 'None'
+            return selectedPOI.value?.id
+        }
+        let info = selectedRegion.value
+        if (info.area) return `${info.area}`
+        if (info.city) return `${info.city}`
+        if (info.province) return `${info.province}`
+        return '100000' // 默认中国
+    })
+
+    /**
+     * 数据检索变量 - 2.格网分辨率
+     */
+    const gridOptions = [1, 2, 5, 10, 15, 20, 25, 30, 40, 50, 100, 200, 500, 1000]
     const allGrids = ref([])
     const allGridCount = ref(0)
 
-    /**
-     * 获取格网数据
-     */
+    // 获取格网数据
     const getAllGrid = async () => {
         let gridRes: any = []
         let window: any = []
-        if (tempLandId.value === '未选择') {
+        if (tempLandId.value === 'None') {
              ElMessage.warning(t('datapage.explore.message.POIerror'))
             return
         }
-        await destroyLayer()
+        destroyGridLayer()
     
         if (marker.value) marker.value.remove()
     
         if (activeSpatialFilterMethod.value === 'region') {
             let boundaryRes = await getBoundary(tempLandId.value)
             curRegionBounds.value = boundaryRes
-            gridRes = await getGridByRegionAndResolution(tempLandId.value, selectedGrid.value)
-            allGrids.value = gridRes
-            allGridCount.value = gridRes.length
-            console.log(boundaryRes, 445);
-    
+            gridRes = await getGridByRegionAndResolution(tempLandId.value, selectedGridResolution.value)
+            allGrids.value = gridRes.grids
+            allGridCount.value = gridRes.grids.length
+            curGridsBoundary.value = gridRes.geoJson
             // 先清除现有的矢量边界，然后再添加新的
             addPolygonLayer(boundaryRes)
             window = await getRegionPosition(tempLandId.value)
         } else if (activeSpatialFilterMethod.value === 'poi') {
-            gridRes = await getGridByPOIAndResolution(tempLandId.value, selectedGrid.value)
-            removeUniqueLayer()
-            // console.log(gridRes, 7474);
-            allGrids.value = gridRes
-            allGridCount.value = gridRes.length
-            window = await getPOIPosition(tempLandId.value, selectedGrid.value)
+            gridRes = await getGridByPOIAndResolution(tempLandId.value, selectedGridResolution.value)
+            destroyUniqueLayer()
+            allGrids.value = gridRes.grids
+            allGridCount.value = gridRes.grids.length
+            curGridsBoundary.value = gridRes.geoJson
+            window = await getPOIPosition(tempLandId.value, selectedGridResolution.value)
             let geojson = createGeoJSONFromBounds(window.bounds)
-            console.log(geojson, 741);
             addPolygonLayer(geojson)
             if (selectedPOI.value) addPOIMarker(selectedPOI.value)
         }
     
-        addGridLayer(gridRes, window)
+        addGridLayer(gridRes.grids, window)
         // 将tab的选择固定下来
         searchedSpatialFilterMethod.value = activeSpatialFilterMethod.value
     }
 
     /**
-     * 3.时间筛选
-     */
-    
-
-    /**
-     * 4.数据类型筛选
-     */
-
-    /**
-     * 5. 最终筛选函数
+     * 数据检索函数及统计信息获取
      */
     // 筛选loading状态
     const filterLoading = ref(false)
     // 筛选是否完成
     const isFilterDone = ref(false)
-    const filter = async () => {
-        if (finalLandId.value === '未选择') {
+    const doFilter = async () => {
+        if (finalLandId.value === 'None') {
             ElMessage.warning(t('datapage.explore.message.filtererror_choose'))
             return
         } else if (allGrids.value.length === 0) {
@@ -284,273 +170,85 @@ export const useFilter = () => {
         }
         // 先禁止按钮，渲染loading状态
         filterLoading.value = true
-        let filterData = {
-            startTime: defaultConfig.value.dateRange[0].format('YYYY-MM-DD'),
-            endTime: defaultConfig.value.dateRange[1].format('YYYY-MM-DD'),
-            cloud: defaultConfig.value.cloudRange[1],
+        const regionFilter = {
+            startTime: selectedDateRange.value[0].format('YYYY-MM-DD'),
+            endTime: selectedDateRange.value[1].format('YYYY-MM-DD'),
             regionId: finalLandId.value,
-            resolution:selectedGrid.value
+            resolution:selectedGridResolution.value
         }
-        // allFilteredImages.value = await getSceneByConfig(filterData)
+        const poiFilter = {
+            startTime: selectedDateRange.value[0].format('YYYY-MM-DD'),
+            endTime: selectedDateRange.value[1].format('YYYY-MM-DD'),
+            locationId: finalLandId.value,
+            resolution: selectedGridResolution.value
+        }
+        let sceneStatsRes, vectorsRes, themeStatsRes
         if (searchedSpatialFilterMethod.value === 'region') {
-            const allScenesRes = await getSceneByConfig(filterData)
-            allScenes.value = allScenesRes
-                .filter((image) => image.dataType === 'satellite')
-                .map((image) => ({
-                    ...image,
-                    tags: [image.tags.source, image.tags.production, image.tags.category],
-                }))
-            allProducts.value = allScenesRes.filter((image) => image.dataType !== 'satellite')
-                .map((image) => ({
-                    ...image,
-                    tags: [image.tags.source, image.tags.production, image.tags.category],
-                }))
-            // 获取矢量数据
-            const vectorsRes = await getVectorsByRegionFilter(filterData)
-            console.log('矢量数据返回', vectorsRes)
-            allVectors.value = vectorsRes
+            sceneStatsRes = await getSceneStatsByRegionFilter(regionFilter)
+            vectorsRes = await getVectorsByRegionFilter(regionFilter)
+            themeStatsRes = await getThemeStatsByRegionFilter(regionFilter)
         } else if (searchedSpatialFilterMethod.value === 'poi') {
-            const poiFilter = {
-                startTime: defaultConfig.value.dateRange[0].format('YYYY-MM-DD'),
-                endTime: defaultConfig.value.dateRange[1].format('YYYY-MM-DD'),
-                cloud: defaultConfig.value.cloudRange[1],
-                locationId: finalLandId.value,
-                resolution: selectedGrid.value
-            }
-            const allScenesRes = await getSceneByPOIConfig(poiFilter)
-            allScenes.value = allScenesRes
-                .filter((image) => image.dataType === 'satellite')
-                .map((image) => ({
-                    ...image,
-                    tags: [image.tags.source, image.tags.production, image.tags.category],
-                }))
-            allProducts.value = allScenesRes
-                .filter((image) => image.dataType !== 'satellite' && image.dataType !== 'dem')
-                .map((image) => ({
-                    ...image,
-                    tags: [image.tags.source, image.tags.production, image.tags.category],
-                }))
-            // 获取矢量数据
-            const vectorsRes = await getVectorsByPOIFilter(poiFilter)
-            allVectors.value = vectorsRes
-            console.log('矢量数据返回', vectorsRes)
+            sceneStatsRes = await getSceneStatsByPOIFilter(poiFilter)
+            vectorsRes = await getVectorsByPOIFilter(poiFilter)
+            themeStatsRes = await getThemeStatsByPOIFilter(poiFilter)
         }
-        console.log('allScenes', allScenes.value)
-        console.log('allProducts', allProducts.value)
-        console.log('allVectors', allVectors.value)
-    
-        // 记录所有景中含有的“传感器+分辨率字段”
-        // allGridsInResolution.value = getSensorsAndResolutions(allScenes.value)
-    
-        // 请求每个格子的景sceneGridsRes， 计算覆盖率，添加覆盖率格网图层，以及图层右键交互事件
-        await makeFullSceneGrid()
-    
-        if (allScenes.value.length === 0) {
+        sceneStats.value = sceneStatsRes
+        vectorStats.value = vectorsRes
+        themeStats.value = themeStatsRes
+
+        syncToGridExplore()
+        syncToDataPrepare()
+
+        if (sceneStats.value.total === 0) {
             ElMessage.warning(t('datapage.explore.message.sceneerror_recondition'))
         } else {
-            ElMessage.success(t('datapage.explore.message.scene_searched',{ count: allScenes.value.length }) )
+            ElMessage.success(t('datapage.explore.message.scene_searched',{ count: sceneStats.value.total }) )
         }
     
-        /**
-         * 遥感影像统计
-         */
-        // 计算各种分辨率下的格网覆盖情况
-        allGridsInResolution.value = countResolutionScenesCoverage(ezStore.get('sceneGridsRes'))
-        // 获取各分辨率拥有多少种传感器，用来渲染下拉框
-        classifyScenesByResolution(allScenes.value)
-
-        /**
-         * 遥感影像产品统计
-         */
-        allGridsInProduct.value = countProductsCoverage(ezStore.get('sceneGridsRes'))
-        classifyProducts(allProducts.value)
-
-        /**
-         * 加载DEM底图
-         */
-        let demProducts
-        let productSceneIds: any[] = []
-        let productSensorName = ''
-        let gridsBoundary
-        allProducts.value.forEach(product => {
-            if (product.dataType === 'dem') {
-                productSceneIds.push(product.sceneId)
-                productSensorName = product.sensorName
-            }
-        })
-        if (searchedSpatialFilterMethod.value === 'region') {
-            const params = {
-                sensorName: productSensorName,
-                sceneIds: productSceneIds,
-                regionId: finalLandId.value,
-                resolution: selectedGrid.value,
-            }
-            const coverProductsRes = await getCoverRegionSensorScenes(params)
-            demProducts = coverProductsRes.sceneList
-            gridsBoundary = coverProductsRes.gridsBoundary
-        } else if (searchedSpatialFilterMethod.value === 'poi') {
-            const params = {
-                sensorName: productSensorName,
-                sceneIds: productSceneIds,
-                locationId: finalLandId.value,
-                resolution: selectedGrid.value,
-            }
-            const coverProductsRes = await getCoverRegionSensorScenes(params)
-            demProducts = coverProductsRes.sceneList
-        }
-        if (demProducts.length > 0) {
-            await addTerrainBaseMap(demProducts, gridsBoundary)
-        }
-
         // 恢复状态
         filterLoading.value = false
         isFilterDone.value = true
     }
-    
-    const makeFullSceneGrid = async () => {
-        let sceneGridParam = {
-            grids: allGrids.value.map((item: any) => {
-                return {
-                    rowId: item.rowId,
-                    columnId: item.columnId,
-                    resolution: item.resolution,
-                }
-            }),
-            sceneIds: [...allScenes.value.filter(image => image.tags.includes('ard') || parseFloat(image.resolution) > 1).map((image: any) => image.sceneId), 
-                ...allProducts.value.map((image: any) => image.sceneId)],
-        }
-        let vectorGridParam = {
-            grids: allGrids.value.map((item: any) => {
-                return {
-                    rowId: item.rowId,
-                    columnId: item.columnId,
-                    resolution: item.resolution,
-                }
-            }),
-            tableNames: allVectors.value.map((item: any) => item.tableName),
-        }
-    
-        // Destroy layer
-        destroyLayer()
-    
-        // Get scene grids
-        let sceneGridsRes = await getSceneGrids(sceneGridParam)
-        console.log('sceneGridRes', sceneGridsRes)
-        let scenes = [...allScenes.value, ...allProducts.value]
-        // Get vector grids
-        let vectorGridsRes = await getVectorGrids(vectorGridParam)
-    
-        const sceneTagMap = new Map<string, string[]>()
-        for (let sc of scenes) {
-            sceneTagMap.set(sc.sceneId, sc.tags)
-        }
-        ezStore.set('sceneTagMap', sceneTagMap)
-    
-        const sceneNodataMap = ezStore.get('sceneNodataMap') as Map<string, number>
-        // Plus sceneGridsRes
-        for (let i = 0; i < sceneGridsRes.length; i++) {
-            let grid = sceneGridsRes[i]
-            grid.international = 0
-            grid.national = 0
-            grid.light = 0
-            grid.radar = 0
-            grid.traditional = 0
-            grid.ard = 0
-    
-            let scenes = sceneGridsRes[i].scenes
-            for (let scene of scenes) {
-                const scTag = sceneTagMap.get(scene.sceneId) as string[]
-                for (let tag of scTag) {
-                    if (grid[tag] === undefined) console.log('未知tag: ', tag)
-                    grid[tag] = grid[tag] + 1
-                }
-                // 在这记录一下景的nodata
-                sceneNodataMap.set(scene.sceneId, scene.noData)
-            }
-        }
-        ezStore.set('sceneGridsRes', sceneGridsRes)
-        ezStore.set('vectorGridsRes', vectorGridsRes)
-    
-        // 算覆盖率
-        let nonEmptyScenesCount = 0
-        let nonEmptyProductsCount = 0
-        for (const item of sceneGridsRes) {
-            if (item.scenes.some(scene => scene.dataType === 'satellite')) nonEmptyScenesCount++
-            if (item.scenes.some(scene => scene.dataType !== 'satellite')) nonEmptyProductsCount++
-        }
-        coverageRSRate.value = ((nonEmptyScenesCount * 100) / sceneGridsRes.length).toFixed(2) + '%'
-        coverageProductsRate.value = ((nonEmptyProductsCount * 100) / sceneGridsRes.length).toFixed(2) + '%'
 
+    /**
+     * 同步到网格图层: 添加格网图层，同步格网探查所需的变量，以及图层右键交互事件
+     */
+    const syncToGridExplore = () => {
         updateGridLayer(allGrids.value)
-    
+        ezStore.set('sceneStats', sceneStats.value)
+        ezStore.set('vectorStats', vectorStats.value)
+        ezStore.set('themeStats', themeStats.value)
+        ezStore.set('curGridsBoundary', curGridsBoundary.value)
+    }
+
+    /**
+     * 同步到数据准备: 同步数据准备所需的变量
+     */
+    const syncToDataPrepare = () => {
         exploreData.updateFields({
             searchtab: searchedSpatialFilterMethod.value,
             regionCode: finalLandId.value,
-            dataRange: [...defaultConfig.value.dateRange],
-            cloud: defaultConfig.value.cloudRange[1],
-            space: selectedGrid.value,
-            coverage: coverageRSRate.value,
-            images: allScenes.value,
+            dataRange: [...selectedDateRange.value],
+            gridResolution: selectedGridResolution.value, // 原space
+            coverage: sceneStats.value.coverage,
+            // images: allScenes.value,
             grids: allGrids.value,
             boundary: curRegionBounds.value,
             load: true
         });
     }
 
-
-    /**
-     * DEM底图可视化
-     */
-    const addTerrainBaseMap = async (demProducts: any[], gridsBoundary: any) => {
-        if (demProducts.length === 0) {
-            return
-        }
-        let targetProduct = demProducts[0]
-        if (!targetProduct)
-            return
-        if (ezStore.get('currentTerrainBaseMap')) {
-            let terrainType = ezStore.get('currentTerrainBaseMap')
-            switch (terrainType) {
-                case 'DEM':
-                    await addBaseTerrainTileLayer(targetProduct, gridsBoundary)
-                    break
-                case 'DSM':
-                    break
-            }
-        }
-    }
-
-
     return {
         gridOptions,
-        resolutionType,
-        resolutionPlatformSensor,
-        selectedGrid,
-        defaultConfig,
-        region,
         allGrids,
         allGridCount,
-        selectedPOI,
         poiOptions,
         fetchPOIOptions,
         getAllGrid,
-        filter,
+        tabs,
+        handleSelectTab,
+        doFilter,
         filterLoading,
         isFilterDone,
-        makeFullSceneGrid,
-        activeSpatialFilterMethod,
-        tabs,
-        allScenes,
-        allProducts,
-        allVectors,
-        coverageProductsRate,
-        allGridsInResolution,
-        allGridsInProduct,
-        coverageRSRate,
-        handleSelectTab,
-        productType,
-        productPlatformSensor,
-        searchedSpatialFilterMethod,
-        finalLandId
     }
 }

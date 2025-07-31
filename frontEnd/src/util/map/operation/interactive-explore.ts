@@ -98,6 +98,18 @@ export function map_addPolygonLayer(options: {
     })
 }
 
+export function map_destroyUniqueLayer() {
+    const id = 'UniqueLayer'
+    const fillId = `${id}-fill`
+    const lineId = `${id}-line`
+    const srcId = `${id}-source`
+    mapManager.withMap((m) => {
+        if (m.getLayer(lineId)) m.removeLayer(lineId)
+        if (m.getLayer(fillId)) m.removeLayer(fillId)
+        if (m.getSource(srcId)) m.removeSource(srcId)
+    })
+}
+
 /**
  * 2. 数据检索 - 检索后
  */
@@ -257,9 +269,9 @@ export function map_destroyGridLayer(): void {
 /**
  * 3. 交互探索 - 遥感影像可视化
  */
-export function map_addImageLayer(url: string) {
+export function map_addSceneLayer(url: string) {
     console.log("影像可视化Url：", url)
-    const id = 'image-layer'
+    const id = 'scene-layer'
     const srcId = id + '-source'
     mapManager.withMap((m) => {
         m.getLayer(id) && m.removeLayer(id)
@@ -282,8 +294,8 @@ export function map_addImageLayer(url: string) {
     })
 }
 
-export function map_destroyImageLayer() {
-    const id = 'image-layer'
+export function map_destroySceneLayer() {
+    const id = 'scene-layer'
     const srcId = id + '-source'
     mapManager.withMap((m) => {
         m.getLayer(id) && m.removeLayer(id)
@@ -301,29 +313,17 @@ export function map_destroyImageLayer() {
  * @param landId 行政区id
  * @param cb 回调函数
  */
-export function map_addMVTLayer(source_layer: string, landId: string, cb?: () => void) {
-    const prefix = 'MVT'
-    let layeridStore: any = null
-    if (!ezStore.get('MVTLayerIds')) ezStore.set('MVTLayerIds', [])
-
-    layeridStore = ezStore.get('MVTLayerIds')
-
-    map_destroyMVTLayer()
-
+export function map_addMVTLayer(source_layer: string, url: string) {
+    const id = 'mvt-layer'
+    const srcId = id + '-source'
     mapManager.withMap((m) => {
-        const id = prefix + uid()
-        const srcId = id + '-source'
-        if (m.getLayer(id) && m.getSource(srcId)) {
-            m.removeLayer(id)
-            m.removeSource(srcId)
-        }
+        m.getLayer(id) && m.removeLayer(id)
+        m.getSource(srcId) && m.removeSource(srcId)
 
-        layeridStore.push(id)
-        const tileUrl = `http://${window.location.host}/api/data/vector/region/${landId}/${source_layer}/{z}/{x}/{y}`
 
         m.addSource(srcId, {
             type: 'vector',
-            tiles: [tileUrl],
+            tiles: [url],
         })
 
         m.addLayer({
@@ -336,10 +336,6 @@ export function map_addMVTLayer(source_layer: string, landId: string, cb?: () =>
                 'fill-opacity': 0.5,
             }
         })
-
-        setTimeout(() => {
-            cb && cb()
-        }, 3000)
     })
 }
 
@@ -347,19 +343,102 @@ export function map_addMVTLayer(source_layer: string, landId: string, cb?: () =>
  * 删除矢量图层
  */
 export function map_destroyMVTLayer() {
-    if (!ezStore.get('MVTLayerIds')) return
-
-    const layeridStore = ezStore.get('MVTLayerIds')
-    console.log(layeridStore)
+    const id = 'mvt-layer'
+    const srcId = id + '-source'
+    
     mapManager.withMap((m) => {
-        for (let i = 0; i < layeridStore.length; i++) {
-            const id = layeridStore[i]
-            m.getLayer(id) && m.removeLayer(id)
-            m.getSource(id + '-source') && m.removeSource(id + '-source')
-        }
+        console.log(m.getLayer(id))
+        console.log(m.getSource(srcId))
+        m.getLayer(id) && m.removeLayer(id)
+        m.getSource(srcId) && m.removeSource(srcId)
     })
 }
 
 /**
  * 5. 交互探索 - 栅格专题产品可视化
  */
+export function map_addDEMLayer(url: string) {
+    const id = 'dem-layer'
+    const srcId = id + '-source'
+    mapManager.withMap((m) => {
+        m.getLayer(id) && m.removeLayer(id)
+        m.getSource(srcId) && m.removeSource(srcId)
+
+        m.setTerrain(null)
+
+        m.addSource(srcId, {
+            type: 'raster-dem',
+            tiles: [url],
+            tileSize: 256,
+        })
+
+        m.setTerrain({ source: srcId, exaggeration: 4.0 })
+    })
+}
+export function map_destroyDEMLayer() {
+    const id = 'dem-layer'
+    const srcId = id + '-source'
+    mapManager.withMap((m) => {
+        m.setTerrain(null)
+        m.getLayer(id) && m.removeLayer(id)
+        m.getSource(srcId) && m.removeSource(srcId)
+    })
+}
+export function map_addNDVIOrSVRLayer(url: string) {
+    const id = 'ndvi-layer'
+    const srcId = id + '-source'
+    mapManager.withMap((m) => {
+        m.getLayer(id) && m.removeLayer(id)
+        m.getSource(srcId) && m.removeSource(srcId)
+
+        m.addSource(srcId, {
+            type: 'raster',
+            tiles: [url],
+            tileSize: 256,
+        })
+
+        m.addLayer({
+            id,
+            type: 'raster',
+            source: srcId,
+            paint: {},
+        })
+    })
+}
+export function map_destroyNDVIOrSVRLayer() {
+    const id = 'ndvi-layer'
+    const srcId = id + '-source'
+    mapManager.withMap((m) => {
+        m.getLayer(id) && m.removeLayer(id)
+        m.getSource(srcId) && m.removeSource(srcId)
+    })
+}
+export function map_add3DLayer(url: string) {
+    const id = '3d-layer'
+    const srcId = id + '-source'
+    mapManager.withMap((m) => {
+        m.getLayer(id) && m.removeLayer(id)
+        m.getSource(srcId) && m.removeSource(srcId)
+
+        m.addSource(srcId, {
+            type: 'raster',
+            tiles: [url],
+            tileSize: 256,
+        })
+
+        m.addLayer({
+            id,
+            type: 'raster',
+            source: srcId,
+            paint: {},
+        })
+    })
+}
+export function map_destroy3DLayer() {
+    const id = '3d-layer'
+    const srcId = id + '-source'
+    mapManager.withMap((m) => {
+        m.getLayer(id) && m.removeLayer(id)
+        m.getSource(srcId) && m.removeSource(srcId)
+    })
+}
