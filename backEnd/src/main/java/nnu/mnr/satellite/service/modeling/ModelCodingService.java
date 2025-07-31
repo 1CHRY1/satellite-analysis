@@ -118,14 +118,15 @@ public class ModelCodingService {
                 "secure", false);
         Map<String, DataSourceProperty> datasources = dynamicDataSourceProperties.getDatasource();
         DataSourceProperty satelliteDs = datasources.get("mysql_satellite");
-        DataSourceProperty tileDs = datasources.get("mysql_tile");
+//        DataSourceProperty tileDs = datasources.get("mysql_tile");
         JSONObject databaseConfig = JSONObject.of(
                 "endpoint", satelliteDs.getUrl().split("://")[1].split("/")[0],
                 "user", satelliteDs.getUsername(),
                 "password", satelliteDs.getPassword(),
 //                "satellite_database", satelliteDs.getUrl().split("://")[1].split("/", 2)[1],
-                "satellite_database", "satellite",
-                "tile_database", tileDs.getUrl().split("://")[1].split("/", 2)[1]);
+                "satellite_database", "satellite"
+//                "tile_database", tileDs.getUrl().split("://")[1].split("/", 2)[1]
+        );
         JSONObject remoteConfig = JSONObject.of("minio", minioConfig, "database", databaseConfig, "project_info", projectConfig);
         return  remoteConfig.toString();
     }
@@ -134,18 +135,22 @@ public class ModelCodingService {
     public CodingProjectVO createCodingProject(CreateProjectDTO createProjectDTO) throws JSchException, SftpException, IOException {
         String userId = createProjectDTO.getUserId();
         String responseInfo = "";
+        // 获取用户基本信息
         if ( !userService.ifUserExist(userId)) {
             responseInfo = String.format(UserConstants.USER_NOT_FOUND, userId);
             return CodingProjectVO.builder().status(-1).info(responseInfo).build();
         }
         User user = userService.getUserById(userId);
+
         String projectName = createProjectDTO.getProjectName();
+        // 获取镜像名称
         String env = createProjectDTO.getEnvironment();
         String imageEnv = DockerFileUtil.getImageByName(env);
         if (imageEnv.equals(DockerContants.NO_IMAGE)) {
             responseInfo = "No Such Image";
             return CodingProjectVO.builder().status(-1).info(responseInfo).build();
         }
+        // 设置项目ID和路径配置
         String projectId = IdUtil.generateProjectId();
         String serverDir = dockerServerProperties.getServerDir() + projectId + "/";
         String workDir = dockerServerProperties.getWorkDir();
@@ -154,11 +159,13 @@ public class ModelCodingService {
         String outputPath = workDir + "output";
         String dataPath = workDir + "data";
         String serverPyPath = serverDir + "main.py";
+        // 检查项目名称是否重复
         Project formerProject = projectDataService.getProjectByUserAndName(userId, projectName);
         if ( formerProject != null){
             responseInfo = "Project " + formerProject.getProjectName() + " has been Registered";
             return CodingProjectVO.builder().status(-1).info(responseInfo).build();
         }
+
         Project project = Project.builder()
                 .projectId(projectId).projectName(projectName)
                 .environment(env).createTime(LocalDateTime.now()).dataBucket(projectDataBucket)
