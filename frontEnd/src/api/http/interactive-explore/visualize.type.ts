@@ -6,3 +6,26 @@ export type VectorUrlParam = {
     spatialFilterMethod: SpatialFilterMethod,
     resolution?: number
 }
+
+export type RGBCompositeParams = {
+    redPath: string
+    greenPath: string
+    bluePath: string
+    r_min: number
+    r_max: number
+    g_min: number
+    g_max: number
+    b_min: number
+    b_max: number
+    normalize_level?: number
+    nodata?: number
+}
+
+export type OneBandColorLayerParam = {
+    fullTifPath: string,
+    min?: number,
+    max?: number,
+    gridsBoundary?: any,
+    nodata?: number,
+    normalize_level?: number
+}
