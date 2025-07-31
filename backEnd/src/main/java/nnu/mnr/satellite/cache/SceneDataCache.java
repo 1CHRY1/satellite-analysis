@@ -1,5 +1,6 @@
 package nnu.mnr.satellite.cache;
 
+import nnu.mnr.satellite.model.dto.resources.ScenesFetchDTOV3;
 import nnu.mnr.satellite.model.vo.resources.CoverageReportVO;
 import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
 import org.locationtech.jts.geom.Geometry;
@@ -14,6 +15,8 @@ public class SceneDataCache {
     // 用户级缓存：Key = userId + requestBody, Value = 缓存数据
     private static final ConcurrentHashMap<String, UserSceneCache> userSceneCacheMap = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, UserThemeCache> userThemeCacheMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, UserRegionInfoCache> userRegionInfoCacheMap = new ConcurrentHashMap<>();
+
 
     // ===============================================缓存景============================================================
 
@@ -85,13 +88,34 @@ public class SceneDataCache {
         userThemeCacheMap.put(cacheKey, new UserThemeCache(scenesInfo, coverageReportVO));
     }
 
-    // ==============================================================================================================
+    // =============================================缓存格网边界==========================================================
+    // 格网边界信息缓存结构
+    public static class UserRegionInfoCache {
+        public Geometry gridsBoundary;
+        private final long cacheTime;                    // 缓存时间（用于超时清理）
+
+        public UserRegionInfoCache(Geometry gridsBoundary) {
+            this.gridsBoundary = gridsBoundary;
+            this.cacheTime = System.currentTimeMillis();
+        }
+    }
+    // 获取当前用户的格网边界缓存
+    public static UserRegionInfoCache getUserRegionInfoCacheMap(String cacheKey) {
+        return userRegionInfoCacheMap.get(cacheKey);
+    }
+    // 缓存格网边界数据
+    public static void cacheUserRegionInfo(String cacheKey, Geometry gridsBoundary) {
+        userRegionInfoCacheMap.put(cacheKey, new UserRegionInfoCache(gridsBoundary));
+    }
+
+    // ===============================================================================================================
 
     // 提供两个方法，以供后续调试
     // 获取当前缓存大小
     public static void getCacheSize() {
         System.out.println(userSceneCacheMap.size());
         System.out.println(userThemeCacheMap.size());
+        System.out.println(userRegionInfoCacheMap.size());
     }
     // 打印所有缓存内容
     public static void printAllCacheContents() {
@@ -100,6 +124,9 @@ public class SceneDataCache {
                 System.out.printf("Key: %s, Value: %s%n", key, value)
         );
         userThemeCacheMap.forEach((key, value) ->
+                System.out.printf("Key: %s, Value: %s%n", key, value)
+        );
+        userRegionInfoCacheMap.forEach((key, value) ->
                 System.out.printf("Key: %s, Value: %s%n", key, value)
         );
         System.out.println("===================================");
@@ -111,6 +138,9 @@ public class SceneDataCache {
                 System.currentTimeMillis() - entry.getValue().cacheTime > expireTimeMs
         );
         userThemeCacheMap.entrySet().removeIf(entry ->
+                System.currentTimeMillis() - entry.getValue().cacheTime > expireTimeMs
+        );
+        userRegionInfoCacheMap.entrySet().removeIf(entry ->
                 System.currentTimeMillis() - entry.getValue().cacheTime > expireTimeMs
         );
     }

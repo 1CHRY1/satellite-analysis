@@ -39,33 +39,36 @@ public class ModelExampleServiceV3 {
 
     public CommonResultVO createScenesVisualizationConfig(VisualizationTileDTO visualizationTileDTO, String cacheKey) {
         SceneDataCache.UserSceneCache userSceneCache = SceneDataCache.getUserSceneCacheMap(cacheKey);
+        SceneDataCache.UserRegionInfoCache userRegionInfoCache = SceneDataCache.getUserRegionInfoCacheMap(cacheKey);
+        // 1、先求瓦片tileBoundingBox，并判断与格网边界是否相交
+        Geometry gridBoundary = userRegionInfoCache.gridsBoundary;
+        List<Float> points = visualizationTileDTO.getPoints();
+        Geometry tileBoundingBox = GeometryUtil.pointsConvertToPolygon(points);
         if (userSceneCache == null) {
             return CommonResultVO.builder()
                     .message("No corresponding data found, please log in again or retrieve the data")
                     .data(cacheKey.split("_")[1])
                     .status(-1)
                     .build();
-        }
-        try {
+        } else if (!gridBoundary.intersects(tileBoundingBox)) {
+            return CommonResultVO.builder()
+                    .message("Tiles out of gridsBoundary")
+                    .status(-1)
+                    .build();
+        } else{
             // 构建JSON配置
-            JSONObject configJson = buildScenesVisualizationConfig(visualizationTileDTO, userSceneCache);
-
+            String sensorName = visualizationTileDTO.getSensorName();
+            JSONObject configJson = buildScenesVisualizationConfig(tileBoundingBox, sensorName, userSceneCache);
             return CommonResultVO.builder().status(1).message("success").data(configJson).build();
-
-        } catch (Exception e) {
-            return CommonResultVO.builder().status(-1).message("Error creating visualization config: " + e.getMessage()).build();
         }
     }
 
     // 构建影像可视化配置JSON
-    private JSONObject buildScenesVisualizationConfig(VisualizationTileDTO visualizationTileDTO, SceneDataCache.UserSceneCache userSceneCache) {
-        // 1、先将瓦片的points转geometry
-        List<Float> points = visualizationTileDTO.getPoints();
-        Geometry tileBoundingBox = GeometryUtil.pointsConvertToPolygon(points);
+    private JSONObject buildScenesVisualizationConfig(Geometry tileBoundingBox, String sensorName, SceneDataCache.UserSceneCache userSceneCache) {
+
         // 2、用空间索引筛选瓦片周围的景
         List<SceneDesVO> scenesInfo = userSceneCache.queryCandidateScenes(tileBoundingBox);
         // 3、根据sensorName进一步筛选景，同时获取bandMapper（最后才用上）
-        String sensorName = visualizationTileDTO.getSensorName();
         JSONObject bandMapper = bandMapperGenerator.getSatelliteConfigBySensorName(sensorName);
         List<SceneDesVO> scenes = new ArrayList<>();
         for (SceneDesVO sceneDesVO : scenesInfo) {
@@ -108,7 +111,7 @@ public class ModelExampleServiceV3 {
         // 记录结束时间并打印耗时
         long endTime = System.nanoTime();
         long durationMs = TimeUnit.NANOSECONDS.toMillis(endTime - startTime);
-        System.out.println("筛选影响可视化景数据运行时间: " + durationMs + " ms，景总数为：" + scenesConfig.size() + "景");
+        System.out.println("筛选影像可视化景数据运行时间: " + durationMs + " ms，景总数为：" + scenesConfig.size() + "景");
         // 降序排列
         scenesConfig.sort((a, b) -> Double.compare(b.getCoverage(), a.getCoverage()));
         JSONObject result = new JSONObject();
