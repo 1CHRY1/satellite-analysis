@@ -1,12 +1,17 @@
 package nnu.mnr.satellite.service.resources;
 
+import lombok.Builder;
+import lombok.Data;
 import nnu.mnr.satellite.cache.SceneDataCache;
 import nnu.mnr.satellite.enums.common.SceneTypeByResolution;
+import nnu.mnr.satellite.enums.common.SceneTypeByTheme;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerImageDTO;
 import nnu.mnr.satellite.model.dto.resources.GridBasicDTO;
+import nnu.mnr.satellite.model.dto.resources.GridsWithFiltersDTO;
 import nnu.mnr.satellite.model.po.geo.GeoLocation;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.model.vo.resources.CoverageReportVO;
+import nnu.mnr.satellite.model.vo.resources.GridsScenesOverlapVO;
 import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
 import nnu.mnr.satellite.service.common.BandMapperGenerator;
 import com.alibaba.fastjson2.JSONObject;
@@ -99,6 +104,138 @@ public class GridDataServiceV3 {
         }
         report.setDataset(dataset);
         return report;
+    }
+
+    public CoverageReportVO<JSONObject> getThemesByGridAndResolution(GridBasicDTO gridBasicDTO, String cacheKey){
+        Integer columnId = gridBasicDTO.getColumnId();
+        Integer rowId = gridBasicDTO.getRowId();
+        Integer resolution = gridBasicDTO.getResolution();
+        Geometry wkt = getTileGeomByIdsAndResolution(rowId, columnId, resolution);
+        SceneDataCache.UserThemeCache userThemeCache = SceneDataCache.getUserThemeCacheMap(cacheKey);
+        if (userThemeCache == null) {
+            throw new NullPointerException("No corresponding cache found, please log in again or retrieve the data");
+        }
+        List<SceneDesVO> scenesInfo = userThemeCache.scenesInfo;
+        if (scenesInfo == null || scenesInfo.isEmpty()) {
+            throw new NullPointerException("No scene data available in the cache.");
+        }
+        // 筛选出与格网相交的景
+        List<SceneDesVO> filteredScenesInfo = scenesInfo.stream()
+                .filter(scene -> isSceneIntersectGrid(scene, wkt))
+                .toList();
+
+        CoverageReportVO<JSONObject> report = new CoverageReportVO<>();
+        List<String> category = SceneTypeByTheme.getAllCodes();
+        Integer total = filteredScenesInfo.size();
+        report.setTotal(total); // 总数据量
+        report.setCategory(category); // 分类名称列表
+
+        Map<String, CoverageReportVO.DatasetItemVO<JSONObject>> dataset = new LinkedHashMap<>();
+        for (SceneTypeByTheme type : SceneTypeByTheme.values()) {
+            // 初始化每个分类的 DatasetItemVO
+            CoverageReportVO.DatasetItemVO<JSONObject> item = new CoverageReportVO.DatasetItemVO<>();
+            item.setLabel(type.getLabel());
+            // 筛选当前分类的场景数据（根据 datatype 字段分类）
+            List<SceneDesVO> filteredScenes = scenesInfo.stream()
+                    .filter(scene -> type.getCode().equalsIgnoreCase(scene.getDataType()))
+                    .toList();
+            item.setTotal(filteredScenes.size());
+            // 构造dataList
+            List<JSONObject> dataList = new ArrayList<>();
+            if (!filteredScenes.isEmpty()) {
+                for(SceneDesVO sceneInfo : filteredScenes){
+                    JSONObject scene = new JSONObject();
+                    scene.put("sceneId", sceneInfo.getSceneId());
+                    scene.put("sceneTime", sceneInfo.getSceneTime());
+                    scene.put("noData", sceneInfo.getNoData());
+                    scene.put("sensorName", sceneInfo.getSensorName());
+                    scene.put("productName", sceneInfo.getProductName());
+                    List<ModelServerImageDTO> images = imageDataService.getModelServerImageDTOBySceneId(sceneInfo.getSceneId());
+                    scene.put("images", images);
+                    JSONObject bandMapper = bandMapperGenerator.getSatelliteConfigBySensorName(sceneInfo.getSensorName());
+                    scene.put("bandMapper", bandMapper);
+                    dataList.add(scene);
+                }
+            }
+            // 排序
+            List<JSONObject> sortedDataList = dataList.stream()
+                    .sorted((scene1, scene2) -> {
+                        // 按 sceneTime 降序排序（最新的在前）
+                        LocalDateTime time1 = LocalDateTime.parse(scene1.getString("sceneTime"));
+                        LocalDateTime time2 = LocalDateTime.parse(scene2.getString("sceneTime"));
+                        return time2.compareTo(time1); // 降序
+                    })
+                    .toList(); // 重新收集成 List
+            item.setDataList(sortedDataList);
+            dataset.put(type.getCode(), item);
+        }
+        report.setDataset(dataset);
+        return report;
+    }
+
+    public GridsScenesOverlapVO getScenesByGridsAndFilters(GridsWithFiltersDTO gridsWithFiltersDTO, String cacheKey){
+        List<GridBasicDTO> gridsInfo = gridsWithFiltersDTO.getGrids();
+        GridsWithFiltersDTO.SceneFilters filters = gridsWithFiltersDTO.getFilters();
+        SceneDataCache.UserSceneCache userSceneCache = SceneDataCache.getUserSceneCacheMap(cacheKey);
+        if (userSceneCache == null) {
+            throw new NullPointerException("No corresponding cache found, please log in again or retrieve the data");
+        }
+        List<SceneDesVO> scenesInfo = userSceneCache.scenesInfo;
+        CoverageReportVO<Map<String, Object>> coverageReport = userSceneCache.coverageReportVO;
+
+        if (scenesInfo == null || scenesInfo.isEmpty() || coverageReport == null) {
+            throw new NullPointerException("No scene data available in the cache.");
+        }
+        String resolutionName = filters.getResolutionName();
+        List<String> sensorNames = new ArrayList<>();
+        if (resolutionName != null) {
+            List<Map<String, Object>> dataList = coverageReport.getDataset().get(resolutionName).getDataList();
+            sensorNames = dataList.stream()
+                    .map(map -> (String) map.get("sensorName")) // 提取 sensorName
+                    .filter(Objects::nonNull) // 过滤掉 null 值（可选）
+                    .toList();
+        }
+        List<SceneDesVO> filterScene = new ArrayList<>();
+        for (SceneDesVO sceneInfo : scenesInfo) {
+            JSONObject tag = sceneInfo.getTags();
+            if ((sensorNames.contains(sceneInfo.getSensorName()) || sensorNames.isEmpty())
+                    && (Objects.equals(filters.getSource(), tag.getString("source")) || filters.getSource() == null)
+                    && (Objects.equals(filters.getProduction(), tag.getString("production")) || filters.getProduction() == null)
+                    && (Objects.equals(filters.getCategory(), tag.getString("category")) || filters.getCategory() == null)) {
+                filterScene.add(sceneInfo);
+            }
+        }
+
+        List<GridsScenesOverlapVO.SceneInfo> scenes = new ArrayList<>();
+        List<GridsScenesOverlapVO.GridsInfo> grids = new ArrayList<>();
+        for (GridBasicDTO grid : gridsInfo) {
+            boolean isOverLapped = false;
+            Geometry bbox = getTileGeomByIdsAndResolution(grid.getRowId(), grid.getColumnId(), grid.getResolution());
+            for (SceneDesVO scene : filterScene) {
+                if (scene.getBoundingBox().contains(bbox)) {
+                    isOverLapped = true;
+                    GridsScenesOverlapVO.SceneInfo sceneInfo = GridsScenesOverlapVO.SceneInfo.builder()
+                            .sceneId(scene.getSceneId())
+                            .platformName(scene.getPlatformName())
+                            .build();
+                    if(!scenes.contains(sceneInfo)){
+                        scenes.add(sceneInfo);
+                    }
+                }
+            }
+            GridsScenesOverlapVO.GridsInfo gridInfo = GridsScenesOverlapVO.GridsInfo.builder()
+                    .columnId(grid.getColumnId())
+                    .rowId(grid.getRowId())
+                    .resolution(grid.getResolution())
+                    .isOverlapped(isOverLapped)
+                    .build();
+            grids.add(gridInfo);
+        }
+
+        return GridsScenesOverlapVO.builder()
+                .grids(grids)
+                .scenes(scenes)
+                .build();
     }
 
     private boolean isSceneIntersectGrid(SceneDesVO scene, Geometry wkt){

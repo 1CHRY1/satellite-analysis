@@ -13,6 +13,7 @@ import nnu.mnr.satellite.utils.common.IdUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
@@ -29,7 +30,8 @@ public class ThemeControllerV3 {
 
     @PostMapping("/time/region")
     public ResponseEntity<CoverageReportVO<String>> getThemesCoverageReportByTimeAndRegion(@RequestBody ScenesFetchDTOV3 scenesFetchDTO,
-                                                                                   @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+                                                                                           @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+                                                                                           HttpServletResponse response) {
         String userId;
         try {
             userId = IdUtil.parseUserIdFromAuthHeader(authorizationHeader);
@@ -37,12 +39,19 @@ public class ThemeControllerV3 {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
         CoverageReportWithCacheKeyVO<String> result = ThemeDataService.getThemesCoverageReportByTimeAndRegion(scenesFetchDTO, userId);
+        // 设置cookie
+        Cookie cookie = new Cookie("encrypted_request_body", result.getEncryptedRequestBody());
+        cookie.setPath("/"); // 设置 Cookie 作用路径
+        cookie.setHttpOnly(true); // 防止 XSS 攻击
+        cookie.setMaxAge(-1); // 默认，浏览器关闭后自动删除
+        response.addCookie(cookie);
         return ResponseEntity.ok(result.getReport());
     }
 
     @PostMapping("/time/location")
     public ResponseEntity<CoverageReportVO<String>> getThemesCoverageReportByTimeAndLocation(@RequestBody ScenesLocationFetchDTOV3 scenesLocationFetchDTO,
-                                                                                           @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+                                                                                           @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+                                                                                             HttpServletResponse response) {
         String userId;
         try {
             userId = IdUtil.parseUserIdFromAuthHeader(authorizationHeader);
@@ -50,6 +59,12 @@ public class ThemeControllerV3 {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
         CoverageReportWithCacheKeyVO<String> result = ThemeDataService.getThemesCoverageReportByTimeAndLocation(scenesLocationFetchDTO, userId);
+        // 设置cookie
+        Cookie cookie = new Cookie("encrypted_request_body", result.getEncryptedRequestBody());
+        cookie.setPath("/"); // 设置 Cookie 作用路径
+        cookie.setHttpOnly(true); // 防止 XSS 攻击
+        cookie.setMaxAge(-1); // 默认，浏览器关闭后自动删除
+        response.addCookie(cookie);
         return ResponseEntity.ok(result.getReport());
     }
 

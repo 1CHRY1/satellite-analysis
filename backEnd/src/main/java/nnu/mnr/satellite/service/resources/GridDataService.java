@@ -58,7 +58,7 @@ public class GridDataService {
         GeoLocation location = locationService.searchById(locationId);
 
         double lon = Double.parseDouble(location.getWgs84Lon());
-        double lat = Double.parseDouble(location.getGcj02Lat());
+        double lat = Double.parseDouble(location.getWgs84Lat());
 
         int[] grid = TileCalculateUtil.getGridXYByLngLatAndResolution(lon, lat, resolution);
         int centerX = grid[0];  // 当前网格的 x 坐标
@@ -68,7 +68,7 @@ public class GridDataService {
         List<Integer[]> gridCoordinates = new ArrayList<>();
         for (int dy = -1; dy <= 1; dy++) {
             for (int dx = -1; dx <= 1; dx++) {
-                gridCoordinates.add(new Integer[]{centerY + dy, centerX + dx});
+                gridCoordinates.add(new Integer[]{centerX + dx, centerY + dy});
             }
         }
 
@@ -77,7 +77,7 @@ public class GridDataService {
 
         // 计算每个网格的边界并加入结果列表
         for (Integer[] coord : gridCoordinates) {
-            grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(coord[0], coord[1], resolution));
+            grids.add(TileCalculateUtil.getTileBoundaryByIdsAndResolution(coord[1], coord[0], resolution));
         }
 
         return GridsAndGridsBoundary.builder()
