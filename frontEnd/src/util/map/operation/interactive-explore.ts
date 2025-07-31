@@ -3,7 +3,6 @@ import { ezStore, useGridStore } from '@/store'
 import { Popup, GeoJSONSource, MapMouseEvent } from 'mapbox-gl'
 import bus from '@/store/bus'
 import { createApp, type ComponentInstance, ref, type Ref, reactive } from 'vue'
-import PopoverContent, { type GridData } from '@/components/feature/map/popoverContent.vue'
 import PopContent from '@/components/feature/map/popContent.vue'
 import Antd from 'ant-design-vue'
 

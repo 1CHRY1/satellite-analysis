@@ -505,6 +505,7 @@ const handleSceneVisualize = () => {
 
         const gridAllScenes:Grid.SceneDetail[] = []
         // gridData.value.scenes
+        // 分辨率指定、传感器全选在上面
         if (selectedResolution.value && selectedResolution.value !== '全选') {
             for (const category of gridData.value.sceneRes.category) {
                 for (const scene of gridData.value.sceneRes.dataset[category].dataList) {
@@ -514,6 +515,7 @@ const handleSceneVisualize = () => {
                 }
             }
         } else {
+            // 分辨率全选，传感器全选
             for (const category of gridData.value.sceneRes.category) {
                 for (const scene of gridData.value.sceneRes.dataset[category].dataList) {
                     gridAllScenes.push(scene)
@@ -531,13 +533,13 @@ const handleSceneVisualize = () => {
             // console.log(sceneInfo.bandMapper)
             for (let bandImg of sceneInfo.images) {
                 // 后端返回的BandMapper如果是单波段的话，Red Green 和 Blue相同
-                if (sceneInfo.bandMapper.Red === bandImg.band) {
+                if (sceneInfo.bandMapper.Red == bandImg.band) {
                     redPath = bandImg.bucket + '/' + bandImg.tifPath
                 }
-                if (sceneInfo.bandMapper.Green === bandImg.band) {
+                if (sceneInfo.bandMapper.Green == bandImg.band) {
                     greenPath = bandImg.bucket + '/' + bandImg.tifPath
                 }
-                if (sceneInfo.bandMapper.Blue === bandImg.band) {
+                if (sceneInfo.bandMapper.Blue == bandImg.band) {
                     bluePath = bandImg.bucket + '/' + bandImg.tifPath
                 }
             }
@@ -553,30 +555,28 @@ const handleSceneVisualize = () => {
                 nodata: sceneInfo.noData,
             })
         }
+        
         bus.emit('cubeVisualize', rgbImageData, gridInfo, scaleRate.value, 'rgb')
     } else {
+        // 针对具体传感器、具体波段组合
         const rgbImageData: MultiImageInfoType[] = []
         const filteredScene: Grid.SceneDetail[] = []
         for (const category of gridData.value.sceneRes.category) {
             for (const scene of gridData.value.sceneRes.dataset[category].dataList) {
-                if (selectedResolution.value != '全选' && gridData.value.sceneRes.dataset[category].label === selectedResolution.value) {
+                // 分辨率全选，传感器全选和分辨率指定、传感器全选在上面
+                if (selectedResolution.value == '全选' && selectedSensor.value != '全选') {
+                    // 分辨率全选，传感器指定
                     if (scene.sensorName === selectedSensor.value) {
                         filteredScene.push(scene)
                     }
-                } else if (selectedResolution.value === '全选') {
-                    filteredScene.push(scene)
+                } else if (selectedResolution.value != '全选' && selectedSensor.value != '全选') {
+                    // 分辨率指定，传感器指定
+                    if (gridData.value.sceneRes.dataset[category].label === selectedResolution.value && scene.sensorName === selectedSensor.value) {
+                        filteredScene.push(scene)
+                    }
                 }
             }
         }
-
-        // const filteredScene = gridData.value.scenes.filter((scene) => {
-        //     if (selectedResolution.value != '全选')
-        //         return (
-        //             scene.resolution === selectedResolution.value &&
-        //             scene.sensorName === selectedSensor.value
-        //         )
-        //     else return scene.sensorName === selectedSensor.value
-        // })
 
         // Process each band (R, G, B)
         for (let scene of filteredScene) {
@@ -586,13 +586,14 @@ const handleSceneVisualize = () => {
 
             // 这里用用户选的
             scene.images.forEach((bandImg) => {
-                if (bandImg.band === Number(selectedRBand.value)) {
+                console.log(bandImg, 'bandImg')
+                if (bandImg.band == Number(selectedRBand.value)) {
                     redPath = bandImg.bucket + '/' + bandImg.tifPath
                 }
-                if (bandImg.band === Number(selectedGBand.value)) {
+                if (bandImg.band == Number(selectedGBand.value)) {
                     greenPath = bandImg.bucket + '/' + bandImg.tifPath
                 }
-                if (bandImg.band === Number(selectedBBand.value)) {
+                if (bandImg.band == Number(selectedBBand.value)) {
                     bluePath = bandImg.bucket + '/' + bandImg.tifPath
                 }
             })
@@ -635,7 +636,14 @@ const handleVectorVisualize = (tableName: string) => {
 const selectedProductType = ref('')
 const selectedProduct = ref('')
 const productTypes = computed(() => {
-    return ['全选', 'DEM', '红绿立体影像', '形变速率', 'NDVI', '其他']
+    if (!gridData.value.themeRes?.dataset)
+        return []
+    const result = new Set<string>()
+    result.add('全选')
+    for (const category of gridData.value.themeRes.category) {
+        result.add(gridData.value.themeRes.dataset[category].label)
+    }
+    return Array.from(result)
 })
 
 const products = computed(() => {
@@ -644,31 +652,14 @@ const products = computed(() => {
         return []
     result.add('全选')
     for (const category of gridData.value.themeRes.category) {
-        for (const scene of gridData.value.themeRes.dataset[category].dataList) {
+        for (const theme of gridData.value.themeRes.dataset[category].dataList) {
             if (selectedProductType.value != '全选') {
-                let dataType = 'others'
-                switch (category) {
-                    case 'dem':
-                        dataType = 'DEM'
-                        break
-                    case '3d':
-                        dataType = '红绿立体影像'
-                        break
-                    case 'svr':
-                        dataType = '形变速率'
-                        break
-                    case 'ndvi':
-                        dataType = 'NDVI'
-                        break
-                    default:
-                        dataType = '其他'
-                        break
-                }
+                let dataType = gridData.value.themeRes.dataset[category].label
                 if (dataType === selectedProductType.value) {
-                    result.add(scene.sensorName)
+                    result.add(theme.sensorName)
                 }
             } else if (selectedProductType.value === '全选') {
-                result.add(scene.sensorName)
+                result.add(theme.sensorName)
             }
         }
     }
@@ -678,7 +669,7 @@ const handleProductVisualize = () => {
     const gridInfo = gridData.value
     gridInfo.opacity = opacity.value
     const imageData: MultiImageInfoType[] = []
-    const gridAllScenes: Grid.ThemeDetail[] = []
+    const gridAllThemes: Grid.ThemeDetail[] = []
     if (!gridData.value.themeRes.dataset) {
         return
     }
@@ -687,80 +678,69 @@ const handleProductVisualize = () => {
     if (selectedProductType.value === '全选') {
         if (selectedProduct.value === '全选') {
             for (const category of gridData.value.themeRes.category) {
-                for (const scene of gridData.value.themeRes.dataset[category].dataList) {
-                    scene.dataType = category
-                    gridAllScenes.push(scene)
+                for (const theme of gridData.value.themeRes.dataset[category].dataList) {
+                    theme.dataType = category
+                    gridAllThemes.push(theme)
                 }
             }
         } else {
             for (const category of gridData.value.themeRes.category) {
-                for (const scene of gridData.value.themeRes.dataset[category].dataList) {
-                    scene.dataType = category
-                    if (scene.sensorName === selectedProduct.value) {
-                        gridAllScenes.push(scene)
+                for (const theme of gridData.value.themeRes.dataset[category].dataList) {
+                    theme.dataType = category
+                    if (theme.sensorName === selectedProduct.value) {
+                        gridAllThemes.push(theme)
                     }
                 }
             }
         }
     } else {
         let dataType = ''
-        switch (selectedProductType.value) {
-            case 'DEM':
-                dataType = 'dem'
+        for (const category of gridData.value.themeRes.category) {
+            if (gridData.value.themeRes.dataset[category].label === selectedProductType.value) {
+                dataType = category
                 break
-            case '红绿立体影像':
-                dataType = '3d'
-                break
-            case '形变速率':
-                dataType = 'svr'
-                break
-            case 'NDVI':
-                dataType = 'ndvi'
-                break
-            default:
-                dataType = 'others'
-                break
+            }
         }
         for (const category of gridData.value.themeRes.category) {
-            for (const scene of gridData.value.themeRes.dataset[category].dataList) {
-                if (dataType === scene.dataType && selectedProduct.value === '全选') {
-                    gridAllScenes.push(scene)
-                } else if (dataType === scene.dataType && selectedProduct.value === scene.sensorName) {
-                    gridAllScenes.push(scene)
+            for (const theme of gridData.value.themeRes.dataset[category].dataList) {
+                if (dataType === theme.dataType && selectedProduct.value === '全选') {
+                    gridAllThemes.push(theme)
+                } else if (dataType === theme.dataType && selectedProduct.value === theme.sensorName) {
+                    gridAllThemes.push(theme)
                 }
             }
         }
     }
     // Process each band (R, G, B)
-    for (let sceneInfo of gridAllScenes) {
+    for (let themeInfo of gridAllThemes) {
         let redPath = ''
         let greenPath = ''
         let bluePath = ''
 
         // 这里用bandmapper, 确保bandMapper！！！！！
         // console.log(sceneInfo.bandMapper)
-        for (let bandImg of sceneInfo.images) {
+        for (let bandImg of themeInfo.images) {
             // 后端返回的BandMapper如果是单波段的话，Red Green 和 Blue相同
-            if (sceneInfo.bandMapper.Red === bandImg.band) {
+            if (themeInfo.bandMapper.Red == bandImg.band) {
                 redPath = bandImg.bucket + '/' + bandImg.tifPath
             }
-            if (sceneInfo.bandMapper.Green === bandImg.band) {
+            if (themeInfo.bandMapper.Green == bandImg.band) {
                 greenPath = bandImg.bucket + '/' + bandImg.tifPath
             }
-            if (sceneInfo.bandMapper.Blue === bandImg.band) {
+            if (themeInfo.bandMapper.Blue == bandImg.band) {
                 bluePath = bandImg.bucket + '/' + bandImg.tifPath
             }
         }
         imageData.push({
-            sceneId: sceneInfo.sceneId,
-            sensorName: sceneInfo.sensorName,
-            productName: sceneInfo.sensorName + '-' + sceneInfo.productName,
-            dataType: sceneInfo.dataType,
-            time: sceneInfo.sceneTime,
+            sceneId: themeInfo.sceneId,
+            sensorName: themeInfo.sensorName,
+            productName: themeInfo.sensorName + '-' + themeInfo.productName,
+            dataType: themeInfo.dataType,
+            time: themeInfo.sceneTime,
             redPath: redPath,
             greenPath: greenPath,
             bluePath: bluePath,
-            nodata: sceneInfo.noData,
+            nodata: themeInfo.noData,
         })
     }
     bus.emit('cubeVisualize', imageData, gridInfo, scaleRate.value, 'product')
@@ -768,7 +748,9 @@ const handleProductVisualize = () => {
     bus.emit('openTimeline')
 }
 
-
+/**
+ * 透明度变量
+ */
 const opacity = ref(0)
 const opacityFormatter = (value: number) => {
     return `${value}%`

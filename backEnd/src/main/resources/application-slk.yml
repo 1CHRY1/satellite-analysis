@@ -109,7 +109,7 @@ modelServer:
 
 
 tiler:
-#  end-point: http://127.0.0.1:8000
-  end-point: http://223.2.34.8:31800
+  end-point: http://127.0.0.1:8000
+#  end-point: http://223.2.34.8:31800
 satelliteConfig:
   path: /Users/paxton/Documents/Code/satellite-analysis/backEnd/src/main/resources/config/band_config.json
