@@ -6,7 +6,9 @@ import nnu.mnr.satellite.model.vo.resources.ViewWindowVO;
 import nnu.mnr.satellite.repository.resources.LocationRepoImpl;
 import nnu.mnr.satellite.utils.geom.GeometryUtil;
 import nnu.mnr.satellite.utils.geom.TileCalculateUtil;
+import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +29,8 @@ public class LocationService {
     @Autowired
     private LocationRepoImpl locationRepo;
 
+    private final GeometryFactory geometryFactory = new GeometryFactory();
+
     public List<GeoLocation> searchByNameContaining(String keyword) {
         return locationRepo.searchByName(keyword);
     }
@@ -44,11 +48,11 @@ public class LocationService {
         double lon = Double.parseDouble(location.getWgs84Lon());
         double lat = Double.parseDouble(location.getGcj02Lat());
         int[] grid = TileCalculateUtil.getGridXYByLngLatAndResolution(lon, lat, resolution);
-        Geometry leftTop = TileCalculateUtil.getTileGeomByIdsAndResolution(grid[1]-1, grid[0]-1, resolution);
-        Geometry rightBottom = TileCalculateUtil.getTileGeomByIdsAndResolution(grid[1]+1, grid[0]+1, resolution);
         Geometry rightTop = TileCalculateUtil.getTileGeomByIdsAndResolution(grid[1]-1, grid[0]+1, resolution);
         Geometry leftBottom = TileCalculateUtil.getTileGeomByIdsAndResolution(grid[1]+1, grid[0]-1, resolution);
-        return leftBottom.union(rightBottom).union(leftTop).union(rightTop).getEnvelope();
+        return leftBottom
+                .union(rightTop)
+                .getEnvelope();
     }
 
     public ViewWindowVO getLocationWindowById(Integer resolution, String id) {

@@ -12,4 +12,5 @@ import java.util.List;
 public class CacheDataDTO<T> {
     CoverageReportVO<T> report;
     List<SceneDesVO> scenesInfo;
+    List<SceneDesVO> themesInfo;
 }

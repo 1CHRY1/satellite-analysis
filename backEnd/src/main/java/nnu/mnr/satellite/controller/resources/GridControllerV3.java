@@ -3,7 +3,9 @@ package nnu.mnr.satellite.controller.resources;
 import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.model.dto.resources.GridBasicDTO;
+import nnu.mnr.satellite.model.dto.resources.GridsWithFiltersDTO;
 import nnu.mnr.satellite.model.vo.resources.CoverageReportVO;
+import nnu.mnr.satellite.model.vo.resources.GridsScenesOverlapVO;
 import nnu.mnr.satellite.service.resources.GridDataServiceV3;
 import nnu.mnr.satellite.utils.common.IdUtil;
 import com.alibaba.fastjson2.JSONObject;
@@ -34,5 +36,33 @@ public class GridControllerV3 {
         }
         String cacheKey = userId + "_" + encryptedRequestBody;
         return ResponseEntity.ok(gridDataService.getScenesByGridAndResolution(gridBasicDTO, cacheKey));
+    }
+
+    @PostMapping("/theme")
+    public ResponseEntity<CoverageReportVO<JSONObject>> getThemesByGridAndResolution(@RequestBody GridBasicDTO gridBasicDTO,
+                                                                                     @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+                                                                                     @CookieValue(value = "encrypted_request_body", required = false) String encryptedRequestBody) throws IOException {
+        String userId;
+        try {
+            userId = IdUtil.parseUserIdFromAuthHeader(authorizationHeader);
+        } catch (JwtException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+        String cacheKey = userId + "_" + encryptedRequestBody;
+        return ResponseEntity.ok(gridDataService.getThemesByGridAndResolution(gridBasicDTO, cacheKey));
+    }
+
+    @PostMapping("/scene/contain")
+    public ResponseEntity<GridsScenesOverlapVO> getScenesByGridsAndFilters(@RequestBody GridsWithFiltersDTO gridsWithFiltersDTO,
+                                                                           @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+                                                                           @CookieValue(value = "encrypted_request_body", required = false) String encryptedRequestBody) throws IOException {
+        String userId;
+        try {
+            userId = IdUtil.parseUserIdFromAuthHeader(authorizationHeader);
+        } catch (JwtException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+        String cacheKey = userId + "_" + encryptedRequestBody;
+        return ResponseEntity.ok(gridDataService.getScenesByGridsAndFilters(gridsWithFiltersDTO, cacheKey));
     }
 }

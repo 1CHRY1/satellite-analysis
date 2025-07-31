@@ -50,7 +50,7 @@ public class VectorDataService {
     }
 
     public byte[] getVectorByLocationAndTableName(String locationId, Integer resolution, String tableName, int z, int x, int y){
-        String wkt = locationService.getLocationBoundary(resolution, locationId).getBoundary().toText();
+        String wkt = locationService.getLocationBoundary(resolution, locationId).toText();
         return getMvtTile(tableName, wkt, z, x, y);
     }
 

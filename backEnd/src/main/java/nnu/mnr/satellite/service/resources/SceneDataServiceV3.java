@@ -17,6 +17,7 @@ import nnu.mnr.satellite.utils.geom.TileCalculateUtil;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.operation.union.CascadedPolygonUnion;
+import org.locationtech.jts.simplify.DouglasPeuckerSimplifier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -58,8 +59,7 @@ public class SceneDataServiceV3 {
         String cacheKey = userId + "_" + encryptedRequestBody;
         // 从缓存读取数据（如果存在）
         SceneDataCache.UserSceneCache userSceneCache = SceneDataCache.getUserSceneCacheMap(cacheKey);
-        List<SceneDesVO> scenesInfo;
-        CoverageReportVO<Map<String, Object>> report = new CoverageReportVO<>();
+        CoverageReportVO<Map<String, Object>> report;
         if (userSceneCache == null) {
             // 缓存未命中，从数据库中读数据
             String startTime = scenesFetchDTO.getStartTime();
@@ -75,6 +75,9 @@ public class SceneDataServiceV3 {
             report = cacheData.getReport();
             // 缓存数据
             SceneDataCache.cacheUserScenes(cacheKey, cacheData.getScenesInfo(), report);
+            if (SceneDataCache.getUserThemeCacheMap(cacheKey) == null){
+                SceneDataCache.cacheUserThemes(cacheKey, cacheData.getThemesInfo(), null);
+            }
         }else {
             // 缓存命中，直接使用
             report = userSceneCache.coverageReportVO;
@@ -100,8 +103,7 @@ public class SceneDataServiceV3 {
         String cacheKey = userId + "_" + encryptedRequestBody;
         // 从缓存读取数据（如果存在）
         SceneDataCache.UserSceneCache userSceneCache = SceneDataCache.getUserSceneCacheMap(cacheKey);
-        List<SceneDesVO> scenesInfo;
-        CoverageReportVO<Map<String, Object>> report = new CoverageReportVO<>();
+        CoverageReportVO<Map<String, Object>> report;
         if (userSceneCache == null) {
             // 缓存未命中，从数据库中读数据
             String startTime = scenesLocationFetchDTO.getStartTime();
@@ -115,6 +117,7 @@ public class SceneDataServiceV3 {
             report = cacheData.getReport();
             // 缓存数据
             SceneDataCache.cacheUserScenes(cacheKey, cacheData.getScenesInfo(), report);
+            SceneDataCache.cacheUserThemes(cacheKey, cacheData.getThemesInfo(), null);
         }else {
             // 缓存命中，直接使用
             report = userSceneCache.coverageReportVO;
@@ -127,10 +130,21 @@ public class SceneDataServiceV3 {
 
     private CacheDataDTO<Map<String, Object>> buildCoverageReport(String startTime, String endTime, Geometry gridsBoundary){
         CoverageReportVO<Map<String, Object>> report = new CoverageReportVO<>();
-        List<SceneDesVO> scenesInfo;
-        String dataType = "'satellite'";
+        List<SceneDesVO> allScenesInfo;
+        List<SceneDesVO> scenesInfo = new ArrayList<>();
+        List<SceneDesVO> themesInfo = new ArrayList<>();
+        String dataType = "'satellite', 'dem', 'dsm', 'ndvi', 'svr', '3d'";
         String wkt = gridsBoundary.toText();
-        scenesInfo = sceneRepo.getScenesInfoByTimeAndRegion(startTime, endTime, wkt, dataType);
+        allScenesInfo = sceneRepo.getScenesInfoByTimeAndRegion(startTime, endTime, wkt, dataType);
+        for (SceneDesVO scene : allScenesInfo) {
+            String sceneDataType = scene.getDataType(); // 假设 SceneDesVO 有 getDataType() 方法
+            if ("satellite".equals(sceneDataType)) {
+                scenesInfo.add(scene);
+            } else if (Arrays.asList("dem", "dsm", "ndvi", "svr", "3d").contains(sceneDataType)) {
+                themesInfo.add(scene);
+            }
+        }
+
         Integer total = scenesInfo.size();
         // 计算覆盖度
         double coverageRatio = calculateCoverageRatio(scenesInfo, gridsBoundary) * 100;
@@ -175,6 +189,7 @@ public class SceneDataServiceV3 {
         return CacheDataDTO.<Map<String, Object>>builder()
                 .report(report)
                 .scenesInfo(scenesInfo)
+                .themesInfo(themesInfo)
                 .build();
     }
 
@@ -212,13 +227,13 @@ public class SceneDataServiceV3 {
         Geometry intersection = boundingBox.intersection(gridsBoundary);
         double coverageArea = intersection.getArea();
         double gridsArea = gridsBoundary.getArea();
-
+        double CoveragePercentage = coverageArea / gridsArea;
         // 记录结束时间并打印耗时
         long endTime = System.nanoTime();
         long durationMs = TimeUnit.NANOSECONDS.toMillis(endTime - startTime);
         System.out.println("相交计算运行时间: " + durationMs + " ms");
 
-        return coverageArea / gridsArea; // 保留两位小数
+        return CoveragePercentage; // 保留两位小数
     }
 
     /**
