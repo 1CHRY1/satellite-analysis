@@ -1,6 +1,6 @@
 <template>
     <teleport to="body">
-        <div class="mian fixed inset-0 bg-black/40 flex items-center justify-center z-50 pointer-events-none">
+        <div class=" fixed inset-0 bg-black/40 flex items-center justify-center z-50 pointer-events-none">
             <div class="bg-black w-[20%] h-[50%] p-6 rounded-lg overflow-auto pointer-events-auto ">
                 <svg viewBox="0 0 320 300">
                     <path
@@ -75,7 +75,7 @@ import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
-defineEmits(['close', 'switch']);
+const emit= defineEmits(['close', 'switch']);
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -110,6 +110,7 @@ const handleLogin = async () => {
             message: t('login.message.success'),
         })
         router.push('/home')
+        emit('close')
     } else if (loginRes.status === -1) {
         ElMessage({
             type: 'error',

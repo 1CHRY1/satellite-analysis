@@ -1,6 +1,20 @@
 <template>
     <div class="relative flex flex-1 flex-row bg-black">
-        <div class="w-[28vw] max-h-[calc(100vh-100px)] p-4 text-gray-200 mb-0 gap-0">
+        <subtitle class="z-10 absolute" style="margin-top: 60px; "/>
+        <div class=" absolute left-18 h-[calc(100vh-100px)] p-4 text-gray-200 mb-0 gap-0 z-10" :class="showPanel ? 'w-[28vw]' : 'w-16'">
+            <button 
+                @click="showPanel = !showPanel"
+                class="absolute top-1/2 right-0 -translate-y-1/2 h-12 w-6 bg-gray-800 hover:bg-gray-700 text-white rounded-l-lg shadow-lg 
+                 items-center justify-center transition-all z-10"
+                :class="{ '!bg-blue-600': showPanel }"
+            >
+                <ChevronRightIcon 
+                    :size="16" 
+                    class="transition-transform duration-300"
+                    :class="{ 'transform rotate-180': showPanel }"
+                />
+            </button>
+            <div v-if="showPanel">
             <section class="panel-section ml-2 mr-2" style="margin-top: 0rem; margin-bottom: 0.5rem;">
                 <div class="section-header">
                     <div class="section-icon">
@@ -406,6 +420,7 @@
                 </dv-border-box12>
             </div>
         </div>
+        </div>
         <MapComp class="flex-1" :style="'local'" :proj="'globe'" :isPicking="isPicking" />
     </div>
 </template>
@@ -417,8 +432,9 @@ import { ref, computed, type Ref, watch, reactive, onMounted, provide,inject } f
 import { RegionSelects } from 'v-region'
 import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'
 import { formatTime } from '@/util/common'
-import * as MapOperation from '@/util/map/operation'
+import * as InteractiveExploreMapOps from '@/util/map/operation/interactive-explore'
 import { mapManager } from '@/util/map/mapManager'
+import subtitle from '../subtitle.vue';
 import { ezStore } from '@/store'
 import {
     DatabaseIcon,
@@ -441,6 +457,7 @@ import {
     ChevronDown,
     ChevronUp,
     ChartColumnBig,
+    ChevronRightIcon,
     EyeOff,
     Eye,
 } from 'lucide-vue-next'
@@ -483,6 +500,9 @@ const {
     doFilter: applyFilter, filterLoading, isFilterDone,
 } = useFilter()
 
+//显示左panel
+const showPanel = ref(true)
+
 const isExpand = ref<boolean>(true)
 const isRSExpand = ref<boolean>(true)
 const isVectorExpand = ref<boolean>(true)
@@ -524,7 +544,7 @@ onMounted(async() => {
     // 最后添加边界（确保在最上层）
     setTimeout(() => {
         if (exploreData.load){
-            MapOperation.map_addPolygonLayer({
+            InteractiveExploreMapOps.map_addPolygonLayer({
                 geoJson: exploreData.boundary,
                 id: 'UniqueLayer',
                 lineColor: '#8fffff'

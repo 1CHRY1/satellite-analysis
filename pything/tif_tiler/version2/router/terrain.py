@@ -6,7 +6,7 @@ import numpy as np
 import os
 import math
 import json
-from shapely.geometry import Polygon, Point
+from shapely.geometry import Polygon, mapping
 from shapely.ops import unary_union
 from rasterio.features import geometry_mask
 from rasterio.transform import from_bounds
@@ -207,3 +207,47 @@ def get_tile(
     except Exception as e:
         print("Terrain tile error:", e)
         return Response(content=ZERO_HEIGHT, media_type="image/png")
+
+
+@router.get("/box/{z}/{x}/{y}.png")
+def get_box_tile(
+    z: int, x: int, y: int,
+    bbox: str = Query(..., description="Bounding box (WGS84): minx,miny,maxx,maxy"),
+    url: str = Query(...),
+    scale_factor: float = Query(1.0, description="高程缩放因子，1.0表示不缩放，0.1表示缩小10倍"),
+):
+        
+    try:
+        bbox_minx, bbox_miny, bbox_maxx, bbox_maxy = map(float, bbox.split(","))
+    except Exception:
+        return Response(status_code=400, content=b"Invalid bbox format")
+
+    # Step 2: Calculate the intersection of the tile and the bbox
+    tile_wgs_bounds: dict = tile_bounds(x, y, z)
+
+    intersection_minx = max(tile_wgs_bounds["west"], bbox_minx)
+    intersection_miny = max(tile_wgs_bounds["south"], bbox_miny)
+    intersection_maxx = min(tile_wgs_bounds["east"], bbox_maxx)
+    intersection_maxy = min(tile_wgs_bounds["north"], bbox_maxy)
+    
+    if intersection_minx >= intersection_maxx or intersection_miny >= intersection_maxy:
+        return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
+    
+    # Step3: Create a Shapely Polygon for the intersection area
+    polygon = Polygon([
+        (intersection_minx, intersection_miny),
+        (intersection_maxx, intersection_miny),
+        (intersection_maxx, intersection_maxy),
+        (intersection_minx, intersection_maxy),
+        (intersection_minx, intersection_miny)  # Close the polygon
+    ])
+    
+    grids_boundary_geojson = {
+        "type": "Feature",
+        "geometry": mapping(polygon),
+        "properties": {}
+    }
+    
+    grids_boundary_json = json.dumps(grids_boundary_geojson)
+    
+    return get_tile(z, x, y, url, grids_boundary=grids_boundary_json, scale_factor=scale_factor)

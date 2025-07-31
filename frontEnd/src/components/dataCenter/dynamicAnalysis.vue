@@ -1,108 +1,125 @@
 <template>
-    <div class="relative flex flex-1 flex-row bg-black">
-        <div class="w-[28vw] p-4 text-gray-200 mb-0 gap-0">
-            <section class="panel-section ml-2 mr-2" style="margin-top: 0rem; margin-bottom: 0.5rem;">
-                <div class="section-header">
-                    <div class="section-icon">
-                        📈
+    <div class="relative flex flex-1 h-full flex-row bg-black ">
+        <subtitle class="z-10 absolute" style="margin-top: 60px; "/>
+        <div class="absolute  left-16  top-0 h-full  p-4 text-gray-200 z-10  " :class="showPanel ? 'w-[28vw]' : 'w-16'" >
+            <button 
+                @click="showPanel = !showPanel"
+                class="absolute top-1/2 right-0 -translate-y-1/2 h-12 w-6 bg-gray-800 hover:bg-gray-700 text-white rounded-l-lg shadow-lg 
+                 items-center justify-center transition-all z-10"
+                :class="{ '!bg-blue-600': showPanel }"
+            >
+                <ChevronRightIcon 
+                    :size="16" 
+                    class="transition-transform duration-300"
+                    :class="{ 'transform rotate-180': showPanel }"
+                />
+            </button>
+            <div v-if="showPanel">                 
+                <section class="panel-section ml-2 mr-2" style="margin-top: 0rem; margin-bottom: 0.5rem;">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            📈
+                        </div>
+                        <span class="page-title">展示分析</span>
                     </div>
-                    <span class="page-title">展示分析</span>
-                </div>
-            </section>
-            <div class="custom-panel px-2 mb-0">
-                <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]">
-                    <div class="main-container">
-                        <section class="panel-section">
-                            <div class="section-header">
-                                <div class="section-icon">
-                                    <MapPinIcon :size="18" />
+                </section>
+                <div class="custom-panel px-2 mb-0">
+                    <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]">
+                    <!-- <dv-border-box12 style="width: 326px; height: 889px;"> -->
+                        <div class="main-container">
+                            <section class="panel-section">
+                                <div class="section-header">
+                                    <div class="section-icon">
+                                        <MapPinIcon :size="18" />
+                                    </div>
+                                    <h2 class="section-title">{{t('datapage.analysis.section1.subtitle')}}</h2>
                                 </div>
-                                <h2 class="section-title">{{t('datapage.analysis.section1.subtitle')}}</h2>
-                            </div>
-                            <div class="section-content">
-                                <div class="config-container">
-                                    <div class="config-item">
-                                        <div class="config-label relative">
-                                            <MapIcon :size="16" class="config-icon" />
-                                            <span>{{t('datapage.analysis.section1.area')}}</span>
-                                        </div>
-                                        <div class="config-control justify-center">
-                                            <RegionSelects v-model="region" class="flex gap-2"
-                                                select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
+                                <div class="section-content">
+                                    <div class="config-container">
+                                        <div class="config-item">
+                                            <div class="config-label relative">
+                                                <MapIcon :size="16" class="config-icon" />
+                                                <span>{{t('datapage.analysis.section1.area')}}</span>
+                                            </div>
+                                            <div class="config-control justify-center">
+                                                <RegionSelects v-model="region" class="flex gap-2"
+                                                    select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </section>
-                        <section class="panel-section">
-                            <div class="section-header">
-                                <div class="section-icon">
-                                    <ChartColumn :size="18" />
-                                </div>
-                                <h2 class="section-title mr-6">数据集  </h2>
-                                <div class="ml-4">
-                                    <button @click="showHistory = !showHistory"
-                                    class=" bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-4 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6] truncate"
-                                    >
-                                      前序数据
-                                    </button>
-                                    <el-dialog v-model="showHistory"
-                                                class="max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-[60vw]
-                                                "
-                                                style="background-color: #111827; color: white;">
-                                        <div class="mb-6 text-gray-100">前序数据集</div>
-                                        
-                                        <div v-if="completedCases.length > 0" class="max-h-[500px] overflow-y-auto">
-                                            <div v-for="item in completedCases" 
-                                            :key="item.caseId" 
-                                            class="p-4 mb-3 border border-gray-200 rounded-md 
-                                                    cursor-pointer transition-all duration-300
-                                                    hover:bg-gray-50 hover:shadow-md"
-                                            @click="showResult(item.caseId, item.regionId)">
-                                                <h3 class="mt-0 text-blue-500">{{ item.address }}无云一版图</h3>
-                                                <p class="my-1 text-blue-300">分辨率: {{ item.resolution }}km</p>
-                                                <p class="my-1 text-blue-300">创建时间: {{ formatTimeToText(item.createTime) }}</p>
-                                                <p class="my-1 text-blue-300">数据集: {{ item.dataSet }}</p>
+                            </section>
+                            <section class="panel-section">
+                                <div class="section-header">
+                                    <div class="section-icon">
+                                        <ChartColumn :size="18" />
+                                    </div>
+                                    <h2 class="section-title mr-6">数据集  </h2>
+                                    <div class="ml-4">
+                                        <button @click="showHistory = !showHistory"
+                                        class=" bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-4 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6] truncate"
+                                        >
+                                        前序数据
+                                        </button>
+                                        <el-dialog v-model="showHistory"
+                                                    class="max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-[60vw]
+                                                    "
+                                                    style="background-color: #111827; color: white;">
+                                            <div class="mb-6 text-gray-100">前序数据集</div>
+                                            
+                                            <div v-if="completedCases.length > 0" class="max-h-[500px] overflow-y-auto">
+                                                <div v-for="item in completedCases" 
+                                                :key="item.caseId" 
+                                                class="p-4 mb-3 border border-gray-200 rounded-md 
+                                                        cursor-pointer transition-all duration-300
+                                                        hover:bg-gray-50 hover:shadow-md"
+                                                @click="showResult(item.caseId, item.regionId)">
+                                                    <h3 class="mt-0 text-blue-500">{{ item.address }}无云一版图</h3>
+                                                    <p class="my-1 text-blue-300">分辨率: {{ item.resolution }}km</p>
+                                                    <p class="my-1 text-blue-300">创建时间: {{ formatTimeToText(item.createTime) }}</p>
+                                                    <p class="my-1 text-blue-300">数据集: {{ item.dataSet }}</p>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div v-else>
-                                            <p class="item-center text-center text-gray-100">暂无数据</p>
-                                        </div>
-                                    </el-dialog>
+                                            <div v-else>
+                                                <p class="item-center text-center text-gray-100">暂无数据</p>
+                                            </div>
+                                        </el-dialog>
+                                    </div>
+                                    <!-- <h2 class="section-title">{{t('datapage.analysis.section2.subtitle')}}</h2>
+                                    <select v-model="selectedTask" @change="handleThematicChange"
+                                        class="bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-3 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6] max-w-[calc(100%-90px)] truncate">
+                                        <option v-for="option in optionalTasks" :key="option.value" :value="option.value"
+                                            :disabled="option.disabled">
+                                            {{ option.label }}
+                                        </option>
+                                    </select> -->
+                                    <div class="absolute right-6" @click="clearImages">
+                                        <a-tooltip>
+                                            <template #title>{{t('datapage.analysis.section2.clear')}}</template>
+                                            <Trash2Icon :size="20" />
+                                        </a-tooltip>
+                                    </div>
+
                                 </div>
-                                <!-- <h2 class="section-title">{{t('datapage.analysis.section2.subtitle')}}</h2>
-                                <select v-model="selectedTask" @change="handleThematicChange"
-                                    class="bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-3 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6] max-w-[calc(100%-90px)] truncate">
-                                    <option v-for="option in optionalTasks" :key="option.value" :value="option.value"
-                                        :disabled="option.disabled">
-                                        {{ option.label }}
-                                    </option>
-                                </select> -->
-                                <div class="absolute right-6" @click="clearImages">
-                                    <a-tooltip>
-                                        <template #title>{{t('datapage.analysis.section2.clear')}}</template>
-                                        <Trash2Icon :size="20" />
-                                    </a-tooltip>
-                                </div>
+                            </section>
 
-                            </div>
-                        </section>
+                            <component :is="currentTaskComponent" :thematicConfig="thematicConfig" />
+                            <ResultComponent @response="handleResultLoaded" />
+                        </div>
 
-                        <component :is="currentTaskComponent" :thematicConfig="thematicConfig" />
-                        <ResultComponent @response="handleResultLoaded" />
-                    </div>
-
-                </dv-border-box12>
+                    </dv-border-box12>
+                </div>
             </div>
+            
         </div>
         <!-- <ImageSearcher class="h-full w-[28vw] mt-10" /> -->
-        <MapComp class="flex-1" :style="'local'" :proj="'globe'" :isPicking="isPicking" />
+        
 
-        <div class="absolute right-0 top-0 h-full flex items-center mt-10 ">
+        <div class="absolute right-0 top-0 h-full flex items-center z-10">
             <!-- Toggle button -->
             <button 
                 @click="isToolbarOpen = !isToolbarOpen"
-                class="h-12 w-6 bg-gray-800 hover:bg-gray-700 text-white rounded-l-lg shadow-lg 
+                class="mt-10 h-12 w-6 bg-gray-800 hover:bg-gray-700 text-white rounded-l-lg shadow-lg 
                 flex items-center justify-center transition-all z-10"
                 :class="{ '!bg-blue-600': isToolbarOpen }"
             >
@@ -116,7 +133,7 @@
             <div v-show="isToolbarOpen" 
                  class="h-full bg-gray-800 shadow-lg transition-all duration-300 overflow-hidden 
                  flex flex-col flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 
-                 mb-20"
+                 "
                 :class="isToolbarOpen ? 'w-64' : 'w-0'">
                 <div class="p-4 text-white border-b border-gray-700">
                     <h3 class="font-semibold flex items-center gap-2">
@@ -197,9 +214,9 @@
                         </div>
                     </div>
                 </div>
-                
             </div>
         </div>
+        <MapComp class="!flex-1" :style="'local'" :proj="'globe'" :isPicking="isPicking" />
     </div>
 </template>
 
@@ -238,6 +255,7 @@ import {
     MapIcon,
     Trash2Icon,
     ChevronLeftIcon,
+    ChevronRightIcon,
     ChevronRight,
     SearchIcon,
     ChevronDownIcon 
@@ -247,7 +265,7 @@ import { mapManager } from '@/util/map/mapManager'
 import { formatTimeToText } from '@/util/common'; 
 import { ElDialog } from 'element-plus'
 import { type Case } from '@/api/http/satellite-data'
-
+import subtitle from './subtitle.vue'
 import { useExploreStore } from '@/store'
 import { useTaskStore } from '@/store'
 const exploreData = useExploreStore()
@@ -261,7 +279,8 @@ const isToolbarOpen = ref(false)
 import MapComp from '@/components/feature/map/mapComp.vue'
 const isPicking = ref(false)
 
-
+//左模块显示
+const showPanel = ref(true)
 
 const startTime = '1900-01-01'
 const endTime = '2050-01-01'
@@ -592,6 +611,14 @@ onUnmounted(() => {
 </script>
 
 <style scoped src="./tabStyle.css">
+html, body, #app {
+  margin: 0;
+  padding: 0;
+  height: 100vh; /* 确保根元素占满视口 */
+  overflow: hidden; /* 防止滚动条导致异常 */
+  overscroll-behavior-y: none; 
+}
+
 .chart-wrapper {
     margin-top: 10px;
 }

@@ -8,9 +8,9 @@ export const useExploreStore = defineStore('exploreStore',{
             regionCode: 0 as number,
             dataRange: '' as string,
             cloud: 0 as number,
-            space: 0 as number,
+            gridResolution: 0 as number,
             coverage: '' as string,
-            images: [] as any[],
+            // images: [] as any[],
             grids: [] as any[],
             boundary: [] as any[],
             load:true
