@@ -11,6 +11,8 @@ import nnu.mnr.satellite.utils.common.ConcurrentUtil;
 import org.geotools.geojson.geom.GeometryJSON;
 import org.locationtech.jts.geom.*;
 import org.locationtech.jts.geom.impl.CoordinateArraySequence;
+import org.locationtech.jts.operation.union.CascadedPolygonUnion;
+import org.locationtech.jts.simplify.DouglasPeuckerSimplifier;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -223,28 +225,61 @@ public class GeometryUtil {
         );
     }
 
+    // 获取格网边界，采用级联并简化格网
     public static Geometry getGridsBoundaryByTilesAndResolution(List<Integer[]> tileIds, Integer resolution) {
-        GeometryFactory geometryFactory = new GeometryFactory();
-        MultiPolygon gridsBoundary = geometryFactory.createMultiPolygon(new Polygon[]{});
+        if (tileIds == null || tileIds.isEmpty()) {
+            throw new IllegalArgumentException("tileIds cannot be null or empty");
+        }
 
+        GeometryFactory geometryFactory = new GeometryFactory();
+        List<Polygon> polygons = new ArrayList<>();
+
+        // 1. 收集所有 Polygon（包括从 MultiPolygon 拆解的）
         for (Integer[] tileId : tileIds) {
             Geometry gridGeom = getTileGeomByIdsAndResolution(tileId[1], tileId[0], resolution);
-            if (gridsBoundary.contains(gridGeom)) {
-                continue;
-            }
             if (gridGeom == null || gridGeom.isEmpty()) {
-                throw new IllegalArgumentException("Invalid tile bounding box");
+                throw new IllegalArgumentException("Invalid tile bounding box for tileId: [" + tileId[0] + ", " + tileId[1] + "]");
             }
-            Geometry unionResult = gridsBoundary.union(gridGeom);
-            if (unionResult instanceof MultiPolygon) {
-                gridsBoundary = (MultiPolygon) unionResult;
-            } else if (unionResult instanceof Polygon) {
-                gridsBoundary = geometryFactory.createMultiPolygon(new Polygon[]{(Polygon) unionResult});
+
+            if (gridGeom instanceof Polygon) {
+                polygons.add((Polygon) gridGeom);
+            } else if (gridGeom instanceof MultiPolygon) {
+                for (int i = 0; i < gridGeom.getNumGeometries(); i++) {
+                    polygons.add((Polygon) gridGeom.getGeometryN(i));
+                }
             } else {
-                throw new IllegalArgumentException("Unsupported geometry type: " + unionResult.getClass().getName());
+                throw new IllegalArgumentException("Unsupported geometry type: " + gridGeom.getClass().getName());
             }
         }
-        return gridsBoundary;
+
+        // 2. 处理单元素情况
+        Geometry unionResult;
+        if (polygons.size() == 1) {
+            unionResult = polygons.get(0);
+        } else {
+            unionResult = CascadedPolygonUnion.union(polygons);
+        }
+
+        // 3. 确保返回 MultiPolygon（可选）
+        Geometry result;
+        if (unionResult instanceof Polygon) {
+            result = geometryFactory.createMultiPolygon(new Polygon[]{(Polygon) unionResult});
+        } else if (unionResult instanceof MultiPolygon) {
+            result = unionResult;
+        } else {
+            throw new IllegalStateException("Unexpected union result type: " + unionResult.getClass().getName());
+        }
+
+        // 4. 对合并后的几何图形进行 Douglas-Peucker 简化
+        double tolerance = 0.001; // 可调整的简化容差
+        Geometry simplifiedResult = DouglasPeuckerSimplifier.simplify(result, tolerance);
+
+        // 5. 确保简化后仍然是 MultiPolygon（可选）
+        if (simplifiedResult instanceof Polygon) {
+            return geometryFactory.createMultiPolygon(new Polygon[]{(Polygon) simplifiedResult});
+        } else {
+            return simplifiedResult;
+        }
     }
 
     public static Polygon pointsConvertToPolygon(List<Float> points) {

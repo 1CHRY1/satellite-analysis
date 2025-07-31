@@ -53,8 +53,7 @@ public class ThemeDataServiceV3 {
         String cacheKey = userId + "_" + encryptedRequestBody;
         // 从缓存读取数据（如果存在）
         SceneDataCache.UserThemeCache userThemeCache = SceneDataCache.getUserThemeCacheMap(cacheKey);
-        List<SceneDesVO> scenesInfo;
-        CoverageReportVO<String> report = new CoverageReportVO<>();
+        CoverageReportVO<String> report;
         if (userThemeCache == null) {
             // 缓存未命中，从数据库中读数据
             String startTime = scenesFetchDTO.getStartTime();
@@ -94,8 +93,7 @@ public class ThemeDataServiceV3 {
         String cacheKey = userId + "_" + encryptedRequestBody;
         // 从缓存读取数据（如果存在）
         SceneDataCache.UserThemeCache userThemeCache = SceneDataCache.getUserThemeCacheMap(cacheKey);
-        List<SceneDesVO> scenesInfo;
-        CoverageReportVO<String> report = new CoverageReportVO<>();
+        CoverageReportVO<String> report;
         if (userThemeCache == null) {
             // 缓存未命中，从数据库中读数据
             String startTime = scenesLocationFetchDTO.getStartTime();

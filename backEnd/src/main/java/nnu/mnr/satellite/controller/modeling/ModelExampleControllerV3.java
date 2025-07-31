@@ -21,7 +21,7 @@ public class ModelExampleControllerV3 {
     }
 
     @PostMapping("/scenes/visualization")
-    public ResponseEntity<CommonResultVO> createVisualizationConfig(@RequestBody VisualizationTileDTO visualizationTileDTO,
+    public ResponseEntity<CommonResultVO> createScenesVisualizationConfig(@RequestBody VisualizationTileDTO visualizationTileDTO,
                                                               @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
                                                               @CookieValue(value = "encrypted_request_body", required = false) String encryptedRequestBody) {
         // 拼凑cacheKey
@@ -33,7 +33,25 @@ public class ModelExampleControllerV3 {
         }
 
         String cacheKey = userId + "_" + encryptedRequestBody;
-        CommonResultVO result = modelExampleService.createVisualizationConfig(visualizationTileDTO, cacheKey);
+        CommonResultVO result = modelExampleService.createScenesVisualizationConfig(visualizationTileDTO, cacheKey);
+
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/theme/visualization/{themeName}")
+    public ResponseEntity<CommonResultVO> createThemeVisualizationConfig(@PathVariable String themeName,
+                                                                    @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+                                                                    @CookieValue(value = "encrypted_request_body", required = false) String encryptedRequestBody) {
+        // 拼凑cacheKey
+        String userId;
+        try {
+            userId = IdUtil.parseUserIdFromAuthHeader(authorizationHeader);
+        } catch (JwtException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+
+        String cacheKey = userId + "_" + encryptedRequestBody;
+        CommonResultVO result = modelExampleService.createThemeVisualizationConfig(themeName, cacheKey);
 
         return ResponseEntity.ok(result);
     }
