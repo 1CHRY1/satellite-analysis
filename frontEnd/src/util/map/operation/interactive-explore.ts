@@ -104,9 +104,9 @@ export function map_destroyUniqueLayer() {
     const lineId = `${id}-line`
     const srcId = `${id}-source`
     mapManager.withMap((m) => {
-        if (m.getSource(srcId)) m.removeSource(srcId)
         if (m.getLayer(lineId)) m.removeLayer(lineId)
         if (m.getLayer(fillId)) m.removeLayer(fillId)
+        if (m.getSource(srcId)) m.removeSource(srcId)
     })
 }
 
@@ -380,6 +380,64 @@ export function map_destroyDEMLayer() {
     const srcId = id + '-source'
     mapManager.withMap((m) => {
         m.setTerrain(null)
+        m.getLayer(id) && m.removeLayer(id)
+        m.getSource(srcId) && m.removeSource(srcId)
+    })
+}
+export function map_addNDVIOrSVRLayer(url: string) {
+    const id = 'ndvi-layer'
+    const srcId = id + '-source'
+    mapManager.withMap((m) => {
+        m.getLayer(id) && m.removeLayer(id)
+        m.getSource(srcId) && m.removeSource(srcId)
+
+        m.addSource(srcId, {
+            type: 'raster',
+            tiles: [url],
+            tileSize: 256,
+        })
+
+        m.addLayer({
+            id,
+            type: 'raster',
+            source: srcId,
+            paint: {},
+        })
+    })
+}
+export function map_destroyNDVIOrSVRLayer() {
+    const id = 'ndvi-layer'
+    const srcId = id + '-source'
+    mapManager.withMap((m) => {
+        m.getLayer(id) && m.removeLayer(id)
+        m.getSource(srcId) && m.removeSource(srcId)
+    })
+}
+export function map_add3DLayer(url: string) {
+    const id = '3d-layer'
+    const srcId = id + '-source'
+    mapManager.withMap((m) => {
+        m.getLayer(id) && m.removeLayer(id)
+        m.getSource(srcId) && m.removeSource(srcId)
+
+        m.addSource(srcId, {
+            type: 'raster',
+            tiles: [url],
+            tileSize: 256,
+        })
+
+        m.addLayer({
+            id,
+            type: 'raster',
+            source: srcId,
+            paint: {},
+        })
+    })
+}
+export function map_destroy3DLayer() {
+    const id = '3d-layer'
+    const srcId = id + '-source'
+    mapManager.withMap((m) => {
         m.getLayer(id) && m.removeLayer(id)
         m.getSource(srcId) && m.removeSource(srcId)
     })

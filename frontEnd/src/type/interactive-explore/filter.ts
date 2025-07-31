@@ -1,6 +1,7 @@
 import type { RegionValues } from "v-region"
 
 export type SpatialFilterMethod = 'region' | 'poi' | 'None'
+export type ProductType = 'dem' | 'dsm' | 'ndvi' | 'svr' | '3d' | 'None'
 import type { Dayjs } from 'dayjs'
 
 export type POIInfo = {
