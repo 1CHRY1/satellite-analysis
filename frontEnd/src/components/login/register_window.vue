@@ -1,6 +1,6 @@
 <template>  
     <teleport to="body">
-        <div class="mian fixed inset-0 bg-black/40 flex items-center justify-center z-50 pointer-events-none">
+        <div class=" fixed inset-0 bg-black/40 flex items-center justify-center z-50 pointer-events-none">
             <div class="bg-black w-[20%] h-[50%] p-6 rounded-lg overflow-auto pointer-events-auto ">
                 <div class="m-10 relative">
                     <div class="flex justify-between items-center mb-6">
