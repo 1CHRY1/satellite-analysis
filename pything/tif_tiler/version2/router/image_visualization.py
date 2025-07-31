@@ -57,6 +57,24 @@ def calc_tile_bounds(x, y, z):
     
     return result
 
+def read_band(x, y, z,bucket_path, band_path):
+    full_path = MINIO_ENDPOINT + "/" + bucket_path + "/" + band_path
+
+    try:
+        with COGReader(full_path, options={'nodata': int(nodata_int)}) as reader:
+            band_data = reader.tile(x, y, z, tilesize=256)
+            original_data = band_data.data[0]
+            original_dtype = original_data.dtype
+
+            # 自动转换为uint8
+            converted_data = convert_to_uint8(original_data, original_dtype)
+
+            return converted_data
+    except Exception as e:
+        print(f"无法读取文件 {full_path}: {str(e)}")
+        return None
+
+
 
 ####### Router ########################################################################################
 router = APIRouter()
@@ -103,19 +121,22 @@ def get_tile(
         mapper = json_response.get('data', {}).get('bandMapper', {})
         # 获取scenesConfig数组
         json_data = json_response.get('data', {}).get('scenesConfig', [])
+
+        # 判断景与瓦片是否相交，不相交则不做任何处理
+        # 获取所有景的最大最小经纬度
+        min_lon_scene = min([float(scene['bbox']['geometry']['coordinates'][0][0][0]) for scene in json_data])  # 所有景的最小经度
+        max_lat_scene = max([float(scene['bbox']['geometry']['coordinates'][0][0][1]) for scene in json_data])  # 所有景的最大纬度
+        max_lon_scene = max([float(scene['bbox']['geometry']['coordinates'][0][2][0]) for scene in json_data])  # 所有景的最大经度
+        min_lat_scene = min([float(scene['bbox']['geometry']['coordinates'][0][2][1]) for scene in json_data])  # 所有景的最小经度
+        # 获取瓦片的最大最小经纬度
+        min_lon_tile, min_lat_tile, max_lon_tile, max_lat_tile = points
+        # 判断是否相交
+        if (min_lon_scene > max_lon_tile or min_lat_scene > max_lat_tile or max_lon_scene < min_lon_tile or max_lat_scene < min_lat_tile):
+            return None
         
-        # 排序：先按是否有云排序（无云优先），再按分辨率排序
-        def sort_key(scene):
-            has_cloud = 1 if scene.get('cloudPath') else 0  # 无云为0，有云为1
-            resolution = float(scene["resolution"].replace("m", ""))
-            return (has_cloud, resolution)  # 先按云量，再按分辨率
-        
-        sorted_scene = sorted(json_data, key=sort_key)
+        # 按照云量排序
+        sorted_scene = sorted(json_data, key=lambda x: int(x.get('cloud', 0)))
         print(f"场景总数: {len(sorted_scene)}")
-        
-        # 统计无云和有云的场景数
-        no_cloud_count = sum(1 for s in sorted_scene if not s.get('cloudPath'))
-        print(f"无云场景数: {no_cloud_count}, 有云场景数: {len(sorted_scene) - no_cloud_count}")
 
         # 处理bandMapper
         scene_band_paths = {}
@@ -232,8 +253,7 @@ def get_tile(
                         else:
                             cloud_mask = np.zeros((target_H, target_W), dtype=bool)
                         
-                        # 更新总的云掩膜：只在需要填充的区域记录云
-                        # 这样确保已经填充的区域的云信息会被保留
+                        # 更新总的云掩膜，只在需要填充的区域记录云
                         total_cloud_mask[need_fill_mask & valid_mask] |= cloud_mask[need_fill_mask & valid_mask]
 
                 except Exception as e:
@@ -246,29 +266,15 @@ def get_tile(
             print(f"[⏱] 处理场景 {scene.get('sceneId')} 耗时: {time.time() - scene_start:.3f} 秒")
             
             if np.any(fill_mask):
-                
-                def read_band(band_path):
-                    full_path = MINIO_ENDPOINT + "/" + scene['bucket'] + "/" + band_path
-
-                    try:
-                        with COGReader(full_path, options={'nodata': int(nodata_int)}) as reader:
-                            band_data = reader.tile(x, y, z, tilesize=256)
-                            original_data = band_data.data[0]
-                            original_dtype = original_data.dtype
-
-                            # 自动转换为uint8
-                            converted_data = convert_to_uint8(original_data, original_dtype)
-
-                            return converted_data
-                    except Exception as e:
-                        print(f"无法读取文件 {full_path}: {str(e)}")
-                        return None
-
                 bands = scene_band_paths[scene['sceneId']]
-                band_1 = read_band(bands['Red'])
-                band_2 = read_band(bands['Green'])
-                band_3 = read_band(bands['Blue'])
-                
+                bucket_path = scene['bucket']
+
+                read_time = time.time()
+                band_1 = read_band(x,y,z, bucket_path, bands['Red'])
+                band_2 = read_band(x,y,z, bucket_path, bands['Green'])
+                band_3 = read_band(x,y,z, bucket_path, bands['Blue'])
+                print(f"[⏱] 读取波段耗时: {time.time() - read_time:.3f} 秒")
+
                 if band_1 is None or band_2 is None or band_3 is None:
                     print(f"警告: {scene_label} 读取波段失败")
                     continue
