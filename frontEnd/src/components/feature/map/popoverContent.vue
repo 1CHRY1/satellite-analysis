@@ -317,7 +317,7 @@ type ImageInfoType = {
     sceneId: string
     time: string
     tifFullPath: string
-    nodata: number
+    nodata: number 
 }
 
 type MultiImageInfoType = {

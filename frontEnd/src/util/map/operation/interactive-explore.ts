@@ -4,6 +4,7 @@ import { Popup, GeoJSONSource, MapMouseEvent } from 'mapbox-gl'
 import bus from '@/store/bus'
 import { createApp, type ComponentInstance, ref, type Ref, reactive } from 'vue'
 import PopoverContent, { type GridData } from '@/components/feature/map/popoverContent.vue'
+import PopContent from '@/components/feature/map/popContent.vue'
 import Antd from 'ant-design-vue'
 
 
@@ -123,10 +124,10 @@ function createPopoverContent() {
     div.id = 'popover-content'
     document.body.appendChild(div)
 
-    const app = createApp(PopoverContent, {
+    const app = createApp(PopContent, {
         // gridData: gridDataRef,
     }).use(Antd)
-    app.mount('#popover-content') as ComponentInstance<typeof PopoverContent>
+    app.mount('#popover-content') as ComponentInstance<typeof PopContent>
     return div
 }
 
@@ -141,9 +142,10 @@ function grid_fill_click_handler(e: MapMouseEvent): void {
         console.log(features[0].properties)
         const gridInfo = {
             rowId: features[0].properties!.rowId,
-            columnId: features[0].properties!.columnId
+            columnId: features[0].properties!.columnId,
+            resolution: features[0].properties!.resolution,
         }
-        // bus.emit('update:gridPopupData', gridInfo)
+        bus.emit('update:gridPopupData', gridInfo)
 
         const popup = ezStore.get('gridPopup') as Popup
         popup.setLngLat(e.lngLat).addTo(ezStore.get('map'))
