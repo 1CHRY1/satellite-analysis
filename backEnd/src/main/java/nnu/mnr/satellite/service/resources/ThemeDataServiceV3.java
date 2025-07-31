@@ -38,6 +38,9 @@ public class ThemeDataServiceV3 {
     @Autowired
     private LocationService locationService;
 
+    @Autowired
+    private SceneDataServiceV3 sceneDataService;
+
     public CoverageReportWithCacheKeyVO<String> getThemesCoverageReportByTimeAndRegion(ScenesFetchDTOV3 scenesFetchDTO, String userId){
         // 先把scenesFetchDTO转成String，后续需要作为cacheKey
         String requestBody;
@@ -52,23 +55,54 @@ public class ThemeDataServiceV3 {
         String encryptedRequestBody = DigestUtils.sha256Hex(requestBody);
         String cacheKey = userId + "_" + encryptedRequestBody;
         // 从缓存读取数据（如果存在）
+        SceneDataCache.UserSceneCache userSceneCache = SceneDataCache.getUserSceneCacheMap(cacheKey);
         SceneDataCache.UserThemeCache userThemeCache = SceneDataCache.getUserThemeCacheMap(cacheKey);
+        String startTime = scenesFetchDTO.getStartTime();
+        String endTime = scenesFetchDTO.getEndTime();
+        Integer regionId = scenesFetchDTO.getRegionId();
+        Integer resolution = scenesFetchDTO.getResolution();
         CoverageReportVO<String> report;
-        if (userThemeCache == null) {
+        if (userThemeCache == null && userSceneCache == null) {
             // 缓存未命中，从数据库中读数据
-            String startTime = scenesFetchDTO.getStartTime();
-            String endTime = scenesFetchDTO.getEndTime();
-            Integer regionId = scenesFetchDTO.getRegionId();
-            Integer resolution = scenesFetchDTO.getResolution();
             Geometry boundary = regionDataService.getRegionById(regionId).getBoundary();
             List<Integer[]> tileIds = TileCalculateUtil.getRowColByRegionAndResolution(boundary, resolution);
             Geometry gridsBoundary = GeometryUtil.getGridsBoundaryByTilesAndResolution(tileIds, resolution);
-            CacheDataDTO<String> cacheData = buildCoverageReport(startTime, endTime, gridsBoundary);
+            String dataType = "'satellite', 'dem', 'dsm', 'ndvi', 'svr', '3d'";
+            List<SceneDesVO> allScenesInfo = sceneDataService.getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, dataType);
+            List<SceneDesVO> scenesInfo = new ArrayList<>();
+            List<SceneDesVO> themesInfo = new ArrayList<>();
+            for (SceneDesVO scene : allScenesInfo) {
+                String sceneDataType = scene.getDataType(); // 假设 SceneDesVO 有 getDataType() 方法
+                if ("satellite".equals(sceneDataType)) {
+                    scenesInfo.add(scene);
+                } else if (Arrays.asList("dem", "dsm", "ndvi", "svr", "3d").contains(sceneDataType)) {
+                    themesInfo.add(scene);
+                }
+            }
 
-            report = cacheData.getReport();
+            report = buildCoverageReport(themesInfo);
+
             // 缓存数据
-            SceneDataCache.cacheUserThemes(cacheKey, cacheData.getScenesInfo(), report);
-        }else {
+            SceneDataCache.cacheUserThemes(cacheKey, themesInfo, report);
+            SceneDataCache.cacheUserScenes(cacheKey, scenesInfo, null);
+        } else if (userThemeCache == null) {
+            // 缓存未命中，从数据库中读数据
+            Geometry boundary = regionDataService.getRegionById(regionId).getBoundary();
+            List<Integer[]> tileIds = TileCalculateUtil.getRowColByRegionAndResolution(boundary, resolution);
+            Geometry gridsBoundary = GeometryUtil.getGridsBoundaryByTilesAndResolution(tileIds, resolution);
+            String dataType = "'dem', 'dsm', 'ndvi', 'svr', '3d'";
+
+            List<SceneDesVO> themesInfo = sceneDataService.getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, dataType);
+
+            report = buildCoverageReport(themesInfo);
+
+            // 缓存数据
+            SceneDataCache.cacheUserThemes(cacheKey, themesInfo, report);
+        } else if (userThemeCache.coverageReportVO == null) {
+            report = buildCoverageReport(userThemeCache.scenesInfo);
+            // 缓存数据
+            SceneDataCache.cacheUserThemes(cacheKey, userThemeCache.scenesInfo, report);
+        } else {
             // 缓存命中，直接使用
             report = userThemeCache.coverageReportVO;
         }
@@ -92,22 +126,50 @@ public class ThemeDataServiceV3 {
         String encryptedRequestBody = DigestUtils.sha256Hex(requestBody);
         String cacheKey = userId + "_" + encryptedRequestBody;
         // 从缓存读取数据（如果存在）
+        SceneDataCache.UserSceneCache userSceneCache = SceneDataCache.getUserSceneCacheMap(cacheKey);
         SceneDataCache.UserThemeCache userThemeCache = SceneDataCache.getUserThemeCacheMap(cacheKey);
+        String startTime = scenesLocationFetchDTO.getStartTime();
+        String endTime = scenesLocationFetchDTO.getEndTime();
+        String locationId = scenesLocationFetchDTO.getLocationId();
+        Integer resolution = scenesLocationFetchDTO.getResolution();
         CoverageReportVO<String> report;
-        if (userThemeCache == null) {
+        if (userThemeCache == null && userSceneCache == null) {
             // 缓存未命中，从数据库中读数据
-            String startTime = scenesLocationFetchDTO.getStartTime();
-            String endTime = scenesLocationFetchDTO.getEndTime();
-            String locationId = scenesLocationFetchDTO.getLocationId();
-            Integer resolution = scenesLocationFetchDTO.getResolution();
             Geometry gridsBoundary = locationService.getLocationBoundary(resolution, locationId);
+            String dataType = "'satellite', 'dem', 'dsm', 'ndvi', 'svr', '3d'";
+            List<SceneDesVO> allScenesInfo = sceneDataService.getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, dataType);
+            List<SceneDesVO> scenesInfo = new ArrayList<>();
+            List<SceneDesVO> themesInfo = new ArrayList<>();
+            for (SceneDesVO scene : allScenesInfo) {
+                String sceneDataType = scene.getDataType(); // 假设 SceneDesVO 有 getDataType() 方法
+                if ("satellite".equals(sceneDataType)) {
+                    scenesInfo.add(scene);
+                } else if (Arrays.asList("dem", "dsm", "ndvi", "svr", "3d").contains(sceneDataType)) {
+                    themesInfo.add(scene);
+                }
+            }
 
-            CacheDataDTO<String> cacheData = buildCoverageReport(startTime, endTime, gridsBoundary);
+            report = buildCoverageReport(themesInfo);
 
-            report = cacheData.getReport();
             // 缓存数据
-            SceneDataCache.cacheUserThemes(cacheKey, cacheData.getScenesInfo(), report);
-        }else {
+            SceneDataCache.cacheUserThemes(cacheKey, themesInfo, report);
+            SceneDataCache.cacheUserScenes(cacheKey, scenesInfo, null);
+        } else if (userThemeCache == null) {
+            // 缓存未命中，从数据库中读数据
+            Geometry gridsBoundary = locationService.getLocationBoundary(resolution, locationId);
+            String dataType = "'dem', 'dsm', 'ndvi', 'svr', '3d'";
+
+            List<SceneDesVO> themesInfo = sceneDataService.getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, dataType);
+
+            report = buildCoverageReport(themesInfo);
+
+            // 缓存数据
+            SceneDataCache.cacheUserThemes(cacheKey, themesInfo, report);
+        } else if (userThemeCache.coverageReportVO == null) {
+            report = buildCoverageReport(userThemeCache.scenesInfo);
+            // 缓存数据
+            SceneDataCache.cacheUserThemes(cacheKey, userThemeCache.scenesInfo, report);
+        } else {
             // 缓存命中，直接使用
             report = userThemeCache.coverageReportVO;
         }
@@ -117,12 +179,8 @@ public class ThemeDataServiceV3 {
         return result;
     }
 
-    private CacheDataDTO<String> buildCoverageReport(String startTime, String endTime, Geometry gridsBoundary){
-        List<SceneDesVO> scenesInfo;
+    private CoverageReportVO<String> buildCoverageReport(List<SceneDesVO> scenesInfo){
         CoverageReportVO<String> report = new CoverageReportVO<>();
-        String wkt = gridsBoundary.toText();
-        String dataType = "'dem', 'dsm', 'ndvi', 'svr', '3d'";
-        scenesInfo = sceneRepo.getScenesInfoByTimeAndRegion(startTime, endTime, wkt, dataType);
         Integer total = scenesInfo.size();
         List<String> category = SceneTypeByTheme.getAllCodes();
         // 4. 构建返回结果
@@ -152,10 +210,7 @@ public class ThemeDataServiceV3 {
             dataset.put(type.getCode(), item);
         }
         report.setDataset(dataset);
-        return CacheDataDTO.<String>builder()
-                .report(report)
-                .scenesInfo(scenesInfo)
-                .build();
+        return report;
     }
 
 }
