@@ -198,7 +198,7 @@ public class GridDataServiceV3 {
         List<SceneDesVO> filterScene = new ArrayList<>();
         for (SceneDesVO sceneInfo : scenesInfo) {
             JSONObject tag = sceneInfo.getTags();
-            if ((sensorNames.contains(sceneInfo.getSensorName()) || sensorNames.isEmpty())
+            if ((sensorNames.contains(sceneInfo.getSensorName()) || resolutionName == null)
                     && (Objects.equals(filters.getSource(), tag.getString("source")) || filters.getSource() == null)
                     && (Objects.equals(filters.getProduction(), tag.getString("production")) || filters.getProduction() == null)
                     && (Objects.equals(filters.getCategory(), tag.getString("category")) || filters.getCategory() == null)) {
