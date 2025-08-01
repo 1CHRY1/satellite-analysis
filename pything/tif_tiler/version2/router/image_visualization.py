@@ -159,8 +159,13 @@ def get_tile(
             
         json_response = requests.post(url, json=data, headers=headers).json()
         logger.info(f"SpringBoot 请求耗时: {time.time() - t2:.3f} 秒")
+        
         if not json_response:
             logger.warning("后端返回的json中为空")
+            return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
+
+        if json_response.get('status') == -1:
+            logger.info("status为-1，直接返回透明瓦片")
             return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
 
         t3 = time.time()
@@ -175,17 +180,17 @@ def get_tile(
 
         # 判断景与瓦片是否相交，不相交则不做任何处理
         # 获取所有景的最大最小经纬度
-        min_lon_scene = min([float(scene['bbox']['geometry']['coordinates'][0][0][0]) for scene in json_data])  # 所有景的最小经度
-        max_lat_scene = max([float(scene['bbox']['geometry']['coordinates'][0][0][1]) for scene in json_data])  # 所有景的最大纬度
-        max_lon_scene = max([float(scene['bbox']['geometry']['coordinates'][0][2][0]) for scene in json_data])  # 所有景的最大经度
-        min_lat_scene = min([float(scene['bbox']['geometry']['coordinates'][0][2][1]) for scene in json_data])  # 所有景的最小经度
-        # 获取瓦片的最大最小经纬度
-        min_lon_tile, min_lat_tile, max_lon_tile, max_lat_tile = points
-        # 判断是否相交
-        if (min_lon_scene > max_lon_tile or min_lat_scene > max_lat_tile or 
-            max_lon_scene < min_lon_tile or max_lat_scene < min_lat_tile):
-            logger.info("景与瓦片不相交，返回空内容")
-            return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
+        # min_lon_scene = min([float(scene['bbox']['geometry']['coordinates'][0][0][0]) for scene in json_data])  # 所有景的最小经度
+        # max_lat_scene = max([float(scene['bbox']['geometry']['coordinates'][0][0][1]) for scene in json_data])  # 所有景的最大纬度
+        # max_lon_scene = max([float(scene['bbox']['geometry']['coordinates'][0][2][0]) for scene in json_data])  # 所有景的最大经度
+        # min_lat_scene = min([float(scene['bbox']['geometry']['coordinates'][0][2][1]) for scene in json_data])  # 所有景的最小经度
+        # # 获取瓦片的最大最小经纬度
+        # min_lon_tile, min_lat_tile, max_lon_tile, max_lat_tile = points
+        # # 判断是否相交
+        # if (min_lon_scene > max_lon_tile or min_lat_scene > max_lat_tile or 
+        #     max_lon_scene < min_lon_tile or max_lat_scene < min_lat_tile):
+        #     logger.info("景与瓦片不相交，返回空内容")
+        #     return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
         
         # 完全覆盖tile的景的列表
         full_coverage_scenes = [scene for scene in json_data if float(scene.get('coverage', 0)) >= 0.999]
