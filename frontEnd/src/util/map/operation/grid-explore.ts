@@ -50,7 +50,7 @@ export function map_addGridDEMLayer(
         m.setTerrain({ source: srcId, exaggeration: 4.0 })
         setTimeout(() => {
             cb && cb()
-        }, 2000)
+        }, 5000)
     })
 }
 export function map_destroyGridDEMLayer(gridInfo: GridData) {
@@ -130,7 +130,7 @@ export function map_addGrid3DLayer(
 
         setTimeout(() => {
             cb && cb()
-        }, 2000)
+        }, 3000)
     })
 }
 export function map_destroyGrid3DLayer(gridInfo: GridData) {

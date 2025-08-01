@@ -230,7 +230,7 @@ export function useViewHistoryModule() {
         MapOperation.map_destroyNoCloudLayer()
     
         // -------- 新版无云一版图（MosaicJson）展示逻辑 --------------------------
-        const mosaicJsonPath = data.bucket + '/' + data.object_path
+        const mosaicJsonPath = data.result.bucket + '/' + data.result.object_path
         const url4MosaicJson = getNoCloudUrl4MosaicJson({
             mosaicJsonPath: mosaicJsonPath
         })

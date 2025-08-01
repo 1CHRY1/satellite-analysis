@@ -451,7 +451,7 @@ export default{
 
             subtitle2:"格网分辨率",
             resolution:"格网分辨率选择：",
-            advice:" 建议省级行政单位格网分辨率不超过30km",
+            advice:" 建议省级行政单位格网分辨率不小于30km",
 
             button:"获取格网",
         },

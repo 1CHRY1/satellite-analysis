@@ -4,11 +4,11 @@ COMMON_CONFIG = {
     "dev": {
         "create_no_cloud_config_url": "http://localhost:8999/api/v3/modeling/example/scenes/visualization"
     },
-    "K8s": {
-        "create_no_cloud_config_url": "http://223.2.34.8:31584/api/v1/modeling/example/noCloud/createNoCloudConfig"
+    "k8s": {
+        "create_no_cloud_config_url": "http://223.2.34.8:31584/api/v3/modeling/example/scenes/visualization"
     },
-    "Vmod": {
-        "create_no_cloud_config_url": "http://172.31.13.21:8999/api/v1/modeling/example/noCloud/createNoCloudConfig"
+    "vmod": {
+        "create_no_cloud_config_url": "http://172.31.13.21:8999/api/v3/modeling/example/scenes/visualization"
     }
 }
 MINIO_CONFIG = {
@@ -19,24 +19,24 @@ MINIO_CONFIG = {
         "bucket": "temp-files",
         "dir": "mosaicjson",
     },
-    "K8s": {
-        "endpoint": "minio.example.com:9000",
-        "access_key": "K8s-user",
-        "secret_key": "K8s-password",
-        "bucket": "K8s-files",
-        "dir": "K8s-mosaicjson",
+    "k8s": {
+        "endpoint": "223.2.34.8:30900",
+        "access_key": "minioadmin",
+        "secret_key": "minioadmin",
+        "bucket": "temp-files",
+        "dir": "mosaicjson",
     },
-    "Vmod": {
-        "endpoint": "minio.example.com:9000",
-        "access_key": "Vmod-user",
-        "secret_key": "Vmod-password",
-        "bucket": "Vmod-files",
-        "dir": "Vmod-mosaicjson",
+    "vmod": {
+        "endpoint": "172.31.13.21:9000",
+        "access_key": "OGMS",
+        "secret_key": "ogms250410",
+        "bucket": "temp-files",
+        "dir": "mosaicjson",
     },
 }
 
 # 改这里
-CURRENT_ENV = "dev"  #
+CURRENT_ENV = "k8s"  #
 minio_config = MINIO_CONFIG[CURRENT_ENV]
 common_config = COMMON_CONFIG[CURRENT_ENV]
 
