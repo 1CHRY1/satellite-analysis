@@ -85,6 +85,10 @@ div {
     background-color: transparent !important;
 }
 
+.ant-picker-presets {
+	color: #e0f2fe;
+}
+
 .ant-picker-header {
     color: #e0f2fe !important;
     border-bottom: 1px solid rgba(56, 189, 248, 0.2) !important;

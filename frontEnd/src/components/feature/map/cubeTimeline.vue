@@ -267,7 +267,7 @@ const handleClick = async (index: number) => {
     console.log(filteredImages.value, 'filteredImages')
     if (index < 0 || index >= filteredImages.value.length) return
 
-    const stopLoading = message.loading('正在加载影像...')
+    const stopLoading = message.loading('正在加载，请稍后...')
 
     activeIndex.value = index
 
