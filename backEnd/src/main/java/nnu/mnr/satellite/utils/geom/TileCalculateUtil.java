@@ -70,7 +70,7 @@ public class TileCalculateUtil {
                 Polygon tilePolygon = geometryFactory.createPolygon(geometryFactory.createLinearRing(coords), null);
 
                 // 精确判断覆盖关系
-                if (region.covers(tilePolygon) || region.intersects(tilePolygon)) {
+                if (region.intersects(tilePolygon)) {
                     tileIds.add(new Integer[]{col, row});
                 }
             }

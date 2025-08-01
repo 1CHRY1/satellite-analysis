@@ -65,7 +65,6 @@ public class SceneDataServiceV3 {
         Integer regionId = scenesFetchDTO.getRegionId();
         Integer resolution = scenesFetchDTO.getResolution();
         CoverageReportVO<Map<String, Object>> report;
-
         if (userSceneCache == null && userThemeCache == null) {
             // 缓存未命中，从数据库中读数据
             Geometry boundary = regionDataService.getRegionById(regionId).getBoundary();
@@ -119,7 +118,6 @@ public class SceneDataServiceV3 {
             // 缓存命中，直接使用
             report = userSceneCache.coverageReportVO;
         }
-
         CoverageReportWithCacheKeyVO<Map<String, Object>> result = new CoverageReportWithCacheKeyVO<>();
         result.setReport(report);
         result.setEncryptedRequestBody(encryptedRequestBody); // 返回给 Controller 设置 Cookie
