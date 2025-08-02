@@ -4,7 +4,7 @@
                 <div class="section-header">
             <div class="section-subtitle flex items-center gap-2 mb-4 mt-4 pb-2 border-b border-[#247699]">
                 <MapIcon :size="18" />
-                <h2 class="section-title text-lg font-medium text-[#38bdf8] mt-2">指数分析</h2>
+                <h2 class="section-title text-lg font-medium text-[#38bdf8] mt-2 ml-2">指数分析</h2>
             </div>
         </div>
         <div class="section-content">

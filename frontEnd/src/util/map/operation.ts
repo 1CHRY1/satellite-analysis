@@ -833,8 +833,8 @@ function grid_fill_click_handler(e: MapMouseEvent): void {
 }
 
 // Data-View:: grid-layer
-export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
-    const id = 'grid-layer'
+export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection, dataType: string = 'default'): void {
+    const id = `grid-layer-${dataType}`
     const fillId = id + '-fill'
     const lineId = id + '-line'
     const highlightId = id + '-highlight'
@@ -939,10 +939,10 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
         // )
 
         // ezStore.set('grid-layer-cancel-watch', cancelWatch)
-        ezStore.set('grid-layer-fill-id', fillId)
-        ezStore.set('grid-layer-line-id', lineId)
-        ezStore.set('grid-layer-highlight-id', highlightId)
-        ezStore.set('grid-layer-source-id', srcId)
+        ezStore.set(`grid-layer-${dataType}-fill-id`, fillId)
+        ezStore.set(`grid-layer-${dataType}-line-id`, lineId)
+        ezStore.set(`grid-layer-${dataType}-highlight-id`, highlightId)
+        ezStore.set(`grid-layer-${dataType}-source-id`, srcId)
     })
 }
 
@@ -1624,25 +1624,55 @@ export function map_destroyOneBandColorLayer() {
 
 // Data-View:: grid-layer
 export function map_destroyGridLayer(): void {
-    const gridLayer = ezStore.get('grid-layer-fill-id')
-    const gridLineLayer = ezStore.get('grid-layer-line-id')
-    const gridHighlightLayer = ezStore.get('grid-layer-highlight-id')
-    const gridSourceId = ezStore.get('grid-layer-source-id')
-    const cancelWatch = ezStore.get('grid-layer-cancel-watch')
-
     mapManager.withMap((m) => {
-        gridLayer && m.getLayer(gridLayer) && m.off('click', gridLayer, grid_fill_click_handler)
-        gridLayer && m.getLayer(gridLayer) && m.removeLayer(gridLayer)
-        gridLineLayer && m.getLayer(gridLineLayer) && m.removeLayer(gridLineLayer)
-        gridHighlightLayer && m.getLayer(gridHighlightLayer) && m.removeLayer(gridHighlightLayer)
-        gridSourceId && m.getSource(gridSourceId) && m.removeSource(gridSourceId)
-        cancelWatch && cancelWatch()
-        gridStore.cleadAllGrids()
-        ezStore.delete('grid-layer-fill-id')
-        ezStore.delete('grid-layer-line-id')
-        ezStore.delete('grid-layer-highlight-id')
-        ezStore.delete('grid-layer-source-id')
-        ezStore.delete('grid-layer-cancel-watch')
+        const fillId = ezStore.get('grid-layer-fill-id')
+        const lineId = ezStore.get('grid-layer-line-id')
+        const highlightId = ezStore.get('grid-layer-highlight-id')
+        const srcId = ezStore.get('grid-layer-source-id')
+
+        if (fillId && m.getLayer(fillId)) {
+            m.removeLayer(fillId)
+        }
+        if (lineId && m.getLayer(lineId)) {
+            m.removeLayer(lineId)
+        }
+        if (highlightId && m.getLayer(highlightId)) {
+            m.removeLayer(highlightId)
+        }
+        if (srcId && m.getSource(srcId)) {
+            m.removeSource(srcId)
+        }
+    })
+}
+
+// 新增：清除特定类型的格网图层
+export function map_destroyGridLayerByType(dataType: string): void {
+    mapManager.withMap((m) => {
+        const fillId = ezStore.get(`grid-layer-${dataType}-fill-id`)
+        const lineId = ezStore.get(`grid-layer-${dataType}-line-id`)
+        const highlightId = ezStore.get(`grid-layer-${dataType}-highlight-id`)
+        const srcId = ezStore.get(`grid-layer-${dataType}-source-id`)
+
+        if (fillId && m.getLayer(fillId)) {
+            m.removeLayer(fillId)
+        }
+        if (lineId && m.getLayer(lineId)) {
+            m.removeLayer(lineId)
+        }
+        if (highlightId && m.getLayer(highlightId)) {
+            m.removeLayer(highlightId)
+        }
+        if (srcId && m.getSource(srcId)) {
+            m.removeSource(srcId)
+        }
+    })
+}
+
+// 新增：清除所有类型的格网图层
+export function map_destroyAllGridLayers(): void {
+    const dataTypes = ['demotic1m', 'demotic2m', 'international', 'radar', 'default']
+    dataTypes.forEach(dataType => {
+        map_destroyGridLayerByType(dataType)
     })
 }
 
