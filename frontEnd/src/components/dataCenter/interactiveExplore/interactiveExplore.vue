@@ -558,6 +558,12 @@ onMounted(async() => {
             });
         }
     }, 2); // 适当延迟
+
+    setTimeout(() => {
+        mapManager.withMap((m) => {
+            m.showTileBoundaries = true
+        })
+    }, 1)
 })
 </script>
 

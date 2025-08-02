@@ -401,6 +401,8 @@ import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import { ezStore } from '@/store'
 import { getSceneGeojson, getTifbandMinMax } from '@/api/http/satellite-data/visualize.api'
 
+import { mapManager } from '@/util/map/mapManager'
+
 import {
     DatabaseIcon,
     MapPinIcon,
@@ -943,6 +945,12 @@ const verifyFilterByTags = () => {
 }
 
 onMounted(() => {
+    setTimeout(() => {
+        mapManager.withMap((m) => {
+            m.showTileBoundaries = true
+        })
+    }, 1)
+
     if (!ezStore.get('statisticCache')) ezStore.set('statisticCache', new Map())
 })
 </script>
