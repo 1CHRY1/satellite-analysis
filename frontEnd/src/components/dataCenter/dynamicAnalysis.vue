@@ -1,7 +1,7 @@
 <template>
     <div class="relative flex flex-1 h-full flex-row bg-black ">
-        <subtitle class="z-10 absolute" style="margin-top: 140px; "/>
-        <div class="absolute  left-16  top-0 h-full  p-4 text-gray-200 z-10  " :class="isToolbarOpen? 'w-[20vw]' : 'w-16'" style="margin-top: 180px; ">
+        <subtitle class="z-10 absolute" style="margin-top: 60px; "/>
+        <div class="absolute  left-16  top-0  p-4 text-gray-200 z-10  " :class="isToolbarOpen? 'w-[20vw]' : 'w-16'" style="margin-top: 100px; ">
             <button 
                 @click="isToolbarOpen = !isToolbarOpen"
                 class="absolute top-1/3 right-0 -translate-y-1/2 h-12 w-6 bg-gray-800 hover:bg-gray-700 text-white rounded-r-lg shadow-lg 
@@ -18,6 +18,7 @@
                  class="h-[989px] w-full bg-gray-800 shadow-lg transition-all duration-300 overflow-hidden 
                  flex flex-col flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 
                  "
+                 style="background-color: rgba(20, 20, 21, 0.6);"
                 :class="isToolbarOpen ? 'w-[20vw]' : 'w-16'">
                 <!-- 工具栏内容 -->
                 <div class="p-4 text-white border-b border-gray-700">
@@ -28,14 +29,14 @@
                 </div>
                 <div>
                     <section class="panel-section">
-                        <div class="section-header">
+                        <div class="section-header" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
                             <div class="section-icon">
                                 <MapPinIcon :size="18" />
                             </div>
                             <h2 class="section-title">{{t('datapage.analysis.section1.subtitle')}}</h2>
                         </div>
                         <div class="section-content">
-                            <div class="config-container">
+                            <div class="config-container" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
                                 <div class="config-item">
                                     <div class="config-label relative">
                                         <MapIcon :size="16" class="config-icon" />
@@ -50,7 +51,7 @@
                         </div>
                     </section>
                     <section class="panel-section">
-                        <div class="section-header">
+                        <div class="section-header" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
                             <div class="section-icon">
                                 <ChartColumn :size="18" />
                             </div>
@@ -103,7 +104,7 @@
                     </section>
                 </div>
                             <!-- Function Title -->
-                <div class="flex flex-col  flex-wrap  gap-2 mt-4 ml-6 mr-6">
+                <div class="flex flex-col  flex-wrap  gap-2 mt-4 ml-6 mr-6" >
                         <!-- <h3>影像分析</h3>
                         <div class="absolute right-6 " @click="clearImages">
                             <a-tooltip>
@@ -140,7 +141,7 @@
                     
                     
                     <!-- 分类工具列表 -->
-                    <div class="overflow-y-auto flex-1 p-2 mb-6">
+                    <div class="overflow-y-auto flex-1 p-2 mb-6" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
                         <div v-for="category in filteredCategories" :key="category.name" class="mb-4">
                             <h3 class="text-gray-300 font-medium px-2 py-1 flex items-center">
                                 <ChevronDownIcon 
@@ -156,21 +157,21 @@
                                 v-show="expandedCategories.includes(category.name) || searchQuery"
                                 class="ml-6 mt-1 space-y-1 "
                             >
-                                <button 
+                                <div
                                     v-for="tool in category.tools" 
                                     :key="tool.value"
                                     
                                     :class="{
                                         'bg-[#1e3a8a] text-white': selectedTask === tool.value,
-                                        'bg-[#0d1526] text-gray-300 hover:bg-[#1e293b]': selectedTask !== tool.value,
+                                        // 'bg-[#0d1526] text-gray-300 hover:bg-[#1e293b]': selectedTask !== tool.value,
                                         'opacity-50 cursor-not-allowed': tool.disabled
                                     }"
-                                    class="px-3 py-1 border border-[#2c3e50] rounded-lg transition-colors w-full text-left truncate"
+                                    class="px-3 py-1  rounded-lg transition-colors w-full text-left truncate"
                                     :disabled="tool.disabled"
                                     @click="selectedTask = tool.value"
                                 >
                                     {{ tool.label }}
-                                </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -202,14 +203,14 @@
                         <span class="page-title">展示分析</span>
                     </div>
                 </section> -->
-            <div v-if="showPanel">
+            <div v-if="showPanel" >
                 <div class="custom-panel px-2 mt-20">
                     <!-- <dv-border-box12 class=" !h-full"> -->
-                    <dv-border-box12 style="width: 326px; height: 889px;">
-                        <div class="main-container">
+                    <dv-border-box12 style="width: 426px; height: 1189px; background-color: rgba(20, 20, 21, 0.6);">
+                        
                             <component :is="currentTaskComponent" :thematicConfig="thematicConfig" />
                             <ResultComponent @response="handleResultLoaded" />
-                        </div>
+                        
                     </dv-border-box12>
                 </div>
             </div>

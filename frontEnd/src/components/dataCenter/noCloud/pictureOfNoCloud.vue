@@ -54,7 +54,7 @@
                             <!--简单合成内容区域-->
                             <div v-show="isNoCloudExpand" class="section-content">
                                 <div class="config-container">
-                                    <div class="config-item">
+                                    <div class="config-item" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
                                         <div class="config-label relative">
                                             <BoltIcon :size="16" class="config-icon" />
                                             <span>{{t('datapage.nocloud.section_chinese.subtitle')}}</span>
@@ -200,8 +200,8 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="config-item">
-                                        <div class="config-label relative">
+                                    <div class="config-item" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
+                                        <div class="config-label relative" >
                                             <CalendarIcon :size="16" class="config-icon" />
                                             <span>{{t('datapage.nocloud.section_international.subtitle')}}</span>
                                             <el-tooltip content="对于缺失数据的格网，采用国外光学影像进行填补，填补过程中基于AI算法进行超分辨率重建" placement="top"
@@ -280,7 +280,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="config-item">
+                                    <div class="config-item" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
                                         <div class="config-label relative">
                                             <CalendarIcon :size="16" class="config-icon" />
                                             <span>{{t('datapage.nocloud.section_SAR.subtitle')}}</span>
@@ -432,7 +432,7 @@
                                 <div class="config-container">
 
                                     <!--简单数据合成-->
-                                    <div class="config-item">
+                                    <div class="config-item" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
                                         <div class="config-label relative">
                                             <LayersIcon :size="16" class="config-icon" />
                                             <span>简单数据合成</span>
@@ -460,7 +460,7 @@
                                         </div>
                                     </div>
                                     <!-- 多源数据合成 -->
-                                    <div class="config-item">
+                                    <div class="config-item" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
                                         <div class="config-label relative">
                                             <LayersIcon :size="16" class="config-icon" />
                                             <span>复合数据合成</span>
@@ -653,7 +653,7 @@
                                     </div>
 
                                     <!-- 多时相数据合成 -->
-                                    <div class="config-item" v-show="false">
+                                    <div class="config-item" v-show="false" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
                                         <div class="config-label relative">
                                             <CalendarIcon :size="16" class="config-icon opacity-50" />
                                             <span class="text-gray-500">多时相数据合成</span>
@@ -838,11 +838,11 @@ const demotic2mGridFeature: Ref<FeatureCollection | null> = ref(null)
 const interGridFeature: Ref<FeatureCollection | null> = ref(null)
 const radarGridFeature: Ref<FeatureCollection | null> = ref(null)
 
-// 新增：格网渲染状态跟踪
+// 格网渲染状态跟踪
 const renderedGrids = ref<Set<string>>(new Set()) // 记录已渲染的格网ID
 const gridRenderingStatus = ref<Map<string, string>>(new Map()) // 记录格网渲染类型
 
-// 新增：格网渲染相关数据
+// 格网渲染相关数据
 const gridRenderingData = reactive({
     demotic1m: {
         rendered: false,
@@ -2265,7 +2265,7 @@ const handleCreateNoCloudTiles = async () => {
     }
 }
 
-// 新增：监听数据重构选择变化，触发格网重新渲染
+// 监听数据重构选择变化，触发格网重新渲染
 watch(() => dataReconstruction.value, (newVal) => {
     console.log('数据重构选择变化:', newVal)
     // 延迟执行，确保数据已更新
@@ -2274,7 +2274,7 @@ watch(() => dataReconstruction.value, (newVal) => {
     }, 100)
 }, { deep: true })
 
-// 新增：监听额外数据选择变化，触发格网重新渲染
+// 监听额外数据选择变化，触发格网重新渲染
 watch(() => additionalData.value, (newVal) => {
     console.log('额外数据选择变化:', newVal)
     // 延迟执行，确保数据已更新
