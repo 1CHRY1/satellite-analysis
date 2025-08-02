@@ -36,7 +36,7 @@ MINIO_CONFIG = {
 }
 
 # 改这里
-CURRENT_ENV = "dev"  #
+CURRENT_ENV = "k8s"  #
 minio_config = MINIO_CONFIG[CURRENT_ENV]
 common_config = COMMON_CONFIG[CURRENT_ENV]
 
