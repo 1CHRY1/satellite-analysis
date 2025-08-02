@@ -1,5 +1,6 @@
 package nnu.mnr.satellite.service.resources;
 
+import nnu.mnr.satellite.cache.SceneDataCache;
 import nnu.mnr.satellite.mapper.resources.IVectorRepo;
 import nnu.mnr.satellite.model.dto.resources.VectorsFetchDTO;
 import nnu.mnr.satellite.model.dto.resources.VectorsLocationFetchDTO;
@@ -44,8 +45,10 @@ public class VectorDataService {
         return vectorRepo.getVectorsDesByTimeAndGeometry(startTime, endTime, wkt);
     }
 
-    public byte[] getVectorByRegionAndTableName(Integer regionId, String tableName, int z, int x, int y){
-        String wkt = regionDataService.getRegionById(regionId).getBoundary().toText();
+    public byte[] getVectorByRegionAndTableName(String tableName, int z, int x, int y, String cacheKey){
+        SceneDataCache.UserRegionInfoCache userRegionInfoCache = SceneDataCache.getUserRegionInfoCacheMap(cacheKey);
+        Geometry gridBoundary = userRegionInfoCache.gridsBoundary;
+        String wkt = gridBoundary.toText();
         return getMvtTile(tableName, wkt, z, x, y);
     }
 
