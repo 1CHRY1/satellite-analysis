@@ -178,6 +178,8 @@ def get_tile(
             return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
 
         if json_response.get('status') == -1:
+            message = json_response.get('message')
+            logger.info(message)
             logger.info("status为-1，直接返回透明瓦片")
             return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
 

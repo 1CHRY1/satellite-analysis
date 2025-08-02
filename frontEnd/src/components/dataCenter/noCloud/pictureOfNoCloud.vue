@@ -3,12 +3,12 @@
     <div class="relative flex flex-1 flex-row bg-black">
         <subtitle class="z-10 absolute" style="margin-top: 60px; "/>
         <!-- 左侧面板栏 -->
-        <div  class=" absolute left-16 z-10 h-[calc(100vh-100px)] p-4 text-gray-200"  :class="showPanel ? 'w-[28vw]' : 'w-16'">
+        <div  class=" absolute left-16 z-10 h-[calc(100vh-100px)] p-4 text-gray-200"  :class="showPanel ? 'w-[28vw]' : 'w-16 transition-all duration-300'">
             <button 
                 @click="showPanel = !showPanel"
-                class="absolute top-1/2 right-0 -translate-y-1/2 h-12 w-6 bg-gray-800 hover:bg-gray-700 text-white rounded-l-lg shadow-lg 
+                class="absolute top-1/2 right-0 -translate-y-1/2 h-12 w-6 text-white rounded-l-lg shadow-lg 
                  items-center justify-center transition-all z-10"
-                :class="{ '!bg-blue-600': showPanel }"
+                :class="showPanel ? 'bg-blue-600 hover:bg-blue-500' : 'bg-gray-800 hover:bg-gray-700'"
             >
                 <ChevronRightIcon 
                     :size="16" 
