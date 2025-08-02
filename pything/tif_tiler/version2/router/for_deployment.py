@@ -102,15 +102,17 @@ def get_tile(
         if not json_data:
             return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
         
+        # 改进的场景选择逻辑
         full_coverage_scenes = [scene for scene in json_data if float(scene.get('coverage', 0)) >= 0.999]
 
         if full_coverage_scenes:
+            # 按云量排序
             sorted_full_coverage = sorted(full_coverage_scenes, key=lambda x: float(x.get('cloud', 0)))
-            scenes_to_process = [sorted_full_coverage[0]]
-            use_single_scene = True
+            # 将高覆盖率低云量的场景放在前面，但仍保留其他场景作为备选
+            other_scenes = [s for s in json_data[:10] if s not in full_coverage_scenes]
+            scenes_to_process = sorted_full_coverage + other_scenes
         else:
             scenes_to_process = json_data[:10]
-            use_single_scene = False
         
         scene_band_paths = {}
         bandList = ['Red', 'Green', 'Blue']
@@ -154,6 +156,7 @@ def get_tile(
 
         filled_ratio = 0.0
 
+        # 统一的场景处理逻辑
         for scene in scenes_to_process:
             if 'SAR' in sensorName:
                 continue
@@ -201,16 +204,15 @@ def get_tile(
                         else:
                             cloud_mask = np.zeros((target_H, target_W), dtype=bool)
                         
-                        if use_single_scene:
-                            total_cloud_mask = cloud_mask
-                        else:
-                            total_cloud_mask[need_fill_mask & valid_mask] |= cloud_mask[need_fill_mask & valid_mask]
+                        # 累积云掩码
+                        total_cloud_mask[need_fill_mask & valid_mask] |= cloud_mask[need_fill_mask & valid_mask]
                 except Exception as e:
                     print("Cannot read cloud file")
             
+            # 只填充需要填充且有效的区域
             fill_mask = need_fill_mask & valid_mask
 
-            if np.any(fill_mask) or use_single_scene:
+            if np.any(fill_mask):
                 bands = scene_band_paths[scene['sceneId']]
                 bucket_path = scene['bucket']
 
@@ -221,22 +223,16 @@ def get_tile(
                 if band_1 is None or band_2 is None or band_3 is None:
                     continue
 
-                if use_single_scene:
-                    img_r[valid_mask] = band_1[valid_mask]
-                    img_g[valid_mask] = band_2[valid_mask]
-                    img_b[valid_mask] = band_3[valid_mask]
-                    need_fill_mask[valid_mask] = False
-                else:
-                    img_r[fill_mask] = band_1[fill_mask]
-                    img_g[fill_mask] = band_2[fill_mask]
-                    img_b[fill_mask] = band_3[fill_mask]
-                    need_fill_mask[fill_mask] = False
+                # 统一的填充逻辑
+                img_r[fill_mask] = band_1[fill_mask]
+                img_g[fill_mask] = band_2[fill_mask]
+                img_b[fill_mask] = band_3[fill_mask]
+                need_fill_mask[fill_mask] = False
 
                 filled_ratio = 1.0 - (np.count_nonzero(need_fill_mask) / need_fill_mask.size)
             
-            if use_single_scene:
-                break
-            elif filled_ratio >= 0.95:
+            # 如果已经填充了99%以上，可以退出
+            if filled_ratio >= 0.99:
                 break
         
         img = np.stack([img_r, img_g, img_b])
