@@ -12,7 +12,7 @@
                     {{ t('nav.title') }}</a>
             </div>
 
-            <nav class="ml-[5vw] flex items-center">
+            <nav class="ml-[5vw] flex items-center justify-center">
                 <template v-for="(item, index) in navItems" :key="item.path || index" class="space-x-[1.5vw]">
                 <!-- 分隔线 (移到前面) -->
                 <div 

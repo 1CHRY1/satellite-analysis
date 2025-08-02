@@ -7,6 +7,7 @@ import { ezStore } from '@/store'
 import { useGridStore } from '@/store/gridStore'
 import type { polygonGeometry } from '../share.type'
 import Bus from '@/store/bus'
+import { CN_Bounds } from './constant'
 
 class MapManager {
     private static instance: MapManager | null

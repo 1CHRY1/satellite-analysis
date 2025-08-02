@@ -304,6 +304,11 @@ export function map_destroySceneLayer() {
     })
 }
 
+export function map_fitViewToTargetZoom(zoom: number) {
+    mapManager.withMap((m) => {
+        m.zoomTo(zoom)
+    })
+}
 /**
  * 4. 交互探索 - 矢量可视化
  */

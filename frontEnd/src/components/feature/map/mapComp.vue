@@ -102,7 +102,6 @@ onMounted(() => {
     // bus.on('cleanAllGridPreviewLayer', () => {
     //     MapOperation.map_removeGridPreviewLayer('all')
     // })
-    handleFitView()
 
     bus.on('cleanAllLayer', () => {
         MapOperation.map_destroyGridLayer()

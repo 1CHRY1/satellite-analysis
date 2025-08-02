@@ -211,6 +211,7 @@ export const useFilter = () => {
             themeStatsRes = await getThemeStatsByPOIFilter(poiFilter)
         }
         sceneStats.value = sceneStatsRes
+        
         vectorStats.value = vectorsRes
         themeStats.value = themeStatsRes
 
@@ -239,7 +240,7 @@ export const useFilter = () => {
         ezStore.set('themeStats', themeStats.value)
         ezStore.set('curGridsBoundary', curGridsBoundary.value)
     }
-
+    
     /**
      * 同步到数据准备: 同步数据准备所需的变量
      */
@@ -250,6 +251,7 @@ export const useFilter = () => {
             dataRange: [...selectedDateRange.value],
             gridResolution: selectedGridResolution.value, // 原space
             coverage: sceneStats.value.coverage,
+            allCoverage: sceneStats.value.dataset,
             // images: allScenes.value,
             grids: allGrids.value,
             boundary: curRegionBounds.value,
