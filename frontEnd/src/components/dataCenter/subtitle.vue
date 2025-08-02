@@ -50,7 +50,7 @@ const router = useRouter()
 }
 
 .button:hover {
-  background-color: #182944;
+  background-color: #1f4179;
 }
 
 .button:active {
