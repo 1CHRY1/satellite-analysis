@@ -304,6 +304,11 @@ export function map_destroySceneLayer() {
     })
 }
 
+export function map_fitViewToTargetZoom(zoom: number) {
+    mapManager.withMap((m) => {
+        m.zoomTo(zoom)
+    })
+}
 /**
  * 4. 交互探索 - 矢量可视化
  */
@@ -346,7 +351,7 @@ export function map_addMVTLayer(source_layer: string, url: string) {
 export function map_destroyMVTLayer() {
     const id = 'mvt-layer'
     const srcId = id + '-source'
-    
+
     mapManager.withMap((m) => {
         console.log(m.getLayer(id))
         console.log(m.getSource(srcId))

@@ -150,7 +150,7 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div class="result-info-item">
+                                                <!-- <div class="result-info-item">
                                                     <div class="result-info-icon">
                                                         <CloudIcon :size="16" />
                                                     </div>
@@ -166,8 +166,8 @@
                                                             }}
                                                         </div>
                                                     </div>
-                                                </div>
-                                                <div class="result-info-item">
+                                                </div> -->
+                                                <!-- <div class="result-info-item">
                                                     <div class="result-info-icon">
                                                         <CloudIcon :size="16" />
                                                     </div>
@@ -196,7 +196,7 @@
                                                             }}
                                                         </div>
                                                     </div>
-                                                </div>
+                                                </div> -->
                                             </div>
                                         </div>
                                     </div>
@@ -218,7 +218,7 @@
                                                 </label>
                                                 <label class="flex items-center gap-2">
                                                     <input type="checkbox" v-model="dataReconstruction[1]"
-                                                        @click="controlProgress(1)" :disabled="!dataReconstruction[0]"
+                                                        @click="handleDataReconstructionChange(1)" :disabled="!dataReconstruction[0]"
                                                         class="h-4 w-4 rounded" />
                                                     {{t('datapage.nocloud.section_international.text_overseaimage')}}
                                                 </label>
@@ -262,7 +262,7 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div class="result-info-item">
+                                                <!-- <div class="result-info-item">
                                                     <div class="result-info-icon">
                                                         <CloudIcon :size="16" />
                                                     </div>
@@ -276,7 +276,7 @@
                                                             }}
                                                         </div>
                                                     </div>
-                                                </div>
+                                                </div> -->
                                             </div>
                                         </div>
                                     </div>
@@ -298,7 +298,7 @@
                                                 </label>
                                                 <label class="flex items-center gap-2">
                                                     <input type="checkbox" v-model="dataReconstruction[2]"
-                                                        @click="controlProgress(2)" :disabled="!additionalData[1] || !dataReconstruction[1]
+                                                        @click="handleDataReconstructionChange(2)" :disabled="!additionalData[1] || !dataReconstruction[1]
                                                             " class="h-4 w-4 rounded" />
                                                     {{t('datapage.nocloud.section_SAR.text_SARtrans')}}
                                                 </label>
@@ -310,7 +310,7 @@
                                             <select class="max-h-[600px] w-[calc(100%-113px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
                                                     v-model="selectsar">
                                                     <option disabled selected value="">{{ t('datapage.explore.section_interactive.choose') }}</option>
-                                                    <option v-for="(platform, index) in internationalSARPlatformList" 
+                                                    <option v-for="(platform, index) in SARPlatformList" 
                                                         :key="platform.platformName" 
                                                         :value="platform"
                                                         @click="handleShowSensorImage(selectsar)"
@@ -344,7 +344,7 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div class="result-info-item">
+                                                <!-- <div class="result-info-item">
                                                     <div class="result-info-icon">
                                                         <CloudIcon :size="16" />
                                                     </div>
@@ -358,7 +358,7 @@
                                                             }}
                                                         </div>
                                                     </div>
-                                                </div>
+                                                </div> -->
                                             </div>
                                         </div>
                                     </div>
@@ -397,6 +397,18 @@
                                             <div class="h-4 bg-gradient-to-r from-[#3b82f6] to-[#06b6d4] transition-all duration-300"
                                                 :style="{ width: `${progress[3]}%` }"></div>
                                         </div>
+                                        
+                                        <!-- 调试按钮 -->
+                                        <!-- <div class="flex w-full flex-row gap-2 mt-2">
+                                            <button @click="debugRenderGrids"
+                                                class="flex justify-center w-1/2 rounded-lg border border-[#ff6b6b] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#ff8e8e] hover:bg-[#1a2b4c] active:scale-95">
+                                                <span>调试：重新渲染格网</span>
+                                            </button>
+                                            <button @click="showRenderingStatus"
+                                                class="flex justify-center w-1/2 rounded-lg border border-[#4ecdc4] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#6ee7df] hover:bg-[#1a2b4c] active:scale-95">
+                                                <span>显示渲染状态</span>
+                                            </button>
+                                        </div> -->
                                     </div>
                                 </div>
                             </div>
@@ -758,6 +770,7 @@ import { mapManager } from '@/util/map/mapManager'
 import router from '@/router'
 import { getImageStats } from '@/api/http/satellite-data/satellite.api3'
 import subtitle from '../subtitle.vue'
+import { getSceneStatsByRegionFilter } from '@/api/http/interactive-explore'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
@@ -791,11 +804,11 @@ interface imageResponse {
 const nation1mSet = ref()
 const nation2mSet = ref()
 const internationalLightSet = ref()
-const internationalSARSet = ref()
+const SARSet = ref()
 const nation1mPlatformList= ref()
 const nation2mPlatformList = ref()
 const internationalLightPlatformList = ref()
-const internationalSARPlatformList = ref()
+const SARPlatformList = ref()
 
 
 /**
@@ -824,6 +837,34 @@ const demotic1mGridFeature: Ref<FeatureCollection | null> = ref(null)
 const demotic2mGridFeature: Ref<FeatureCollection | null> = ref(null)
 const interGridFeature: Ref<FeatureCollection | null> = ref(null)
 const radarGridFeature: Ref<FeatureCollection | null> = ref(null)
+
+// 新增：格网渲染状态跟踪
+const renderedGrids = ref<Set<string>>(new Set()) // 记录已渲染的格网ID
+const gridRenderingStatus = ref<Map<string, string>>(new Map()) // 记录格网渲染类型
+
+// 新增：格网渲染相关数据
+const gridRenderingData = reactive({
+    demotic1m: {
+        rendered: false,
+        grids: [] as any[],
+        color: '#00FFFF' // 青色
+    },
+    demotic2m: {
+        rendered: false,
+        grids: [] as any[],
+        color: '#00FF00' // 绿色
+    },
+    international: {
+        rendered: false,
+        grids: [] as any[],
+        color: '#FFA500' // 橙色
+    },
+    radar: {
+        rendered: false,
+        grids: [] as any[],
+        color: '#FF0000' // 红色
+    }
+})
 
 // ========== 复杂合成相关数据定义 ==========
 
@@ -1363,208 +1404,7 @@ const allScenes = computed(() => [
 ])
 console.log(demotic1mImages.value.length)
 
-const add1mDemoticImage = async () => {
-    const isChecked = additionalData.value[0];
-    // 清除格网图层，得放到一个请求上面，不然添加图层的时候还没销毁
-    // gridStore.cleadAllGrids()
-    MapOperation.map_destroyImagePolygon()
-    MapOperation.map_destroyImagePreviewLayer()
-    MapOperation.map_destroyGridLayer()
 
-    // 不管是否勾选，都要调用这个，因为取消勾选的进度条显示逻辑也在里面！！！
-    controlProgress(0)
-
-    if (isChecked) {
-        return;
-    }
-    // 计算国产1m影像的格网分布和覆盖率
-    const gridCount = exploreData.grids.length;
-    const allGrids = exploreData.grids.map((item: any) => ({
-        rowId: item.rowId,
-        columnId: item.columnId,
-        resolution: item.resolution,
-    }));
-    
-    
-    demotic1mGridImages.value = await getSceneGrids({
-        grids: allGrids,
-        sceneIds: demotic1mImages.value.map((image) => image.sceneId),
-    });
-    coverageRate.value.demotic1m = getCoverage(demotic1mGridImages.value, gridCount);
-
-    // 国产影像渲染
-    // 添加带有数据指示的格网
-    let gridFeature: FeatureCollection = {
-        type: 'FeatureCollection',
-        features: exploreData.grids.map((item: any, index) => {
-            return {
-                type: 'Feature',
-                geometry: item.boundary.geometry as Geometry,
-                properties: {
-                    ...(item.properties || {}),
-                    id: item.properties?.id ?? index, // 确保每个都有 id
-                    opacity: judgeGridOpacity(index, demotic1mGridImages.value),
-                    source: classifyGridSource(index, demotic1mGridImages.value, null) || null,
-                },
-            }
-        }),
-    }
-    console.log(exploreData.grids, 111)
-
-    demotic1mGridFeature.value = gridFeature
-    MapOperation.map_addGridLayer(gridFeature)
-    MapOperation.draw_deleteAll()
-
-    ElMessage.success(t('datapage.nocloud.message.guochanload'))
-}
-
-const add2mDemoticImages = () => {
-    cancelCheckbox('grid', 0)
-
-    // 逻辑与addRadarImages中的一样，可以参考
-    let operateData = dataReconstruction.value[0]
-        ? demotic1mGridImages.value
-        : demotic2mGridImages.value
-
-    // 清除格网图层，得放到一个请求上面，不然添加图层的时候还没销毁
-    // gridStore.cleadAllGrids()
-    MapOperation.map_destroyImagePolygon()
-    MapOperation.map_destroyImagePreviewLayer()
-    MapOperation.map_destroyGridLayer()
-
-    // 不管是否勾选，都要调用这个，因为取消勾选的进度条显示逻辑也在里面！！！
-    controlProgress(0)
-
-    // 进度条加载完毕才能进行渲染图层，但是取消勾选不需要等待，而是立刻加载上一级的图层
-    setTimeout(
-        () => {
-            let gridFeature: FeatureCollection = {
-                type: 'FeatureCollection',
-                features: exploreData.grids.map((item: any, index) => {
-                    return {
-                        type: 'Feature',
-                        geometry: item.boundary.geometry as Geometry,
-                        properties: {
-                            ...(item.properties || {}),
-                            id: item.properties?.id ?? index, // 确保每个都有 id
-                            opacity: judgeGridOpacity(index, operateData),
-                            source:
-                                classifyGridSource(
-                                    index,
-                                    operateData,
-                                    demotic1mGridFeature.value,
-                                    'demotic2m',
-                                ) || null,
-                        },
-                    }
-                }),
-            }
-            demotic2mGridFeature.value = gridFeature
-
-            MapOperation.map_addGridLayer(gridFeature)
-            MapOperation.draw_deleteAll()
-        },
-        dataReconstruction.value[0] ? 100 : mockProgressTime,
-    )
-}
-
-/**
- * 欧美区
- */
-
-const addAbroadImages = () => {
-    cancelCheckbox('grid', 1)
-    // 逻辑与addRadarImages中的一样，可以参考
-    let operateData = additionalData.value[1] ? demotic2mGridImages.value : interGridImages.value
-
-    // 清除格网图层，得放到一个请求上面，不然添加图层的时候还没销毁
-    // gridStore.cleadAllGrids()
-    MapOperation.map_destroyImagePolygon()
-    MapOperation.map_destroyImagePreviewLayer()
-    MapOperation.map_destroyGridLayer()
-
-    // 不管是否勾选，都要调用这个，因为取消勾选的进度条显示逻辑也在里面！！！
-    // controlProgress(1)
-
-    // 进度条加载完毕才能进行渲染图层，但是取消勾选不需要等待，而是立刻加载上一级的图层
-    setTimeout(
-        () => {
-            let gridFeature: FeatureCollection = {
-                type: 'FeatureCollection',
-                features: exploreData.grids.map((item: any, index) => {
-                    return {
-                        type: 'Feature',
-                        geometry: item.boundary.geometry as Geometry,
-                        properties: {
-                            ...(item.properties || {}),
-                            id: item.properties?.id ?? index, // 确保每个都有 id
-                            opacity: judgeGridOpacity(index, operateData),
-                            source:
-                                classifyGridSource(
-                                    index,
-                                    operateData,
-                                    demotic2mGridFeature.value,
-                                    'international',
-                                ) || null,
-                        },
-                    }
-                }),
-            }
-
-            interGridFeature.value = gridFeature
-            MapOperation.map_addGridLayer(gridFeature)
-            MapOperation.draw_deleteAll()
-        },
-        dataReconstruction.value[1] ? 100 : mockProgressTime,
-    )
-}
-
-const addRadarImages = () => {
-    // 这里要考虑一个问题，就是勾选的时候，渲染三合一的数据，取消勾选的时候，要渲染二合一的数据，所以渲染数据要根据
-    // 勾选框的数据变化比较晚，所以勾选的时候是false，取消勾选的时候是true
-    let operateData = additionalData.value[2] ? interGridImages.value : radarGridImages.value
-
-    // 清除格网图层，得放到一个请求上面，不然添加图层的时候还没销毁
-    // gridStore.cleadAllGrids()
-    MapOperation.map_destroyImagePolygon()
-    MapOperation.map_destroyImagePreviewLayer()
-    MapOperation.map_destroyGridLayer()
-
-    // 不管是否勾选，都要调用这个，因为取消勾选的进度条显示逻辑也在里面！！！
-    // controlProgress(2)
-
-    // 进度条加载完毕才能进行渲染图层，但是取消勾选不需要等待，而是立刻加载上一级的图层
-    setTimeout(
-        () => {
-            let gridFeature: FeatureCollection = {
-                type: 'FeatureCollection',
-                features: exploreData.grids.map((item: any, index) => {
-                    return {
-                        type: 'Feature',
-                        geometry: item.boundary.geometry as Geometry,
-                        properties: {
-                            ...(item.properties || {}),
-                            id: item.properties?.id ?? index, // 确保每个都有 id
-                            opacity: judgeGridOpacity(index, operateData),
-                            source:
-                                classifyGridSource(
-                                    index,
-                                    operateData,
-                                    interGridFeature.value,
-                                    'radar',
-                                ) || null,
-                        },
-                    }
-                }),
-            }
-            console.log(gridFeature)
-            radarGridFeature.value = gridFeature
-            MapOperation.map_addGridLayer(gridFeature)
-            MapOperation.draw_deleteAll()
-        },
-        dataReconstruction.value[2] ? 100 : mockProgressTime,
-    )
-}
 
 /**
  * 快进进度条
@@ -1879,6 +1719,7 @@ const controlProgress = (index: number) => {
     }, mockProgressTime)
 }
 
+
 //scenesId 和 platformName获取
 const dataPrepare =  async ()=>{
     let nation1mData = {resolutionName:'subMeter', source:'national',production:'light'}
@@ -1902,24 +1743,24 @@ const dataPrepare =  async ()=>{
     };
     internationalLightSet.value= await getImageStats(InternationalLightPara)
 
-    let internationalSARData = { source:'international',production:'radar'}
-    const internationalSARPara = {
+    let SARData = {production:'radar'}
+    const SARPara = {
     grids: exploreData.grids,
-    filters: internationalSARData
+    filters: SARData
     };
-    internationalSARSet.value= await getImageStats(internationalSARPara)
+    SARSet.value= await getImageStats(SARPara)
     
     //对应的名称列表创建
     nation1mPlatformList.value = extractPlatformList(nation1mSet.value.scenes);
     nation2mPlatformList.value = extractPlatformList(nation2mSet.value.scenes);
     internationalLightPlatformList.value = extractPlatformList(internationalLightSet.value.scenes);
-    internationalSARPlatformList.value = extractPlatformList(internationalSARSet.value.scenes);
+    SARPlatformList.value = extractPlatformList(SARSet.value.scenes);
     console.log(nation2mPlatformList)
 
     demotic1mImages.value = nation1mSet.value?.scenes|| []
     demotic2mImages.value = nation2mSet.value?.scenes|| []
     internationalImages.value = internationalLightSet.value?.scenes|| []
-    radarImages.value = internationalSARSet.value?.scenes|| []
+    radarImages.value = SARSet.value?.scenes|| []
 }
 
 onMounted(async () => {
@@ -1950,34 +1791,46 @@ onMounted(async () => {
     })
 
     // 计算四种情况的格网分布情况
-    demotic1mGridImages.value = await getSceneGrids({
-        grids: allGrids,
-        sceneIds: demotic1mImages.value.map((images) => images.sceneId),
-    })
-    console.log('国产亚米级影像分布情况', demotic1mGridImages.value)
-    coverageRate.value.demotic1m = getCoverage(demotic1mGridImages.value, gridCount)
+    // demotic1mGridImages.value = await getSceneGrids({
+    //     grids: allGrids,
+    //     sceneIds: demotic1mImages.value.map((images) => images.sceneId),
+    // })
+    // console.log('国产亚米级影像分布情况', demotic1mGridImages.value)
+    // coverageRate.value.demotic1m = getCoverage(demotic1mGridImages.value, gridCount)
+    // console.log(demotic1mGridImages.value,'国产亚米的GridImages')
+    // console.log(coverageRate.value, "覆盖率情况")
 
-    let addDemotic1mImages = demotic1mImages.value.concat(demotic2mImages.value)
-    demotic2mGridImages.value = await getSceneGrids({
-        grids: allGrids,
-        sceneIds: addDemotic1mImages.map((images) => images.sceneId),
-    })
-    console.log('国产2m超分影像分布情况', demotic2mGridImages.value)
-    coverageRate.value.demotic2m = getCoverage(demotic2mGridImages.value, gridCount)
 
-    let addInternationalImages = addDemotic1mImages.concat(internationalImages.value)
-    interGridImages.value = await getSceneGrids({
-        grids: allGrids,
-        sceneIds: addInternationalImages.map((images) => images.sceneId),
-    })
-    coverageRate.value.international = getCoverage(interGridImages.value, gridCount)
+    // let addDemotic1mImages = demotic1mImages.value.concat(demotic2mImages.value)
+    // demotic2mGridImages.value = await getSceneGrids({
+    //     grids: allGrids,
+    //     sceneIds: addDemotic1mImages.map((images) => images.sceneId),
+    // })
+    // console.log('国产2m超分影像分布情况', demotic2mGridImages.value)
+    // coverageRate.value.demotic2m = getCoverage(demotic2mGridImages.value, gridCount)
 
-    let addRadarImages = addInternationalImages.concat(radarImages.value)
-    radarGridImages.value = await getSceneGrids({
-        grids: allGrids,
-        sceneIds: addRadarImages.map((images) => images.sceneId),
-    })
-    coverageRate.value.addRadar = getCoverage(radarGridImages.value, gridCount)
+    // let addInternationalImages = addDemotic1mImages.concat(internationalImages.value)
+    // interGridImages.value = await getSceneGrids({
+    //     grids: allGrids,
+    //     sceneIds: addInternationalImages.map((images) => images.sceneId),
+    // })
+    // coverageRate.value.international = getCoverage(interGridImages.value, gridCount)
+
+    // let addRadarImages = addInternationalImages.concat(radarImages.value)
+    // radarGridImages.value = await getSceneGrids({
+    //     grids: allGrids,
+    //     sceneIds: addRadarImages.map((images) => images.sceneId),
+    // })
+    // coverageRate.value.addRadar = getCoverage(radarGridImages.value, gridCount)
+
+    // 新增：渲染格网
+    await mapManager.waitForInit();
+    
+    // 清除旧的格网图层
+    MapOperation.map_destroyAllGridLayers()
+    
+    // 渲染所有格网
+    reRenderAllGrids()
 
     // // 国产影像渲染
     // // 添加带有数据指示的格网
@@ -2017,6 +1870,101 @@ onMounted(async () => {
 
 })
 
+
+const add1mDemoticImage = async() => {
+    const isChecked = additionalData.value[0]
+
+    if (isChecked) {
+        // 启用国产1m影像渲染
+        console.log('启用国产1m影像渲染')
+        // 清除之前的渲染状态
+        gridRenderingData.demotic1m.rendered = false
+        
+        reRenderAllGrids()
+    } else {
+        
+        console.log('禁用国产1m影像渲染')
+        
+        clearGridRenderingByType('demotic1m')
+    }
+}
+
+// 添加国产2m影像
+const add2mDemoticImages = async() => {
+    const isChecked = dataReconstruction.value[0]
+    
+    if (isChecked) {
+        console.log('启用国产2m影像渲染')
+
+        gridRenderingData.demotic2m.rendered = false
+
+        renderGrids('demotic2m')
+    } else {
+        
+        console.log('禁用国产2m影像渲染')
+        
+        clearGridRenderingByType('demotic2m')
+    }
+}
+
+// 添加国外影像
+const addAbroadImages = async() => {
+    const isChecked = additionalData.value[1]
+    
+    if (isChecked) {
+        console.log('启用国外影像渲染')
+        
+        gridRenderingData.international.rendered = false
+        
+        renderGrids('international')
+    } else {
+        
+        console.log('禁用国外影像渲染')
+        
+        clearGridRenderingByType('international')
+    }
+}
+
+// 添加雷达影像
+const addRadarImages = async() => {
+    const isChecked = additionalData.value[2]
+    
+    if (isChecked) {
+        console.log('启用雷达影像渲染')
+        gridRenderingData.radar.rendered = false
+        renderGrids('radar')
+    } else {
+        console.log('禁用雷达影像渲染')
+        clearGridRenderingByType('radar')
+    }
+}
+
+// 清除特定类型的格网渲染
+const clearGridRenderingByType = (dataType: string) => {
+    console.log(`开始清除${dataType}类型的格网渲染`)
+    
+    MapOperation.map_destroyGridLayerByType(dataType)
+    
+    // 从渲染状态中移除该类型的格网
+    const gridsToRemove = Array.from(gridRenderingStatus.value.entries())
+        .filter(([gridId, type]) => type === dataType)
+        .map(([gridId]) => gridId)
+    
+    console.log(`找到 ${gridsToRemove.length} 个${dataType}类型的格网需要清除`)
+    
+    gridsToRemove.forEach(gridId => {
+        renderedGrids.value.delete(gridId)
+        gridRenderingStatus.value.delete(gridId)
+    })
+    
+    // 重置该类型的渲染状态
+    gridRenderingData[dataType].rendered = false
+    gridRenderingData[dataType].grids = []
+    
+    console.log(`成功清除${dataType}类型的格网渲染，移除了${gridsToRemove.length}个格网`)
+    console.log(`当前已渲染格网总数: ${renderedGrids.value.size}`)
+}
+
 // 算格网的颜色,接收的数据分别为：要上色的格网本身，累积影像分布到格网的结果，格网数量，所属层级
 // 取消勾选，即回到上一级数据格网的结果也没问题，第三个传输就传递上一级（和第二个参数相同）即可
 const classifyGridSource = (
@@ -2055,6 +2003,223 @@ const getCoverage = (gridImages: any, gridCount: number) => {
     let coverage = ((nonEmptyScenesCount * 100) / gridCount).toFixed(2) + '%'
     return coverage
 }
+
+// 新增：格网渲染相关函数
+// 生成格网唯一ID
+const generateGridId = (rowId: number, columnId: number, resolution: number): string => {
+    return `${rowId}_${columnId}_${resolution}`
+}
+
+// 判断格网是否需要渲染
+const shouldRenderGrid = (gridId: string, gridData: any, dataType: string): boolean => {
+    // 如果已经渲染过，不再渲染
+    if (renderedGrids.value.has(gridId)) {
+        return false
+    }
+    
+    // 检查是否有数据覆盖
+    return gridData && gridData.isOverlapped === true
+}
+
+// 创建格网FeatureCollection
+const createGridFeatureCollection = (grids: any[], dataType: string): FeatureCollection => {
+    const features = grids.map((grid: any) => {
+        const gridId = generateGridId(grid.rowId, grid.columnId, grid.resolution)
+        
+        return {
+            type: 'Feature' as const,
+            geometry: grid.boundary?.geometry || null,
+            properties: {
+                id: gridId,
+                rowId: grid.rowId,
+                columnId: grid.columnId,
+                resolution: grid.resolution,
+                source: dataType,
+                opacity: 0.3,
+                color: gridRenderingData[dataType].color
+            }
+        }
+    }).filter(feature => feature.geometry !== null)
+
+    return {
+        type: 'FeatureCollection',
+        features
+    }
+}
+
+// 渲染格网
+const renderGrids = (dataType: string) => {
+    console.log(`开始渲染${dataType}类型格网`)
+    
+    // 检查对应的复选框是否启用
+    const isEnabled = checkDataTypeEnabled(dataType)
+    console.log(`${dataType}类型启用状态:`, isEnabled)
+    if (!isEnabled) {
+        console.log(`数据类型 ${dataType} 未启用，跳过渲染`)
+        return
+    }
+
+    if (gridRenderingData[dataType].rendered) {
+        console.log(`数据类型 ${dataType} 已经渲染过，跳过`)
+        return
+    }
+
+    const grids = exploreData.grids || []
+    if (grids.length === 0) {
+        console.log('没有可用的格网数据')
+        return
+    }
+
+    const gridStats = getGridStatsByType(dataType)
+    console.log(`${dataType}类型的格网统计数据:`, gridStats)
+    
+    if (!gridStats || gridStats.length === 0) {
+        console.log(`没有找到 ${dataType} 类型的格网统计数据`)
+        return
+    }
+
+    console.log(`处理 ${grids.length} 个格网，类型: ${dataType}`)
+    console.log(`可用的格网统计数据: ${gridStats.length} 个`)
+
+    const gridsToRender = grids.filter((grid: any) => {
+        const gridId = generateGridId(grid.rowId, grid.columnId, grid.resolution)
+        const gridStat = gridStats.find((stat: any) => 
+            stat.rowId === grid.rowId && 
+            stat.columnId === grid.columnId && 
+            stat.resolution === grid.resolution
+        )
+        
+        const shouldRender = shouldRenderGrid(gridId, gridStat, dataType)
+        if (shouldRender) {
+            //格网监测
+            // console.log(`格网 ${gridId} 将被渲染为 ${dataType} 类型`)
+        }
+        
+        return shouldRender
+    })
+
+    console.log(`最终需要渲染的格网数量: ${gridsToRender.length}`)
+    console.log(`要渲染的格网:`, gridsToRender)
+
+    if (gridsToRender.length === 0) {
+        console.log(`没有格网需要渲染，类型: ${dataType}`)
+        return
+    }
+
+    console.log(`渲染 ${gridsToRender.length} 个格网，类型: ${dataType}`)
+
+    // 创建FeatureCollection
+    const gridFeature = createGridFeatureCollection(gridsToRender, dataType)
+    console.log(`创建的FeatureCollection:`, gridFeature)
+    
+    // 添加到地图
+    MapOperation.map_addGridLayer(gridFeature, dataType)
+    
+    // 更新渲染状态
+    gridsToRender.forEach((grid: any) => {
+        const gridId = generateGridId(grid.rowId, grid.columnId, grid.resolution)
+        renderedGrids.value.add(gridId)
+        gridRenderingStatus.value.set(gridId, dataType)
+    })
+    
+    gridRenderingData[dataType].rendered = true
+    gridRenderingData[dataType].grids = gridsToRender
+    
+    console.log(`成功渲染 ${gridsToRender.length} 个格网，类型: ${dataType}`)
+    console.log(`当前已渲染格网总数: ${renderedGrids.value.size}`)
+}
+
+// 检查数据类型是否启用
+const checkDataTypeEnabled = (dataType: string): boolean => {
+    const dataTypeMap: Record<string, boolean> = {
+        'demotic1m': additionalData.value[0] ?? false,
+        'demotic2m': dataReconstruction.value[0] ?? false,
+        'international': (additionalData.value[1] ?? false) || (dataReconstruction[1] ?? false),
+        'radar': (additionalData.value[2] ?? false) || (dataReconstruction[2] ?? false),
+    };
+
+    return dataTypeMap[dataType] ?? false;
+}
+
+// 清除所有格网渲染
+const clearAllGridRendering = () => {
+    MapOperation.map_destroyAllGridLayers()
+    renderedGrids.value.clear()
+    gridRenderingStatus.value.clear()
+    
+    // 重置渲染状态
+    Object.keys(gridRenderingData).forEach(key => {
+        gridRenderingData[key].rendered = false
+        gridRenderingData[key].grids = []
+    })
+}
+
+// 重新渲染所有格网
+const reRenderAllGrids = () => {
+    clearAllGridRendering()
+    
+    // 按优先级渲染：国产1m -> 国产2m -> 国外 -> 雷达
+    const renderOrder = ['demotic1m', 'demotic2m', 'international', 'radar']
+    
+    renderOrder.forEach(dataType => {
+        if (checkDataTypeEnabled(dataType)) {
+            renderGrids(dataType)
+        } else {
+
+            gridRenderingData[dataType].rendered = false
+            gridRenderingData[dataType].grids = []
+        }
+    })
+}
+
+// 调试函数：手动触发格网渲染
+// const debugRenderGrids = () => {
+//     console.log('=== Debug: Manual grid rendering triggered ===')
+//     console.log('Current checkbox states:', {
+//         additionalData: additionalData.value,
+//         dataReconstruction: dataReconstruction.value
+//     })
+//     console.log('Current grid data:', {
+//         nation1mSet: nation1mSet.value,
+//         nation2mSet: nation2mSet.value,
+//         internationalLightSet: internationalLightSet.value,
+//         SARSet: SARSet.value
+//     })
+//     console.log('Grid rendering data:', gridRenderingData)
+//     console.log('Rendered grids:', Array.from(renderedGrids.value))
+//     console.log('Grid rendering status:', Object.fromEntries(gridRenderingStatus.value))
+//     reRenderAllGrids()
+// }
+
+// 显示当前渲染状态
+// const showRenderingStatus = () => {
+//     console.log('=== 当前渲染状态 ===')
+//     console.log('复选框状态:', {
+//         additionalData: additionalData.value,
+//         dataReconstruction: dataReconstruction.value
+//     })
+//     console.log('已渲染格网数量:', renderedGrids.value.size)
+//     console.log('格网渲染类型分布:', Object.fromEntries(gridRenderingStatus.value))
+//     console.log('各类型渲染状态:', {
+//         demotic1m: gridRenderingData.demotic1m.rendered,
+//         demotic2m: gridRenderingData.demotic2m.rendered,
+//         international: gridRenderingData.international.rendered,
+//         radar: gridRenderingData.radar.rendered
+//     })
+//     console.log('各类型启用状态:', {
+//         demotic1m: checkDataTypeEnabled('demotic1m'),
+//         demotic2m: checkDataTypeEnabled('demotic2m'),
+//         international: checkDataTypeEnabled('international'),
+//         radar: checkDataTypeEnabled('radar')
+//     })
+//     console.log('各类型格网数据:', {
+//         demotic1m: getGridStatsByType('demotic1m'),
+//         demotic2m: getGridStatsByType('demotic2m'),
+//         international: getGridStatsByType('international'),
+//         radar: getGridStatsByType('radar')
+//     })
+//     console.log('exploreData.grids:', exploreData.grids)
+// }
 
 // 创建无云一版图瓦片
 const handleCreateNoCloudTiles = async () => {
@@ -2100,6 +2265,91 @@ const handleCreateNoCloudTiles = async () => {
     }
 }
 
+// 新增：监听数据重构选择变化，触发格网重新渲染
+watch(() => dataReconstruction.value, (newVal) => {
+    console.log('数据重构选择变化:', newVal)
+    // 延迟执行，确保数据已更新
+    setTimeout(() => {
+        reRenderAllGrids()
+    }, 100)
+}, { deep: true })
+
+// 新增：监听额外数据选择变化，触发格网重新渲染
+watch(() => additionalData.value, (newVal) => {
+    console.log('额外数据选择变化:', newVal)
+    // 延迟执行，确保数据已更新
+    setTimeout(() => {
+        reRenderAllGrids()
+    }, 100)
+}, { deep: true })
+
+// 根据数据类型获取对应的格网统计数据
+const getGridStatsByType = (dataType: string): any[] => {
+    switch (dataType) {
+        case 'demotic1m':
+            return nation1mSet.value?.grids || []
+        case 'demotic2m':
+            return nation2mSet.value?.grids || []
+        case 'international':
+            return internationalLightSet.value?.grids || []
+        case 'radar':
+            return SARSet.value?.grids || []
+        default:
+            return []
+    }
+}
+
+// 处理数据重构复选框变化
+const handleDataReconstructionChange = (index: number) => {
+    const isChecked = dataReconstruction.value[index]
+    console.log(`数据重构复选框${index}变化:`, isChecked)
+    
+    // 根据索引确定对应的数据类型
+    let dataType = ''
+    switch (index) {
+        case 0: // 国产2m超分影像
+            dataType = 'demotic2m'
+            break
+        case 1: // 国外影像超分数据
+            dataType = 'international'
+            break
+        case 2: // SAR色彩转换数据
+            dataType = 'radar'
+            break
+        default:
+            console.warn(`未知的数据重构索引: ${index}`)
+            return
+    }
+    
+    if (isChecked) {
+        console.log(`启用${dataType}数据重构`)
+        // 确保对应的预览也启用
+        if (index === 1) additionalData.value[1] = true 
+        if (index === 2) additionalData.value[2] = true 
+        
+        // 重新渲染所有格网
+        setTimeout(() => {
+            reRenderAllGrids()
+        }, 100)
+    } else {
+        console.log(`禁用${dataType}数据重构`)
+        // 数据重构禁用时，清除对应的渲染
+        clearGridRenderingByType(dataType)
+        
+        // 如果禁用后面的选项，也要禁用依赖的选项
+        if (index === 0) {
+        
+            dataReconstruction.value[1] = false
+            dataReconstruction.value[2] = false
+            additionalData.value[1] = false
+            additionalData.value[2] = false
+        } else if (index === 1) {
+            
+            dataReconstruction.value[2] = false
+            additionalData.value[2] = false
+        }
+    }
+}
 
 </script>
 

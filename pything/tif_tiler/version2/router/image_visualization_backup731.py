@@ -57,7 +57,7 @@ def calc_tile_bounds(x, y, z):
     
     return result
 
-def read_band(x, y, z,bucket_path, band_path):
+def read_band(x, y, z,bucket_path, band_path, nodata_int):
     full_path = MINIO_ENDPOINT + "/" + bucket_path + "/" + band_path
 
     try:
@@ -270,9 +270,9 @@ def get_tile(
                 bucket_path = scene['bucket']
 
                 read_time = time.time()
-                band_1 = read_band(x,y,z, bucket_path, bands['Red'])
-                band_2 = read_band(x,y,z, bucket_path, bands['Green'])
-                band_3 = read_band(x,y,z, bucket_path, bands['Blue'])
+                band_1 = read_band(x,y,z, bucket_path, bands['Red'], nodata_int)
+                band_2 = read_band(x,y,z, bucket_path, bands['Green'], nodata_int)
+                band_3 = read_band(x,y,z, bucket_path, bands['Blue'], nodata_int)
                 print(f"[⏱] 读取波段耗时: {time.time() - read_time:.3f} 秒")
 
                 if band_1 is None or band_2 is None or band_3 is None:

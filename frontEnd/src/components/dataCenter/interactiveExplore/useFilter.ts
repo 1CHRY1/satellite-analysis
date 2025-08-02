@@ -2,7 +2,8 @@ import { ref, computed } from 'vue'
 import { type SpatialFilterMethod, type POIInfo, type FilterTab } from '@/type/interactive-explore/filter'
 import { useExploreStore } from '@/store/exploreStore'
 import { useI18n } from 'vue-i18n'
-import { ElMessage } from 'element-plus'
+import { dayjs, ElMessage } from 'element-plus'
+import { message } from 'ant-design-vue'
 import {
     // ------------------------ V1/V2版本API ------------------------ //
     getGridByRegionAndResolution,
@@ -122,6 +123,7 @@ export const useFilter = () => {
              ElMessage.warning(t('datapage.explore.message.POIerror'))
             return
         }
+        const stopLoading = message.loading('正在获取格网，请稍后...', 100)
         destroyGridLayer()
     
         if (marker.value) marker.value.remove()
@@ -151,7 +153,22 @@ export const useFilter = () => {
         addGridLayer(gridRes.grids, window)
         // 将tab的选择固定下来
         searchedSpatialFilterMethod.value = activeSpatialFilterMethod.value
+        stopLoading()
+        message.success('格网获取成功')
     }
+
+    /**
+     * 数据检索变量 - 3.时间预设范围
+     */
+    const dateRangePresets = ref([
+        { label: '7 天内', value: [dayjs().add(-7, 'd'), dayjs()] },
+        { label: '14 天内', value: [dayjs().add(-14, 'd'), dayjs()] },
+        { label: '最近一个月', value: [dayjs().add(-30, 'd'), dayjs()] },
+        { label: '最近三个月', value: [dayjs().add(-90, 'd'), dayjs()] },
+        { label: '最近半年', value: [dayjs().add(-180, 'd'), dayjs()] },
+        { label: '最近一年', value: [dayjs().add(-365, 'd'), dayjs()] },
+    ]);
+
 
     /**
      * 数据检索函数及统计信息获取
@@ -168,6 +185,7 @@ export const useFilter = () => {
             ElMessage.warning(t('datapage.explore.message.filtererror_grid'))
             return
         }
+        const stopLoading = message.loading('正在检索数据，请稍后...', 500)
         // 先禁止按钮，渲染loading状态
         filterLoading.value = true
         const regionFilter = {
@@ -193,6 +211,7 @@ export const useFilter = () => {
             themeStatsRes = await getThemeStatsByPOIFilter(poiFilter)
         }
         sceneStats.value = sceneStatsRes
+        
         vectorStats.value = vectorsRes
         themeStats.value = themeStatsRes
 
@@ -200,10 +219,11 @@ export const useFilter = () => {
         syncToDataPrepare()
 
         if (sceneStats.value.total === 0) {
-            ElMessage.warning(t('datapage.explore.message.sceneerror_recondition'))
+            message.warning('未检索到数据')
         } else {
-            ElMessage.success(t('datapage.explore.message.scene_searched',{ count: sceneStats.value.total }) )
+            message.success('数据检索成功')
         }
+        stopLoading()
     
         // 恢复状态
         filterLoading.value = false
@@ -220,7 +240,7 @@ export const useFilter = () => {
         ezStore.set('themeStats', themeStats.value)
         ezStore.set('curGridsBoundary', curGridsBoundary.value)
     }
-
+    
     /**
      * 同步到数据准备: 同步数据准备所需的变量
      */
@@ -231,6 +251,7 @@ export const useFilter = () => {
             dataRange: [...selectedDateRange.value],
             gridResolution: selectedGridResolution.value, // 原space
             coverage: sceneStats.value.coverage,
+            allCoverage: sceneStats.value.dataset,
             // images: allScenes.value,
             grids: allGrids.value,
             boundary: curRegionBounds.value,
@@ -250,5 +271,6 @@ export const useFilter = () => {
         doFilter,
         filterLoading,
         isFilterDone,
+        dateRangePresets
     }
 }

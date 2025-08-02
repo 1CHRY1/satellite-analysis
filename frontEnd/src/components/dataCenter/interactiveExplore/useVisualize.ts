@@ -154,9 +154,12 @@ export const useVisualize = () => {
      */
     const selectedSensorName = ref('')
     const showSceneResult = async (sensorName: string) => {
-        const stopLoading = message.loading('正在加载，请稍后...', 0)
         destroyScene()
-        handleShowScene(sensorName)
+        InteractiveExploreMapOps.map_fitViewToTargetZoom(11)
+        const stopLoading = message.loading('正在加载，请稍后...', 0)
+        setTimeout(() => {
+            handleShowScene(sensorName)
+        }, 1000)
         setTimeout(() => {
             stopLoading()
         }, 5000)
