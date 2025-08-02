@@ -10,6 +10,7 @@ export const useExploreStore = defineStore('exploreStore',{
             cloud: 0 as number,
             gridResolution: 0 as number,
             coverage: '' as string,
+            allCoverage: [] as any, 
             // images: [] as any[],
             grids: [] as any[],
             boundary: [] as any[],
