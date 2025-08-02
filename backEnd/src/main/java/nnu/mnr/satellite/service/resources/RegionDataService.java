@@ -12,6 +12,7 @@ import nnu.mnr.satellite.mapper.resources.IRegionRepo;
 import nnu.mnr.satellite.utils.geom.GeometryUtil;
 import nnu.mnr.satellite.utils.geom.TileCalculateUtil;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.simplify.DouglasPeuckerSimplifier;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created with IntelliJ IDEA.
@@ -93,11 +95,13 @@ public class RegionDataService {
 
     public GridsAndGridsBoundary getGridsByRegionAndResolution(Integer regionId, Integer resolution) throws IOException {
         Region region = getRegionById(regionId);
-        List<Integer[]> tileIds = TileCalculateUtil.getRowColByRegionAndResolution(region.getBoundary(), resolution);
+        List<GridBoundaryVO> grids = TileCalculateUtil.getStrictlyCoveredRowColByRegionAndResolution(region.getBoundary(), resolution);
+        List<Integer[]> tileIds = new ArrayList<>();
+        for (GridBoundaryVO grid : grids) {
+            tileIds.add(new Integer[]{grid.getColumnId(), grid.getRowId()});
+        }
         Geometry gridsBoundary = GeometryUtil.getGridsBoundaryByTilesAndResolution(tileIds, resolution);
         JSONObject geoJson = GeometryUtil.geometry2Geojson(gridsBoundary);
-        List<GridBoundaryVO> grids = TileCalculateUtil.getStrictlyCoveredRowColByRegionAndResolution(region.getBoundary(), resolution);
-
 
         return GridsAndGridsBoundary.builder()
                 .grids(grids)

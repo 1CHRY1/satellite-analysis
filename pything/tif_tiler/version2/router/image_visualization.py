@@ -26,15 +26,15 @@ class ThreadFormatter(logging.Formatter):
         # 获取线程ID和名称
         thread_id = threading.current_thread().ident
         thread_name = threading.current_thread().name
-        
+
         # 从上下文变量获取请求标识
         request_id = thread_context.get('')
-        
+
         # 添加线程信息到日志记录
         record.thread_info = f"[Thread-{thread_id}:{thread_name}]"
         if request_id:
             record.thread_info += f"[{request_id}]"
-            
+
         return super().format(record)
 
 # 配置日志
@@ -42,22 +42,22 @@ def setup_logging():
     # 创建logger
     logger = logging.getLogger('tile_service')
     logger.setLevel(logging.INFO)
-    
+
     # 创建控制台处理器
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
-    
+
     # 创建格式化器
     formatter = ThreadFormatter(
         '%(asctime)s %(thread_info)s %(levelname)s: %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
     console_handler.setFormatter(formatter)
-    
+
     # 添加处理器到logger
     if not logger.handlers:
         logger.addHandler(console_handler)
-    
+
     return logger
 
 # 初始化logger
@@ -67,29 +67,39 @@ logger = setup_logging()
 # MINIO_ENDPOINT = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}"
 MINIO_ENDPOINT = "http://" + minio_config['endpoint']
 
-def normalize(arr, min_val=0, max_val=5000):
+def normalize(arr, min_val = 0 , max_val = 5000):
     arr = np.nan_to_num(arr)
     arr = np.clip((arr - min_val) / (max_val - min_val), 0, 1)
     return (arr * 255).astype("uint8")
 
+
 def convert_to_uint8(data, original_dtype):
+    """
+    自动将不同数据类型转换为uint8
+    - Byte (uint8): 直接返回
+    - UInt16: 映射到0-255范围
+    """
     if original_dtype == np.uint8:
         return data.astype(np.uint8)
     elif original_dtype == np.uint16:
+        # 将 uint16 (0-65535) 线性映射到 uint8 (0-255)
         return (data / 65535.0 * 255.0).astype(np.uint8)
     else:
+        # 其他类型，先归一化到0-1，再映射to 0-255
         return np.uint8(np.floor(data.clip(0, 255)))
 
 def calc_tile_bounds(x, y, z):
+    """ Calculate the bounds of a tile in degrees """
     Z2 = math.pow(2, z)
+
     ul_lon_deg = x / Z2 * 360.0 - 180.0
     ul_lat_rad = math.atan(math.sinh(math.pi * (1 - 2 * y / Z2)))
     ul_lat_deg = math.degrees(ul_lat_rad)
-    
+
     lr_lon_deg = (x + 1) / Z2 * 360.0 - 180.0
     lr_lat_rad = math.atan(math.sinh(math.pi * (1 - 2 * (y + 1) / Z2)))
     lr_lat_deg = math.degrees(lr_lat_rad)
-    
+
     return {
         "west": ul_lon_deg,
         "east": lr_lon_deg,
@@ -100,13 +110,16 @@ def calc_tile_bounds(x, y, z):
 
 def read_band(x, y, z, bucket_path, band_path, nodata_int):
     full_path = MINIO_ENDPOINT + "/" + bucket_path + "/" + band_path
-    
+
     try:
         with Reader(full_path, options={'nodata': int(nodata_int)}) as reader:
             band_data = reader.tile(x, y, z, tilesize=256)
             original_data = band_data.data[0]
             original_dtype = original_data.dtype
+
+            # 自动转换为uint8
             converted_data = convert_to_uint8(original_data, original_dtype)
+
             return converted_data
     except Exception as e:
         logger.error(f"无法读取文件 {full_path}: {str(e)}")
@@ -128,7 +141,7 @@ def get_tile(
     # 设置请求上下文
     request_id = f"tile-{z}/{x}/{y}"
     thread_context.set(request_id)
-    
+
     logger.info(f"开始处理瓦片请求")
 
     try:
@@ -159,7 +172,7 @@ def get_tile(
             
         json_response = requests.post(url, json=data, headers=headers).json()
         logger.info(f"SpringBoot 请求耗时: {time.time() - t2:.3f} 秒")
-        
+
         if not json_response:
             logger.warning("后端返回的json中为空")
             return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
@@ -187,7 +200,7 @@ def get_tile(
         # # 获取瓦片的最大最小经纬度
         # min_lon_tile, min_lat_tile, max_lon_tile, max_lat_tile = points
         # # 判断是否相交
-        # if (min_lon_scene > max_lon_tile or min_lat_scene > max_lat_tile or 
+        # if (min_lon_scene > max_lon_tile or min_lat_scene > max_lat_tile or
         #     max_lon_scene < min_lon_tile or max_lat_scene < min_lat_tile):
         #     logger.info("景与瓦片不相交，返回空内容")
         #     return Response(content=TRANSPARENT_CONTENT, media_type="image/png")

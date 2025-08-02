@@ -266,8 +266,8 @@ const handleConfirm = async() => {
     let mapPosition = itemInMinIo.value.bbox.geometry.coordinates[0]
     let tifUrl = `${tileUrlObj.value.minioEndpoint}/${tileUrlObj.value.object}`
     const bidx = selectedBidx.value === null ? 'b1' : selectedBidx.value
-    range.value[0] = stats.value[bidx]?.min
-    range.value[1] = stats.value[bidx]?.max
+    range.value[0] = -1
+    range.value[1] = 1
     let wholeTileUrl = `${tileUrlObj.value.tilerUrl}/tiles/WebMercatorQuad/{z}/{x}/{y}.png?scale=1&url=${tifUrl}&colormap_name=${colormapName.value}&rescale=${range.value[0]},${range.value[1]}`
 
     console.log(wholeTileUrl, 'wholeTileUrl')

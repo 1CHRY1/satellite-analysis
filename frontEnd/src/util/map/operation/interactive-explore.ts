@@ -346,7 +346,7 @@ export function map_addMVTLayer(source_layer: string, url: string) {
 export function map_destroyMVTLayer() {
     const id = 'mvt-layer'
     const srcId = id + '-source'
-    
+
     mapManager.withMap((m) => {
         console.log(m.getLayer(id))
         console.log(m.getSource(srcId))

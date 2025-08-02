@@ -55,11 +55,15 @@
                                         <div class="config-control">
                                             <segmented class="!w-full scale-y-90 scale-x-90 origin-center" :options="tabs" :active-tab="activeTab" @change="handleSelectTab" />
                                         </div>
-                                        <div class="config-control mt-3 mb-3">
+                                        <div class="config-control mt-3 mb-3 flex flex-col !items-start">
                                             <div v-if="activeTab === 'region'" class="config-control justify-center">
                                                 <RegionSelects v-model="selectedRegion" :placeholder="[t('datapage.explore.section1.intext_choose')]"
                                                     class="flex gap-2"
                                                     select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
+                                            </div>
+                                            <div v-if="activeTab === 'region'" class="flex flex-row mt-2 ml-2">
+                                                <div class="text-red-500">*</div>
+                                                <span class="text-xs text-gray-400">未选择行政区默认以全国范围检索</span>
                                             </div>
                                             <div v-else-if="activeTab === 'poi'" class="config-control justify-center w-full">
                                                 <el-select v-model="selectedPOI" filterable remote reserve-keyword value-key="id"
@@ -113,6 +117,7 @@
                                         </div>
                                         <div class="config-control">
                                             <a-range-picker class="custom-date-picker" v-model:value="selectedDateRange"
+                                                :presets="dateRangePresets"
                                                 :allow-clear="false" :placeholder="t('datapage.explore.section_time.intext_date')" />
                                         </div>
                                     </div>
@@ -496,7 +501,9 @@ const {
     tabs, poiOptions, fetchPOIOptions, handleSelectTab,
     // ------------------------ 数据检索 2.格网分辨率 -------------------------- //
     gridOptions, allGrids, allGridCount, getAllGrid,
-    // ------------------------ 数据检索 3.筛选 -------------------------- //
+    // ------------------------ 数据检索 3.时间范围 -------------------------- //
+    dateRangePresets,
+    // ------------------------ 数据检索 4.筛选 -------------------------- //
     doFilter: applyFilter, filterLoading, isFilterDone,
 } = useFilter()
 
