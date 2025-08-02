@@ -32,21 +32,21 @@ public interface IVectorRepo  extends BaseMapper<Vector> {
             "WITH mvt_geom AS (" +
                     "   SELECT " +
                     "       ST_AsMVTGeom(" +
-                    "           ST_Transform(original_table.geom, 4326) " +
-                    "ST_Transform(" +
-                    "           ST_TileEnvelope(#{z}, #{x}, #{y}), " +
-                    "           4326)," +
-                    "           extent => 256," +
-                    "           buffer => 64" +
+                    "           ST_Transform(original_table.geom, 3857), " + // 先转换到 Web Mercator
+                    "           ST_Transform(ST_TileEnvelope(#{z}, #{x}, #{y}), 3857), " + // tile 边界也转换到 3857
+                    "           extent => 256, " + // 典型 MVT 范围
+                    "           buffer => 64, " + // 调整缓冲区
+                    "           clip_geom => true " + // 确保裁剪
                     "       ) AS geom " +
                     "   FROM gis_db.${tableName} AS original_table " +
                     "   WHERE ST_Intersects(" +
-                    "       original_table.geom," +
+                    "       ST_Transform(original_table.geom, 4326), " + // 保持过滤条件在 4326
                     "       ST_GeomFromText(#{wkt}, 4326)" +
                     "   )" +
                     ")" +
                     "SELECT ST_AsMVT(t, '${tableName}', 256, 'geom') AS mvt " +
-                    "FROM mvt_geom AS t"
+                    "FROM mvt_geom AS t " +
+                    "WHERE geom IS NOT NULL" // 过滤掉可能被裁剪掉的空几何
     )
     Object getVectorByTableNameAndGeometry(
             @Param("tableName") String tableName,
