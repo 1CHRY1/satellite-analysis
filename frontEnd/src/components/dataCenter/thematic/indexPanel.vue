@@ -1,6 +1,6 @@
 <template>
     <!-- Section: 输入模块 -->
-    <section class="panel-section">
+    <!-- <section class="panel-section"> -->
                 <div class="section-header">
             <div class="section-subtitle flex items-center gap-2 mb-4 mt-4 pb-2 border-b border-[#247699]">
                 <MapIcon :size="18" />
@@ -71,16 +71,16 @@
                         </div>
                     </div> -->
 
-                    <div class="config-label flex items-center gap-2 mt-4 mb-4">
+                    <div class="config-label flex items-center gap-2 mt-4 mb-4  border border-[#247699] rounded" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);" >
                         <!-- <LayersIcon :size="16" /> -->
-                        <span>预制指数</span>
+                        <span class="ml-4">预制指数</span>
                         <button type="button" @click="togglePresetIndexes" class="text-blue-400 hover:text-blue-300">
                             {{ showPresetIndexes ? '隐藏' : '显示' }}
                         </button>
  
                     </div>
 
-                    <div class="config-control">
+                    <div class="config-control" >
                         <!-- 指数类型选择 -->
                         <div v-if="showPresetIndexes" class="section-content mb-6 ml-8">
                             <div class="max-h-48 overflow-y-auto border border-[#247699] rounded-lg p-2 bg-[#0d1526]">
@@ -118,11 +118,11 @@
                                             <input v-model="form.name"  placeholder="请输入指数名称">
                                         </p>
                                         
-                                        <p class="text-blue-300 flex items-center gap-2" >
+                                        <div class="text-blue-300 flex items-center gap-2" >
                                             公式详情 : 
                                             <input v-model="form.expression"  placeholder="请输入具体公式" readonly @focus="showInput = true">
                                             <div class="text-red-400 cursor-pointer hover:underline" @click="undoLast">删除</div>
-                                        </p>
+                                        </div>
                                         <div v-if="showInput" class="option-panel mb-2" >
                                             <el-button
                                                 v-for="(item,index) in reBands"
@@ -221,28 +221,30 @@
                                         </div>
                                     </div>
                                 </el-dialog>
-                                
-                        <div class="color-palette-selector mb-6">
-                            <span>选择指数</span>
-                            <select
-                                v-model="selectedIndex"
-                                class="w-full rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white appearance-none hover:border-[#2bb2ff] hover:bg-[#1a2b4c] focus:outline-none focus:border-[#3b82f6]"
-                            >
-                                <option disabled value="">选择指数</option>
-                                <option
-                                v-for="(palette, index) in presetIndex"
-                                :key="index"
-                                :value="palette.name"
-                                :disabled="palette.isAble === false"
-                                class="bg-[#0d1526] text-white mb-4"
+                        
+                        <div>
+                            <div class="color-palette-selector mb-6 border border-[#247699] rounded mt-2 mb-4" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
+                                <span class="ml-4">选择指数</span>
+                                <select
+                                    v-model="selectedIndex"
+                                    class="w-full rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white appearance-none hover:border-[#2bb2ff] hover:bg-[#1a2b4c] focus:outline-none focus:border-[#3b82f6]"
                                 >
-                                {{ palette.name }}
-                                </option>
+                                    <option disabled value="">选择指数</option>
+                                    <option
+                                    v-for="(palette, index) in presetIndex"
+                                    :key="index"
+                                    :value="palette.name"
+                                    :disabled="palette.isAble === false"
+                                    class="bg-[#0d1526] text-white mb-4"
+                                    >
+                                    {{ palette.name }}
+                                    </option>
 
-                            </select>
+                                </select>
+                            </div>
                         </div>
-                        <div class="color-palette-selector  mb-6">
-                                <label >配色方案:</label>
+                        <div class="color-palette-selector  mb-6  border border-[#247699] rounded mt-2 mb-4" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
+                                <label class="ml-4">配色方案:</label>
                                 <select
                                     v-model="selectedColorMap"
                                     class="w-full rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white appearance-none hover:border-[#2bb2ff] hover:bg-[#1a2b4c] focus:outline-none focus:border-[#3b82f6]"
@@ -255,12 +257,12 @@
                     </div>
                 </div>
                 <button type="button" @click="handleCloudTiles"
-                            class="cursor-pointer w-full rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95">
+                            class="cursor-pointer w-full rounded-lg border border-[#247699] bg-[#069FFF] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-95">
                             开始运行
                 </button>
             </div>
         </div>
-    </section>
+    <!-- </section> -->
     
 </template>
 
