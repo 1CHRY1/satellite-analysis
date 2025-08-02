@@ -193,10 +193,10 @@ function createPopoverContent() {
     div.id = 'popover-content'
     document.body.appendChild(div)
 
-    const app = createApp(PopoverContent, {
+    const app = createApp(PopContent, {
         // gridData: gridDataRef,
     }).use(Antd)
-    app.mount('#popover-content') as ComponentInstance<typeof PopoverContent>
+    app.mount('#popover-content') as ComponentInstance<typeof PopContent>
     return div
 }
 

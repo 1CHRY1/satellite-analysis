@@ -32,7 +32,7 @@ public interface IVectorRepo  extends BaseMapper<Vector> {
             "WITH mvt_geom AS (" +
                     "   SELECT " +
                     "       ST_AsMVTGeom(" +
-                    "           original_table.geom," +
+                    "           ST_Transform(original_table.geom, 4326) " +
                     "ST_Transform(" +
                     "           ST_TileEnvelope(#{z}, #{x}, #{y}), " +
                     "           4326)," +

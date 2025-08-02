@@ -269,6 +269,7 @@ import { getThemesInGrid } from '@/api/http/interactive-explore/grid.api'
 import { getScenesInGrid } from '@/api/http/interactive-explore/grid.api'
 import * as GridExploreMapOps from '@/util/map/operation/grid-explore'
 import { getGridVectorUrl } from '@/api/http/interactive-explore/visualize.api'
+import { message } from 'ant-design-vue'
 /**
  * 1. 公共变量
  */
@@ -785,13 +786,21 @@ const calTask: Ref<any> = ref({
 const isSuperRes = ref(false)
 
 const handleSuperResolution = async ()=> {
+    if (!gridData.value.sceneRes.dataset) {
+        return
+    }
     if (visualLoad.value){
         isSuperRes.value = !isSuperRes.value 
         try{
             handleRemove()
-            const currentScene = gridData.value.scenes.find(scene => 
-                scene.sensorName === selectedSensor.value
-            );
+            let currentScene
+            for (const category of gridData.value.sceneRes.category) {
+                for (const scene of gridData.value.sceneRes.dataset[category].dataList) {
+                    if (scene.sensorName === selectedSensor.value) {
+                        currentScene = scene
+                    }
+                }
+            }
 
             const bands : band_path ={
                 R:'',
@@ -803,7 +812,7 @@ const handleSuperResolution = async ()=> {
                 return;
             }
 
-            currentScene.images.forEach((bandImg: Image) => {
+            currentScene.images.forEach((bandImg) => {
                         if (bandImg.band === selectedRBand.value) {
                             bands.R = bandImg.bucket + '/' + bandImg.tifPath
                         }

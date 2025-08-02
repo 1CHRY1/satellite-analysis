@@ -70,7 +70,7 @@ public class TileCalculateUtil {
                 Polygon tilePolygon = geometryFactory.createPolygon(geometryFactory.createLinearRing(coords), null);
 
                 // 精确判断覆盖关系
-                if (region.covers(tilePolygon) || region.intersects(tilePolygon)) {
+                if (region.intersects(tilePolygon)) {
                     tileIds.add(new Integer[]{col, row});
                 }
             }
@@ -122,7 +122,7 @@ public class TileCalculateUtil {
                 Polygon tilePolygon = geometryFactory.createPolygon(geometryFactory.createLinearRing(coords), null);
 
                 // 精确判断覆盖关系
-                if (region.covers(tilePolygon) || region.intersects(tilePolygon)) {
+                if (region.intersects(tilePolygon)) {
                     grids.add(GridBoundaryVO.builder().rowId(row).columnId(col)
                             .resolution(resolution).boundary(GeometryUtil.geometry2Geojson(tilePolygon)).build());
                 }
