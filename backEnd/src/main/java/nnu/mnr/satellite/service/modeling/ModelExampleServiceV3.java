@@ -1,6 +1,7 @@
 package nnu.mnr.satellite.service.modeling;
 
 import com.alibaba.fastjson2.JSONObject;
+import javassist.expr.NewArray;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.cache.SceneDataCache;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerImageDTO;
@@ -14,14 +15,15 @@ import nnu.mnr.satellite.service.resources.ImageDataService;
 import nnu.mnr.satellite.service.resources.SceneDataServiceV3;
 import nnu.mnr.satellite.utils.geom.GeometryUtil;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.MultiPolygon;
+import org.locationtech.jts.geom.Polygon;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import nnu.mnr.satellite.utils.dt.MinioUtil;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -76,10 +78,14 @@ public class ModelExampleServiceV3 {
                 scenes.add(sceneDesVO);
             }
         }
+        // 按云量升序排列
+        scenes.sort(Comparator.comparing(SceneDesVO::getCloud));
 
         // 记录开始时间
         long startTime = System.nanoTime();
         List<NoCloudConfigVO> scenesConfig = new ArrayList<>();
+        GeometryFactory geometryFactory = new GeometryFactory();
+        Geometry unionCoverage = geometryFactory.createMultiPolygon(new Polygon[]{});
         for (SceneDesVO scene : scenes) {
             // path
             List<ModelServerImageDTO> imageDTO = imageDataService.getModelServerImageDTOBySceneId(scene.getSceneId());
@@ -88,11 +94,16 @@ public class ModelExampleServiceV3 {
                 paths.put("band_" + image.getBand(), image.getTifPath());
             }
             // coverage
-            double coverage = sceneDataService.calculateCoveragePercentage(scene.getBoundingBox(), tileBoundingBox);
-            if (coverage > 0.0) {
+            AbstractMap.SimpleEntry<Double, Geometry> coverageInfo = sceneDataService.calculateCoveragePercentage(scene.getBoundingBox(), tileBoundingBox);
+            double coverage = coverageInfo.getKey();
+            Geometry coverageGeometry = coverageInfo.getValue();
+            // 已覆盖区域覆盖了新覆盖区域90%以上，跳过这一个新景
+            if (coverage > 0.0 && sceneDataService.calculateCoveragePercentage(unionCoverage, coverageGeometry).getKey() < 0.9) {
+                unionCoverage = unionCoverage.union(coverageGeometry);
                 NoCloudConfigVO noCloudConfigVO = new NoCloudConfigVO();
                 noCloudConfigVO.setSensorName(sensorName);
                 noCloudConfigVO.setSceneId(scene.getSceneId());
+                noCloudConfigVO.setSceneName(scene.getSceneName());
                 noCloudConfigVO.setCloudPath(scene.getCloudPath());
                 noCloudConfigVO.setBucket(scene.getBucket());
                 noCloudConfigVO.setPath(paths);
@@ -112,7 +123,7 @@ public class ModelExampleServiceV3 {
         long endTime = System.nanoTime();
         long durationMs = TimeUnit.NANOSECONDS.toMillis(endTime - startTime);
         System.out.println("筛选影像可视化景数据运行时间: " + durationMs + " ms，景总数为：" + scenesConfig.size() + "景");
-        // 降序排列
+        // 按覆盖率降序排列
         scenesConfig.sort((a, b) -> Double.compare(b.getCoverage(), a.getCoverage()));
         JSONObject result = new JSONObject();
         result.put("bandMapper", bandMapper);
