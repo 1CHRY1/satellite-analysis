@@ -41,12 +41,12 @@ def createApp():
     app.include_router(mosaic.router, tags=["Mosaic Tiler"], prefix="/mosaic")
     app.include_router(no_cloud.router, tags=["No Cloud Tiler"], prefix="/no_cloud")
     app.include_router(no_cloud_with_sensorname.router, tags=["No Cloud Tiler with SensorName"], prefix="/no_cloud_with_sensorname")
-    app.include_router(image_visualization.router, tags=["Image Visualization Tiler"], prefix="/image_visualization")
+    # app.include_router(image_visualization.router, tags=["Image Visualization Tiler"], prefix="/image_visualization")
     app.include_router(on_the_fly_exploration_mosaic.router, tags=["On the Fly Exploration Mosaic Tiler"], prefix="/on_the_fly_exploration_mosaic")
     app.include_router(mosaic_single.router, tags=["Mosaic Single Tiler"], prefix="/mosaic2")
     app.include_router(edge_image_visualization.router, tags=["Edge Image Visualization Tiler"], prefix="/edge_image_visualization")
-    app.include_router(image_visualization_backup_0801.router, tags=["Image Visualization Backup 0801 Tiler"], prefix="/image_visualization_backup_0801")
-    app.include_router(for_deployment.router, tags=["Deployment Tiler"], prefix="/for_deployment")
+    app.include_router(image_visualization_backup_0801.router, tags=["Image Visualization Backup 0801 Tiler"], prefix="/image_visualization")
+    # app.include_router(for_deployment.router, tags=["Deployment Tiler"], prefix="/image_visualization")
 
     # Add a welcome message for the root endpoint
     @app.get("/")

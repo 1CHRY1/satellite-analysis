@@ -156,10 +156,10 @@ config = {
 def get_config(profile=None):
     """获取配置类，如果profile为None则使用k8s配置"""
     if profile is None:
-        profile = 'k8s'
+        profile = 'vmod'
     
     # 更安全的方式，避免KeyError
-    default_config = config.get('k8s', {})
+    default_config = config.get('vmod', {})
     return config.get(profile, default_config)
 
 # 获取配置类
@@ -167,9 +167,9 @@ def get_current_config():
     """获取当前环境的配置类"""
     return get_config(CURRENT_PROFILE)
 
-os.environ['APP_PROFILE'] = 'k8s'
+os.environ['APP_PROFILE'] = 'vmod'
 # 获取当前环境配置 - 类似Spring Boot的 spring.profiles.active
-CURRENT_PROFILE = os.getenv('APP_PROFILE', 'k8s')  # 默认使用k8s
+CURRENT_PROFILE = os.getenv('APP_PROFILE', 'vmod')  # 默认使用k8s
 
 # 创建全局配置实例 - 这是关键
 CUR_CONFIG_CLASS = get_current_config()
