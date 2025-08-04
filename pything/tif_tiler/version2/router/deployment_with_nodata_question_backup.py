@@ -12,9 +12,6 @@ import time
 import threading
 import logging
 from contextvars import ContextVar
-from shapely.geometry import Polygon
-from shapely.ops import transform
-import pyproj
 
 MINIO_ENDPOINT = "http://" + minio_config['endpoint']
 
@@ -63,8 +60,6 @@ def read_band(x, y, z, bucket_path, band_path, nodata_int):
     except Exception as e:
         logger.error(f"无法读取文件 {full_path}: {str(e)}")
         return None
-
-
 # endregion
 
 router = APIRouter()
@@ -120,13 +115,12 @@ def get_tile(
 
         # region 选择要处理的景
         if full_coverage_scenes:
-            # sorted_full_coverage = sorted(full_coverage_scenes, key=lambda x: float(x.get('cloud', 0)))
+            sorted_full_coverage = sorted(full_coverage_scenes, key=lambda x: float(x.get('cloud', 0)))
             scenes_to_process = [sorted_full_coverage[0]]
             use_single_scene = True
         else:
             scenes_to_process = json_data[:10]
             use_single_scene = False
-            
         # endregion
 
         # region 获取RGB三波段的路径
@@ -177,13 +171,11 @@ def get_tile(
 
         # region 处理每个景
         for scene in scenes_to_process:
-            # region SAR景不处理
             if 'SAR' in sensorName:
                 continue
-            # endregion
+            
             nodata = scene.get('noData')
 
-            # region 获取nodata
             try:
                 if nodata is not None:
                     nodata_int = int(float(nodata))
@@ -191,16 +183,13 @@ def get_tile(
                     nodata_int = 0
             except (ValueError, TypeError):
                 nodata_int = 0
-            # endregion
-
-            # 获取cloudPath
+            
             cloud_band_path = scene.get('cloudPath')
 
-            #region 获取有效像素的掩膜
             red_band_path = scene_band_paths[scene['sceneId']]['Red']
             if not red_band_path:
                 continue
-
+            
             full_red_path = MINIO_ENDPOINT + "/" + scene['bucket'] + "/" + red_band_path
             try:
                 with Reader(full_red_path, options={'nodata': int(nodata_int)}) as reader:
@@ -210,9 +199,7 @@ def get_tile(
                 continue
 
             valid_mask = nodata_mask
-            # endregion
 
-            # region 获取云掩膜
             if cloud_band_path:
                 cloud_full_path = MINIO_ENDPOINT + "/" + scene['bucket'] + "/" + scene['cloudPath']
                 try:
@@ -236,12 +223,9 @@ def get_tile(
                             total_cloud_mask[need_fill_mask & valid_mask] |= cloud_mask[need_fill_mask & valid_mask]
                 except Exception as e:
                     print("Cannot read cloud file")
-            # endregion
             
-            # 获取可以填充的像素位置掩膜
             fill_mask = need_fill_mask & valid_mask
-            
-            # region 填充像素
+
             if np.any(fill_mask) or use_single_scene:
                 bands = scene_band_paths[scene['sceneId']]
                 bucket_path = scene['bucket']
@@ -265,13 +249,12 @@ def get_tile(
                     need_fill_mask[fill_mask] = False
 
                 filled_ratio = 1.0 - (np.count_nonzero(need_fill_mask) / need_fill_mask.size)
-            # endregion
-
+            
             if use_single_scene:
                 break
             elif filled_ratio >= 0.95:
                 break
-        
+        # endregion
 
         # region 渲染
         img = np.stack([img_r, img_g, img_b])
