@@ -590,4 +590,7 @@ onMounted(async() => {
     pointer-events: none;
     color: #aaa;
 }
+.config-item {
+    background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);
+}
 </style>
