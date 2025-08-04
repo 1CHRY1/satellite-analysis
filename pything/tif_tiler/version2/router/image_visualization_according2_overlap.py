@@ -65,6 +65,89 @@ def read_band(x, y, z, bucket_path, band_path, nodata_int):
         return None
 
 
+def calculate_scene_overlap(scene1, scene2):
+    """
+    计算两个场景的重叠度
+    
+    Args:
+        scene1, scene2: 场景字典，包含bbox信息
+        
+    Returns:
+        float: 重叠度，范围[0, 1]
+    """
+    try:
+        # 从bbox中提取坐标
+        coords1 = scene1['bbox']['geometry']['coordinates'][0]
+        coords2 = scene2['bbox']['geometry']['coordinates'][0]
+        
+        # 创建Shapely多边形对象
+        polygon1 = Polygon(coords1)
+        polygon2 = Polygon(coords2)
+        
+        # 如果没有相交，返回0
+        if not polygon1.intersects(polygon2):
+            return 0.0
+        
+        # 计算交集
+        intersection = polygon1.intersection(polygon2)
+        
+        # 计算重叠度（使用较小的多边形作为分母，这样更容易检测出重复覆盖）
+        min_area = min(polygon1.area, polygon2.area)
+        overlap_ratio = intersection.area / min_area if min_area > 0 else 0.0
+        
+        return overlap_ratio
+        
+    except Exception as e:
+        print(f"计算重叠度时出错: {e}")
+        return 0.0
+
+
+def select_diverse_scenes(scenes, max_scenes=10, overlap_threshold=0.8):
+    """
+    选择空间分布多样化的场景
+    
+    Args:
+        scenes: 场景列表
+        max_scenes: 最大选择场景数
+        overlap_threshold: 重叠度阈值，超过此值认为场景重复
+        
+    Returns:
+        list: 选中的场景列表
+    """
+    if not scenes:
+        return []
+    
+    selected_scenes = []
+    
+    for scene in scenes:
+        # 第一个场景直接加入
+        if not selected_scenes:
+            selected_scenes.append(scene)
+            print(f"选择第1个场景: {scene['sceneId']}, 覆盖率: {scene['coverage']:.4f}")
+            continue
+        
+        # 检查与已选场景的重叠度
+        is_diverse = True
+        max_overlap = 0
+        
+        for selected in selected_scenes:
+            overlap = calculate_scene_overlap(scene, selected)
+            max_overlap = max(max_overlap, overlap)
+            
+            if overlap > overlap_threshold:
+                is_diverse = False
+                print(f"场景 {scene['sceneId']} 与 {selected['sceneId']} 重叠度过高: {overlap:.2f}")
+                break
+        
+        if is_diverse:
+            selected_scenes.append(scene)
+            print(f"选择第{len(selected_scenes)}个场景: {scene['sceneId']}, 最大重叠度: {max_overlap:.2f}")
+        
+        if len(selected_scenes) >= max_scenes:
+            break
+    
+    return selected_scenes
+
 # endregion
 
 router = APIRouter()
@@ -120,13 +203,15 @@ def get_tile(
 
         # region 选择要处理的景
         if full_coverage_scenes:
-            # sorted_full_coverage = sorted(full_coverage_scenes, key=lambda x: float(x.get('cloud', 0)))
+            sorted_full_coverage = sorted(full_coverage_scenes, key=lambda x: float(x.get('cloud', 0)))
+            print(f"完全覆盖tile的景: {sorted_full_coverage}")
             scenes_to_process = [sorted_full_coverage[0]]
             use_single_scene = True
         else:
-            scenes_to_process = json_data[:10]
+            scenes_to_process = select_diverse_scenes(json_data, max_scenes=10, overlap_threshold=0.7)
+            print(f"空间分布多样的景: {scenes_to_process}")
             use_single_scene = False
-            
+            print(f"从{len(json_data)}个场景中选择了{len(scenes_to_process)}个空间分布多样的场景")
         # endregion
 
         # region 获取RGB三波段的路径
@@ -177,13 +262,11 @@ def get_tile(
 
         # region 处理每个景
         for scene in scenes_to_process:
-            # region SAR景不处理
             if 'SAR' in sensorName:
                 continue
-            # endregion
+            
             nodata = scene.get('noData')
 
-            # region 获取nodata
             try:
                 if nodata is not None:
                     nodata_int = int(float(nodata))
@@ -191,16 +274,13 @@ def get_tile(
                     nodata_int = 0
             except (ValueError, TypeError):
                 nodata_int = 0
-            # endregion
-
-            # 获取cloudPath
+            
             cloud_band_path = scene.get('cloudPath')
 
-            #region 获取有效像素的掩膜
             red_band_path = scene_band_paths[scene['sceneId']]['Red']
             if not red_band_path:
                 continue
-
+            
             full_red_path = MINIO_ENDPOINT + "/" + scene['bucket'] + "/" + red_band_path
             try:
                 with Reader(full_red_path, options={'nodata': int(nodata_int)}) as reader:
@@ -210,9 +290,7 @@ def get_tile(
                 continue
 
             valid_mask = nodata_mask
-            # endregion
 
-            # region 获取云掩膜
             if cloud_band_path:
                 cloud_full_path = MINIO_ENDPOINT + "/" + scene['bucket'] + "/" + scene['cloudPath']
                 try:
@@ -236,12 +314,9 @@ def get_tile(
                             total_cloud_mask[need_fill_mask & valid_mask] |= cloud_mask[need_fill_mask & valid_mask]
                 except Exception as e:
                     print("Cannot read cloud file")
-            # endregion
             
-            # 获取可以填充的像素位置掩膜
             fill_mask = need_fill_mask & valid_mask
-            
-            # region 填充像素
+
             if np.any(fill_mask) or use_single_scene:
                 bands = scene_band_paths[scene['sceneId']]
                 bucket_path = scene['bucket']
@@ -265,13 +340,12 @@ def get_tile(
                     need_fill_mask[fill_mask] = False
 
                 filled_ratio = 1.0 - (np.count_nonzero(need_fill_mask) / need_fill_mask.size)
-            # endregion
-
+            
             if use_single_scene:
                 break
             elif filled_ratio >= 0.95:
                 break
-        
+        # endregion
 
         # region 渲染
         img = np.stack([img_r, img_g, img_b])
