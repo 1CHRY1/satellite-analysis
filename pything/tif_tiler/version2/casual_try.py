@@ -109,7 +109,10 @@ def get_tile(
             scenes_to_process = [sorted_full_coverage[0]]
             use_single_scene = True
         else:
-            scenes_to_process = json_data[:10]
+            if z > 12:
+                scenes_to_process = json_data[:10]
+            else:
+                scenes_to_process = json_data[:]
             use_single_scene = False
         
         scene_band_paths = {}

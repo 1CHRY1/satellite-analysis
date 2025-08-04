@@ -1,12 +1,12 @@
 <template>
     <div class="relative flex flex-1 flex-row bg-black">
         <subtitle class="z-10 absolute" style="margin-top: 60px; "/>
-        <div class=" absolute left-18 h-[calc(100vh-100px)] p-4 text-gray-200 mb-0 gap-0 z-10" :class="showPanel ? 'w-[28vw]' : 'w-16'">
+        <div class=" absolute left-18 h-[calc(100vh-100px)] p-4 text-gray-200 mb-0 gap-0 z-10" :class="showPanel ? 'w-[28vw]' : 'w-16 transition-all duration-300'">
             <button 
                 @click="showPanel = !showPanel"
-                class="absolute top-1/2 right-0 -translate-y-1/2 h-12 w-6 bg-gray-800 hover:bg-gray-700 text-white rounded-l-lg shadow-lg 
+                class="absolute top-1/2 right-0 -translate-y-1/2 h-12 w-6 text-white rounded-l-lg shadow-lg 
                  items-center justify-center transition-all z-10"
-                :class="{ '!bg-blue-600': showPanel }"
+                :class="showPanel ? 'bg-blue-600 hover:bg-blue-500' : 'bg-gray-800 hover:bg-gray-700'"
             >
                 <ChevronRightIcon 
                     :size="16" 
@@ -15,402 +15,323 @@
                 />
             </button>
             <div v-if="showPanel">
-            <section class="panel-section ml-2 mr-2" style="margin-top: 0rem; margin-bottom: 0.5rem;">
-                <div class="section-header">
-                    <div class="section-icon">
-                        🔍
+                <section class="panel-section ml-2 mr-2" style="margin-top: 0rem; margin-bottom: 0.5rem;">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            🔍
+                        </div>
+                        <span class="page-title">交互式探索</span>
+                        <div class="section-icon absolute right-0 cursor-pointer"
+                            @click="toNoCloud">
+                            <a-tooltip>
+                                <template #title>无云一版图</template>
+                                <ChevronRight :size="22" />
+                            </a-tooltip>
+                        </div>
                     </div>
-                    <span class="page-title">交互式探索</span>
-                    <div class="section-icon absolute right-0 cursor-pointer"
-                        @click="toNoCloud">
-                        <a-tooltip>
-                            <template #title>无云一版图</template>
-                            <ChevronRight :size="22" />
-                        </a-tooltip>
-                    </div>
-                </div>
-            </section>
-            <div class="custom-panel px-2 mb-0 ">
-                <dv-border-box12 class="!h-full">
-                    <div class="main-container">
-                        <!-- 数据检索 -->
-                        <section class="panel-section">
-                            <div class="section-header">
-                                <div class="section-icon">
-                                    <ListFilter :size="18" />
-                                </div>
-                                <h2 class="section-title">数据检索</h2>
-                                <div class="absolute right-2 cursor-pointer">
-                                    <ChevronDown v-if="isExpand" :size="22" @click="isExpand = false" />
-                                    <ChevronUp v-else @click="isExpand = true" :size="22" />
-                                </div>
-                            </div>
-                            <div v-show="isExpand" class="section-content flex-col !items-start">
-                                <div class="config-container">
-                                    <div class="config-item">
-                                        <div class="config-label relative">
-                                            <MapIcon :size="16" class="config-icon" />
-                                            <span>空间位置</span>
-                                        </div>
-                                        <div class="config-control">
-                                            <segmented class="!w-full scale-y-90 scale-x-90 origin-center" :options="tabs" :active-tab="activeTab" @change="handleSelectTab" />
-                                        </div>
-                                        <div class="config-control mt-3 mb-3 flex flex-col !items-start">
-                                            <div v-if="activeTab === 'region'" class="config-control justify-center">
-                                                <RegionSelects v-model="selectedRegion" :placeholder="[t('datapage.explore.section1.intext_choose')]"
-                                                    class="flex gap-2"
-                                                    select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
-                                            </div>
-                                            <div v-if="activeTab === 'region'" class="flex flex-row mt-2 ml-2">
-                                                <div class="text-red-500">*</div>
-                                                <span class="text-xs text-gray-400">未选择行政区默认以全国范围检索</span>
-                                            </div>
-                                            <div v-else-if="activeTab === 'poi'" class="config-control justify-center w-full">
-                                                <el-select v-model="selectedPOI" filterable remote reserve-keyword value-key="id"
-                                                    :placeholder="t('datapage.explore.section1.intext_POI')" :remote-method="fetchPOIOptions"
-                                                    class="!w-[90%] bg-[#0d1526] text-white" popper-class="bg-[#0d1526] text-white">
-                                                    <el-option v-for="item in poiOptions" :key="item.id"
-                                                        :label="item.name + '(' + item.pname + item.cityname + item.adname + item.address + ')'"
-                                                        :value="item" />
-                                                </el-select>
-                                            </div>
-                                        </div>
+                </section>
+                <div class="custom-panel px-2 mb-0 ">
+                    <dv-border-box12 class="!h-full">
+                        <div class="main-container">
+                            <!-- 数据检索 -->
+                            <section class="panel-section">
+                                <div class="section-header">
+                                    <div class="section-icon">
+                                        <ListFilter :size="18" />
+                                    </div>
+                                    <h2 class="section-title">数据检索</h2>
+                                    <div class="absolute right-2 cursor-pointer">
+                                        <ChevronDown v-if="isExpand" :size="22" @click="isExpand = false" />
+                                        <ChevronUp v-else @click="isExpand = true" :size="22" />
                                     </div>
                                 </div>
-                                <div class="config-container">
-                                    <div class="config-item">
-                                        <div class="config-label relative">
-                                            <BoltIcon :size="16" class="config-icon" />
-                                            <!-- 格网分辨率 -->
-                                            <span>{{t('datapage.explore.section1.subtitle2')}}</span>
-                                        </div>
-                                        <div class="config-control flex-col !items-start">
-                                            <div class="flex flex-row gap-2 items-center w-full">
-                                                <!-- {{ t('datapage.explore.section1.resolution') }} -->
-                                                <select v-model="selectedGridResolution"
-                                                    class="w-40 scale-88 appearance-none rounded-lg border border-[#2c3e50] bg-[#0d1526] px-4 py-2 pr-8 text-white transition-all duration-200 hover:border-[#206d93] focus:border-[#3b82f6] focus:outline-none">
-                                                    <option v-for="option in gridOptions" :key="option" :value="option"
-                                                        class="bg-[#0d1526] text-white">
-                                                        {{ option }}km
-                                                    </option>
-                                                </select>
-                                                <a-button class="a-button" type="primary" @click="getAllGrid">
-                                                    {{ t('datapage.explore.section1.button') }}
-                                                </a-button>
+                                <div v-show="isExpand" class="section-content flex-col !items-start">
+                                    <div class="config-container">
+                                        <div class="config-item">
+                                            <div class="config-label relative">
+                                                <MapIcon :size="16" class="config-icon" />
+                                                <span>空间位置</span>
                                             </div>
-                                            <div class="flex flex-row mt-2 ml-2">
-                                                <div class="text-red-500">*</div>
-                                                <span class="text-xs text-gray-400">{{ t('datapage.explore.section1.advice') }}</span>
+                                            <div class="config-control">
+                                                <segmented class="!w-full scale-y-90 scale-x-90 origin-center" :options="tabs" :active-tab="activeTab" @change="handleSelectTab" />
                                             </div>
-                                        </div>
-                                    </div>
-                                    <!-- <button @click="getAllGrid"
-                                        class="cursor-pointer scale-98 rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-93">
-                                        {{ t('datapage.explore.section1.button') }}
-                                    </button> -->
-                                </div>
-                                <div class="config-container">
-                                    <div class="config-item">
-                                        <div class="config-label relative">
-                                            <CalendarIcon :size="16" class="config-icon" />
-                                            <span>{{ t('datapage.explore.section_time.subtitle1') }}</span>
-                                        </div>
-                                        <div class="config-control">
-                                            <a-range-picker class="custom-date-picker" v-model:value="selectedDateRange"
-                                                :presets="dateRangePresets"
-                                                :allow-clear="false" :placeholder="t('datapage.explore.section_time.intext_date')" />
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="config-container">
-                                    <div class="config-item-no-hover">
-                                        <div class="config-label relative">
-                                            <ZapIcon :size="16" class="config-icon" />
-                                            <span>快速操作</span>
-                                        </div>
-                                        <div class="config-control">
-                                            <div class="control-info-container">
-                                                <div class="control-info-item" 
-                                                    @click="applyFilter"
-                                                    :class="{ 'cursor-not-allowed': filterLoading,
-                                                        'cursor-pointer': !filterLoading,}"
-                                                    >
-                                                    <div class="result-info-icon">
-                                                        🔍
-                                                    </div>
-                                                    <div class="result-info-content" >
-                                                        <div class="result-info-value">
-                                                            <span style="font-size: 1rem;">数据检索</span>
-                                                            <Loader v-if="filterLoading" class="ml-2" />
-                                                        </div>
-                                                    </div>
+                                            <div class="config-control mt-3 mb-3 flex flex-col !items-start">
+                                                <div v-if="activeTab === 'region'" class="config-control justify-center">
+                                                    <RegionSelects v-model="selectedRegion" :placeholder="[t('datapage.explore.section1.intext_choose')]"
+                                                        class="flex gap-2"
+                                                        select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
                                                 </div>
-                                                <div class="control-info-item" @click="toNoCloud"
-                                                    :class="{ 'cursor-not-allowed': !isFilterDone,
-                                                            'cursor-pointer': isFilterDone,
-                                                    }">
-                                                    <div class="result-info-icon">
-                                                        🗺️
-                                                    </div>
-                                                    <div class="result-info-content">
-                                                        <div class="result-info-value">
-                                                            <span style="font-size: 1rem;">数据准备</span>
-                                                        </div>
-                                                    </div>
+                                                <div v-if="activeTab === 'region'" class="flex flex-row mt-2 ml-2">
+                                                    <div class="text-red-500">*</div>
+                                                    <span class="text-xs text-gray-400">未选择行政区默认以全国范围检索</span>
+                                                </div>
+                                                <div v-else-if="activeTab === 'poi'" class="config-control justify-center w-full">
+                                                    <el-select v-model="selectedPOI" filterable remote reserve-keyword value-key="id"
+                                                        :placeholder="t('datapage.explore.section1.intext_POI')" :remote-method="fetchPOIOptions"
+                                                        class="!w-[90%] bg-[#0d1526] text-white" popper-class="bg-[#0d1526] text-white">
+                                                        <el-option v-for="item in poiOptions" :key="item.id"
+                                                            :label="item.name + '(' + item.pname + item.cityname + item.adname + item.address + ')'"
+                                                            :value="item" />
+                                                    </el-select>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        </section>
-                        <!-- 交互探索 -->
-                        <section class="panel-section">
-                            <div class="section-header">
-                                <div class="section-icon">
-                                    <DatabaseIcon :size="18" />
-                                </div>
-                                <h2 class="section-title">{{ t('datapage.explore.section_interactive.sectiontitle') }}</h2>
-                                <div class="section-icon absolute right-0 cursor-pointer" @click="destroyExploreLayers">
-                                    <a-tooltip>
-                                        <template #title>{{ t('datapage.explore.section_interactive.clear') }}</template>
-                                        <Trash2Icon :size="18" />
-                                    </a-tooltip>
-                                </div>
-                            </div>
-                            <div class="section-content">
-                                <div class="stats">
-                                    <div class="stats-header">
-                                        <div class="config-label relative">
-                                            <BoltIcon :size="16" class="config-icon" />
-                                            <span class="text-sm">遥感影像</span>
-                                        </div>
-                                        <div class="absolute right-2 cursor-pointer">
-                                            <ChevronDown v-if="isRSExpand" :size="22" @click="isRSExpand = false" />
-                                            <ChevronUp v-else @click="isRSExpand = true" :size="22" />
-                                        </div>
-                                    </div>
-                                    <div class="stats-content" v-show="isRSExpand">
-                                        <div class="stats-item">
+                                    <div class="config-container">
+                                        <div class="config-item">
                                             <div class="config-label relative">
                                                 <BoltIcon :size="16" class="config-icon" />
-                                                <span>{{ t('datapage.explore.section_time.subtitle2') }}</span>
+                                                <!-- 格网分辨率 -->
+                                                <span>{{t('datapage.explore.section1.subtitle2')}}</span>
                                             </div>
-                                            <div class="config-control flex-col gap-4">
-                                                <div class="result-info-container">
-                                                    <div class="result-info-item">
+                                            <div class="config-control flex-col !items-start">
+                                                <div class="flex flex-row gap-2 items-center w-full">
+                                                    <!-- {{ t('datapage.explore.section1.resolution') }} -->
+                                                    <select v-model="selectedGridResolution"
+                                                        class="w-40 scale-88 appearance-none rounded-lg border border-[#2c3e50] bg-[#0d1526] px-4 py-2 pr-8 text-white transition-all duration-200 hover:border-[#206d93] focus:border-[#3b82f6] focus:outline-none">
+                                                        <option v-for="option in gridOptions" :key="option" :value="option"
+                                                            class="bg-[#0d1526] text-white">
+                                                            {{ option }}km
+                                                        </option>
+                                                    </select>
+                                                    <a-button class="a-button" type="primary" @click="getAllGrid">
+                                                        {{ t('datapage.explore.section1.button') }}
+                                                    </a-button>
+                                                </div>
+                                                <div class="flex flex-row mt-2 ml-2">
+                                                    <div class="text-red-500">*</div>
+                                                    <span class="text-xs text-gray-400">{{ t('datapage.explore.section1.advice') }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- <button @click="getAllGrid"
+                                            class="cursor-pointer scale-98 rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-93">
+                                            {{ t('datapage.explore.section1.button') }}
+                                        </button> -->
+                                    </div>
+                                    <div class="config-container">
+                                        <div class="config-item">
+                                            <div class="config-label relative">
+                                                <CalendarIcon :size="16" class="config-icon" />
+                                                <span>{{ t('datapage.explore.section_time.subtitle1') }}</span>
+                                            </div>
+                                            <div class="config-control">
+                                                <a-range-picker class="custom-date-picker" v-model:value="selectedDateRange"
+                                                    :presets="dateRangePresets"
+                                                    :allow-clear="false" :placeholder="t('datapage.explore.section_time.intext_date')" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="config-container">
+                                        <div class="config-item-no-hover">
+                                            <div class="config-label relative">
+                                                <ZapIcon :size="16" class="config-icon" />
+                                                <span>快速操作</span>
+                                            </div>
+                                            <div class="config-control">
+                                                <div class="control-info-container">
+                                                    <div class="control-info-item" 
+                                                        @click="applyFilter"
+                                                        :class="{ 'cursor-not-allowed': filterLoading,
+                                                            'cursor-pointer': !filterLoading,}"
+                                                        >
                                                         <div class="result-info-icon">
-                                                            <MapIcon :size="16" />
+                                                            🔍
                                                         </div>
-                                                        <div class="result-info-content">
-                                                            <div class="result-info-label">{{ t('datapage.explore.section_time.resolution') }}</div>
+                                                        <div class="result-info-content" >
                                                             <div class="result-info-value">
-                                                                {{ selectedGridResolution }}km
+                                                                <span style="font-size: 1rem;">数据检索</span>
+                                                                <Loader v-if="filterLoading" class="ml-2" />
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div class="result-info-item">
+                                                    <div class="control-info-item" @click="toNoCloud"
+                                                        :class="{ 'cursor-not-allowed': !isFilterDone,
+                                                                'cursor-pointer': isFilterDone,
+                                                        }">
                                                         <div class="result-info-icon">
-                                                            <CalendarIcon :size="16" />
+                                                            🗺️
                                                         </div>
                                                         <div class="result-info-content">
-                                                            <div class="result-info-label">{{ t('datapage.explore.section_time.time') }}</div>
-                                                            <div class="result-info-value date-range">
-                                                                <div class="date-item">
+                                                            <div class="result-info-value">
+                                                                <span style="font-size: 1rem;">数据准备</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                            <!-- 交互探索 -->
+                            <section class="panel-section">
+                                <div class="section-header">
+                                    <div class="section-icon">
+                                        <DatabaseIcon :size="18" />
+                                    </div>
+                                    <h2 class="section-title">{{ t('datapage.explore.section_interactive.sectiontitle') }}</h2>
+                                    <div class="section-icon absolute right-0 cursor-pointer" @click="destroyExploreLayers">
+                                        <a-tooltip>
+                                            <template #title>{{ t('datapage.explore.section_interactive.clear') }}</template>
+                                            <Trash2Icon :size="18" />
+                                        </a-tooltip>
+                                    </div>
+                                </div>
+                                <div class="section-content">
+                                    <div class="stats">
+                                        <div class="stats-header">
+                                            <div class="config-label relative">
+                                                <BoltIcon :size="16" class="config-icon" />
+                                                <span class="text-sm">遥感影像</span>
+                                            </div>
+                                            <div class="absolute right-2 cursor-pointer">
+                                                <ChevronDown v-if="isRSExpand" :size="22" @click="isRSExpand = false" />
+                                                <ChevronUp v-else @click="isRSExpand = true" :size="22" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-content" v-show="isRSExpand">
+                                            <div class="stats-item">
+                                                <div class="config-label relative">
+                                                    <BoltIcon :size="16" class="config-icon" />
+                                                    <span>{{ t('datapage.explore.section_time.subtitle2') }}</span>
+                                                </div>
+                                                <div class="config-control flex-col gap-4">
+                                                    <div class="result-info-container">
+                                                        <div class="result-info-item">
+                                                            <div class="result-info-icon">
+                                                                <MapIcon :size="16" />
+                                                            </div>
+                                                            <div class="result-info-content">
+                                                                <div class="result-info-label">{{ t('datapage.explore.section_time.resolution') }}</div>
+                                                                <div class="result-info-value">
+                                                                    {{ selectedGridResolution }}km
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="result-info-item">
+                                                            <div class="result-info-icon">
+                                                                <CalendarIcon :size="16" />
+                                                            </div>
+                                                            <div class="result-info-content">
+                                                                <div class="result-info-label">{{ t('datapage.explore.section_time.time') }}</div>
+                                                                <div class="result-info-value date-range">
+                                                                    <div class="date-item">
+                                                                        {{
+                                                                            formatTime(
+                                                                                selectedDateRange[0],
+                                                                                'day',
+                                                                            )
+                                                                        }}~
+                                                                        {{
+                                                                            formatTime(
+                                                                                selectedDateRange[1],
+                                                                                'day',
+                                                                            )
+                                                                        }}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="result-info-item">
+                                                            <div class="result-info-icon">
+                                                                <CloudIcon :size="16" />
+                                                            </div>
+                                                            <div class="result-info-content">
+                                                                <div class="result-info-label">{{ t('datapage.explore.section_time.search') }}</div>
+                                                                <div class="result-info-value">
+                                                                    {{ sceneStats.total }}{{ t('datapage.explore.scene') }}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="result-info-item">
+                                                            <div class="result-info-icon">
+                                                                <CloudIcon :size="16" />
+                                                            </div>
+                                                            <div class="result-info-content">
+                                                                <div class="result-info-label">{{ t('datapage.explore.percent') }}</div>
+                                                                <div class="result-info-value">
                                                                     {{
-                                                                        formatTime(
-                                                                            selectedDateRange[0],
-                                                                            'day',
-                                                                        )
-                                                                    }}~
-                                                                    {{
-                                                                        formatTime(
-                                                                            selectedDateRange[1],
-                                                                            'day',
-                                                                        )
+                                                                        sceneStats.coverage
                                                                     }}
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div class="result-info-item">
-                                                        <div class="result-info-icon">
-                                                            <CloudIcon :size="16" />
+                                                </div>
+                                            </div>
+                                            <div class="stats-item-tree" v-for="(category, index) in sceneStats.category" :key="category"
+                                                :class="{
+                                                    'stats-item-rounded-t': index === 0,
+                                                    'stats-item-rounded-b': index === sceneStats.category.length - 1,
+                                                }"
+                                            >
+                                                <div class="config-label relative">
+                                                    <ChevronDown v-if="isRSItemExpand[index]" :size="22" class="config-icon cursor-pointer" @click="isRSItemExpand[index] = false" />
+                                                    <ChevronRight v-else @click="isRSItemExpand[index] = true" :size="22" class="config-icon cursor-pointer" />
+                                                    <span>{{ sceneStats?.dataset?.[category]?.label }}</span>
+                                                </div>
+                                                <div class="stats-subtitile" v-show="!isRSItemExpand[index]">
+                                                    <div class="flex flex-row gap-2 items-center ml-4">
+                                                        <ImageIcon :size="12" class="text-[#7a899f]" @click="isRSItemExpand[index] = false" />
+                                                        <span class="text-xs text-[#7a899f]">{{ sceneStats?.dataset?.[category]?.total }} 景</span>
+                                                    </div>
+                                                    <div class="flex flex-row gap-2 items-center">
+                                                        <ChartColumnBig :size="12" class="text-[#7a899f]" @click="isRSItemExpand[index] = false" />
+                                                        <span class="text-xs text-[#7a899f]">
+                                                            {{ sceneStats?.dataset?.[category]?.coverage }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="config-control flex w-full flex-col gap-4 h-full" v-show="isRSItemExpand[index]">
+                                                    <div class="result-info-container w-full h-full">
+                                                        <div class="result-info-item">
+                                                            <div class="result-info-icon">
+                                                                <CloudIcon :size="16" />
+                                                            </div>
+                                                            <div class="result-info-content">
+                                                                <div class="result-info-label">{{ t('datapage.explore.include') }}</div>
+                                                                <div class="result-info-value">
+                                                                    {{ sceneStats?.dataset?.[category]?.total }}{{ t('datapage.explore.scene') }}
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                        <div class="result-info-content">
-                                                            <div class="result-info-label">{{ t('datapage.explore.section_time.search') }}</div>
-                                                            <div class="result-info-value">
-                                                                {{ sceneStats.total }}{{ t('datapage.explore.scene') }}
+                                                        <div class="result-info-item">
+                                                            <div class="result-info-icon">
+                                                                <CloudIcon :size="16" />
+                                                            </div>
+                                                            <div class="result-info-content">
+                                                                <div class="result-info-label">{{ t('datapage.explore.percent') }}</div>
+                                                                <div v-if="!(sceneStats.total > 0)" class="result-info-value">
+                                                                    {{ t('datapage.explore.section_interactive.intext1') }}
+                                                                </div>
+                                                                <div v-else class="result-info-value">
+                                                                    {{ sceneStats?.dataset?.[category]?.coverage }}
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div class="result-info-item">
-                                                        <div class="result-info-icon">
-                                                            <CloudIcon :size="16" />
-                                                        </div>
-                                                        <div class="result-info-content">
-                                                            <div class="result-info-label">{{ t('datapage.explore.percent') }}</div>
-                                                            <div class="result-info-value">
-                                                                {{
-                                                                    sceneStats.coverage
-                                                                }}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="stats-item-tree" v-for="(category, index) in sceneStats.category" :key="category"
-                                            :class="{
-                                                'stats-item-rounded-t': index === 0,
-                                                'stats-item-rounded-b': index === sceneStats.category.length - 1,
-                                            }"
-                                        >
-                                            <div class="config-label relative">
-                                                <ChevronDown v-if="isRSItemExpand[index]" :size="22" class="config-icon cursor-pointer" @click="isRSItemExpand[index] = false" />
-                                                <ChevronRight v-else @click="isRSItemExpand[index] = true" :size="22" class="config-icon cursor-pointer" />
-                                                <span>{{ sceneStats?.dataset?.[category]?.label }}</span>
-                                            </div>
-                                            <div class="stats-subtitile" v-show="!isRSItemExpand[index]">
-                                                <div class="flex flex-row gap-2 items-center ml-4">
-                                                    <ImageIcon :size="12" class="text-[#7a899f]" @click="isRSItemExpand[index] = false" />
-                                                    <span class="text-xs text-[#7a899f]">{{ sceneStats?.dataset?.[category]?.total }} 景</span>
-                                                </div>
-                                                <div class="flex flex-row gap-2 items-center">
-                                                    <ChartColumnBig :size="12" class="text-[#7a899f]" @click="isRSItemExpand[index] = false" />
-                                                    <span class="text-xs text-[#7a899f]">
-                                                        {{ sceneStats?.dataset?.[category]?.coverage }}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div class="config-control flex w-full flex-col gap-4 h-full" v-show="isRSItemExpand[index]">
-                                                <div class="result-info-container w-full h-full">
-                                                    <div class="result-info-item">
-                                                        <div class="result-info-icon">
-                                                            <CloudIcon :size="16" />
-                                                        </div>
-                                                        <div class="result-info-content">
-                                                            <div class="result-info-label">{{ t('datapage.explore.include') }}</div>
-                                                            <div class="result-info-value">
-                                                                {{ sceneStats?.dataset?.[category]?.total }}{{ t('datapage.explore.scene') }}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="result-info-item">
-                                                        <div class="result-info-icon">
-                                                            <CloudIcon :size="16" />
-                                                        </div>
-                                                        <div class="result-info-content">
-                                                            <div class="result-info-label">{{ t('datapage.explore.percent') }}</div>
-                                                            <div v-if="!(sceneStats.total > 0)" class="result-info-value">
-                                                                {{ t('datapage.explore.section_interactive.intext1') }}
-                                                            </div>
-                                                            <div v-else class="result-info-value">
-                                                                {{ sceneStats?.dataset?.[category]?.coverage }}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div v-if="(sceneStats?.dataset?.[category]?.total || 0) > 0" class="!w-full ml-3">
-                                                    <label class="mr-2 text-white">{{ t('datapage.explore.section_interactive.scene') }}</label>
-                                                    <select
-                                                        class="max-h-[600px] w-[calc(100%-113px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
-                                                        v-model="selectedSensorName">
-                                                        <option disabled selected value="">{{ t('datapage.explore.section_interactive.choose') }}</option>
-                                                        <!-- <option :value="'all'" class="truncate">全选</option> -->
-                                                        <option v-for="sensor in sceneStats?.dataset?.[category]?.dataList" :value="sensor.sensorName" :key="sensor.sensorName" class="truncate">
-                                                            {{ sensor.platformName }}
-                                                        </option>
-                                                    </select>
-                                                    <div class="flex flex-row items-center">
-                                                        <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
-                                                            @click="showSceneResult(selectedSensorName)"
-                                                            :disabled="!selectedSensorName">
-                                                            {{ t('datapage.explore.section_interactive.button') }}
-                                                        </a-button>
-                                                        <a-tooltip>
-                                                            <template #title>{{ t('datapage.explore.section_interactive.clear') }}</template>
-                                                            <Trash2Icon :size="18" class="mt-4! ml-4! cursor-pointer"
-                                                                @click="destroyScene" />
-                                                        </a-tooltip>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="stats">
-                                    <div class="stats-header">
-                                        <div class="config-label relative">
-                                            <BoltIcon :size="16" class="config-icon" />
-                                            <span>矢量数据</span>
-                                        </div>
-                                        <div class="absolute right-2 cursor-pointer">
-                                            <ChevronDown v-if="isVectorExpand" :size="22" @click="isVectorExpand = false" />
-                                            <ChevronUp v-else @click="isVectorExpand = true" :size="22" />
-                                        </div>
-                                    </div>
-                                    <div class="stats-content" v-show="isVectorExpand">
-                                        <div class="config-label relative">
-                                            <span class="result-info-label">共找到 {{vectorStats.length}} 条记录</span>
-                                        </div>
-                                        <div v-for="(item, index) in vectorStats" class="config-item mb-3" :key="item.tableName">
-                                            <div class="config-label relative">
-                                                <Image :size="16" class="config-icon" />
-                                                <span>{{ item.vectorName }}</span>
-                                                <div class="absolute right-0 cursor-pointer">
-                                                    <a-tooltip>
-                                                        <template #title>{{t('datapage.history.preview')}}</template>
-                                                        <Eye v-if="previewVectorList[index]" @click="destroyVector(index)" :size="16" class="cursor-pointer"/>
-                                                        <EyeOff v-else :size="16" @click="showVectorResult(item.tableName, index)" class="cursor-pointer"/>
-                                                    </a-tooltip>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <!-- <a-empty v-if="allVectors.length === 0" /> -->
-                                    </div>
-                                </div>
-                                <div class="stats">
-                                    <div class="stats-header">
-                                        <div class="config-label relative">
-                                            <BoltIcon :size="16" class="config-icon" />
-                                            <span>栅格产品</span>
-                                        </div>
-                                        <div class="absolute right-2 cursor-pointer">
-                                            <ChevronDown v-if="isProductsExpand" :size="22" @click="isProductsExpand = false" />
-                                            <ChevronUp v-else @click="isProductsExpand = true" :size="22" />
-                                        </div>
-                                    </div>
-                                    <div class="stats-content" v-show="isProductsExpand">
-                                        <div class="config-label relative">
-                                            <span class="result-info-label">共找到 {{themeStats.total}} 条记录</span>
-                                        </div>
-                                        <div class="stats-item-tree" v-for="(category, index) in themeStats.category" :key="category"
-                                            :class="{
-                                                'stats-item-rounded-t': index === 0,
-                                                'stats-item-rounded-b': index === themeStats.category.length - 1,
-                                            }"
-                                        >
-                                            <div class="config-label relative">
-                                                <ChevronDown v-if="isProductsItemExpand[index]" :size="22" class="config-icon cursor-pointer" @click="isProductsItemExpand[index] = false" />
-                                                <ChevronRight v-else @click="isProductsItemExpand[index] = true" :size="22" class="config-icon cursor-pointer" />
-                                                <span>{{ themeStats?.dataset?.[category]?.label }}</span>
-                                                <div class="absolute right-0 flex flex-row gap-2 items-center">
-                                                    <ImageIcon :size="12" class="text-[#7a899f]" @click="isProductsItemExpand[index] = false" />
-                                                    <span class="text-xs text-[#7a899f]">{{ themeStats?.dataset?.[category]?.total }} 幅</span>
-                                                </div>
-                                            </div>
-
-                                            <div v-show="isProductsItemExpand[index]">
-                                                <div v-for="(themeName, idx) in themeStats?.dataset?.[category]?.dataList" class="config-item mt-1 mb-2" :key="idx">
-                                                    <div class="config-label relative">
-                                                        <Image :size="16" class="config-icon" />
-                                                        <span>{{ themeName }}</span>
-                                                        <div class="absolute right-0 cursor-pointer">
+                                                    <div v-if="(sceneStats?.dataset?.[category]?.total || 0) > 0" class="!w-full ml-3">
+                                                        <label class="mr-2 text-white">{{ t('datapage.explore.section_interactive.scene') }}</label>
+                                                        <select
+                                                            class="max-h-[600px] w-[calc(100%-113px)] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
+                                                            v-model="selectedSensorName">
+                                                            <option disabled selected value="">{{ t('datapage.explore.section_interactive.choose') }}</option>
+                                                            <!-- <option :value="'all'" class="truncate">全选</option> -->
+                                                            <option v-for="sensor in sceneStats?.dataset?.[category]?.dataList" :value="sensor.sensorName" :key="sensor.sensorName" class="truncate">
+                                                                {{ sensor.platformName }}
+                                                            </option>
+                                                        </select>
+                                                        <div class="flex flex-row items-center">
+                                                            <a-button class="custom-button mt-4! w-[calc(100%-50px)]!"
+                                                                @click="showSceneResult(selectedSensorName)"
+                                                                :disabled="!selectedSensorName">
+                                                                {{ t('datapage.explore.section_interactive.button') }}
+                                                            </a-button>
                                                             <a-tooltip>
-                                                                <template #title>{{t('datapage.history.preview')}}</template>
-                                                                <Eye v-if="shouldShowEyeOff(category, idx)" @click="toggleEye(category, idx, themeName)" :size="16" class="cursor-pointer"/>
-                                                                <EyeOff v-else :size="16" @click="toggleEye(category, idx, themeName)" class="cursor-pointer"/>
+                                                                <template #title>{{ t('datapage.explore.section_interactive.clear') }}</template>
+                                                                <Trash2Icon :size="18" class="mt-4! ml-4! cursor-pointer"
+                                                                    @click="destroyScene" />
                                                             </a-tooltip>
                                                         </div>
                                                     </div>
@@ -418,13 +339,92 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <div class="stats">
+                                        <div class="stats-header">
+                                            <div class="config-label relative">
+                                                <BoltIcon :size="16" class="config-icon" />
+                                                <span>矢量数据</span>
+                                            </div>
+                                            <div class="absolute right-2 cursor-pointer">
+                                                <ChevronDown v-if="isVectorExpand" :size="22" @click="isVectorExpand = false" />
+                                                <ChevronUp v-else @click="isVectorExpand = true" :size="22" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-content" v-show="isVectorExpand">
+                                            <div class="config-label relative">
+                                                <span class="result-info-label">共找到 {{vectorStats.length}} 条记录</span>
+                                            </div>
+                                            <div v-for="(item, index) in vectorStats" class="config-item mb-3" :key="item.tableName">
+                                                <div class="config-label relative">
+                                                    <Image :size="16" class="config-icon" />
+                                                    <span>{{ item.vectorName }}</span>
+                                                    <div class="absolute right-0 cursor-pointer">
+                                                        <a-tooltip>
+                                                            <template #title>{{t('datapage.history.preview')}}</template>
+                                                            <Eye v-if="previewVectorList[index]" @click="destroyVector(index)" :size="16" class="cursor-pointer"/>
+                                                            <EyeOff v-else :size="16" @click="showVectorResult(item.tableName, index)" class="cursor-pointer"/>
+                                                        </a-tooltip>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- <a-empty v-if="allVectors.length === 0" /> -->
+                                        </div>
+                                    </div>
+                                    <div class="stats">
+                                        <div class="stats-header">
+                                            <div class="config-label relative">
+                                                <BoltIcon :size="16" class="config-icon" />
+                                                <span>栅格产品</span>
+                                            </div>
+                                            <div class="absolute right-2 cursor-pointer">
+                                                <ChevronDown v-if="isProductsExpand" :size="22" @click="isProductsExpand = false" />
+                                                <ChevronUp v-else @click="isProductsExpand = true" :size="22" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-content" v-show="isProductsExpand">
+                                            <div class="config-label relative">
+                                                <span class="result-info-label">共找到 {{themeStats.total}} 条记录</span>
+                                            </div>
+                                            <div class="stats-item-tree" v-for="(category, index) in themeStats.category" :key="category"
+                                                :class="{
+                                                    'stats-item-rounded-t': index === 0,
+                                                    'stats-item-rounded-b': index === themeStats.category.length - 1,
+                                                }"
+                                            >
+                                                <div class="config-label relative">
+                                                    <ChevronDown v-if="isProductsItemExpand[index]" :size="22" class="config-icon cursor-pointer" @click="isProductsItemExpand[index] = false" />
+                                                    <ChevronRight v-else @click="isProductsItemExpand[index] = true" :size="22" class="config-icon cursor-pointer" />
+                                                    <span>{{ themeStats?.dataset?.[category]?.label }}</span>
+                                                    <div class="absolute right-0 flex flex-row gap-2 items-center">
+                                                        <ImageIcon :size="12" class="text-[#7a899f]" @click="isProductsItemExpand[index] = false" />
+                                                        <span class="text-xs text-[#7a899f]">{{ themeStats?.dataset?.[category]?.total }} 幅</span>
+                                                    </div>
+                                                </div>
+
+                                                <div v-show="isProductsItemExpand[index]">
+                                                    <div v-for="(themeName, idx) in themeStats?.dataset?.[category]?.dataList" class="config-item mt-1 mb-2" :key="idx">
+                                                        <div class="config-label relative">
+                                                            <Image :size="16" class="config-icon" />
+                                                            <span>{{ themeName }}</span>
+                                                            <div class="absolute right-0 cursor-pointer">
+                                                                <a-tooltip>
+                                                                    <template #title>{{t('datapage.history.preview')}}</template>
+                                                                    <Eye v-if="shouldShowEyeOff(category, idx)" @click="toggleEye(category, idx, themeName)" :size="16" class="cursor-pointer"/>
+                                                                    <EyeOff v-else :size="16" @click="toggleEye(category, idx, themeName)" class="cursor-pointer"/>
+                                                                </a-tooltip>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </section>
-                    </div>
-                </dv-border-box12>
+                            </section>
+                        </div>
+                    </dv-border-box12>
+                </div>
             </div>
-        </div>
         </div>
         <MapComp class="flex-1" :style="'local'" :proj="'globe'" :isPicking="isPicking" />
     </div>
@@ -559,6 +559,24 @@ onMounted(async() => {
         }
     }, 2); // 适当延迟
 
+    setTimeout(() => {
+        mapManager.withMap((m) => {
+            m.showTileBoundaries = true
+        })
+        //         // '/hytemp/rgb/tiles/{z}/{x}/{y}.png?url_r=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B4.TIF&url_g=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B3.TIF&url_b=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B2.TIF'
+        //         '/hytemp/rgb/box/{z}/{x}/{y}.png?url_r=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B4.TIF&url_g=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B3.TIF&url_b=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B2.TIF&bbox=117,31.5,118,32&max_r=50000&max_g=50000&max_b=50000&min_r=20000&min_g=20000&min_b=20000'
+        //     ]
+        // })
+        // m.addLayer({
+        //     id: 'raster-layer',
+        //     source: 'src',
+        //     type: 'raster',
+        //     minzoom: 5,
+        //     maxzoom: 22
+        // })
+        // })
+    }, 1)
+
 })
 </script>
 
@@ -571,5 +589,8 @@ onMounted(async() => {
 :deep(button.ant-picker-month-btn) {
     pointer-events: none;
     color: #aaa;
+}
+.config-item {
+    background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);
 }
 </style>

@@ -12,9 +12,13 @@ import time
 import threading
 import logging
 from contextvars import ContextVar
+from shapely.geometry import Polygon
+from shapely.ops import transform
+import pyproj
 
 MINIO_ENDPOINT = "http://" + minio_config['endpoint']
 
+# region 工具函数
 def normalize(arr, min_val=0, max_val=5000):
     arr = np.nan_to_num(arr)
     arr = np.clip((arr - min_val) / (max_val - min_val), 0, 1)
@@ -61,6 +65,91 @@ def read_band(x, y, z, bucket_path, band_path, nodata_int):
         return None
 
 
+def calculate_scene_overlap(scene1, scene2):
+    """
+    计算两个场景的重叠度
+    
+    Args:
+        scene1, scene2: 场景字典，包含bbox信息
+        
+    Returns:
+        float: 重叠度，范围[0, 1]
+    """
+    try:
+        # 从bbox中提取坐标
+        coords1 = scene1['bbox']['geometry']['coordinates'][0]
+        coords2 = scene2['bbox']['geometry']['coordinates'][0]
+        
+        # 创建Shapely多边形对象
+        polygon1 = Polygon(coords1)
+        polygon2 = Polygon(coords2)
+        
+        # 如果没有相交，返回0
+        if not polygon1.intersects(polygon2):
+            return 0.0
+        
+        # 计算交集
+        intersection = polygon1.intersection(polygon2)
+        
+        # 计算重叠度（使用较小的多边形作为分母，这样更容易检测出重复覆盖）
+        min_area = min(polygon1.area, polygon2.area)
+        overlap_ratio = intersection.area / min_area if min_area > 0 else 0.0
+        
+        return overlap_ratio
+        
+    except Exception as e:
+        print(f"计算重叠度时出错: {e}")
+        return 0.0
+
+
+def select_diverse_scenes(scenes, max_scenes=10, overlap_threshold=0.8):
+    """
+    选择空间分布多样化的场景
+    
+    Args:
+        scenes: 场景列表
+        max_scenes: 最大选择场景数
+        overlap_threshold: 重叠度阈值，超过此值认为场景重复
+        
+    Returns:
+        list: 选中的场景列表
+    """
+    if not scenes:
+        return []
+    
+    selected_scenes = []
+    
+    for scene in scenes:
+        # 第一个场景直接加入
+        if not selected_scenes:
+            selected_scenes.append(scene)
+            print(f"选择第1个场景: {scene['sceneId']}, 覆盖率: {scene['coverage']:.4f}")
+            continue
+        
+        # 检查与已选场景的重叠度
+        is_diverse = True
+        max_overlap = 0
+        
+        for selected in selected_scenes:
+            overlap = calculate_scene_overlap(scene, selected)
+            max_overlap = max(max_overlap, overlap)
+            
+            if overlap > overlap_threshold:
+                is_diverse = False
+                print(f"场景 {scene['sceneId']} 与 {selected['sceneId']} 重叠度过高: {overlap:.2f}")
+                break
+        
+        if is_diverse:
+            selected_scenes.append(scene)
+            print(f"选择第{len(selected_scenes)}个场景: {scene['sceneId']}, 最大重叠度: {max_overlap:.2f}")
+        
+        if len(selected_scenes) >= max_scenes:
+            break
+    
+    return selected_scenes
+
+# endregion
+
 router = APIRouter()
 @router.get("/{z}/{x}/{y}.png")
 def get_tile(
@@ -69,9 +158,12 @@ def get_tile(
     sensorName: str = Query(...),
 ):
     try:
+        # region 获取tile的边界
         tile_bound = calc_tile_bounds(x, y, z)
         points = tile_bound['bbox']
+        # endregion
 
+        # region 参数配置
         url = common_config['create_no_cloud_config_url']
         data = {
             "sensorName": sensorName,
@@ -86,7 +178,9 @@ def get_tile(
         cookie = request.headers.get('Cookie')
         if cookie:
             headers['Cookie'] = cookie
+        # endregion
 
+        # region 获取scenes和bandMapper
         json_response = requests.post(url, json=data, headers=headers).json()
 
         if not json_response:
@@ -101,19 +195,26 @@ def get_tile(
 
         if not json_data:
             return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
+        # endregion
         
-        # 改进的场景选择逻辑
+        # region 完全覆盖tile的景的列表
         full_coverage_scenes = [scene for scene in json_data if float(scene.get('coverage', 0)) >= 0.999]
+        # endregion
 
+        # region 选择要处理的景
         if full_coverage_scenes:
-            # 按云量排序
             sorted_full_coverage = sorted(full_coverage_scenes, key=lambda x: float(x.get('cloud', 0)))
-            # 将高覆盖率低云量的场景放在前面，但仍保留其他场景作为备选
-            other_scenes = [s for s in json_data[:10] if s not in full_coverage_scenes]
-            scenes_to_process = sorted_full_coverage + other_scenes
+            print(f"完全覆盖tile的景: {sorted_full_coverage}")
+            scenes_to_process = [sorted_full_coverage[0]]
+            use_single_scene = True
         else:
-            scenes_to_process = json_data[:10]
-        
+            scenes_to_process = select_diverse_scenes(json_data, max_scenes=10, overlap_threshold=0.7)
+            print(f"空间分布多样的景: {scenes_to_process}")
+            use_single_scene = False
+            print(f"从{len(json_data)}个场景中选择了{len(scenes_to_process)}个空间分布多样的场景")
+        # endregion
+
+        # region 获取RGB三波段的路径
         scene_band_paths = {}
         bandList = ['Red', 'Green', 'Blue']
 
@@ -145,7 +246,9 @@ def get_tile(
                             bands[band] = paths['band_3']
 
             scene_band_paths[scene['sceneId']] = bands
-        
+        # endregion
+
+        # region 初始化
         target_H, target_W = 256, 256
         img_r = np.full((target_H, target_W), 0, dtype=np.uint8)
         img_g = np.full((target_H, target_W), 0, dtype=np.uint8)
@@ -155,8 +258,9 @@ def get_tile(
         total_cloud_mask = np.zeros((target_H, target_W), dtype=bool)
 
         filled_ratio = 0.0
+        # endregion
 
-        # 统一的场景处理逻辑
+        # region 处理每个景
         for scene in scenes_to_process:
             if 'SAR' in sensorName:
                 continue
@@ -204,15 +308,16 @@ def get_tile(
                         else:
                             cloud_mask = np.zeros((target_H, target_W), dtype=bool)
                         
-                        # 累积云掩码
-                        total_cloud_mask[need_fill_mask & valid_mask] |= cloud_mask[need_fill_mask & valid_mask]
+                        if use_single_scene:
+                            total_cloud_mask = cloud_mask
+                        else:
+                            total_cloud_mask[need_fill_mask & valid_mask] |= cloud_mask[need_fill_mask & valid_mask]
                 except Exception as e:
                     print("Cannot read cloud file")
             
-            # 只填充需要填充且有效的区域
             fill_mask = need_fill_mask & valid_mask
 
-            if np.any(fill_mask):
+            if np.any(fill_mask) or use_single_scene:
                 bands = scene_band_paths[scene['sceneId']]
                 bucket_path = scene['bucket']
 
@@ -223,18 +328,26 @@ def get_tile(
                 if band_1 is None or band_2 is None or band_3 is None:
                     continue
 
-                # 统一的填充逻辑
-                img_r[fill_mask] = band_1[fill_mask]
-                img_g[fill_mask] = band_2[fill_mask]
-                img_b[fill_mask] = band_3[fill_mask]
-                need_fill_mask[fill_mask] = False
+                if use_single_scene:
+                    img_r[valid_mask] = band_1[valid_mask]
+                    img_g[valid_mask] = band_2[valid_mask]
+                    img_b[valid_mask] = band_3[valid_mask]
+                    need_fill_mask[valid_mask] = False
+                else:
+                    img_r[fill_mask] = band_1[fill_mask]
+                    img_g[fill_mask] = band_2[fill_mask]
+                    img_b[fill_mask] = band_3[fill_mask]
+                    need_fill_mask[fill_mask] = False
 
                 filled_ratio = 1.0 - (np.count_nonzero(need_fill_mask) / need_fill_mask.size)
             
-            # 如果已经填充了99%以上，可以退出
-            if filled_ratio >= 0.99:
+            if use_single_scene:
                 break
-        
+            elif filled_ratio >= 0.95:
+                break
+        # endregion
+
+        # region 渲染
         img = np.stack([img_r, img_g, img_b])
 
         transparent_mask = need_fill_mask | total_cloud_mask
@@ -242,6 +355,6 @@ def get_tile(
 
         content = render(img, mask=alpha_mask, img_format="png", **img_profiles.get("png"))
         return Response(content=content, media_type="image/png")
-    
+        # endregion
     except Exception as e:
         return Response(content=TRANSPARENT_CONTENT, media_type="image/png")

@@ -42,7 +42,8 @@ export async function getImgStats(url: string): Promise<any> {
  * 遥感影像Url - OnTheFly
  */
 export const getSceneUrl = (sensorName: string) => {
-    let baseUrl = `${titilerProxyEndPoint}/image_visualization/{z}/{x}/{y}.png`
+
+    let baseUrl = `${titilerProxyEndPoint}/deployment_with_nodata_question/{z}/{x}/{y}.png`
     const requestParams = new URLSearchParams()
     requestParams.append('sensorName', sensorName)
     const fullUrl = baseUrl + '?' + requestParams.toString()

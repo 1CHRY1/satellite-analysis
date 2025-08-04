@@ -36,8 +36,8 @@ public class GeometryUtil {
     /**
      * 解析 LinearRing
      *
-     * @param ringCoordinates  GeoJSON 中的环坐标数组
-     * @param geometryFactory  JTS GeometryFactory
+     * @param ringCoordinates GeoJSON 中的环坐标数组
+     * @param geometryFactory JTS GeometryFactory
      * @return JTS LinearRing 对象
      */
     public static LinearRing parseLinearRing(JSONArray ringCoordinates, GeometryFactory geometryFactory) {
@@ -134,6 +134,7 @@ public class GeometryUtil {
     public static JSONObject geometry2ResourceGeojson(Geometry jtsGeometry, String id) throws IOException {
         return geometry2ResourceGeojson(jtsGeometry, id, -1, -1);
     }
+
     public static JSONObject geometry2ResourceGeojson(Geometry jtsGeometry, String id, int columnId, int rowId) throws IOException {
         if (jtsGeometry == null || id == null) {
             return null;
@@ -291,7 +292,7 @@ public class GeometryUtil {
         Float maxLon = points.get(2);
         Float maxLat = points.get(3);
         // 按顺时针或逆时针顺序定义多边形顶点（闭合环）
-        Coordinate[] coordinates = new Coordinate[] {
+        Coordinate[] coordinates = new Coordinate[]{
                 new Coordinate(minLon, minLat), // 左下角
                 new Coordinate(minLon, maxLat), // 左上角
                 new Coordinate(maxLon, maxLat), // 右上角
@@ -302,5 +303,21 @@ public class GeometryUtil {
         return geometryFactory.createPolygon(coordinates);
     }
 
-
+    public static MultiPolygon GeometryToMutiPolygon(Geometry geometry) {
+        GeometryFactory geometryFactory = new GeometryFactory();
+        MultiPolygon multiPolygon;
+        if (geometry != null && !geometry.isEmpty()) {
+            // 强制转换为 MultiPolygon（如果是 Polygon，会自动包装）
+            if (geometry instanceof MultiPolygon) {
+                multiPolygon = (MultiPolygon) geometry;
+            } else if (geometry instanceof Polygon) {
+                multiPolygon = geometryFactory.createMultiPolygon(new Polygon[]{(Polygon) geometry});
+            } else {
+                throw new IllegalArgumentException("Unsupported geometry type: " + geometry.getGeometryType());
+            }
+        }else {
+            multiPolygon = geometryFactory.createMultiPolygon(new Polygon[0]);
+        }
+        return multiPolygon;
+    }
 }

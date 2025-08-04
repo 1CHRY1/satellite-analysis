@@ -12,9 +12,13 @@ import time
 import threading
 import logging
 from contextvars import ContextVar
+from shapely.geometry import Polygon
+from shapely.ops import transform
+import pyproj
 
 MINIO_ENDPOINT = "http://" + minio_config['endpoint']
 
+# region 工具函数
 def normalize(arr, min_val=0, max_val=5000):
     arr = np.nan_to_num(arr)
     arr = np.clip((arr - min_val) / (max_val - min_val), 0, 1)
@@ -61,6 +65,8 @@ def read_band(x, y, z, bucket_path, band_path, nodata_int):
         return None
 
 
+# endregion
+
 router = APIRouter()
 @router.get("/{z}/{x}/{y}.png")
 def get_tile(
@@ -69,9 +75,12 @@ def get_tile(
     sensorName: str = Query(...),
 ):
     try:
+        # region 获取tile的边界
         tile_bound = calc_tile_bounds(x, y, z)
         points = tile_bound['bbox']
+        # endregion
 
+        # region 参数配置
         url = common_config['create_no_cloud_config_url']
         data = {
             "sensorName": sensorName,
@@ -86,7 +95,9 @@ def get_tile(
         cookie = request.headers.get('Cookie')
         if cookie:
             headers['Cookie'] = cookie
+        # endregion
 
+        # region 获取scenes和bandMapper
         json_response = requests.post(url, json=data, headers=headers).json()
 
         if not json_response:
@@ -101,19 +112,24 @@ def get_tile(
 
         if not json_data:
             return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
+        # endregion
         
-        # 改进的场景选择逻辑
+        # region 完全覆盖tile的景的列表
         full_coverage_scenes = [scene for scene in json_data if float(scene.get('coverage', 0)) >= 0.999]
+        # endregion
 
+        # region 选择要处理的景
         if full_coverage_scenes:
-            # 按云量排序
-            sorted_full_coverage = sorted(full_coverage_scenes, key=lambda x: float(x.get('cloud', 0)))
-            # 将高覆盖率低云量的场景放在前面，但仍保留其他场景作为备选
-            other_scenes = [s for s in json_data[:10] if s not in full_coverage_scenes]
-            scenes_to_process = sorted_full_coverage + other_scenes
+            # sorted_full_coverage = sorted(full_coverage_scenes, key=lambda x: float(x.get('cloud', 0)))
+            scenes_to_process = [sorted_full_coverage[0]]
+            use_single_scene = True
         else:
             scenes_to_process = json_data[:10]
-        
+            use_single_scene = False
+            
+        # endregion
+
+        # region 获取RGB三波段的路径
         scene_band_paths = {}
         bandList = ['Red', 'Green', 'Blue']
 
@@ -145,7 +161,9 @@ def get_tile(
                             bands[band] = paths['band_3']
 
             scene_band_paths[scene['sceneId']] = bands
-        
+        # endregion
+
+        # region 初始化
         target_H, target_W = 256, 256
         img_r = np.full((target_H, target_W), 0, dtype=np.uint8)
         img_g = np.full((target_H, target_W), 0, dtype=np.uint8)
@@ -155,14 +173,17 @@ def get_tile(
         total_cloud_mask = np.zeros((target_H, target_W), dtype=bool)
 
         filled_ratio = 0.0
+        # endregion
 
-        # 统一的场景处理逻辑
+        # region 处理每个景
         for scene in scenes_to_process:
+            # region SAR景不处理
             if 'SAR' in sensorName:
                 continue
-            
+            # endregion
             nodata = scene.get('noData')
 
+            # region 获取nodata
             try:
                 if nodata is not None:
                     nodata_int = int(float(nodata))
@@ -170,13 +191,16 @@ def get_tile(
                     nodata_int = 0
             except (ValueError, TypeError):
                 nodata_int = 0
-            
+            # endregion
+
+            # 获取cloudPath
             cloud_band_path = scene.get('cloudPath')
 
+            #region 获取有效像素的掩膜
             red_band_path = scene_band_paths[scene['sceneId']]['Red']
             if not red_band_path:
                 continue
-            
+
             full_red_path = MINIO_ENDPOINT + "/" + scene['bucket'] + "/" + red_band_path
             try:
                 with Reader(full_red_path, options={'nodata': int(nodata_int)}) as reader:
@@ -186,7 +210,9 @@ def get_tile(
                 continue
 
             valid_mask = nodata_mask
+            # endregion
 
+            # region 获取云掩膜
             if cloud_band_path:
                 cloud_full_path = MINIO_ENDPOINT + "/" + scene['bucket'] + "/" + scene['cloudPath']
                 try:
@@ -204,15 +230,19 @@ def get_tile(
                         else:
                             cloud_mask = np.zeros((target_H, target_W), dtype=bool)
                         
-                        # 累积云掩码
-                        total_cloud_mask[need_fill_mask & valid_mask] |= cloud_mask[need_fill_mask & valid_mask]
+                        if use_single_scene:
+                            total_cloud_mask = cloud_mask
+                        else:
+                            total_cloud_mask[need_fill_mask & valid_mask] |= cloud_mask[need_fill_mask & valid_mask]
                 except Exception as e:
                     print("Cannot read cloud file")
+            # endregion
             
-            # 只填充需要填充且有效的区域
+            # 获取可以填充的像素位置掩膜
             fill_mask = need_fill_mask & valid_mask
-
-            if np.any(fill_mask):
+            
+            # region 填充像素
+            if np.any(fill_mask) or use_single_scene:
                 bands = scene_band_paths[scene['sceneId']]
                 bucket_path = scene['bucket']
 
@@ -223,18 +253,27 @@ def get_tile(
                 if band_1 is None or band_2 is None or band_3 is None:
                     continue
 
-                # 统一的填充逻辑
-                img_r[fill_mask] = band_1[fill_mask]
-                img_g[fill_mask] = band_2[fill_mask]
-                img_b[fill_mask] = band_3[fill_mask]
-                need_fill_mask[fill_mask] = False
+                if use_single_scene:
+                    img_r[valid_mask] = band_1[valid_mask]
+                    img_g[valid_mask] = band_2[valid_mask]
+                    img_b[valid_mask] = band_3[valid_mask]
+                    need_fill_mask[valid_mask] = False
+                else:
+                    img_r[fill_mask] = band_1[fill_mask]
+                    img_g[fill_mask] = band_2[fill_mask]
+                    img_b[fill_mask] = band_3[fill_mask]
+                    need_fill_mask[fill_mask] = False
 
                 filled_ratio = 1.0 - (np.count_nonzero(need_fill_mask) / need_fill_mask.size)
-            
-            # 如果已经填充了99%以上，可以退出
-            if filled_ratio >= 0.99:
+            # endregion
+
+            if use_single_scene:
+                break
+            elif filled_ratio >= 0.95:
                 break
         
+
+        # region 渲染
         img = np.stack([img_r, img_g, img_b])
 
         transparent_mask = need_fill_mask | total_cloud_mask
@@ -242,6 +281,6 @@ def get_tile(
 
         content = render(img, mask=alpha_mask, img_format="png", **img_profiles.get("png"))
         return Response(content=content, media_type="image/png")
-    
+        # endregion
     except Exception as e:
         return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
