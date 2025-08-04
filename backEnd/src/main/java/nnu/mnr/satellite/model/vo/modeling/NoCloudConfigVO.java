@@ -8,6 +8,7 @@ import org.geotools.geojson.GeoJSON;
 public class NoCloudConfigVO {
     private String sceneId;
     private String sensorName;
+    private String sceneName;
     private String resolution;
     private String cloudPath;
     private String bucket;

@@ -70,6 +70,7 @@ public class ThemeDataServiceV3 {
             Geometry gridsBoundary = GeometryUtil.getGridsBoundaryByTilesAndResolution(tileIds, resolution);
             String dataType = "'satellite', 'dem', 'dsm', 'ndvi', 'svr', '3d'";
             List<SceneDesVO> allScenesInfo = sceneDataService.getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, dataType);
+            allScenesInfo.sort((s1, s2) -> s2.getSceneTime().compareTo(s1.getSceneTime()));
             List<SceneDesVO> scenesInfo = new ArrayList<>();
             List<SceneDesVO> themesInfo = new ArrayList<>();
             for (SceneDesVO scene : allScenesInfo) {
@@ -94,6 +95,7 @@ public class ThemeDataServiceV3 {
             String dataType = "'dem', 'dsm', 'ndvi', 'svr', '3d'";
 
             List<SceneDesVO> themesInfo = sceneDataService.getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, dataType);
+            themesInfo.sort((s1, s2) -> s2.getSceneTime().compareTo(s1.getSceneTime()));
 
             report = buildCoverageReport(themesInfo);
 

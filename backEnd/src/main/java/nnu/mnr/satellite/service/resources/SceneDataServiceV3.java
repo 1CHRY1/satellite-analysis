@@ -151,6 +151,7 @@ public class SceneDataServiceV3 {
             String dataType = "'satellite', 'dem', 'dsm', 'ndvi', 'svr', '3d'";
 
             List<SceneDesVO> allScenesInfo = getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, dataType);
+            allScenesInfo.sort((s1, s2) -> s2.getSceneTime().compareTo(s1.getSceneTime()));
             List<SceneDesVO> scenesInfo = new ArrayList<>();
             List<SceneDesVO> themesInfo = new ArrayList<>();
             for (SceneDesVO scene : allScenesInfo) {
@@ -174,6 +175,7 @@ public class SceneDataServiceV3 {
             String dataType = "'satellite'";
 
             List<SceneDesVO> scenesInfo = getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, dataType);
+            scenesInfo.sort((s1, s2) -> s2.getSceneTime().compareTo(s1.getSceneTime()));
 
             report = buildCoverageReport(scenesInfo, gridsBoundary);
             // 缓存数据
@@ -269,27 +271,26 @@ public class SceneDataServiceV3 {
         System.out.println("联合计算运行时间: " + durationMs + " ms");
 
         // 2. 计算覆盖度
-        return calculateCoveragePercentage(unionBoundingBox, gridsBoundary);
+        return calculateCoveragePercentage(unionBoundingBox, gridsBoundary).getKey();
     }
     // 计算覆盖度函数
-    public double calculateCoveragePercentage(Geometry boundingBox, Geometry gridsBoundary) {
+    public AbstractMap.SimpleEntry<Double, Geometry> calculateCoveragePercentage(Geometry boundingBox, Geometry gridsBoundary) {
         // 记录开始时间
         long startTime = System.nanoTime();
         if (boundingBox == null || boundingBox.isEmpty() ||
                 gridsBoundary == null || gridsBoundary.isEmpty()) {
-            return 0.0;
+            return new AbstractMap.SimpleEntry<>(0.0, null);
         }
 
         Geometry intersection = boundingBox.intersection(gridsBoundary);
         double coverageArea = intersection.getArea();
         double gridsArea = gridsBoundary.getArea();
-        double CoveragePercentage = coverageArea / gridsArea;
+        double coveragePercentage = coverageArea / gridsArea;
         // 记录结束时间并打印耗时
         long endTime = System.nanoTime();
         long durationMs = TimeUnit.NANOSECONDS.toMillis(endTime - startTime);
         System.out.println("相交计算运行时间: " + durationMs + " ms");
-
-        return CoveragePercentage; // 保留两位小数
+        return new AbstractMap.SimpleEntry<>(coveragePercentage, intersection);
     }
 
     /**
