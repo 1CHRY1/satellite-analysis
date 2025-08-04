@@ -61,13 +61,11 @@ def calc_tile_bounds(x, y, z):
 ####### Router ########################################################################################
 router = APIRouter()
 
-@router.get("/{z}/{x}/{y}")
+@router.get("/{z}/{x}/{y}.png")
 def get_tile(
+    request: Request,
     z: int, x: int, y: int,
     sensorName: str = Query(...),
-    startTime: str = Query(...),
-    endTime: str = Query(...),
-    request: Request = None
 ):
     start_time = time.time()
 
@@ -86,8 +84,6 @@ def get_tile(
         url = "http://192.168.1.127:8999/api/v1/modeling/example/noCloud/createNoCloudConfig"  # 测试使用，记得修改~~~~~~~~~~~~~~~
         data = {
         "sensorName": sensorName,
-        "startTime": startTime,
-        "endTime": endTime,
         "points": points
         }
         json_response = requests.post(url, json=data).json()
