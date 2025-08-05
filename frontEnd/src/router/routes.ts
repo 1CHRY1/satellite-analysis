@@ -81,6 +81,38 @@ export const routes = [
             requiresGuest: true,
         },
     },
+    {
+        isBar: false,
+        path: "/user",
+        name: "个人空间",
+        component: () => import("../components/user/usercenter.vue"),
+        meta: {
+          requireAuth: true,
+        },
+        children: [
+          {
+            isBar: false,
+            path: "",
+            name: "概览",
+            component: () =>
+              import("../components/user/userFunctionCollection/overview.vue"),
+          },
+        //   {
+        //     isBar: false,
+        //     path: "projects",
+        //     name: "我的项目",
+        //     component: () =>
+        //       import(""),
+        //   },
+        //   {
+        //     isBar: false,
+        //     path: "data",
+        //     name: "我的数据",
+        //     component: () =>
+        //       import(""),
+        //   },
+        ],
+      },
     // {
     //     path: '/register',
     //     // @ts-ignore
