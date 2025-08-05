@@ -22,16 +22,22 @@ def process_grid(grid, sensor_name, fetcher, crs, z_level):
         if len(scenes) > 0:
             print(f"处理中... Grid {grid['rowId']}-{grid['columnId']} 包含 {len(scenes)} 个场景")
             grid_mosaic = GridMosaic(grid['coordinates'][0], scenes, crs_id=crs, z_level=z_level)
-            minio_path, bounds, crs_info = grid_mosaic.create_mosaic_with_metadata()
+            result = grid_mosaic.create_mosaic_with_metadata()
             
-            # 返回文件路径和元数据
-            return {
-                'path': minio_path,
-                'bounds': bounds,
-                'crs': crs_info,
-                'grid_coords': grid['coordinates'][0]
-            }
+            if result:
+                minio_path, bounds, crs_info = result
+                # 返回文件路径和元数据
+                return {
+                    'path': minio_path,
+                    'bounds': bounds,
+                    'crs': crs_info,
+                    'grid_coords': grid['coordinates'][0]
+                }
+            else:
+                print(f"❌ Grid {grid['rowId']}-{grid['columnId']} 镶嵌失败")
+                return None
         else:
+            print(f"⚠️ Grid {grid['rowId']}-{grid['columnId']} 没有找到场景")
             return None
     except Exception as e:
         print(f"❌ Error in grid {grid['rowId']}-{grid['columnId']}: {e}")
@@ -73,7 +79,7 @@ def create_mosaicjson_from_metadata(cog_metadata_list, bucket_name, quadkey_zoom
     tiles_map = {}
     
     # 计算全局边界
-    all_bounds = [item['bounds'] for item in cog_metadata_list if item['bounds']]
+    all_bounds = [item['bounds'] for item in cog_metadata_list if item.get('bounds')]
     if not all_bounds:
         raise ValueError("没有有效的边界信息")
     
@@ -88,7 +94,7 @@ def create_mosaicjson_from_metadata(cog_metadata_list, bucket_name, quadkey_zoom
     
     # 使用指定的quadkey_zoom级别创建瓦片映射
     for item in cog_metadata_list:
-        if not item['bounds']:
+        if not item.get('bounds'):
             continue
             
         bounds = item['bounds']
@@ -161,68 +167,101 @@ def upload_mosaicjson(minio_client, bucket_name, mosaic_definition, output_objec
         return False
 
 def main():
+    """
+    主函数，返回上传的MosaicJSON路径
+    """
     grid_res = 150
     crs = 4326
     z_level = 8
 
-    fetcher = SceneFetcher(email="253301116@qq.com", password="123456")
-    fetcher.login()
-    
-    grids_data = fetcher.get_grids(region_id="100000", resolution=grid_res)
-    print(f"网格总数：{len(grids_data)}")
-
-    fetcher.submit_query(
-        start_time="2024-05-01", end_time="2025-06-30", region_id="100000", resolution=grid_res
-    )
-    
-    sensor_name = "GF-1_PMS"
-    
-    start = time.time()
-    futures = [process_grid.remote(grid, sensor_name, fetcher, crs, z_level) for grid in grids_data]
-    results = ray.get(futures)
-    print(f"\n所有格网处理完成，耗时: {time.time() - start:.2f} 秒")
-    
-    # 过滤出成功的结果
-    successful_results = [result for result in results if result is not None]
-    
-    print(f"\n--- 成功处理的COG文件: {len(successful_results)} 个 ---")
-    if successful_results:
-        for result in successful_results:
-            print(f"文件: {result['path']}, 边界: {result['bounds']}")
-    else:
-        print("没有成功生成的COG文件。")
-
-    # 创建和上传MosaicJSON
-    if successful_results:
-        print("\n--- 正在生成 MosaicJSON (无需HTTP请求) ---")
+    try:
+        fetcher = SceneFetcher(email="253301116@qq.com", password="123456")
+        fetcher.login()
         
-        minio_client = Minio(
-            "223.2.34.8:30900",
-            access_key="minioadmin",
-            secret_key="minioadmin",
-            secure=False
+        grids_data = fetcher.get_grids(region_id="100000", resolution=grid_res)
+        print(f"网格总数：{len(grids_data)}")
+
+        fetcher.submit_query(
+            start_time="2024-05-01", end_time="2025-06-30", region_id="100000", resolution=grid_res
         )
         
-        bucket = "temp-files"
-        minio_dir = "national-mosaicjson"
-        mosaic_output_path = f"{minio_dir}/mosaic.json"
+        sensor_name = "GF-1_PMS"
         
-        # 使用元数据直接创建MosaicJSON
-        start_mosaic = time.time()
-        mosaic_definition = create_mosaicjson_from_metadata(
-            successful_results, 
-            bucket,
-            quadkey_zoom=8  # 使用固定的quadkey_zoom级别
-        )
-        print(f"MosaicJSON创建耗时: {time.time() - start_mosaic:.2f} 秒")
+        # 并行处理所有格网
+        start = time.time()
+        futures = [process_grid.remote(grid, sensor_name, fetcher, crs, z_level) for grid in grids_data]
+        results = ray.get(futures)
+        print(f"\n所有格网处理完成，耗时: {time.time() - start:.2f} 秒")
         
-        # 上传MosaicJSON
-        upload_mosaicjson(minio_client, bucket, mosaic_definition, mosaic_output_path)
+        # 过滤出成功的结果
+        successful_results = [result for result in results if result is not None]
         
-        print(f"\n🎉 总共处理了 {len(successful_results)} 个格网")
-        print(f"📊 MosaicJSON 包含 {len(mosaic_definition['tiles'])} 个瓦片映射")
-    else:
-        print("\n由于没有成功的COG文件，跳过MosaicJSON的生成。")
+        print(f"\n--- 成功处理的COG文件: {len(successful_results)} 个 ---")
+        if successful_results:
+            for i, result in enumerate(successful_results, 1):
+                print(f"{i}. 文件: {result['path']}, 边界: {result['bounds']}")
+        else:
+            print("没有成功生成的COG文件。")
+            return None
+
+        # 创建和上传MosaicJSON
+        if successful_results:
+            print("\n--- 正在生成 MosaicJSON (无需HTTP请求) ---")
+            
+            minio_client = Minio(
+                "223.2.34.8:30900",
+                access_key="minioadmin",
+                secret_key="minioadmin",
+                secure=False
+            )
+            
+            bucket = "temp-files"
+            minio_dir = "national-mosaicjson"
+            mosaic_output_path = f"{minio_dir}/mosaic.json"
+            
+            # 使用元数据直接创建MosaicJSON
+            start_mosaic = time.time()
+            mosaic_definition = create_mosaicjson_from_metadata(
+                successful_results, 
+                bucket,
+                quadkey_zoom=8  # 使用固定的quadkey_zoom级别
+            )
+            print(f"MosaicJSON创建耗时: {time.time() - start_mosaic:.2f} 秒")
+            
+            # 上传MosaicJSON
+            upload_success = upload_mosaicjson(minio_client, bucket, mosaic_definition, mosaic_output_path)
+            
+            if upload_success:
+                print(f"\n🎉 总共处理了 {len(successful_results)} 个格网")
+                print(f"📊 MosaicJSON 包含 {len(mosaic_definition['tiles'])} 个瓦片映射")
+                
+                # 返回完整的MinIO路径
+                full_mosaicjson_path = f"{minio_base_url}/{bucket}/{mosaic_output_path}"
+                print(f"🔗 MosaicJSON 路径: {full_mosaicjson_path}")
+                return full_mosaicjson_path
+            else:
+                print("❌ MosaicJSON上传失败")
+                return None
+        else:
+            print("\n由于没有成功的COG文件，跳过MosaicJSON的生成。")
+            return None
+    
+    except Exception as e:
+        print(f"❌ 主程序执行失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+    
+    finally:
+        # 清理Ray资源
+        try:
+            ray.shutdown()
+        except:
+            pass
 
 if __name__ == "__main__":
-    main()
+    mosaic_path = main()
+    if mosaic_path:
+        print(f"\n✅ 程序执行完成，MosaicJSON路径: {mosaic_path}")
+    else:
+        print("\n❌ 程序执行失败或没有生成MosaicJSON")
