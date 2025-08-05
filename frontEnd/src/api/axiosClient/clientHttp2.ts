@@ -4,7 +4,7 @@ import ezStore from '@/store/ezStore'
 import router from '@/router'
 import { useUserStore } from '@/store/userStore'
 
-const userStore = useUserStore()
+
 
 class HttpClient {
     private instance: AxiosInstance
@@ -46,7 +46,9 @@ class HttpClient {
                     const refreshToken = localStorage.getItem('refreshToken')
                     if (!refreshToken) {
                         // 没有 refreshToken，跳转登录页
+                        const userStore = useUserStore()
                         userStore.logout()
+                        message.warning('登录已过期，请重新登录')
                         router.push('/home')
                         return Promise.reject(error)
                     }
