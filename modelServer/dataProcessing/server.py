@@ -7,7 +7,11 @@ import ray
 
 # 初始化ray
 def init_ray():
-    try:
+    if ray.is_initialized():
+        print("Ray已经初始化，跳过重复初始化")
+        return
+    
+    try:    
         ray.init(
             address='auto',
             # 可预留内存：12GB（约60%）
@@ -15,20 +19,20 @@ def init_ray():
             _memory=CONFIG.RAY_MEMORY,
             
             # 启用资源隔离（推荐）
-            enable_resource_isolation=True,
+            # enable_resource_isolation=True,
             
             # 系统预留内存：2GB
             # Ray系统进程预留内存，剩余内存约2GB给系统
-            system_reserved_memory=CONFIG.RAY_SYSTEM_RESERVED_MEMORY,
-            system_reserved_cpu=CONFIG.RAY_SYSTEM_RESERVED_CPU,  # 至少 0.5
+            # system_reserved_memory=CONFIG.RAY_SYSTEM_RESERVED_MEMORY,
+            # system_reserved_cpu=CONFIG.RAY_SYSTEM_RESERVED_CPU,  # 至少 0.5
         )
         # ray.init(address='auto')
         for node in ray.nodes():
             print(node)
         print("Connected to existing Ray cluster")
     except ConnectionError:
-        ray.init()
-        print("Started new Ray Head Node")
+        ray.init(num_cpus=CONFIG.RAY_NUM_CPUS, ignore_reinit_error=True)
+        print(f"Started new Ray Head Node with {CONFIG.RAY_NUM_CPUS} CPUs")
 
 ######################################################################
 app = create_app()
