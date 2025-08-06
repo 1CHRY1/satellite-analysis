@@ -131,15 +131,29 @@ def calc_no_cloud_complex():
     return api_response(data={'taskId': task_id})
 
 
-# ==================== 新增的镶嵌任务路由 ====================
+# ==================== 全国范围可视化Mosaic数据加载 ====================
 
 @bp.route(CONFIG.API_VERSION + '/mosaic/create', methods=['POST'])
-def create_mosaic():
+def create_mosaic_with_query_param():
     """
-    创建镶嵌任务
+    创建镶嵌任务 - sensor_name作为查询参数
+    URL示例: /v0/mosaic/create?sensor_name=GF-1_PMS
     """
     scheduler = init_scheduler()
     data = request.json or {}
+    
+    # 从查询参数获取sensor_name
+    sensor_name = request.args.get('sensor_name')
+    if not sensor_name:
+        return api_response(
+            code=400,
+            message="缺少必要参数: sensor_name (查询参数)",
+            data=None
+        )
+    
+    # 添加到数据中
+    data['sensor_name'] = sensor_name
+    print(f"从查询参数获取sensor_name: {sensor_name}")
     
     # 验证必要参数
     required_fields = ['email', 'password']
@@ -153,13 +167,13 @@ def create_mosaic():
     
     try:
         task_id = scheduler.start_task('low_level_mosaic', data)
-        print(f"创建镶嵌任务: {task_id}, 参数: {data}")
+        print(f"创建镶嵌任务: {task_id}, sensor_name: {sensor_name}, 参数: {data}")
         return api_response(
             code=200,
-            message="镶嵌任务已启动，请使用taskId查询任务状态",
+            message=f"镶嵌任务已启动，传感器: {sensor_name}",
             data={
                 'taskId': task_id,
-                'message': '镶嵌任务已启动，请使用taskId查询任务状态'
+                'sensor_name': sensor_name,
             }
         )
     except Exception as e:
@@ -217,6 +231,7 @@ def get_mosaic_status(task_id):
             response_data['cog_count'] = result.get('cog_count')
             response_data['tile_count'] = result.get('tile_count')
             response_data['processing_time'] = result.get('processing_time')
+            response_data['sensor_name'] = result.get('sensor_name', 'Unknown')  # 添加sensor_name信息
             print(f"镶嵌任务 {task_id} 完成: {result.get('message')}")
             return api_response(
                 code=200,
@@ -303,6 +318,7 @@ def list_mosaic_tasks():
                 task_info.update({
                     'success': result.get('success', False),
                     'mosaicjson_path': result.get('mosaicjson_path'),
+                    'sensor_name': result.get('sensor_name', 'Unknown'),  # 添加sensor_name信息
                     'cog_count': result.get('cog_count', 0),
                     'processing_time': result.get('processing_time', 0)
                 })
