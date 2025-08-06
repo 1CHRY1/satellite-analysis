@@ -212,7 +212,7 @@ config = {
     'k8s': DevK8SConfig,
     'vmod':VmodConfig,
     'hxf':hxfConfig,
-    'zzw':zzwConfig  # 添加zzw配置
+    'zzw':zzwConfig
 }
 
 def get_config(profile=None):
