@@ -4,6 +4,7 @@ import os
 from dataProcessing.config import current_config as CONFIG
 from dataProcessing.app.resTemplate import api_response
 from dataProcessing.model.scheduler import init_scheduler
+import ray
 
 # 使用函数获取MINIO_ENDPOINT
 def get_minio_endpoint():
@@ -130,6 +131,70 @@ def calc_no_cloud_complex():
     task_id = scheduler.start_task('calc_no_cloud_complex', data)
     return api_response(data={'taskId': task_id})
 
+
+# ==================== 调试路由 ====================
+@bp.route('/test/task', methods=['POST'])
+def create_test_task():
+    """创建测试任务"""
+    scheduler = init_scheduler()
+    data = request.json or {}
+    
+    # 设置默认持续时间
+    if 'duration' not in data:
+        data['duration'] = 5
+    
+    try:
+        task_id = scheduler.start_task('test', data)
+        print(f"创建测试任务: {task_id}, 参数: {data}")
+        return api_response(
+            code=200,
+            message="测试任务已创建",
+            data={'taskId': task_id}
+        )
+    except Exception as e:
+        print(f"创建测试任务失败: {str(e)}")
+        return api_response(
+            code=500,
+            message=f"创建测试任务失败: {str(e)}",
+            data=None
+        )
+
+# ==================== 调试路由 ====================
+@bp.route('/debug/scheduler', methods=['GET'])
+def debug_scheduler():
+    """调试路由：查看调度器状态"""
+    scheduler = init_scheduler()
+    
+    # 获取所有队列的大小
+    pending_size = scheduler.pending_queue.qsize()
+    running_size = scheduler.running_queue.qsize()
+    complete_size = scheduler.complete_queue.qsize()
+    error_size = scheduler.error_queue.qsize()
+    
+    # 获取所有任务状态
+    task_statuses = {}
+    for task_id, status in scheduler.task_status.items():
+        task_info = scheduler.task_info.get(task_id)
+        task_class = task_info.__class__.__name__ if task_info else "Unknown"
+        task_statuses[task_id] = {
+            'status': status,
+            'task_type': task_class
+        }
+    
+    # 检查调度器线程是否存活
+    scheduler_thread_alive = scheduler.scheduler_thread.is_alive() if hasattr(scheduler, 'scheduler_thread') else False
+    
+    return jsonify({
+        'queues': {
+            'pending': pending_size,
+            'running': running_size,
+            'complete': complete_size,
+            'error': error_size
+        },
+        'tasks': task_statuses,
+        'scheduler_thread_alive': scheduler_thread_alive,
+        'ray_initialized': ray.is_initialized()
+    })
 
 # ==================== 全国范围可视化Mosaic数据加载 ====================
 

@@ -12,6 +12,7 @@ import io
 from rasterio.crs import CRS
 from rio_cogeo.cogeo import cog_translate
 from rio_cogeo.profiles import cog_profiles
+from dataProcessing.config import current_config as CONFIG
 
 class GridMosaic:
     def __init__(self, grid_bbox, scene_list, crs_id, z_level):
@@ -19,18 +20,18 @@ class GridMosaic:
         self.scene_list = scene_list
         self.final_image = None
         self.final_metadata = None
-        self.minio_endpoint = "http://223.2.34.8:30900"
+        self.minio_endpoint = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}"
         self.crs_id = CRS.from_epsg(crs_id)
         self.target_res = self.resolution_from_zoom(z_level)
 
-        # MinIO configuration
+        # MinIO configuration - 使用统一配置
         self.minio_client = Minio(
-            "223.2.34.8:30900",
-            access_key="minioadmin",
-            secret_key="minioadmin",
-            secure=False
+            f"{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}",
+            access_key=CONFIG.MINIO_ACCESS_KEY,
+            secret_key=CONFIG.MINIO_SECRET_KEY,
+            secure=CONFIG.MINIO_SECURE
         )
-        self.minio_bucket = "temp-files"
+        self.minio_bucket = CONFIG.MINIO_TEMP_FILES_BUCKET
         self.minio_dir = "national-mosaicjson"
 
     def get_lowest_resolution_overview(self, scene) -> ImageData:
@@ -109,4 +110,138 @@ class GridMosaic:
         minio_object_name = f"{self.minio_dir}/{self.grid_bbox[0][0]}_{self.grid_bbox[0][1]}.tif"
         
         # 调用上传函数
-        success = self.upload_cog
+        success = self.upload_cog_to_minio(mosaic, out_meta, self.minio_bucket, minio_object_name)
+        
+        if success:
+            # 从out_meta中提取边界信息
+            bounds = self.extract_bounds_from_metadata(out_meta)
+            crs_info = out_meta.get('crs', self.crs_id).to_string()
+            
+            print(f"✅ Successfully uploaded mosaic to minio://{self.minio_bucket}/{minio_object_name}")
+            print(f"📍 Bounds: {bounds}")
+            
+            return minio_object_name, bounds, crs_info
+        else:
+            print(f"❌ Failed to upload mosaic")
+            return None
+
+    def extract_bounds_from_metadata(self, metadata):
+        """
+        从rasterio metadata中提取地理边界
+        """
+        transform = metadata.get('transform')
+        width = metadata.get('width')
+        height = metadata.get('height')
+        
+        if transform and width and height:
+            # 计算四个角的坐标
+            left, top = transform * (0, 0)
+            right, bottom = transform * (width, height)
+            
+            # 返回 [west, south, east, north] 格式
+            return [left, bottom, right, top]
+        else:
+            # 如果无法从metadata提取，则使用grid的边界
+            return self.extract_bounds_from_grid(self.grid_bbox)
+
+    def mosaic_by_rasterIO(self, img_list):
+        rio_dataset_list = []
+        out_meta = None
+        for img in img_list:
+            memory_file = io.BytesIO()
+            # 必须写nodata，否则会多出一个alpha波段
+            img.to_raster(memory_file, nodata=0)
+            memory_file.seek(0)
+            src = rasterio.open(memory_file)
+            rio_dataset_list.append(src)
+            if out_meta is None:
+                out_meta = src.meta.copy()
+
+        bounds = self.extract_bounds_from_grid(self.grid_bbox)
+        mosaic, out_trans = merge(sources=rio_dataset_list, bounds=bounds, res=self.target_res, nodata=0, method="max")
+        out_meta.update({
+            "driver": "GTiff",
+            "height": mosaic.shape[1],
+            "width": mosaic.shape[2],
+            "transform": out_trans,
+            "crs": self.crs_id  # 确保CRS信息被保存
+        })
+
+        for src in rio_dataset_list:
+            src.close()
+        return mosaic, out_meta
+
+    # --- 修改上传函数，返回成功/失败状态 ---
+    def upload_cog_to_minio(self, mosaic_data, metadata, bucket_name, object_name, blocksize=256):
+        """
+        将镶嵌结果转换为COG格式, 并作为字节流直接上传到MinIO.
+        返回是否成功
+        """
+        try:
+            cog_profile = cog_profiles.get("deflate")
+            cog_profile.update({
+                "blockxsize": blocksize,
+                "blockysize": blocksize,
+                "compress": "deflate",
+                "tiled": True,
+                "nodata": 0,
+                "driver": "GTiff"
+            })
+
+            # 步骤 1: 创建一个临时的内存Tiff文件
+            with MemoryFile() as mem_tiff:
+                with mem_tiff.open(**metadata) as dataset:
+                    dataset.write(mosaic_data)
+                    
+                # 步骤 2: 将内存Tiff转换为内存COG
+                with MemoryFile() as mem_cog:
+                    cog_translate(
+                        mem_tiff,
+                        mem_cog.name, # cog_translate需要一个路径，这里使用内存文件的虚拟路径
+                        dst_kwargs=cog_profile,
+                        in_memory=True, # 关键参数：确保转换过程在内存中
+                        quiet=True,
+                    )
+                    
+                    # 步骤 3: 从内存COG中读取字节流并上传
+                    cog_bytes = mem_cog.read()
+                    
+            # 检查存储桶是否存在，如果不存在则创建
+            found = self.minio_client.bucket_exists(bucket_name)
+            if not found:
+                self.minio_client.make_bucket(bucket_name)
+                print(f"Bucket '{bucket_name}' created.")
+
+            # 将字节流上传到 MinIO
+            self.minio_client.put_object(
+                bucket_name=bucket_name,
+                object_name=object_name,
+                data=io.BytesIO(cog_bytes), # 将字节数据包装成BytesIO对象
+                length=len(cog_bytes),
+                content_type='image/tiff'
+            )
+            return True
+            
+        except Exception as e:
+            print(f"❌ 上传COG失败: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
+
+    def extract_bounds_from_grid(self, grid):
+        longitudes = [x[0] for x in grid]
+        latitudes = [x[1] for x in grid]
+        return (min(longitudes), min(latitudes), max(longitudes), max(latitudes))
+
+    def resolution_from_zoom(self, z: int, tile_size: int = 256) -> float:
+        return 360.0 / (tile_size * (2 ** z))
+
+    def get_image_size_from_grid(self, grid_coords: list, resolution: float, crs_is_wgs84: bool = True):
+        lons = [pt[0] for pt in grid_coords]
+        lats = [pt[1] for pt in grid_coords]
+        xmin, xmax = min(lons), max(lons)
+        ymin, ymax = min(lats), max(lats)
+        x_res, y_res = resolution, resolution
+        width = int(round((xmax - xmin) / x_res))
+        height = int(round((ymax - ymin) / y_res))
+        return width, height

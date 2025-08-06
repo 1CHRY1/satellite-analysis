@@ -36,6 +36,8 @@ class LowLevelMosaicTask(Task):
 
     def run(self):
         """执行镶嵌任务"""
+        print(f"[LowLevelMosaicTask] 任务 {self.task_id} 开始执行")
+        print(f"[LowLevelMosaicTask] 参数: sensor_name={self.sensor_name}, grid_res={self.grid_res}, crs={self.crs}")
         try:
             # 验证必要参数
             if not self.email or not self.password:
@@ -48,12 +50,15 @@ class LowLevelMosaicTask(Task):
             
             # 使用配置文件中的Ray设置初始化
             if not ray.is_initialized():
+                print(f"[LowLevelMosaicTask] 任务 {self.task_id}: Ray未初始化，正在初始化...")
                 ray.init(
                     num_cpus=CONFIG.RAY_NUM_CPUS,
                     object_store_memory=CONFIG.RAY_OBJECT_STORE_MEMORY,
                     ignore_reinit_error=True
                 )
-                print(f"任务 {self.task_id}: Ray已初始化，CPU数: {CONFIG.RAY_NUM_CPUS}")
+                print(f"[LowLevelMosaicTask] 任务 {self.task_id}: Ray已初始化，CPU数: {CONFIG.RAY_NUM_CPUS}")
+            else:
+                print(f"[LowLevelMosaicTask] 任务 {self.task_id}: Ray已经初始化，跳过初始化")
             
             # 创建场景获取器并登录
             fetcher = SceneFetcher(email=self.email, password=self.password)
