@@ -173,6 +173,7 @@ def main():
     grid_res = 150
     crs = 4326
     z_level = 8
+    minio_base_url = "http://223.2.34.8:30900"
 
     try:
         fetcher = SceneFetcher(email="253301116@qq.com", password="123456")
