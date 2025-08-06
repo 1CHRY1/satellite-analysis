@@ -12,3 +12,7 @@ export async function login(userInfo: any): Promise<any> {
 export async function getUsers(userId: any): Promise<any> {
     return http.get<any>(`user/description/userId/${userId}`)
 }
+
+export async function getUserUpdate(param: any): Promise<any> {
+    return http.post<any>(`user/update`, param)
+}

@@ -1,10 +1,10 @@
 <template>
     <div class="relative flex flex-1 h-full flex-row bg-black ">
         <subtitle class="z-10 absolute" style="margin-top: 60px; "/>
-        <div class="absolute  left-16  top-0  p-4 text-gray-200 z-10  " :class="isToolbarOpen? 'w-[20vw]' : 'w-16'" style="margin-top: 100px; ">
+        <div class="absolute  left-16  top-0  p-4 text-gray-200 z-10 h-[1089px] " :class="isToolbarOpen? 'w-[20vw]' : 'w-16'" style="margin-top: 100px; ">
             <button 
                 @click="isToolbarOpen = !isToolbarOpen"
-                class="absolute top-1/3 right-0 -translate-y-1/2 h-12 w-6 bg-gray-800 hover:bg-gray-700 text-white rounded-r-lg shadow-lg 
+                class="absolute top-1/2 right-0 -translate-y-1/2 h-12 w-6 bg-gray-800 hover:bg-gray-700 text-white rounded-r-lg shadow-lg 
                  items-center justify-center transition-all z-10"
                 :class="{ '!bg-blue-600': isToolbarOpen }"
             >
@@ -15,7 +15,7 @@
                 />
             </button>               
             <div v-show="isToolbarOpen" 
-                 class="h-[989px] w-full bg-gray-800 shadow-lg transition-all duration-300 overflow-hidden 
+                 class="h-[1089px] w-full bg-gray-800 shadow-lg transition-all duration-300 overflow-hidden 
                  flex flex-col flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 
                  "
                  style="background-color: rgba(20, 20, 21, 0.6);"

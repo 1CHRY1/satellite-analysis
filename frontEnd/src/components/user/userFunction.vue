@@ -19,7 +19,7 @@
             <font-awesome-icon :icon="['far', 'eye']" />
             {{ t("userpage.userFunction.overview") }}
           </router-link>
-          <!-- <router-link
+           <router-link
             to="/user/projects"
             class="text-lg font-semibold mr-10"
             :class="[
@@ -32,7 +32,7 @@
           >
             <font-awesome-icon :icon="['fas', 'bars-progress']" />
             {{ t("userpage.userFunction.projects") }}
-          </router-link> -->
+          </router-link> 
           <!-- <router-link
             to="/user/data"
             class="text-lg font-semibold"
