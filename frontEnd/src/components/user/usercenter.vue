@@ -46,9 +46,12 @@
                 </div>
               </div>
             </el-upload>
-            <h1 class="text-2xl font-bold">{{ data.name }}</h1>
+            <h1 class="text-2xl font-bold text-black">{{ data.name }}</h1>
             <h2 class="text-lg text-gray-600">
               {{ data.email }}
+            </h2>
+            <h2 class="text-lg text-gray-600">
+            组织： {{ data.organization }}
             </h2>
             <p class="text-center text-gray-600" v-if="data.introduction">
               {{ data.introduction }}
@@ -88,6 +91,12 @@
       <el-form-item label="邮箱" :label-width="formLabelWidth">
           <el-input v-model="data.email" autocomplete="off" />
         </el-form-item>
+      <el-form-item label="称呼" :label-width="formLabelWidth">
+          <el-input v-model="data.title" autocomplete="off" />
+        </el-form-item>
+      <el-form-item label="组织" :label-width="formLabelWidth">
+          <el-input v-model="data.organization" autocomplete="off" />
+        </el-form-item>
       <el-form-item label="自我介绍" :label-width="formLabelWidth">
         <el-input
           v-model="updateForm.introduction"
@@ -119,6 +128,7 @@ import { ref, reactive } from "vue";
 import userFunction from "@/components/user/userFunction.vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
+import { getUserUpdate } from '@/api/http/user';
 
 const router = useRouter();
 const useUser = useUserStore()
@@ -127,12 +137,17 @@ const data = reactive({
   avatar: "",
   name: useUser.user.name,
   email: useUser.user.email,
+  title: useUser.user.title,
+  organization:useUser.user.organization,
   introduction: "",
 });
 
 // 更新表单数据
 const updateForm = reactive({
   name: "",
+  email: "",
+  title: "",
+  organization:"",
   introduction: "",
 });
 
@@ -161,6 +176,9 @@ function beforeUploadAvatar(file: File) {
 function opendialog() {
   dialogFormVisible.value = true;
   updateForm.name = data.name;
+  updateForm.email = data.email;
+  updateForm.title = data.title;
+  updateForm.organization = data.organization;
   updateForm.introduction = data.introduction;
 }
 
@@ -171,12 +189,27 @@ function logout() {
 }
 
 // 更新用户信息
-function updateUserInfo() {
-  data.name = updateForm.name;
-  data.introduction = updateForm.introduction;
-  dialogFormVisible.value = false;
-  ElMessage.success("信息已更新");
-}
+const updateUserInfo = async() => {
+  let updata = {
+    name: useUser.user.name,
+    email: useUser.user.email,
+    title: useUser.user.title,
+    organization:useUser.user.organization,
+    introduction: updateForm.introduction,
+  };
+  console.log(updata);
+  let res = await getUserUpdate(updata)
+    if (res.code == 0) {
+      ElMessage.success("更新成功");
+      data.name = res.data.name;
+      data.introduction = res.data.introduction;
+      dialogFormVisible.value = false;
+    } else {
+      ElMessage.error(res.message);
+      dialogFormVisible.value = false;
+    }
+  ;
+};
 </script>
 
 <style>

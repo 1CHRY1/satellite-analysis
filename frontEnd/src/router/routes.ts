@@ -97,13 +97,13 @@ export const routes = [
             component: () =>
               import("../components/user/userFunctionCollection/overview.vue"),
           },
-        //   {
-        //     isBar: false,
-        //     path: "projects",
-        //     name: "我的项目",
-        //     component: () =>
-        //       import(""),
-        //   },
+          {
+            isBar: false,
+            path: "projects",
+            name: "我的项目",
+            component: () =>
+              import("../components/user/userFunctionCollection/userProject.vue"),
+          },
         //   {
         //     isBar: false,
         //     path: "data",
