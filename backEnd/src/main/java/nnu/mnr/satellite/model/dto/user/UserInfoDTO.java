@@ -17,9 +17,11 @@ import java.util.HashSet;
 public class UserInfoDTO {
 
     private String userId;
+    private String userName;
     private String phone;
     private String province;
     private String city;
+    private String email;
     private String title;
     private String organization;
     private String introduction;
