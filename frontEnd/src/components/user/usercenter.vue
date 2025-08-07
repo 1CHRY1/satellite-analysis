@@ -12,11 +12,11 @@
               v-model:file-list="fileList_ava"
               :show-file-list="false"
               class="upload-demo relative"
-              action=""
               accept="image/jpg,image/jpeg,image/png"
               :limit="1"
               :before-upload="beforeUploadAvatar"
               :auto-upload="true"
+              :http-request="uploadAvatar"
             >
               <div class="relative w-48 h-48">
                 <img
@@ -161,12 +161,13 @@ const {t} = useI18n()
 
 import { useUserStore } from '@/store';
 import userAvatar from "@/assets/image/avator.png";
-import { ref, reactive } from "vue";
+import { ref, reactive , onMounted} from "vue";
 import userFunction from "@/components/user/userFunction.vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { userUpdate, getUsers , changePassword} from '@/api/http/user';
 import { RegionSelects } from 'v-region'
+import { avaterUpdate, getAvatar } from '@/api/http/user'
 
 const router = useRouter();
 const userStore = useUserStore()
@@ -218,6 +219,52 @@ function beforeUploadAvatar(file: File) {
   }
   return true;
 }
+
+//头像更新
+const uploadAvatar = async (option: any) => {
+  const formData = new FormData();
+  formData.append("userId", userStore.user.id);
+  formData.append("userName", userStore.user.name);
+  formData.append("file", option.file); // binary file
+
+  try {
+    const res = await avaterUpdate(formData);
+    if (res.status === 1) {
+      ElMessage.success("头像上传成功");
+
+      // 更新头像展示路径
+      data.avatar = "http://223.2.34.8:30900/" + res.data.avatarPath;
+
+      // 更新 Store（可选）
+      userStore.updateUser({
+        ...userStore.user,
+        avatar: res.data.avatarPath,
+      });
+    } else {
+      ElMessage.error(res.message || "上传失败");
+    }
+  } catch (err) {
+    console.error(err);
+    ElMessage.error("上传异常");
+  }
+};
+
+//获取头像
+
+async function fetchAvatar(userId: string) {
+  try {
+    const res = await getAvatar(userId);
+    if (res.status === 1 && res.data.avatarPath) {
+      data.avatar = `http://223.2.34.8:30900/${res.data.avatarPath}`
+    } else {
+      data.avatar = '';
+    }
+  } catch (error) {
+    console.error('获取头像失败', error);
+    data.avatar = '';
+  }
+}
+
 
 // 打开编辑对话框
 function opendialog() {
@@ -308,6 +355,10 @@ const updateUserInfo = async() => {
     }
   ;
 };
+
+onMounted(async () => {
+  await fetchAvatar(userStore.user.id);
+});
 </script>
 
 <style scoped>
