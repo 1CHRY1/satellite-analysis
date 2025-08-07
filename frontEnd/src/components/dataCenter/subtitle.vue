@@ -36,7 +36,7 @@ const router = useRouter()
     height: min-content; 
     background: transparent;
     padding: 0;
-    overflow: hidden
+    overflow: hidden;
     }
 
 .button {
