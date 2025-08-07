@@ -1,7 +1,9 @@
 package nnu.mnr.satellite.mapper.user;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import nnu.mnr.satellite.model.dto.user.UserInfoDTO;
 import nnu.mnr.satellite.model.po.user.User;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 

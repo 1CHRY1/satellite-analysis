@@ -44,4 +44,6 @@ public class User {
     private HashSet<String> joinedProjects;
     private HashSet<String> createdProjects;
 
+    private String avatarPath;
+
 }
