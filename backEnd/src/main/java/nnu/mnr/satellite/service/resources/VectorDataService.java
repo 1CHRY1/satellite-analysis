@@ -1,19 +1,23 @@
 package nnu.mnr.satellite.service.resources;
 
+import com.baomidou.dynamic.datasource.annotation.DS;
 import nnu.mnr.satellite.cache.SceneDataCache;
 import nnu.mnr.satellite.mapper.resources.IVectorRepo;
 import nnu.mnr.satellite.model.dto.resources.VectorsFetchDTO;
 import nnu.mnr.satellite.model.dto.resources.VectorsLocationFetchDTO;
 import nnu.mnr.satellite.model.po.resources.Region;
 import nnu.mnr.satellite.model.vo.resources.VectorInfoVO;
+import nnu.mnr.satellite.model.vo.resources.VectorTypeVO;
 import org.locationtech.jts.geom.Geometry;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.regex.Pattern;
 
 import static nnu.mnr.satellite.utils.geom.TileCalculateUtil.getTileGeomByIdsAndResolution;
+
 
 @Service("VectorDataService")
 public class VectorDataService {
@@ -25,6 +29,8 @@ public class VectorDataService {
     IVectorRepo vectorRepo;
     @Autowired
     LocationService locationService;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     public List<VectorInfoVO> getVectorByTimeAndRegion(VectorsFetchDTO vectorsFetchDTO) {
         String startTime = vectorsFetchDTO.getStartTime();
@@ -45,29 +51,41 @@ public class VectorDataService {
         return vectorRepo.getVectorsDesByTimeAndGeometry(startTime, endTime, wkt);
     }
 
-    public byte[] getVectorByRegionAndTableName(String tableName, int z, int x, int y, String cacheKey){
+    public List<VectorTypeVO> getVectorTypeByTableName(String tableName){
+        return vectorRepo.getVectorTypeByTableName(tableName);
+    }
+
+    public byte[] getVectorByRegionAndTableName(String tableName, int z, int x, int y, String cacheKey, Integer type){
         SceneDataCache.UserRegionInfoCache userRegionInfoCache = SceneDataCache.getUserRegionInfoCacheMap(cacheKey);
         Geometry gridBoundary = userRegionInfoCache.gridsBoundary;
         String wkt = gridBoundary.toText();
-        return getMvtTile(tableName, wkt, z, x, y);
+        return getMvtTile(tableName, wkt, z, x, y, type);
     }
 
-    public byte[] getVectorByLocationAndTableName(String locationId, Integer resolution, String tableName, int z, int x, int y){
+    public byte[] getVectorByLocationAndTableName(String locationId, Integer resolution, String tableName, int z, int x, int y, Integer type){
         String wkt = locationService.getLocationBoundary(resolution, locationId).toText();
-        return getMvtTile(tableName, wkt, z, x, y);
+        return getMvtTile(tableName, wkt, z, x, y, type);
     }
 
-    public byte[] getVectorByGridResolutionAndTableName(Integer columnId, Integer rowId, Integer resolution, String tableName, int z, int x, int y){
+    public byte[] getVectorByGridResolutionAndTableName(Integer columnId, Integer rowId, Integer resolution, String tableName, int z, int x, int y, Integer type){
         String wkt = getTileGeomByIdsAndResolution(rowId,  columnId, resolution).toString();
-        return getMvtTile(tableName, wkt, z, x, y);
+        return getMvtTile(tableName, wkt, z, x, y, type);
     }
 
     // 获取矢量数据并发布成瓦片服务
-    public byte[] getMvtTile(String tableName, String wkt, int z, int x, int y){
+    @DS("pg_satellite")
+    public byte[] getMvtTile(String tableName, String wkt, int z, int x, int y, Integer type){
         // 参数校验，防止sql注入
         validateParams(tableName, z, x, y);
+        // 查询表的非几何字段列表（排除 'geom' 字段）
+        List<String> columns = jdbcTemplate.queryForList(
+                "SELECT column_name FROM information_schema.columns " +
+                        "WHERE table_schema = 'gis_db' AND table_name = ? AND column_name != 'geom'",
+                String.class,
+                tableName
+        );
         // 调用Mapper查询MVT数据
-        Object mvtResult = vectorRepo.getVectorByTableNameAndGeometry(tableName, wkt, z, x, y);
+        Object mvtResult = vectorRepo.getVectorByTableNameAndGeometry(tableName, wkt, z, x, y, columns, type);
         // 类型转换与返回
         if (mvtResult instanceof byte[]) {
             return (byte[]) mvtResult;
