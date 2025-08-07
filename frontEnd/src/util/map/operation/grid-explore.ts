@@ -56,8 +56,8 @@ export function map_addGridDEMLayer(
 export function map_destroyGridDEMLayer(gridInfo: GridData) {
     const prefix = gridInfo.rowId + '_' + gridInfo.columnId
     const gridDEMLayerMap = ezStore.get('grid-dem-layer-map')
-
     mapManager.withMap((m) => {
+        m.setTerrain(null)  
         for (let key of gridDEMLayerMap.keys()) {
             if (key.includes(prefix)) { 
                 const oldId = key

@@ -282,7 +282,7 @@ export function map_addSceneLayer(url: string) {
             type: 'raster',
             tiles: [url],
             tileSize: 256,
-            minzoom: 6,
+            minzoom: 9,
             maxzoom: 22,
         })
 

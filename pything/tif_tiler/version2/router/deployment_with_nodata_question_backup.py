@@ -15,6 +15,7 @@ from contextvars import ContextVar
 
 MINIO_ENDPOINT = "http://" + minio_config['endpoint']
 
+# region 工具函数
 def normalize(arr, min_val=0, max_val=5000):
     arr = np.nan_to_num(arr)
     arr = np.clip((arr - min_val) / (max_val - min_val), 0, 1)
@@ -59,7 +60,7 @@ def read_band(x, y, z, bucket_path, band_path, nodata_int):
     except Exception as e:
         logger.error(f"无法读取文件 {full_path}: {str(e)}")
         return None
-
+# endregion
 
 router = APIRouter()
 @router.get("/{z}/{x}/{y}.png")
@@ -69,9 +70,12 @@ def get_tile(
     sensorName: str = Query(...),
 ):
     try:
+        # region 获取tile的边界
         tile_bound = calc_tile_bounds(x, y, z)
         points = tile_bound['bbox']
+        # endregion
 
+        # region 参数配置
         url = common_config['create_no_cloud_config_url']
         data = {
             "sensorName": sensorName,
@@ -86,7 +90,9 @@ def get_tile(
         cookie = request.headers.get('Cookie')
         if cookie:
             headers['Cookie'] = cookie
+        # endregion
 
+        # region 获取scenes和bandMapper
         json_response = requests.post(url, json=data, headers=headers).json()
 
         if not json_response:
@@ -101,20 +107,23 @@ def get_tile(
 
         if not json_data:
             return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
+        # endregion
         
+        # region 完全覆盖tile的景的列表
         full_coverage_scenes = [scene for scene in json_data if float(scene.get('coverage', 0)) >= 0.999]
+        # endregion
 
+        # region 选择要处理的景
         if full_coverage_scenes:
             sorted_full_coverage = sorted(full_coverage_scenes, key=lambda x: float(x.get('cloud', 0)))
             scenes_to_process = [sorted_full_coverage[0]]
             use_single_scene = True
         else:
-            if z > 12:
-                scenes_to_process = json_data[:10]
-            else:
-                scenes_to_process = json_data[:]
+            scenes_to_process = json_data[:10]
             use_single_scene = False
-        
+        # endregion
+
+        # region 获取RGB三波段的路径
         scene_band_paths = {}
         bandList = ['Red', 'Green', 'Blue']
 
@@ -146,7 +155,9 @@ def get_tile(
                             bands[band] = paths['band_3']
 
             scene_band_paths[scene['sceneId']] = bands
-        
+        # endregion
+
+        # region 初始化
         target_H, target_W = 256, 256
         img_r = np.full((target_H, target_W), 0, dtype=np.uint8)
         img_g = np.full((target_H, target_W), 0, dtype=np.uint8)
@@ -156,7 +167,9 @@ def get_tile(
         total_cloud_mask = np.zeros((target_H, target_W), dtype=bool)
 
         filled_ratio = 0.0
+        # endregion
 
+        # region 处理每个景
         for scene in scenes_to_process:
             if 'SAR' in sensorName:
                 continue
@@ -241,7 +254,9 @@ def get_tile(
                 break
             elif filled_ratio >= 0.95:
                 break
-        
+        # endregion
+
+        # region 渲染
         img = np.stack([img_r, img_g, img_b])
 
         transparent_mask = need_fill_mask | total_cloud_mask
@@ -249,6 +264,6 @@ def get_tile(
 
         content = render(img, mask=alpha_mask, img_format="png", **img_profiles.get("png"))
         return Response(content=content, media_type="image/png")
-    
+        # endregion
     except Exception as e:
         return Response(content=TRANSPARENT_CONTENT, media_type="image/png")

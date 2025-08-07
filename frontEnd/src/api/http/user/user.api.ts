@@ -12,3 +12,11 @@ export async function login(userInfo: any): Promise<any> {
 export async function getUsers(userId: any): Promise<any> {
     return http.get<any>(`user/description/userId/${userId}`)
 }
+
+export async function userUpdate(userId: any, param: any ): Promise<any> {
+    return http.put<any>(`user/description/userId/${userId}`,param)
+}
+
+export async function changePassword(userId: any, param:any): Promise<any> {
+    return http.put<any>(`user/password/userId/${userId}`,param)
+} 

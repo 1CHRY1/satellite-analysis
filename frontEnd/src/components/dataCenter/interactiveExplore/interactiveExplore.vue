@@ -47,7 +47,7 @@
                                 </div>
                                 <div v-show="isExpand" class="section-content flex-col !items-start">
                                     <div class="config-container">
-                                        <div class="config-item">
+                                        <div class="config-item" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
                                             <div class="config-label relative">
                                                 <MapIcon :size="16" class="config-icon" />
                                                 <span>空间位置</span>
@@ -78,7 +78,7 @@
                                         </div>
                                     </div>
                                     <div class="config-container">
-                                        <div class="config-item">
+                                        <div class="config-item" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
                                             <div class="config-label relative">
                                                 <BoltIcon :size="16" class="config-icon" />
                                                 <!-- 格网分辨率 -->
@@ -110,7 +110,7 @@
                                         </button> -->
                                     </div>
                                     <div class="config-container">
-                                        <div class="config-item">
+                                        <div class="config-item" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
                                             <div class="config-label relative">
                                                 <CalendarIcon :size="16" class="config-icon" />
                                                 <span>{{ t('datapage.explore.section_time.subtitle1') }}</span>
@@ -123,7 +123,7 @@
                                         </div>
                                     </div>
                                     <div class="config-container">
-                                        <div class="config-item-no-hover">
+                                        <div class="config-item-no-hover" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
                                             <div class="config-label relative">
                                                 <ZapIcon :size="16" class="config-icon" />
                                                 <span>快速操作</span>
@@ -179,7 +179,7 @@
                                     </div>
                                 </div>
                                 <div class="section-content">
-                                    <div class="stats">
+                                    <div class="stats" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
                                         <div class="stats-header">
                                             <div class="config-label relative">
                                                 <BoltIcon :size="16" class="config-icon" />
@@ -339,7 +339,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="stats">
+                                    <div class="stats" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
                                         <div class="stats-header">
                                             <div class="config-label relative">
                                                 <BoltIcon :size="16" class="config-icon" />
@@ -370,7 +370,7 @@
                                             <!-- <a-empty v-if="allVectors.length === 0" /> -->
                                         </div>
                                     </div>
-                                    <div class="stats">
+                                    <div class="stats" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
                                         <div class="stats-header">
                                             <div class="config-label relative">
                                                 <BoltIcon :size="16" class="config-icon" />
@@ -558,6 +558,24 @@ onMounted(async() => {
             });
         }
     }, 2); // 适当延迟
+
+    setTimeout(() => {
+        mapManager.withMap((m) => {
+            m.showTileBoundaries = true
+        })
+        //         // '/hytemp/rgb/tiles/{z}/{x}/{y}.png?url_r=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B4.TIF&url_g=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B3.TIF&url_b=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B2.TIF'
+        //         '/hytemp/rgb/box/{z}/{x}/{y}.png?url_r=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B4.TIF&url_g=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B3.TIF&url_b=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B2.TIF&bbox=117,31.5,118,32&max_r=50000&max_g=50000&max_b=50000&min_r=20000&min_g=20000&min_b=20000'
+        //     ]
+        // })
+        // m.addLayer({
+        //     id: 'raster-layer',
+        //     source: 'src',
+        //     type: 'raster',
+        //     minzoom: 5,
+        //     maxzoom: 22
+        // })
+        // })
+    }, 1)
 
 })
 </script>

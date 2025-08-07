@@ -14,7 +14,7 @@ def createApp():
     from fastapi import FastAPI
     from titiler.core.factory import TilerFactory
     from starlette.middleware.cors import CORSMiddleware
-    from router import rgb, terrain, oneband, mosaic, no_cloud, no_cloud_with_sensorname, image_visualization, on_the_fly_exploration_mosaic, mosaic_single, edge_image_visualization, image_visualization_backup_0801, for_deployment, deployment_with_nodata_question
+    from router import rgb, terrain, oneband, mosaic, no_cloud, no_cloud_with_sensorname, image_visualization, on_the_fly_exploration_mosaic, mosaic_single, edge_image_visualization, image_visualization_backup_0801, for_deployment, deployment_with_nodata_question, deployment_with_nodata_question_backup, image_visualization_without_national_scale
 
 
 
@@ -48,6 +48,8 @@ def createApp():
     app.include_router(image_visualization_backup_0801.router, tags=["Image Visualization Backup 0801 Tiler"], prefix="/image_visualization_backup_0801")
     app.include_router(for_deployment.router, tags=["Deployment Tiler"], prefix="/for_deployment")
     app.include_router(deployment_with_nodata_question.router, tags=["Deployment with Nodata Question Tiler"], prefix="/deployment_with_nodata_question")
+    app.include_router(deployment_with_nodata_question_backup.router, tags=["Deployment with Nodata Question Backup Tiler"], prefix="/deployment_with_nodata_question_backup")
+    app.include_router(image_visualization_without_national_scale.router, tags=["Deployment without national scale loading"], prefix="/image_visualization_without_national_scale")
     # Add a welcome message for the root endpoint
     @app.get("/")
     def read_index():

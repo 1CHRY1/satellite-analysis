@@ -143,7 +143,7 @@
                                                     </div>
                                                     <div class="result-info-content">
                                                         <div class="result-info-label">
-                                                            {{t('datapage.nocloud.section_chinese.text_national_research')}}
+                                                            亚米级国产影像
                                                         </div>
                                                         <div class="result-info-value">
                                                             {{ demotic1mImages.length }}{{ t('datapage.explore.scene') }}
@@ -167,20 +167,20 @@
                                                         </div>
                                                     </div>
                                                 </div> -->
-                                                <!-- <div class="result-info-item">
+                                                <div class="result-info-item">
                                                     <div class="result-info-icon">
                                                         <CloudIcon :size="16" />
                                                     </div>
                                                     <div class="result-info-content">
                                                         <div class="result-info-label">
-                                                            {{t('datapage.nocloud.section_chinese.text_research2m')}}
+                                                            2米级国产影像
                                                         </div>
                                                         <div class="result-info-value">
                                                             {{ demotic2mImages.length }}{{ t('datapage.explore.scene') }}
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div class="result-info-item">
+                                                <!-- <div class="result-info-item">
                                                     <div class="result-info-icon">
                                                         <CloudIcon :size="16" />
                                                     </div>
@@ -1860,13 +1860,19 @@ onMounted(async () => {
     await mapManager.waitForInit();
 
     // 显示已筛选的边界
-    MapOperation.map_addPolygonLayer({
-            geoJson: exploreData.boundary,
-            id: 'UniqueLayer',
-            lineColor: '#8fffff',
-            fillColor: '#a4ffff',
-            fillOpacity: 0.2,
-        })
+    console.log(exploreData.boundary, 'exploreData.boundary')
+    setTimeout(() => {
+        if (exploreData.load){
+            MapOperation.map_addPolygonLayer({
+                geoJson: exploreData.boundary,
+                id: 'UniqueLayer',
+                lineColor: '#8fffff',
+                fillColor: '#a4ffff',
+                fillOpacity: 0.2,
+            })
+        }
+    }, 2); // 适当延迟
+   
 
 })
 
