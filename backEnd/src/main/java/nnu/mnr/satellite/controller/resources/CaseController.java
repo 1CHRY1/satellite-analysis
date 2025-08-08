@@ -1,9 +1,12 @@
 package nnu.mnr.satellite.controller.resources;
 
+import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.model.dto.resources.CasePageDTO;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.service.resources.CaseDataService;
+import nnu.mnr.satellite.utils.common.IdUtil;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,8 +28,15 @@ public class CaseController {
     }
 
     @PostMapping("/page")
-    public ResponseEntity<CommonResultVO> getCasePage(@RequestBody CasePageDTO casePageDTO) {
-        return ResponseEntity.ok(caseDataService.getCasePage(casePageDTO));
+    public ResponseEntity<CommonResultVO> getCasePage(@RequestBody CasePageDTO casePageDTO,
+                                                      @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        String userId;
+        try {
+            userId = IdUtil.parseUserIdFromAuthHeader(authorizationHeader);
+        } catch (JwtException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+        return ResponseEntity.ok(caseDataService.getCasePage(casePageDTO, userId));
     }
 
     @GetMapping("/boundary/{caseId}")

@@ -2,6 +2,7 @@ package nnu.mnr.satellite.service.tool;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -28,6 +29,7 @@ import java.util.*;
 
 @Service
 @Slf4j
+@DS("mysql_ard_dev")
 public class ToolService {
 
     @Autowired

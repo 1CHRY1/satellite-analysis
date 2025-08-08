@@ -1,6 +1,7 @@
 package nnu.mnr.satellite.service.modeling;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.model.dto.common.FileData;
 import nnu.mnr.satellite.model.dto.modeling.ProjectBasicDTO;
@@ -30,6 +31,7 @@ import java.util.Objects;
  */
 
 @Service
+@DS("mysql_ard_iam")
 public class ProjectResultDataService {
 
     @Autowired

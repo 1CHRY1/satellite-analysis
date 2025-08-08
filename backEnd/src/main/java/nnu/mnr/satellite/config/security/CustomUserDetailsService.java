@@ -1,5 +1,6 @@
 package nnu.mnr.satellite.config.security;
 
+import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.model.po.user.User;
@@ -22,6 +23,7 @@ import java.util.Collections;
 
 @Component
 @Slf4j
+@DS("mysql_ard_iam")
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final IUserRepo userRepo;

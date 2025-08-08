@@ -1,5 +1,6 @@
 package nnu.mnr.satellite.mapper.user;
 
+import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import nnu.mnr.satellite.model.dto.user.UserInfoDTO;
 import nnu.mnr.satellite.model.po.user.User;
@@ -14,8 +15,8 @@ import org.apache.ibatis.annotations.Select;
  * @Date: 2025/3/27 20:26
  * @Description:
  */
-
+@DS("mysql_ard_iam")
 public interface IUserRepo extends BaseMapper<User> {
-    @Select("SELECT COUNT(1) > 0 FROM user WHERE user_id = #{userId}")
+    @Select("SELECT COUNT(1) > 0 FROM user_table WHERE user_id = #{userId}")
     boolean existsById(@Param("userId") String userId);
 }

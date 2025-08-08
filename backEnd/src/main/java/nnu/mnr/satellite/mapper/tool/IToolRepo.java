@@ -8,17 +8,17 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Update;
 
 //@Repository("IToolRepo")
-@DS("pg_satellite")
+@DS("mysql_ard_dev")
 public interface IToolRepo extends BaseMapper<Tool> {
-    @Insert("INSERT INTO tool.tool_table (tool_id, project_id, environment, user_id, tool_name, description, tags, category, parameters, output_type) " +
+    @Insert("INSERT INTO tool_table (tool_id, project_id, environment, user_id, tool_name, description, tags, category, parameters, output_type) " +
             "VALUES (#{toolId}, #{projectId}, #{environment}, #{userId}, #{toolName}, #{description}, #{tags}, #{category}, #{parameters}, #{outputType})")
     int insertTool(Tool toolObj);
 
-    @Update("UPDATE tool.tool_table SET environment = #{environment}, tool_name = #{toolName}, description = #{description}, output_type = #{outputType}, " +
+    @Update("UPDATE tool_table SET environment = #{environment}, tool_name = #{toolName}, description = #{description}, output_type = #{outputType}, " +
             "tags = #{tags}, category = #{category}, parameters = #{parameters} " +
             "WHERE tool_id = #{toolId}")
     int updateToolById(Tool toolObj);
 
-    @Delete("DELETE FROM tool.tool_table WHERE tool_id = #{toolId}")
+    @Delete("DELETE FROM tool_table WHERE tool_id = #{toolId}")
     int deleteToolById(Tool toolObj);
 }
