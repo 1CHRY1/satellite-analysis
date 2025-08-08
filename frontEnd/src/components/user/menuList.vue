@@ -70,7 +70,7 @@ interface menuItem {
 }
 
 const menuOption = ref<menuItem[]>([
-    {name: '个人中心', path:'',},
+    {name: '个人中心', path:'/user',},
     {name: '安全设置', path:'',},
     {name : '个性化', path:'',
     children:[

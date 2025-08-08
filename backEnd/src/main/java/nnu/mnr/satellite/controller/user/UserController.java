@@ -1,8 +1,6 @@
 package nnu.mnr.satellite.controller.user;
 
-import nnu.mnr.satellite.model.dto.user.UserInfoDTO;
-import nnu.mnr.satellite.model.dto.user.UserLoginDTO;
-import nnu.mnr.satellite.model.dto.user.UserRegisterDTO;
+import nnu.mnr.satellite.model.dto.user.*;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.model.vo.user.UserVO;
 import nnu.mnr.satellite.service.user.UserService;
@@ -51,5 +49,22 @@ public class UserController {
     public ResponseEntity<CommonResultVO> updateUserDescription(@RequestBody UserInfoDTO userInfoDTO) {
         return ResponseEntity.ok(userService.updateUserInfoById(userInfoDTO));
     }
+
+    @PutMapping("/password/userId/{userId}")
+    public ResponseEntity<CommonResultVO> updateUserPassword(@RequestBody UserPasswordDTO userPasswordDTO) {
+        return ResponseEntity.ok(userService.updateUserPasswordById(userPasswordDTO));
+    }
+
+    @GetMapping("/avatar/{userId}")
+    public ResponseEntity<CommonResultVO> getAvatar(@PathVariable String userId) {
+        return ResponseEntity.ok(userService.getAvatar(userId));
+    }
+
+    @PostMapping("/avatar/upload")
+    public ResponseEntity<CommonResultVO> uploadAvatar(@RequestBody AvatarUploadDTO avatarUploadDTO) {
+        return ResponseEntity.ok(userService.uploadAvatar(avatarUploadDTO));
+    }
+
+
 
 }

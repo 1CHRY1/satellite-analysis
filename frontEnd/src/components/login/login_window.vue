@@ -57,6 +57,16 @@
                                 {{$t('login.button.register')}}
                         </span>
                         </div>
+                        <div>
+                            <span
+                                type="reset"
+                                id="reset"
+                                @click=""
+                                class="submit justify-center item-center cursor-pointer text-blue"
+                            >
+                             忘记密码
+                        </span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -66,7 +76,7 @@
 
 <script setup >
 import anime from 'animejs/lib/anime.es.js'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref ,reactive} from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store'
 import { login, getUsers } from '@/api/http/user'
@@ -100,10 +110,14 @@ const handleLogin = async () => {
 
         userStore.login({
             id: loginRes.data.userId,
+            phone: userRes.phone,
+            province:userRes.province,
+            city:userRes.city,
             email: userRes.email,
             name: userRes.userName,
             title: userRes.title,
             organization: userRes.organization,
+            introduction: userRes.introduction 
         })
         ElMessage({
             type: 'success',

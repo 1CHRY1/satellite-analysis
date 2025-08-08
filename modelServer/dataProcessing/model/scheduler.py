@@ -18,6 +18,8 @@ from dataProcessing.model.calc_raster_line import calc_raster_line
 from dataProcessing.model.calc_no_cloud import calc_no_cloud
 from dataProcessing.model.calc_no_cloud_grid import calc_no_cloud_grid
 from dataProcessing.model.calc_no_cloud_complex import calc_no_cloud_complex
+from dataProcessing.model.low_level_mosaic_task import LowLevelMosaicTask
+from dataProcessing.model.test_task import TestTask
 
 STATUS_RUNNING = CONFIG.STATUS_RUNNING
 STATUS_COMPLETE = CONFIG.STATUS_COMPLETE
@@ -106,23 +108,28 @@ class TaskScheduler:
             'calc_raster_point': calc_raster_point,
             'calc_raster_line': calc_raster_line,
             'calc_no_cloud_complex': calc_no_cloud_complex,
-            # 'test': 
+            'low_level_mosaic': LowLevelMosaicTask,
+            'test': TestTask,
             # 可以在这里扩展其他类型的任务
         }
         return task_classes.get(task_type)
 
     def _scheduler_worker(self):
+        print("调度器工作线程已启动")
         while True:
             try:
                 # --------- Pending queue to running queue -------------------------------------
                 with self.condition:
                     while not self.pending_queue.empty() and not self.running_queue.full():
                         task_id = self.pending_queue.get()
+                        print(f"[调度器] 从待处理队列获取任务: {task_id}")
                         self.running_queue.put(task_id)
+                        print(f"[调度器] 任务 {task_id} 已加入运行队列")
 
                         # 为每个运行中的任务创建执行线程
                         thread = threading.Thread(target=self._execute_task, args=(task_id,), daemon=True)
                         thread.start()
+                        print(f"[调度器] 任务 {task_id} 的执行线程已启动")
 
                     # 暂停，等待任务变化
                     self.condition.wait(timeout=1)
@@ -132,12 +139,16 @@ class TaskScheduler:
 
     def _execute_task(self, task_id: str):
         # --------- Execute the task ----------------------------
+        print(f"[执行器] 开始执行任务: {task_id}")
         try:
             task_instance = self.task_info[task_id]
+            print(f"[执行器] 获取任务实例: {task_instance.__class__.__name__}")
             self.task_status[task_id] = STATUS_RUNNING
             # Reuse the result of the task
             
+            print(f"[执行器] 调用任务 {task_id} 的run方法")
             result = task_instance.run()
+            print(f"[执行器] 任务 {task_id} 执行完成")
 
             # --------- Update the status and queue ---------------------------
             with self.condition:
