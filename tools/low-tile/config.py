@@ -1,0 +1,13 @@
+minio_endpoint = "http://223.2.34.8:30900"
+ray_num_cpus = 36
+email = "lingkai.shi@nnu.edu.cn"
+password = "123456"
+grid_res = 150
+crs = 4326
+z_level = 8
+start_time = "2024-05-01"
+end_time = "2025-07-30"
+region_id = "100000"
+sensor_name = "GF-1_PMS"
+back_url = "http://223.2.34.8:31584/api/"
+test_num = 200

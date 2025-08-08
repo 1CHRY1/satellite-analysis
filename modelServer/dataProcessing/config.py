@@ -55,7 +55,7 @@ class DevK8SConfig(BaseConfig):
     MYSQL_TILE_PORT                                 =       30779
     MYSQL_TILE_DB                                   =       "tile"
     MYSQL_RESOURCE_PORT                             =       31036
-    MYSQL_RESOURCE_DB                               =       "satllite"
+    MYSQL_RESOURCE_DB                               =       "ard_satellite"
     MYSQL_USER                                      =       "root"
     MYSQL_PWD                                       =       "123456"
 
@@ -91,7 +91,7 @@ class VmodConfig(BaseConfig):
     MYSQL_TILE_PORT                                 =       3306
     MYSQL_TILE_DB                                   =       "tile"
     MYSQL_RESOURCE_PORT                             =       3306
-    MYSQL_RESOURCE_DB                               =       "satellite"
+    MYSQL_RESOURCE_DB                               =       "ard_satellite"
     MYSQL_USER                                      =       "root"
     MYSQL_PWD                                       =       "ogms250410"
 

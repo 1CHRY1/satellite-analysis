@@ -257,3 +257,6 @@ export async function getVectorsByRegionFilter(param: any): Promise<any> {
 export async function getVectorsByPOIFilter(param: any): Promise<any> {
     return http.post<any>(`data/vector/time/location`, param)
 }
+export async function getVectorAttr(source_layer: string): Promise<any> {
+    return http.get<any>(`data/vector/${source_layer}/type`)
+}

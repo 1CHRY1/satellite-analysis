@@ -354,9 +354,15 @@
                                             <div class="config-label relative">
                                                 <span class="result-info-label">共找到 {{vectorStats.length}} 条记录</span>
                                             </div>
-                                            <div v-for="(item, index) in vectorStats" class="config-item mb-3" :key="item.tableName">
+                                            <div v-for="(item, index) in vectorStats" class="stats-item-tree"
+                                                :class="{
+                                                    'stats-item-rounded-t': index === 0,
+                                                    'stats-item-rounded-b': index === vectorStats.length - 1,
+                                                }"
+                                                 :key="item.tableName">
                                                 <div class="config-label relative">
-                                                    <Image :size="16" class="config-icon" />
+                                                    <ChevronDown v-if="isVectorItemExpand[index]" :size="22" class="config-icon cursor-pointer" @click="isVectorItemExpand[index] = false" />
+                                                    <ChevronRight v-else @click="isVectorItemExpand[index] = true" :size="22" class="config-icon cursor-pointer" />
                                                     <span>{{ item.vectorName }}</span>
                                                     <div class="absolute right-0 cursor-pointer">
                                                         <a-tooltip>
@@ -365,6 +371,10 @@
                                                             <EyeOff v-else :size="16" @click="showVectorResult(item.tableName, index)" class="cursor-pointer"/>
                                                         </a-tooltip>
                                                     </div>
+                                                </div>
+                                                <div v-show="isVectorItemExpand[index]" class="config-control">
+                                                    
+                                                    <el-color-picker show-alpha size="small" class="custom-color-picker" />
                                                 </div>
                                             </div>
                                             <!-- <a-empty v-if="allVectors.length === 0" /> -->
@@ -592,5 +602,22 @@ onMounted(async() => {
 }
 .config-item {
     background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);
+}
+
+.custom-color-picker {
+    --el-bg-color-overlay: #0d1526 !important; /* 修改下拉面板背景色 */
+  	--el-border-color-light: #1d415b !important; /* 修改边框颜色 */
+    /* --el-color-primary: #0f0f0f !important;
+    --el-button-border-color: #456275 !important;
+    --el-button-bg-color: #0d1526 !important;
+    --el-button-text-color: #38bdf8 !important;
+    --el-button-hover-bg-color: #1d415b !important;
+    --el-button-hover-text-color: #38bdf8 !important;
+    --el-button-hover-border-color: #456275 !important;
+    --el-button-active-bg-color: #1d415b !important;
+    --el-button-active-text-color: #38bdf8 !important;
+    --el-button-active-border-color: #456275 !important;
+    --el-input-bg-color: #0d1526 !important;
+    --el-fill-color-blank: #0d1526 !important; */
 }
 </style>
