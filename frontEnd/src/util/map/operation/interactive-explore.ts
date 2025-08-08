@@ -320,43 +320,109 @@ export function map_fitViewToTargetZoom(zoom: number) {
  * @param cb 回调函数
  */
 export function map_addMVTLayer(source_layer: string, url: string) {
-    const id = 'mvt-layer'
-    const srcId = id + '-source'
+    const baseId = 'mvt-layer'
+    const srcId = baseId + '-source'
+    
     mapManager.withMap((m) => {
-        m.getLayer(id) && m.removeLayer(id)
-        m.getSource(srcId) && m.removeSource(srcId)
-
-
-        m.addSource(srcId, {
-            type: 'vector',
-            tiles: [url],
-        })
-
-        m.addLayer({
-            id: id,
-            type: 'fill',
-            source: srcId,
-            'source-layer': source_layer,
-            paint: {
-                'fill-color': '#0066cc',
-                'fill-opacity': 0.5,
-            }
-        })
+      // 移除已存在的图层和数据源
+      const layerIds = [
+        `${baseId}-fill`,
+        `${baseId}-line`, 
+        `${baseId}-point`
+      ]
+      
+      layerIds.forEach(layerId => {
+        if (m.getLayer(layerId)) {
+          m.removeLayer(layerId)
+        }
+      })
+      
+      if (m.getSource(srcId)) {
+        m.removeSource(srcId)
+      }
+      
+      // 添加数据源
+      m.addSource(srcId, {
+        type: 'vector',
+        tiles: [url],
+      })
+      
+      // 添加面图层
+      m.addLayer({
+        id: `${baseId}-fill`,
+        type: 'fill',
+        source: srcId,
+        'source-layer': source_layer,
+        filter: ['==', '$type', 'Polygon'], // 只显示面要素
+        paint: {
+          'fill-color': '#0066cc',
+          'fill-opacity': 0.5,
+          'fill-outline-color': '#004499'
+        }
+      })
+      
+      // 添加线图层
+      m.addLayer({
+        id: `${baseId}-line`,
+        type: 'line',
+        source: srcId,
+        'source-layer': source_layer,
+        filter: ['==', '$type', 'LineString'], // 只显示线要素
+        paint: {
+          'line-color': '#ff6600',
+          'line-width': 2,
+          'line-opacity': 0.8
+        }
+      })
+      
+      // 添加点图层
+      m.addLayer({
+        id: `${baseId}-point`,
+        type: 'circle',
+        source: srcId,
+        'source-layer': source_layer,
+        filter: ['==', '$type', 'Point'], // 只显示点要素
+        paint: {
+          'circle-color': '#ff0066',
+          'circle-radius': 6,
+          'circle-opacity': 0.8,
+          'circle-stroke-color': '#ffffff',
+          'circle-stroke-width': 2
+        }
+      })
     })
-}
+  }
 
 /**
  * 删除矢量图层
  */
 export function map_destroyMVTLayer() {
-    const id = 'mvt-layer'
-    const srcId = id + '-source'
-
+    const baseId = 'mvt-layer'
+    const srcId = baseId + '-source'
+    
     mapManager.withMap((m) => {
-        console.log(m.getLayer(id))
-        console.log(m.getSource(srcId))
-        m.getLayer(id) && m.removeLayer(id)
-        m.getSource(srcId) && m.removeSource(srcId)
+      // 定义所有需要清理的图层ID
+      const layerIds = [
+        `${baseId}-fill`,
+        `${baseId}-line`, 
+        `${baseId}-point`
+      ]
+      
+      // 移除所有图层
+      layerIds.forEach(layerId => {
+        console.log(`检查图层: ${layerId}`, m.getLayer(layerId))
+        if (m.getLayer(layerId)) {
+          m.removeLayer(layerId)
+          console.log(`已移除图层: ${layerId}`)
+        }
+      })
+      
+      // 移除数据源
+      console.log(`检查数据源: ${srcId}`, m.getSource(srcId))
+      if (m.getSource(srcId)) {
+        m.removeSource(srcId)
+        console.log(`已移除数据源: ${srcId}`)
+      }
     })
 }
 

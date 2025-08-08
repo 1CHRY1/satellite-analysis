@@ -1,15 +1,15 @@
 {
     "minio": {
-        "endpoint": "192.168.1.101:30900",
+        "endpoint": "223.2.43.228:30900",
         "access_key": "jTbgNHEqQafOpUxVg7Ol",
         "secret_key": "7UxtrqhSOyN1KUeumbqTRMv1zeluLO69OwJnCC0M",
         "secure": false
     },
     "database": {
-        "endpoint": "192.168.1.101:3306",
+        "endpoint": "223.2.43.228:31136",
         "user": "root",
         "password": "123456",
-        "satellite_database": "ard_satellite"
+        "satellite_database": "satellite"
     },
     "project_info": {
         "project_id": "PRJs7YvIaDCCQnsDUIF9",

@@ -7,13 +7,13 @@ import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
 
 
-import './style.css'
 import App from './App.vue'
 import router from './router'
 import ezStore from '@/store/ezStore'
 
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
+import './style.css'
 import { message } from 'ant-design-vue'
 
 import i18n from './i18n'
