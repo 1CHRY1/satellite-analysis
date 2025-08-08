@@ -1,5 +1,6 @@
 package nnu.mnr.satellite.model.po.user;
 
+import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
@@ -23,7 +24,7 @@ import java.util.HashSet;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@TableName("user")
+@TableName("user_table")
 public class User {
 
     @TableId

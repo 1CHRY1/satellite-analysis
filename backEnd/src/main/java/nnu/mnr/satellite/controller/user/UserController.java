@@ -61,7 +61,7 @@ public class UserController {
     }
 
     @PostMapping("/avatar/upload")
-    public ResponseEntity<CommonResultVO> uploadAvatar(@RequestBody AvatarUploadDTO avatarUploadDTO) {
+    public ResponseEntity<CommonResultVO> uploadAvatar(@ModelAttribute AvatarUploadDTO avatarUploadDTO) {
         return ResponseEntity.ok(userService.uploadAvatar(avatarUploadDTO));
     }
 

@@ -1,5 +1,6 @@
 package nnu.mnr.satellite.service.user;
 
+import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,7 @@ import java.util.*;
 
 @Service
 @Slf4j
+@DS("mysql_ard_iam")
 public class UserService {
 
     private final IUserRepo userRepo;
