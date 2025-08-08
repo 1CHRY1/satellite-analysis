@@ -1,3 +1,5 @@
+import time
+from turtle import width
 import numpy as np
 import rasterio
 from minio import Minio
@@ -13,13 +15,15 @@ from rasterio.crs import CRS
 from rio_cogeo.cogeo import cog_translate
 from rasterio.enums import Resampling
 from rio_cogeo.profiles import cog_profiles
+from config import minio_endpoint
+
 class GridMosaic:
     def __init__(self, grid_bbox, scene_list, crs_id, z_level):
         self.grid_bbox = grid_bbox  # 格网的 bounding box
         self.scene_list = scene_list  # 格网相关的场景列表
         self.final_image = None  # 最终拼接的图像
         self.final_metadata = None  # 最终图像的元数据
-        self.minio_endpoint = "http://172.31.13.21:9000"
+        self.minio_endpoint = minio_endpoint
         self.crs_id = CRS.from_epsg(crs_id)
         self.target_res = self.resolution_from_zoom(z_level)
 
@@ -38,7 +42,9 @@ class GridMosaic:
                         info = reader.info()
                         # 取width 和height的大值
                         max_size = int(max(info.width, info.height)/info.overviews[-1])
+                    start_time = time.time()
                     img = reader.preview(indexes=1, max_size=max_size)
+                    print(f"preview: {time.time() - start_time}; width:{info.width};height:{info.height}\n", flush=True)
                     img_data = img.data
                     if not np.issubdtype(img_data.dtype, np.uint8):  #转换为 uint8
                         band_min = np.nanmin(img_data)
@@ -73,15 +79,25 @@ class GridMosaic:
         else:
             raise ValueError("Invalid scene path length")
 # 入口函数
-    def create_mosaic(self, prefix_minio):
+    def create_mosaic(self, prefix_minio, quiet=True):
         """合成多个场景的镶嵌影像"""
+        import time
+        start_time = time.time()
         img_list = []
         for scene in self.scene_list:
             imagedata = self.get_lowest_resolution_overview(scene)
             img_list.append(imagedata)
+        # if not quiet:
+            # print(f"Create mosaic [1] time in get_lowest_resolution_overview: {time.time() - start_time}\n", flush=True)
+        start_time = time.time()
         mosaic, out_meta = self.mosaic_by_rasterIO(img_list) 
+        # if not quiet:
+            # print(f"Create mosaic [2] time in mosaic_by_rasterIO: {time.time() - start_time}\n", flush=True)
+        start_time = time.time()
         output_path = f"{prefix_minio}/{self.grid_bbox[0]}_{self.grid_bbox[1]}.tif"
         self.save_mosaic_as_cog(mosaic, out_meta, output_path)
+        # if not quiet:
+            # print(f"Create mosaic [3] time in save_mosaic_as_cog: {time.time() - start_time}\n", flush=True)
         return output_path
 
     def mosaic_by_rasterIO(self, img_list):
@@ -128,6 +144,7 @@ class GridMosaic:
                 dst_kwargs=profile,
                 in_memory=True,
                 quiet=True,
+                config={"GDAL_NUM_THREADS": "ALL_CPUS"}
             )
 
     def extract_bounds_from_grid(self, grid):

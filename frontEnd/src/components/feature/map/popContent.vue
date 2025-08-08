@@ -254,7 +254,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, type Ref, reactive } from 'vue'
+import { ref, computed, onMounted, onUnmounted, type Ref, reactive } from 'vue'
 import { DatabaseIcon, GalleryHorizontalIcon, RectangleEllipsisIcon, Trash2Icon,CircleOff } from 'lucide-vue-next'
 import bus from '@/store/bus'
 import Vue3DraggableResizable from 'vue3-draggable-resizable'
@@ -348,13 +348,24 @@ const handleRemove = () => {
 /**
  * 初始化网格
  */
-bus.on('update:gridPopupData', async (info) => {
-    gridData.value = info
-    gridData.value.vectors = ezStore.get('vectorStats')
-    gridData.value.themeRes = await getThemesInGrid(info)
-    gridData.value.sceneRes = await getScenesInGrid(info)
+// 请求锁
+let themeResLoading = false
+const handleInitGrid = async (info) => {
+  if (themeResLoading) return
+  themeResLoading = true
+  try {
+    gridData.value = {
+        ...info,  // 拷贝原有属性
+        vectors: ezStore.get('vectorStats'),
+        themeRes: await getThemesInGrid(info),
+        sceneRes: await getScenesInGrid(info)
+    }
     console.log(gridData.value, 'gridData')
-})
+  } finally {
+    themeResLoading = false
+  }
+}
+bus.on('update:gridPopupData', handleInitGrid)
 
 onMounted(async () => {
     if (!ezStore.get('statisticCache')) {
@@ -368,6 +379,10 @@ onMounted(async () => {
         selectedBBand.value = ''
         selectedSensor.value = ''
     })
+})
+
+onUnmounted(() => {
+    bus.off('update:gridPopupData', handleInitGrid)
 })
 
 /**
