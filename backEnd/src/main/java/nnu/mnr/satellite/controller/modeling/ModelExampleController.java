@@ -1,8 +1,11 @@
 package nnu.mnr.satellite.controller.modeling;
 
+import io.jsonwebtoken.JwtException;
 import nnu.mnr.satellite.model.dto.modeling.*;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.service.modeling.ModelExampleService;
+import nnu.mnr.satellite.utils.common.IdUtil;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,8 +30,15 @@ public class ModelExampleController {
     }
 
     @PostMapping("/noCloud")
-    public ResponseEntity<CommonResultVO> getNoCloudByRegion(@RequestBody NoCloudFetchDTO noCloudFetchDTO) throws IOException {
-        return ResponseEntity.ok(modelExampleService.getNoCloudByRegion(noCloudFetchDTO));
+    public ResponseEntity<CommonResultVO> getNoCloudByRegion(@RequestBody NoCloudFetchDTO noCloudFetchDTO,
+                                                             @RequestHeader(value = "Authorization", required = false) String authorizationHeader) throws IOException {
+        String userId;
+        try {
+            userId = IdUtil.parseUserIdFromAuthHeader(authorizationHeader);
+        } catch (JwtException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+        return ResponseEntity.ok(modelExampleService.getNoCloudByRegion(noCloudFetchDTO, userId));
     }
 
     @PostMapping("/noCloud/createNoCloudConfig")
