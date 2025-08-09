@@ -1,6 +1,7 @@
 import http from '../../axiosClient/clientHttp'
 import type { Sensor, Product, SensorImage, ImageTile, Project, Case, Common } from './satellite.type'
 import { blobDownload } from '../../util'
+import type { AttrSymbology } from '@/type/interactive-explore/visualize'
 
 export async function getSensorList(): Promise<Sensor.SensorListResponse> {
     return http.get<Sensor.SensorListResponse>(`/data/sensor`)
@@ -257,6 +258,6 @@ export async function getVectorsByRegionFilter(param: any): Promise<any> {
 export async function getVectorsByPOIFilter(param: any): Promise<any> {
     return http.post<any>(`data/vector/time/location`, param)
 }
-export async function getVectorAttr(source_layer: string): Promise<any> {
-    return http.get<any>(`data/vector/${source_layer}/type`)
+export async function getVectorAttr(source_layer: string): Promise<Array<AttrSymbology>> {
+    return http.get<Array<AttrSymbology>>(`data/vector/${source_layer}/type`)
 }

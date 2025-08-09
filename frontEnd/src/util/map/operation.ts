@@ -9,7 +9,7 @@ import type { polygonGeometry } from '../share.type'
 import { ezStore, useGridStore } from '@/store'
 import Antd from 'ant-design-vue'
 import { createApp, type ComponentInstance, ref, type Ref, reactive } from 'vue'
-import PopContent from '@/components/feature/map/popContent.vue'
+import PopContent from '@/components/feature/map/popContent/popContent.vue'
 import bus from '@/store/bus'
 import {
     getSceneRGBCompositeTileUrl,

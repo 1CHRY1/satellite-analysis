@@ -8,6 +8,23 @@
 	height: 16px !important;
 	width: 16px !important;
 }
+/* el-color-picker */
+.el-popper.is-light, .el-popper.is-light>.el-popper__arrow:before {
+    background: #192031 !important;
+    border: 1px solid #19212f !important;
+}
+.el-input__wrapper {
+    background-color: rgb(13, 21, 35) !important;
+	box-shadow: 0 0 0 1px rgb(81, 112, 127) inset !important;
+}
+.el-input__inner {
+    color: #e0f2fe !important;
+}
+.el-button {
+    background-color: rgb(13, 21, 35) !important;
+    border: 1px solid rgb(97, 143, 167) !important;
+    color: #e0f2fe !important;
+}
 
 
 
