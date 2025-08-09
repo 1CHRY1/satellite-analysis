@@ -13,7 +13,8 @@ import {
     getGridByPOIAndResolution,
     getPOIPosition,
     getVectorsByRegionFilter,
-    getVectorsByPOIFilter
+    getVectorsByPOIFilter,
+    getVectorAttr
 } from '@/api/http/satellite-data'
 import {
     // ------------------------ V3版本API ------------------------ //
@@ -177,6 +178,18 @@ export const useFilter = () => {
     const filterLoading = ref(false)
     // 筛选是否完成
     const isFilterDone = ref(false)
+    const getVectorSymbology = async () => {
+        const promises: Promise<any>[] = []
+        for (const vector of vectorStats.value) {
+            promises.push(getVectorAttr(vector.tableName))
+        }
+        const vectorAttrList = await Promise.all(promises)
+        for (const [index, vector] of vectorStats.value.entries()) {
+            // vectorStats.value[index].attr = vectorAttrList[index]
+        }
+        console.log(vectorAttrList)
+
+    }
     const doFilter = async () => {
         if (finalLandId.value === 'None') {
             ElMessage.warning(t('datapage.explore.message.filtererror_choose'))
@@ -211,9 +224,9 @@ export const useFilter = () => {
             themeStatsRes = await getThemeStatsByPOIFilter(poiFilter)
         }
         sceneStats.value = sceneStatsRes
-        
         vectorStats.value = vectorsRes
         themeStats.value = themeStatsRes
+        getVectorSymbology()
 
         syncToGridExplore()
         syncToDataPrepare()

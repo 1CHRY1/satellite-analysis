@@ -46,20 +46,25 @@ public class CaseDataService {
     }
 
     public void addCaseFromParamAndCaseId(String caseId, JSONObject param) {
-        Integer resolution = (Integer) param.get("resolution");
+        String resolution = param.get("resolution").toString();
         String address = param.get("address").toString();
+        Integer regionId = (Integer) param.get("regionId");
+        Geometry boundary = (Geometry) param.get("boundary");
         List<String> sceneIds = (List<String>) param.get("sceneIds");
+        String dataSet = param.get("dataSet").toString();
         List<String> bandList = (List<String>) param.get("bandList");
+        String userId = param.get("userId").toString();
 
         Case caseObj = Case.builder()
                 .caseId(caseId)
                 .address(address)
-                .regionId((Integer) param.get("regionId"))
-                .resolution(resolution.toString())
-                .boundary((Geometry) param.get("boundary"))
+                .regionId(regionId)
+                .resolution(resolution)
+                .boundary(boundary)
                 .sceneList(sceneIds)
-                .dataSet(param.get("dataSet").toString())
+                .dataSet(dataSet)
                 .bandList(bandList)
+                .userId(userId)
                 .status("RUNNING")
                 .result(null)
                 .createTime(LocalDateTime.now(ZoneId.of("Asia/Shanghai")))
@@ -94,11 +99,11 @@ public class CaseDataService {
         return caseRepo.selectById(caseId);
     }
 
-    public CommonResultVO getCasePage(CasePageDTO casePageDTO) {
+    public CommonResultVO getCasePage(CasePageDTO casePageDTO, String userId) {
         // 构造分页对象
         Page<Case> page = new Page<>(casePageDTO.getPage(), casePageDTO.getPageSize());
         // 调用 Mapper 方法
-        IPage<Case> casePage = getCasesWithCondition(page, casePageDTO);
+        IPage<Case> casePage = getCasesWithCondition(page, casePageDTO, userId);
         return CommonResultVO.builder()
                 .status(1)
                 .message("分页查询成功")
@@ -106,7 +111,7 @@ public class CaseDataService {
                 .build();
     }
 
-    private IPage<Case> getCasesWithCondition(Page<Case> page, CasePageDTO casePageDTO) {
+    private IPage<Case> getCasesWithCondition(Page<Case> page, CasePageDTO casePageDTO, String userId) {
         Integer resolution = casePageDTO.getResolution();
         LocalDateTime startTime = casePageDTO.getStartTime();
         LocalDateTime endTime = casePageDTO.getEndTime();
@@ -116,22 +121,6 @@ public class CaseDataService {
         Integer regionId = casePageDTO.getRegionId();
 
         LambdaQueryWrapper<Case> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-
-        // TODO: DEPRECATED 查询 region_table 表，获取当前行政区下所有regionId
-        /*List<Integer> allRegionIds = new ArrayList<>();
-        if (regionId != null) {
-            allRegionIds = regionDataService.getAllRegionIdsByParent(regionId, allRegionIds);
-        } else {
-            allRegionIds = null;
-        }
-        // 添加区域条件
-        if (allRegionIds != null && !allRegionIds.isEmpty()) {
-            List<Integer> finalCollection = allRegionIds;
-            lambdaQueryWrapper.in(Case::getRegionId, finalCollection);
-        }*/
-
-        // 模糊查询address
-        // lambdaQueryWrapper.like(Case::getAddress, casePageDTO.getAddress());
 
         // 按regionId筛选子区域
         if (regionId != null) {
@@ -143,7 +132,8 @@ public class CaseDataService {
                 lambdaQueryWrapper.eq(Case::getRegionId, regionId);
             }
         }
-
+        // 按用户筛选
+        lambdaQueryWrapper.eq(Case::getUserId, userId);
         // 添加时间范围筛选条件
         if (startTime != null && endTime != null) {
             lambdaQueryWrapper.between(Case::getCreateTime, startTime, endTime);
@@ -182,16 +172,6 @@ public class CaseDataService {
         }
 
         return caseRepo.selectPage(page, lambdaQueryWrapper);
-    }
-
-    private List<Integer> getAcroutesByRegionId(Integer regionId) {
-        Region region = regionDataService.getRegionById(regionId);
-
-        if (region != null && region.getAcroutes() != null) {
-            return region.getAcroutes();
-        } else {
-            return List.of(); // 返回空列表，避免 null
-        }
     }
 
     private IPage<CaseInfoVO> mapPage(IPage<Case> casePage) {

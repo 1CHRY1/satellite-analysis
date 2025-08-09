@@ -1,5 +1,6 @@
 import requests
 from scene import Scene
+from config import back_url, email, password, region_id, grid_res, start_time, end_time, sensor_name
 
 class SceneFetcher:
     def __init__(self, email, password):
@@ -9,7 +10,7 @@ class SceneFetcher:
         self.token = None  # 用于存储 accessToken
         self.refresh_token = None  # 可选: 用于刷新 token
         self.user_id = None  # 用于存储用户 ID
-        self.url_prefix = "http://172.31.13.21:8999/api/"
+        self.url_prefix = back_url
 
     def login(self):
         """进行登录请求并获取 token"""
@@ -190,21 +191,20 @@ class SceneFetcher:
 # 示例使用：
 if __name__ == "__main__":
     # 实例化 SceneFetcher 类
-    fetcher = SceneFetcher(email="loop@ogms.com", password="ogms")
+    fetcher = SceneFetcher(email=email, password=password)
     
     # 登录并获取 token
     fetcher.login()
     
     # 获取格网数据
-    grids_data = fetcher.get_grids(region_id="100000", resolution=10000)
+    grids_data = fetcher.get_grids(region_id=region_id, resolution=grid_res)
 
     # 获取检索数据
     retrieved_data = fetcher.submit_query(
-        start_time="2024-05-01", end_time="2025-07-30", region_id="100000", resolution=100
+        start_time=start_time, end_time=end_time, region_id=region_id, resolution=grid_res
     )
     
     # 获取影像路径
-    sensor_name = "Month_map"
     # points = grids_data[0]['coordinates'][0]
 
-    scenes = fetcher.get_scenes_for_grid(sensor_name, grids_data[1]['coordinates'][0])
+    scenes = fetcher.get_scenes_for_grid(sensor_name=sensor_name, coords=grids_data[1]['coordinates'][0])

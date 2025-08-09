@@ -9,7 +9,7 @@
         "endpoint": "192.168.1.101:3306",
         "user": "root",
         "password": "123456",
-        "satellite_database": "satellite"
+        "satellite_database": "ard_satellite"
     },
     "project_info": {
         "project_id": "PRJs7YvIaDCCQnsDUIF9",

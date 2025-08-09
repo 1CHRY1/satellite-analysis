@@ -49,7 +49,12 @@ public class GridDataServiceV3 {
         }
         List<SceneDesVO> scenesInfo = userSceneCache.scenesInfo;
         if (scenesInfo == null || scenesInfo.isEmpty()) {
-            throw new NullPointerException("No scene data available in the cache.");
+            return CoverageReportVO.<JSONObject>builder()
+                    .total(0)
+                    .coverage("0%")
+                    .category(new ArrayList<>())
+                    .dataset(null)
+                    .build();
         }
         // 筛选出与格网相交的景
         List<SceneDesVO> filteredScenesInfo = scenesInfo.stream()
@@ -117,7 +122,12 @@ public class GridDataServiceV3 {
         }
         List<SceneDesVO> scenesInfo = userThemeCache.scenesInfo;
         if (scenesInfo == null || scenesInfo.isEmpty()) {
-            throw new NullPointerException("No scene data available in the cache.");
+            return CoverageReportVO.<JSONObject>builder()
+                    .total(0)
+                    .coverage("0%")
+                    .category(new ArrayList<>())
+                    .dataset(null)
+                    .build();
         }
         // 筛选出与格网相交的景
         List<SceneDesVO> filteredScenesInfo = scenesInfo.stream()
@@ -173,6 +183,7 @@ public class GridDataServiceV3 {
         return report;
     }
 
+    // 数据准备模块
     public GridsScenesOverlapVO getScenesByGridsAndFilters(GridsWithFiltersDTO gridsWithFiltersDTO, String cacheKey){
         List<GridBasicDTO> gridsInfo = gridsWithFiltersDTO.getGrids();
         GridsWithFiltersDTO.SceneFilters filters = gridsWithFiltersDTO.getFilters();
@@ -184,7 +195,10 @@ public class GridDataServiceV3 {
         CoverageReportVO<Map<String, Object>> coverageReport = userSceneCache.coverageReportVO;
 
         if (scenesInfo == null || scenesInfo.isEmpty() || coverageReport == null) {
-            throw new NullPointerException("No scene data available in the cache.");
+            return GridsScenesOverlapVO.builder()
+                    .grids(new ArrayList<>())
+                    .scenes(new ArrayList<>())
+                    .build();
         }
         String resolutionName = filters.getResolutionName();
         List<String> sensorNames = new ArrayList<>();

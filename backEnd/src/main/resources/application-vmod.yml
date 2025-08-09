@@ -7,6 +7,17 @@ netty:
   websocket:
     port: 9888
 
+mysql:
+  host: 172.31.13.21
+  port: 3306
+  username: root
+  password: ogms250410
+pg:
+  host: 172.31.13.21
+  port: 5432
+  username: postgres
+  password: ogms250410
+
 spring:
   datasource:
     dynamic:
@@ -14,25 +25,47 @@ spring:
       strict: false
       datasource:
         mysql_satellite:
-          url: jdbc:mysql://172.31.13.21:3306/satellite?useSSL=false&allowPublicKeyRetrieval=true
-          username: root
-          password: ogms250410
+          url: jdbc:mysql://${mysql.host}:${mysql.port}/satellite?useSSL=false&allowPublicKeyRetrieval=true
+          username: ${mysql.username}
+          password: ${mysql.password}
           driver-class-name: com.mysql.cj.jdbc.Driver
+          hikari:
+            connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
+        mysql_ard_satellite:
+          url: jdbc:mysql://${mysql.host}:${mysql.port}/ard_satellite?useSSL=false&allowPublicKeyRetrieval=true
+          username: ${mysql.username}
+          password: ${mysql.password}
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          hikari:
+            connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
+        mysql_ard_iam:
+          url: jdbc:mysql://${mysql.host}:${mysql.port}/ard_iam?useSSL=false&allowPublicKeyRetrieval=true
+          username: ${mysql.username}
+          password: ${mysql.password}
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          hikari:
+            connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
+        mysql_ard_dev:
+          url: jdbc:mysql://${mysql.host}:${mysql.port}/ard_dev?useSSL=false&allowPublicKeyRetrieval=true
+          username: ${mysql.username}
+          password: ${mysql.password}
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          hikari:
+            connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
         mysql_tile:
-          url: jdbc:mysql://172.31.13.21:3306/tile?useSSL=false&allowPublicKeyRetrieval=true
-          username: root
-          password: ogms250410
+          url: jdbc:mysql://${mysql.host}:${mysql.port}/tile?useSSL=false&allowPublicKeyRetrieval=true
+          username: ${mysql.username}
+          password: ${mysql.password}
           driver-class-name: com.mysql.cj.jdbc.Driver
         pg_space:
-          url: jdbc:postgresql://172.31.13.21:5432/gis_db
-          username: postgres
-          password: ogms250410
+          url: jdbc:postgresql://${pg.host}:${pg.port}/gis_db
+          username: ${pg.username}
+          password: ${pg.password}
           driver-class-name: org.postgresql.Driver
         pg_satellite:
-          #          url: jdbc:postgresql://223.2.34.8:31543/satellite
-          url: jdbc:postgresql://172.31.13.21:5432/satellite
-          username: postgres
-          password: ogms250410
+          url: jdbc:postgresql://${pg.host}:${pg.port}/satellite
+          username: ${pg.username}
+          password: ${pg.password}
           driver-class-name: org.postgresql.Driver
   servlet:
     multipart:

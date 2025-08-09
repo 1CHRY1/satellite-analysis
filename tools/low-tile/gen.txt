@@ -1,0 +1,3 @@
+pyarmor gen --platform linux.aarch64 -r  grid_mosaic.py
+
+docker run --name test -it -v /Users/paxton/Documents/Code/satellite-analysis/low-tile/test:/app -w /app root/model-server:latest python -u low_level_tile_ray.py

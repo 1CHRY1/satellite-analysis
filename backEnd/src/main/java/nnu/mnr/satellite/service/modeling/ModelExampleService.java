@@ -192,7 +192,7 @@ public class ModelExampleService {
     }
 
     // 无云一版图计算
-    public CommonResultVO getNoCloudByRegion(NoCloudFetchDTO noCloudFetchDTO) throws IOException {
+    public CommonResultVO getNoCloudByRegion(NoCloudFetchDTO noCloudFetchDTO, String userId) throws IOException {
         Integer regionId = noCloudFetchDTO.getRegionId();
         Integer resolution = noCloudFetchDTO.getResolution();
         List<String> sceneIds = noCloudFetchDTO.getSceneIds();
@@ -231,6 +231,7 @@ public class ModelExampleService {
         JSONObject caseJsonObj = JSONObject.of("boundary", boundary, "address", address, "resolution", resolution, "sceneIds", sceneIds, "dataSet", noCloudFetchDTO.getDataSet());
         caseJsonObj.put("regionId", regionId);
         caseJsonObj.put("bandList", bandList);
+        caseJsonObj.put("userId", userId);
         String noCloudUrl;
         if (bandList.equals(Arrays.asList("Red", "Green", "Blue"))) {
             noCloudUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("noCloud");

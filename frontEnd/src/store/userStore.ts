@@ -3,8 +3,14 @@ import { ref } from 'vue'
 
 export interface UserInfo {
     name: string
+    phone: string
+    province: string
+    city: string
     email: string
-    id:string
+    id: string
+    title: string
+    organization: string
+    introduction: string
 }
 
 interface User {
@@ -35,10 +41,14 @@ export const useUserStore = defineStore('user-store', {
             return {
                 id: localStorage.getItem('userId') || '???',
                 name: '',
+                phone:'',
+                province:'',
+                city:'',
                 email: '',
                 title: '',
                 organization: '',
                 role: '',
+                introduction:''
             }
         })(),
     }),
@@ -48,21 +58,30 @@ export const useUserStore = defineStore('user-store', {
     actions: {
         updateUser(newUser: UserInfo) {
             this.user = { ...this.user, ...newUser }
+            localStorage.setItem('user', JSON.stringify(this.user))
         },
         // Mock login logic
         login(credentials: {
             name: string
+            phone: string
+            province: string
+            city: string
             email: string
             id: string
             title: string
             organization: string
+            introduction: string
         }) {
             this.authenticated = true
             this.user.id = credentials.id
             this.user.name = credentials.name
+            this.user.phone = credentials.phone
+            this.user.province = credentials.province
+            this.user.city = credentials.city
             this.user.email = credentials.email
             this.user.title = credentials.title
             this.user.organization = credentials.organization
+            this.user.introduction = credentials.introduction
             this.user.role = 'user'
             localStorage.setItem('user', JSON.stringify(this.user))
         },

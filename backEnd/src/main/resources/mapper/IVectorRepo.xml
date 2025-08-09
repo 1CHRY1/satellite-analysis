@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="nnu.mnr.satellite.mapper.resources.IVectorRepo">
+
+    <select id="getVectorByTableNameAndGeometry" resultType="java.lang.Object">
+        WITH mvt_geom AS (
+        SELECT
+        ST_AsMVTGeom(
+        ST_Transform(ST_Intersection(
+        original_table.geom,
+        ST_Transform(ST_GeomFromText(#{wkt}, 4326), ST_SRID(original_table.geom))
+        ), 3857),
+        ST_Transform(ST_TileEnvelope(#{z}, #{x}, #{y}), 3857),
+        extent => 256,
+        buffer => 64,
+        clip_geom => true
+        ) AS geom,
+        <if test="columns != null and columns.size() > 0">
+            <foreach collection="columns" item="column" separator=",">
+                original_table.${column}
+            </foreach>
+        </if>
+        <if test="columns == null or columns.size() == 0">
+            original_table.id  <!-- 默认字段 -->
+        </if>
+        FROM gis_db.${tableName} AS original_table
+        WHERE ST_Intersects(
+        ST_Transform(original_table.geom, 4326),
+        ST_GeomFromText(#{wkt}, 4326)
+        )
+        <if test="type != null">
+            AND original_table.type = #{type}
+        </if>
+
+        )
+        SELECT ST_AsMVT(t, '${tableName}', 256, 'geom') AS mvt
+        FROM mvt_geom AS t
+        WHERE geom IS NOT NULL
+    </select>
+
+</mapper>

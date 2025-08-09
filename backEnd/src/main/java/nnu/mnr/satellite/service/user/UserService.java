@@ -1,17 +1,18 @@
 package nnu.mnr.satellite.service.user;
 
+import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.config.security.CustomUserDetailsService;
 import nnu.mnr.satellite.constants.UserConstants;
-import nnu.mnr.satellite.model.dto.user.UserInfoDTO;
-import nnu.mnr.satellite.model.dto.user.UserLoginDTO;
-import nnu.mnr.satellite.model.dto.user.UserRegisterDTO;
+import nnu.mnr.satellite.model.dto.user.*;
 import nnu.mnr.satellite.model.po.user.User;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.model.vo.user.UserVO;
 import nnu.mnr.satellite.mapper.user.IUserRepo;
 import nnu.mnr.satellite.utils.common.IdUtil;
+import nnu.mnr.satellite.utils.dt.MinioUtil;
 import nnu.mnr.satellite.utils.security.JwtUtil;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
@@ -23,11 +24,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -39,6 +40,7 @@ import java.util.Optional;
 
 @Service
 @Slf4j
+@DS("mysql_ard_iam")
 public class UserService {
 
     private final IUserRepo userRepo;
@@ -50,6 +52,9 @@ public class UserService {
 
     @Autowired
     CustomUserDetailsService userDetailsService;
+
+    @Autowired
+    MinioUtil minioUtil;
 
     public UserService(IUserRepo userRepo, BCryptPasswordEncoder passwordEncoder, AuthenticationManager authenticationManager) {
         this.userRepo = userRepo;
@@ -171,17 +176,156 @@ public class UserService {
 
     public CommonResultVO updateUserInfoById(UserInfoDTO userInfoDTO) {
         String userId = userInfoDTO.getUserId();
+        String userName = userInfoDTO.getUserName();
         User user = userRepo.selectById(userId);
         if (user == null) {
             return CommonResultVO.builder()
-                    .message(String.format(UserConstants.USER_NOT_FOUND, userId)).status(-1).build();
+                    .message(String.format(UserConstants.USER_NOT_FOUND, userName)).status(-1).build();
         }
-        user.setCity(userInfoDTO.getCity()); user.setIntroduction(userInfoDTO.getIntroduction());
-        user.setOrganization(userInfoDTO.getOrganization()); user.setProvince(userInfoDTO.getProvince());
-        user.setPhone(userInfoDTO.getPhone()); user.setTitle(userInfoDTO.getTitle());
+        if (getUserByName(userName).isPresent() && !userName.equals(user.getUserName())) {
+            return CommonResultVO.builder().status(UserConstants.FAILURE_STATUS)
+                    .message(String.format(UserConstants.USER_ALREADY_EXISTS, userName)).build();
+        }
+        String email = userInfoDTO.getEmail();
+        if (getUserByEmail(email).isPresent() && !email.equals(user.getEmail())) {
+            return CommonResultVO.builder().status(UserConstants.FAILURE_STATUS)
+                    .message(String.format(UserConstants.EMAIL_ALREADY_EXISTS, email)).build();
+        }
+        String phone = userInfoDTO.getPhone();
+        if (getUserByPhone(phone).isPresent() && !phone.equals(user.getPhone())) {
+            return CommonResultVO.builder().status(UserConstants.FAILURE_STATUS)
+                    .message(String.format(UserConstants.PHONE_ALREADY_EXISTS, phone)).build();
+        }
+
+        user.setUserName(userInfoDTO.getUserName());
+        user.setPhone(userInfoDTO.getPhone());
+        user.setProvince(userInfoDTO.getProvince());
+        user.setCity(userInfoDTO.getCity());
+        user.setEmail(userInfoDTO.getEmail());
+        user.setTitle(userInfoDTO.getTitle());
+        user.setOrganization(userInfoDTO.getOrganization());
+        user.setIntroduction(userInfoDTO.getIntroduction());
+
         userRepo.updateById(user);
         return CommonResultVO.builder()
-                .message(String.format(UserConstants.USER_INFO_UPDATE, userId)).status(1).build();
+                .message(String.format(UserConstants.USER_INFO_UPDATE, userName)).status(1).build();
+    }
+
+    public CommonResultVO updateUserPasswordById(UserPasswordDTO userPasswordDTO) {
+        String userId = userPasswordDTO.getUserId();
+        String userName = userPasswordDTO.getUserName();
+        User user = userRepo.selectById(userId);
+        if (user == null) {
+            return CommonResultVO.builder()
+                    .message(String.format(UserConstants.USER_NOT_FOUND, userName)).status(-1).build();
+        }
+        if (!passwordEncoder.matches(userPasswordDTO.getOldPassword(), user.getPassword())){
+            return CommonResultVO.builder()
+                    .message("旧密码不正确").status(-1).build();
+        } else if (Objects.equals(userPasswordDTO.getOldPassword(), userPasswordDTO.getNewPassword())) {
+            return CommonResultVO.builder()
+                    .message("新密码不能与旧密码相同").status(-1).build();
+        } else {
+            String encryptedPassword = passwordEncoder.encode(userPasswordDTO.getNewPassword());
+            user.setPassword(encryptedPassword);
+            userRepo.updateById(user);
+            return CommonResultVO.builder()
+                    .message("密码修改成功").status(1).build();
+        }
+    }
+
+    public CommonResultVO getAvatar(String userId){
+        User user = userRepo.selectById(userId);
+        String avatarPath = user.getAvatarPath();
+        JSONObject avatarPathJSON = new JSONObject();
+        avatarPathJSON.put("avatarPath", avatarPath);
+        return CommonResultVO.builder()
+                .status(1)
+                .message("头像获取成功")
+                .data(avatarPathJSON)
+                .build();
+    }
+
+    public CommonResultVO uploadAvatar(AvatarUploadDTO avatarUploadDTO) {
+        String userId = avatarUploadDTO.getUserId();
+        String userName = avatarUploadDTO.getUserName();
+        MultipartFile file = avatarUploadDTO.getFile();
+
+        // 1. 检查用户是否存在
+        User user = userRepo.selectById(userId);
+        if (user == null) {
+            return CommonResultVO.builder()
+                    .message(String.format(UserConstants.USER_NOT_FOUND, userName))
+                    .status(-1)
+                    .build();
+        }
+        // 2. 检查文件是否为空
+        if (file.isEmpty()) {
+            return CommonResultVO.builder()
+                    .message("头像不能为空")
+                    .status(-1)
+                    .build();
+        }
+        // 3. 检查文件类型（仅允许 JPEG 或 PNG）
+        String fileType = file.getContentType();
+        if (!"image/jpeg".equals(fileType) && !"image/png".equals(fileType)) {
+            return CommonResultVO.builder()
+                    .message("头像格式不支持，仅支持 JPEG 或 PNG")
+                    .status(-1)
+                    .build();
+        }
+        // 4. 检查文件大小（< 1MB）
+        long maxSize = 1024 * 1024; // 1MB = 1024 * 1024 bytes
+        if (file.getSize() > maxSize) {
+            return CommonResultVO.builder()
+                    .message("头像大小不能超过 1MB")
+                    .status(-1)
+                    .build();
+        }
+
+        // 5. 文件校验通过，执行上传逻辑
+        String bucketName = "user";
+        if (minioUtil.existBucket(bucketName)){
+            String avatarPath = user.getAvatarPath();
+            String filePath = null;
+            // 判断是否已有头像路径，有的话直接覆盖，没有的话生成一个
+            if (avatarPath == null || avatarPath.isEmpty()) {
+                String OriginalFilename = file.getOriginalFilename();
+                String suffix = null;
+                if (OriginalFilename != null) {
+                    suffix = OriginalFilename.substring(OriginalFilename.lastIndexOf("."));
+                }else {
+                    return CommonResultVO.builder()
+                            .message("头像文件名不能为空")
+                            .status(-1)
+                            .build();
+                }
+                String fileName = UUID.randomUUID().toString().replace("-", "") + suffix;
+                filePath = "/user-avatars/" + fileName;
+                minioUtil.upload(file, filePath, bucketName);
+
+                // 更新用户头像信息（示例）
+                user.setAvatarPath(bucketName + filePath);
+                userRepo.updateById(user);
+            }else {
+                filePath = avatarPath.substring(avatarPath.indexOf("/"));
+                minioUtil.upload(file, filePath, bucketName);
+            }
+            JSONObject avatarPathJSON = new JSONObject();
+            avatarPath = bucketName + filePath;
+            avatarPathJSON.put("avatarPath", avatarPath);
+            return CommonResultVO.builder()
+                    .message("头像上传成功")
+                    .status(1)
+                    .data(avatarPathJSON)
+                    .build();
+
+        }else {
+            return CommonResultVO.builder()
+                    .message("保存路径不存在，多半是崩了")
+                    .status(-1)
+                    .build();
+        }
     }
 
     private Optional<User> getUserByName(String name) {
@@ -193,6 +337,12 @@ public class UserService {
     private Optional<User> getUserByEmail(String email) {
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("email", email);
+        return Optional.ofNullable(userRepo.selectOne(queryWrapper));
+    }
+
+    private Optional<User> getUserByPhone(String phone) {
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("phone", phone);
         return Optional.ofNullable(userRepo.selectOne(queryWrapper));
     }
 

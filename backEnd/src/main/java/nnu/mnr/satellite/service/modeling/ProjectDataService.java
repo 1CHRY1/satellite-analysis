@@ -1,5 +1,6 @@
 package nnu.mnr.satellite.service.modeling;
 
+import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.model.po.modeling.Project;
 import nnu.mnr.satellite.model.vo.modeling.ProjectVO;
@@ -20,6 +21,7 @@ import java.util.List;
  */
 
 @Service
+@DS("mysql_ard_dev")
 public class ProjectDataService {
 
     @Autowired

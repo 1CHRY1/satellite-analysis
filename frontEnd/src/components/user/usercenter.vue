@@ -12,11 +12,11 @@
               v-model:file-list="fileList_ava"
               :show-file-list="false"
               class="upload-demo relative"
-              action=""
               accept="image/jpg,image/jpeg,image/png"
               :limit="1"
               :before-upload="beforeUploadAvatar"
               :auto-upload="true"
+              :http-request="uploadAvatar"
             >
               <div class="relative w-48 h-48">
                 <img
@@ -59,7 +59,7 @@
             <p class="text-center text-gray-600" v-else>
               {{ t("userpage.introduction") }}
             </p>
-            <div>
+            <div class="button-container">
               <button
                 class="mr-4 px-4 py-2 text-white bg-blue-500 hover:bg-blue-400 rounded "
                 @click="opendialog"
@@ -68,8 +68,15 @@
                 {{ t("userpage.edit") }}
               </button>
 
+              <button 
+                class="mr-4 px-4 py-2 text-white bg-blue-500 hover:bg-blue-400 rounded "
+                @click="openReset"
+                >
+                 修改密码 
+              </button>
+
               <button
-                class="px-4 py-2 text-white bg-red-500 hover:bg-red-400 rounded"
+                class="mr-4 px-4 py-2 text-white bg-blue-500 hover:bg-blue-400 rounded "
                 @click="logout"
               >
                 <font-awesome-icon :icon="['fas', 'arrow-right-from-bracket']" />
@@ -86,7 +93,17 @@
   <el-dialog v-model="dialogFormVisible" title="编辑" width="400">
     <el-form :model="data">
       <el-form-item label="姓名" :label-width="formLabelWidth">
-        <el-input v-model="updateForm.name" autocomplete="off" />
+        <el-input v-model="updateForm.userName" autocomplete="off" />
+      </el-form-item>
+      <el-form-item label="电话" :label-width="formLabelWidth">
+        <el-input v-model="updateForm.phone" autocomplete="off" />
+      </el-form-item>
+      <el-form-item label="地址" :label-width="formLabelWidth">
+        <RegionSelects
+            v-model="regionValue"
+            :area="false"
+            @change = "regionUpdate"
+          />
       </el-form-item>
       <el-form-item label="邮箱" :label-width="formLabelWidth">
           <el-input v-model="data.email" autocomplete="off" />
@@ -116,6 +133,26 @@
       </span>
     </template>
   </el-dialog>
+  <el-dialog v-model="resetVisible" title="修改密码" width="400">
+      <el-form>
+        <el-form-item label="旧密码" :label-width="formLabelWidth">
+          <el-input v-model="oldPassword" autocomplete="off" />
+        </el-form-item>
+        <el-form-item label="新密码" :label-width="formLabelWidth">
+          <el-input v-model="newPassword" autocomplete="off" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="dialogFormVisible = false">{{
+          t("userpage.cancel")
+        }}</el-button>
+        <el-button type="primary" @click="updatePassword()">{{
+          t("userpage.confirm")
+        }}</el-button>
+      </span>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">    
@@ -124,27 +161,38 @@ const {t} = useI18n()
 
 import { useUserStore } from '@/store';
 import userAvatar from "@/assets/image/avator.png";
-import { ref, reactive } from "vue";
+import { ref, reactive , onMounted} from "vue";
 import userFunction from "@/components/user/userFunction.vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
-import { getUserUpdate } from '@/api/http/user';
+import { userUpdate, getUsers , changePassword} from '@/api/http/user';
+import { RegionSelects } from 'v-region'
+import { avaterUpdate, getAvatar } from '@/api/http/user'
 
 const router = useRouter();
-const useUser = useUserStore()
+const userStore = useUserStore()
+
 // 用户数据
 const data = reactive({
   avatar: "",
-  name: useUser.user.name,
-  email: useUser.user.email,
-  title: useUser.user.title,
-  organization:useUser.user.organization,
-  introduction: "",
+  id:userStore.user.id,
+  name: userStore.user.name,
+  phone: userStore.user.phone,
+  province:userStore.user.province,
+  city:userStore.user.city,
+  email: userStore.user.email,
+  title: userStore.user.title,
+  organization:userStore.user.organization,
+  introduction: userStore.user.introduction,
 });
 
 // 更新表单数据
 const updateForm = reactive({
-  name: "",
+  userId:'',
+  userName: "",
+  phone: '',
+  province:'',
+  city:'',
   email: "",
   title: "",
   organization:"",
@@ -172,14 +220,91 @@ function beforeUploadAvatar(file: File) {
   return true;
 }
 
+//头像更新
+const uploadAvatar = async (option: any) => {
+  const formData = new FormData();
+  formData.append("userId", userStore.user.id);
+  formData.append("userName", userStore.user.name);
+  formData.append("file", option.file); // binary file
+
+  try {
+    const res = await avaterUpdate(formData);
+    if (res.status === 1) {
+      ElMessage.success("头像上传成功");
+
+      // 更新头像展示路径
+      data.avatar = "http://223.2.34.8:30900/" + res.data.avatarPath;
+
+      // 更新 Store（可选）
+      userStore.updateUser({
+        ...userStore.user,
+        avatar: res.data.avatarPath,
+      });
+    } else {
+      ElMessage.error(res.message || "上传失败");
+    }
+  } catch (err) {
+    console.error(err);
+    ElMessage.error("上传异常");
+  }
+};
+
+//获取头像
+
+async function fetchAvatar(userId: string) {
+  try {
+    const res = await getAvatar(userId);
+    if (res.status === 1 && res.data.avatarPath) {
+      data.avatar = `http://223.2.34.8:30900/${res.data.avatarPath}`
+    } else {
+      data.avatar = '';
+    }
+  } catch (error) {
+    console.error('获取头像失败', error);
+    data.avatar = '';
+  }
+}
+
+
 // 打开编辑对话框
 function opendialog() {
   dialogFormVisible.value = true;
-  updateForm.name = data.name;
+  updateForm.userId = data.id
+  updateForm.userName = data.name;
+  updateForm.phone = data.phone;
   updateForm.email = data.email;
   updateForm.title = data.title;
   updateForm.organization = data.organization;
   updateForm.introduction = data.introduction;
+  regionValue.province = data.province;
+  regionValue.city = data.city;
+}
+
+// 更新密码
+const resetVisible = ref(false)
+const oldPassword = ref()
+const newPassword = ref()
+const openReset = ()=>{
+  resetVisible.value = true 
+}
+
+const updatePassword =  async() => {
+  let passwordData ={
+    userId :userStore.user.id,
+    userName : userStore.user.name,
+    oldPassword: oldPassword.value,
+    newPassword: newPassword.value
+  }
+  let passwordRes = await changePassword(userStore.user.id,passwordData )
+    if (passwordRes.status == 1) {
+      ElMessage.success("更新成功");
+      let newData = await getUsers(userStore.user.id)
+      resetVisible.value = false;
+    } else {
+      ElMessage.error(passwordRes.message);
+      resetVisible.value = false;
+    }
+  ;
 }
 
 // 退出登录
@@ -188,21 +313,41 @@ function logout() {
   router.push('/login');
 }
 
+const regionValue = reactive({
+  province: '',
+  city: '',
+})
+
+const regionUpdate = () =>{
+  updateForm.province = regionValue.province
+  updateForm.city = regionValue.city
+}
+
 // 更新用户信息
 const updateUserInfo = async() => {
-  let updata = {
-    name: useUser.user.name,
-    email: useUser.user.email,
-    title: useUser.user.title,
-    organization:useUser.user.organization,
+  let userInfo = {
+    name: userStore.user.name,
+    email: userStore.user.email,
+    title: userStore.user.title,
+    organization:userStore.user.organization,
     introduction: updateForm.introduction,
   };
-  console.log(updata);
-  let res = await getUserUpdate(updata)
-    if (res.code == 0) {
+  console.log(userInfo);
+  let res = await userUpdate(userStore.user.id,updateForm)
+    if (res.status == 1) {
       ElMessage.success("更新成功");
-      data.name = res.data.name;
-      data.introduction = res.data.introduction;
+      let newData = await getUsers(userStore.user.id)
+      userStore.updateUser({
+            id: userStore.user.id,
+            phone: newData.phone,
+            province:newData.province,
+            city:newData.city,
+            email: newData.email,
+            name: newData.userName,
+            title: newData.title,
+            organization: newData.organization,
+            introduction:newData.introduction 
+        })
       dialogFormVisible.value = false;
     } else {
       ElMessage.error(res.message);
@@ -210,8 +355,16 @@ const updateUserInfo = async() => {
     }
   ;
 };
+
+onMounted(async () => {
+  await fetchAvatar(userStore.user.id);
+});
 </script>
 
-<style>
-
+<style scoped>
+.button-container {
+  display: flex;
+  flex-direction: column; 
+  gap: 8px
+    }
 </style>
