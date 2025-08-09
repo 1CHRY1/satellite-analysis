@@ -53,7 +53,7 @@
     align-items: center;
     justify-content: center;
     background: transparent;
-    border: none;
+    border: 1px solid #577f9d;
     color: white;
     cursor: pointer;
     padding: 1rem;

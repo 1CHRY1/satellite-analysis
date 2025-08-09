@@ -4,7 +4,8 @@ export type VectorUrlParam = {
     landId: string
     source_layer: string
     spatialFilterMethod: SpatialFilterMethod,
-    resolution?: number
+    resolution?: number,
+    type?: number
 }
 
 export type RGBCompositeParams = {

@@ -55,17 +55,17 @@ export const getSceneUrl = (sensorName: string) => {
  * 矢量Url
  */
 export const getVectorUrl = (vectorUrlParam: VectorUrlParam) => {
-    const { landId, source_layer, spatialFilterMethod, resolution } = vectorUrlParam
+    const { landId, source_layer, spatialFilterMethod, resolution, type } = vectorUrlParam
     let baseUrl = ''
     switch (spatialFilterMethod) {
         case 'region':
-            baseUrl = `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/region/${landId}/${source_layer}/{z}/{x}/{y}`
+            baseUrl = `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/region/${landId}/${source_layer}/{z}/{x}/{y}?type=${type}`
             break
         case 'poi':
-            baseUrl = `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/location/${landId}/${resolution}/${source_layer}/{z}/{x}/{y}`
+            baseUrl = `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/location/${landId}/${resolution}/${source_layer}/{z}/{x}/{y}?type=${type}`
             break
         default:
-            baseUrl = `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/region/${landId}/${source_layer}/{z}/{x}/{y}`
+            baseUrl = `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/region/${landId}/${source_layer}/{z}/{x}/{y}?type=${type}`
             break
     }
     const fullUrl = baseUrl
@@ -154,8 +154,8 @@ export const getGridSceneUrl = (grid: GridData, param: RGBCompositeParams) => {
 /**
  * 格网矢量Url
  */
-export const getGridVectorUrl = (grid: GridData, source_layer: string) => {
-    return `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/grid/${grid.columnId}/${grid.rowId}/${grid.resolution}/${source_layer}/{z}/{x}/{y}`
+export const getGridVectorUrl = (grid: GridData, source_layer: string, type?: number) => {
+    return `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/grid/${grid.columnId}/${grid.rowId}/${grid.resolution}/${source_layer}/{z}/{x}/{y}?type=${type}`
 }
 
 /**

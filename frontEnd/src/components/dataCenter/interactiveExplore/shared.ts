@@ -7,6 +7,7 @@ import type { RegionValues } from "v-region"
 import { ref, computed } from "vue"
 import dayjs from "dayjs"
 import type { SceneStats, VectorStats, ThemeStats } from '@/api/http/interactive-explore/filter.type'
+import type { VectorSymbology } from "@/type/interactive-explore/visualize"
 
 
 /**
@@ -72,3 +73,5 @@ export const themeStats = ref<ThemeStats.ThemeStatsResponse>({
     total: 0,
     category: []
 })
+
+export const vectorSymbology = ref<VectorSymbology>({})

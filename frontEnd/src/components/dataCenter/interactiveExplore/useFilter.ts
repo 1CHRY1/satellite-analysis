@@ -14,7 +14,6 @@ import {
     getPOIPosition,
     getVectorsByRegionFilter,
     getVectorsByPOIFilter,
-    getVectorAttr
 } from '@/api/http/satellite-data'
 import {
     // ------------------------ V3版本API ------------------------ //
@@ -47,7 +46,7 @@ const exploreData = useExploreStore()
  */
 export const useFilter = () => {
     const { t } = useI18n()
-    const { createGeoJSONFromBounds, marker, addPolygonLayer, addPOIMarker, addGridLayer, updateGridLayer, destroyUniqueLayer, destroyGridLayer } = useVisualize()
+    const { createGeoJSONFromBounds, marker, addPolygonLayer, addPOIMarker, addGridLayer, updateGridLayer, destroyUniqueLayer, destroyGridLayer, getVectorSymbology } = useVisualize()
 
     
     /**
@@ -178,18 +177,6 @@ export const useFilter = () => {
     const filterLoading = ref(false)
     // 筛选是否完成
     const isFilterDone = ref(false)
-    const getVectorSymbology = async () => {
-        const promises: Promise<any>[] = []
-        for (const vector of vectorStats.value) {
-            promises.push(getVectorAttr(vector.tableName))
-        }
-        const vectorAttrList = await Promise.all(promises)
-        for (const [index, vector] of vectorStats.value.entries()) {
-            // vectorStats.value[index].attr = vectorAttrList[index]
-        }
-        console.log(vectorAttrList)
-
-    }
     const doFilter = async () => {
         if (finalLandId.value === 'None') {
             ElMessage.warning(t('datapage.explore.message.filtererror_choose'))
@@ -226,7 +213,11 @@ export const useFilter = () => {
         sceneStats.value = sceneStatsRes
         vectorStats.value = vectorsRes
         themeStats.value = themeStatsRes
-        getVectorSymbology()
+        try {
+            await getVectorSymbology()
+        } catch (e) {
+            console.error('获取矢量属性类型失败:', e)
+        }
 
         syncToGridExplore()
         syncToDataPrepare()
