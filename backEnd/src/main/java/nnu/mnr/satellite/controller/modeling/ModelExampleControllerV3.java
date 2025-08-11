@@ -1,6 +1,7 @@
 package nnu.mnr.satellite.controller.modeling;
 
 import io.jsonwebtoken.JwtException;
+import nnu.mnr.satellite.model.dto.modeling.VisualizationLowLevelTile;
 import nnu.mnr.satellite.model.dto.modeling.VisualizationTileDTO;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.service.modeling.ModelExampleServiceV3;
@@ -37,6 +38,24 @@ public class ModelExampleControllerV3 {
 
         return ResponseEntity.ok(result);
     }
+
+//    @PostMapping("/scenes/visualization/lowLevel")
+//    public ResponseEntity<CommonResultVO> createLowLevelScenesVisualizationConfig(@RequestBody VisualizationLowLevelTile visualizationLowLevelTile,
+//                                                                          @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+//                                                                          @CookieValue(value = "encrypted_request_body", required = false) String encryptedRequestBody) {
+//        // 拼凑cacheKey
+//        String userId;
+//        try {
+//            userId = IdUtil.parseUserIdFromAuthHeader(authorizationHeader);
+//        } catch (JwtException e) {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+//        }
+//
+//        String cacheKey = userId + "_" + encryptedRequestBody;
+//        CommonResultVO result = modelExampleService.createLowLevelScenesVisualizationConfig(visualizationTileDTO, cacheKey);
+//
+//        return ResponseEntity.ok(result);
+//    }
 
     @GetMapping("/theme/visualization/{themeName}")
     public ResponseEntity<CommonResultVO> createThemeVisualizationConfig(@PathVariable String themeName,
