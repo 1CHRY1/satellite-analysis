@@ -1,7 +1,7 @@
 <template>
     <div class="relative flex flex-1 h-full flex-row bg-black ">
         <subtitle class="z-10 absolute" style="margin-top: 60px; "/>
-        <div class="absolute  left-16  top-0  p-4 text-gray-200 z-10 h-[1089px] " :class="isToolbarOpen? 'w-[20vw]' : 'w-16'" style="margin-top: 100px; ">
+        <div class="absolute  left-16  top-0  p-4 text-gray-200 z-10 h-[calc(100vh-300px)] " :class="isToolbarOpen? 'w-[20vw]' : 'w-16'" style="margin-top: 100px; ">
             <button 
                 @click="isToolbarOpen = !isToolbarOpen"
                 class="absolute top-1/2 right-0 -translate-y-1/2 h-12 w-6 bg-gray-800 hover:bg-gray-700 text-white rounded-r-lg shadow-lg 
@@ -13,169 +13,173 @@
                     class="transition-transform duration-300"
                     :class="{ 'transform rotate-180': isToolbarOpen }"
                 />
-            </button>               
+            </button>
+                          
             <div v-show="isToolbarOpen" 
-                 class="h-[1089px] w-full bg-gray-800 shadow-lg transition-all duration-300 overflow-hidden 
-                 flex flex-col flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 
+                 class="h-full
                  "
                  style="background-color: rgba(20, 20, 21, 0.6);"
                 :class="isToolbarOpen ? 'w-[20vw]' : 'w-16'">
+
+                <dv-border-box12 class="h-full overflow-y-auto box-border " style="height: calc(100vh-300px);"> 
                 <!-- 工具栏内容 -->
-                <div class="p-4 text-white border-b border-gray-700">
-                    <h3 class="font-semibold flex items-center gap-2">
-                        <ToolIcon :size="18" />
-                        设置
-                    </h3>
-                </div>
-                <div>
-                    <section class="panel-section">
-                        <div class="section-header" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
-                            <div class="section-icon">
-                                <MapPinIcon :size="18" />
-                            </div>
-                            <h2 class="section-title">{{t('datapage.analysis.section1.subtitle')}}</h2>
-                        </div>
-                        <div class="section-content">
-                            <div class="config-container" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
-                                <div class="config-item">
-                                    <div class="config-label relative">
-                                        <MapIcon :size="16" class="config-icon" />
-                                        <span>{{t('datapage.analysis.section1.area')}}</span>
-                                    </div>
-                                    <div class="config-control justify-center">
-                                        <RegionSelects v-model="region" class="flex gap-2"
-                                            select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
-                                    </div>
+                    <div class="p-4 text-white border-b border-gray-700">
+                        <h3 class="font-semibold flex items-center gap-2">
+                            <ToolIcon :size="18" />
+                            设置
+                        </h3>
+                    </div>
+                    <div>
+                        <section class="panel-section">
+                            <div class="section-header" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
+                                <div class="section-icon">
+                                    <MapPinIcon :size="18" />
                                 </div>
+                                <h2 class="section-title">{{t('datapage.analysis.section1.subtitle')}}</h2>
                             </div>
-                        </div>
-                    </section>
-                    <section class="panel-section">
-                        <div class="section-header" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
-                            <div class="section-icon">
-                                <ChartColumn :size="18" />
-                            </div>
-                            <h2 class="section-title mr-6">数据集  </h2>
-                            <div class="ml-4">
-                                <button @click="showHistory = !showHistory"
-                                class=" bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-4 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6] truncate"
-                                >
-                                前序数据
-                                </button>
-                                <el-dialog v-model="showHistory"
-                                            class="max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-[60vw]
-                                            "
-                                            style="background-color: #111827; color: white;">
-                                    <div class="mb-6 text-gray-100">前序数据集</div>
-                                    
-                                    <div v-if="completedCases.length > 0" class="max-h-[500px] overflow-y-auto">
-                                        <div v-for="item in completedCases" 
-                                        :key="item.caseId" 
-                                        class="p-4 mb-3 border border-gray-200 rounded-md 
-                                                cursor-pointer transition-all duration-300
-                                                hover:bg-gray-50 hover:shadow-md"
-                                        @click="showResult(item.caseId, item.regionId)">
-                                            <h3 class="mt-0 text-blue-500">{{ item.address }}无云一版图</h3>
-                                            <p class="my-1 text-blue-300">分辨率: {{ item.resolution }}km</p>
-                                            <p class="my-1 text-blue-300">创建时间: {{ formatTimeToText(item.createTime) }}</p>
-                                            <p class="my-1 text-blue-300">数据集: {{ item.dataSet }}</p>
+                            <div class="section-content">
+                                <div class="config-container" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
+                                    <div class="config-item">
+                                        <div class="config-label relative">
+                                            <MapIcon :size="16" class="config-icon" />
+                                            <span>{{t('datapage.analysis.section1.area')}}</span>
+                                        </div>
+                                        <div class="config-control justify-center">
+                                            <RegionSelects v-model="region" class="flex gap-2"
+                                                select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
                                         </div>
                                     </div>
-                                    <div v-else>
-                                        <p class="item-center text-center text-gray-100">暂无数据</p>
-                                    </div>
-                                </el-dialog>
+                                </div>
                             </div>
-                            <!-- <h2 class="section-title">{{t('datapage.analysis.section2.subtitle')}}</h2>
-                            <select v-model="selectedTask" @change="handleThematicChange"
-                                class="bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-3 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6] max-w-[calc(100%-90px)] truncate">
-                                <option v-for="option in optionalTasks" :key="option.value" :value="option.value"
-                                    :disabled="option.disabled">
-                                    {{ option.label }}
-                                </option>
-                            </select> -->
-                            <div class="absolute right-6" @click="clearImages">
-                                <a-tooltip>
-                                    <template #title>{{t('datapage.analysis.section2.clear')}}</template>
-                                    <Trash2Icon :size="20" />
-                                </a-tooltip>
+                        </section>
+                        <section class="panel-section">
+                            <div class="section-header" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
+                                <div class="section-icon">
+                                    <ChartColumn :size="18" />
+                                </div>
+                                <h2 class="section-title mr-6">数据集  </h2>
+                                <div class="ml-4">
+                                    <button @click="showHistory = !showHistory"
+                                    class=" bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-4 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6] truncate"
+                                    >
+                                    前序数据
+                                    </button>
+                                    <el-dialog v-model="showHistory"
+                                                class="max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-[60vw]
+                                                "
+                                                style="background-color: #111827; color: white;">
+                                        <div class="mb-6 text-gray-100">前序数据集</div>
+                                        
+                                        <div v-if="completedCases.length > 0" class="max-h-[500px] overflow-y-auto">
+                                            <div v-for="item in completedCases" 
+                                            :key="item.caseId" 
+                                            class="p-4 mb-3 border border-gray-200 rounded-md 
+                                                    cursor-pointer transition-all duration-300
+                                                    hover:bg-gray-50 hover:shadow-md"
+                                            @click="showResult(item.caseId, item.regionId)">
+                                                <h3 class="mt-0 text-blue-500">{{ item.address }}无云一版图</h3>
+                                                <p class="my-1 text-blue-300">分辨率: {{ item.resolution }}km</p>
+                                                <p class="my-1 text-blue-300">创建时间: {{ formatTimeToText(item.createTime) }}</p>
+                                                <p class="my-1 text-blue-300">数据集: {{ item.dataSet }}</p>
+                                            </div>
+                                        </div>
+                                        <div v-else>
+                                            <p class="item-center text-center text-gray-100">暂无数据</p>
+                                        </div>
+                                    </el-dialog>
+                                </div>
+                                <!-- <h2 class="section-title">{{t('datapage.analysis.section2.subtitle')}}</h2>
+                                <select v-model="selectedTask" @change="handleThematicChange"
+                                    class="bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-3 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6] max-w-[calc(100%-90px)] truncate">
+                                    <option v-for="option in optionalTasks" :key="option.value" :value="option.value"
+                                        :disabled="option.disabled">
+                                        {{ option.label }}
+                                    </option>
+                                </select> -->
+                                <div class="absolute right-6" @click="clearImages">
+                                    <a-tooltip>
+                                        <template #title>{{t('datapage.analysis.section2.clear')}}</template>
+                                        <Trash2Icon :size="20" />
+                                    </a-tooltip>
+                                </div>
                             </div>
-                        </div>
-                    </section>
-                </div>
-                            <!-- Function Title -->
-                <div class="flex flex-col  flex-wrap  gap-2 mt-4 ml-6 mr-6" >
-                        <!-- <h3>影像分析</h3>
-                        <div class="absolute right-6 " @click="clearImages">
-                            <a-tooltip>
-                                <template #title>{{t('datapage.analysis.section2.clear')}}</template>
-                                <Trash2Icon :size="20" />
-                            </a-tooltip>
-                        </div>
-                        <button 
-                            v-for="option in optionalTasks" 
-                            :key="option.value"
-                            @click="selectedTask = option.value"
-                            :class="{
-                            'bg-[#1e3a8a] text-white': selectedTask === option.value,
-                            'bg-[#0d1526] text-gray-300 hover:bg-[#1e293b]': selectedTask !== option.value,
-                            'opacity-50 cursor-not-allowed': option.disabled
-                            }"
-                            class="px-3 py-1 border border-[#2c3e50] rounded-lg transition-colors"
-                            :disabled="option.disabled"
-                            >
-                                {{ option.label }}
-                        </button> -->
-                        <!-- 数据集 -->
-                        
-                    <h3>目录</h3>
-                    <div class="mt-2 relative">
-                        <input
-                            v-model="searchQuery"
-                            placeholder="搜索工具..."
-                            class="w-full bg-gray-700 text-white px-3 py-1 rounded border border-gray-600 
-                            focus:outline-none focus:border-blue-500"
-                        />
-                        <SearchIcon :size="16" class="absolute right-3 top-2 text-gray-400" />
+                        </section>
                     </div>
-                    
-                    
-                    <!-- 分类工具列表 -->
-                    <div class="overflow-y-auto flex-1 p-2 mb-6" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
-                        <div v-for="category in filteredCategories" :key="category.name" class="mb-4">
-                            <h3 class="text-gray-300 font-medium px-2 py-1 flex items-center">
-                                <ChevronDownIcon 
-                                    :size="16" 
-                                    class="mr-1 transition-transform duration-200"
-                                    :class="{ 'transform rotate-180': expandedCategories.includes(category.name) }"
-                                    @click="toggleCategory(category.name)"
-                                />
-                                {{ category.name }}
-                            </h3>
-                            
-                            <div 
-                                v-show="expandedCategories.includes(category.name) || searchQuery"
-                                class="ml-6 mt-1 space-y-1 "
-                            >
-                                <div
-                                    v-for="tool in category.tools" 
-                                    :key="tool.value"
-                                    
+
+                                <!-- Function Title -->
+                    <div class="flex flex-col flex-1  mt-4 ml-6 mr-6 max-h-[calc((100vh-140px)/2)]"  >
+                                <!-- <h3>影像分析</h3>
+                                <div class="absolute right-6 " @click="clearImages">
+                                    <a-tooltip>
+                                        <template #title>{{t('datapage.analysis.section2.clear')}}</template>
+                                        <Trash2Icon :size="20" />
+                                    </a-tooltip>
+                                </div>
+                                <button 
+                                    v-for="option in optionalTasks" 
+                                    :key="option.value"
+                                    @click="selectedTask = option.value"
                                     :class="{
-                                        'bg-[#1e3a8a] text-white': selectedTask === tool.value,
-                                        // 'bg-[#0d1526] text-gray-300 hover:bg-[#1e293b]': selectedTask !== tool.value,
-                                        'opacity-50 cursor-not-allowed': tool.disabled
+                                    'bg-[#1e3a8a] text-white': selectedTask === option.value,
+                                    'bg-[#0d1526] text-gray-300 hover:bg-[#1e293b]': selectedTask !== option.value,
+                                    'opacity-50 cursor-not-allowed': option.disabled
                                     }"
-                                    class="px-3 py-1  rounded-lg transition-colors w-full text-left truncate"
-                                    :disabled="tool.disabled"
-                                    @click="selectedTask = tool.value"
-                                >
-                                    {{ tool.label }}
+                                    class="px-3 py-1 border border-[#2c3e50] rounded-lg transition-colors"
+                                    :disabled="option.disabled"
+                                    >
+                                        {{ option.label }}
+                                </button> -->
+                                <!-- 数据集 -->
+                                
+                            <h3>目录</h3>
+                            <div class="mt-2 relative mb-2">
+                                <input
+                                    v-model="searchQuery"
+                                    placeholder="搜索工具..."
+                                    class="w-full bg-gray-700 text-white px-3 py-1 rounded border border-gray-600 
+                                    focus:outline-none focus:border-blue-500"
+                                />
+                                <SearchIcon :size="16" class="absolute right-3 top-2 text-gray-400" />
+                            </div>
+                            
+                            
+                            <!-- 分类工具列表 -->
+                            <div class=" p-2 mb-6 min-h-0 overflow-y-auto" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
+                                <div v-for="category in filteredCategories" :key="category.name" class="mb-4">
+                                    <h3 class="text-gray-300 font-medium px-2 py-1 flex items-center flex-1">
+                                        <ChevronDownIcon 
+                                            :size="16" 
+                                            class="mr-1 transition-transform duration-200"
+                                            :class="{ 'transform rotate-180': expandedCategories.includes(category.name) }"
+                                            @click="toggleCategory(category.name)"
+                                        />
+                                        {{ category.name }}
+                                    </h3>
+                                    
+                                    <div 
+                                        v-show="expandedCategories.includes(category.name) || searchQuery"
+                                        class="ml-6 mt-1 space-y-1 flex-1"
+                                    >
+                                        <div
+                                            v-for="tool in category.tools" 
+                                            :key="tool.value"
+                                            
+                                            :class="{
+                                                'bg-[#1e3a8a] text-white': selectedTask === tool.value,
+                                                // 'bg-[#0d1526] text-gray-300 hover:bg-[#1e293b]': selectedTask !== tool.value,
+                                                'opacity-50 cursor-not-allowed': tool.disabled
+                                            }"
+                                            class="px-3 py-1  rounded-lg transition-colors w-full text-left truncate"
+                                            :disabled="tool.disabled"
+                                            @click="selectedTask = tool.value"
+                                        >
+                                            {{ tool.label }}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
+                </dv-border-box12>
             </div>
         </div>
         <!-- <ImageSearcher class="h-full w-[28vw] mt-10" /> -->
