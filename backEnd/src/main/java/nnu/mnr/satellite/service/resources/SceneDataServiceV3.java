@@ -90,6 +90,7 @@ public class SceneDataServiceV3 {
             SceneDataCache.cacheUserThemes(cacheKey, themesInfo, null);
             // 格网边界缓存
             SceneDataCache.cacheUserRegionInfo(cacheKey, gridsBoundary);
+            SceneDataCache.printAllCacheContents();
         } else if (userSceneCache == null) {
             // 缓存未命中，从数据库中读数据
             Geometry boundary = regionDataService.getRegionById(regionId).getBoundary();

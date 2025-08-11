@@ -10,6 +10,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
 // 没有v2，直接v3
 @RestController
 @RequestMapping("/api/v3/modeling/example")
@@ -39,10 +43,10 @@ public class ModelExampleControllerV3 {
         return ResponseEntity.ok(result);
     }
 
-//    @PostMapping("/scenes/visualization/lowLevel")
-//    public ResponseEntity<CommonResultVO> createLowLevelScenesVisualizationConfig(@RequestBody VisualizationLowLevelTile visualizationLowLevelTile,
-//                                                                          @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-//                                                                          @CookieValue(value = "encrypted_request_body", required = false) String encryptedRequestBody) {
+    @PostMapping("/scenes/visualization/lowLevel")
+    public ResponseEntity<CommonResultVO> createLowLevelScenesVisualizationConfig(@RequestBody VisualizationLowLevelTile visualizationLowLevelTile,
+                                                                          @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+                                                                          @CookieValue(value = "encrypted_request_body", required = false) String encryptedRequestBody) throws IOException {
 //        // 拼凑cacheKey
 //        String userId;
 //        try {
@@ -52,10 +56,19 @@ public class ModelExampleControllerV3 {
 //        }
 //
 //        String cacheKey = userId + "_" + encryptedRequestBody;
-//        CommonResultVO result = modelExampleService.createLowLevelScenesVisualizationConfig(visualizationTileDTO, cacheKey);
-//
-//        return ResponseEntity.ok(result);
-//    }
+        Map<String, String> headers = new HashMap<>();
+        if (authorizationHeader != null) {
+            headers.put("Authorization", authorizationHeader); // 添加 Authorization 请求头
+        }
+        Map<String, String> cookies = new HashMap<>();
+        if (encryptedRequestBody != null) {
+            cookies.put("encrypted_request_body", encryptedRequestBody); // 添加 Cookie
+        }
+
+        CommonResultVO result = modelExampleService.createLowLevelScenesVisualizationConfig(visualizationLowLevelTile, headers, cookies);
+
+        return ResponseEntity.ok(result);
+    }
 
     @GetMapping("/theme/visualization/{themeName}")
     public ResponseEntity<CommonResultVO> createThemeVisualizationConfig(@PathVariable String themeName,
