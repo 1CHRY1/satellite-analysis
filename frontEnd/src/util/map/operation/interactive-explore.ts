@@ -270,6 +270,40 @@ export function map_destroyGridLayer(): void {
 /**
  * 3. 交互探索 - 遥感影像可视化
  */
+export function map_addLargeSceneLayer(url: string) {
+    console.log("影像可视化Url：", url)
+    const id = 'large-scene-layer'
+    const srcId = id + '-source'
+    mapManager.withMap((m) => {
+        m.getLayer(id) && m.removeLayer(id)
+        m.getSource(srcId) && m.removeSource(srcId)
+
+        m.addSource(srcId, {
+            type: 'raster',
+            tiles: [url],
+            tileSize: 256,
+            minzoom: 1,
+            maxzoom: 8, // 数据源最大 8 级，不会请求更高
+        })
+        
+        m.addLayer({
+            id,
+            type: 'raster',
+            source: srcId,
+            paint: {},
+            maxzoom: 8, // 图层最大 8 级，>8 就不渲染
+        })
+    })
+}
+
+export function map_destroyLargeSceneLayer() {
+    const id = 'large-scene-layer'
+    const srcId = id + '-source'
+    mapManager.withMap((m) => {
+        m.getLayer(id) && m.removeLayer(id)
+        m.getSource(srcId) && m.removeSource(srcId)
+    })
+}
 export function map_addSceneLayer(url: string) {
     console.log("影像可视化Url：", url)
     const id = 'scene-layer'
