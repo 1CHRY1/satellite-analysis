@@ -84,8 +84,9 @@
             width: 100%;
             height: 30px;
             margin-top: 1%;
-            border-color: white;
-            background-color: white;
+            border-color: white !important  ;
+            background-color: white !important;
+            color: black !important;
           "
           @click="loadmoreAll"
           v-if="TotalElement > 5 && historyData.length < TotalElement"
@@ -101,6 +102,7 @@ import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { getUserProjects } from "@/api/http/analysis";
+import { getHistoryData } from "@/api/http/user";
 
   
 const router = useRouter();
@@ -173,6 +175,7 @@ const projectList = ref<Project[]>([])
 
   onMounted(async () => {
     projectList.value = await getUserProjects()
+
 })
   </script>
   

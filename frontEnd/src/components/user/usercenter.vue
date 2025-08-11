@@ -99,11 +99,27 @@
         <el-input v-model="updateForm.phone" autocomplete="off" />
       </el-form-item>
       <el-form-item label="地址" :label-width="formLabelWidth">
-        <RegionSelects
-            v-model="regionValue"
-            :area="false"
-            @change = "regionUpdate"
-          />
+        <p class="flex items-center gap-2">
+      <span>{{ data.province }} {{ data.city }}</span>
+      <span
+        @click="showSelection"
+        
+        class="text-blue-500 cursor-pointer select-none active:text-red-500"
+      >
+        修改
+      </span>
+    </p>
+        <div v-if="isShow">
+          <RegionSelects
+              v-model="regionValue"
+              :defaultRegion="{
+              province: { key: '', value: data.province },
+              city: { key: '', value: data.city }
+              }"
+              :area="false"
+              @change = "regionUpdate"
+            />
+        </div>
       </el-form-item>
       <el-form-item label="邮箱" :label-width="formLabelWidth">
           <el-input v-model="data.email" autocomplete="off" />
@@ -161,7 +177,7 @@ const {t} = useI18n()
 
 import { useUserStore } from '@/store';
 import userAvatar from "@/assets/image/avator.png";
-import { ref, reactive , onMounted} from "vue";
+import { ref, reactive , onMounted,watch } from "vue";
 import userFunction from "@/components/user/userFunction.vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
@@ -175,16 +191,24 @@ const userStore = useUserStore()
 // 用户数据
 const data = reactive({
   avatar: "",
-  id:userStore.user.id,
-  name: userStore.user.name,
-  phone: userStore.user.phone,
-  province:userStore.user.province,
-  city:userStore.user.city,
-  email: userStore.user.email,
-  title: userStore.user.title,
-  organization:userStore.user.organization,
-  introduction: userStore.user.introduction,
+  id: "",
+  name: "",
+  phone: "",
+  province: "",
+  city: "",
+  email: "",
+  title: "",
+  organization: "",
+  introduction: "",
 });
+
+// 初始赋值
+Object.assign(data, userStore.user);
+
+// 监听 userStore.user 改变，实时同步到 data
+watch(() => userStore.user, (newUser) => {
+  Object.assign(data, newUser);
+}, { deep: true });
 
 // 更新表单数据
 const updateForm = reactive({
@@ -207,14 +231,14 @@ const formLabelWidth = "80px";
 // 头像上传前校验
 function beforeUploadAvatar(file: File) {
   const isJPG = file.type === 'image/jpeg' || file.type === 'image/png';
-  const isLt2M = file.size / 1024 / 1024 < 2;
+  const isLt1M = file.size / 1024 / 1024 < 1;
 
   if (!isJPG) {
     ElMessage.error('上传头像图片只能是 JPG/PNG 格式!');
     return false;
   }
-  if (!isLt2M) {
-    ElMessage.error('上传头像图片大小不能超过 2MB!');
+  if (!isLt1M) {
+    ElMessage.error('上传头像图片大小不能超过 1MB!');
     return false;
   }
   return true;
@@ -310,17 +334,34 @@ const updatePassword =  async() => {
 // 退出登录
 function logout() {
   ElMessage.success("已退出登录");
-  router.push('/login');
+  userStore.logout()
+  router.push('/home');
 }
 
 const regionValue = reactive({
-  province: '',
-  city: '',
+  province: data.province,
+  city: data.city,
 })
 
-const regionUpdate = () =>{
-  updateForm.province = regionValue.province
-  updateForm.city = regionValue.city
+
+const regionUpdate = (value) => {
+  console.log("RegionSelects返回值：", value);
+
+
+  regionValue.province = value.province;
+  regionValue.city = value.city;
+
+  updateForm.province = value.province.value;
+  updateForm.city = value.city.value;
+
+  console.log("省份", updateForm.province);
+  // isShow.value=false 
+
+}
+
+const isShow = ref(false)
+const showSelection = () =>{
+  isShow.value = !isShow.value
 }
 
 // 更新用户信息
@@ -367,4 +408,10 @@ onMounted(async () => {
   flex-direction: column; 
   gap: 8px
     }
+:deep(.el-input__wrapper) {
+  background-color: white !important;
+}
+:deep(.el-input__inner) {
+  color: black !important;
+}
 </style>
