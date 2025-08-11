@@ -2,12 +2,13 @@
  * Visualize API: 获取可视化服务URL
  */
 import { ezStore } from "@/store"
-import type { OneBandColorLayerParam, RGBCompositeParams, VectorUrlParam } from "./visualize.type"
+import type { LargeScaleSceneParam, OneBandColorLayerParam, RGBCompositeParams, VectorUrlParam } from "./visualize.type"
 import { getThemeByThemeName } from "./filter.api"
 import http from "@/api/axiosClient/tilerHttp"
 import { message } from "ant-design-vue"
 import type { GridData } from "@/type/interactive-explore/grid"
 import { grid2bbox } from "@/util/map/gridMaker"
+import httpV3 from '../../axiosClient/clientHttp3'
 
 const titilerProxyEndPoint = ezStore.get('conf')['titiler']
 const minioEndPoint = ezStore.get('conf')['minioIpAndPort']
@@ -39,16 +40,25 @@ export async function getImgStats(url: string): Promise<any> {
  */
 
 /**
- * 遥感影像Url - OnTheFly
+ * 遥感影像Url - 小范围OnTheFly
  */
 export const getSceneUrl = (sensorName: string) => {
-
     let baseUrl = `${titilerProxyEndPoint}/image_visualization/{z}/{x}/{y}.png`
     const requestParams = new URLSearchParams()
     requestParams.append('sensorName', sensorName)
     const fullUrl = baseUrl + '?' + requestParams.toString()
     console.log("Scene URL: ", fullUrl)
     return fullUrl
+}
+export const getLargeSceneUrl = (mosaicUrl: string) => {
+    let baseUrl = `${titilerProxyEndPoint}/mosaic/mosaictile/{z}/{x}/{y}.png`
+    const requestParams = new URLSearchParams()
+    requestParams.append('mosaic_url', mosaicUrl)
+    const fullUrl = baseUrl + '?' + requestParams.toString()
+    return fullUrl
+}
+export async function getLargeSceneMosaicUrl (param: LargeScaleSceneParam): Promise<any> {
+    return httpV3.post<any>(`modeling/example/scenes/visualization/lowLevel`, param)
 }
 
 /**

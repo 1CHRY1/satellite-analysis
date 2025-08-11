@@ -5,7 +5,7 @@ import { getRealtimeNoCloudUrl } from "@/api/http/satellite-data/visualize.api"
 import { ElMessage } from 'element-plus'
 import { useI18n } from "vue-i18n";
 import { ezStore } from "@/store"
-import { getDEMUrl, getNDVIOrSVRUrl, getSceneUrl, getVectorUrl, get3DUrl } from "@/api/http/interactive-explore/visualize.api";
+import { getDEMUrl, getNDVIOrSVRUrl, getSceneUrl, getVectorUrl, get3DUrl, getLargeSceneMosaicUrl, getLargeSceneUrl } from "@/api/http/interactive-explore/visualize.api";
 import type { Marker } from 'mapbox-gl'
 import type { POIInfo, ProductType } from '@/type/interactive-explore/filter'
 import type { AttrSymbology, VectorSymbology } from '@/type/interactive-explore/visualize'
@@ -13,9 +13,10 @@ import * as CommonMapOps from '@/util/map/operation/common'
 import mapboxgl from 'mapbox-gl'
 import { mapManager } from '@/util/map/mapManager'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
-import { searchedSpatialFilterMethod, finalLandId, curGridsBoundary, vectorStats, selectedGridResolution, vectorSymbology } from "./shared"
+import { searchedSpatialFilterMethod, finalLandId, curGridsBoundary, vectorStats, selectedGridResolution, vectorSymbology, selectedDateRange } from "./shared"
 import { message } from "ant-design-vue";
-import { getVectorAttr } from "@/api/http/satellite-data/satellite.api";
+import { getCaseResult, getVectorAttr, pollStatus } from "@/api/http/satellite-data/satellite.api";
+import { calTask } from "../noCloud/composables/shared";
 // 使用一个对象来存储每个 Product Item 的显示状态
 const eyeStates = ref({});
 
@@ -158,17 +159,56 @@ export const useVisualize = () => {
     const showSceneResult = async (sensorName: string) => {
         destroyScene()
         InteractiveExploreMapOps.map_fitViewToTargetZoom(11)
-        const stopLoading = message.loading('正在加载，请稍后...', 0)
+        const stopLoading = message.loading('正在生成大范围图幅，请耐心等待...', 0)
+        // 1. 创建大范围可视化的任务，轮询，最后返回 mosaicJson
+        let taskRes = await getLargeSceneMosaicUrl({
+            startTime: selectedDateRange.value[0].format('YYYY-MM-DD'),
+            endTime: selectedDateRange.value[1].format('YYYY-MM-DD'),
+            sensorName
+        })
         setTimeout(() => {
             handleShowScene(sensorName)
         }, 1000)
+        let taskId = taskRes.data
+        try {
+            await pollStatus(taskId)
+            console.log('成功，开始拿结果')
+    
+            let res = await getCaseResult(taskId)
+            console.log(res, '结果')
+    
+            // 1、先预览无云一版图影像
+            let data = res.data
+            const getData = async (taskId: string) => {
+                let res:any
+                while (!(res = await getCaseResult(taskId)).data) {
+                    console.log('Retrying...')
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+                return res.data;
+            }
+            if(!data)
+                data = await getData(taskId)
+            
+            handleShowLargeScene(data.mosaicjson_url)
+            stopLoading()
+            message.success("计算完成")
+        } catch (error) {
+            console.log(error)
+            stopLoading()
+            message.warning("计算失败，请重试")
+        }
         setTimeout(() => {
             stopLoading()
-        }, 5000)
+        }, 500000)
     }
     const handleShowScene = async (sensorName: string) => {
         const url = getSceneUrl(sensorName)
         InteractiveExploreMapOps.map_addSceneLayer(url)
+    }
+    const handleShowLargeScene = async (mosaicUrl: string) => {
+        const url = getLargeSceneUrl(mosaicUrl)
+        InteractiveExploreMapOps.map_addLargeSceneLayer(url)
     }
     const destroyExploreLayers = () => {
         destroyScene()
@@ -177,6 +217,7 @@ export const useVisualize = () => {
     }
     const destroyScene = () => {
         InteractiveExploreMapOps.map_destroySceneLayer()
+        InteractiveExploreMapOps.map_destroyLargeSceneLayer()
     }
 
     /**

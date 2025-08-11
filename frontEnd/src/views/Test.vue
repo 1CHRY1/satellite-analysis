@@ -193,10 +193,10 @@ const addFK = () => {
 
 const addMosaicJsonLayer = () => {
     // TEMP
-    let titilerEndPoint = 'http://223.2.43.228:31800'
+    let titilerEndPoint = 'http://223.2.34.8:31800'
     let baseUrl = `${titilerEndPoint}/mosaic/mosaictile/{z}/{x}/{y}.png`
     const requestParams = new URLSearchParams()
-    requestParams.append('mosaic_url', 'http://223.2.43.228:30900/' + 'temp-files' + '/' + 'mosaicjson/b0e75625-7224-495e-b875-c9b3e1493c9b.json')
+    requestParams.append('mosaic_url', 'http://223.2.34.8:30900/temp-files/national-mosaicjson/mosaic_2c6d9de1-0c63-4d38-b43f-458cd6e87b84.json')
     const fullUrl = baseUrl + '?' + requestParams.toString()
     MapOperation.map_removeNocloudGridPreviewLayer()
     MapOperation.map_destroyNoCloudLayer()
