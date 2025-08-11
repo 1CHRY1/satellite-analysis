@@ -129,7 +129,7 @@ class VmodConfig(BaseConfig):
 class hxfConfig(BaseConfig):
     # MinIO Config
     MINIO_PORT                                      =       30900
-    MINIO_IP                                        =       "192.168.1.127"
+    MINIO_IP                                        =       "223.2.34.8"
     MINIO_ACCESS_KEY                                =       "minioadmin"
     MINIO_SECRET_KEY                                =       "minioadmin"
     MINIO_SECURE                                    =       False

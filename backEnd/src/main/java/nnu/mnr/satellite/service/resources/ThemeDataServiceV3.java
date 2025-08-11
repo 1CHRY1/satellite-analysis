@@ -87,6 +87,7 @@ public class ThemeDataServiceV3 {
             // 缓存数据
             SceneDataCache.cacheUserThemes(cacheKey, themesInfo, report);
             SceneDataCache.cacheUserScenes(cacheKey, scenesInfo, null);
+            SceneDataCache.printAllCacheContents();
         } else if (userThemeCache == null) {
             // 缓存未命中，从数据库中读数据
             Geometry boundary = regionDataService.getRegionById(regionId).getBoundary();
