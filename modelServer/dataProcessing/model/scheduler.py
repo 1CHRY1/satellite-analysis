@@ -18,7 +18,7 @@ from dataProcessing.model.calc_raster_line import calc_raster_line
 from dataProcessing.model.calc_no_cloud import calc_no_cloud
 from dataProcessing.model.calc_no_cloud_grid import calc_no_cloud_grid
 from dataProcessing.model.calc_no_cloud_complex import calc_no_cloud_complex
-from dataProcessing.model.low_level_mosaic_task import LowLevelMosaicTask
+from dataProcessing.model.create_low_level_mosaic import create_low_level_mosaic
 from dataProcessing.model.test_task import TestTask
 
 STATUS_RUNNING = CONFIG.STATUS_RUNNING
@@ -52,6 +52,7 @@ class TaskScheduler:
     def load_history(self):
         # --------- Load the history of the task ---------------------------
         file_path = os.path.join(os.path.dirname(__file__), "..", "history")
+        os.makedirs(file_path, exist_ok=True)
         for file in os.listdir(file_path):
             with open(os.path.join(file_path, file), "r", encoding="utf-8") as f:
                 try:
@@ -108,7 +109,7 @@ class TaskScheduler:
             'calc_raster_point': calc_raster_point,
             'calc_raster_line': calc_raster_line,
             'calc_no_cloud_complex': calc_no_cloud_complex,
-            'low_level_mosaic': LowLevelMosaicTask,
+            'create_low_level_mosaic': create_low_level_mosaic,
             'test': TestTask,
             # 可以在这里扩展其他类型的任务
         }
