@@ -22,46 +22,66 @@ class create_low_level_mosaic(Task):
         self.config = args[0] if args else kwargs.get('config', {})
         
         # 使用系统配置的默认值，允许请求参数覆盖
-        self.grids_data = self.config.get('gridsAndGridsBoundary', {})
-        self.grid_res = self.config.get('gridResolution', CONFIG.MOSAIC_DEFAULT_GRID_RES)
+        self.grid_res = self.config.get('grid_res', CONFIG.MOSAIC_DEFAULT_GRID_RES)
         self.crs = self.config.get('crs', CONFIG.MOSAIC_DEFAULT_CRS)
-        self.z_level = self.config.get('zLevel', CONFIG.MOSAIC_DEFAULT_Z_LEVEL)
-        self.start_time = self.config.get('startTime', CONFIG.MOSAIC_DEFAULT_START_TIME)
-        self.end_time = self.config.get('endTime', CONFIG.MOSAIC_DEFAULT_END_TIME)
-        self.region_id = self.config.get('regionId', CONFIG.MOSAIC_DEFAULT_REGION_ID)
-        self.sensor_name = self.config.get('sensorName', CONFIG.MOSAIC_DEFAULT_SENSOR_NAME)
-        self.quadkey_zoom = self.config.get('quadkeyZoom', CONFIG.MOSAIC_DEFAULT_QUADKEY_ZOOM)
-        # 提取headers和cookies
-        self.headers = kwargs.get('headers', {})
-        self.cookies = kwargs.get('cookies', {})
+        self.z_level = self.config.get('z_level', CONFIG.MOSAIC_DEFAULT_Z_LEVEL)
+        self.start_time = self.config.get('start_time', CONFIG.MOSAIC_DEFAULT_START_TIME)
+        self.end_time = self.config.get('end_time', CONFIG.MOSAIC_DEFAULT_END_TIME)
+        self.region_id = self.config.get('region_id', CONFIG.MOSAIC_DEFAULT_REGION_ID)
+        self.sensor_name = self.config.get('sensor_name', CONFIG.MOSAIC_DEFAULT_SENSOR_NAME)
+        self.email = self.config.get('email')
+        self.password = self.config.get('password')
+        self.quadkey_zoom = self.config.get('quadkey_zoom', CONFIG.MOSAIC_DEFAULT_QUADKEY_ZOOM)
 
     def run(self):
         """执行镶嵌任务"""
         print(f"[LowLevelMosaicTask] 任务 {self.task_id} 开始执行")
         print(f"[LowLevelMosaicTask] 参数: sensor_name={self.sensor_name}, grid_res={self.grid_res}, crs={self.crs}")
         try:
-
-            # 创建场景获取器
-            fetcher = SceneFetcher(headers=self.headers, cookies=self.cookies)
+            # 验证必要参数
+            if not self.email or not self.password:
+                return {
+                    'success': False,
+                    'message': '缺少必要的登录凭据',
+                    'error': 'Missing email or password',
+                    'task_id': self.task_id
+                }
+            
+            # 使用配置文件中的Ray设置初始化
+            if not ray.is_initialized():
+                print(f"[LowLevelMosaicTask] 任务 {self.task_id}: Ray未初始化，正在初始化...")
+                ray.init(
+                    num_cpus=CONFIG.RAY_NUM_CPUS,
+                    object_store_memory=CONFIG.RAY_OBJECT_STORE_MEMORY,
+                    ignore_reinit_error=True
+                )
+                print(f"[LowLevelMosaicTask] 任务 {self.task_id}: Ray已初始化，CPU数: {CONFIG.RAY_NUM_CPUS}")
+            else:
+                print(f"[LowLevelMosaicTask] 任务 {self.task_id}: Ray已经初始化，跳过初始化")
+            
+            # 创建场景获取器并登录
+            fetcher = SceneFetcher(email=self.email, password=self.password)
+            fetcher.login()
             
             # 获取格网数据
-            grids_data = fetcher.parse_grids(self.grids_data)
+            grids_data = fetcher.get_grids(region_id=self.region_id, resolution=self.grid_res)
             print(f"任务 {self.task_id}: 网格总数：{len(grids_data)}")
+
+            # 提交查询
+            fetcher.submit_query(
+                start_time=self.start_time, 
+                end_time=self.end_time, 
+                region_id=self.region_id, 
+                resolution=self.grid_res
+            )
             
             # 并行处理所有格网
             start = time.time()
             futures = [self._process_grid_remote.remote(
-                grid, self.sensor_name, fetcher, self.crs, self.z_level, self.task_id
+                grid, self.sensor_name, fetcher, self.crs, self.z_level
             ) for grid in grids_data]
-
+            
             results = ray.get(futures)
-            # 串行测试用
-            # results = []
-            # for grid in grids_data:
-            #     result = self._process_grid_remote(  # 直接调用方法（去掉 .remote）
-            #         grid, self.sensor_name, fetcher, self.crs, self.z_level
-            #     )
-            #     results.append(result)
             processing_time = time.time() - start
             print(f"任务 {self.task_id}: 所有格网处理完成，耗时: {processing_time:.2f} 秒")
             
@@ -72,7 +92,7 @@ class create_low_level_mosaic(Task):
             
             if not successful_results:
                 return {
-                    'status': -1,
+                    'success': False,
                     'message': '没有成功生成的COG文件',
                     'mosaicjson_path': None,
                     'processing_time': processing_time,
@@ -91,8 +111,8 @@ class create_low_level_mosaic(Task):
             )
             
             bucket = CONFIG.MINIO_TEMP_FILES_BUCKET
-            minio_dir = f"national-mosaic/{self.task_id}"
-            mosaic_output_path = f"{minio_dir}/mosaic.json"
+            minio_dir = "national-mosaicjson"
+            mosaic_output_path = f"{minio_dir}/mosaic_{self.task_id}.json"
             
             # 使用元数据直接创建MosaicJSON
             start_mosaic = time.time()
@@ -113,22 +133,24 @@ class create_low_level_mosaic(Task):
                 full_mosaicjson_path = f"minio://{bucket}/{mosaic_output_path}"
                 mosaicjson_url = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}/{bucket}/{mosaic_output_path}"
                 print(f"任务 {self.task_id}: MosaicJSON 路径: {full_mosaicjson_path}")
-                results = {
-                    'status': 1,
-                    'message': '镶嵌任务完成',
+                
+                return {
+                    # 'success': True,
+                    # 'message': '镶嵌任务完成',
+                    'mosaicjson_path': full_mosaicjson_path,
                     'mosaicjson_url': mosaicjson_url,
                     'processing_time': processing_time,
+                    'mosaic_creation_time': mosaic_creation_time,
                     'cog_count': len(successful_results),
                     'tile_count': len(mosaic_definition['tiles']),
                     'bounds': mosaic_definition['bounds'],
                     'task_id': self.task_id,
+                    # 'config_profile': 'zzw'  # 标识使用的配置
                 }
-
-                return results
             else:
                 return {
-                    'status': -1,
-                    'message': 'MosaicJSON上传失败',
+                    # 'success': False,
+                    # 'message': 'MosaicJSON上传失败',
                     'mosaicjson_path': None,
                     'processing_time': processing_time,
                     'cog_count': len(successful_results),
@@ -140,7 +162,7 @@ class create_low_level_mosaic(Task):
             import traceback
             traceback.print_exc()
             return {
-                'status': -1,
+                # 'success': False,
                 'message': f'任务执行失败: {str(e)}',
                 'mosaicjson_path': None,
                 'error': str(e),
@@ -149,13 +171,19 @@ class create_low_level_mosaic(Task):
 
     @staticmethod
     @ray.remote
-    def _process_grid_remote(grid, sensor_name, fetcher, crs, z_level, task_id):
+    def _process_grid_remote(grid, sensor_name, fetcher, crs, z_level):
         """远程处理单个格网的函数"""
         try:
             scenes = fetcher.get_scenes_for_grid(sensor_name, grid['coordinates'][0])
             if len(scenes) > 0:
                 print(f"处理中... Grid {grid['rowId']}-{grid['columnId']} 包含 {len(scenes)} 个场景")
-                grid_mosaic = GridMosaic(grid['coordinates'][0], scenes, crs_id=crs, z_level=z_level, task_id=task_id)
+                grid_mosaic = GridMosaic(
+                    grid['coordinates'][0],
+                    scenes,
+                    crs_id=crs,
+                    z_level=z_level,
+                    per_grid_workers=10  # 或从配置读取
+                )
                 result = grid_mosaic.create_mosaic_with_metadata()
                 
                 if result:
@@ -240,7 +268,7 @@ class create_low_level_mosaic(Task):
         mosaic_definition = {
             "mosaicjson": "0.0.3",
             "name": f"Mosaic_{self.task_id}",
-            "description": f"Generated mosaic for task {self.task_id}",
+            "description": f"Generated mosaic for task {self.task_id} using zzwConfig",
             "version": "1.0.0",
             "attribution": None,
             "minzoom": quadkey_zoom,
