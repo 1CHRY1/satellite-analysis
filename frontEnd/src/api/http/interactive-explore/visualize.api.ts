@@ -43,7 +43,7 @@ export async function getImgStats(url: string): Promise<any> {
  */
 export const getSceneUrl = (sensorName: string) => {
 
-    let baseUrl = `${titilerProxyEndPoint}/image_visualization_without_national_scale/{z}/{x}/{y}.png`
+    let baseUrl = `${titilerProxyEndPoint}/image_visualization/{z}/{x}/{y}.png`
     const requestParams = new URLSearchParams()
     requestParams.append('sensorName', sensorName)
     const fullUrl = baseUrl + '?' + requestParams.toString()

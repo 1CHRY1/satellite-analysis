@@ -78,7 +78,7 @@ class create_low_level_mosaic(Task):
             # 并行处理所有格网
             start = time.time()
             futures = [self._process_grid_remote.remote(
-                grid, self.sensor_name, fetcher, self.crs, self.z_level, self.task_id
+                grid, self.sensor_name, fetcher, self.crs, self.z_level
             ) for grid in grids_data]
             
             results = ray.get(futures)
@@ -111,8 +111,8 @@ class create_low_level_mosaic(Task):
             )
             
             bucket = CONFIG.MINIO_TEMP_FILES_BUCKET
-            minio_dir = f"national-mosaic/{self.task_id}"
-            mosaic_output_path = f"{minio_dir}/mosaic.json"
+            minio_dir = "national-mosaicjson"
+            mosaic_output_path = f"{minio_dir}/mosaic_{self.task_id}.json"
             
             # 使用元数据直接创建MosaicJSON
             start_mosaic = time.time()
@@ -171,13 +171,19 @@ class create_low_level_mosaic(Task):
 
     @staticmethod
     @ray.remote
-    def _process_grid_remote(grid, sensor_name, fetcher, crs, z_level, task_id):
+    def _process_grid_remote(grid, sensor_name, fetcher, crs, z_level):
         """远程处理单个格网的函数"""
         try:
             scenes = fetcher.get_scenes_for_grid(sensor_name, grid['coordinates'][0])
             if len(scenes) > 0:
                 print(f"处理中... Grid {grid['rowId']}-{grid['columnId']} 包含 {len(scenes)} 个场景")
-                grid_mosaic = GridMosaic(grid['coordinates'][0], scenes, crs_id=crs, z_level=z_level, task_id=task_id)
+                grid_mosaic = GridMosaic(
+                    grid['coordinates'][0],
+                    scenes,
+                    crs_id=crs,
+                    z_level=z_level,
+                    per_grid_workers=10  # 或从配置读取
+                )
                 result = grid_mosaic.create_mosaic_with_metadata()
                 
                 if result:
