@@ -3,7 +3,7 @@ import { ezStore, useGridStore } from '@/store'
 import { Popup, GeoJSONSource, MapMouseEvent } from 'mapbox-gl'
 import bus from '@/store/bus'
 import { createApp, type ComponentInstance, ref, type Ref, reactive } from 'vue'
-import PopContent from '@/components/feature/map/popContent.vue'
+import PopContent from '@/components/feature/map/popContent/popContent.vue'
 import Antd from 'ant-design-vue'
 
 
@@ -319,27 +319,27 @@ export function map_fitViewToTargetZoom(zoom: number) {
  * @param landId 行政区id
  * @param cb 回调函数
  */
-export function map_addMVTLayer(source_layer: string, url: string) {
-    const baseId = 'mvt-layer'
+export function map_addMVTLayer(source_layer: string, url: string, color: string, type?: number) {
+    const baseId = `${source_layer}-${type || 0}-mvt-layer`
     const srcId = baseId + '-source'
     
     mapManager.withMap((m) => {
-      // 移除已存在的图层和数据源
-      const layerIds = [
-        `${baseId}-fill`,
-        `${baseId}-line`, 
-        `${baseId}-point`
-      ]
+    //   // 移除已存在的图层和数据源
+    //   const layerIds = [
+    //     `${baseId}-fill`,
+    //     `${baseId}-line`, 
+    //     `${baseId}-point`
+    //   ]
       
-      layerIds.forEach(layerId => {
-        if (m.getLayer(layerId)) {
-          m.removeLayer(layerId)
-        }
-      })
+    //   layerIds.forEach(layerId => {
+    //     if (m.getLayer(layerId)) {
+    //       m.removeLayer(layerId)
+    //     }
+    //   })
       
-      if (m.getSource(srcId)) {
-        m.removeSource(srcId)
-      }
+    //   if (m.getSource(srcId)) {
+    //     m.removeSource(srcId)
+    //   }
       
       // 添加数据源
       m.addSource(srcId, {
@@ -355,8 +355,9 @@ export function map_addMVTLayer(source_layer: string, url: string) {
         'source-layer': source_layer,
         filter: ['==', '$type', 'Polygon'], // 只显示面要素
         paint: {
-          'fill-color': '#0066cc',
-          'fill-opacity': 0.5,
+        //   'fill-color': '#0066cc',
+          'fill-color': color,
+        //   'fill-opacity': 0.5,
           'fill-outline-color': '#004499'
         }
       })
@@ -369,7 +370,7 @@ export function map_addMVTLayer(source_layer: string, url: string) {
         'source-layer': source_layer,
         filter: ['==', '$type', 'LineString'], // 只显示线要素
         paint: {
-          'line-color': '#ff6600',
+          'line-color': color,
           'line-width': 2,
           'line-opacity': 0.8
         }
@@ -383,7 +384,7 @@ export function map_addMVTLayer(source_layer: string, url: string) {
         'source-layer': source_layer,
         filter: ['==', '$type', 'Point'], // 只显示点要素
         paint: {
-          'circle-color': '#ff0066',
+          'circle-color': color,
           'circle-radius': 6,
           'circle-opacity': 0.8,
           'circle-stroke-color': '#ffffff',
@@ -397,33 +398,31 @@ export function map_addMVTLayer(source_layer: string, url: string) {
  * 删除矢量图层
  */
 export function map_destroyMVTLayer() {
-    const baseId = 'mvt-layer'
-    const srcId = baseId + '-source'
-    
     mapManager.withMap((m) => {
-      // 定义所有需要清理的图层ID
-      const layerIds = [
-        `${baseId}-fill`,
-        `${baseId}-line`, 
-        `${baseId}-point`
-      ]
-      
-      // 移除所有图层
-      layerIds.forEach(layerId => {
-        console.log(`检查图层: ${layerId}`, m.getLayer(layerId))
-        if (m.getLayer(layerId)) {
-          m.removeLayer(layerId)
-          console.log(`已移除图层: ${layerId}`)
-        }
-      })
-      
-      // 移除数据源
-      console.log(`检查数据源: ${srcId}`, m.getSource(srcId))
-      if (m.getSource(srcId)) {
-        m.removeSource(srcId)
-        console.log(`已移除数据源: ${srcId}`)
-      }
-    })
+        const style = m.getStyle();
+        if (!style) return;
+
+        // 1. 删除所有匹配 `mvt-layer-*-fill/line/point` 的图层
+        const layers = style.layers || [];
+        layers.forEach(layer => {
+            if (layer.id.includes('mvt-layer-') && 
+                (layer.id.endsWith('-fill') || 
+                 layer.id.endsWith('-line') || 
+                 layer.id.endsWith('-point'))) {
+                m.removeLayer(layer.id);
+                console.log(`已移除图层: ${layer.id}`);
+            }
+        });
+
+        // 2. 删除所有匹配 `mvt-layer-source` 的数据源
+        const sources = Object.keys(style.sources || {});
+        sources.forEach(sourceId => {
+            if (sourceId.includes('mvt-layer-source')) {
+                m.removeSource(sourceId);
+                console.log(`已移除数据源: ${sourceId}`);
+            }
+        });
+    });
 }
 
 /**

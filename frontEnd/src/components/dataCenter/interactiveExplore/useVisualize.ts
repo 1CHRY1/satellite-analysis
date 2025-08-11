@@ -8,12 +8,14 @@ import { ezStore } from "@/store"
 import { getDEMUrl, getNDVIOrSVRUrl, getSceneUrl, getVectorUrl, get3DUrl } from "@/api/http/interactive-explore/visualize.api";
 import type { Marker } from 'mapbox-gl'
 import type { POIInfo, ProductType } from '@/type/interactive-explore/filter'
+import type { AttrSymbology, VectorSymbology } from '@/type/interactive-explore/visualize'
 import * as CommonMapOps from '@/util/map/operation/common'
 import mapboxgl from 'mapbox-gl'
 import { mapManager } from '@/util/map/mapManager'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
-import { searchedSpatialFilterMethod, finalLandId, curGridsBoundary, vectorStats, selectedGridResolution } from "./shared"
+import { searchedSpatialFilterMethod, finalLandId, curGridsBoundary, vectorStats, selectedGridResolution, vectorSymbology } from "./shared"
 import { message } from "ant-design-vue";
+import { getVectorAttr } from "@/api/http/satellite-data/satellite.api";
 // 使用一个对象来存储每个 Product Item 的显示状态
 const eyeStates = ref({});
 
@@ -190,6 +192,71 @@ export const useVisualize = () => {
     })
     const previewVectorIndex = ref<number | null>(null)
 
+    const predefineColors = ref([
+        '#ff4500',
+        '#ff8c00',
+        '#ffd700',
+        '#90ee90',
+        '#00ced1',
+        '#1e90ff',
+        '#c71585',
+        'rgba(255, 69, 0, 0.68)',
+        'rgb(255, 120, 0)',
+        'hsv(51, 100, 98)',
+        'hsva(120, 40, 94, 0.5)',
+        'hsl(181, 100%, 37%)',
+        'hsla(209, 100%, 56%, 0.73)',
+        '#c7158577',
+    ])
+    const getVectorSymbology = async () => {
+        for (const vector of vectorStats.value) {
+            let result: Array<AttrSymbology> = []
+            try {
+                // 初始化
+                vectorSymbology.value[vector.tableName] = {
+                    attrs: [],
+                    checkAll: false,
+                    isIndeterminate: true,
+                    checkedAttrs: []
+                }
+                result = await getVectorAttr(vector.tableName)
+                console.log('result', result)
+                vectorSymbology.value[vector.tableName].attrs = result.map((item, index) => {
+                    return {
+                        ...item,
+                        color: predefineColors.value[index % predefineColors.value.length],
+                    }
+                })
+                vectorSymbology.value[vector.tableName].checkedAttrs = result.map(item => {
+                    return item.label
+                })
+            } catch (e) {
+                console.error(`[${vector.tableName}] 请求失败:`, e);
+            }
+        }
+        ezStore.set("vectorSymbology", vectorSymbology.value)
+        console.log('vectorSymbology', vectorSymbology.value)
+    }
+    const handleCheckAllChange = (tableName: string, val: boolean) => {
+        console.log('all:', val)
+        const item = vectorSymbology.value[tableName];
+        // 使用解构赋值或 Vue.set 确保响应性
+        vectorSymbology.value[tableName] = {
+            ...item,
+            checkedAttrs: val ? item.attrs.map(attr => attr.label) : [],
+            isIndeterminate: false
+        };
+        console.log(vectorSymbology.value[tableName])
+    }
+    const handleCheckedAttrsChange = (tableName: string, value: string[]) => {
+        console.log(value)
+        const checkedCount = value.length
+        const attrs = vectorSymbology.value[tableName].attrs
+        vectorSymbology.value[tableName].checkAll = checkedCount === attrs.length
+        vectorSymbology.value[tableName].isIndeterminate = checkedCount > 0 && checkedCount < attrs.length
+        console.log(vectorSymbology.value[tableName])
+    }
+
     const showVectorResult = async (tableName: string, index: number) => {
         if (tableName === '') {
             ElMessage.warning(t('datapage.explore.message.filtererror_choose'))
@@ -204,13 +271,20 @@ export const useVisualize = () => {
         }, 5000)
     }
     const handleShowVector = async(source_layer: string, landId: string) => {
-        const url = getVectorUrl({
-            landId,
-            source_layer,
-            spatialFilterMethod: searchedSpatialFilterMethod.value,
-            resolution: selectedGridResolution.value,
+        const attrList = vectorSymbology.value[source_layer].checkedAttrs.map(item => {
+            const targetAttr = vectorSymbology.value[source_layer].attrs.find(i => i.label === item)
+            return targetAttr
         })
-        InteractiveExploreMapOps.map_addMVTLayer(source_layer, url)
+        for (const attr of attrList) {
+            const url = getVectorUrl({
+                landId,
+                source_layer,
+                spatialFilterMethod: searchedSpatialFilterMethod.value,
+                resolution: selectedGridResolution.value,
+                type: attr?.type
+            })
+            InteractiveExploreMapOps.map_addMVTLayer(source_layer, url, attr?.color || '#0066cc', attr?.type)
+        }
     }
     const destroyVector = (index?: number) => {
         if (index !== undefined) {
@@ -350,5 +424,10 @@ export const useVisualize = () => {
         createGeoJSONFromBounds,
         marker,
         destroyProduct,
+        predefineColors,
+        getVectorSymbology,
+        vectorSymbology,
+        handleCheckAllChange,
+        handleCheckedAttrsChange
     }
 }

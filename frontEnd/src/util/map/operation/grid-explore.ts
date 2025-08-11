@@ -223,38 +223,68 @@ export function map_destroyGridNDVIOrSVRLayer(gridInfo: GridData) {
     })
 }
 
-export function map_addGridMVTLayer(source_layer: string, url: string, cb?: () => void) {
-    const prefix = 'GridMVT'
+export function map_addGridMVTLayer(source_layer: string, url: string, color: string, type?: number, cb?: () => void) {
+    const prefix = `GridMVT-${type || 0}`
     let layeridStore: any = null
     if (!ezStore.get('GridMVTLayerIds')) ezStore.set('GridMVTLayerIds', [])
 
     layeridStore = ezStore.get('GridMVTLayerIds')
 
-    map_destroyGridMVTLayer()
-
     mapManager.withMap((m) => {
         const id = prefix + uid()
         const srcId = id + '-source'
-        if (m.getLayer(id) && m.getSource(srcId)) {
-            m.removeLayer(id)
-            m.removeSource(srcId)
-        }
 
-        layeridStore.push(id)
+        layeridStore.push(`${id}-fill`)
+        layeridStore.push(`${id}-line`)
+        layeridStore.push(`${id}-point`)
 
         m.addSource(srcId, {
             type: 'vector',
             tiles: [url],
         })
 
+        // 添加面图层
         m.addLayer({
-            id: id,
+            id: `${id}-fill`,
             type: 'fill',
             source: srcId,
             'source-layer': source_layer,
+            filter: ['==', '$type', 'Polygon'], // 只显示面要素
             paint: {
-                'fill-color': '#0066cc',
-                'fill-opacity': 0.5,
+            //   'fill-color': '#0066cc',
+            'fill-color': color,
+            //   'fill-opacity': 0.5,
+            'fill-outline-color': '#004499'
+            }
+        })
+        
+        // 添加线图层
+        m.addLayer({
+            id: `${id}-line`,
+            type: 'line',
+            source: srcId,
+            'source-layer': source_layer,
+            filter: ['==', '$type', 'LineString'], // 只显示线要素
+            paint: {
+            'line-color': color,
+            'line-width': 2,
+            'line-opacity': 0.8
+            }
+        })
+        
+        // 添加点图层
+        m.addLayer({
+            id: `${id}-point`,
+            type: 'circle',
+            source: srcId,
+            'source-layer': source_layer,
+            filter: ['==', '$type', 'Point'], // 只显示点要素
+            paint: {
+            'circle-color': color,
+            'circle-radius': 6,
+            'circle-opacity': 0.8,
+            'circle-stroke-color': '#ffffff',
+            'circle-stroke-width': 2
             }
         })
 
@@ -269,10 +299,19 @@ export function map_destroyGridMVTLayer() {
     const layeridStore = ezStore.get('GridMVTLayerIds')
     console.log(layeridStore)
     mapManager.withMap((m) => {
+        const style = m.getStyle();
+        if (!style) return;
         for (let i = 0; i < layeridStore.length; i++) {
             const id = layeridStore[i]
             m.getLayer(id) && m.removeLayer(id)
-            m.getSource(id + '-source') && m.removeSource(id + '-source')
+            console.log(`已移除图层：${id}`)
         }
+        const sources = Object.keys(style.sources || {});
+        sources.forEach(sourceId => {
+            if (sourceId.includes('GridMVT') && sourceId.includes('-source')) {
+                m.removeSource(sourceId);
+                console.log(`已移除数据源: ${sourceId}`);
+            }
+        });
     })
 }
