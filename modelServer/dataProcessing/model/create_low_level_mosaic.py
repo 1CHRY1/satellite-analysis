@@ -1,4 +1,4 @@
-# dataProcessing/model/low_level_mosaic_task.py
+# dataProcessing/model/create_low_level_mosaic.py
 
 import ray
 import time
@@ -13,7 +13,7 @@ import mercantile
 from rasterio.crs import CRS
 
 
-class LowLevelMosaicTask(Task):
+class create_low_level_mosaic(Task):
     """低层级镶嵌任务类"""
     
     def __init__(self, task_id, *args, **kwargs):
@@ -135,8 +135,8 @@ class LowLevelMosaicTask(Task):
                 print(f"任务 {self.task_id}: MosaicJSON 路径: {full_mosaicjson_path}")
                 
                 return {
-                    'success': True,
-                    'message': '镶嵌任务完成',
+                    # 'success': True,
+                    # 'message': '镶嵌任务完成',
                     'mosaicjson_path': full_mosaicjson_path,
                     'mosaicjson_url': mosaicjson_url,
                     'processing_time': processing_time,
@@ -145,12 +145,12 @@ class LowLevelMosaicTask(Task):
                     'tile_count': len(mosaic_definition['tiles']),
                     'bounds': mosaic_definition['bounds'],
                     'task_id': self.task_id,
-                    'config_profile': 'zzw'  # 标识使用的配置
+                    # 'config_profile': 'zzw'  # 标识使用的配置
                 }
             else:
                 return {
-                    'success': False,
-                    'message': 'MosaicJSON上传失败',
+                    # 'success': False,
+                    # 'message': 'MosaicJSON上传失败',
                     'mosaicjson_path': None,
                     'processing_time': processing_time,
                     'cog_count': len(successful_results),
@@ -162,7 +162,7 @@ class LowLevelMosaicTask(Task):
             import traceback
             traceback.print_exc()
             return {
-                'success': False,
+                # 'success': False,
                 'message': f'任务执行失败: {str(e)}',
                 'mosaicjson_path': None,
                 'error': str(e),

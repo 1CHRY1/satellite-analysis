@@ -18,6 +18,7 @@ class BaseConfig:
     API_TIF_get_spectral_profile                    =       API_VERSION + '/tif/get_spectral_profile'
     API_TIF_calc_raster_point                       =       API_VERSION + '/tif/calc_raster_point'
     API_TIF_calc_raster_line                        =       API_VERSION + '/tif/calc_raster_line'
+    API_TIF_create_low_level_mosaic                 =       API_VERSION + '/mosaic/create_low_level_mosaic'
 
     # API for Task
     API_TASK_STATUS                                 =       API_VERSION + '/task/status'
@@ -195,15 +196,6 @@ class zzwConfig(BaseConfig):
     RAY_NUM_CPUS                                    =       8
     RAY_SYSTEM_RESERVED_CPU                         =       0.5
     RAY_SYSTEM_RESERVED_MEMORY                      =       2 * 1024**3
-
-    MOSAIC_DEFAULT_GRID_RES                         =       150
-    MOSAIC_DEFAULT_CRS                              =       4326
-    MOSAIC_DEFAULT_Z_LEVEL                          =       8
-    MOSAIC_DEFAULT_QUADKEY_ZOOM                     =       8
-    MOSAIC_DEFAULT_START_TIME                       =       "2024-05-01"
-    MOSAIC_DEFAULT_END_TIME                         =       "2025-06-30"
-    MOSAIC_DEFAULT_REGION_ID                        =       "100000"
-    MOSAIC_DEFAULT_SENSOR_NAME                      =       "GF-1_PMS"
 
 # --------------- class ProdConfig(BaseConfig): ---------------
 

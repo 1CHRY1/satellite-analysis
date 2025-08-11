@@ -131,6 +131,13 @@ def calc_no_cloud_complex():
     task_id = scheduler.start_task('calc_no_cloud_complex', data)
     return api_response(data={'taskId': task_id})
 
+@bp.route(CONFIG.API_TIF_create_low_level_mosaic, methods=['POST'])
+def create_low_level_mosaic():
+    scheduler = init_scheduler()
+    data = request.json
+    task_id = scheduler.start_task('create_low_level_mosaic', data)
+    return api_response(data={'taskId': task_id})
+
 
 # ==================== 调试路由 ====================
 @bp.route('/test/task', methods=['POST'])
@@ -231,7 +238,7 @@ def create_mosaic_with_query_param():
             )
     
     try:
-        task_id = scheduler.start_task('low_level_mosaic', data)
+        task_id = scheduler.start_task('create_low_level_mosaic', data)
         print(f"创建镶嵌任务: {task_id}, sensor_name: {sensor_name}, 参数: {data}")
         return api_response(
             code=200,
