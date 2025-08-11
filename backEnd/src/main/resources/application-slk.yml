@@ -5,56 +5,99 @@ netty:
   websocket:
     port: 9888
 
+## localhost
+#mysql:
+#  host: 192.168.1.127
+#  port: 3306
+#  username: root
+#  password: root
+pg:
+  host: 192.168.1.127
+  port: 5432
+  username: postgres
+  password: 123456
+
+# k8s
+mysql:
+  host: 223.2.34.8
+  port: 31036
+  username: root
+  password: 123456
+#pg:
+#  host: 223.2.34.8
+#  port: 31543
+#  username: postgres
+#  password: 123456
+
+
 spring:
   datasource:
     dynamic:
-      primary: mysql_satellite
+      primary: mysql_ard_satellite
       strict: false
       datasource:
-        mysql_satellite:
-          # k8s
-          #url: jdbc:mysql://223.2.43.228:31136/satellite
-          url: jdbc:mysql://223.2.34.8:31036/satellite?useSSL=false&allowPublicKeyRetrieval=true
-          username: root
-          password: 123456
-#          password: root
+        #        mysql_satellite:
+        #          url: jdbc:mysql://${mysql.host}:${mysql.port}/satellite
+        #          username: ${mysql.username}
+        #          password: ${mysql.password}
+        #          driver-class-name: com.mysql.cj.jdbc.Driver
+        #          hikari:
+        #            connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
+        mysql_ard_satellite:
+          url: jdbc:mysql://${mysql.host}:${mysql.port}/ard_satellite
+          username: ${mysql.username}
+          password: ${mysql.password}
           driver-class-name: com.mysql.cj.jdbc.Driver
           hikari:
             connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
-        mysql_tile:
-          #          url: jdbc:mysql://223.2.34.7:3306/tile
-          url: jdbc:mysql://223.2.34.8:31036/tile?useSSL=false&allowPublicKeyRetrieval=true
-          username: root
-          password: 123456
+        mysql_ard_iam:
+          url: jdbc:mysql://${mysql.host}:${mysql.port}/ard_iam
+          username: ${mysql.username}
+          password: ${mysql.password}
           driver-class-name: com.mysql.cj.jdbc.Driver
-        pg_space:
-          url: jdbc:postgresql://223.2.34.8:31543/gis_db
-          #          url: jdbc:postgresql://127.0.0.1:5431/gis_db
-          username: postgres
-          password: 123456
-          #          password: ogms250410
-          driver-class-name: org.postgresql.Driver
+          hikari:
+            connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
+        mysql_ard_dev:
+          url: jdbc:mysql://${mysql.host}:${mysql.port}/ard_dev
+          username: ${mysql.username}
+          password: ${mysql.password}
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          hikari:
+            connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
+
         pg_satellite:
-          #          url: jdbc:postgresql://223.2.34.8:31543/satellite
-          url: jdbc:postgresql://192.168.1.127:5432/satellite
-          username: postgres
-          password: 123456
+          url: jdbc:postgresql://${pg.host}:${pg.port}/satellite
+          username: ${pg.username}
+          password: ${pg.password}
           driver-class-name: org.postgresql.Driver
+  #        mysql_tile:
+  ##          url: jdbc:mysql://223.2.34.8:31036/tile
+  #          url: jdbc:mysql://192.168.1.110:3306/tile
+  #          username: root
+  #          password: root
+  ##          password: 123456
+  #          driver-class-name: com.mysql.cj.jdbc.Driver
+  #        pg_space:
+  #          url: jdbc:postgresql://223.2.34.8:31543/gis_db
+  ##                    url: jdbc:postgresql://127.0.0.1:5431/gis_db
+  #          username: postgres
+  #          password: 123456
+  #          #          password: ogms250410
+  #          driver-class-name: org.postgresql.Driver
+
   servlet:
     multipart:
       max-file-size: 1GB
       max-request-size: 1GB
   data:
     redis:
-      #host: 223.2.43.228
-      #port: 30379
       host: 114.55.142.175
       port: 30379
       database: 0
     mongodb:
       uri: mongodb://OGMSROOT:ogms1qaz2wsx@172.21.252.208:23266/opengmp
   elasticsearch:
-    uris: http://223.2.34.8:30920
+    uris: http://223.2.32.166:30920
 #    uris: http://127.0.0.1:9200
 
 mybatis-plus:
@@ -89,8 +132,8 @@ docker:
   workDir: /usr/local/coding/
 
 modelServer:
-#  address: http://127.0.0.1:5000
-  address: http://223.2.34.8:30500
+  address: http://127.0.0.1:5001
+#  address: http://223.2.43.228:30500
   apis:
     status: /v0/task/status
     result: /v0/task/result
@@ -98,18 +141,23 @@ modelServer:
     spectrum: /v0/tif/get_spectral_profile
     noCloud: /v0/tif/calc_no_cloud
     noCloud_complex: /v0/tif/calc_no_cloud_complex
-    #    noCloud: /v0/tif/calc_qa_middle
-    #    noCloud: /v0/tif/calc_qa_simple
-    #    noCloud: /v0/tif/calc_qa
     rasterPoint: /v0/tif/calc_raster_point
     rasterLine: /v0/tif/calc_raster_line
     ndvi: /v0/tif/calc_NDVI
   interval:
     status: 2
 
+srmodelServer:
+  address: http://nrspeclib.sasclouds.com:33445
+  apis:
+    status: /v0/task/status
+    result: /v0/task/result
+    SR: /v0/model/superresolution
+  interval:
+    status: 2
 
 tiler:
   end-point: http://127.0.0.1:8000
 #  end-point: http://223.2.34.8:31800
 satelliteConfig:
-  path: /Users/paxton/Documents/Code/satellite-analysis/backEnd/src/main/resources/config/band_config.json
+  path: /Users/paxton/Documents/1_projects/2025-03_satellite/satellite-analysis/backEnd/src/main/resources/config/band_config.json

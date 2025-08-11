@@ -17,7 +17,7 @@ MINIO_ENDPOINT = None  # 初始化为None，将在需要时获取
 
 bp = Blueprint('main', __name__)
 
-
+# -------------------------- 通用函数 --------------------------#
 @bp.route('/tif/<int:id>')
 def get_tif(id):
     tif_path = os.path.join(CONFIG.TEMP_OUTPUT_DIR, f"{id}.tif")
@@ -41,7 +41,7 @@ def get_geojson():
     else:
         return "GeoJSON not found", 404
 
-
+# -------------------------- 任务通用函数 --------------------------#
 @bp.route(CONFIG.API_TASK_STATUS, methods=['GET'])
 def get_status():
     scheduler = init_scheduler()
@@ -59,7 +59,22 @@ def get_status():
         print(f"结果信息：{scheduler.task_results[task_id]}")
     return api_response(data={'status': status})
 
+@bp.route(CONFIG.API_TASK_RESULT, methods=['GET'])
+def get_result():
+    scheduler = init_scheduler()
+    task_id = request.args.get('id', type=str)
+    result = scheduler.get_result(task_id)
+    return api_response(data={'result': result})
 
+@bp.route(CONFIG.API_TASK_CANCEL, methods=['GET'])
+def cancel_task():
+    scheduler = init_scheduler()
+    task_id = request.args.get('id', type=str)
+    scheduler.cancel_task(task_id)
+    scheduler.set_status(task_id, 'ERROR')
+    return api_response(data={'status': 'ERROR'})
+
+# -------------------------- 任务路由 --------------------------#
 @bp.route(CONFIG.API_TIF_MERGE, methods=['POST'])
 def merge_tifs():
     scheduler = init_scheduler()
@@ -88,7 +103,6 @@ def calc_no_cloud_grid():
     task_id = scheduler.start_task('calc_no_cloud_grid', data)
     return api_response(data={'taskId': task_id})
 
-
 @bp.route(CONFIG.API_TIF_get_spectral_profile, methods=['POST'])
 def get_spectral_profile():
     scheduler = init_scheduler()
@@ -116,13 +130,6 @@ def calc_NDVI():
     data = request.json
     task_id = scheduler.start_task('calc_NDVI', data)
     return api_response(data={'taskId': task_id})
-
-@bp.route(CONFIG.API_TASK_RESULT, methods=['GET'])
-def get_result():
-    scheduler = init_scheduler()
-    task_id = request.args.get('id', type=str)
-    result = scheduler.get_result(task_id)
-    return api_response(data={'result': result})
 
 @bp.route(CONFIG.API_TIF_calc_no_cloud_complex, methods=['POST'])
 def calc_no_cloud_complex():
