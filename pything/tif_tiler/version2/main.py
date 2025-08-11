@@ -41,7 +41,7 @@ def createApp():
     app.include_router(mosaic.router, tags=["Mosaic Tiler"], prefix="/mosaic")
     app.include_router(no_cloud.router, tags=["No Cloud Tiler"], prefix="/no_cloud")
     app.include_router(no_cloud_with_sensorname.router, tags=["No Cloud Tiler with SensorName"], prefix="/no_cloud_with_sensorname")
-    app.include_router(image_visualization.router, tags=["Image Visualization Tiler"], prefix="/image_visualization")
+    app.include_router(image_visualization_without_national_scale.router, tags=["Image Visualization Tiler"], prefix="/image_visualization")
     app.include_router(on_the_fly_exploration_mosaic.router, tags=["On the Fly Exploration Mosaic Tiler"], prefix="/on_the_fly_exploration_mosaic")
     app.include_router(mosaic_single.router, tags=["Mosaic Single Tiler"], prefix="/mosaic2")
     app.include_router(edge_image_visualization.router, tags=["Edge Image Visualization Tiler"], prefix="/edge_image_visualization")
@@ -49,7 +49,7 @@ def createApp():
     app.include_router(for_deployment.router, tags=["Deployment Tiler"], prefix="/for_deployment")
     # app.include_router(deployment_with_nodata_question.router, tags=["Deployment with Nodata Question Tiler"], prefix="/deployment_with_nodata_question")
     app.include_router(deployment_with_nodata_question_backup.router, tags=["Deployment with Nodata Question Backup Tiler"], prefix="/deployment_with_nodata_question_backup")
-    app.include_router(image_visualization_without_national_scale.router, tags=["Deployment without national scale loading"], prefix="/image_visualization_without_national_scale")
+    # app.include_router(image_visualization_without_national_scale.router, tags=["Deployment without national scale loading"], prefix="/image_visualization_without_national_scale")
     app.include_router(mosaicjson_visualization.router, tags=["MosaicJSON Visualization"], prefix="/mosaicjson_visualization")
     # Add a welcome message for the root endpoint
     @app.get("/")

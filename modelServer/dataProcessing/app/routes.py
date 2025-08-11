@@ -140,9 +140,12 @@ def calc_no_cloud_complex():
 
 @bp.route(CONFIG.API_TIF_create_low_level_mosaic, methods=['POST'])
 def create_low_level_mosaic():
+    # 提取 Headers和Cookies（转为普通字典）
+    headers = dict(request.headers)
+    cookies = request.cookies.to_dict()
     scheduler = init_scheduler()
     data = request.json
-    task_id = scheduler.start_task('create_low_level_mosaic', data)
+    task_id = scheduler.start_task('create_low_level_mosaic', data, headers=headers, cookies=cookies)
     return api_response(data={'taskId': task_id})
 
 
