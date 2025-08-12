@@ -3,11 +3,12 @@ import traceback
 import uuid
 import threading
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict
 import os
 import json
 import hashlib
-from dataProcessing.config import current_config as CONFIG
+
+from dataProcessing.config import STATUS_RUNNING, STATUS_COMPLETE, STATUS_ERROR, STATUS_PENDING, MAX_RUNNING_TASKS
 
 from dataProcessing.model.mergeTifTask import MergeTifTask
 from dataProcessing.model.mergeTifTaskV2 import MergeTifTaskV2
@@ -17,15 +18,7 @@ from dataProcessing.model.calc_raster_point import calc_raster_point
 from dataProcessing.model.calc_raster_line import calc_raster_line
 from dataProcessing.model.calc_no_cloud import calc_no_cloud
 from dataProcessing.model.calc_no_cloud_grid import calc_no_cloud_grid
-from dataProcessing.model.calc_no_cloud_complex import calc_no_cloud_complex
-from dataProcessing.model.create_low_level_mosaic import create_low_level_mosaic
-from dataProcessing.model.test_task import TestTask
-import ray
-STATUS_RUNNING = CONFIG.STATUS_RUNNING
-STATUS_COMPLETE = CONFIG.STATUS_COMPLETE
-STATUS_ERROR = CONFIG.STATUS_ERROR
-STATUS_PENDING = CONFIG.STATUS_PENDING
-MAX_RUNNING_TASKS = CONFIG.MAX_RUNNING_TASKS
+
 
 class TaskScheduler:
     def __init__(self):
@@ -36,7 +29,6 @@ class TaskScheduler:
         self.task_status: Dict[str, Any] = {}
         self.task_info: Dict[str, Any] = {}
         self.task_results: Dict[str, Any] = {}
-        self.task_refs: Dict[str, List[str]] = {}
         self.task_md5: Dict[str, Any] = {}
 
         # 锁和条件变量
@@ -53,14 +45,12 @@ class TaskScheduler:
     def load_history(self):
         # --------- Load the history of the task ---------------------------
         file_path = os.path.join(os.path.dirname(__file__), "..", "history")
-        os.makedirs(file_path, exist_ok=True)
         for file in os.listdir(file_path):
             with open(os.path.join(file_path, file), "r", encoding="utf-8") as f:
                 try:
                     json_data = json.load(f)
                     self.set_status(json_data["ID"], json_data["STATUS"])
                     self.task_results[json_data["ID"]] = json_data["RESULT"]
-                    self.task_refs[json_data["ID"]] = []
                     self.task_md5[json_data["ID"]] = json_data["MD5"]
                     task_id = json_data["ID"]
                     if self.task_status[task_id] == STATUS_COMPLETE:
@@ -109,30 +99,24 @@ class TaskScheduler:
             'calc_NDVI': calc_NDVI,
             'get_spectral_profile': get_spectral_profile,
             'calc_raster_point': calc_raster_point,
-            'calc_raster_line': calc_raster_line,
-            'calc_no_cloud_complex': calc_no_cloud_complex,
-            'create_low_level_mosaic': create_low_level_mosaic,
-            'test': TestTask,
+            'calc_raster_line': calc_raster_line
+            # 'test': 
             # 可以在这里扩展其他类型的任务
         }
         return task_classes.get(task_type)
 
     def _scheduler_worker(self):
-        print("调度器工作线程已启动")
         while True:
             try:
                 # --------- Pending queue to running queue -------------------------------------
                 with self.condition:
                     while not self.pending_queue.empty() and not self.running_queue.full():
                         task_id = self.pending_queue.get()
-                        print(f"[调度器] 从待处理队列获取任务: {task_id}")
                         self.running_queue.put(task_id)
-                        print(f"[调度器] 任务 {task_id} 已加入运行队列")
 
                         # 为每个运行中的任务创建执行线程
                         thread = threading.Thread(target=self._execute_task, args=(task_id,), daemon=True)
                         thread.start()
-                        print(f"[调度器] 任务 {task_id} 的执行线程已启动")
 
                     # 暂停，等待任务变化
                     self.condition.wait(timeout=1)
@@ -142,19 +126,18 @@ class TaskScheduler:
 
     def _execute_task(self, task_id: str):
         # --------- Execute the task ----------------------------
-        print(f"[执行器] 开始执行任务: {task_id}")
         try:
             task_instance = self.task_info[task_id]
-            print(f"[执行器] 获取任务实例: {task_instance.__class__.__name__}")
             self.task_status[task_id] = STATUS_RUNNING
             # Reuse the result of the task
             
-            print(f"[执行器] 调用任务 {task_id} 的run方法")
             result = task_instance.run()
-            print(f"[执行器] 任务 {task_id} 执行完成")
 
             # --------- Update the status and queue ---------------------------
             with self.condition:
+                self.task_status[task_id] = STATUS_COMPLETE
+                self.task_results[task_id] = result
+
                 # 显式移除特定任务ID
                 # TODO RUNNING 数组
                 temp_queue = queue.Queue()
@@ -174,17 +157,15 @@ class TaskScheduler:
                     print(f"Warning: Task {task_id} not found in running queue")
 
                 self.complete_queue.put((datetime.now(), task_id))
-
-                # Update the result and status
-                self.task_results[task_id] = result
-                self.task_status[task_id] = STATUS_COMPLETE
                 self.condition.notify_all()
 
         except Exception as e:
             # --------- Handle Exceptions --------------------------------
             with self.condition:
                 del self.task_md5[task_id]
-                
+                self.task_status[task_id] = STATUS_ERROR
+                self.task_results[task_id] = str(e)
+
                 temp_queue = queue.Queue()
                 found = False
                 while not self.running_queue.empty():
@@ -199,11 +180,8 @@ class TaskScheduler:
 
                 if not found:
                     print(f"Warning: Task {task_id} not found in running queue")
-                self.error_queue.put(task_id)
 
-                # Update the result and status
-                self.task_status[task_id] = STATUS_ERROR
-                self.task_results[task_id] = str(e)
+                self.error_queue.put(task_id)
                 self.condition.notify_all()
         finally:
             if self.get_status(task_id) != 'COMPLETE':
@@ -247,7 +225,7 @@ class TaskScheduler:
         return "Task Not Completed or Not Found"
 
     def save_to_history(self, task_id):
-        # 序列化任务记录至history
+        # 持久化任务记录至history
         file_path = os.path.join(os.path.dirname(__file__), "..", "history", f"{task_id}.json")
         json_data = {
             "STATUS": self.get_status(task_id),
@@ -259,45 +237,6 @@ class TaskScheduler:
         }
         with open(file_path, "w", encoding="utf-8") as f:
             json.dump(json_data, f, ensure_ascii=False, indent=2)
-
-    def set_task_refs(self, task_id, ref_task_id_list: List[str]):
-        self.task_refs[task_id] = ref_task_id_list
-
-    def get_task_refs(self, task_id):
-        return self.task_refs.get(task_id, [])
-
-    def cancel_task(self, task_id):
-        # 以ERROR形式退出
-        with self.condition:
-            del self.task_md5[task_id]
-            
-            temp_queue = queue.Queue()
-            found = False
-            while not self.running_queue.empty():
-                current_task = self.running_queue.get()
-                if current_task == task_id:
-                    found = True
-                else:
-                    temp_queue.put(current_task)
-
-            while not temp_queue.empty():
-                self.running_queue.put(temp_queue.get())
-
-            if not found:
-                print(f"Warning: Task {task_id} not found in running queue")
-            self.error_queue.put(task_id)
-
-            # Update the result and status
-            self.task_status[task_id] = STATUS_ERROR
-            self.task_results[task_id] = str("CANCEL")
-            self.condition.notify_all()
-
-        object_refs = self.get_task_refs(task_id)
-        for object_ref in object_refs:
-            ray.cancel(object_ref, force=True, recursive=True)
-        
-        
-
 
 scheduler = None
 

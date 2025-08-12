@@ -66,6 +66,7 @@ class DevK8SConfig(BaseConfig):
     MINIO_IMAGES_BUCKET                             =       "test-images"
     MINIO_TILES_BUCKET                              =       "test-tiles"
     MINIO_GRID_BUCKET                               =       "test-tiles"
+    MINIO_SR_BUCKET                                 =       "temp-files/temp-superResolution"  # Super resolution
     MINIO_TEMP_FILES_BUCKET                         =       "temp-files"
 
     # MySQL Config
@@ -77,6 +78,10 @@ class DevK8SConfig(BaseConfig):
     MYSQL_USER                                      =       "root"
     MYSQL_PWD                                       =       "123456"
 
+    # Backend Config
+    BACK_URL_PREFIX                                 =       "http://223.2.34.8:31584/api/"
+    LOW_LEVEL_IMAGE_VISUALIZATION                   =       "v3/modeling/example/scenes/visualization"
+
     # Titiler Config
     TITILER_BASE_URL                                =       "http://223.2.34.8:31800"
     MOSAIC_CREATE_URL                               =       TITILER_BASE_URL + "/mosaic/create"
@@ -85,7 +90,7 @@ class DevK8SConfig(BaseConfig):
 
     # Limitation for Ray
     RAY_MEMORY                                      =       40 * 1024**3
-    RAY_MEMORY_PER_TASK                             =       5 * 1024**3
+    RAY_MEMORY_PER_TASK                             =       12 * 1024**3
     RAY_OBJECT_STORE_MEMORY                         =       RAY_MEMORY * 0.3
     RAY_NUM_CPUS                                    =       8
     RAY_SYSTEM_RESERVED_CPU                         =       0.5
@@ -117,6 +122,10 @@ class VmodConfig(BaseConfig):
     TITILER_BASE_URL                                =       "http://172.31.13.21:5050"
     MOSAIC_CREATE_URL                               =       TITILER_BASE_URL + "/mosaic/create"
 
+    # Backend Config
+    BACK_URL_PREFIX                                 =       "http://172.31.13.21:8999/api/"
+    LOW_LEVEL_IMAGE_VISUALIZATION                   =       "v3/modeling/example/scenes/visualization"
+
     TEMP_OUTPUT_DIR                                 =       r"/usr/resource/temp"
 
     # Limitation for Ray
@@ -147,6 +156,10 @@ class hxfConfig(BaseConfig):
     MYSQL_RESOURCE_DB                               =       "resource"
     MYSQL_USER                                      =       "root"
     MYSQL_PWD                                       =       "123456"
+
+    # Backend Config
+    BACK_URL_PREFIX                                 =       "http://192.168.1.127:8999/api/"
+    LOW_LEVEL_IMAGE_VISUALIZATION                   =       "v3/modeling/example/scenes/visualization"
 
     # Titiler Config
     TITILER_BASE_URL                                =       "http://192.168.1.127:8000"
@@ -184,6 +197,10 @@ class zzwConfig(BaseConfig):
     MYSQL_USER                                      =       "root"
     MYSQL_PWD                                       =       "123456"
 
+    # Backend Config
+    BACK_URL_PREFIX                                 =       "http://223.2.34.8:31584/api/"
+    LOW_LEVEL_IMAGE_VISUALIZATION                   =       "v3/modeling/example/scenes/visualization"
+
     # Titiler Config
     TITILER_BASE_URL                                =       "http://localhost:8000"
     MOSAIC_CREATE_URL                               =       TITILER_BASE_URL + "/mosaic/create"
@@ -219,6 +236,10 @@ class slkConfig(BaseConfig):
     MYSQL_RESOURCE_DB                               =       "satllite"
     MYSQL_USER                                      =       "root"
     MYSQL_PWD                                       =       "123456"
+
+    # Backend Config
+    BACK_URL_PREFIX                                 =       "http://223.2.34.8:31584/api/"
+    LOW_LEVEL_IMAGE_VISUALIZATION                   =       "v3/modeling/example/scenes/visualization"
 
     # Titiler Config
     TITILER_BASE_URL                                =       "http://223.2.34.8:31800"
@@ -259,7 +280,7 @@ def get_current_config():
     """获取当前环境的配置类"""
     return get_config(CURRENT_PROFILE)
 
-os.environ['APP_PROFILE'] = 'slk'
+os.environ['APP_PROFILE'] = 'k8s'
 # 获取当前环境配置 - 类似Spring Boot的 spring.profiles.active
 CURRENT_PROFILE = os.getenv('APP_PROFILE', 'k8s')  # 默认使用k8s
 

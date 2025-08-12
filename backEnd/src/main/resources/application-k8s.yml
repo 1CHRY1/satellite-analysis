@@ -16,10 +16,11 @@ pg:
   username: postgres
   password: 123456
 
+# 修改数据库级相应配置注意兼顾在线编程写死部分
 spring:
   datasource:
     dynamic:
-      primary: mysql_satellite
+      primary: mysql_ard_satellite
       strict: false
       datasource:
         mysql_satellite:
@@ -112,7 +113,8 @@ docker:
 
 modelServer:
   #  address: http://127.0.0.1:5001
-  address: http://20.1.182.105:5000
+#  address: http://20.1.182.105:5000
+  address: http://model-server:5000
   apis:
     status: /v0/task/status
     result: /v0/task/result

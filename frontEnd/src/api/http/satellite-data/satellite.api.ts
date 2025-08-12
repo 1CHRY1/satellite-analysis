@@ -177,6 +177,10 @@ export async function getCaseStatus(taskId: string): Promise<any> {
     return http.get<any>(`modeling/case/status/caseId/${taskId}`)
 }
 
+export async function cancelCase(taskId: string): Promise<any> {
+    return http.get<any>(`modeling/case/cancel/caseId/${taskId}`)
+}
+
 export async function getCaseTifResult(taskId: string): Promise<any> {
     return http.get<any>(`modeling/case/result/tif/caseId/${taskId}`)
 }

@@ -18,10 +18,11 @@ pg:
   username: postgres
   password: ogms250410
 
+# 修改数据库级相应配置注意兼顾在线编程写死部分
 spring:
   datasource:
     dynamic:
-      primary: mysql_satellite
+      primary: mysql_ard_satellite
       strict: false
       datasource:
         mysql_satellite:
