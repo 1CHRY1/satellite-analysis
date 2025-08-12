@@ -6,13 +6,14 @@ import type { platformType } from './shared'
 /**
  * 数据准备相关的组合式函数
  */
+export const demotic1mImages = ref<any[]>([])
+export const demotic2mImages = ref<any[]>([])
+export const internationalImages = ref<any[]>([])
+export const radarImages = ref<any[]>([])
 
 export const useDataPreparation = () => {
     // 各品类影像分类,1m是亚米
-    const demotic1mImages = ref<any[]>([])
-    const demotic2mImages = ref<any[]>([])
-    const internationalImages = ref<any[]>([])
-    const radarImages = ref<any[]>([])
+    
 
     // 累积影像分布到各个格网的计算结果
     const demotic1mGridImages = ref<any[]>([])

@@ -5,6 +5,8 @@ import { getNoCloud } from '@/api/http/satellite-data'
 import { getNoCloudUrl4MosaicJson } from '@/api/http/satellite-data/visualize.api'
 import * as MapOperation from '@/util/map/operation'
 import { exploreData, taskStore, setCurrentPanel, noCloudLoading, calTask, additionalData, dataReconstruction, progress, showProgress } from './shared'
+import {demotic1mImages,demotic2mImages,internationalImages,radarImages} from './useDataPreparation'
+import { bandList } from './useComplexSynthesis'
 
 /**
  * 无云一版图计算相关的组合式函数
@@ -100,15 +102,15 @@ export const useNoCloudCalculation = (allScenes: any) => {
         setCurrentPanel('history')
 
         // 根据勾选情况合并影像
-        let addedImages = [...allScenes.value]
+        let addedImages = [...demotic1mImages.value]
         if (dataReconstruction.value[0] === true) {
-            addedImages = addedImages.concat(allScenes.value)
+            addedImages = addedImages.concat(demotic2mImages.value)
         }
         if (dataReconstruction.value[1] === true) {
-            addedImages = addedImages.concat(allScenes.value)
+            addedImages = addedImages.concat(internationalImages.value)
         }
         if (dataReconstruction.value[2] === true) {
-            addedImages = addedImages.concat(allScenes.value)
+            addedImages = addedImages.concat(radarImages.value)
         }
         
         let dataSet = [
@@ -124,7 +126,7 @@ export const useNoCloudCalculation = (allScenes: any) => {
             resolution: exploreData.gridResolution,
             sceneIds: addedImages.map((image) => image.sceneId),
             dataSet: dataSet,
-            bandList: ['Red', 'Green', 'Blue']
+            bandList: bandList.value
         }
 
         // 发送请求
