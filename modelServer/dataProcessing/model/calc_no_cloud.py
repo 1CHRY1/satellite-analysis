@@ -385,7 +385,7 @@ class calc_no_cloud(Task):
             bands = {band: None for band in bandList}
             for img in scene['images']:
                 for band in bandList:
-                    if img['band'] == mapper[band]:  # 检查当前图像是否匹配目标波段
+                    if str(img['band']) == str(mapper[band]):  # 检查当前图像是否匹配目标波段
                         bands[band] = img['tifPath']  # 动态赋值
             scene_band_paths[scene['sceneId']] = bands
 
@@ -406,6 +406,9 @@ class calc_no_cloud(Task):
                                 temp_dir_path=temp_dir_path)
             for g in grids
         ]
+        from dataProcessing.model.scheduler import init_scheduler
+        scheduler = init_scheduler()
+        scheduler.set_task_refs(self.task_id, ray_tasks)
         results = ray.get(ray_tasks)
 
         # 不使用ray

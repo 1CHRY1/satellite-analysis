@@ -23,6 +23,7 @@ class BaseConfig:
     # API for Task
     API_TASK_STATUS                                 =       API_VERSION + '/task/status'
     API_TASK_RESULT                                 =       API_VERSION + '/task/result'
+    API_TASK_CANCEL                                 =       API_VERSION + '/task/cancel'
     
     # API for Mosaic (新增)
     API_MOSAIC_CREATE                               =       API_VERSION + '/mosaic/create'
@@ -197,6 +198,42 @@ class zzwConfig(BaseConfig):
     RAY_SYSTEM_RESERVED_CPU                         =       0.5
     RAY_SYSTEM_RESERVED_MEMORY                      =       2 * 1024**3
 
+
+class slkConfig(BaseConfig):
+    # MinIO Config
+    MINIO_PORT                                      =       30900
+    MINIO_IP                                        =       "223.2.34.8"
+    MINIO_ACCESS_KEY                                =       "jTbgNHEqQafOpUxVg7Ol"
+    MINIO_SECRET_KEY                                =       "7UxtrqhSOyN1KUeumbqTRMv1zeluLO69OwJnCC0M"
+    MINIO_SECURE                                    =       False
+    MINIO_IMAGES_BUCKET                             =       "test-images"
+    MINIO_TILES_BUCKET                              =       "test-tiles"
+    MINIO_GRID_BUCKET                               =       "test-tiles"
+    MINIO_TEMP_FILES_BUCKET                         =       "temp-files"
+
+    # MySQL Config
+    MYSQL_HOST                                      =       "223.2.34.8"
+    MYSQL_TILE_PORT                                 =       30779
+    MYSQL_TILE_DB                                   =       "tile"
+    MYSQL_RESOURCE_PORT                             =       31036
+    MYSQL_RESOURCE_DB                               =       "satllite"
+    MYSQL_USER                                      =       "root"
+    MYSQL_PWD                                       =       "123456"
+
+    # Titiler Config
+    TITILER_BASE_URL                                =       "http://223.2.34.8:31800"
+    MOSAIC_CREATE_URL                               =       TITILER_BASE_URL + "/mosaic/create"
+
+    TEMP_OUTPUT_DIR                                 =       r"/Users/paxton/Documents/1_projects/2025-03_satellite/satellite-analysis/modelServer/temp"
+
+    # Limitation for Ray
+    RAY_MEMORY                                      =       40 * 1024**3
+    RAY_MEMORY_PER_TASK                             =       5 * 1024**3
+    RAY_OBJECT_STORE_MEMORY                         =       RAY_MEMORY * 0.3
+    RAY_NUM_CPUS                                    =       8
+    RAY_SYSTEM_RESERVED_CPU                         =       0.5
+    RAY_SYSTEM_RESERVED_MEMORY                      =       2 * 1024**3
+
 # --------------- class ProdConfig(BaseConfig): ---------------
 
 # 配置映射字典 - 类似Spring Boot的profile机制
@@ -204,7 +241,8 @@ config = {
     'k8s': DevK8SConfig,
     'vmod':VmodConfig,
     'hxf':hxfConfig,
-    'zzw':zzwConfig
+    'zzw':zzwConfig,
+    'slk':slkConfig
 }
 
 def get_config(profile=None):
@@ -221,7 +259,7 @@ def get_current_config():
     """获取当前环境的配置类"""
     return get_config(CURRENT_PROFILE)
 
-os.environ['APP_PROFILE'] = 'zzw'
+os.environ['APP_PROFILE'] = 'slk'
 # 获取当前环境配置 - 类似Spring Boot的 spring.profiles.active
 CURRENT_PROFILE = os.getenv('APP_PROFILE', 'k8s')  # 默认使用k8s
 
