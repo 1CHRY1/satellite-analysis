@@ -49,6 +49,11 @@ public class ModelComputeController {
                 .body(modelData);
     }
 
+    @GetMapping("/cancel/caseId/{caseId}")
+    public ResponseEntity<CommonResultVO> cancelCaseById(@PathVariable String caseId) {
+        return ResponseEntity.ok(modelServerService.cancelCaseById(caseId));
+    }
+
     @GetMapping("/result/SRbands/caseId/{caseId}")
     public ResponseEntity<CommonResultVO> getModelCaseSRBandsResultById(@PathVariable String caseId) {
         return ResponseEntity.ok(modelServerService.getModelCaseSRBandsResultById(caseId));

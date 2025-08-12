@@ -7,11 +7,13 @@ import nnu.mnr.satellite.model.pojo.modeling.ModelServerProperties;
 import nnu.mnr.satellite.model.pojo.modeling.TilerProperties;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.model.vo.modeling.TilerResultVO;
+import nnu.mnr.satellite.utils.common.ProcessUtil;
 import nnu.mnr.satellite.utils.dt.MinioUtil;
 import nnu.mnr.satellite.utils.dt.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
@@ -109,6 +111,16 @@ public class ModelServerService {
             return null;
         }
 
+    }
+
+    public CommonResultVO cancelCaseById(String caseId){
+        try {
+             String url = modelServerProperties.getAddress() + modelServerProperties.getApis().get("cancel");
+            JSONObject modelCaseResponse = JSONObject.parseObject(ProcessUtil.cancelModelCase(url, caseId));
+            return CommonResultVO.builder().status(1).message("success").data(modelCaseResponse).build();
+        } catch (Exception e) {
+            return CommonResultVO.builder().status(-1).message("Wrong Because of " + e.getMessage()).build();
+        }
     }
 
     public CommonResultVO getModelCaseSRBandsResultById(String caseId){

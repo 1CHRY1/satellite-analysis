@@ -50,6 +50,14 @@ public class ProcessUtil {
         }
     }
 
+    public static String cancelModelCase(String url, String caseId) {
+        try {
+            return HttpUtil.doGet(url, JSONObject.of("id", caseId));
+        } catch (Exception e) {
+            // TODO: verify
+            return "RUN WRONG";
+        }
+    }
 
 
 }

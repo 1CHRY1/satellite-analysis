@@ -65,6 +65,15 @@ public class UserController {
         return ResponseEntity.ok(userService.uploadAvatar(avatarUploadDTO));
     }
 
+    @PostMapping("/record/page")
+    public ResponseEntity<CommonResultVO> getRecordPage(@RequestBody RecordPageFetchDTO recordPageFetchDTO){
+        return ResponseEntity.ok(userService.getRecordPage(recordPageFetchDTO));
+    }
+
+    @PutMapping("/record/add")
+    public ResponseEntity<CommonResultVO> saveRecord(@RequestBody RecordSaveDTO recordSaveDTO){
+        return ResponseEntity.ok(userService.saveRecord(recordSaveDTO));
+    }
 
 
 }

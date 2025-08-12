@@ -1,12 +1,18 @@
 package nnu.mnr.satellite.service.user;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.alibaba.fastjson2.JSONObject;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.config.security.CustomUserDetailsService;
 import nnu.mnr.satellite.constants.UserConstants;
+import nnu.mnr.satellite.mapper.user.IRecordRepo;
 import nnu.mnr.satellite.model.dto.user.*;
+import nnu.mnr.satellite.model.po.user.Record;
+import nnu.mnr.satellite.model.vo.user.RecordInfoVO;
 import nnu.mnr.satellite.model.po.user.User;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.model.vo.user.UserVO;
@@ -25,10 +31,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created with IntelliJ IDEA.
@@ -44,6 +51,7 @@ import java.util.*;
 public class UserService {
 
     private final IUserRepo userRepo;
+    private final IRecordRepo recordRepo;
     private final BCryptPasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
 
@@ -56,8 +64,9 @@ public class UserService {
     @Autowired
     MinioUtil minioUtil;
 
-    public UserService(IUserRepo userRepo, BCryptPasswordEncoder passwordEncoder, AuthenticationManager authenticationManager) {
+    public UserService(IUserRepo userRepo, IRecordRepo recordRepo, BCryptPasswordEncoder passwordEncoder, AuthenticationManager authenticationManager) {
         this.userRepo = userRepo;
+        this.recordRepo = recordRepo;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
     }
@@ -324,6 +333,100 @@ public class UserService {
             return CommonResultVO.builder()
                     .message("保存路径不存在，多半是崩了")
                     .status(-1)
+                    .build();
+        }
+    }
+
+    public CommonResultVO getRecordPage(RecordPageFetchDTO recordPageFetchDTO){
+        // 构造分页对象
+        Page<Record> page = new Page<>(recordPageFetchDTO.getPage(), recordPageFetchDTO.getPageSize());
+        // 调用 Mapper 方法
+        IPage<Record> recordPage = getRecordsWithCondition(page, recordPageFetchDTO, recordPageFetchDTO.getUserId());
+        return CommonResultVO.builder()
+                .status(1)
+                .message("分页查询成功")
+                .data(mapPage(recordPage))
+                .build();
+    }
+
+    private IPage<Record> getRecordsWithCondition(Page<Record> page, RecordPageFetchDTO recordPageFetchDTO, String userId) {
+        String sortField = recordPageFetchDTO.getSortField();
+        Boolean asc = recordPageFetchDTO.getAsc();
+
+        LambdaQueryWrapper<Record> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+
+        // 按用户筛选
+        lambdaQueryWrapper.eq(Record::getUserId, userId);
+
+        // 添加排序条件
+        if (sortField != null && !sortField.isEmpty()) {
+            // 使用 sortField 对应的数据库字段进行排序
+            switch (sortField) {
+                case "actionTime":
+                    lambdaQueryWrapper.orderBy(true, asc, Record::getActionTime);
+                    break;
+                case "actionType":
+                    lambdaQueryWrapper.orderBy(true, asc, Record::getActionType);
+                    break;
+                // 可以根据需要添加更多的字段
+                default:
+                    throw new IllegalArgumentException("Unsupported sort field: " + sortField);
+            }
+        }
+        return recordRepo.selectPage(page, lambdaQueryWrapper);
+    }
+
+    private IPage<RecordInfoVO> mapPage(IPage<Record> recordPage) {
+        // 手动映射，自动映射全是null
+        userModelMapper.typeMap(Record.class, RecordInfoVO.class)
+                .addMappings(mapper -> {
+                    mapper.map(Record::getActionId, RecordInfoVO::setActionId);
+                    mapper.map(Record::getActionType, RecordInfoVO::setActionType);
+                    mapper.map(Record::getActionDetail, RecordInfoVO::setActionDetail);
+                    mapper.map(Record::getActionTime, RecordInfoVO::setActionTime);
+                });
+
+        // 执行映射
+        List<RecordInfoVO> recordInfoVOList = recordPage.getRecords().stream()
+                .map(record -> userModelMapper.map(record, RecordInfoVO.class))
+                .toList();
+
+        // 创建一个新的 Page 对象
+        Page<RecordInfoVO> resultPage = new Page<>();
+        resultPage.setRecords(recordInfoVOList);
+        resultPage.setTotal(recordPage.getTotal());
+        resultPage.setSize(recordPage.getSize());
+        resultPage.setCurrent(recordPage.getCurrent());
+
+        return resultPage;
+    }
+
+    public CommonResultVO saveRecord(RecordSaveDTO recordSaveDTO){
+        if (recordSaveDTO == null || recordSaveDTO.getUserId() == null) {
+            return CommonResultVO.builder()
+                    .status(-1)
+                    .message("参数错误")
+                    .build();
+        }
+        try {
+            String userId = recordSaveDTO.getUserId();
+            String actionType = recordSaveDTO.getActionType();
+            JSONObject actionDetail = recordSaveDTO.getActionDetail();
+            String actionTime = recordSaveDTO.getActionTime();
+            Record record = Record.builder()
+                    .userId(userId)
+                    .actionType(actionType)
+                    .actionDetail(actionDetail)
+                    .build();
+            recordRepo.insert(record);
+            return CommonResultVO.builder()
+                    .status(1)
+                    .message("上传记录成功")
+                    .build();
+        } catch (Exception e) {
+            return CommonResultVO.builder()
+                    .status(-1)
+                    .message("写入数据库失败")
                     .build();
         }
     }
