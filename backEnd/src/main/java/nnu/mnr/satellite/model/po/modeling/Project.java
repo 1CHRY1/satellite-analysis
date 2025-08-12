@@ -23,7 +23,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@TableName("project")
+@TableName("project_table")
 public class Project {
 
     @TableId

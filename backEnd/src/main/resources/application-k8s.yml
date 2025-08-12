@@ -6,8 +6,10 @@ netty:
     port: 9888
 
 mysql:
-  host: 20.1.47.208
-  port: 3306
+#  host: 20.1.47.208
+#  port: 3306
+  host: 223.2.34.8
+  port: 31036
   username: root
   password: 123456
 pg:
@@ -23,13 +25,13 @@ spring:
       primary: mysql_ard_satellite
       strict: false
       datasource:
-        mysql_satellite:
-          url: jdbc:mysql://${mysql.host}:${mysql.port}/satellite
-          username: ${mysql.username}
-          password: ${mysql.password}
-          driver-class-name: com.mysql.cj.jdbc.Driver
-          hikari:
-            connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
+#        mysql_satellite:
+#          url: jdbc:mysql://${mysql.host}:${mysql.port}/satellite
+#          username: ${mysql.username}
+#          password: ${mysql.password}
+#          driver-class-name: com.mysql.cj.jdbc.Driver
+#          hikari:
+#            connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
         mysql_ard_satellite:
           url: jdbc:mysql://${mysql.host}:${mysql.port}/ard_satellite
           username: ${mysql.username}
@@ -94,8 +96,8 @@ mybatis-plus:
 minio:
   access-key: jTbgNHEqQafOpUxVg7Ol
   secret-key: 7UxtrqhSOyN1KUeumbqTRMv1zeluLO69OwJnCC0M
-  url: http://20.1.115.166:9000
-
+#  url: http://20.1.115.166:9000
+  url: http://223.2.34.8:30900
 docker:
   defaultServer:
     #    port: 2376
@@ -140,7 +142,7 @@ srmodelServer:
     status: 2
 
 tiler:
-  end-point: http://20.1.37.145:8000
-
+  end-point: http://223.2.34.8:31800
+#  end-point: http://20.1.37.145:8000
 satelliteConfig:
   path: /usr/resource/band_config.json

@@ -120,7 +120,6 @@ def get_tile(
 
         # region 选择要处理的景
         if full_coverage_scenes:
-            # TODO:??
             # sorted_full_coverage = sorted(full_coverage_scenes, key=lambda x: float(x.get('cloud', 0)))
             scenes_to_process = [full_coverage_scenes[0]]
             use_single_scene = True
