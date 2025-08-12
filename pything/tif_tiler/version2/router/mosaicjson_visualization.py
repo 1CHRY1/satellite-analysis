@@ -5,6 +5,7 @@ from rio_tiler.profiles import img_profiles
 import numpy as np
 import requests
 from typing import List, Dict, Any
+import mercantile
 from config import minio_config, TRANSPARENT_CONTENT
 
 
@@ -40,7 +41,6 @@ def fetch_mosaicjson(path: str) -> Dict[str, Any]:
 
 def read_tile_rgb(x: int, y: int, z: int, url: str) -> Dict[str, np.ndarray]:
     url = to_http_url(url)
-    nodata = scene.get('noData') or 0
     with Reader(url, options={"nodata": 0}) as reader:
         tile = reader.tile(x, y, z, tilesize=256)
         data = tile.data
@@ -78,12 +78,30 @@ def get_tile(
     try:
         mj = fetch_mosaicjson(mosaicPath)
         quadkey_zoom = int(mj.get("quadkey_zoom", mj.get("minzoom", z)))
-        if z != quadkey_zoom:
-            return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
-
         tiles_map: Dict[str, List[str]] = mj.get("tiles", {})
-        qk = tile_to_quadkey(x, y, z)
-        urls = tiles_map.get(qk, [])
+
+        urls: List[str] = []
+        if z == quadkey_zoom:
+            qk = tile_to_quadkey(x, y, z)
+            urls = tiles_map.get(qk, []) or []
+        elif z < quadkey_zoom:
+            factor = 2 ** (quadkey_zoom - z)
+            x_start = x * factor
+            y_start = y * factor
+            for xx in range(x_start, x_start + factor):
+                for yy in range(y_start, y_start + factor):
+                    qk = mercantile.quadkey(xx, yy, quadkey_zoom)
+                    assets = tiles_map.get(qk, [])
+                    if assets:
+                        urls.extend(assets)
+        else:  # z > quadkey_zoom
+            merc_tile = mercantile.Tile(x=x, y=y, z=z)
+            depth = z - quadkey_zoom
+            for _ in range(depth):
+                merc_tile = mercantile.parent(merc_tile)
+            qk = mercantile.quadkey(merc_tile.x, merc_tile.y, merc_tile.z)
+            urls = tiles_map.get(qk, []) or []
+
         if not urls:
             return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
 
