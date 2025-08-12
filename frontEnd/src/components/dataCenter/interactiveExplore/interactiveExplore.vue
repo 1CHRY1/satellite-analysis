@@ -528,7 +528,7 @@
 <script setup lang="ts">
 import MapComp from '@/components/feature/map/mapComp.vue'
 import segmented from '@/components/common/segmented.vue';
-import { ref, computed, type Ref, watch, reactive, onMounted, provide, inject } from 'vue'
+import { ref, computed, type Ref, watch, reactive, onMounted, provide, inject, onUnmounted } from 'vue'
 import { RegionSelects } from 'v-region'
 import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'
 import { formatTime } from '@/util/common'
@@ -678,6 +678,7 @@ onMounted(async () => {
     }, 1)
 
 })
+
 </script>
 
 <style scoped src="../tabStyle.css">

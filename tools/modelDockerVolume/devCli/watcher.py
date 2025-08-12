@@ -24,7 +24,7 @@ global BUCKET_NAME, WATCH_DIR
 
 def initialize(config_file_path: str):
 
-    global minio_client, mysql_engine, BUCKET_NAME, WATCH_DIR, USER_ID, PROJECT_ID
+    global minio_client, mysql_engine, mysql_dev_engine, BUCKET_NAME, WATCH_DIR, USER_ID, PROJECT_ID
     
     with open(config_file_path, 'r') as f:
         config = json.load(f)
@@ -45,7 +45,8 @@ def initialize(config_file_path: str):
         secure=secure
     )
     
-    url = f"mysql+pymysql://{database_config['user']}:{database_config['password']}@{database_config['endpoint']}/{database_config['satellite_database']}"
+    url = f"mysql+pymysql://{database_config['user']}:{database_config['password']}@{database_config['endpoint']}/{database_config['dev_database']}"
+    # url = f"mysql+pymysql://{database_config['user']}:{database_config['password']}@{database_config['endpoint']}/{database_config['satellite_database']}"
     mysql_engine = create_engine(url)
 
 ###### Data Model of table<project_data> #########################################
@@ -55,7 +56,7 @@ from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
 class ProjectData(Base):
-    __tablename__ = 'project_data'
+    __tablename__ = 'project_data_table'
 
     data_id = Column(String(20), primary_key=True, index=True)
     project_id = Column(String(30), index=True)

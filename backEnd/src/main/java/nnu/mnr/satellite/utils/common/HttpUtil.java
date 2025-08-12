@@ -43,6 +43,10 @@ public class HttpUtil {
             HttpURLConnection connection = (HttpURLConnection) obj.openConnection();
             connection.setRequestMethod("GET");
 
+
+            log.info("GET URL: {}", url + (query.isEmpty() ? "" : "?" + query));
+
+
             // 设置超时时间为10s
             connection.setConnectTimeout(10000);
             connection.setReadTimeout(10000);

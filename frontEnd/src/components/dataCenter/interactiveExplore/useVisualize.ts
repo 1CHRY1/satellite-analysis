@@ -15,7 +15,7 @@ import { mapManager } from '@/util/map/mapManager'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import { searchedSpatialFilterMethod, finalLandId, curGridsBoundary, vectorStats, selectedGridResolution, vectorSymbology, selectedDateRange } from "./shared"
 import { message } from "ant-design-vue";
-import { getCaseResult, getVectorAttr, pollStatus } from "@/api/http/satellite-data/satellite.api";
+import { cancelCase, getCaseResult, getVectorAttr, pollStatus } from "@/api/http/satellite-data/satellite.api";
 import { calTask } from "../noCloud/composables/shared";
 // 使用一个对象来存储每个 Product Item 的显示状态
 const eyeStates = ref({});
@@ -155,6 +155,7 @@ export const useVisualize = () => {
     /**
      * 3. 交互探索 - 影像可视化
      */
+    const curTaskId = ref<string>('')
     const selectedSensorName = ref('')
     const showSceneResult = async (sensorName: string) => {
         destroyScene()
@@ -170,6 +171,13 @@ export const useVisualize = () => {
             handleShowScene(sensorName)
         }, 1000)
         let taskId = taskRes.data
+        if (!taskId) {
+            stopLoading()
+            message.warning("任务创建失败")
+            return
+        }
+        curTaskId.value = taskId
+        
         try {
             await pollStatus(taskId)
             console.log('成功，开始拿结果')
@@ -189,14 +197,21 @@ export const useVisualize = () => {
             }
             if(!data)
                 data = await getData(taskId)
-            
+            if (!data.mosaicjson_url) {
+                stopLoading()
+                message.warning("计算失败，请重试")
+                curTaskId.value = ''
+            }
             handleShowLargeScene(data.mosaicjson_url)
             stopLoading()
             message.success("计算完成")
+            curTaskId.value = ''
         } catch (error) {
             console.log(error)
             stopLoading()
-            message.warning("计算失败，请重试")
+            if (curTaskId.value !== '')
+                message.warning("计算失败，请重试")
+            curTaskId.value = ''
         }
         setTimeout(() => {
             stopLoading()
@@ -210,12 +225,23 @@ export const useVisualize = () => {
         const url = getLargeSceneUrl(mosaicUrl)
         InteractiveExploreMapOps.map_addLargeSceneLayer(url)
     }
+    const cancelLargeScaleScene = async (taskId: string) => {
+        if (taskId !== '') {
+            try {
+                await cancelCase(taskId)
+                curTaskId.value = ''
+            } catch (error) {
+                console.error("任务取消失败")
+            }
+        }
+    }
     const destroyExploreLayers = () => {
         destroyScene()
         destroyVector()
         destroyProduct()
     }
     const destroyScene = () => {
+        cancelLargeScaleScene(curTaskId.value)
         InteractiveExploreMapOps.map_destroySceneLayer()
         InteractiveExploreMapOps.map_destroyLargeSceneLayer()
     }

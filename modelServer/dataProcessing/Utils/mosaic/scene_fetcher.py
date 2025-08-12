@@ -1,5 +1,6 @@
 import requests
 from .scene import Scene
+from dataProcessing.config import current_config as CONFIG
 
 class SceneFetcher:
     def __init__(self, headers, cookies):
@@ -7,7 +8,7 @@ class SceneFetcher:
         self.headers = headers
         self.cookies = cookies
         # self.url_prefix = "http://223.2.34.8:31584/api/"
-        self.url_prefix = "http://192.168.1.127:8999/api/"
+        self.url_prefix = CONFIG.BACK_URL_PREFIX
 
     def parse_grids(self, grids_data):
         """解析返回的格网数据并返回格式化的结果"""
@@ -66,7 +67,7 @@ class SceneFetcher:
             if y > y_max:
                 y_max = y
 
-        scenes_url = self.url_prefix + "v3/modeling/example/scenes/visualization"
+        scenes_url = self.url_prefix + CONFIG.LOW_LEVEL_IMAGE_VISUALIZATION
         headers = self.headers
         cookies = self.cookies
         scenes_payload = {

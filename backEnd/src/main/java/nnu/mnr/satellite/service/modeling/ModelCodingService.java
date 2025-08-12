@@ -117,14 +117,15 @@ public class ModelCodingService {
                 "secret_key", minioProperties.getSecretKey(),
                 "secure", false);
         Map<String, DataSourceProperty> datasources = dynamicDataSourceProperties.getDatasource();
-        DataSourceProperty satelliteDs = datasources.get("mysql_satellite");
+        DataSourceProperty satelliteDs = datasources.get("mysql_ard_satellite");
 //        DataSourceProperty tileDs = datasources.get("mysql_tile");
         JSONObject databaseConfig = JSONObject.of(
                 "endpoint", satelliteDs.getUrl().split("://")[1].split("/")[0],
                 "user", satelliteDs.getUsername(),
                 "password", satelliteDs.getPassword(),
 //                "satellite_database", satelliteDs.getUrl().split("://")[1].split("/", 2)[1],
-                "satellite_database", "satellite"
+                "satellite_database", "ard_satellite",
+                "dev_database", "ard_dev"
 //                "tile_database", tileDs.getUrl().split("://")[1].split("/", 2)[1]
         );
         JSONObject remoteConfig = JSONObject.of("minio", minioConfig, "database", databaseConfig, "project_info", projectConfig);
