@@ -202,10 +202,10 @@ class zzwConfig(BaseConfig):
     LOW_LEVEL_IMAGE_VISUALIZATION                   =       "v3/modeling/example/scenes/visualization"
 
     # Titiler Config
-    TITILER_BASE_URL                                =       "http://localhost:8000"
+    TITILER_BASE_URL                                =       "http://localhost:31800"
     MOSAIC_CREATE_URL                               =       TITILER_BASE_URL + "/mosaic/create"
 
-    TEMP_OUTPUT_DIR                                 =       r"/usr/resource/temp"
+    TEMP_OUTPUT_DIR                                 =       r"/Users/paxton/Documents/1_projects/2025-03_satellite/satellite-analysis/modelServer/temp"
 
     # Limitation for Ray
     RAY_MEMORY                                      =       40 * 1024**3

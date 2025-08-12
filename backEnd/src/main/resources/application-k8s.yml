@@ -118,6 +118,7 @@ modelServer:
   apis:
     status: /v0/task/status
     result: /v0/task/result
+    cancel: /v0/task/cancel
     merge: /v0/tif/merge_v2
     spectrum: /v0/tif/get_spectral_profile
     noCloud: /v0/tif/calc_no_cloud
