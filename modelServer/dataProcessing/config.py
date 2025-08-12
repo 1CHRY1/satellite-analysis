@@ -2,7 +2,7 @@ import math
 import os
 
 class BaseConfig:
-    APP_PORT                                        =       5001
+    APP_PORT                                        =       5000
     APP_DEBUG                                       =       False
 
     # API Version
