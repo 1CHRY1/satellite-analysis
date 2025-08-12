@@ -57,7 +57,7 @@ public class QuartzSchedulerManager {
                 .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(interval).repeatForever()).build();
         scheduler.scheduleJob(jobDetail, simpleTrigger);
     }
-
+    // 轮询
     private void modelRunningStatusJob(Scheduler scheduler, String caseId, BaseModelServerProperties serverProperties) throws SchedulerException {
         JobDetail jobDetail = JobBuilder.newJob(ModelRunStatusJob.class)
                 .withIdentity(caseId, "modelStatusGroup")

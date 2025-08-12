@@ -47,15 +47,6 @@ public class ModelExampleControllerV3 {
     public ResponseEntity<CommonResultVO> createLowLevelScenesVisualizationConfig(@RequestBody VisualizationLowLevelTile visualizationLowLevelTile,
                                                                           @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
                                                                           @CookieValue(value = "encrypted_request_body", required = false) String encryptedRequestBody) throws IOException {
-//        // 拼凑cacheKey
-//        String userId;
-//        try {
-//            userId = IdUtil.parseUserIdFromAuthHeader(authorizationHeader);
-//        } catch (JwtException e) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-//        }
-//
-//        String cacheKey = userId + "_" + encryptedRequestBody;
         Map<String, String> headers = new HashMap<>();
         if (authorizationHeader != null) {
             headers.put("Authorization", authorizationHeader); // 添加 Authorization 请求头
