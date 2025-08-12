@@ -388,7 +388,7 @@ class calc_no_cloud_complex(Task):
         def find_band_path(images, target_band):
             """辅助函数：在影像列表中查找目标波段的路径"""
             for img in images:
-                if img['band'] == target_band:
+                if str(img['band']) == str(target_band):
                     return img['tifPath']
             return None
 
@@ -443,6 +443,9 @@ class calc_no_cloud_complex(Task):
                                 temp_dir_path=temp_dir_path,band_num=band_num)
             for g in grids
         ]
+        from dataProcessing.model.scheduler import init_scheduler
+        scheduler = init_scheduler()
+        scheduler.set_task_refs(self.task_id, ray_tasks)
         results = ray.get(ray_tasks)
 
         # 不使用ray

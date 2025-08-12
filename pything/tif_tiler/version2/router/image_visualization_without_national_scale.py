@@ -61,7 +61,7 @@ def read_band(x, y, z, bucket_path, band_path, nodata_int):
             converted_data = convert_to_uint8(original_data, original_dtype)
             return converted_data
     except Exception as e:
-        logger.error(f"无法读取文件 {full_path}: {str(e)}")
+        print(f"无法读取文件 {full_path}: {str(e)}", flush=True)
         return None
 
 
@@ -120,8 +120,9 @@ def get_tile(
 
         # region 选择要处理的景
         if full_coverage_scenes:
+            # TODO:??
             # sorted_full_coverage = sorted(full_coverage_scenes, key=lambda x: float(x.get('cloud', 0)))
-            scenes_to_process = [sorted_full_coverage[0]]
+            scenes_to_process = [full_coverage_scenes[0]]
             use_single_scene = True
         else:
             scenes_to_process = json_data[:10]

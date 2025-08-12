@@ -30,3 +30,9 @@ export type OneBandColorLayerParam = {
     nodata?: number,
     normalize_level?: number
 }
+
+export type LargeScaleSceneParam = {
+    startTime: string,
+    endTime: string,
+    sensorName: string
+}

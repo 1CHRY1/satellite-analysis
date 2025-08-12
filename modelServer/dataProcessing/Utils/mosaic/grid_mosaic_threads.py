@@ -13,9 +13,11 @@ from rasterio.crs import CRS
 from rio_cogeo.cogeo import cog_translate
 from rio_cogeo.profiles import cog_profiles
 from dataProcessing.config import current_config as CONFIG
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 
 class GridMosaic:
-    def __init__(self, grid_bbox, scene_list, crs_id, z_level, task_id=None):
+    def __init__(self, grid_bbox, scene_list, crs_id, z_level):
         self.grid_bbox = grid_bbox
         self.scene_list = scene_list
         self.final_image = None
@@ -23,7 +25,7 @@ class GridMosaic:
         self.minio_endpoint = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}"
         self.crs_id = CRS.from_epsg(crs_id)
         self.target_res = self.resolution_from_zoom(z_level)
-        self.task_id = task_id
+        self.per_grid_workers = per_grid_workers
 
         # MinIO configuration - 使用统一配置
         self.minio_client = Minio(
@@ -33,13 +35,9 @@ class GridMosaic:
             secure=CONFIG.MINIO_SECURE
         )
         self.minio_bucket = CONFIG.MINIO_TEMP_FILES_BUCKET
-        # 根据task_id设置目录
-        if self.task_id:
-            self.minio_dir = f"national-mosaic/{self.task_id}/cog"
-        else:
-            self.minio_dir = "national-mosaicjson"
+        self.minio_dir = "national-mosaicjson"
 
-    def get_lowest_resolution_overview(self, scene) -> ImageData | None:
+    def get_lowest_resolution_overview(self, scene) -> ImageData:
         """从 MinIO 中获取最低分辨率的概览数据"""
         max_size = 0
         all_bands_data = []
@@ -67,7 +65,6 @@ class GridMosaic:
                 image_data = ImageData(data, bounds=img.bounds, crs=img.crs)
                 image_data = image_data.reproject(dst_crs=self.crs_id)
                 return image_data
-            return None
 
         elif len(scene.path) == 1:
             fp = f"{self.minio_endpoint}/{scene.bucket}/{scene.path[0]}"
@@ -94,16 +91,20 @@ class GridMosaic:
 
     # --- 新的入口函数，返回元数据 ---
     def create_mosaic_with_metadata(self):
-        """
-        合成多个场景的镶嵌影像, 并将结果上传到 MinIO.
-        返回 (minio_path, bounds, crs_info) 元组
-        """
         img_list = []
-        for scene in self.scene_list:
-            imagedata = self.get_lowest_resolution_overview(scene)
-            if imagedata:
-                img_list.append(imagedata)
+        if not self.scene_list:
+            return None
 
+        max_workers = max(1, int(self.per_grid_workers))
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = {executor.submit(self.get_lowest_resolution_overview, scene): scene for scene in self.scene_list}
+            for fut in as_completed(futures):
+                try:
+                    imagedata = fut.result()
+                    if imagedata:
+                        img_list.append(imagedata)
+                except Exception as e:
+                    print(f"get_lowest_resolution_overview failed: {e}")
         if not img_list:
             print("No valid images to create a mosaic.")
             return None
@@ -112,10 +113,8 @@ class GridMosaic:
         print(out_meta)
 
         # 定义在MinIO中的存储路径
-        # 格式: national-mosaic/{task_id}/cog/grid_{row}_{col}.tif
-        # 从grid_bbox中提取网格信息用于命名
-        grid_coords = self.grid_bbox[0]
-        minio_object_name = f"{self.minio_dir}/grid_{grid_coords[0]:.6f}_{grid_coords[1]:.6f}.tif"
+        # 格式: national-mosaicjson/经度_纬度.tif
+        minio_object_name = f"{self.minio_dir}/{self.grid_bbox[0][0]}_{self.grid_bbox[0][1]}.tif"
         
         # 调用上传函数
         success = self.upload_cog_to_minio(mosaic, out_meta, self.minio_bucket, minio_object_name)
