@@ -56,7 +56,6 @@ public class ModelExampleServiceV3 {
     RedisUtil redisUtil;
 
     public CommonResultVO createScenesVisualizationConfig(VisualizationTileDTO visualizationTileDTO, String cacheKey) {
-        SceneDataCache.printAllCacheContents();
         SceneDataCache.UserSceneCache userSceneCache = SceneDataCache.getUserSceneCacheMap(cacheKey);
         SceneDataCache.UserRegionInfoCache userRegionInfoCache = SceneDataCache.getUserRegionInfoCacheMap(cacheKey);
         // 1、先求瓦片tileBoundingBox，并判断与格网边界是否相交

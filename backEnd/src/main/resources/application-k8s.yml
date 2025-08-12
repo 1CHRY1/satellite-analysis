@@ -19,7 +19,7 @@ pg:
 spring:
   datasource:
     dynamic:
-      primary: mysql_satellite
+      primary: mysql_ard_satellite
       strict: false
       datasource:
         mysql_satellite:
@@ -116,6 +116,7 @@ modelServer:
   apis:
     status: /v0/task/status
     result: /v0/task/result
+    cancel: /v0/task/cancel
     merge: /v0/tif/merge_v2
     spectrum: /v0/tif/get_spectral_profile
     noCloud: /v0/tif/calc_no_cloud
