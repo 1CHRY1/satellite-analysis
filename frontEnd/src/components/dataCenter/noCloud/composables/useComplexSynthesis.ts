@@ -1,4 +1,4 @@
-import { reactive, computed, watch } from 'vue'
+import { reactive, computed, watch, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getNoCloud } from '@/api/http/satellite-data'
 import { exploreData, taskStore, setCurrentPanel, additionalData, dataReconstruction, complexProgress, showComplexProgress, complexSynthesisLoading, hasComplexResult } from './shared'
@@ -6,6 +6,7 @@ import { exploreData, taskStore, setCurrentPanel, additionalData, dataReconstruc
 /**
  * 复杂合成相关的组合式函数
  */
+export const bandList = ref<string[]>([])
 
 export const useComplexSynthesis = (allScenes: any) => {
     
@@ -51,7 +52,7 @@ export const useComplexSynthesis = (allScenes: any) => {
     })
 
     // 监听多源数据选择变化
-    watch(() => multiSourceData.selectedBands, (newBands, oldBands) => {
+    watch(() => multiSourceData.selectedBands, (newBands, oldBands:[]) => {
         if (!newBands.length) {
             multiSourceData.visualization = { red_band: '', green_band: '', blue_band: '' }
             return
@@ -105,7 +106,7 @@ export const useComplexSynthesis = (allScenes: any) => {
         }
 
         // 获取波段列表
-        const bandList = multiSourceData.selectedBands
+        bandList.value = multiSourceData.selectedBands
 
         taskStore.setIsInitialTaskPending(true)
         setCurrentPanel('history')
