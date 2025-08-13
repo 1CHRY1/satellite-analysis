@@ -1,11 +1,15 @@
 <template>
-    <div class="relative flex flex-1 h-full flex-row bg-black ">
+    <div class="relative flex flex-1 h-screen bg-black overflow-hidden">
         <subtitle class="z-10 absolute" style="margin-top: 60px; "/>
-        <div class="absolute  left-16  top-0  p-4 text-gray-200 z-10 h-[calc(100vh-300px)] " :class="isToolbarOpen? 'w-[20vw]' : 'w-16'" style="margin-top: 100px; ">
+        
+        <!-- 左侧工具栏 -->
+        <div class="absolute left-16 top-[100px] bottom-[100px] text-gray-200 z-10" 
+             :class="isToolbarOpen ? 'w-[20vw]' : 'w-16'">
+            
             <button 
                 @click="isToolbarOpen = !isToolbarOpen"
                 class="absolute top-1/2 right-0 -translate-y-1/2 h-12 w-6 bg-gray-800 hover:bg-gray-700 text-white rounded-r-lg shadow-lg 
-                 items-center justify-center transition-all z-10"
+                 flex items-center justify-center transition-all z-20"
                 :class="{ '!bg-blue-600': isToolbarOpen }"
             >
                 <ChevronRightIcon 
@@ -16,68 +20,73 @@
             </button>
                           
             <div v-show="isToolbarOpen" 
-                 class="h-full
-                 "
-                 style="background-color: rgba(20, 20, 21, 0.6);"
-                :class="isToolbarOpen ? 'w-[20vw]' : 'w-16'">
+                 class="h-full"
+                 
+                 >
 
-                <div class="custom-panel px-2">
-                    <dv-border-box12  style="height: calc(100vh-100px) !important;"> 
-                    <!-- 工具栏内容 -->
-                        <div class="p-4 text-white border-b border-gray-700">
-                            <h3 class="font-semibold flex items-center gap-2">
-                                <ToolIcon :size="18" />
-                                设置
-                            </h3>
-                        </div>
-                        <div>
-                            <section class="panel-section">
-                                <div class="section-header" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
-                                    <div class="section-icon">
-                                        <MapPinIcon :size="18" />
-                                    </div>
-                                    <h2 class="section-title">{{t('datapage.analysis.section1.subtitle')}}</h2>
-                                </div>
-                                <div class="section-content">
-                                    <div class="config-container" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
-                                        <div class="config-item">
-                                            <div class="config-label relative">
-                                                <MapIcon :size="16" class="config-icon" />
-                                                <span>{{t('datapage.analysis.section1.area')}}</span>
-                                            </div>
-                                            <div class="config-control justify-center">
-                                                <RegionSelects v-model="region" class="flex gap-2"
-                                                    select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
-                                            </div>
+                <div class="h-full p-2">
+                    <dv-border-box12 class="h-full min-h-0"> 
+                        <div class="h-full min-h-0" style="background-color: rgba(20, 20, 21, 0.6);">
+                        <div class="h-full flex flex-col p-4">
+                            <!-- 标题部分 - 固定高度 -->
+                            <div class="flex-shrink-0 pb-4 border-b border-gray-700">
+                                <h3 class="font-semibold flex items-center gap-2 text-white">
+                                    <ToolIcon :size="18" />
+                                    设置
+                                </h3>
+                            </div>
+                            
+                            <!-- 可滚动内容区域 -->
+                            <div class="flex-1 overflow-y-auto mt-4">
+                                <!-- 区域选择部分 -->
+                                <div class="mb-4">
+                                    <div class="p-3 rounded-lg" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
+                                        <div class="flex items-center gap-2 mb-3">
+                                            <MapPinIcon :size="18" />
+                                            <h2 class="text-white font-medium">{{t('datapage.analysis.section1.subtitle')}}</h2>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <MapIcon :size="16" class="text-gray-300" />
+                                            <span class="text-gray-300">{{t('datapage.analysis.section1.area')}}</span>
+                                        </div>
+                                        <div class="mt-2">
+                                            <RegionSelects v-model="region" class="flex gap-2"
+                                                select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
                                         </div>
                                     </div>
                                 </div>
-                            </section>
-                            <section class="panel-section">
-                                <div class="section-header" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
-                                    <div class="section-icon">
-                                        <ChartColumn :size="18" />
-                                    </div>
-                                    <h2 class="section-title mr-6">数据集  </h2>
-                                    <div class="ml-4">
-                                        <button @click="showHistory = !showHistory"
-                                        class=" bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-4 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6] truncate"
-                                        >
-                                        前序数据
-                                        </button>
+                                
+                                <!-- 数据集部分 -->
+                                <div class="mb-4">
+                                    <div class="p-3 rounded-lg relative" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <div class="flex items-center gap-2">
+                                                <ChartColumn :size="18" />
+                                                <h2 class="text-white font-medium">数据集</h2>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <button @click="showHistory = !showHistory"
+                                                        class="bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-3 py-1 text-sm hover:border-[#2bb2ff] focus:outline-none">
+                                                    前序数据
+                                                </button>
+                                                <button @click="clearImages" class="text-gray-300 hover:text-white">
+                                                    <Trash2Icon :size="18" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
                                         <el-dialog v-model="showHistory"
-                                                    class="max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-[60vw]
-                                                    "
-                                                    style="background-color: #111827; color: white;">
+                                                   class="max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-[60vw]"
+                                                   style="background-color: #111827; color: white;">
                                             <div class="mb-6 text-gray-100">前序数据集</div>
                                             
                                             <div v-if="completedCases.length > 0" class="max-h-[500px] overflow-y-auto">
                                                 <div v-for="item in completedCases" 
-                                                :key="item.caseId" 
-                                                class="p-4 mb-3 border border-gray-200 rounded-md 
-                                                        cursor-pointer transition-all duration-300
-                                                        hover:bg-gray-50 hover:shadow-md"
-                                                @click="showResult(item.caseId, item.regionId)">
+                                                     :key="item.caseId" 
+                                                     class="p-4 mb-3 border border-gray-200 rounded-md 
+                                                            cursor-pointer transition-all duration-300
+                                                            hover:bg-gray-50 hover:shadow-md"
+                                                     @click="showResult(item.caseId, item.regionId)">
                                                     <h3 class="mt-0 text-blue-500">{{ item.address }}无云一版图</h3>
                                                     <p class="my-1 text-blue-300">分辨率: {{ item.resolution }}km</p>
                                                     <p class="my-1 text-blue-300">创建时间: {{ formatTimeToText(item.createTime) }}</p>
@@ -85,140 +94,104 @@
                                                 </div>
                                             </div>
                                             <div v-else>
-                                                <p class="item-center text-center text-gray-100">暂无数据</p>
+                                                <p class="text-center text-gray-100">暂无数据</p>
                                             </div>
                                         </el-dialog>
                                     </div>
-                                    <!-- <h2 class="section-title">{{t('datapage.analysis.section2.subtitle')}}</h2>
-                                    <select v-model="selectedTask" @change="handleThematicChange"
-                                        class="bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-3 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6] max-w-[calc(100%-90px)] truncate">
-                                        <option v-for="option in optionalTasks" :key="option.value" :value="option.value"
-                                            :disabled="option.disabled">
-                                            {{ option.label }}
-                                        </option>
-                                    </select> -->
-                                    <div class="absolute right-6" @click="clearImages">
-                                        <a-tooltip>
-                                            <template #title>{{t('datapage.analysis.section2.clear')}}</template>
-                                            <Trash2Icon :size="20" />
-                                        </a-tooltip>
-                                    </div>
                                 </div>
-                            </section>
-                        </div>
 
-                                    <!-- Function Title -->
-                        <div class="flex flex-col flex-1  max-h-[calc((100vh-140px)/2)]"  >
-                                    <!-- <h3>影像分析</h3>
-                                    <div class="absolute right-6 " @click="clearImages">
-                                        <a-tooltip>
-                                            <template #title>{{t('datapage.analysis.section2.clear')}}</template>
-                                            <Trash2Icon :size="20" />
-                                        </a-tooltip>
-                                    </div>
-                                    <button 
-                                        v-for="option in optionalTasks" 
-                                        :key="option.value"
-                                        @click="selectedTask = option.value"
-                                        :class="{
-                                        'bg-[#1e3a8a] text-white': selectedTask === option.value,
-                                        'bg-[#0d1526] text-gray-300 hover:bg-[#1e293b]': selectedTask !== option.value,
-                                        'opacity-50 cursor-not-allowed': option.disabled
-                                        }"
-                                        class="px-3 py-1 border border-[#2c3e50] rounded-lg transition-colors"
-                                        :disabled="option.disabled"
-                                        >
-                                            {{ option.label }}
-                                    </button> -->
-                                    <!-- 数据集 -->
+                                <!-- 目录部分 -->
+                                <div class="flex flex-col flex-1 min-h-0">
+                                    <h3 class="text-white font-medium mb-3">目录</h3>
                                     
-                                <h3>目录</h3>
-                                <div class="mt-2 relative mb-2">
-                                    <input
-                                        v-model="searchQuery"
-                                        placeholder="搜索工具..."
-                                        class="w-full bg-gray-700 text-white px-3 py-1 rounded border border-gray-600 
-                                        focus:outline-none focus:border-blue-500"
-                                    />
-                                    <SearchIcon :size="16" class="absolute right-3 top-2 text-gray-400" />
-                                </div>
-                                
-                                
-                                <!-- 分类工具列表 -->
-                                <div class=" p-2 mb-6 min-h-0 overflow-y-auto" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
-                                    <div v-for="category in filteredCategories" :key="category.name" class="mb-4">
-                                        <h3 class="text-gray-300 font-medium px-2 py-1 flex items-center flex-1">
-                                            <ChevronDownIcon 
-                                                :size="16" 
-                                                class="mr-1 transition-transform duration-200"
-                                                :class="{ 'transform rotate-180': expandedCategories.includes(category.name) }"
+                                    <!-- 搜索框 -->
+                                    <div class="relative mb-3">
+                                        <input
+                                            v-model="searchQuery"
+                                            placeholder="搜索工具..."
+                                            class="w-full bg-gray-700 text-white px-3 py-2 pr-10 rounded border border-gray-600 
+                                                   focus:outline-none focus:border-blue-500 text-sm"
+                                        />
+                                        <SearchIcon :size="16" class="absolute right-3 top-3 text-gray-400" />
+                                    </div>
+                                    
+                                    <!-- 工具分类列表 -->
+                                    <div class="flex-1 p-3 rounded-lg overflow-y-auto" 
+                                         style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
+                                        <div v-for="category in filteredCategories" :key="category.name" class="mb-4">
+                                            <button 
                                                 @click="toggleCategory(category.name)"
-                                            />
-                                            {{ category.name }}
-                                        </h3>
-                                        
-                                        <div 
-                                            v-show="expandedCategories.includes(category.name) || searchQuery"
-                                            class="ml-6 mt-1 space-y-1 flex-1"
-                                        >
-                                            <div
-                                                v-for="tool in category.tools" 
-                                                :key="tool.value"
-                                                
-                                                :class="{
-                                                    'bg-[#1e3a8a] text-white': selectedTask === tool.value,
-                                                    // 'bg-[#0d1526] text-gray-300 hover:bg-[#1e293b]': selectedTask !== tool.value,
-                                                    'opacity-50 cursor-not-allowed': tool.disabled
-                                                }"
-                                                class="px-3 py-1  rounded-lg transition-colors w-full text-left truncate"
-                                                :disabled="tool.disabled"
-                                                @click="selectedTask = tool.value"
+                                                class="w-full text-left flex items-center text-gray-300 font-medium px-2 py-2 hover:text-white transition-colors"
                                             >
-                                                {{ tool.label }}
+                                                <ChevronDownIcon 
+                                                    :size="16" 
+                                                    class="mr-2 transition-transform duration-200"
+                                                    :class="{ 'transform rotate-180': expandedCategories.includes(category.name) }"
+                                                />
+                                                {{ category.name }}
+                                            </button>
+                                            
+                                            <div 
+                                                v-show="expandedCategories.includes(category.name) || searchQuery"
+                                                class="ml-6 space-y-1"
+                                            >
+                                                <button
+                                                    v-for="tool in category.tools" 
+                                                    :key="tool.value"
+                                                    :class="{
+                                                        'bg-[#1e3a8a] text-white': selectedTask === tool.value,
+                                                        'text-gray-300 hover:bg-[#1e293b] hover:text-white': selectedTask !== tool.value,
+                                                        'opacity-50 cursor-not-allowed': tool.disabled
+                                                    }"
+                                                    class="w-full text-left px-3 py-2 rounded-lg transition-colors text-sm"
+                                                    :disabled="tool.disabled"
+                                                    @click="selectedTask = tool.value"
+                                                >
+                                                    {{ tool.label }}
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                        </div>
                     </dv-border-box12>
                 </div>
             </div>
         </div>
-        <!-- <ImageSearcher class="h-full w-[28vw] mt-10" /> -->
         
-        <!-- 展示页面 -->
-        <div class="absolute right-0 top-0 h-full flex items-center z-10 " >
+        <!-- 右侧展示面板 -->
+        <div class="absolute right-0 top-[100px] bottom-0 flex items-center z-10">
             <!-- Toggle button -->
-            <button 
+            <button
                 @click="showPanel = !showPanel"
-                class="mt-10 h-12 w-6 bg-gray-800 hover:bg-gray-700 text-white rounded-l-lg shadow-lg 
-                flex items-center justify-center transition-all z-10"
+                class="h-12 w-6 bg-gray-800 hover:bg-gray-700 text-white rounded-l-lg shadow-lg
+                    flex items-center justify-center transition-all z-20"
                 :class="{ '!bg-blue-600': showPanel }"
             >
-                <ChevronLeftIcon 
-                    :size="16" 
-                    class="transition-transform duration-300"
-                    :class="{ 'transform rotate-180': showPanel }"
+                <ChevronLeftIcon
+                :size="16"
+                class="transition-transform duration-300"
+                :class="{ 'transform rotate-180': showPanel }"
                 />
             </button>
-            <!-- <section class="panel-section ml-2 mr-2" style="margin-top: 0rem; margin-bottom: 0.5rem;">
-                    <div class="section-header">
-                        <div class="section-icon">
-                            📈
-                        </div>
-                        <span class="page-title">展示分析</span>
-                    </div>
-                </section> -->
-            <div v-if="showPanel" >
-                <div class="custom-panel px-2 mt-20">
-                    <!-- <dv-border-box12 class=" !h-full"> -->
-                    <dv-border-box12 style="width: 426px; height: 1189px; background-color: rgba(20, 20, 21, 0.6);">
-                        
+
+            <!-- 右侧面板 -->
+            <div v-show="showPanel" class="w-[326px] h-full p-2">
+                <div class="h-full p-2">
+                <dv-border-box12
+                class="h-full min-h-0"
+                
+                >
+                    <div class="h-full h-min-0" style="background-color: rgba(20, 20, 21, 0.6);">
+                        <div class="h-full overflow-y-auto p-4">
                             <component :is="currentTaskComponent" :thematicConfig="thematicConfig" />
                             <ResultComponent @response="handleResultLoaded" />
-                        
-                    </dv-border-box12>
-                </div>
+                        </div>
+                    </div>
+                </dv-border-box12>
+            </div>
             </div>
         </div>
         <MapComp class="!flex-1" :style="'local'" :proj="'globe'" :isPicking="isPicking" />
