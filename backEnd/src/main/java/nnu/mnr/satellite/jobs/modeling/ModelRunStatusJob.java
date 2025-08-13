@@ -45,14 +45,24 @@ public class ModelRunStatusJob implements Job {
         BaseModelServerProperties modelServerProperties = (BaseModelServerProperties) dataMap.get("serverProperties");
         String caseId = dataMap.getString("caseId");
         String statusUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("status");
-        JSONObject statusResponse = JSONObject.parseObject(ProcessUtil.getModelCaseStatus(statusUrl, caseId));
+        JSONObject statusResponse;
+        JSONObject statusData;
+        try {
+            statusResponse = JSONObject.parseObject(ProcessUtil.getModelCaseStatus(statusUrl, caseId));
+            statusData = statusResponse.getJSONObject("data");
+        } catch (Exception e) {
+            // 打印日志方便排查
+            log.error("获取模型状态失败，等待下次定时任务重试", e);
+            return; // 直接退出，不做任何处理
+        }
+//        JSONObject statusResponse = JSONObject.parseObject(ProcessUtil.getModelCaseStatus(statusUrl, caseId));
 //        String status = statusResponse.getJSONObject("data").getString("status");
         // 堆一点屎
-        JSONObject statusData = statusResponse.getJSONObject("data");
+
         String status;
-        if(statusData == null) {
+        if (statusData == null) {
             status = statusResponse.getString("status");
-        }else {
+        } else {
             status = statusResponse.getJSONObject("data").getString("status");
         }
 //        String status = statusResponse.getJSONObject("data").getString("status");
@@ -71,9 +81,9 @@ public class ModelRunStatusJob implements Job {
                 JSONObject resultData = resultResponse.getJSONObject("data");
                 JSONObject resObj;
                 try {
-                    if(resultData == null) {
+                    if (resultData == null) {
                         resObj = resultResponse.getJSONObject("result");
-                    }else {
+                    } else {
                         resObj = resultResponse.getJSONObject("data").getJSONObject("result");
                     }
 //                    resObj = resultResponse.getJSONObject("data").getJSONObject("result");

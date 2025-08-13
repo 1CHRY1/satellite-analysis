@@ -73,10 +73,10 @@ class TaskScheduler:
 
     def start_task(self, task_type, *args, **kwargs):
         cur_md5 = self.generate_md5(json.dumps(args))
-        # if cur_md5 in self.task_md5.values():   #  测试原因，注释，提交的时候记得改回来~~~~~~~~~~~~~~~~~~~~~~~~~
-        #     for key, value in self.task_md5.items():
-        #         if value == cur_md5:
-        #             return key
+        if cur_md5 in self.task_md5.values():
+            for key, value in self.task_md5.items():
+                if value == cur_md5:
+                    return key
         # --------- Start task -------------------------------------
         task_id = str(uuid.uuid4())  # 生成唯一任务 ID
         task_class = self._get_task_class(task_type)
@@ -291,7 +291,7 @@ class TaskScheduler:
             self.task_status[task_id] = STATUS_ERROR
             self.task_results[task_id] = str("CANCEL")
             self.condition.notify_all()
-            
+
         object_refs = self.get_task_refs(task_id)
         for object_ref in object_refs:
             ray.cancel(object_ref, force=True, recursive=True)

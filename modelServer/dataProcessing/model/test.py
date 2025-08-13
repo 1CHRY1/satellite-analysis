@@ -16,7 +16,7 @@ import requests
 MINIO_ENDPOINT = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}"
 INFINITY = 999999
 
-@ray.remote(num_cpus=CONFIG.RAY_NUM_CPUS, memory=CONFIG.RAY_MEMORY_PER_TASK)
+# @ray.remote(num_cpus=CONFIG.RAY_NUM_CPUS, memory=CONFIG.RAY_MEMORY_PER_TASK)
 def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper, minio_endpoint, temp_dir_path):
     try:
         from rio_tiler.io import COGReader
@@ -57,33 +57,12 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
             自动将不同数据类型转换为uint8
             - Byte (uint8): 直接返回
             - UInt16: 映射到0-255范围
-            - Float32:
-                * 如果数据范围在0-255内，直接转uint8
-                * 如果数据范围在0-65535内，直接转uint16再映射到uint8
-                * 否则归一化映射到0-255
             """
             if original_dtype == np.uint8:
                 return data.astype(np.uint8)
             elif original_dtype == np.uint16:
                 # 将 uint16 (0-65535) 线性映射到 uint8 (0-255)
                 return (data / 65535.0 * 255.0).astype(np.uint8)
-            elif original_dtype == np.float32 or original_dtype == float:
-                data_min = np.min(data)
-                data_max = np.max(data)
-                if data_min >= 0 and data_max <= 255:
-                    # 数据在uint8范围内，直接转uint8
-                    return data.astype(np.uint8)
-                elif data_min >= 0 and data_max <= 65535:
-                    # 数据在uint16范围内，先转uint16，再映射到uint8
-                    temp_uint16 = data.astype(np.uint16)
-                    return (temp_uint16 / 65535.0 * 255.0).astype(np.uint8)
-                else:
-                    # 归一化映射到0-255
-                    if data_max > data_min:
-                        normalized = (data - data_min) / (data_max - data_min)
-                        return (normalized * 255.0).astype(np.uint8)
-                    else:
-                        return np.zeros_like(data, dtype=np.uint8)
             else:
                 # 其他类型，先归一化到0-1，再映射to 0-255
                 data_min = np.min(data)
@@ -258,7 +237,6 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
 
         tif_path = os.path.join(temp_dir_path, f"{grid_x}_{grid_y}.tif")
         transform = from_bounds(*bbox, img.shape[2], img.shape[1])
-        # Important Reference: https://gdal.org/en/stable/drivers/raster/cog.html
         with rasterio.open(
             tif_path, 'w',
             driver='COG',
@@ -269,16 +247,9 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
             # Very Important!!!!!!!!!!!!!!!!
             # dtype=np.float32,
             dtype=np.uint8,
-            nodata=0,
             crs='EPSG:4326',
             transform=transform,
-            BIGTIFF='YES',
-            NUM_THREADS="ALL_CPUS",
-            # COG 专用选项：强制块大小为 256x256
-            BLOCKSIZE=256,
-            COMPRESS='LZW',  # 压缩算法
-            OVERVIEWS='AUTO',  # 自动生成金字塔
-            OVERVIEW_RESAMPLING='NEAREST'  # 金字塔重采样方法
+            BIGTIFF='YES'
         ) as dst:
             dst.write(img)
 
@@ -310,8 +281,6 @@ def merge_tifs(temp_dir_path: str, task_id: str) -> str:
     mosaic, out_trans = merge(src_files, mem_limit = 20480, use_highest_res = True) # use_highes_resolution，最终tif统一为最精细分辨率
 
     out_meta = src_files[0].meta.copy()
-
-    # TODO：直接在这里写入cog
     out_meta.update({
         "driver": "GTiff",
         "height": mosaic.shape[1],
@@ -333,7 +302,6 @@ def merge_tifs(temp_dir_path: str, task_id: str) -> str:
     else:
         with rasterio.open(temp_merge_path) as src:
             profile = cog_profiles.get("deflate")
-            # Important Reference: https://gdal.org/en/stable/user/configoptions.html
             cog_translate(src, final_merge_path, profile, in_memory=True, overview_resampling="nearest", resampling="nearest", allow_intermediate_compression=False, temporary_compression="LZW", config={"GDAL_NUM_THREADS": "ALL_CPUS"})
 
         return final_merge_path
@@ -403,10 +371,10 @@ class calc_no_cloud(Task):
         scene_band_paths = {} # as cache
         for scene in scenes:
             mapper = scene['bandMapper']
-            bands = {band: None for band in bandList}
+            bands = { band: None for band in bandList}
             for img in scene['images']:
                 for band in bandList:
-                    if str(img['band']) == str(mapper[band]):  # 检查当前图像是否匹配目标波段
+                    if img['band'] == mapper[band]:  # 检查当前图像是否匹配目标波段
                         bands[band] = img['tifPath']  # 动态赋值
             scene_band_paths[scene['sceneId']] = bands
 
@@ -418,25 +386,22 @@ class calc_no_cloud(Task):
         # 序列化数据到临时文件
         scenes_json_file, scene_band_paths_json_file = serialize_data_to_temp_files(scenes, scene_band_paths)
         # 使用ray
-        ray_tasks = [
-            process_grid.remote(grid=g,
-                                scenes_json_file=scenes_json_file,
-                                scene_band_paths_json_file=scene_band_paths_json_file,
-                                grid_helper=grid_helper,
-                                minio_endpoint=MINIO_ENDPOINT,
-                                temp_dir_path=temp_dir_path)
-            for g in grids
-        ]
-        from dataProcessing.model.scheduler import init_scheduler
-        scheduler = init_scheduler()
-        scheduler.set_task_refs(self.task_id, ray_tasks)
-        results = ray.get(ray_tasks)
+        # ray_tasks = [
+        #     process_grid.remote(grid=g,
+        #                         scenes_json_file=scenes_json_file,
+        #                         scene_band_paths_json_file=scene_band_paths_json_file,
+        #                         grid_helper=grid_helper,
+        #                         minio_endpoint=MINIO_ENDPOINT,
+        #                         temp_dir_path=temp_dir_path)
+        #     for g in grids
+        # ]
+        # results = ray.get(ray_tasks)
 
         # 不使用ray
-        # results = []
-        # for g in grids:
-        #     result = process_grid(g, scenes_json_file, scene_band_paths_json_file, grid_helper, MINIO_ENDPOINT, temp_dir_path)
-        #     results.append(result)
+        results = []
+        for g in grids:
+            result = process_grid(g, scenes_json_file, scene_band_paths_json_file, grid_helper, MINIO_ENDPOINT, temp_dir_path)
+            results.append(result)
 
 
         ## Step 3 : Results Uploading and Statistic #######################
@@ -452,7 +417,7 @@ class calc_no_cloud(Task):
                 upload_results.append(future.result())
 
         upload_results.sort(key=lambda x: (x["grid"][0], x["grid"][1]))
-        print('end upload ', time.time())
+        print('end upload ',time.time())
 
         ## Step 4 : Deprecated(Merge TIF) #######################
         # print('start merge ',time.time())
@@ -480,4 +445,5 @@ class calc_no_cloud(Task):
         if os.path.exists(temp_dir_path):
             shutil.rmtree(temp_dir_path)
             print('=============No Cloud Origin Data Deleted=================')
+
         return response.json()

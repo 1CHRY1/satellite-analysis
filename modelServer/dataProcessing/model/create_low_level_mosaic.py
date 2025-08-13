@@ -53,6 +53,9 @@ class create_low_level_mosaic(Task):
             futures = [self._process_grid_remote.remote(
                 grid, self.sensor_name, fetcher, self.crs, self.z_level, self.task_id
             ) for grid in grids_data]
+            from dataProcessing.model.scheduler import init_scheduler
+            scheduler = init_scheduler()
+            scheduler.set_task_refs(self.task_id, futures)
 
             results = ray.get(futures)
             # 串行测试用

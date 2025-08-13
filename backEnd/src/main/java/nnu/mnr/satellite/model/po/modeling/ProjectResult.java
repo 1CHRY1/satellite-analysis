@@ -24,7 +24,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@TableName("project_data")
+@TableName("project_data_table")
 public class ProjectResult {
 
     @TableId

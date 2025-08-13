@@ -29,7 +29,7 @@ mysql:
 #  username: postgres
 #  password: 123456
 
-
+# 修改数据库级相应配置注意兼顾在线编程写死部分
 spring:
   datasource:
     dynamic:
