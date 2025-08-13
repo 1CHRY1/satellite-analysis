@@ -149,10 +149,12 @@ import { Loading } from "@element-plus/icons-vue"
 import type { project, newProject } from '@/type/analysis'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
-
+import { useUserStore } from '@/store'
 import { useI18n } from 'vue-i18n'
-const { t } = useI18n()
+import { updateRecord } from '@/api/http/user'
 
+const { t } = useI18n()
+const userStore = useUserStore()
 const router = useRouter()
 const userId = localStorage.getItem('userId')
 const searchInput = ref('')
@@ -238,6 +240,12 @@ const create = async () => {
     let createRes = await createProject(createBody)
     router.push(`/project/${createRes.projectId}`)
     ElMessage.success(t("projectpage.message.success"))
+    try{
+    action.value = '创建'
+    uploadRecord(action)}
+    catch(error){
+        console.error('upload 报错:', error);
+    }
     createLoading.value = false
     createProjectView.value = false
 }
@@ -249,6 +257,24 @@ const afterDeleteProject = async () => {
 const getProjectsInOrder = async () => {
     projectList.value = await getProjects()
     projectList.value.sort((a, b) => b.createTime.localeCompare(a.createTime))
+}
+
+const action = ref()
+
+//上传记录
+const uploadRecord = async(typeParam = action) =>{
+    let param = {
+        userId : userStore.user.id,
+        actionDetail:{
+            projectName:newProject.value.projectName,
+            projectType:"Project",
+            description: newProject.value.description
+        },
+        actionType:typeParam.value,
+    }
+
+    let res = await updateRecord(param)
+    console.log(res, "记录")
 }
 
 onMounted(async () => {

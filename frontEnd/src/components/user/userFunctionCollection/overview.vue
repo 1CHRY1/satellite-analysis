@@ -48,7 +48,7 @@
         </div>
       </section> -->
   
-      <section>
+      <section class="h-[calc(100vh-400px)/2] overflow-y-auto">
         <h2 class="text-xl font-semibold mb-4 text-black">
           {{ t("userpage.userFunction.dynamic") }}
         </h2>
@@ -56,18 +56,19 @@
           <el-timeline>
             <el-timeline-item
               v-for="item in historyData"
-              :timestamp="item.createTime"
+              :timestamp="item.actionTime"
               placement="top"
-              :key="item.createTime"
+              :key="item.actionTime"
             >
               <el-card>
-                <h4 class="font-bold">{{ item.type }}</h4>
-                <div style="display: flex; flex-direction: row; justify-content: space-between;">
-                  <p class="mt-2">{{ item.content }}</p>
-                  <div v-show="!resolvedList.includes(item.id) && item.type === '项目邀请' && item.state === '未读'" class="mt-2">
+                <h1 class="font-bold">{{ item.actionType }} {{ item.actionDetail.projectName }}</h1>
+                <div style="display: flex; flex-direction: column; justify-content: space-between;">
+                  <p class="mt-2">类型： {{ item.actionDetail.projectType }}</p>
+                  <p class="mt-2">描述： {{ item.actionDetail.description}}</p>
+                  <!-- <div v-show="!resolvedList.includes(item.actionId) && item.ActionType === '项目邀请' " class="mt-2">
                     <el-link class="mr-2" :underline="false" @click="handleInvite('同意', item.id)">同意</el-link>
                     <el-link :underline="false" @click="handleInvite('拒绝', item.id)">拒绝</el-link>
-                  </div>
+                  </div> -->
                 </div>
                 
               </el-card>
@@ -93,6 +94,20 @@
         >
           {{ t("userpage.userFunction.load") }}
         </el-button>
+
+        <!--动态获取调试 -->
+        <!-- <el-button  
+        style="
+            width: 100%;
+            height: 30px;
+            margin-top: 1%;
+            border-color: white !important  ;
+            background-color: white !important;
+            color: black !important;
+          "
+        @click="loadHistroy()">
+          调试
+        </el-button> -->
       </section>
     </div>
   </template>
@@ -103,8 +118,9 @@ import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { getUserProjects } from "@/api/http/analysis";
 import { getHistoryData } from "@/api/http/user";
+import { useUserStore } from "@/store";
 
-  
+const userStore = useUserStore()
 const router = useRouter();
 const { t } = useI18n();
   
@@ -128,54 +144,80 @@ type Project = {
     projectId: any
 }
 
+interface historyType  {
+    actionId: number,
+    actionType: string,            
+    actionDetail:{
+      projectName: string,
+      projectType: string,
+      description?: string 
+    },
+    actionTime: string
+}
+
 const projectList = ref<Project[]>([])
 
  
   // 历史数据demo
-  const historyData = ref([
-  {
-      id: 1,
-      type:'项目创建',
-      content:"创建了一个新的测试项目",
-      createTime:"2025-08-05 16:27:00",
-      STATE:"已读"
-    },
-    {
-      id: 2,
-      type: "数据上传",
-      content: "成功上传了新的卫星数据",
-      createTime: "2024-05-30 15:30:00",
-      state: "已读"
-    },
+const historyData = ref<historyType[]>([]);
+
+
+const page = ref(1)
+const loadHistroy = async(pagePara = page ) => {
+  let param = {
+      userId : userStore.user.id,
+      page: pagePara.value,
+      pageSize: "5",
+      asc: false,
+      sortField: "actionTime",
+      };
+  try{
+  let res = await getHistoryData(param)
+  console.log(res);
     
-  ]);
-  
+  if (res.status == 1){
+    res.data.records.sort((a,b) => b.actionTime.localeCompare(a.actionTime))
+    historyData.value.push(...res.data.records)
+    console.log(historyData.value)
+    page.value += 1
+    }
+  } catch(error){
+    console.error('loadHistroy 报错:', error);
+  }
+}
+
   // 已处理的项目ID列表
-  const resolvedList = ref<number[]>([]);
+const resolvedList = ref<number[]>([]);
   
   // 总元素数量
-  const TotalElement = ref(10);
+const TotalElement = ref(10);
   
   // 跳转到项目详情
-  function toProject(id: number) {
+function toProject(id: number) {
     router.push(`/project/${id}`);
   }
   
   // 处理邀请
-  function handleInvite(action: string, id: number) {
+function handleInvite(action: string, id: number) {
     resolvedList.value.push(id);
     console.log(`处理邀请: ${action}, ID: ${id}`);
   }
   
   // 加载更多
-  function loadmoreAll() {
+function loadmoreAll() {
     console.log("加载更多数据");
+    loadHistroy()
     // 这里可以添加加载更多数据的逻辑
   }
 
-  onMounted(async () => {
-    projectList.value = await getUserProjects()
-
+onMounted(async () => {
+  try {
+    // projectList.value = await getUserProjects()
+    await loadHistroy()
+    console.log('historyData:', historyData.value)
+  } catch (err) {
+    console.error('onMounted 里异步流程出错:', err)
+  }
 })
   </script>
   
