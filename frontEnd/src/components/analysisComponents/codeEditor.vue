@@ -195,6 +195,8 @@ import { Codemirror } from 'vue-codemirror'
 import { python } from '@codemirror/lang-python'
 import { ElMessage } from 'element-plus'
 import { publishTool} from '@/api/http/tool' 
+import { updateRecord } from '@/api/http/user'
+import { useUserStore } from '@/store'
 
 // import type { analysisResponse } from "@/type/analysis";
 // import { oneDarkTheme } from "@codemirror/theme-one-dark";
@@ -209,7 +211,7 @@ const props = defineProps({
         required: true,
     },
 })
-
+const userStore = useUserStore()
 const emit = defineEmits(['addMessage'])
 
 /**
@@ -384,6 +386,26 @@ const publishOpen = async() =>{
 
 
 const publishLoading = ref(false)
+
+//记录上传
+const action = ref()
+//记录上传
+const uploadRecord = async(typeParam = action) =>{
+    let param = {
+        userId : userStore.user.id,
+        actionDetail:{
+            projectName:publishToolData.value.toolName,
+            projectType:"Tool",
+            description: publishToolData.value.description
+        },
+        actionType:typeParam.value,
+    }
+
+    let res = await updateRecord(param)
+    console.log(res, "记录")
+}
+
+
 // 发布结构
 const publishToolData = ref({
     toolName: '',
@@ -488,6 +510,12 @@ const publishFunction = async () => {
             tags: [],
             parameters: []
         }
+        try{
+                action.value = '发布'
+                uploadRecord(action)
+            } catch(error){
+                console.error('upload 报错:', error);
+            }
     } catch (error) {
         ElMessage.error('工具发布失败: ' + (error as Error).message)
     } finally {
