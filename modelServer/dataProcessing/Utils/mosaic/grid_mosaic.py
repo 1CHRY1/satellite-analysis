@@ -39,7 +39,7 @@ class GridMosaic:
         else:
             self.minio_dir = "national-mosaicjson"
 
-    def get_lowest_resolution_overview(self, scene) -> ImageData:
+    def get_lowest_resolution_overview(self, scene) -> ImageData | None:
         """从 MinIO 中获取最低分辨率的概览数据"""
         max_size = 0
         all_bands_data = []
@@ -67,6 +67,7 @@ class GridMosaic:
                 image_data = ImageData(data, bounds=img.bounds, crs=img.crs)
                 image_data = image_data.reproject(dst_crs=self.crs_id)
                 return image_data
+            return None
 
         elif len(scene.path) == 1:
             fp = f"{self.minio_endpoint}/{scene.bucket}/{scene.path[0]}"

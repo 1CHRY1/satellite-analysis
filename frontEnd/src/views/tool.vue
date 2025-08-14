@@ -157,7 +157,7 @@ import type { modelsOrMethods } from '@/type/modelCentral'
 import { getAllTools,type ToolData, updateTool, deleteTool, getToolById, type ToolParameter, type PaginatedToolResponse} from '@/api/http/tool'
 import { ElMessage,ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/store'
-
+import { updateRecord } from '@/api/http/user'
 import { useI18n } from 'vue-i18n'
 import router from '@/router'
 const { t } = useI18n()
@@ -322,6 +322,12 @@ const submitToolForm = async () => {
             await updateTool(
                toolForm.value.toolId, toolData)
             ElMessage.success("更新成功")
+            try{
+                action.value = '更新'
+                uploadRecord(action)
+            } catch(error){
+                console.error('upload 报错:', error);
+            }
         }
 
         editDialogVisible.value = false
@@ -330,6 +336,23 @@ const submitToolForm = async () => {
     } catch (error) {
         ElMessage.error("更新失败")
     }
+}
+
+const action = ref()
+//记录上传
+const uploadRecord = async(typeParam = action) =>{
+    let param = {
+        userId : userStore.user.id,
+        actionDetail:{
+            projectName:toolForm.value.name,
+            projectType:"Project",
+            // description: props.project.value.description
+        },
+        actionType:typeParam.value,
+    }
+
+    let res = await updateRecord(param)
+    console.log(res, "记录")
 }
 
 // 删除工具（带确认）

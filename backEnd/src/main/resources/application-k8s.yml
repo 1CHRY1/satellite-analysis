@@ -6,8 +6,10 @@ netty:
     port: 9888
 
 mysql:
-  host: 20.1.47.208
-  port: 3306
+#  host: 20.1.47.208
+#  port: 3306
+  host: 223.2.34.8
+  port: 31036
   username: root
   password: 123456
 pg:
@@ -16,19 +18,20 @@ pg:
   username: postgres
   password: 123456
 
+# 修改数据库级相应配置注意兼顾在线编程写死部分
 spring:
   datasource:
     dynamic:
-      primary: mysql_satellite
+      primary: mysql_ard_satellite
       strict: false
       datasource:
-        mysql_satellite:
-          url: jdbc:mysql://${mysql.host}:${mysql.port}/satellite
-          username: ${mysql.username}
-          password: ${mysql.password}
-          driver-class-name: com.mysql.cj.jdbc.Driver
-          hikari:
-            connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
+#        mysql_satellite:
+#          url: jdbc:mysql://${mysql.host}:${mysql.port}/satellite
+#          username: ${mysql.username}
+#          password: ${mysql.password}
+#          driver-class-name: com.mysql.cj.jdbc.Driver
+#          hikari:
+#            connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
         mysql_ard_satellite:
           url: jdbc:mysql://${mysql.host}:${mysql.port}/ard_satellite
           username: ${mysql.username}
@@ -93,8 +96,8 @@ mybatis-plus:
 minio:
   access-key: jTbgNHEqQafOpUxVg7Ol
   secret-key: 7UxtrqhSOyN1KUeumbqTRMv1zeluLO69OwJnCC0M
-  url: http://20.1.115.166:9000
-
+#  url: http://20.1.115.166:9000
+  url: http://223.2.34.8:30900
 docker:
   defaultServer:
     #    port: 2376
@@ -112,19 +115,20 @@ docker:
 
 modelServer:
   #  address: http://127.0.0.1:5001
-  address: http://20.1.182.105:5000
+#  address: http://20.1.182.105:5000
+  address: http://model-server:5000
   apis:
     status: /v0/task/status
     result: /v0/task/result
+    cancel: /v0/task/cancel
     merge: /v0/tif/merge_v2
+    spectrum: /v0/tif/get_spectral_profile
     noCloud: /v0/tif/calc_no_cloud
     noCloud_complex: /v0/tif/calc_no_cloud_complex
-    spectrum: /v0/tif/get_spectral_profile
     rasterPoint: /v0/tif/calc_raster_point
     rasterLine: /v0/tif/calc_raster_line
-    #    noCloud: /v0/tif/calc_qa_simple
-    #    noCloud: /v0/tif/calc_qa
     ndvi: /v0/tif/calc_NDVI
+    createLowLevelMosaic: /v0/mosaic/create_low_level_mosaic
   interval:
     status: 2
 
@@ -138,7 +142,7 @@ srmodelServer:
     status: 2
 
 tiler:
-  end-point: http://20.1.37.145:8000
-
+  end-point: http://223.2.34.8:31800
+#  end-point: http://20.1.37.145:8000
 satelliteConfig:
   path: /usr/resource/band_config.json

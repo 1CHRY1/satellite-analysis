@@ -28,3 +28,11 @@ export async function avaterUpdate(param: any):Promise<any> {
 export async function getAvatar(userId:any): Promise<any> {
     return http.get<any>(`user/avatar/${userId}`)
 }
+
+export async function getHistoryData(param:any):Promise<any>{
+    return http.post<any>(`user/record/page`,param)
+}
+
+export async function updateRecord( param:any):Promise<any>{
+    return http.put<any>(`user/record/add`,param)
+}

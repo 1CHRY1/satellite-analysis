@@ -19,8 +19,8 @@ import java.time.LocalDateTime;
 //@Repository("ICaseRepo")
 public interface ICaseRepo extends BaseMapper<Case> {
 
-    @Insert("INSERT INTO case_table (case_id, address, region_id, resolution, boundary, scene_list, data_set, band_list, status, result, create_time) " +
-            "VALUES (#{caseId}, #{address}, #{regionId}, #{resolution}, ST_GeomFromText(#{boundary}, 4326, 'axis-order=long-lat'), #{sceneList}, #{dataSet}, #{bandList}, #{status}, #{result}, #{createTime})")
+    @Insert("INSERT INTO case_table (case_id, address, region_id, resolution, boundary, scene_list, data_set, band_list, status, result, create_time, user_id) " +
+            "VALUES (#{caseId}, #{address}, #{regionId}, #{resolution}, ST_GeomFromText(#{boundary}, 4326, 'axis-order=long-lat'), #{sceneList}, #{dataSet}, #{bandList}, #{status}, #{result}, #{createTime}, #{userId})")
     int insertCase(Case caseObj);
 
     @Update("UPDATE case_table SET address = #{address}, region_id = #{regionId}, resolution = #{resolution}, " +

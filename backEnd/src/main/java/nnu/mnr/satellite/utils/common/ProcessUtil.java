@@ -2,6 +2,8 @@ package nnu.mnr.satellite.utils.common;
 
 import com.alibaba.fastjson2.JSONObject;
 
+import java.util.Map;
+
 /**
  * Created with IntelliJ IDEA.
  *
@@ -14,6 +16,15 @@ public class ProcessUtil {
     public static String runModelCase(String url, JSONObject params) {
         try {
             return HttpUtil.doPost(url, params);
+        } catch (Exception e) {
+            // TODO: verify
+            return "RUN WRONG";
+        }
+    }
+
+    public static String runModelCaseWithCookies(String url, JSONObject params, Map<String, String> headers, Map<String, String> cookies) {
+        try {
+            return HttpUtil.doPost(url, params, headers, cookies);
         } catch (Exception e) {
             // TODO: verify
             return "RUN WRONG";
@@ -39,6 +50,14 @@ public class ProcessUtil {
         }
     }
 
+    public static String cancelModelCase(String url, String caseId) {
+        try {
+            return HttpUtil.doGet(url, JSONObject.of("id", caseId));
+        } catch (Exception e) {
+            // TODO: verify
+            return "RUN WRONG";
+        }
+    }
 
 
 }

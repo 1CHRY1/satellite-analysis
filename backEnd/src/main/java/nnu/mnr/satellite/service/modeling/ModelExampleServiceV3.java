@@ -4,15 +4,22 @@ import com.alibaba.fastjson2.JSONObject;
 import javassist.expr.NewArray;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.cache.SceneDataCache;
+import nnu.mnr.satellite.jobs.QuartzSchedulerManager;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerImageDTO;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerSceneDTO;
+import nnu.mnr.satellite.model.dto.modeling.VisualizationLowLevelTile;
 import nnu.mnr.satellite.model.dto.modeling.VisualizationTileDTO;
+import nnu.mnr.satellite.model.pojo.modeling.ModelServerProperties;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.model.vo.modeling.NoCloudConfigVO;
+import nnu.mnr.satellite.model.vo.resources.GridsAndGridsBoundary;
 import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
 import nnu.mnr.satellite.service.common.BandMapperGenerator;
 import nnu.mnr.satellite.service.resources.ImageDataService;
+import nnu.mnr.satellite.service.resources.RegionDataService;
 import nnu.mnr.satellite.service.resources.SceneDataServiceV3;
+import nnu.mnr.satellite.utils.common.ProcessUtil;
+import nnu.mnr.satellite.utils.dt.RedisUtil;
 import nnu.mnr.satellite.utils.geom.GeometryUtil;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -23,6 +30,7 @@ import org.springframework.stereotype.Service;
 import nnu.mnr.satellite.utils.dt.MinioUtil;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -38,6 +46,14 @@ public class ModelExampleServiceV3 {
     ImageDataService imageDataService;
     @Autowired
     SceneDataServiceV3 sceneDataService;
+    @Autowired
+    RegionDataService regionDataService;
+    @Autowired
+    QuartzSchedulerManager quartzSchedulerManager;
+    @Autowired
+    ModelServerProperties modelServerProperties;
+    @Autowired
+    RedisUtil redisUtil;
 
     public CommonResultVO createScenesVisualizationConfig(VisualizationTileDTO visualizationTileDTO, String cacheKey) {
         SceneDataCache.UserSceneCache userSceneCache = SceneDataCache.getUserSceneCacheMap(cacheKey);
@@ -157,6 +173,32 @@ public class ModelExampleServiceV3 {
                 .images(imageDataService.getModelServerImageDTOBySceneId(targetScene.getSceneId())).build();
 
         return CommonResultVO.builder().status(1).message("success").data(modelServerSceneDTO).build();
+    }
+
+    //全国范围低zoom下的可视化
+    public CommonResultVO createLowLevelScenesVisualizationConfig(VisualizationLowLevelTile visualizationLowLevelTile, Map<String, String> headers, Map<String, String> cookies) throws IOException {
+        GridsAndGridsBoundary gridsAndGridsBoundary = regionDataService.getGridsByRegionAndResolution(100000, 150);
+        String sensorName = visualizationLowLevelTile.getSensorName();
+        String startTime = visualizationLowLevelTile.getStartTime();
+        String endTime = visualizationLowLevelTile.getEndTime();
+        String visualizationUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("createLowLevelMosaic");
+        JSONObject visualizationParam = JSONObject.of("sensorName", sensorName, "startTime", startTime, "endTime", endTime, "gridsAndGridsBoundary", gridsAndGridsBoundary);
+        long expirationTime = 60 * 10;
+        return runModelServerModel(visualizationUrl, visualizationParam, expirationTime, headers, cookies);
+    }
+
+    // 携带headers和cookies执行modelServer任务
+    private CommonResultVO runModelServerModel(String url, JSONObject param, long expirationTime, Map<String, String> headers, Map<String, String> cookies) {
+        try {
+            JSONObject modelCaseResponse = JSONObject.parseObject(ProcessUtil.runModelCaseWithCookies(url, param, headers, cookies));
+            String caseId = modelCaseResponse.getJSONObject("data").getString("taskId");
+            quartzSchedulerManager.startModelRunningStatusJob(caseId, modelServerProperties);
+            JSONObject modelCase = JSONObject.of("status", "RUNNING", "start", LocalDateTime.now());
+            redisUtil.addJsonDataWithExpiration(caseId, modelCase, expirationTime);
+            return CommonResultVO.builder().status(1).message("success").data(caseId).build();
+        } catch (Exception e) {
+            return CommonResultVO.builder().status(-1).message("Wrong Because of " + e.getMessage()).build();
+        }
     }
 
 }

@@ -26,7 +26,29 @@
     color: #e0f2fe !important;
 }
 
-
+/* region-picker */
+.dd-trigger-container .dd-default-trigger {
+    background-color: #0d1526 !important;
+    border: 1px solid #19212f !important;
+    color: #d6f1ff !important;
+	font-weight: 600 !important;
+}
+.dd-content {
+    background-color: #10192a !important;
+    border: 1px solid #0b2639 !important;
+    box-shadow: 0 9px 24px #0000002e, 0 3px 6px #00000014 !important;
+}
+.rg-select__list li {
+    color: white !important;
+}
+.rg-select__list li:hover {
+    background-color: #0b2639 !important;
+    color: #d6f1ff !important;
+}
+.rg-select__list li.selected {
+    background-color: #0b2639 !important;
+    color: #d6f1ff !important;
+}
 
 html {
     font-size: 16px;

@@ -57,15 +57,35 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
             自动将不同数据类型转换为uint8
             - Byte (uint8): 直接返回
             - UInt16: 映射到0-255范围
+            - Float32:
+                * 如果数据范围在0-255内，直接转uint8
+                * 如果数据范围在0-65535内，直接转uint16再映射到uint8
+                * 否则归一化映射到0-255
             """
             if original_dtype == np.uint8:
                 return data.astype(np.uint8)
             elif original_dtype == np.uint16:
                 # 将 uint16 (0-65535) 线性映射到 uint8 (0-255)
                 return (data / 65535.0 * 255.0).astype(np.uint8)
+            elif original_dtype == np.float32 or original_dtype == float:
+                data_min = np.min(data)
+                data_max = np.max(data)
+                if data_min >= 0 and data_max <= 255:
+                    # 数据在uint8范围内，直接转uint8
+                    return data.astype(np.uint8)
+                elif data_min >= 0 and data_max <= 65535:
+                    # 数据在uint16范围内，先转uint16，再映射到uint8
+                    temp_uint16 = data.astype(np.uint16)
+                    return (temp_uint16 / 65535.0 * 255.0).astype(np.uint8)
+                else:
+                    # 归一化映射到0-255
+                    if data_max > data_min:
+                        normalized = (data - data_min) / (data_max - data_min)
+                        return (normalized * 255.0).astype(np.uint8)
+                    else:
+                        return np.zeros_like(data, dtype=np.uint8)
             else:
                 # 其他类型，先归一化到0-1，再映射to 0-255
-                # 这里可能会出现色彩不一致
                 data_min = np.min(data)
                 data_max = np.max(data)
                 if data_max > data_min:
@@ -388,7 +408,7 @@ class calc_no_cloud_complex(Task):
         def find_band_path(images, target_band):
             """辅助函数：在影像列表中查找目标波段的路径"""
             for img in images:
-                if img['band'] == target_band:
+                if str(img['band']) == str(target_band):
                     return img['tifPath']
             return None
 
@@ -443,6 +463,9 @@ class calc_no_cloud_complex(Task):
                                 temp_dir_path=temp_dir_path,band_num=band_num)
             for g in grids
         ]
+        from dataProcessing.model.scheduler import init_scheduler
+        scheduler = init_scheduler()
+        scheduler.set_task_refs(self.task_id, ray_tasks)
         results = ray.get(ray_tasks)
 
         # 不使用ray

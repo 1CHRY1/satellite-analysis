@@ -156,22 +156,10 @@ def mosaictile(
     try:
         # Step 1: Fetch mosaic definition 
         mosaic_def = fetch_mosaic_definition(mosaic_url)
-
-        # Step 2: Get assets list using mercantile and mosaicJSON minzoom
         quadkey_zoom = mosaic_def["minzoom"]
         mercator_tile = mercantile.Tile(x=x, y=y, z=z)
-    
-        if mercator_tile.z > quadkey_zoom:
-            depth = mercator_tile.z - quadkey_zoom
-            for _ in range(depth):
-                mercator_tile = mercantile.parent(mercator_tile)
-    
-        quadkey = mercantile.quadkey(*mercator_tile)
-        assets = mosaic_def["tiles"].get(quadkey)
-        if not assets:
-            return Response(status_code=204)
-       
-        # Step 3: Configure pixel selection method
+
+        # Step 2: Configure pixel selection method
         method = pixel_selection.lower()
         if method == "highest":
             sel = defaults.HighestMethod()
@@ -179,10 +167,42 @@ def mosaictile(
             sel = defaults.LowestMethod()
         else:
             sel = defaults.FirstMethod()
-        
-        # Step 4: Get tile from mosaic
-        img, mask = mosaic_tiler(assets, x, y, z, tiler, pixel_selection=sel, nodata=0)
-        # img = img.astype(np.uint8)
+
+        # Step 3: Get assets list using mercantile and mosaicJSON minzoom
+        if z < quadkey_zoom:
+            # 低级别瓦片 -> 计算对应8级瓦片范围
+            factor = 2 ** (quadkey_zoom - z)
+            x_start = x * factor
+            y_start = y * factor
+
+            # 收集对应所有8级瓦片的assets
+            assets_list = []
+            for xx in range(x_start, x_start + factor):
+                for yy in range(y_start, y_start + factor):
+                    qk = mercantile.quadkey(xx, yy, quadkey_zoom)
+                    assets = mosaic_def["tiles"].get(qk)
+                    if assets:
+                        assets_list.extend(assets)
+
+            if not assets_list:
+                return Response(status_code=204)
+            
+            # mosaic_tiler 这里需要能支持多个assets合成
+            img, mask = mosaic_tiler(assets_list, x, y, z, tiler, pixel_selection=sel, nodata=0)
+        else:
+            # z >= quadkey_zoom，正常找瓦片
+            if mercator_tile.z > quadkey_zoom:
+                depth = mercator_tile.z - quadkey_zoom
+                for _ in range(depth):
+                    mercator_tile = mercantile.parent(mercator_tile)
+
+            quadkey = mercantile.quadkey(*mercator_tile)
+            assets = mosaic_def["tiles"].get(quadkey)
+            if not assets:
+                return Response(status_code=204)
+            img, mask = mosaic_tiler(assets, x, y, z, tiler, pixel_selection=sel, nodata=0)
+
+
         if img is None:
             return Response(status_code=204)
         
@@ -256,6 +276,8 @@ def analysis_tile(
         # Step 5: Render
         img_uint8 = normalize(img[0], np.min(img[0]), np.max(img[0]))
         content = render(img_uint8, mask, img_format="png", colormap=cmap.get(color), **img_profiles.get("png"))
+        # 不要拉伸
+        # content = render(img[0], mask, img_format="png", colormap=cmap.get(color), **img_profiles.get("png"))
         return Response(content=content, media_type="image/png")
     except Exception as e:
         print(e)

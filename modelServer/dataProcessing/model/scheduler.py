@@ -3,7 +3,7 @@ import traceback
 import uuid
 import threading
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any, Dict, List
 import os
 import json
 import hashlib
@@ -21,7 +21,7 @@ from dataProcessing.model.calc_no_cloud_complex import calc_no_cloud_complex
 from dataProcessing.model.create_low_level_mosaic import create_low_level_mosaic
 from dataProcessing.model.create_low_level_mosaic_threads import create_low_level_mosaic_threads
 from dataProcessing.model.test_task import TestTask
-
+import ray
 STATUS_RUNNING = CONFIG.STATUS_RUNNING
 STATUS_COMPLETE = CONFIG.STATUS_COMPLETE
 STATUS_ERROR = CONFIG.STATUS_ERROR
@@ -37,6 +37,7 @@ class TaskScheduler:
         self.task_status: Dict[str, Any] = {}
         self.task_info: Dict[str, Any] = {}
         self.task_results: Dict[str, Any] = {}
+        self.task_refs: Dict[str, List[str]] = {}
         self.task_md5: Dict[str, Any] = {}
 
         # 锁和条件变量
@@ -60,6 +61,7 @@ class TaskScheduler:
                     json_data = json.load(f)
                     self.set_status(json_data["ID"], json_data["STATUS"])
                     self.task_results[json_data["ID"]] = json_data["RESULT"]
+                    self.task_refs[json_data["ID"]] = []
                     self.task_md5[json_data["ID"]] = json_data["MD5"]
                     task_id = json_data["ID"]
                     if self.task_status[task_id] == STATUS_COMPLETE:
@@ -72,10 +74,10 @@ class TaskScheduler:
 
     def start_task(self, task_type, *args, **kwargs):
         cur_md5 = self.generate_md5(json.dumps(args))
-        # if cur_md5 in self.task_md5.values():   #  测试原因，注释，提交的时候记得改回来~~~~~~~~~~~~~~~~~~~~~~~~~
-        #     for key, value in self.task_md5.items():
-        #         if value == cur_md5:
-        #             return key
+        if cur_md5 in self.task_md5.values():
+            for key, value in self.task_md5.items():
+                if value == cur_md5:
+                    return key
         # --------- Start task -------------------------------------
         task_id = str(uuid.uuid4())  # 生成唯一任务 ID
         task_class = self._get_task_class(task_type)
@@ -259,6 +261,45 @@ class TaskScheduler:
         }
         with open(file_path, "w", encoding="utf-8") as f:
             json.dump(json_data, f, ensure_ascii=False, indent=2)
+
+    def set_task_refs(self, task_id, ref_task_id_list: List[str]):
+        self.task_refs[task_id] = ref_task_id_list
+
+    def get_task_refs(self, task_id):
+        return self.task_refs.get(task_id, [])
+
+    def cancel_task(self, task_id):
+        # 以ERROR形式退出
+        with self.condition:
+            del self.task_md5[task_id]
+            
+            temp_queue = queue.Queue()
+            found = False
+            while not self.running_queue.empty():
+                current_task = self.running_queue.get()
+                if current_task == task_id:
+                    found = True
+                else:
+                    temp_queue.put(current_task)
+
+            while not temp_queue.empty():
+                self.running_queue.put(temp_queue.get())
+
+            if not found:
+                print(f"Warning: Task {task_id} not found in running queue")
+            self.error_queue.put(task_id)
+
+            # Update the result and status
+            self.task_status[task_id] = STATUS_ERROR
+            self.task_results[task_id] = str("CANCEL")
+            self.condition.notify_all()
+
+        object_refs = self.get_task_refs(task_id)
+        for object_ref in object_refs:
+            ray.cancel(object_ref, force=True, recursive=True)
+        
+        
+
 
 scheduler = None
 
