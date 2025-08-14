@@ -17,7 +17,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
 class GridMosaic:
-    def __init__(self, grid_bbox, scene_list, crs_id, z_level):
+    def __init__(self, grid_bbox, scene_list, crs_id, z_level, task_id=None, per_grid_workers=10):
         self.grid_bbox = grid_bbox
         self.scene_list = scene_list
         self.final_image = None
@@ -26,6 +26,7 @@ class GridMosaic:
         self.crs_id = CRS.from_epsg(crs_id)
         self.target_res = self.resolution_from_zoom(z_level)
         self.per_grid_workers = per_grid_workers
+        self.task_id = task_id
 
         # MinIO configuration - 使用统一配置
         self.minio_client = Minio(
@@ -35,7 +36,11 @@ class GridMosaic:
             secure=CONFIG.MINIO_SECURE
         )
         self.minio_bucket = CONFIG.MINIO_TEMP_FILES_BUCKET
-        self.minio_dir = "national-mosaicjson"
+        # 与单线程版本保持一致的目录组织
+        if self.task_id:
+            self.minio_dir = f"national-mosaic/{self.task_id}/cog"
+        else:
+            self.minio_dir = "national-mosaicjson"
 
     def get_lowest_resolution_overview(self, scene) -> ImageData:
         """从 MinIO 中获取最低分辨率的概览数据"""
@@ -113,8 +118,9 @@ class GridMosaic:
         print(out_meta)
 
         # 定义在MinIO中的存储路径
-        # 格式: national-mosaicjson/经度_纬度.tif
-        minio_object_name = f"{self.minio_dir}/{self.grid_bbox[0][0]}_{self.grid_bbox[0][1]}.tif"
+        # 与单线程版本保持一致: national-mosaic/{task_id}/cog/grid_{lon}_{lat}.tif
+        grid_coords = self.grid_bbox[0]
+        minio_object_name = f"{self.minio_dir}/grid_{grid_coords[0]:.6f}_{grid_coords[1]:.6f}.tif"
         
         # 调用上传函数
         success = self.upload_cog_to_minio(mosaic, out_meta, self.minio_bucket, minio_object_name)

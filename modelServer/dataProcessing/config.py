@@ -19,6 +19,7 @@ class BaseConfig:
     API_TIF_calc_raster_point                       =       API_VERSION + '/tif/calc_raster_point'
     API_TIF_calc_raster_line                        =       API_VERSION + '/tif/calc_raster_line'
     API_TIF_create_low_level_mosaic                 =       API_VERSION + '/mosaic/create_low_level_mosaic'
+    API_TIF_create_low_level_mosaic_threads         =       API_VERSION + '/mosaic/create_low_level_mosaic_threads'
 
     # API for Task
     API_TASK_STATUS                                 =       API_VERSION + '/task/status'

@@ -148,6 +148,13 @@ def create_low_level_mosaic():
     task_id = scheduler.start_task('create_low_level_mosaic', data, headers=headers, cookies=cookies)
     return api_response(data={'taskId': task_id})
 
+@bp.route(CONFIG.API_TIF_create_low_level_mosaic_threads, methods=['POST'])
+def create_low_level_mosaic_threads():
+    scheduler = init_scheduler()
+    data = request.json
+    task_id = scheduler.start_task('create_low_level_mosaic_threads', data)
+    return api_response(data={'taskId': task_id})
+
 
 # ==================== 调试路由 ====================
 @bp.route('/test/task', methods=['POST'])
@@ -260,6 +267,54 @@ def create_mosaic_with_query_param():
         )
     except Exception as e:
         print(f"创建镶嵌任务失败: {str(e)}")
+        return api_response(
+            code=500,
+            message=f"创建任务失败: {str(e)}",
+            data=None
+        )
+
+@bp.route(CONFIG.API_VERSION + '/mosaic/create_threads', methods=['POST'])
+def create_mosaic_threads_with_query_param():
+    """
+    创建多线程镶嵌任务 - sensor_name作为查询参数
+    URL示例: /v0/mosaic/create_threads?sensor_name=GF-1_PMS
+    """
+    scheduler = init_scheduler()
+    data = request.json or {}
+
+    sensor_name = request.args.get('sensor_name')
+    if not sensor_name:
+        return api_response(
+            code=400,
+            message="缺少必要参数: sensor_name (查询参数)",
+            data=None
+        )
+
+    data['sensor_name'] = sensor_name
+    print(f"从查询参数获取sensor_name: {sensor_name}")
+
+    required_fields = ['email', 'password']
+    for field in required_fields:
+        if field not in data:
+            return api_response(
+                code=400,
+                message=f"缺少必要参数: {field}",
+                data=None
+            )
+
+    try:
+        task_id = scheduler.start_task('create_low_level_mosaic_threads', data)
+        print(f"创建多线程镶嵌任务: {task_id}, sensor_name: {sensor_name}, 参数: {data}")
+        return api_response(
+            code=200,
+            message=f"多线程镶嵌任务已启动，传感器: {sensor_name}",
+            data={
+                'taskId': task_id,
+                'sensor_name': sensor_name,
+            }
+        )
+    except Exception as e:
+        print(f"创建多线程镶嵌任务失败: {str(e)}")
         return api_response(
             code=500,
             message=f"创建任务失败: {str(e)}",

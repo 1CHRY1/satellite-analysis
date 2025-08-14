@@ -1,4 +1,4 @@
-# dataProcessing/model/create_low_level_mosaic.py
+# dataProcessing/model/create_low_level_mosaic_threads.py
 
 import ray
 import time
@@ -6,14 +6,14 @@ import json
 import io
 from minio import Minio
 from dataProcessing.Utils.mosaic.scene_fetcher import SceneFetcher
-from dataProcessing.Utils.mosaic.grid_mosaic import GridMosaic
+from dataProcessing.Utils.mosaic.grid_mosaic_threads import GridMosaic
 from dataProcessing.model.task import Task
 from dataProcessing.config import current_config as CONFIG
 import mercantile
 from rasterio.crs import CRS
 
 
-class create_low_level_mosaic(Task):
+class create_low_level_mosaic_threads(Task):
     """低层级镶嵌任务类"""
     
     def __init__(self, task_id, *args, **kwargs):
@@ -78,7 +78,7 @@ class create_low_level_mosaic(Task):
             # 并行处理所有格网
             start = time.time()
             futures = [self._process_grid_remote.remote(
-                grid, self.sensor_name, fetcher, self.crs, self.z_level
+                grid, self.sensor_name, fetcher, self.crs, self.z_level, self.task_id
             ) for grid in grids_data]
             
             results = ray.get(futures)
@@ -111,8 +111,8 @@ class create_low_level_mosaic(Task):
             )
             
             bucket = CONFIG.MINIO_TEMP_FILES_BUCKET
-            minio_dir = "national-mosaicjson"
-            mosaic_output_path = f"{minio_dir}/mosaic_{self.task_id}.json"
+            minio_dir = f"national-mosaic/{self.task_id}"
+            mosaic_output_path = f"{minio_dir}/mosaic.json"
             
             # 使用元数据直接创建MosaicJSON
             start_mosaic = time.time()
@@ -171,7 +171,7 @@ class create_low_level_mosaic(Task):
 
     @staticmethod
     @ray.remote
-    def _process_grid_remote(grid, sensor_name, fetcher, crs, z_level):
+    def _process_grid_remote(grid, sensor_name, fetcher, crs, z_level, task_id):
         """远程处理单个格网的函数"""
         try:
             scenes = fetcher.get_scenes_for_grid(sensor_name, grid['coordinates'][0])
@@ -182,6 +182,7 @@ class create_low_level_mosaic(Task):
                     scenes,
                     crs_id=crs,
                     z_level=z_level,
+                    task_id=task_id,
                     per_grid_workers=10  # 或从配置读取
                 )
                 result = grid_mosaic.create_mosaic_with_metadata()

@@ -42,10 +42,15 @@
 </template>
 
 <script lang="ts" setup>
+import { ref } from 'vue';
 import { Satellite, User, Mail, Clock3, CircleX } from 'lucide-vue-next'
 import { formatTime } from '@/util/common.ts'
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { projectOperating } from "@/api/http/analysis"
+import { useUserStore } from '@/store';
+import { updateRecord } from '@/api/http/user';
+
+const userStore = useUserStore()
 
 const props = defineProps({
     project: {
@@ -56,6 +61,23 @@ const props = defineProps({
 const emit = defineEmits(['deleteProject'])
 
 const userId = localStorage.getItem('userId')
+
+const action = ref()
+//记录上传
+const uploadRecord = async(typeParam = action) =>{
+    let param = {
+        userId : userStore.user.id,
+        actionDetail:{
+            projectName:props.project.projectName,
+            projectType:"Project",
+            // description: props.project.value.description
+        },
+        actionType:typeParam.value,
+    }
+
+    let res = await updateRecord(param)
+    console.log(res, "记录")
+}
 
 const deleteConfirm = async () => {
     if (props.project.createUser !== userId) {
@@ -81,6 +103,12 @@ const deleteConfirm = async () => {
             await projectOperating(params);
             ElMessage.success('项目删除成功');
             emit('deleteProject'); // 触发删除事件
+            try{
+                action.value = '删除'
+                uploadRecord(action)
+            } catch(error){
+                console.error('upload 报错:', error);
+            }
         })
         .catch(() => {
             // 用户点击了“取消”
