@@ -53,11 +53,11 @@ spring:
           driver-class-name: com.mysql.cj.jdbc.Driver
           hikari:
             connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
-        mysql_tile:
-          url: jdbc:mysql://${mysql.host}:${mysql.port}/tile?useSSL=false&allowPublicKeyRetrieval=true
-          username: ${mysql.username}
-          password: ${mysql.password}
-          driver-class-name: com.mysql.cj.jdbc.Driver
+#        mysql_tile:
+#          url: jdbc:mysql://${mysql.host}:${mysql.port}/tile?useSSL=false&allowPublicKeyRetrieval=true
+#          username: ${mysql.username}
+#          password: ${mysql.password}
+#          driver-class-name: com.mysql.cj.jdbc.Driver
         pg_space:
           url: jdbc:postgresql://${pg.host}:${pg.port}/gis_db
           username: ${pg.username}

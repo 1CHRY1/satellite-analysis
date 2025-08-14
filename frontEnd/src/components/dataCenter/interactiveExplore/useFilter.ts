@@ -111,7 +111,7 @@ export const useFilter = () => {
     /**
      * 数据检索变量 - 2.格网分辨率
      */
-    const gridOptions = [1, 2, 5, 10, 15, 20, 25, 30, 40, 50, 100, 200, 500, 1000]
+    const gridOptions = [1, 2, 5, 10, 15, 20, 25, 30, 40, 50, 100, 150, 200, 500, 1000]
     const allGrids = ref([])
     const allGridCount = ref(0)
 
