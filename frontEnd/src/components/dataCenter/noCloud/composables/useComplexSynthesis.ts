@@ -1,7 +1,8 @@
 import { reactive, computed, watch, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getNoCloud } from '@/api/http/satellite-data'
-import { exploreData, taskStore, setCurrentPanel, additionalData, dataReconstruction, complexProgress, showComplexProgress, complexSynthesisLoading, hasComplexResult } from './shared'
+import { exploreData, taskStore, setCurrentPanel, additionalData, dataReconstruction, complexProgress, showComplexProgress, complexSynthesisLoading, hasComplexResult, calTask } from './shared'
+import {demotic1mImages,demotic2mImages,internationalImages,radarImages} from './useDataPreparation'
 
 /**
  * 复杂合成相关的组合式函数
@@ -52,7 +53,7 @@ export const useComplexSynthesis = (allScenes: any) => {
     })
 
     // 监听多源数据选择变化
-    watch(() => multiSourceData.selectedBands, (newBands, oldBands:[]) => {
+    watch(() => multiSourceData.selectedBands, (newBands, oldBands) => {
         if (!newBands.length) {
             multiSourceData.visualization = { red_band: '', green_band: '', blue_band: '' }
             return
@@ -112,15 +113,15 @@ export const useComplexSynthesis = (allScenes: any) => {
         setCurrentPanel('history')
 
         // 根据勾选情况合并影像
-        let addedImages = [...allScenes.value]
+        let addedImages = [...demotic1mImages.value]
         if (dataReconstruction.value[0] === true) {
-            addedImages = addedImages.concat(allScenes.value)
+            addedImages = addedImages.concat(demotic2mImages.value)
         }
         if (dataReconstruction.value[1] === true) {
-            addedImages = addedImages.concat(allScenes.value)
+            addedImages = addedImages.concat(internationalImages.value)
         }
         if (dataReconstruction.value[2] === true) {
-            addedImages = addedImages.concat(allScenes.value)
+            addedImages = addedImages.concat(radarImages.value)
         }
         
         let dataSet = [
@@ -136,7 +137,7 @@ export const useComplexSynthesis = (allScenes: any) => {
             resolution: exploreData.gridResolution,
             sceneIds: addedImages.map((image) => image.sceneId),
             dataSet: dataSet,
-            bandList: bandList
+            bandList: bandList.value
         }
 
         // 发送请求
@@ -149,6 +150,8 @@ export const useComplexSynthesis = (allScenes: any) => {
         }
         
         // 更新任务，跳转至历史panel
+        calTask.value.taskId = startCalcRes.data
+        taskStore.setTaskStatus(calTask.value.taskId, 'PENDING')
         taskStore.setIsInitialTaskPending(false)
     }
 

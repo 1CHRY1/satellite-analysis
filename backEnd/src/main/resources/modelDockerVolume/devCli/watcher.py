@@ -45,7 +45,7 @@ def initialize(config_file_path: str):
         secure=secure
     )
     
-    url = f"mysql+pymysql://{database_config['user']}:{database_config['password']}@{database_config['endpoint']}/{database_config['satellite_database']}"
+    url = f"mysql+pymysql://{database_config['user']}:{database_config['password']}@{database_config['endpoint']}/{database_config['dev_database']}"
     mysql_engine = create_engine(url)
 
 ###### Data Model of table<project_data> #########################################
@@ -55,7 +55,7 @@ from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
 class ProjectData(Base):
-    __tablename__ = 'project_data'
+    __tablename__ = 'project_data_table'
 
     data_id = Column(String(20), primary_key=True, index=True)
     project_id = Column(String(30), index=True)

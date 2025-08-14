@@ -34,5 +34,6 @@ export type OneBandColorLayerParam = {
 export type LargeScaleSceneParam = {
     startTime: string,
     endTime: string,
-    sensorName: string
+    sensorName: string,
+    regionId: string
 }

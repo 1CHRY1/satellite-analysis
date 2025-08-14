@@ -68,7 +68,7 @@ class TaskScheduler:
                     # elif self.task_status[task_id] == STATUS_ERROR:
                     #     self.error_queue.put(task_id)
                 except Exception as e:
-                    print(f"Error loading history: {e}")
+                    print(f"Error loading history: {e}", flush=True)
                     traceback.print_exc()
 
     def start_task(self, task_type, *args, **kwargs):
@@ -118,40 +118,40 @@ class TaskScheduler:
         return task_classes.get(task_type)
 
     def _scheduler_worker(self):
-        print("调度器工作线程已启动")
+        print("Scheduler started", flush=True)
         while True:
             try:
                 # --------- Pending queue to running queue -------------------------------------
                 with self.condition:
                     while not self.pending_queue.empty() and not self.running_queue.full():
                         task_id = self.pending_queue.get()
-                        print(f"[调度器] 从待处理队列获取任务: {task_id}")
+                        print(f"[Scheduler] get task from pending queue: {task_id}", flush=True)
                         self.running_queue.put(task_id)
-                        print(f"[调度器] 任务 {task_id} 已加入运行队列")
+                        print(f"[Scheduler] task {task_id} already in running queue", flush=True)
 
                         # 为每个运行中的任务创建执行线程
                         thread = threading.Thread(target=self._execute_task, args=(task_id,), daemon=True)
                         thread.start()
-                        print(f"[调度器] 任务 {task_id} 的执行线程已启动")
+                        print(f"[Scheduler] task {task_id} exec thread started", flush=True)
 
                     # 暂停，等待任务变化
                     self.condition.wait(timeout=1)
             except Exception as e:
-                print(f"Scheduler worker error: {e}")
+                print(f"Scheduler worker error: {e}", flush=True)
                 traceback.print_exc()
 
     def _execute_task(self, task_id: str):
         # --------- Execute the task ----------------------------
-        print(f"[执行器] 开始执行任务: {task_id}")
+        print(f"[Exec] start to exec task: {task_id}", flush=True)
         try:
             task_instance = self.task_info[task_id]
-            print(f"[执行器] 获取任务实例: {task_instance.__class__.__name__}")
+            print(f"[Exec] get task instance: {task_instance.__class__.__name__}", flush=True)
             self.task_status[task_id] = STATUS_RUNNING
             # Reuse the result of the task
             
-            print(f"[执行器] 调用任务 {task_id} 的run方法")
+            print(f"[Exec] invoke task {task_id} run method", flush=True)
             result = task_instance.run()
-            print(f"[执行器] 任务 {task_id} 执行完成")
+            print(f"[Exec] task {task_id} finished", flush=True)
 
             # --------- Update the status and queue ---------------------------
             with self.condition:
@@ -171,7 +171,7 @@ class TaskScheduler:
                     self.running_queue.put(temp_queue.get())
 
                 if not found:
-                    print(f"Warning: Task {task_id} not found in running queue")
+                    print(f"Warning: Task {task_id} not found in running queue", flush=True)
 
                 self.complete_queue.put((datetime.now(), task_id))
 
@@ -198,7 +198,7 @@ class TaskScheduler:
                     self.running_queue.put(temp_queue.get())
 
                 if not found:
-                    print(f"Warning: Task {task_id} not found in running queue")
+                    print(f"Warning: Task {task_id} not found in running queue", flush=True)
                 self.error_queue.put(task_id)
 
                 # Update the result and status
@@ -284,7 +284,7 @@ class TaskScheduler:
                 self.running_queue.put(temp_queue.get())
 
             if not found:
-                print(f"Warning: Task {task_id} not found in running queue")
+                print(f"Warning: Task {task_id} not found in running queue", flush=True)
             self.error_queue.put(task_id)
 
             # Update the result and status

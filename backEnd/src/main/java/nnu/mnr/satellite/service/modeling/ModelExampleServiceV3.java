@@ -177,12 +177,14 @@ public class ModelExampleServiceV3 {
 
     //全国范围低zoom下的可视化
     public CommonResultVO createLowLevelScenesVisualizationConfig(VisualizationLowLevelTile visualizationLowLevelTile, Map<String, String> headers, Map<String, String> cookies) throws IOException {
+        // TODO:
         GridsAndGridsBoundary gridsAndGridsBoundary = regionDataService.getGridsByRegionAndResolution(100000, 150);
         String sensorName = visualizationLowLevelTile.getSensorName();
         String startTime = visualizationLowLevelTile.getStartTime();
         String endTime = visualizationLowLevelTile.getEndTime();
+        Integer regionId = visualizationLowLevelTile.getRegionId();
         String visualizationUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("createLowLevelMosaic");
-        JSONObject visualizationParam = JSONObject.of("sensorName", sensorName, "startTime", startTime, "endTime", endTime, "gridsAndGridsBoundary", gridsAndGridsBoundary);
+        JSONObject visualizationParam = JSONObject.of("sensorName", sensorName, "startTime", startTime, "endTime", endTime, "gridsAndGridsBoundary", gridsAndGridsBoundary, "regionId", regionId);
         long expirationTime = 60 * 10;
         return runModelServerModel(visualizationUrl, visualizationParam, expirationTime, headers, cookies);
     }
