@@ -20,7 +20,7 @@
                     <StopOutlined class="mr-1" />
                     结束
                 </el-button>
-                <div style="border-right: 1.5px dashed #5f6477; height: 20px;"></div>
+                <!-- <div style="border-right: 1.5px dashed #5f6477; height: 20px;"></div> -->
                 <el-button link class="toolItem btHover" @click="saveCode">
                     <SaveOutlined class="mr-1" />
                     保存
@@ -583,5 +583,11 @@ onBeforeUnmount(async () => {
 
 .toolItem:last-child {
     border-right: none;
+}
+:deep(.el-input__wrapper) {
+  background-color: white !important;
+}
+:deep(.el-input__inner) {
+  color: black !important;
 }
 </style>

@@ -127,7 +127,7 @@
                     </button>
                 </div>
                         <!-- <div class="flex gap-10">
-                            <!-- 地图选点块
+                             地图选点块
                             <div @click="toggleMode('point')"
                                 class="w-24 h-24 flex flex-col items-center justify-center rounded-lg border cursor-pointer transition-all duration-200 text-white"
                                 :class="[
@@ -140,7 +140,7 @@
                                   {{ t('datapage.optional_thematic.spectrum.map_point') }}
                             </div>
 
-                            <!-- 划线采点块
+                            划线采点块
                             <div @click="!true && toggleMode('line')"
                                 class="w-24 h-24 flex flex-col items-center justify-center rounded-lg border cursor-pointer transition-all duration-200 text-white relative"
                                 :class="[

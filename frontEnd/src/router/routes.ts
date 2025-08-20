@@ -104,13 +104,13 @@ export const routes = [
             component: () =>
               import("../components/user/userFunctionCollection/userProject.vue"),
           },
-        //   {
-        //     isBar: false,
-        //     path: "data",
-        //     name: "我的数据",
-        //     component: () =>
-        //       import(""),
-        //   },
+          {
+            isBar: false,
+            path: "data",
+            name: "我的数据",
+            component: () =>
+              import("../components/user/userFunctionCollection/userData.vue"),
+          },
         ],
       },
     // {
