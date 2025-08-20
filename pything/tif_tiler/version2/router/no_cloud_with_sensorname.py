@@ -81,7 +81,7 @@ def get_tile(
 
         # spring boot 接口
         t2 = time.time()
-        url = "http://192.168.1.127:8999/api/v1/modeling/example/noCloud/createNoCloudConfig"  # 测试使用，记得修改~~~~~~~~~~~~~~~
+        url = "http://192.168.1.123:8999/api/v1/modeling/example/noCloud/createNoCloudConfig"  # 测试使用，记得修改~~~~~~~~~~~~~~~
         data = {
         "sensorName": sensorName,
         "points": points
