@@ -165,7 +165,9 @@ export const useVisualize = () => {
         let taskRes = await getLargeSceneMosaicUrl({
             startTime: selectedDateRange.value[0].format('YYYY-MM-DD'),
             endTime: selectedDateRange.value[1].format('YYYY-MM-DD'),
-            sensorName
+            sensorName,
+            // TODO: regionId(POI等待兼容！！！！)
+            regionId: finalLandId.value
         })
         setTimeout(() => {
             handleShowScene(sensorName)
@@ -201,6 +203,7 @@ export const useVisualize = () => {
                 stopLoading()
                 message.warning("计算失败，请重试")
                 curTaskId.value = ''
+                return
             }
             handleShowLargeScene(data.mosaicjson_url)
             stopLoading()

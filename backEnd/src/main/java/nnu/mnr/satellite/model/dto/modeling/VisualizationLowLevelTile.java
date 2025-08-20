@@ -7,4 +7,5 @@ public class VisualizationLowLevelTile {
     private String sensorName;
     private String startTime;
     private String endTime;
+    private Integer regionId;
 }
