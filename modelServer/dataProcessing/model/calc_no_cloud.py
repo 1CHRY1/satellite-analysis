@@ -37,8 +37,8 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
         grid_x, grid_y = grid
         grid_lable = f'grid_{grid_x}_{grid_y}'
         INFINITY = 999999
-        print('-' * 50)
-        print(f" start { grid_lable }")
+        print('-' * 50, flush=True)
+        print(f" start { grid_lable }", flush=True)
 
         def grid_bbox():
             bbox = grid_helper._get_grid_polygon(grid_x, grid_y)
@@ -115,14 +115,14 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
             nodata = scene.get('noData')
             scene_label = scene.get('sensorName') + '-' + scene.get('sceneId') + '-' + scene.get('resolution')
 
-            print('Process', scene_label)
+            print('Process', scene_label, flush=True)
 
             ########### Check cover ######################
             if not is_grid_covered(scene):
-                print(scene_label, ':: not cover, jump')
+                print(scene_label, ':: not cover, jump', flush=True)
                 continue
 
-            print(scene.get('resolution'), grid_x, grid_y)
+            print(scene.get('resolution'), grid_x, grid_y, flush=True)
 
             ########### Check cloud ######################
             cloud_band_path = scene.get('cloudPath')
@@ -140,7 +140,7 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
                         nodata_mask = temp_img_data.mask
 
                         target_H, target_W = temp_img_data.data[0].shape
-                        print(f"{grid_lable}: H={target_H}, W={target_W}")
+                        print(f"{grid_lable}: H={target_H}, W={target_W}", flush=True)
 
                         img_1 = np.full((target_H, target_W), 0, dtype=np.uint8)
                         img_2 = np.full((target_H, target_W), 0, dtype=np.uint8)
@@ -161,7 +161,7 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
                     if not first_shape_set:
                         temp_img_data = ctx.part(bbox=bbox, indexes=[1])
                         target_H, target_W = temp_img_data.data[0].shape
-                        print(f"{grid_lable}: H={target_H}, W={target_W}")
+                        print(f"{grid_lable}: H={target_H}, W={target_W}", flush=True)
 
                         img_1 = np.full((target_H, target_W), 0, dtype=np.uint8)
                         img_2 = np.full((target_H, target_W), 0, dtype=np.uint8)
@@ -187,11 +187,11 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
                     cloud_mask = (image_data == 2)
 
                 else:
-                    print("UNKNOWN :" , sensorName)
+                    print("UNKNOWN :" , sensorName, flush=True)
                     continue
 
-                # print(f"这一瓦片有云的像素数：",np.count_nonzero(cloud_mask))
-                # print(f"这一瓦片的非Nodata像素数: ",np.count_nonzero(nodata_mask.astype(bool)))
+                # print(f"这一瓦片有云的像素数：",np.count_nonzero(cloud_mask), flush=True)
+                # print(f"这一瓦片的非Nodata像素数: ",np.count_nonzero(nodata_mask.astype(bool)), flush=True)
 
                 # !!! valid_mask <--> 无云 且 非nodata
                 valid_mask = (~cloud_mask) & (nodata_mask.astype(bool))
@@ -199,7 +199,7 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
             # 需要填充的区域 & 该景有效区域 <--> 该景可以填充格网的区域
             fill_mask = need_fill_mask & valid_mask
 
-            # print(f"这一景这一瓦片可填充的像素数：",np.count_nonzero(fill_mask))
+            # print(f"这一景这一瓦片可填充的像素数：",np.count_nonzero(fill_mask), flush=True)
 
             if np.any(fill_mask): # 只要有任意一个是1 ，那就可以填充
 
@@ -225,7 +225,7 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
 
                         # 【新增】自动转换为uint8
                         converted_data = convert_to_uint8(original_data, original_dtype)
-                        print(f"Band data converted from {original_dtype} to uint8")
+                        print(f"Band data converted from {original_dtype} to uint8", flush=True)
 
                         return converted_data
                 ################# NEW END ######################
@@ -242,13 +242,13 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
 
                 filled_ratio = 1.0 - (np.count_nonzero(need_fill_mask) / need_fill_mask.size)
 
-                print(f"grid fill progress: {filled_ratio * 100:.2f}%")
+                print(f"grid fill progress: {filled_ratio * 100:.2f}%", flush=True)
 
             if not np.any(need_fill_mask) or filled_ratio > 0.995:
-                print("填充完毕")
+                print("fill done", flush=True)
                 break
 
-            print('ENDING ----- ')
+            print('ENDING ----- ', flush=True)
 
         first_shape_set = False
 
@@ -285,7 +285,7 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
         return tif_path, grid_x, grid_y
 
     except Exception as e:
-        print(f"进程ERROR: {e}")
+        print(f"ERROR: {e}", flush=True)
         return None
 
 def upload_one(tif_path, grid_x, grid_y, task_id):
@@ -373,7 +373,7 @@ def cleanup_temp_files(scenes_json_file, scene_band_paths_json_file):
         if os.path.exists(scene_band_paths_json_file):
             os.remove(scene_band_paths_json_file)
     except Exception as e:
-        print(f"清理临时文件时出错: {e}")
+        print(f"cleaup error: {e}", flush=True)
 
 
 class calc_no_cloud(Task):
@@ -388,7 +388,7 @@ class calc_no_cloud(Task):
 
 
     def run(self):
-        print("NoCloudGraphTask run")
+        print("NoCloudGraphTask run", flush=True)
 
         ## Step 1 : Input Args #################################################
         grids = self.tiles
@@ -413,7 +413,7 @@ class calc_no_cloud(Task):
         temp_dir_path = os.path.join(CONFIG.TEMP_OUTPUT_DIR, self.task_id)
         os.makedirs(temp_dir_path, exist_ok=True)
 
-        print('start time ', time.time())
+        print('start time ', time.time(), flush=True)
 
         # 序列化数据到临时文件
         scenes_json_file, scene_band_paths_json_file = serialize_data_to_temp_files(scenes, scene_band_paths)
@@ -452,12 +452,12 @@ class calc_no_cloud(Task):
                 upload_results.append(future.result())
 
         upload_results.sort(key=lambda x: (x["grid"][0], x["grid"][1]))
-        print('end upload ', time.time())
+        print('end upload ', time.time(), flush=True)
 
         ## Step 4 : Deprecated(Merge TIF) #######################
-        # print('start merge ',time.time())
+        # print('start merge ',time.time(), flush=True)
         # result_path = merge_tifs(temp_dir_path, task_id=self.task_id)
-        # print('end merge ',time.time())
+        # print('end merge ',time.time(), flush=True)
         # minio_path = f"{self.task_id}/noCloud_merge.tif"
         # uploadLocalFile(result_path, config.MINIO_TEMP_FILES_BUCKET, minio_path)
 
@@ -467,7 +467,7 @@ class calc_no_cloud(Task):
         # }
 
         ## Step 4 : Generate MosaicJSON as result #######################
-        print([CONFIG.MINIO_TEMP_FILES_BUCKET+item["tifPath"] for item in upload_results])
+        print([CONFIG.MINIO_TEMP_FILES_BUCKET+item["tifPath"] for item in upload_results], flush=True)
         response = requests.post(CONFIG.MOSAIC_CREATE_URL, json={
             "files": [f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}/{item['bucket']}/{item['tifPath']}" for item in upload_results],
             "minzoom": 7,
@@ -475,9 +475,9 @@ class calc_no_cloud(Task):
             "max_threads": 20
         }, headers={ "Content-Type": "application/json" })
 
-        print('=============No Cloud Task Has Finally Finished=================')
+        print('=============No Cloud Task Has Finally Finished=================', flush=True)
         cleanup_temp_files(scenes_json_file, scene_band_paths_json_file)
         if os.path.exists(temp_dir_path):
             shutil.rmtree(temp_dir_path)
-            print('=============No Cloud Origin Data Deleted=================')
+            print('=============No Cloud Origin Data Deleted=================', flush=True)
         return response.json()

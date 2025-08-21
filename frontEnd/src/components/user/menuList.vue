@@ -71,15 +71,15 @@ interface menuItem {
 
 const menuOption = ref<menuItem[]>([
     {name: '个人中心', path:'/user',},
-    {name: '安全设置', path:'',},
-    {name : '个性化', path:'',
-    children:[
-        {name:'数据浏览查询', path:''},
-        {name:'数据管理', path:''},
-        {name:'数据可视化', path:''}
-    ]
-    },
-    {name: '设置', path:''},
+    // {name: '安全设置', path:'',},
+    // {name : '个性化', path:'',
+    // children:[
+    //     {name:'数据浏览查询', path:''},
+    //     {name:'数据管理', path:''},
+    //     {name:'数据可视化', path:''}
+    // ]
+    // },
+    // {name: '设置', path:''},
     
 ])
 

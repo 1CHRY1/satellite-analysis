@@ -37,8 +37,8 @@ class create_low_level_mosaic(Task):
 
     def run(self):
         """执行镶嵌任务"""
-        print(f"[LowLevelMosaicTask] 任务 {self.task_id} 开始执行")
-        print(f"[LowLevelMosaicTask] 参数: sensor_name={self.sensor_name}, grid_res={self.grid_res}, crs={self.crs}")
+        print(f"[LowLevelMosaicTask] task {self.task_id} start", flush=True)
+        print(f"[LowLevelMosaicTask] param: sensor_name={self.sensor_name}, grid_res={self.grid_res}, crs={self.crs}", flush=True)
         try:
 
             # 创建场景获取器
@@ -46,7 +46,7 @@ class create_low_level_mosaic(Task):
             
             # 获取格网数据
             grids_data = fetcher.parse_grids(self.grids_data)
-            print(f"任务 {self.task_id}: 网格总数：{len(grids_data)}")
+            print(f"Task {self.task_id}: grid count {len(grids_data)}", flush=True)
             
             # 并行处理所有格网
             start = time.time()
@@ -66,12 +66,12 @@ class create_low_level_mosaic(Task):
             #     )
             #     results.append(result)
             processing_time = time.time() - start
-            print(f"任务 {self.task_id}: 所有格网处理完成，耗时: {processing_time:.2f} 秒")
+            print(f"Task {self.task_id}: grids done, time elapsed: {processing_time:.2f} s", flush=True)
             
             # 过滤出成功的结果
             successful_results = [result for result in results if result is not None]
             
-            print(f"任务 {self.task_id}: 成功处理的COG文件: {len(successful_results)} 个")
+            print(f"Task {self.task_id}: successfully processed cog files: {len(successful_results)}", flush=True)
             
             if not successful_results:
                 return {
@@ -84,7 +84,7 @@ class create_low_level_mosaic(Task):
                 }
 
             # 创建和上传MosaicJSON - 使用配置文件中的MinIO设置
-            print(f"任务 {self.task_id}: 正在生成 MosaicJSON")
+            print(f"Task {self.task_id}: Generating MosaicJSON...", flush=True)
             
             minio_client = Minio(
                 f"{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}",
@@ -105,7 +105,7 @@ class create_low_level_mosaic(Task):
                 quadkey_zoom=self.quadkey_zoom
             )
             mosaic_creation_time = time.time() - start_mosaic
-            print(f"任务 {self.task_id}: MosaicJSON创建耗时: {mosaic_creation_time:.2f} 秒")
+            print(f"Task {self.task_id}: MosaicJSON creation time elapsed: {mosaic_creation_time:.2f} s", flush=True)
             
             # 上传MosaicJSON
             upload_success = self._upload_mosaicjson(
@@ -115,7 +115,7 @@ class create_low_level_mosaic(Task):
             if upload_success:
                 full_mosaicjson_path = f"minio://{bucket}/{mosaic_output_path}"
                 mosaicjson_url = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}/{bucket}/{mosaic_output_path}"
-                print(f"任务 {self.task_id}: MosaicJSON 路径: {full_mosaicjson_path}")
+                print(f"Task {self.task_id}: MosaicJSON path: {full_mosaicjson_path}", flush=True)
                 results = {
                     'status': 1,
                     'message': '镶嵌任务完成',
@@ -139,7 +139,7 @@ class create_low_level_mosaic(Task):
                 }
                 
         except Exception as e:
-            print(f"任务 {self.task_id} 执行失败: {e}")
+            print(f"task {self.task_id} failed: {e}", flush=True)
             import traceback
             traceback.print_exc()
             return {
@@ -157,7 +157,7 @@ class create_low_level_mosaic(Task):
         try:
             scenes = fetcher.get_scenes_for_grid(sensor_name, grid['coordinates'][0])
             if len(scenes) > 0:
-                print(f"处理中... Grid {grid['rowId']}-{grid['columnId']} 包含 {len(scenes)} 个场景")
+                print(f"Processing... Grid {grid['rowId']}-{grid['columnId']} Including {len(scenes)} scenes", flush=True)
                 grid_mosaic = GridMosaic(grid['coordinates'][0], scenes, crs_id=crs, z_level=z_level, task_id=task_id)
                 result = grid_mosaic.create_mosaic_with_metadata()
                 
@@ -170,13 +170,13 @@ class create_low_level_mosaic(Task):
                         'grid_coords': grid['coordinates'][0]
                     }
                 else:
-                    print(f"❌ Grid {grid['rowId']}-{grid['columnId']} 镶嵌失败")
+                    print(f"❌ Grid {grid['rowId']}-{grid['columnId']} mosaic failed", flush=True)
                     return None
             else:
-                print(f"⚠️ Grid {grid['rowId']}-{grid['columnId']} 没有找到场景")
+                print(f"⚠️ Grid {grid['rowId']}-{grid['columnId']} Not Found Scene", flush=True)
                 return None
         except Exception as e:
-            print(f"❌ Error in grid {grid['rowId']}-{grid['columnId']}: {e}")
+            print(f"❌ Error in grid {grid['rowId']}-{grid['columnId']}: {e}", flush=True)
             import traceback
             traceback.print_exc()
             return None
@@ -218,8 +218,8 @@ class create_low_level_mosaic(Task):
         global_north = max(bounds[3] for bounds in all_bounds)
         global_bounds = [global_west, global_south, global_east, global_north]
         
-        print(f"任务 {self.task_id}: 全局边界: {global_bounds}")
-        print(f"任务 {self.task_id}: 使用 quadkey_zoom 级别: {quadkey_zoom}")
+        print(f"Task {self.task_id}: Global boundary: {global_bounds}", flush=True)
+        print(f"Task {self.task_id}: use quadkey_zoom: {quadkey_zoom}", flush=True)
         
         # 使用指定的quadkey_zoom级别创建瓦片映射
         for item in cog_metadata_list:
@@ -276,7 +276,7 @@ class create_low_level_mosaic(Task):
             found = minio_client.bucket_exists(bucket_name)
             if not found:
                 minio_client.make_bucket(bucket_name)
-                print(f"任务 {self.task_id}: 创建存储桶 '{bucket_name}'")
+                print(f"Task {self.task_id}: Create bucket '{bucket_name}'", flush=True)
             
             # 上传到 MinIO
             minio_client.put_object(
@@ -286,10 +286,10 @@ class create_low_level_mosaic(Task):
                 length=len(mosaic_bytes),
                 content_type='application/json'
             )
-            print(f"任务 {self.task_id}: MosaicJSON 成功上传至: minio://{bucket_name}/{output_object_name}")
+            print(f"Task {self.task_id}: MosaicJSON uploaded to: {bucket_name}/{output_object_name}", flush=True)
             return True
         except Exception as e:
-            print(f"任务 {self.task_id}: 上传 MosaicJSON 失败: {e}")
+            print(f"Task {self.task_id}: upload MosaicJSON failed: {e}", flush=True)
             import traceback
             traceback.print_exc()
             return False
