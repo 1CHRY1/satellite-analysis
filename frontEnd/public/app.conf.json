@@ -14,5 +14,7 @@
     "intranet_img_url": "/basemap/{z}/{x}/{y}",
     "intranet_vec_url": "/proxymap/vec_w_2000/{z}/{x}/{y}.png",
     "intranet_cva_url": "/proxymap/cva_w_2000/{z}/{x}/{y}.png",
+    "dem_tiles_url": "/demtiles/{z}/{x}/{y}.png",
+    "dem_tiles2_url": "/demtiles2/{z}/{x}/{y}.png",
     "fk_url": "/temporaryMap/202501/wms?bbox={bbox-epsg-3857}&format=image/png&service=WMS&version=1.1.1&request=GetMap&SRS=WGS84&transparent=true&width=256&height=256"
 }

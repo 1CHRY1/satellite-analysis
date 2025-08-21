@@ -1,5 +1,6 @@
 from flask import send_file, request, jsonify, make_response, Blueprint
 import os
+import requests
 
 from dataProcessing.config import current_config as CONFIG
 from dataProcessing.app.resTemplate import api_response
@@ -224,6 +225,10 @@ def create_mosaic_with_query_param():
     scheduler = init_scheduler()
     data = request.json or {}
     
+    # 透传客户端的 Headers 和 Cookies（供后续取场景与鉴权使用）
+    # headers = dict(request.headers)
+    # cookies = request.cookies.to_dict()
+    
     # 从查询参数获取sensor_name
     sensor_name = request.args.get('sensor_name')
     if not sensor_name:
@@ -247,8 +252,27 @@ def create_mosaic_with_query_param():
                 data=None
             )
     
+    # 若未提供 gridsAndGridsBoundary，则按 region_id/grid_res 从后端补齐
+    # region_id = data.get('region_id', CONFIG.MOSAIC_DEFAULT_REGION_ID)
+    # grid_res = data.get('grid_res', CONFIG.MOSAIC_DEFAULT_GRID_RES)
+    # if not data.get('gridsAndGridsBoundary'):
+    #     try:
+    #         grids_url = f"{CONFIG.BACK_URL_PREFIX}v1/data/grid/grids/region/{region_id}/resolution/{grid_res}"
+    #         resp = requests.get(grids_url, headers=headers, cookies=cookies, timeout=30)
+    #         resp.raise_for_status()
+    #         data['gridsAndGridsBoundary'] = resp.json()
+    #         print(f"已从后端补齐格网: region_id={region_id}, grid_res={grid_res}")
+    #     except Exception as e:
+    #         print(f"获取格网失败: {e}")
+    #         return api_response(
+    #             code=502,
+    #             message=f"获取格网失败: {str(e)}",
+    #             data=None
+    #         )
+
     try:
-        task_id = scheduler.start_task('create_low_level_mosaic', data)
+        # 将 headers/cookies 透传给任务，供 SceneFetcher 使用
+        task_id = scheduler.start_task('create_low_level_mosaic', data, headers=headers, cookies=cookies)
         print(f"创建镶嵌任务: {task_id}, sensor_name: {sensor_name}, 参数: {data}")
         return api_response(
             code=200,

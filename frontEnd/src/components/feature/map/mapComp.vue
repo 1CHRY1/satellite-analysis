@@ -7,6 +7,7 @@
             <button @click="handleZoomOut" class="map-button">➖</button>
             <button @click="handleRightRotate" class="map-button">↩️</button>
             <button @click="handleLeftRotate" class="map-button">↪️</button>
+            <button @click="handle3DTiles" class="map-button">⛰️</button>
             <button @click="localTian" class="map-button text-gray-900!">{{ t('datapage.mapcomp.vector') }}</button>
             <button @click="localImg" class="map-button text-gray-900!">{{ t('datapage.mapcomp.imagery') }}</button>
         </div>
@@ -26,6 +27,7 @@ import { StyleMap } from '@/util/map/tianMapStyle'
 import CubeTimeline from './cubeTimeline.vue'
 import bus from '@/store/bus'
 import { useI18n } from 'vue-i18n'
+import { ezStore } from '@/store'
 const { t } = useI18n()
 
 const props = defineProps({
@@ -84,6 +86,23 @@ const handleRightRotate = () => {
         // m.rotateTo(90, { duration: 5000 })
         const bare = m.getBearing()
         m.rotateTo(bare - 90, { duration: 2000 })
+    })
+}
+
+const handle3DTiles = () => {
+    mapManager.withMap((m) => {
+        console.log('加载3D瓦片')
+        // 添加DEM瓦片图层
+        m.addSource('dem-tiles', {
+            type: 'raster-dem',
+            tiles: [ezStore.get('conf')['dem_tiles2_url']],
+            // tiles: ['https://api.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.png?access_token='],
+            tileSize: 256,
+            encoding: 'mapbox'
+        })
+        
+        m.setTerrain({source: "dem-tiles", exaggeration: 1.5})
+    
     })
 }
 

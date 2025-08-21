@@ -8,7 +8,8 @@ export interface EnvConfig {
     realtime: string
     websocket: string
     tiler: string
-    proxymap: string
+    proxymap: string,
+    demtiles: string,
 }
 
 export interface FixedConfig {
@@ -57,6 +58,7 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
         // websocket: 'http://192.168.1.127:9000/model/websocket',
         tiler: 'http://localhost:8000', 
         proxymap: 'http://localhost:5003',
+        demtiles: 'http://localhost',
     }
 }
 
