@@ -7,10 +7,10 @@ import { ENV_CONFIG, FIXED_CONFIG } from './env.config'
 // 环境配置
 // const ENV = process.env.NODE_ENV || 'development'
 
-const ENV_TARGET = 'hxf' // 一键切换配置环境，使用集群则改为cluster，使用本地则改为local
+const ENV_TARGET = 'zzw' // 一键切换配置环境，使用集群则改为cluster，使用本地则改为local
 
 // 获取当前环境配置
-const currentEnv = ENV_CONFIG[ENV_TARGET as keyof typeof ENV_CONFIG] || ENV_CONFIG.hxf
+const currentEnv = ENV_CONFIG[ENV_TARGET as keyof typeof ENV_CONFIG] || ENV_CONFIG.zzw
 
 // 代理配置生成器
 const createProxyConfig = () => {
@@ -76,6 +76,16 @@ const createProxyConfig = () => {
             target: currentEnv.proxymap,
             changeOrigin: true,
             rewrite: (path: string) => path.replace(/^\/proxymap/, ''),
+        },
+        '/demtiles': {
+            target: currentEnv.demtiles,
+            changeOrigin: true,
+            rewrite: (path: string) => path.replace(/^\/demtiles/, '/tiles'),
+        },
+        '/demtiles2': {
+            target: currentEnv.demtiles,
+            changeOrigin: true,
+            rewrite: (path: string) => path.replace(/^\/demtiles2/, '/tiles2'),
         },
         // '/chry': {
         //     target: FIXED_CONFIG.chry,
