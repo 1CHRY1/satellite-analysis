@@ -12,7 +12,7 @@ public class ToolInfoDTO {
     private String toolName;
     private String description;
     private List<String> tags;
-    private String category;
+    private Integer categoryId;
     private List<JSONObject> parameters;
     private String outputType;
 }

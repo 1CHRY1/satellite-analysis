@@ -18,18 +18,17 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@TableName(value = "tool_table", schema = "tool")
+@TableName("tool_table")
 public class Tool {
     @TableId
     private String toolId;
-    private String projectId;
     private String environment;
     private String userId;
     private String toolName;
     private String description;
     @TableField(typeHandler = ListTypeHandler.class)
     private List<String> tags;
-    private String category;
+    private Integer categoryId;
     @TableField(typeHandler = ListTypeHandler.class)
     private String parameters;
     private String outputType;

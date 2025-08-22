@@ -51,7 +51,7 @@ public class ToolService {
         String toolName = code2ToolDTO.getToolName();
         String description = code2ToolDTO.getDescription();
         List<String> tags = Optional.ofNullable(code2ToolDTO.getTags()).orElse(Collections.emptyList());
-        String category = code2ToolDTO.getCategory();
+        Integer categoryId = code2ToolDTO.getCategoryId();
         List<JSONObject> parameters = Optional.ofNullable(code2ToolDTO.getParameters()).orElse(Collections.emptyList());
         String outputType = code2ToolDTO.getOutputType();
         String userId = Optional.ofNullable(code2ToolDTO.getUserId())
@@ -74,13 +74,12 @@ public class ToolService {
 
         Tool toolObj = Tool.builder()
                 .toolId(toolId)
-                .projectId(projectId)
                 .environment(environment)
                 .userId(userId)
                 .toolName(toolName)
                 .description(description)
                 .tags(tags)
-                .category(category)
+                .categoryId(categoryId)
                 .parameters(parameters.toString())
                 .outputType(outputType)
                 .build();
@@ -111,7 +110,7 @@ public class ToolService {
         String toolName = toolInfoDTO.getToolName();
         String description = toolInfoDTO.getDescription();
         List<String> tags = Optional.ofNullable(toolInfoDTO.getTags()).orElse(Collections.emptyList());
-        String category = toolInfoDTO.getCategory();
+        Integer categoryId = toolInfoDTO.getCategoryId();
         List<JSONObject> parameters = Optional.ofNullable(toolInfoDTO.getParameters()).orElse(Collections.emptyList());
         String outputType = toolInfoDTO.getOutputType();
         if(isToolIdExistInTool(toolId)){
@@ -121,7 +120,7 @@ public class ToolService {
                     .toolName(toolName)
                     .description(description)
                     .tags(tags)
-                    .category(category)
+                    .categoryId(categoryId)
                     .parameters(parameters.toString())
                     .outputType(outputType)
                     .build();
