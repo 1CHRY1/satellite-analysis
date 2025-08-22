@@ -80,7 +80,7 @@
  
                     </div>
 
-                    <div class="config-control" >
+                    <div class="config-control flex flex-col gap-2 w-full" >
                         <!-- 指数类型选择 -->
                         <div v-if="showPresetIndexes" class="section-content mb-6 ml-8">
                             <div class="max-h-48 overflow-y-auto border border-[#247699] rounded-lg p-2 bg-[#0d1526]">
@@ -222,8 +222,8 @@
                                     </div>
                                 </el-dialog>
                         
-                        <div>
-                            <div class="color-palette-selector mb-6 border border-[#247699] rounded mt-2 mb-4" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
+                        
+                            <div class="color-palette-selector mb-6 border border-[#247699] rounded mt-2 mb-4 w-full" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
                                 <span class="ml-4">选择指数</span>
                                 <select
                                     v-model="selectedIndex"
@@ -242,8 +242,8 @@
 
                                 </select>
                             </div>
-                        </div>
-                        <div class="color-palette-selector  mb-6  border border-[#247699] rounded mt-2 mb-4" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
+                        
+                        <div class="color-palette-selector  mb-6  border border-[#247699] rounded mt-2 mb-4 w-full " style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
                                 <label class="ml-4">配色方案:</label>
                                 <select
                                     v-model="selectedColorMap"

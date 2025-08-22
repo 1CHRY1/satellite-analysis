@@ -99,26 +99,30 @@
         <el-input v-model="updateForm.phone" autocomplete="off" />
       </el-form-item>
       <el-form-item label="地址" :label-width="formLabelWidth">
+        <div class="flex flex-col" >
         <p class="flex items-center gap-2">
-      <span>{{ data.province }} {{ data.city }}</span>
-      <span
-        @click="showSelection"
-        
-        class="text-blue-500 cursor-pointer select-none active:text-red-500"
-      >
-        修改
-      </span>
-    </p>
+          <span>{{ data.province }} {{ data.city }}</span>
+          <span
+            @click="showSelection"
+            
+            class="text-blue-500 cursor-pointer select-none active:text-red-500"
+          >
+            修改
+          </span>
+        </p>
         <div v-if="isShow">
           <RegionSelects
               v-model="regionValue"
+              class="region-selects"
               :defaultRegion="{
               province: { key: '', value: data.province },
               city: { key: '', value: data.city }
               }"
               :area="false"
               @change = "regionUpdate"
+              style="background-color: white !important; color: black !important;"
             />
+        </div>
         </div>
       </el-form-item>
       <el-form-item label="邮箱" :label-width="formLabelWidth">
@@ -413,5 +417,9 @@ onMounted(async () => {
 }
 :deep(.el-input__inner) {
   color: black !important;
+}
+:deep(.region-selects button) {
+  background-color: white !important;
+  color:black !important
 }
 </style>

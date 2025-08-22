@@ -33,7 +33,7 @@
             <font-awesome-icon :icon="['fas', 'bars-progress']" />
             {{ t("userpage.userFunction.projects") }}
           </router-link> 
-          <!-- <router-link
+          <router-link
             to="/user/data"
             class="text-lg font-semibold"
             :class="[
@@ -45,7 +45,7 @@
             ]"
             ><font-awesome-icon :icon="['fas', 'database']" />
             {{ t("userpage.userFunction.data") }}
-          </router-link> -->
+          </router-link>
         </nav>
       </header>
   
