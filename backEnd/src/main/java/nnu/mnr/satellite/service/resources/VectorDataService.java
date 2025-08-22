@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 
 import static nnu.mnr.satellite.utils.geom.TileCalculateUtil.getTileGeomByIdsAndResolution;
 
-
+@DS("pg_satellite")
 @Service("VectorDataService")
 public class VectorDataService {
 
@@ -29,6 +29,7 @@ public class VectorDataService {
     IVectorRepo vectorRepo;
     @Autowired
     LocationService locationService;
+
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
@@ -73,7 +74,6 @@ public class VectorDataService {
     }
 
     // 获取矢量数据并发布成瓦片服务
-    @DS("pg_satellite")
     public byte[] getMvtTile(String tableName, String wkt, int z, int x, int y, Integer type){
         // 参数校验，防止sql注入
         validateParams(tableName, z, x, y);

@@ -1,6 +1,7 @@
 package nnu.mnr.satellite.service.resources;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.model.vo.resources.GridBoundaryVO;
@@ -32,6 +33,7 @@ import java.util.concurrent.TimeUnit;
  * @Description:
  */
 
+@DS("mysql_ard_satellite")
 @Service("RegionDataService")
 public class RegionDataService {
 

@@ -98,7 +98,7 @@ const handleCreateNoCloudTiles = async () => {
         // const result = await response.json()
         // const jsonUrl = result.data  // 从CommonResultVO中获取data字段，正式版本~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-        const jsonUrl = 'http://192.168.1.127:30900/temp-files/zzw/nocloud_005371400fb149c48046bd2b52635d24.json'  // 测试使用，记得改回来~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        const jsonUrl = 'http://192.168.1.123:30900/temp-files/zzw/nocloud_005371400fb149c48046bd2b52635d24.json'  // 测试使用，记得改回来~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         console.log('获取到的jsonUrl:', jsonUrl)
         
         // 3. 添加瓦片图层
