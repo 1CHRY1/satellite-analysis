@@ -69,7 +69,7 @@ def get_tile(
 ):
     try:
         points = calc_tile_bounds(x, y, z)
-        url = "http://192.168.1.127:8999/api/v1/modeling/example/noCloud/createNoCloudConfig"
+        url = "http://192.168.1.123:8999/api/v1/modeling/example/noCloud/createNoCloudConfig"
         data = {
             "sensorName": sensorName,
             "startTime": startTime,

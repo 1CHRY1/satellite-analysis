@@ -150,7 +150,7 @@ class hxfConfig(BaseConfig):
     MINIO_TEMP_FILES_BUCKET                         =       "temp-files"
 
     # MySQL Config
-    MYSQL_HOST                                      =       "192.168.1.127"
+    MYSQL_HOST                                      =       "192.168.1.123"
     MYSQL_TILE_PORT                                 =       3306
     MYSQL_TILE_DB                                   =       "tile"
     MYSQL_RESOURCE_PORT                             =       3306
@@ -159,11 +159,11 @@ class hxfConfig(BaseConfig):
     MYSQL_PWD                                       =       "123456"
 
     # Backend Config
-    BACK_URL_PREFIX                                 =       "http://192.168.1.127:8999/api/"
+    BACK_URL_PREFIX                                 =       "http://192.168.1.123:8999/api/"
     LOW_LEVEL_IMAGE_VISUALIZATION                   =       "v3/modeling/example/scenes/visualization"
 
     # Titiler Config
-    TITILER_BASE_URL                                =       "http://192.168.1.127:8000"
+    TITILER_BASE_URL                                =       "http://192.168.1.123:8000"
     MOSAIC_CREATE_URL                               =       TITILER_BASE_URL + "/mosaic/create"
 
     TEMP_OUTPUT_DIR                                 =       r"D:/code/test"
@@ -281,7 +281,7 @@ def get_current_config():
     """获取当前环境的配置类"""
     return get_config(CURRENT_PROFILE)
 
-os.environ['APP_PROFILE'] = 'zzw'
+os.environ['APP_PROFILE'] = 'k8s'
 # 获取当前环境配置 - 类似Spring Boot的 spring.profiles.active
 CURRENT_PROFILE = os.getenv('APP_PROFILE', 'k8s')  # 默认使用k8s
 
