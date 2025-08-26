@@ -102,7 +102,7 @@ type MultiImageInfoType = {
 const show = defineModel<boolean>()
 const multiImages = ref<MultiImageInfoType[]>([])
 const productImages = ref<MultiImageInfoType[]>([])
-const scaleRate = ref(0)
+const scaleRate = ref(1.00)
 const grid = ref<GridData>({ rowId: 0, columnId: 0, resolution: 0, opacity: 0, normalize_level: 0, sceneRes: { total: 0, category: [] }, vectors: [], themeRes: { total: 0, category: [] } })
 const activeIndex = ref(-1)
 const visualMode = ref<'rgb' | 'product'>('rgb')
@@ -462,7 +462,7 @@ const clearState = () => {
   activeIndex.value = -1;
   multiImages.value = [];
   productImages.value = [];
-  scaleRate.value = 0;
+  scaleRate.value = 1.00;
 }
 
 const superResOverride = ref<{
@@ -495,7 +495,7 @@ onMounted(() => {
         activeIndex.value = -1
         multiImages.value = []
         productImages.value = []
-        scaleRate.value = 0
+        scaleRate.value = 1.00
     })
 })
 </script>

@@ -89,20 +89,38 @@ const handleRightRotate = () => {
     })
 }
 
+const is3D = ref(false)
 const handle3DTiles = () => {
-    mapManager.withMap((m) => {
-        console.log('加载3D瓦片')
-        // 添加DEM瓦片图层
-        m.addSource('dem-tiles', {
-            type: 'raster-dem',
-            tiles: [ezStore.get('conf')['dem_tiles2_url']],
-            // tiles: ['https://api.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.png?access_token='],
-            tileSize: 256,
-            encoding: 'mapbox'
-        })
+    if (is3D.value) {
+        handleDestroyDEMLayer()
+        is3D.value = false
+    } else {
+        mapManager.withMap((m) => {
+            console.log('加载3D瓦片')
+            // 添加DEM瓦片图层
+            m.addSource('dem-tiles', {
+                type: 'raster-dem',
+                // tiles: [ezStore.get('conf')['dem_tiles_url']],
+                tiles: [`http://${window.location.host}` + '/demtiles/{z}/{x}/{y}.png'],
+                // tiles: ['https://api.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.png?access_token='],
+                tileSize: 256,
+                encoding: 'mapbox'
+            })
+            
+            m.setTerrain({source: "dem-tiles", exaggeration: 1.5})
         
-        m.setTerrain({source: "dem-tiles", exaggeration: 1.5})
-    
+        })
+        is3D.value = true
+    }
+}
+
+const handleDestroyDEMLayer = () => {
+    const id = 'dem-tiles'
+    const srcId = id
+    mapManager.withMap((m) => {
+        m.setTerrain(null)
+        m.getLayer(id) && m.removeLayer(id)
+        m.getSource(srcId) && m.removeSource(srcId)
     })
 }
 
@@ -137,6 +155,7 @@ onMounted(() => {
 
 onUnmounted(() => {
     MapOperation.map_destroy()
+    handleDestroyDEMLayer()
 })
 </script>
 
