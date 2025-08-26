@@ -8,6 +8,7 @@
             <button @click="handleRightRotate" class="map-button">↩️</button>
             <button @click="handleLeftRotate" class="map-button">↪️</button>
             <button @click="handle3DTiles" class="map-button">⛰️</button>
+            <!-- <button @click="handle3DTiles" class="map-button !text-gray-900">{{ is3DMode ? '3D' : '2D' }}</button>-->
             <button @click="localTian" class="map-button text-gray-900!">{{ t('datapage.mapcomp.vector') }}</button>
             <button @click="localImg" class="map-button text-gray-900!">{{ t('datapage.mapcomp.imagery') }}</button>
         </div>
@@ -46,6 +47,7 @@ const props = defineProps({
 })
 
 const cubeTimelineShow = ref(false)
+const is3DMode = ref(false)
 
 
 const handleFitView = () => {
@@ -106,9 +108,9 @@ const handle3DTiles = () => {
                 tileSize: 256,
                 encoding: 'mapbox'
             })
-            
+
             m.setTerrain({source: "dem-tiles", exaggeration: 1.5})
-        
+
         })
         is3D.value = true
     }
@@ -150,12 +152,29 @@ onMounted(() => {
         MapOperation.map_destroyNoCloudLayer()
         MapOperation.map_destroyTerrain()
     })
- 
+
+    // setTimeout(() => {
+    //     mapManager.withMap((m) => {
+    //         m.showTileBoundaries = true
+    //     })
+    //     //         // '/hytemp/rgb/tiles/{z}/{x}/{y}.png?url_r=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B4.TIF&url_g=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B3.TIF&url_b=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B2.TIF'
+    //     //         '/hytemp/rgb/box/{z}/{x}/{y}.png?url_r=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B4.TIF&url_g=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B3.TIF&url_b=D%3A%5Cedgedownload%5CLC08_L2SP_121038_20200922_20201006_02_T2%5CLC08_L2SP_121038_20200922_20201006_02_T2_SR_B2.TIF&bbox=117,31.5,118,32&max_r=50000&max_g=50000&max_b=50000&min_r=20000&min_g=20000&min_b=20000'
+    //     //     ]
+    //     // })
+    //     // m.addLayer({
+    //     //     id: 'raster-layer',
+    //     //     source: 'src',
+    //     //     type: 'raster',
+    //     //     minzoom: 5,
+    //     //     maxzoom: 22
+    //     // })
+    //     // })
+    // }, 1)
+
 })
 
 onUnmounted(() => {
     MapOperation.map_destroy()
-    handleDestroyDEMLayer()
 })
 </script>
 
