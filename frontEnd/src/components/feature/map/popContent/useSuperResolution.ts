@@ -104,7 +104,14 @@ export const useSuperResolution = () => {
                     console.log(bandres, '结果');
                     console.log('超分返回数据',bandres.data)
                 // console.log(result.value)
-                    bus.emit('SuperResTimeLine', bandres.data,isSuperRes.value)
+                    bus.emit('SuperResTimeLine', {
+                        data: bandres.data,
+                        gridInfo: {
+                            rowId: gridData.value.rowId,
+                            columnId: gridData.value.columnId,
+                            resolution: gridData.value.resolution
+                        }
+                    }, isSuperRes.value)
                     
                 } catch (error) {
                     calTask.value.calState = 'failed'

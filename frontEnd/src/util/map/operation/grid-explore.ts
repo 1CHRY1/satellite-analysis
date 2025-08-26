@@ -1,6 +1,7 @@
 import { mapManager } from '../mapManager'
 import { ezStore } from '@/store'
 import type { GridData } from '@/type/interactive-explore/grid'
+import bus from '@/store/bus'
 
 
 /**
@@ -314,4 +315,34 @@ export function map_destroyGridMVTLayer() {
             }
         });
     })
+}
+
+export function map_destroySuperResolution(gridInfo: GridData) {
+    const prefix = gridInfo.rowId + '_' + gridInfo.columnId
+    const gridImageLayerMap = ezStore.get('grid-image-layer-map')
+
+    mapManager.withMap((m) => {
+        if (gridImageLayerMap) {
+            for (let key of gridImageLayerMap.keys()) {
+                if (key.startsWith(prefix)) {
+                    const oldId = key
+                    const oldSrcId = oldId + '-source'
+                    if (m.getLayer(oldId) && m.getSource(oldSrcId)) {
+                        m.removeLayer(oldId)
+                        m.removeSource(oldSrcId)
+                    }
+                }
+            }
+        }
+    })
+    
+    // 通过总线事件重置超分增强状态，传递格网信息
+    bus.emit('SuperResTimeLine', {
+        data: { R: '', G: '', B: '' },
+        gridInfo: {
+            rowId: gridInfo.rowId,
+            columnId: gridInfo.columnId,
+            resolution: gridInfo.resolution
+        }
+    }, false)
 }

@@ -116,6 +116,11 @@
                         </span>
                         超分增强
                     </button>
+                    <button class="delete-btn" @click="handleRemove">
+                        <span class="btn-icon">
+                            <Trash2Icon :size="18" />
+                        </span>
+                    </button>
                 </div>
                 <div class="btns flex justify-center" v-show="showBandSelector && activeMethod === 'superresolution'">
                     <button class="visualize-btn">
@@ -123,6 +128,11 @@
                             <GalleryHorizontalIcon :size="18" />
                         </span>
                         指数增强
+                    </button>
+                    <button class="delete-btn" @click="handleRemove">
+                        <span class="btn-icon">
+                            <Trash2Icon :size="18" />
+                        </span>
                     </button>
                 </div>
 
@@ -337,6 +347,7 @@ const handleRemove = () => {
     GridExploreMapOps.map_destroyGridMVTLayer()
     GridExploreMapOps.map_destroyGrid3DLayer(gridData.value)
     GridExploreMapOps.map_destroyGridNDVIOrSVRLayer(gridData.value)
+    GridExploreMapOps.map_destroySuperResolution(gridData.value)
 }
 /**
  * 1-3.初始化网格
