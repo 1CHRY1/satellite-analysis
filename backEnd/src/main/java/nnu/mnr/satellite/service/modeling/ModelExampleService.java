@@ -347,7 +347,7 @@ public class ModelExampleService {
         SRJson.put("boundary", wkt.toString());  // Geometry 转 WKT 字符串
         SRJson.put("band", band);          // 直接放入 JSONObject
         String SRUrl = SRModelServerProperties.getAddress() + SRModelServerProperties.getApis().get("SR");
-        long expirationTime = 60 * 10;
+        long expirationTime = 60 * 100;
         return runModelServerModel(SRUrl, SRJson, expirationTime, SRModelServerProperties);
     }
     public CommonResultVO createNoCloudConfig(NoCloudTileDTO noCloudTileDTO) {

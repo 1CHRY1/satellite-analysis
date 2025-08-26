@@ -78,14 +78,9 @@ const createProxyConfig = () => {
             rewrite: (path: string) => path.replace(/^\/proxymap/, ''),
         },
         '/demtiles': {
-            target: currentEnv.demtiles,
+            target: FIXED_CONFIG.demtiles,
             changeOrigin: true,
-            rewrite: (path: string) => path.replace(/^\/demtiles/, '/tiles'),
-        },
-        '/demtiles2': {
-            target: currentEnv.demtiles,
-            changeOrigin: true,
-            rewrite: (path: string) => path.replace(/^\/demtiles2/, '/tiles2'),
+            rewrite: (path: string) => path.replace(/^\/demtiles/, ''),
         },
         // '/chry': {
         //     target: FIXED_CONFIG.chry,

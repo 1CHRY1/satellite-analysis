@@ -137,8 +137,9 @@
                     <a-slider
                         :tip-formatter="scaleRateFormatter"
                         v-model:value="scaleRate"
-                        :min="0"
+                        :min="0.10"
                         :max="10"
+                        :step="0.01"
                         @afterChange="onAfterScaleRateChange"
                     />
                 </div>
