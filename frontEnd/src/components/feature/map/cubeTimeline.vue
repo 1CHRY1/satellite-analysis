@@ -493,8 +493,8 @@ onMounted(() => {
             load: loadSuper
         })
         
-        // 强制重新加载当前图像（如果有）
-        if (activeIndex.value >= 0) {
+        // 只有在启用超分时才重新加载，清除时不重新加载
+        if (loadSuper && activeIndex.value >= 0) {
             handleClick(activeIndex.value)
         }
     }
@@ -505,6 +505,9 @@ onMounted(() => {
         multiImages.value = []
         productImages.value = []
         scaleRate.value = 1.00
+        // 清除当前格网的超分状态
+        const currentGridKey = `${grid.value.rowId}-${grid.value.columnId}-${grid.value.resolution}`
+        superResOverride.value.delete(currentGridKey)
     })
 })
 </script>

@@ -347,6 +347,10 @@ const handleRemove = () => {
     GridExploreMapOps.map_destroyGridMVTLayer()
     GridExploreMapOps.map_destroyGrid3DLayer(gridData.value)
     GridExploreMapOps.map_destroyGridNDVIOrSVRLayer(gridData.value)
+    // 清除超分状态，确保不会重新加载
+    if (isSuperRes.value) {
+        isSuperRes.value = false
+    }
     GridExploreMapOps.map_destroySuperResolution(gridData.value)
 }
 /**
@@ -428,7 +432,7 @@ const { // ------------------------------ 1. 产品选项 ----------------------
 /**
  * 5. 超分Tab
  */
-const { handleSuperResolution } = useSuperResolution()
+const { handleSuperResolution, isSuperRes } = useSuperResolution()
 
 </script>
 
