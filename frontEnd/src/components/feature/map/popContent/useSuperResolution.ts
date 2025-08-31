@@ -100,11 +100,20 @@ export const useSuperResolution = () => {
                     await pollStatus(calTask.value.taskId)
                     // ✅ 成功后设置状态
                     calTask.value.calState = 'success'
+                    // 添加1000毫秒延迟
+                    await new Promise(resolve => setTimeout(resolve, 1000))
                     let bandres = await getCaseBandsResult(calTask.value.taskId)
                     console.log(bandres, '结果');
                     console.log('超分返回数据',bandres.data)
                 // console.log(result.value)
-                    bus.emit('SuperResTimeLine', bandres.data,isSuperRes.value)
+                    bus.emit('SuperResTimeLine', {
+                        data: bandres.data,
+                        gridInfo: {
+                            rowId: gridData.value.rowId,
+                            columnId: gridData.value.columnId,
+                            resolution: gridData.value.resolution
+                        }
+                    }, isSuperRes.value)
                     
                 } catch (error) {
                     calTask.value.calState = 'failed'
@@ -124,5 +133,6 @@ export const useSuperResolution = () => {
 
     return {
         handleSuperResolution,
+        isSuperRes,
     }
 }
