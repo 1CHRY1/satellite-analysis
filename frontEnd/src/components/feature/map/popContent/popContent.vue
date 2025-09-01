@@ -116,6 +116,11 @@
                         </span>
                         超分增强
                     </button>
+                    <button class="delete-btn" @click="handleRemove">
+                        <span class="btn-icon">
+                            <Trash2Icon :size="18" />
+                        </span>
+                    </button>
                 </div>
                 <div class="btns flex justify-center" v-show="showBandSelector && activeMethod === 'superresolution'">
                     <button class="visualize-btn">
@@ -123,6 +128,11 @@
                             <GalleryHorizontalIcon :size="18" />
                         </span>
                         指数增强
+                    </button>
+                    <button class="delete-btn" @click="handleRemove">
+                        <span class="btn-icon">
+                            <Trash2Icon :size="18" />
+                        </span>
                     </button>
                 </div>
 
@@ -137,8 +147,9 @@
                     <a-slider
                         :tip-formatter="scaleRateFormatter"
                         v-model:value="scaleRate"
-                        :min="0"
+                        :min="0.10"
                         :max="10"
+                        :step="0.01"
                         @afterChange="onAfterScaleRateChange"
                     />
                 </div>
@@ -336,6 +347,11 @@ const handleRemove = () => {
     GridExploreMapOps.map_destroyGridMVTLayer()
     GridExploreMapOps.map_destroyGrid3DLayer(gridData.value)
     GridExploreMapOps.map_destroyGridNDVIOrSVRLayer(gridData.value)
+    // 清除超分状态，确保不会重新加载
+    if (isSuperRes.value) {
+        isSuperRes.value = false
+    }
+    GridExploreMapOps.map_destroySuperResolution(gridData.value)
 }
 /**
  * 1-3.初始化网格
@@ -416,7 +432,7 @@ const { // ------------------------------ 1. 产品选项 ----------------------
 /**
  * 5. 超分Tab
  */
-const { handleSuperResolution } = useSuperResolution()
+const { handleSuperResolution, isSuperRes } = useSuperResolution()
 
 </script>
 

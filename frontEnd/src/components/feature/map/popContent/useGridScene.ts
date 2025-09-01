@@ -11,7 +11,7 @@ import bus from '@/store/bus'
 /**
  * 一些共用变量，其他功能也可能用到的
  */
-export const scaleRate = ref(0)
+export const scaleRate = ref(1.00)
 export const visualLoad = ref(false)
 export const selectedBand = ref('')
 export const selectedRBand = ref('')
@@ -118,7 +118,8 @@ export const useGridScene = () => {
     const enableDraggable = ref(true)
     
     const scaleRateFormatter = (value: number) => {
-        return `${value}级`
+        // return `${value}级`
+        return `${value}`
     }
     
     const handleScaleMouseUp = () => (enableDraggable.value = true)

@@ -9,11 +9,11 @@ export interface EnvConfig {
     websocket: string
     tiler: string
     proxymap: string,
-    demtiles: string,
 }
 
 export interface FixedConfig {
     basemap: string
+    demtiles: string,
     mvtbasemap: string
 }
 
@@ -58,7 +58,6 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
         // websocket: 'http://192.168.1.127:9000/model/websocket',
         tiler: 'http://localhost:8000', 
         proxymap: 'http://localhost:5003',
-        demtiles: 'http://localhost',
     }
 }
 
@@ -66,4 +65,5 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
 export const FIXED_CONFIG: FixedConfig = {
     basemap: 'http://172.31.13.21:5001/tiles', // 北京影像底图
     mvtbasemap: 'http://172.31.13.21:5002/tiles', // 北京矢量底图
+    demtiles: 'http://localhost:5003/tiles',
 }
