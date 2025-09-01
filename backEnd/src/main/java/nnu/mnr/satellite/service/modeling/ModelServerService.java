@@ -126,7 +126,7 @@ public class ModelServerService {
     public CommonResultVO getModelCaseSRBandsResultById(String caseId){
         Optional<String> oModelResult = Optional.ofNullable(redisUtil.getJsonData(caseId).getString("result"));
         if (oModelResult.isEmpty()) {
-            return CommonResultVO.builder().status(-1).message("Wrong getting tif result").build();
+            return CommonResultVO.builder().status(-1).message("Wrong getting tif result").data(redisUtil.getJsonData(caseId)).build();
         }
         String modelResult = oModelResult.get();
         JSONObject modelResultJson = JSONObject.parseObject(modelResult);
