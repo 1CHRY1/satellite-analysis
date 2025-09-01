@@ -3,7 +3,7 @@ import os
 COMMON_CONFIG = {
     "dev": {
         # "create_no_cloud_config_url": "http://223.2.34.8:31584/api/v3/modeling/example/scenes/visualization"
-        "create_no_cloud_config_url": "http://192.168.1.123:8999/api/v3/modeling/example/scenes/visualization"
+        "create_no_cloud_config_url": "http://223.2.43.238:8999/api/v3/modeling/example/scenes/visualization"
     },
     "k8s": {
         "create_no_cloud_config_url": "http://223.2.34.8:31584/api/v3/modeling/example/scenes/visualization"

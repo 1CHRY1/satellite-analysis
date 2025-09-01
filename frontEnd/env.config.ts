@@ -36,10 +36,10 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
     },
     // HXF开发环境
     hxf: {
-        api: 'http://192.168.1.123:8999',
-        realtime: 'http://192.168.1.123:5001',
-        websocket: 'http://192.168.1.123:9000/model/websocket',
-        tiler: 'http://192.168.1.123:8000',
+        api: 'http://223.2.43.238:8999',
+        realtime: 'http://223.2.43.238:5001',
+        websocket: 'http://223.2.43.238:9000/model/websocket',
+        tiler: 'http://223.2.43.238:8000',
         proxymap: 'http://localhost:5003',
     },
     slk: {
