@@ -190,6 +190,7 @@ export const useFilter = () => {
     // 筛选是否完成
     const isFilterDone = ref(false)
     const doFilter = async () => {
+        // ------------------- Step1: 前序判断操作 -------------------- //
         if (finalLandId.value === 'None') {
             ElMessage.warning(t('datapage.explore.message.filtererror_choose'))
             return
@@ -200,6 +201,8 @@ export const useFilter = () => {
         const stopLoading = message.loading('正在检索数据，请稍后...', 500)
         // 先禁止按钮，渲染loading状态
         filterLoading.value = true
+
+        // ------------------- Step2: 请求体准备操作 -------------------- //
         const regionFilter = {
             startTime: selectedDateRange.value[0].format('YYYY-MM-DD'),
             endTime: selectedDateRange.value[1].format('YYYY-MM-DD'),
@@ -212,6 +215,8 @@ export const useFilter = () => {
             locationId: finalLandId.value,
             resolution: selectedGridResolution.value
         }
+
+        // ------------------- Step3: 检索请求操作 -------------------- //
         let sceneStatsRes, vectorsRes, themeStatsRes
         if (searchedSpatialFilterMethod.value === 'region') {
             sceneStatsRes = await getSceneStatsByRegionFilter(regionFilter)
@@ -225,15 +230,8 @@ export const useFilter = () => {
         sceneStats.value = sceneStatsRes
         vectorStats.value = vectorsRes
         themeStats.value = themeStatsRes
-        try {
-            await getVectorSymbology()
-        } catch (e) {
-            console.error('获取矢量属性类型失败:', e)
-        }
 
-        syncToGridExplore()
-        syncToDataPrepare()
-
+        // ------------------- Step4: 用户反馈操作 -------------------- //
         if (sceneStats.value.total === 0) {
             message.warning('未检索到数据')
         } else {
@@ -241,9 +239,18 @@ export const useFilter = () => {
         }
         stopLoading()
     
+        // ------------------- Step5: 变量更新操作 -------------------- //
+        syncToGridExplore()
+        syncToDataPrepare()
         // 恢复状态
         filterLoading.value = false
         isFilterDone.value = true
+        // 懒加载：矢量属性
+        try {
+            await getVectorSymbology()
+        } catch (e) {
+            console.error('获取矢量属性类型失败:', e)
+        }
     }
 
     /**

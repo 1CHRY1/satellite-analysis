@@ -103,7 +103,7 @@ const handle3DTiles = () => {
             m.addSource('dem-tiles', {
                 type: 'raster-dem',
                 // tiles: [ezStore.get('conf')['dem_tiles_url']],
-                tiles: [`http://${window.location.host}` + '/demtiles/{z}/{x}/{y}.png'],
+                tiles: [`http://${window.location.host}` + '/demtiles/{z}/{x}/{y}.png'], //注意app.conf.json中的并没有dem_tiles_url真正应用
                 // tiles: ['https://api.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.png?access_token='],
                 tileSize: 256,
                 encoding: 'mapbox'
