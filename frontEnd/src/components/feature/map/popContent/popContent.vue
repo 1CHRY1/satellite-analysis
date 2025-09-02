@@ -370,7 +370,17 @@ const handleInitGrid = async (info) => {
         themeRes: await getThemesInGrid(info),
         sceneRes: await getScenesInGrid(info)
     }
-    gridVectorSymbology.value = JSON.parse(JSON.stringify(ezStore.get("vectorSymbology"))) // 深拷贝
+    let timer = setInterval(() => {
+        const data = ezStore.get("vectorSymbology");
+        if (data) {
+            gridVectorSymbology.value = JSON.parse(JSON.stringify(data)); // 深拷贝
+            console.log("✅ vectorSymbology 初始化成功");
+            clearInterval(timer); // 成功后停止重试
+        } else {
+            console.log("⏳ vectorSymbology 未准备好，继续重试...");
+        }
+    }, 500);
+    // gridVectorSymbology.value = JSON.parse(JSON.stringify(ezStore.get("vectorSymbology"))) // 深拷贝
     console.log(gridData.value, 'gridData')
   } finally {
     themeResLoading = false
