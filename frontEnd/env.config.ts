@@ -65,5 +65,5 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
 export const FIXED_CONFIG: FixedConfig = {
     basemap: 'http://172.31.13.21:5001/tiles', // 北京影像底图
     mvtbasemap: 'http://172.31.13.21:5002/tiles', // 北京矢量底图
-    demtiles: 'http://localhost:5003/tiles',
+    demtiles: 'http://223.2.34.8:30504/tiles', // 北京内网5004端口
 }

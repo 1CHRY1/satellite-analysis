@@ -408,8 +408,8 @@
                                                         :size="22" class="config-icon cursor-pointer" />
                                                     <span>{{ item.vectorName }}</span>
                                                 </div>
-                                                <div v-show="isVectorItemExpand[index]" class="space-y-3 p-4 rounded-md text-white w-full">
-                                                    <div class="flex items-center justify-between gap-2">
+                                                <div v-if="isVectorItemExpand[index]" class="space-y-3 p-4 rounded-md text-white w-full">
+                                                    <div v-if="vectorSymbology[item.tableName].attrs.length" class="flex items-center justify-between gap-2">
                                                         <el-checkbox
                                                             v-model="vectorSymbology[item.tableName].checkAll"
                                                             :indeterminate="vectorSymbology[item.tableName].isIndeterminate"
@@ -429,23 +429,30 @@
                                                                 class="cursor-pointer" />
                                                         </a-tooltip>
                                                     </div>
-                                                    <el-checkbox-group v-model="vectorSymbology[item.tableName].checkedAttrs"
-                                                        @change="(val: string[]) => handleCheckedAttrsChange(item.tableName, val)" >
-                                                        <template v-if="vectorSymbology[item.tableName].attrs.length">
-                                                            <div v-for="(attr, attrIndex) in vectorSymbology[item.tableName].attrs"
-                                                                :key="attrIndex"
-                                                                class="flex items-center justify-between bg-[#01314e] px-3 mb-1.5 py-2 rounded">
-                                                                <div class="flex items-center gap-2">
-                                                                    <el-checkbox class="config-label mt-1" :key="attr.type" :label="attr.label" >
-                                                                        <template default></template>
-                                                                    </el-checkbox>
-                                                                    <span class="config-label mt-1">{{ attr.label }}</span>
+                                                    <div class="w-full max-h-[248px] overflow-y-auto">
+                                                        <el-checkbox-group v-model="vectorSymbology[item.tableName].checkedAttrs"
+                                                            @change="(val: string[]) => handleCheckedAttrsChange(item.tableName, val)" >
+                                                            <template v-if="vectorSymbology[item.tableName].attrs.length">
+                                                                <div v-for="(attr, attrIndex) in vectorSymbology[item.tableName].attrs"
+                                                                    :key="attrIndex"
+                                                                    class="flex items-center justify-between bg-[#01314e] px-3 mb-1.5 py-2 rounded">
+                                                                    <div class="flex items-center gap-2">
+                                                                        <el-checkbox class="config-label mt-1" :key="attr.type" :label="attr.label" >
+                                                                            <template default></template>
+                                                                        </el-checkbox>
+                                                                        <span class="config-label mt-1">{{ attr.label }}</span>
+                                                                    </div>
+                                                                    <el-color-picker v-model="attr.color" size="small"
+                                                                        show-alpha :predefine="predefineColors" />
                                                                 </div>
-                                                                <el-color-picker v-model="attr.color" size="small"
-                                                                    show-alpha :predefine="predefineColors" />
-                                                            </div>
-                                                        </template>
-                                                    </el-checkbox-group>
+                                                            </template>
+                                                        </el-checkbox-group>
+                                                    </div>
+                                                    <div v-if="vectorSymbology[item.tableName].attrs.length === 0" class="flex justify-center items-center">
+                                                        <a-space>
+                                                            <a-spin size="large" />
+                                                        </a-space>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <a-empty v-if="vectorStats.length === 0" />

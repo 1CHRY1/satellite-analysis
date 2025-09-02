@@ -196,23 +196,25 @@
                             </template>
                         </el-checkbox>
                     </div>
-                    <el-checkbox-group v-model="gridVectorSymbology[selectedVector.tableName].checkedAttrs"
-                        @change="(val) => handleCheckedAttrsChange(selectedVector.tableName, val as string[])" >
-                        <template v-if="gridVectorSymbology[selectedVector.tableName].attrs.length">
-                            <div v-for="(attr, attrIndex) in gridVectorSymbology[selectedVector.tableName].attrs"
-                                :key="attrIndex"
-                                class="flex items-center justify-between bg-[#01314e] px-3 mb-1.5 py-2 rounded">
-                                <div class="flex items-center gap-2">
-                                    <el-checkbox class="config-label mt-1" :key="attr.type" :label="attr.label" >
-                                        <template default></template>
-                                    </el-checkbox>
-                                    <span class="config-label mt-1">{{ attr.label }}</span>
+                    <div class="w-full max-h-[248px] overflow-y-auto">
+                        <el-checkbox-group v-model="gridVectorSymbology[selectedVector.tableName].checkedAttrs"
+                            @change="(val) => handleCheckedAttrsChange(selectedVector.tableName, val as string[])" >
+                            <template v-if="gridVectorSymbology[selectedVector.tableName].attrs.length">
+                                <div v-for="(attr, attrIndex) in gridVectorSymbology[selectedVector.tableName].attrs"
+                                    :key="attrIndex"
+                                    class="flex items-center justify-between bg-[#01314e] px-3 mb-1.5 py-2 rounded">
+                                    <div class="flex items-center gap-2">
+                                        <el-checkbox class="config-label mt-1" :key="attr.type" :label="attr.label" >
+                                            <template default></template>
+                                        </el-checkbox>
+                                        <span class="config-label mt-1">{{ attr.label }}</span>
+                                    </div>
+                                    <el-color-picker v-model="attr.color" size="small"
+                                        show-alpha :predefine="predefineColors" />
                                 </div>
-                                <el-color-picker v-model="attr.color" size="small"
-                                    show-alpha :predefine="predefineColors" />
-                            </div>
-                        </template>
-                    </el-checkbox-group>
+                            </template>
+                        </el-checkbox-group>
+                    </div>
                     <!-- <span class="result-info-label">共找到 {{gridData.vectors.length}} 条记录</span>
                     <a-checkable-tag
                         v-for="(item, index) in gridData.vectors"
