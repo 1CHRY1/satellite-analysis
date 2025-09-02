@@ -124,37 +124,49 @@ export const useFilter = () => {
             return
         }
         const stopLoading = message.loading('正在获取格网，请稍后...', 100)
-        destroyGridLayer()
-    
-        if (marker.value) marker.value.remove()
-    
-        if (activeSpatialFilterMethod.value === 'region') {
-            let boundaryRes = await getBoundary(tempLandId.value)
-            curRegionBounds.value = boundaryRes
-            gridRes = await getGridByRegionAndResolution(tempLandId.value, selectedGridResolution.value)
-            allGrids.value = gridRes.grids
-            allGridCount.value = gridRes.grids.length
-            curGridsBoundary.value = gridRes.geoJson
-            // 先清除现有的矢量边界，然后再添加新的
-            addPolygonLayer(boundaryRes)
-            window = await getRegionPosition(tempLandId.value)
-        } else if (activeSpatialFilterMethod.value === 'poi') {
-            gridRes = await getGridByPOIAndResolution(tempLandId.value, selectedGridResolution.value)
-            destroyUniqueLayer()
-            allGrids.value = gridRes.grids
-            allGridCount.value = gridRes.grids.length
-            curGridsBoundary.value = gridRes.geoJson
-            window = await getPOIPosition(tempLandId.value, selectedGridResolution.value)
-            let geojson = createGeoJSONFromBounds(window.bounds)
-            addPolygonLayer(geojson)
-            if (selectedPOI.value) addPOIMarker(selectedPOI.value)
+        
+        try {
+            destroyGridLayer()
+        
+            if (marker.value) marker.value.remove()
+        
+            if (activeSpatialFilterMethod.value === 'region') {
+                let boundaryRes = await getBoundary(tempLandId.value)
+                curRegionBounds.value = boundaryRes
+                gridRes = await getGridByRegionAndResolution(tempLandId.value, selectedGridResolution.value)
+                allGrids.value = gridRes.grids
+                allGridCount.value = gridRes.grids.length
+                curGridsBoundary.value = gridRes.geoJson
+                // 先清除现有的矢量边界，然后再添加新的
+                addPolygonLayer(boundaryRes)
+                window = await getRegionPosition(tempLandId.value)
+            } else if (activeSpatialFilterMethod.value === 'poi') {
+                gridRes = await getGridByPOIAndResolution(tempLandId.value, selectedGridResolution.value)
+                destroyUniqueLayer()
+                allGrids.value = gridRes.grids
+                allGridCount.value = gridRes.grids.length
+                curGridsBoundary.value = gridRes.geoJson
+                window = await getPOIPosition(tempLandId.value, selectedGridResolution.value)
+                let geojson = createGeoJSONFromBounds(window.bounds)
+                addPolygonLayer(geojson)
+                if (selectedPOI.value) addPOIMarker(selectedPOI.value)
+            }
+        
+            addGridLayer(gridRes.grids, window)
+            // 将tab的选择固定下来
+            searchedSpatialFilterMethod.value = activeSpatialFilterMethod.value
+            stopLoading()
+            message.success('格网获取成功')
+        } catch (error: any) {
+            console.error('获取格网失败:', error)
+            stopLoading()
+            // 检查是否为未登录错误（通常状态码为401）
+            if (error?.response?.status === 401 || error?.code === 401) {
+                // 未登录错误，页面会自动跳转到首页，不需要显示错误提示
+                return
+            }
+            ElMessage.error('获取格网失败，请重试')
         }
-    
-        addGridLayer(gridRes.grids, window)
-        // 将tab的选择固定下来
-        searchedSpatialFilterMethod.value = activeSpatialFilterMethod.value
-        stopLoading()
-        message.success('格网获取成功')
     }
 
     /**
