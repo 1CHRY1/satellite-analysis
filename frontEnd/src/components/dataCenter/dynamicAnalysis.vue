@@ -212,7 +212,7 @@
             <div v-if="showPanel" >
                 <div class="custom-panel px-2 mt-20">
                     <!-- <dv-border-box12 class=" !h-full"> -->
-                    <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]" style="width:426px">
+                    <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]" style="width:426px; background-color: rgba(20, 20, 21, 0.6);">
                         
                             <component :is="currentTaskComponent" :thematicConfig="thematicConfig" />
                             <ResultComponent @response="handleResultLoaded" />
