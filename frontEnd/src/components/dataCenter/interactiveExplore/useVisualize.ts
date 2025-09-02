@@ -17,6 +17,7 @@ import { searchedSpatialFilterMethod, finalLandId, curGridsBoundary, vectorStats
 import { message } from "ant-design-vue";
 import { cancelCase, getCaseResult, getVectorAttr, pollStatus } from "@/api/http/satellite-data/satellite.api";
 import { calTask } from "../noCloud/composables/shared";
+import bus from '@/store/bus'
 // 使用一个对象来存储每个 Product Item 的显示状态
 const eyeStates = ref({});
 
@@ -340,11 +341,12 @@ export const useVisualize = () => {
             stopLoading()
         }, 5000)
     }
-    const handleShowVector = async(source_layer: string, landId: string) => {
+    const handleShowVector = async (source_layer: string, landId: string) => {
         const attrList = vectorSymbology.value[source_layer].checkedAttrs.map(item => {
             const targetAttr = vectorSymbology.value[source_layer].attrs.find(i => i.label === item)
             return targetAttr
         })
+    
         for (const attr of attrList) {
             const url = getVectorUrl({
                 landId,
@@ -353,7 +355,42 @@ export const useVisualize = () => {
                 resolution: selectedGridResolution.value,
                 type: attr?.type
             })
+    
+            // 生成 baseId，要和 map_addMVTLayer 内保持一致
+            const baseId = `${source_layer}-${attr?.type || 0}-mvt-layer`
+
             InteractiveExploreMapOps.map_addMVTLayer(source_layer, url, attr?.color || '#0066cc', attr?.type)
+    
+            mapManager.withMap((map) => {
+
+                // console.log(map.getStyle())
+                map.on('click', (e) => {
+                    //注意传真正的 layer.id而不是 source_layer
+                    const features = map.queryRenderedFeatures(e.point, { 
+                        layers: [
+                            `${baseId}-fill`, 
+                            `${baseId}-line`, 
+                            `${baseId}-point`
+                        ]
+                    })
+                    if (features.length > 0) {
+                        const feature = features[0]
+                        const properties = feature.properties || {}
+                        
+                        // 通过事件总线触发弹窗显示
+                        bus.emit('mvt:feature:click', {
+                            feature,
+                            properties,
+                            lngLat: e.lngLat
+                        })
+                        
+                        // 保留控制台输出用于调试
+                        console.log('Mapbox Layer ID:', feature.layer?.id)    
+                        console.log('MVT Source Layer:', feature.sourceLayer)
+                        console.log('Feature properties:', properties)
+                    }
+                })
+            })
         }
     }
     const destroyVector = (index?: number) => {

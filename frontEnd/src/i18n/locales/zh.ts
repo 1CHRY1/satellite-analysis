@@ -2,6 +2,7 @@ export default{
     nav: {
         title: "多源遥感应用支撑云平台",
         home: "首页",
+        source: "资源中心",
         models: "模型中心",
         data: "数据中心",
         tools: "工具发布",

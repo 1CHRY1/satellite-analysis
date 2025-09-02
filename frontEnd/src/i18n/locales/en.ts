@@ -1,7 +1,8 @@
 export default{
   nav: {
-    title: "Muti_resource RS Application Cloud Platform",
+    title: "Muti-resource RS Application Cloud Platform",
     home: "Home",
+    source: "Resource Center",
     models: "Model Center",
     data: "Data Center",
     tools: "Tools",
@@ -18,7 +19,7 @@ export default{
 
   homepage: {
     title:{
-      maintitle: "Remote Sensing ARD Platform",
+      maintitle: "Muti-resource RS Application Cloud Platform",
       subtitle_tool:"An integrated analytical tool",
       subtitle_explore:"Interactive data exploration and visualisation",
       subtitle_program:"Online programming for satellite data analysis",
