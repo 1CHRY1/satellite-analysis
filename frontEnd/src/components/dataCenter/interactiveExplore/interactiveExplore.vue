@@ -529,12 +529,15 @@
             </div>
         </div>
         <MapComp class="flex-1" :style="'local'" :proj="'globe'" :isPicking="isPicking" />
+        <!-- MVT属性信息弹窗 -->
+        <MvtPop />
     </div>
 </template>
 
 <script setup lang="ts">
 import MapComp from '@/components/feature/map/mapComp.vue'
 import segmented from '@/components/common/segmented.vue';
+import MvtPop from '@/components/feature/map/popContent/mvtPop.vue'
 import { ref, computed, type Ref, watch, reactive, onMounted, provide, inject, onUnmounted } from 'vue'
 import { RegionSelects } from 'v-region'
 import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'

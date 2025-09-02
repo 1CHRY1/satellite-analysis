@@ -71,17 +71,17 @@
                                 线要素采样
                             </div>
                         </div>
-                        </div>
+                    </div>
                         <!-- 单点分析参数设置 -->
-                        <div v-if="activeMode === 'point'" class="mt-4 space-y-2 gap-2">
-                            <div class="flex items-center gap-2">
-                                <input type="radio" id="pointTypeSingle" value="single" v-model="pointAnalysisType" />
-                                <label for="pointTypeSingle">单点选择</label>
-                            </div>
-                            <div class="flex items-center gap-2">
+                    <div v-if="activeMode === 'point'" class="mt-4 space-y-2 gap-2">
+                        <div class="flex items-center gap-2">
+                            <input type="radio" id="pointTypeSingle" value="single" v-model="pointAnalysisType" />
+                            <label for="pointTypeSingle">单点选择</label>
+                        </div>
+                        <div class="flex items-center gap-2">
                                 <input type="radio" id="pointTypeLine" value="line" v-model="pointAnalysisType" />
                                 <label for="pointTypeLine">沿线采样</label>
-                            </div>
+                        </div>
 
                             <!-- <div v-if="pointAnalysisType === 'line'" class="mt-2">
                                 <label class="block text-sm mb-1">采样点数：</label>
