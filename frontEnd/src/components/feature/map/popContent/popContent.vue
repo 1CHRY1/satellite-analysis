@@ -195,8 +195,25 @@
                                 <span class="text-white">全选</span>
                             </template>
                         </el-checkbox>
+                        <button 
+                            @click="isAttributesExpanded = !isAttributesExpanded" 
+                            class="text-white hover:text-gray-300 transition-colors"
+                            :title="isAttributesExpanded ? '收起属性列表' : '展开属性列表'"
+                        >
+                            <svg 
+                                :class="{'rotate-180': isAttributesExpanded}" 
+                                class="w-4 h-4 transition-transform duration-200" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
+                            >
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
                     </div>
-                    <el-checkbox-group v-model="gridVectorSymbology[selectedVector.tableName].checkedAttrs"
+                    <el-checkbox-group 
+                        v-show="isAttributesExpanded"
+                        v-model="gridVectorSymbology[selectedVector.tableName].checkedAttrs"
                         @change="(val) => handleCheckedAttrsChange(selectedVector.tableName, val as string[])" >
                         <template v-if="gridVectorSymbology[selectedVector.tableName].attrs.length">
                             <div v-for="(attr, attrIndex) in gridVectorSymbology[selectedVector.tableName].attrs"
@@ -433,6 +450,9 @@ const { // ------------------------------ 1. 产品选项 ----------------------
  * 5. 超分Tab
  */
 const { handleSuperResolution, isSuperRes } = useSuperResolution()
+
+// 属性列表收放状态
+const isAttributesExpanded = ref(true)
 
 </script>
 

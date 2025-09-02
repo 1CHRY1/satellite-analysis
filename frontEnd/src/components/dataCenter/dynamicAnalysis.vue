@@ -1,7 +1,7 @@
 <template>
     <div class="relative flex flex-1 h-full flex-row bg-black ">
         <subtitle class="z-10 absolute" style="margin-top: 60px; "/>
-        <div class="absolute  left-16  top-0  p-4 text-gray-200 z-10 h-[calc(100vh-300px)] " :class="isToolbarOpen? 'w-[20vw]' : 'w-16'" style="margin-top: 100px; ">
+        <div class="absolute  left-16  top-0  p-4 text-gray-200 z-10 h-[calc(100vh-100px)] " :class="isToolbarOpen? 'w-[24vw]' : 'w-16'" style="margin-top: 100px; ">
             <button 
                 @click="isToolbarOpen = !isToolbarOpen"
                 class="absolute top-1/2 right-0 -translate-y-1/2 h-12 w-6 bg-gray-800 hover:bg-gray-700 text-white rounded-r-lg shadow-lg 
@@ -19,10 +19,10 @@
                  class="h-full
                  "
                  style="background-color: rgba(20, 20, 21, 0.6);"
-                :class="isToolbarOpen ? 'w-[20vw]' : 'w-16'">
+                :class="isToolbarOpen ? 'w-[24vw]' : 'w-16'">
 
                 <div class="custom-panel px-2">
-                    <dv-border-box12  style="height: calc(100vh-100px) !important;"> 
+                    <dv-border-box12  class="!h-[calc(100vh-56px-48px-32px-8px)]"> 
                     <!-- 工具栏内容 -->
                         <div class="p-4 text-white border-b border-gray-700">
                             <h3 class="font-semibold flex items-center gap-2">
@@ -212,7 +212,7 @@
             <div v-if="showPanel" >
                 <div class="custom-panel px-2 mt-20">
                     <!-- <dv-border-box12 class=" !h-full"> -->
-                    <dv-border-box12 style="width: 426px; height: 1189px; background-color: rgba(20, 20, 21, 0.6);">
+                    <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]" style="width:426px">
                         
                             <component :is="currentTaskComponent" :thematicConfig="thematicConfig" />
                             <ResultComponent @response="handleResultLoaded" />
