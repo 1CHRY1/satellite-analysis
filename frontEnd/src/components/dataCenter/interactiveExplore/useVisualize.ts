@@ -264,20 +264,20 @@ export const useVisualize = () => {
     const previewVectorIndex = ref<number | null>(null)
 
     const predefineColors = ref([
-        '#ff4500',
-        '#ff8c00',
-        '#ffd700',
-        '#90ee90',
-        '#00ced1',
-        '#1e90ff',
-        '#c71585',
-        'rgba(255, 69, 0, 0.68)',
-        'rgb(255, 120, 0)',
-        'hsv(51, 100, 98)',
-        'hsva(120, 40, 94, 0.5)',
-        'hsl(181, 100%, 37%)',
-        'hsla(209, 100%, 56%, 0.73)',
-        '#c7158577',
+        "rgb(255, 69, 0)",            // #ff4500
+        "rgb(255, 140, 0)",           // #ff8c00
+        "rgb(255, 215, 0)",           // #ffd700
+        "rgb(144, 238, 144)",         // #90ee90
+        "rgb(0, 206, 209)",           // #00ced1
+        "rgb(30, 144, 255)",          // #1e90ff
+        "rgb(199, 21, 133)",          // #c71585
+        "rgba(255, 69, 0, 0.68)",     // 已是 rgba
+        "rgb(255, 120, 0)",           // 已是 rgb
+        "rgb(250, 255, 0)",           // hsv(51, 100, 98)
+        "rgba(143, 242, 143, 0.5)",   // hsva(120, 40, 94, 0.5)
+        "rgb(0, 189, 189)",           // hsl(181, 100%, 37%)
+        "rgba(0, 142, 255, 0.73)",    // hsla(209, 100%, 56%, 0.73)
+        "rgba(199, 21, 133, 0.47)"    // #c7158577
     ])
     const getVectorSymbology = async () => {
         for (const vector of vectorStats.value) {
