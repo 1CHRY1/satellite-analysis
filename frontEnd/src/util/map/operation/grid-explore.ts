@@ -224,20 +224,38 @@ export function map_destroyGridNDVIOrSVRLayer(gridInfo: GridData) {
     })
 }
 
-export function map_addGridMVTLayer(source_layer: string, url: string, color: string, type?: number, cb?: () => void) {
+export function map_addGridMVTLayer(source_layer: string, url: string, color: string, type?: number, cb?: () => void, gridInfo?: GridData) {
     const prefix = `GridMVT-${type || 0}`
     let layeridStore: any = null
     if (!ezStore.get('GridMVTLayerIds')) ezStore.set('GridMVTLayerIds', [])
+    
+    // 创建格网MVT图层映射表
+    if (!ezStore.get('grid-mvt-layer-map')) {
+        ezStore.set('grid-mvt-layer-map', new window.Map())
+    }
 
     layeridStore = ezStore.get('GridMVTLayerIds')
+    const gridMVTLayerMap = ezStore.get('grid-mvt-layer-map')
 
     mapManager.withMap((m) => {
-        const id = prefix + uid()
+        // 如果有格网信息，使用格网信息生成可识别的ID
+        const gridPrefix = gridInfo ? `${gridInfo.rowId}_${gridInfo.columnId}_` : ''
+        const id = prefix + gridPrefix + uid()
         const srcId = id + '-source'
 
         layeridStore.push(`${id}-fill`)
         layeridStore.push(`${id}-line`)
         layeridStore.push(`${id}-point`)
+        
+        // 如果有格网信息，将图层ID存储到映射表中
+        if (gridInfo) {
+            const gridKey = `${gridInfo.rowId}_${gridInfo.columnId}`
+            if (!gridMVTLayerMap.has(gridKey)) {
+                gridMVTLayerMap.set(gridKey, [])
+            }
+            const gridLayers = gridMVTLayerMap.get(gridKey)
+            gridLayers.push(`${id}-fill`, `${id}-line`, `${id}-point`)
+        }
 
         m.addSource(srcId, {
             type: 'vector',
@@ -315,6 +333,59 @@ export function map_destroyGridMVTLayer() {
             }
         });
     })
+    
+    // 清理存储的图层 ID 列表
+    ezStore.set('GridMVTLayerIds', [])
+    // 清理格网MVT图层映射表
+    ezStore.set('grid-mvt-layer-map', new window.Map())
+}
+
+// 删除特定格网的MVT图层
+export function map_destroyGridMVTLayerByGrid(gridInfo: GridData) {
+    // 确保映射表已初始化
+    if (!ezStore.get('grid-mvt-layer-map')) {
+        ezStore.set('grid-mvt-layer-map', new window.Map())
+    }
+    
+    const gridMVTLayerMap = ezStore.get('grid-mvt-layer-map')
+    if (!gridMVTLayerMap) return
+    
+    const gridKey = `${gridInfo.rowId}_${gridInfo.columnId}`
+    const gridLayers = gridMVTLayerMap.get(gridKey)
+    
+    if (!gridLayers || gridLayers.length === 0) return
+    
+    mapManager.withMap((m) => {
+        const style = m.getStyle();
+        if (!style) return;
+        
+        // 移除该格网的所有图层
+        gridLayers.forEach(layerId => {
+            if (m.getLayer(layerId)) {
+                m.removeLayer(layerId)
+                console.log(`已移除格网 ${gridKey} 的图层：${layerId}`)
+            }
+        })
+        
+        // 移除对应的数据源
+        const sources = Object.keys(style.sources || {});
+        sources.forEach(sourceId => {
+            if (sourceId.includes('GridMVT') && sourceId.includes(`${gridInfo.rowId}_${gridInfo.columnId}_`) && sourceId.includes('-source')) {
+                m.removeSource(sourceId);
+                console.log(`已移除格网 ${gridKey} 的数据源: ${sourceId}`);
+            }
+        });
+    })
+    
+    // 从全局图层ID列表中移除该格网的图层ID
+    const layeridStore = ezStore.get('GridMVTLayerIds') || []
+    const updatedLayerIds = layeridStore.filter(id => !gridLayers.includes(id))
+    ezStore.set('GridMVTLayerIds', updatedLayerIds)
+    
+    // 从映射表中移除该格网的记录
+    gridMVTLayerMap.delete(gridKey)
+    
+    console.log(`成功删除格网 ${gridKey} 的所有MVT图层`)
 }
 
 export function map_destroySuperResolution(gridInfo: GridData) {

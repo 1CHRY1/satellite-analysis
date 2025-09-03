@@ -346,7 +346,9 @@ const handleVisualize = () => {
 const handleRemove = () => {
     previewIndex.value = null
     GridExploreMapOps.map_destroyGridDEMLayer(gridData.value)
-    GridExploreMapOps.map_destroyGridMVTLayer()
+    GridExploreMapOps.map_destroyGridMVTLayerByGrid(gridData.value)
+    // 清理矢量图层的事件监听器
+    cleanupGridVectorEvents()
     GridExploreMapOps.map_destroyGrid3DLayer(gridData.value)
     GridExploreMapOps.map_destroyGridNDVIOrSVRLayer(gridData.value)
     // 清除超分状态，确保不会重新加载
@@ -428,7 +430,7 @@ const { // ------------------------------ 1. 矢量符号化 -------------------
         // ------------------------------ 2. 矢量选择 -------------------------------//
         previewIndex, selectedVector,
         // ------------------------------ 3. 立方体可视化 ------------------------------//
-        handleVectorVisualize } = useGridVector()
+        handleVectorVisualize, cleanupGridVectorEvents } = useGridVector()
 
 /**
  * 4. 栅格专题Tab
