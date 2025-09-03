@@ -3,6 +3,9 @@ import type { VectorSymbology } from "@/type/interactive-explore/visualize"
 import type { VectorStats } from '@/api/http/interactive-explore'
 import { getGridVectorUrl } from '@/api/http/interactive-explore/visualize.api'
 import * as GridExploreMapOps from '@/util/map/operation/grid-explore'
+import * as InteractiveExploreMapOps from '@/util/map/operation/interactive-explore'
+import { mapManager } from '@/util/map/mapManager'
+import bus from '@/store/bus'
 import { gridData } from "./shared"
 
 /**
@@ -74,6 +77,42 @@ export const useGridVector = () => {
             console.log(url)
             console.log(tableName)
             GridExploreMapOps.map_addGridMVTLayer(tableName, url, attr?.color || '#0066cc', attr?.type)
+
+            // 生成 baseId，要和 map_addMVTLayer 内保持一致
+            const baseId = `${tableName}-${attr?.type || 0}-mvt-layer`
+
+            InteractiveExploreMapOps.map_addMVTLayer(tableName, url, attr?.color || '#0066cc', attr?.type)
+    
+            mapManager.withMap((map) => {
+
+                // console.log(map.getStyle())
+                map.on('click', (e) => {
+                    //注意传真正的 layer.id而不是 source_layer
+                    const features = map.queryRenderedFeatures(e.point, { 
+                        layers: [
+                            `${baseId}-fill`, 
+                            `${baseId}-line`, 
+                            `${baseId}-point`
+                        ]
+                    })
+                    if (features.length > 0) {
+                        const feature = features[0]
+                        const properties = feature.properties || {}
+                        
+                        // 通过事件总线触发弹窗显示
+                        bus.emit('mvt:feature:click', {
+                            feature,
+                            properties,
+                            lngLat: e.lngLat
+                        })
+                        
+                        // 保留控制台输出用于调试
+                        console.log('Mapbox Layer ID:', feature.layer?.id)    
+                        console.log('MVT Source Layer:', feature.sourceLayer)
+                        console.log('Feature properties:', properties)
+                    }
+                })
+            })
         }
     }
 

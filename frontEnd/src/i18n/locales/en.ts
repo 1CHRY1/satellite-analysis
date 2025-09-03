@@ -217,8 +217,8 @@ export default{
 
   datapage:{
     title_explore:"Interactive Exploration",
-    title_nocloud:"Cloud-free basemap",
-    title_analysis:"Dynamic Display Analysis",
+    title_nocloud:"Data Perparation",
+    title_analysis:"Display Analysis",
 
     mapcomp:{
         vector:"Vector basemap",
