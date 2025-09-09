@@ -32,6 +32,13 @@
                     <SendOutlined class="mr-1" />
                     发布
                 </el-button>
+                
+                <div style="border-right: 1.5px dashed #5f6477; height: 20px;"></div>
+                
+                <el-button link class="toolItem btHover" @click="servicePublishOpen">
+                    <CloudServerOutlined class="mr-1" />
+                    服务发布
+                </el-button>
             </div>
 
             <el-dialog title="工具发布" v-model="publishView" width="400px"> 
@@ -112,6 +119,49 @@
                 </template>
             </el-dialog>
 
+            <el-dialog title="服务发布" v-model="servicePublishView" width="400px">
+                <el-form :model="servicePublishData" label-width="100px">
+                    <el-form-item label="服务端口">
+                        <el-input 
+                            v-model="servicePublishData.servicePort" 
+                            type="number" 
+                            placeholder="留空自动分配端口" 
+                        />
+                        <div class="text-xs text-gray-500 mt-1">端口范围: 20080-20180</div>
+                    </el-form-item>
+                    <el-form-item v-if="serviceStatus.isPublished">
+                        <div class="text-sm">
+                            <div class="text-green-600 mb-2" v-if="serviceStatus.running">
+                                ✅ 服务运行中: <a :href="serviceStatus.url" target="_blank" class="text-blue-600 underline">{{ serviceStatus.url }}</a>
+                            </div>
+                            <div class="text-red-600 mb-2" v-else>
+                                ❌ 服务已停止
+                            </div>
+                        </div>
+                    </el-form-item>
+                </el-form>
+                
+                <template #footer>
+                    <el-button @click="servicePublishView = false">取消</el-button>
+                    <el-button 
+                        v-if="!serviceStatus.isPublished || !serviceStatus.running" 
+                        type="primary" 
+                        @click="publishServiceFunction" 
+                        :loading="servicePublishLoading"
+                    >
+                        启动服务
+                    </el-button>
+                    <el-button 
+                        v-if="serviceStatus.isPublished && serviceStatus.running" 
+                        type="danger" 
+                        @click="unpublishServiceFunction" 
+                        :loading="servicePublishLoading"
+                    >
+                        停止服务
+                    </el-button>
+                </template>
+            </el-dialog>
+
             <el-dialog title="依赖管理" v-model="dialogVisible" width="400px">
                 <!-- 表格 -->
                 <el-table :data="packageList" style="width: 100%">
@@ -189,6 +239,9 @@ import {
     stopScript,
     operatePackage,
     getPackages,
+    publishService,
+    unpublishService,
+    getServiceStatus,
 } from '@/api/http/analysis'
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { Codemirror } from 'vue-codemirror'
@@ -456,6 +509,90 @@ const removeParameter = (index) => {
     publishToolData.value.parameters.splice(index, 1)
 }
 
+// 服务发布相关
+const servicePublishView = ref(false)
+const servicePublishLoading = ref(false)
+const servicePublishData = ref({
+    servicePort: null
+})
+const serviceStatus = ref({
+    isPublished: false,
+    running: false,
+    url: '',
+    host: '',
+    port: null
+})
+
+const servicePublishOpen = async () => {
+    servicePublishView.value = true
+    await checkServiceStatus()
+}
+
+const checkServiceStatus = async () => {
+    try {
+        const response = await getServiceStatus({
+            projectId: props.projectId,
+            userId: props.userId
+        })
+        serviceStatus.value = response
+    } catch (error) {
+        console.error('检查服务状态失败:', error)
+        serviceStatus.value = {
+            isPublished: false,
+            running: false,
+            url: '',
+            host: '',
+            port: null
+        }
+    }
+}
+
+const publishServiceFunction = async () => {
+    servicePublishLoading.value = true
+    try {
+        const param: any = {
+            projectId: props.projectId,
+            userId: props.userId
+        }
+        if (servicePublishData.value.servicePort) {
+            param.servicePort = parseInt(servicePublishData.value.servicePort)
+        }
+        
+        const response = await publishService(param)
+        serviceStatus.value = {
+            isPublished: true,
+            running: true,
+            url: response.url,
+            host: response.host,
+            port: response.port
+        }
+        
+        ElMessage.success(`服务发布成功！访问地址: ${response.url}`)
+        emit('addMessage', `Service running at: ${response.url}`)
+    } catch (error) {
+        ElMessage.error('服务发布失败: ' + (error as Error).message)
+    } finally {
+        servicePublishLoading.value = false
+    }
+}
+
+const unpublishServiceFunction = async () => {
+    servicePublishLoading.value = true
+    try {
+        await unpublishService({
+            projectId: props.projectId,
+            userId: props.userId
+        })
+        
+        serviceStatus.value.running = false
+        ElMessage.success('服务已停止')
+        emit('addMessage', 'Service stopped')
+    } catch (error) {
+        ElMessage.error('停止服务失败: ' + (error as Error).message)
+    } finally {
+        servicePublishLoading.value = false
+    }
+}
 
 // 发布工具
 const publishFunction = async () => {
