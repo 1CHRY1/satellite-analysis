@@ -193,15 +193,11 @@ public class MinIOService {
                 .build();
     }
 
-    public CommonResultVO downloadFile(String fullPath, HttpServletResponse response) throws Exception {
+    public void downloadFile(String fullPath, HttpServletResponse response) throws Exception {
         String[] parts = fullPath.split("/", 2);
         String bucketName = parts[0];
         String filePath = parts[1];
         minioUtil.download(response, filePath, bucketName);
-        return CommonResultVO.builder()
-                .message("文件下载成功")
-                .status(1)
-                .build();
     }
 
     public CommonResultVO deleteFile(String fullPath) throws Exception {

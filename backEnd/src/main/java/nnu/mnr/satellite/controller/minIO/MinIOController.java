@@ -34,10 +34,10 @@ public class MinIOController {
         return ResponseEntity.ok(minIOService.uploadFile(fileUploadDTO));
     }
 
-    @PostMapping("/file/download")
-    public ResponseEntity<CommonResultVO> downloadFile(@RequestParam("filePath") String fullPath,
+    @GetMapping("/file/download")
+    public void downloadFile(@RequestParam("filePath") String fullPath,
                                                        HttpServletResponse response) throws Exception {
-        return ResponseEntity.ok(minIOService.downloadFile(fullPath, response));
+        minIOService.downloadFile(fullPath, response);
     }
 
     @DeleteMapping("/file/delete")
