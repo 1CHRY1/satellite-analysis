@@ -29,4 +29,26 @@ public class DockerServerProperties {
 
     private String workDir;
 
+    private ServicePortRange servicePortRange;
+
+    private ServiceDefaults serviceDefaults;
+
+    private Faas faas;
+
+    @Data
+    public static class ServicePortRange {
+        private Integer start;
+        private Integer end;
+    }
+
+    @Data
+    public static class ServiceDefaults {
+        private Integer internalPort;
+    }
+
+    @Data
+    public static class Faas {
+        private String workDirSubdir;
+    }
+
 }

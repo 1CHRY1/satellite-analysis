@@ -150,4 +150,20 @@ public class ModelCodingController {
                 .headers(headers)
                 .body(resultData.getStream());
     }
+
+    // Service Controller
+    @PostMapping("/project/service/publish")
+    public ResponseEntity<ServicePublishVO> publishService(@RequestBody ProjectServicePublishDTO projectServicePublishDTO) {
+        return ResponseEntity.ok(modelCodingService.publishService(projectServicePublishDTO));
+    }
+
+    @PostMapping("/project/service/unpublish")
+    public ResponseEntity<CodingProjectVO> unpublishService(@RequestBody ProjectBasicDTO projectBasicDTO) {
+        return ResponseEntity.ok(modelCodingService.unpublishService(projectBasicDTO));
+    }
+
+    @PostMapping("/project/service/status")
+    public ResponseEntity<ServiceStatusVO> getServiceStatus(@RequestBody ProjectBasicDTO projectBasicDTO) {
+        return ResponseEntity.ok(modelCodingService.getServiceStatus(projectBasicDTO));
+    }
 }

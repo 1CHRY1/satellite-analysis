@@ -9,6 +9,7 @@ import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.Volume;
+import com.github.dockerjava.api.model.ContainerPort;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
@@ -25,20 +26,12 @@ import nnu.mnr.satellite.nettywebsocket.ModelResultCallBack;
 import nnu.mnr.satellite.service.websocket.ModelSocketService;
 import nnu.mnr.satellite.utils.docker.DockerFileUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -334,6 +327,107 @@ public class DockerService {
                     .awaitCompletion(30, TimeUnit.SECONDS);
         } catch (Exception e) {
             log.debug("Silent command execution failed (ignored): {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Check if a host port is free (not used by any container)
+     */
+    public boolean isHostPortFree(int port) {
+        try {
+            List<Container> containers = dockerClient.listContainersCmd().withShowAll(true).exec();
+            for (Container container : containers) {
+                if (container.getPorts() != null) {
+                    for (ContainerPort containerPort : container.getPorts()) {
+                        if (containerPort.getPublicPort() != null && 
+                            containerPort.getPublicPort().equals(port)) {
+                            return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        } catch (Exception e) {
+            log.error("Error checking port availability: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Find the next free port in the specified range
+     */
+    public int findNextFreePort(int start, int end) {
+        for (int port = start; port <= end; port++) {
+            if (isHostPortFree(port)) {
+                return port;
+            }
+        }
+        throw new RuntimeException("No free ports available in range " + start + "-" + end);
+    }
+
+    /**
+     * Recreate a project container with port binding
+     */
+    public String recreateProjectContainerWithPort(nnu.mnr.satellite.model.po.modeling.Project project, 
+                                                   int hostPort, int internalPort) {
+        try {
+            String oldContainerId = project.getContainerId();
+            
+            // Stop and remove old container if it exists
+            if (oldContainerId != null && !oldContainerId.isEmpty()) {
+                try {
+                    stopContainer(oldContainerId);
+                    removeContainer(oldContainerId);
+                } catch (Exception e) {
+                    log.warn("Failed to remove old container {}: {}", oldContainerId, e.getMessage());
+                }
+            }
+
+            // Create new container with port binding
+            String imageName = DockerFileUtil.getImageByName(project.getEnvironment());
+            Volume workVolume = new Volume(project.getWorkDir());
+            Bind workBind = new Bind(project.getServerDir(), workVolume);
+            
+            List<Bind> bindList = new ArrayList<>();
+            bindList.add(workBind);
+            List<Volume> volumeList = new ArrayList<>();
+            volumeList.add(workVolume);
+
+            List<String> envList = new ArrayList<>();
+            envList.add("TZ=Asia/Shanghai");
+            envList.add("LANG=C.UTF-8");
+            envList.add("LC_ALL=C.UTF-8");
+
+            // Create port binding
+            ExposedPort exposedPort = ExposedPort.tcp(internalPort);
+            com.github.dockerjava.api.model.PortBinding portBinding = 
+                new com.github.dockerjava.api.model.PortBinding(
+                    com.github.dockerjava.api.model.Ports.Binding.bindPort(hostPort), 
+                    exposedPort);
+
+            CreateContainerResponse container = dockerClient.createContainerCmd(imageName)
+                    .withName(project.getProjectId() + "_service")
+                    .withStdinOpen(true)
+                    .withTty(true)
+                    .withWorkingDir(project.getWorkDir())
+                    .withExposedPorts(exposedPort)
+                    .withPortBindings(portBinding)
+                    .withVolumes(volumeList)
+                    .withBinds(bindList)
+                    .withEnv(envList)
+                    .exec();
+
+            String newContainerId = container.getId();
+            startContainer(newContainerId);
+            
+            log.info("Recreated container {} with port binding {}:{}", 
+                    newContainerId, hostPort, internalPort);
+            
+            return newContainerId;
+            
+        } catch (Exception e) {
+            log.error("Failed to recreate container with port binding: {}", e.getMessage());
+            throw new RuntimeException("Failed to recreate container: " + e.getMessage());
         }
     }
 
