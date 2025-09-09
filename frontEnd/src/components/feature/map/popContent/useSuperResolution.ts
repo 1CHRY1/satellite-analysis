@@ -71,7 +71,7 @@ export const useSuperResolution = () => {
                 // ✅ 轮询函数，直到 data === 'COMPLETE'
                 const pollStatus = async (taskId: string) => {
                     console.log('查询报错')
-                    const interval = 1000 // 每秒轮询一次
+                    const interval = 500 
                     return new Promise<void>((resolve, reject) => {
                         const timer = setInterval(async () => {
                             try {
@@ -97,11 +97,12 @@ export const useSuperResolution = () => {
                 
                 try {
                     console.log("开始")
+                    ElMessage.info('超分处理中，请等候')
                     await pollStatus(calTask.value.taskId)
                     // ✅ 成功后设置状态
                     calTask.value.calState = 'success'
                     // 添加1000毫秒延迟
-                    await new Promise(resolve => setTimeout(resolve, 1000))
+                    await new Promise(resolve => setTimeout(resolve, 500))
                     let bandres = await getCaseBandsResult(calTask.value.taskId)
                     console.log(bandres, '结果');
                     console.log('超分返回数据',bandres.data)

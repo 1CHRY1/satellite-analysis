@@ -196,23 +196,25 @@
                             </template>
                         </el-checkbox>
                     </div>
-                    <el-checkbox-group v-model="gridVectorSymbology[selectedVector.tableName].checkedAttrs"
-                        @change="(val) => handleCheckedAttrsChange(selectedVector.tableName, val as string[])" >
-                        <template v-if="gridVectorSymbology[selectedVector.tableName].attrs.length">
-                            <div v-for="(attr, attrIndex) in gridVectorSymbology[selectedVector.tableName].attrs"
-                                :key="attrIndex"
-                                class="flex items-center justify-between bg-[#01314e] px-3 mb-1.5 py-2 rounded">
-                                <div class="flex items-center gap-2">
-                                    <el-checkbox class="config-label mt-1" :key="attr.type" :label="attr.label" >
-                                        <template default></template>
-                                    </el-checkbox>
-                                    <span class="config-label mt-1">{{ attr.label }}</span>
+                    <div class="w-full max-h-[248px] overflow-y-auto">
+                        <el-checkbox-group v-model="gridVectorSymbology[selectedVector.tableName].checkedAttrs"
+                            @change="(val) => handleCheckedAttrsChange(selectedVector.tableName, val as string[])" >
+                            <template v-if="gridVectorSymbology[selectedVector.tableName].attrs.length">
+                                <div v-for="(attr, attrIndex) in gridVectorSymbology[selectedVector.tableName].attrs"
+                                    :key="attrIndex"
+                                    class="flex items-center justify-between bg-[#01314e] px-3 mb-1.5 py-2 rounded">
+                                    <div class="flex items-center gap-2">
+                                        <el-checkbox class="config-label mt-1" :key="attr.type" :label="attr.label" >
+                                            <template default></template>
+                                        </el-checkbox>
+                                        <span class="config-label mt-1">{{ attr.label }}</span>
+                                    </div>
+                                    <el-color-picker v-model="attr.color" size="small"
+                                        show-alpha :predefine="predefineColors" />
                                 </div>
-                                <el-color-picker v-model="attr.color" size="small"
-                                    show-alpha :predefine="predefineColors" />
-                            </div>
-                        </template>
-                    </el-checkbox-group>
+                            </template>
+                        </el-checkbox-group>
+                    </div>
                     <!-- <span class="result-info-label">共找到 {{gridData.vectors.length}} 条记录</span>
                     <a-checkable-tag
                         v-for="(item, index) in gridData.vectors"
@@ -344,7 +346,9 @@ const handleVisualize = () => {
 const handleRemove = () => {
     previewIndex.value = null
     GridExploreMapOps.map_destroyGridDEMLayer(gridData.value)
-    GridExploreMapOps.map_destroyGridMVTLayer()
+    GridExploreMapOps.map_destroyGridMVTLayerByGrid(gridData.value)
+    // 清理矢量图层的事件监听器
+    cleanupGridVectorEvents()
     GridExploreMapOps.map_destroyGrid3DLayer(gridData.value)
     GridExploreMapOps.map_destroyGridNDVIOrSVRLayer(gridData.value)
     // 清除超分状态，确保不会重新加载
@@ -368,7 +372,17 @@ const handleInitGrid = async (info) => {
         themeRes: await getThemesInGrid(info),
         sceneRes: await getScenesInGrid(info)
     }
-    gridVectorSymbology.value = JSON.parse(JSON.stringify(ezStore.get("vectorSymbology"))) // 深拷贝
+    let timer = setInterval(() => {
+        const data = ezStore.get("vectorSymbology");
+        if (data) {
+            gridVectorSymbology.value = JSON.parse(JSON.stringify(data)); // 深拷贝
+            console.log("✅ vectorSymbology 初始化成功");
+            clearInterval(timer); // 成功后停止重试
+        } else {
+            console.log("⏳ vectorSymbology 未准备好，继续重试...");
+        }
+    }, 500);
+    // gridVectorSymbology.value = JSON.parse(JSON.stringify(ezStore.get("vectorSymbology"))) // 深拷贝
     console.log(gridData.value, 'gridData')
   } finally {
     themeResLoading = false
@@ -416,7 +430,7 @@ const { // ------------------------------ 1. 矢量符号化 -------------------
         // ------------------------------ 2. 矢量选择 -------------------------------//
         previewIndex, selectedVector,
         // ------------------------------ 3. 立方体可视化 ------------------------------//
-        handleVectorVisualize } = useGridVector()
+        handleVectorVisualize, cleanupGridVectorEvents } = useGridVector()
 
 /**
  * 4. 栅格专题Tab
