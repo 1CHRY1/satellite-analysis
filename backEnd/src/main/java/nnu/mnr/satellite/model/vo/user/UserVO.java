@@ -27,5 +27,6 @@ public class UserVO {
     private String createTime;
     private HashSet<String> createdProjects;
     private HashSet<String> joinedProjects;
+    private Integer roleId;
 
 }
