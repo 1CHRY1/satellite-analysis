@@ -1,6 +1,7 @@
 package nnu.mnr.satellite.utils.dt;
 
 import io.minio.*;
+import io.minio.errors.ErrorResponseException;
 import io.minio.http.Method;
 import jakarta.servlet.http.HttpServletResponse;
 import nnu.mnr.satellite.model.pojo.modeling.MinioProperties;
@@ -236,6 +237,46 @@ public class MinioUtil {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    // 复制
+    public void copyObject(
+            String sourceBucket, String sourceKey,
+            String targetBucket, String targetKey
+    ) throws Exception {
+        // 1. 参数校验与默认值处理
+        if (sourceKey == null || targetKey == null) {
+            throw new IllegalArgumentException("源Key和目标Key不能为空");
+        }
+
+        // 2. 检查源对象是否存在
+        try {
+            minioClient.statObject(
+                    StatObjectArgs.builder()
+                            .bucket(sourceBucket)
+                            .object(sourceKey)
+                            .build()
+            );
+        } catch (ErrorResponseException e) {
+            if (e.errorResponse().code().equals("NoSuchKey")) {
+                throw new RuntimeException("源对象不存在: " + sourceBucket + "/" + sourceKey);
+            }
+            throw e;
+        }
+
+        // 3. 构建复制参数
+        CopySource.Builder copySourceBuilder = CopySource.builder()
+                .bucket(sourceBucket)
+                .object(sourceKey);
+
+
+        CopyObjectArgs.Builder copyArgsBuilder = CopyObjectArgs.builder()
+                .source(copySourceBuilder.build())
+                .bucket(targetBucket)
+                .object(targetKey);
+
+        // 4. 执行复制
+        minioClient.copyObject(copyArgsBuilder.build());
     }
 
 }

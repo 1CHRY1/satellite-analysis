@@ -42,9 +42,9 @@ public class User {
     private LocalDateTime createTime;
 
     private String role;
+    private Integer roleId;
     private HashSet<String> joinedProjects;
     private HashSet<String> createdProjects;
-
     private String avatarPath;
 
 }

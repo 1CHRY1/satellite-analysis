@@ -113,6 +113,13 @@ docker:
   localPath: /usr/resource/modelDockerVolume/
   serverDir: /home/satellite/
   workDir: /usr/local/coding/
+  servicePortRange:
+    start: 20080
+    end: 20180
+  serviceDefaults:
+    internalPort: 20080
+  faas:
+    workDirSubdir: service
 
 modelServer:
   address: http://172.31.13.23:5000

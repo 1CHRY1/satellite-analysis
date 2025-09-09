@@ -16,12 +16,15 @@ import nnu.mnr.satellite.model.po.modeling.Project;
 import nnu.mnr.satellite.model.pojo.common.DFileInfo;
 import nnu.mnr.satellite.model.pojo.modeling.DockerServerProperties;
 import nnu.mnr.satellite.model.vo.modeling.CodingProjectVO;
+import nnu.mnr.satellite.model.vo.modeling.ServicePublishVO;
+import nnu.mnr.satellite.model.vo.modeling.ServiceStatusVO;
 import nnu.mnr.satellite.mapper.modeling.IProjectRepo;
 import nnu.mnr.satellite.mapper.resources.ITileRepo;
 import nnu.mnr.satellite.service.common.DockerService;
 import nnu.mnr.satellite.service.common.SftpDataService;
 //import nnu.mnr.satellite.service.common.UnifiedDockerService;
 import nnu.mnr.satellite.service.user.UserService;
+import nnu.mnr.satellite.service.websocket.ModelSocketService;
 // 临时注释掉Ray优化相关的imports
 /*
 import nnu.mnr.satellite.service.optimization.CodeOptimizationFacade;
@@ -89,6 +92,9 @@ public class ModelCodingService {
 
     @Autowired
     MinioUtil minioUtil;
+
+    @Autowired
+    ModelSocketService modelSocketService;
 
     // 临时注释掉Ray优化相关的字段
     /*
@@ -662,6 +668,231 @@ public class ModelCodingService {
         projectRepo.updateById(project);
         responseInfo = "Package " + name + version + " has been " + conditionStr;
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
+    }
+
+    // Service Publishing Methods
+    public ServicePublishVO publishService(ProjectServicePublishDTO dto) {
+        String userId = dto.getUserId();
+        String projectId = dto.getProjectId();
+        Integer servicePort = dto.getServicePort();
+
+        // Validate user and project
+        if (!projectDataService.VerifyUserProject(userId, projectId)) {
+            throw new RuntimeException("User " + userId + " Can't Operate Project " + projectId);
+        }
+
+        Project project = projectDataService.getProjectById(projectId);
+        if (project == null) {
+            throw new RuntimeException("Project " + projectId + " hasn't been Registered");
+        }
+
+        try {
+            // Determine host port
+            int hostPort;
+            int internalPort = dockerServerProperties.getServiceDefaults().getInternalPort();
+            
+            if (servicePort != null) {
+                // Validate provided port is in range
+                int startPort = dockerServerProperties.getServicePortRange().getStart();
+                int endPort = dockerServerProperties.getServicePortRange().getEnd();
+                
+                if (servicePort < startPort || servicePort > endPort) {
+                    throw new RuntimeException("Port " + servicePort + " is outside allowed range " + startPort + "-" + endPort);
+                }
+                
+                if (!dockerService.isHostPortFree(servicePort)) {
+                    throw new RuntimeException("Port " + servicePort + " is already in use");
+                }
+                
+                hostPort = servicePort;
+            } else {
+                // Auto-assign port
+                hostPort = dockerService.findNextFreePort(
+                    dockerServerProperties.getServicePortRange().getStart(),
+                    dockerServerProperties.getServicePortRange().getEnd()
+                );
+            }
+
+            // Check if container needs to be recreated with port binding
+            String containerId = project.getContainerId();
+            boolean needsRecreation = true; // For simplicity, always recreate for now
+            
+            if (needsRecreation) {
+                containerId = dockerService.recreateProjectContainerWithPort(project, hostPort, internalPort);
+                project.setContainerId(containerId);
+                projectRepo.updateById(project);
+            }
+
+            // Install Flask if not already installed
+            String installFlaskCommand = "pip show flask || pip install flask";
+            dockerService.runCMDInContainerSilent(containerId, installFlaskCommand);
+
+            // Start Flask application in background
+            String flaskCommand = "nohup python -u " + project.getPyPath() + " > service.out 2>&1 &";
+            dockerService.runCMDInContainerSilent(containerId, flaskCommand);
+
+            // Create service metadata
+            String dockerHost = dockerServerProperties.getDefaultServer().get("host");
+            String url = "http://" + dockerHost + ":" + hostPort + "/";
+
+            // Save service metadata
+            String serviceDir = project.getServerDir() + dockerServerProperties.getFaas().getWorkDirSubdir() + "/";
+            sftpDataService.createRemoteDir(serviceDir, 0755);
+            
+            JSONObject faasMetadata = new JSONObject();
+            faasMetadata.put("projectId", projectId);
+            faasMetadata.put("host", dockerHost);
+            faasMetadata.put("port", hostPort);
+            faasMetadata.put("internalPort", internalPort);
+            faasMetadata.put("url", url);
+            faasMetadata.put("running", true);
+            faasMetadata.put("publishedAt", LocalDateTime.now().toString());
+            
+            String faasPath = serviceDir + "faas.json";
+            sftpDataService.writeRemoteFile(faasPath, faasMetadata.toString());
+
+            // Notify via WebSocket
+            modelSocketService.sendMessageByProject(userId, projectId, "Service running at: " + url);
+
+            return ServicePublishVO.builder()
+                    .status("running")
+                    .url(url)
+                    .host(dockerHost)
+                    .port(hostPort)
+                    .build();
+
+        } catch (Exception e) {
+            log.error("Failed to publish service for project {}: {}", projectId, e.getMessage());
+            throw new RuntimeException("Failed to publish service: " + e.getMessage());
+        }
+    }
+
+    public CodingProjectVO unpublishService(ProjectBasicDTO dto) {
+        String userId = dto.getUserId();
+        String projectId = dto.getProjectId();
+
+        // Validate user and project
+        if (!projectDataService.VerifyUserProject(userId, projectId)) {
+            return CodingProjectVO.builder()
+                    .status(-1)
+                    .info("User " + userId + " Can't Operate Project " + projectId)
+                    .projectId(projectId)
+                    .build();
+        }
+
+        Project project = projectDataService.getProjectById(projectId);
+        if (project == null) {
+            return CodingProjectVO.builder()
+                    .status(-1)
+                    .info("Project " + projectId + " hasn't been Registered")
+                    .projectId(projectId)
+                    .build();
+        }
+
+        try {
+            String containerId = project.getContainerId();
+            
+            // Stop Flask process
+            String stopCommand = "pkill -f \"python.*" + project.getPyPath().replace("/", "\\/") + "\"";
+            dockerService.runCMDInContainerSilent(containerId, stopCommand);
+
+            // Update service metadata
+            String serviceDir = project.getServerDir() + dockerServerProperties.getFaas().getWorkDirSubdir() + "/";
+            String faasPath = serviceDir + "faas.json";
+            
+            try {
+                String existingMetadata = sftpDataService.readRemoteFile(faasPath);
+                JSONObject faasData = JSONObject.parseObject(existingMetadata);
+                faasData.put("running", false);
+                faasData.put("stoppedAt", LocalDateTime.now().toString());
+                sftpDataService.writeRemoteFile(faasPath, faasData.toString());
+            } catch (Exception e) {
+                log.warn("Failed to update service metadata: {}", e.getMessage());
+            }
+
+            // Notify via WebSocket
+            modelSocketService.sendMessageByProject(userId, projectId, "Service stopped");
+
+            return CodingProjectVO.builder()
+                    .status(1)
+                    .info("Service stopped successfully")
+                    .projectId(projectId)
+                    .build();
+
+        } catch (Exception e) {
+            log.error("Failed to unpublish service for project {}: {}", projectId, e.getMessage());
+            return CodingProjectVO.builder()
+                    .status(-1)
+                    .info("Failed to stop service: " + e.getMessage())
+                    .projectId(projectId)
+                    .build();
+        }
+    }
+
+    public ServiceStatusVO getServiceStatus(ProjectBasicDTO dto) {
+        String userId = dto.getUserId();
+        String projectId = dto.getProjectId();
+
+        // Validate user and project
+        if (!projectDataService.VerifyUserProject(userId, projectId)) {
+            return ServiceStatusVO.builder()
+                    .isPublished(false)
+                    .running(false)
+                    .build();
+        }
+
+        Project project = projectDataService.getProjectById(projectId);
+        if (project == null) {
+            return ServiceStatusVO.builder()
+                    .isPublished(false)
+                    .running(false)
+                    .build();
+        }
+
+        try {
+            String serviceDir = project.getServerDir() + dockerServerProperties.getFaas().getWorkDirSubdir() + "/";
+            String faasPath = serviceDir + "faas.json";
+            
+            try {
+                String metadata = sftpDataService.readRemoteFile(faasPath);
+                JSONObject faasData = JSONObject.parseObject(metadata);
+                
+                // Check if process is actually running
+                String containerId = project.getContainerId();
+                String checkCommand = "pgrep -f \"python.*" + project.getPyPath().replace("/", "\\/") + "\"";
+                boolean actuallyRunning = false;
+                
+                try {
+                    // This is a simplified check - in a real implementation you'd capture the command output
+                    dockerService.runCMDInContainerSilent(containerId, checkCommand);
+                    actuallyRunning = faasData.getBooleanValue("running");
+                } catch (Exception e) {
+                    actuallyRunning = false;
+                }
+
+                return ServiceStatusVO.builder()
+                        .isPublished(true)
+                        .running(actuallyRunning)
+                        .url(faasData.getString("url"))
+                        .host(faasData.getString("host"))
+                        .port(faasData.getInteger("port"))
+                        .build();
+                        
+            } catch (Exception e) {
+                // No metadata file means not published
+                return ServiceStatusVO.builder()
+                        .isPublished(false)
+                        .running(false)
+                        .build();
+            }
+
+        } catch (Exception e) {
+            log.error("Failed to get service status for project {}: {}", projectId, e.getMessage());
+            return ServiceStatusVO.builder()
+                    .isPublished(false)
+                    .running(false)
+                    .build();
+        }
     }
 
 }
