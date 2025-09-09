@@ -87,3 +87,16 @@ export async function uploadGeoJson(param: any): Promise<any> {
 export async function cmdOperation(param: any): Promise<any> {
     return http.post<any>(`modeling/coding/project/environment`, param)
 }
+
+//-----------------------------  -----------------------------//
+export async function publishService(param: any): Promise<any> {
+    return http.post<any>(`modeling/coding/project/service/publish`, param)
+}
+
+export async function unpublishService(param: any): Promise<any> {
+    return http.post<any>(`modeling/coding/project/service/unpublish`, param)
+}
+
+export async function getServiceStatus(param: any): Promise<any> {
+    return http.post<any>(`modeling/coding/project/service/status`, param)
+}

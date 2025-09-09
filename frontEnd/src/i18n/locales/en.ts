@@ -217,8 +217,8 @@ export default{
 
   datapage:{
     title_explore:"Interactive Exploration",
-    title_nocloud:"Cloud-free basemap",
-    title_analysis:"Dynamic Display Analysis",
+    title_nocloud:"Data Perparation",
+    title_analysis:"Display Analysis",
 
     mapcomp:{
         vector:"Vector basemap",
@@ -444,7 +444,7 @@ export default{
     },
 
     explore:{
-        section1:{
+        data:{
             sectiontitle:"Administrative divisions and grid resolution",
             subtitle1:"Research region selection",
             admin:"Administrative division",
@@ -680,7 +680,9 @@ export default{
       multiple: "Multiple Data",
       or: "Drag to this or ",
       addto: "Add data to the project",
-      add: "Select the project you want to add to"
+      add: "Select the project you want to add to",
+      modifyTime: "Modify Time",
+      emptyFolder: "No data",
     }
   },
 }

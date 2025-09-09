@@ -91,7 +91,8 @@ spring:
       max-request-size: 1GB
   data:
     redis:
-      host: 114.55.142.175
+#      host: 114.55.142.175
+      host: 223.2.34.8
       port: 30379
       database: 0
     mongodb:
