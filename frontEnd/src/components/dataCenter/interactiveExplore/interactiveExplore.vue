@@ -55,7 +55,7 @@
                                                 <div v-if="activeTab === 'region'"
                                                     class="config-control justify-center">
                                                     <RegionSelects v-model="selectedRegion"
-                                                        :placeholder="[t('datapage.explore.section1.intext_choose')]"
+                                                        :placeholder="[t('datapage.explore.data.intext_choose')]"
                                                         class="flex gap-2"
                                                         select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
                                                 </div>
@@ -67,7 +67,7 @@
                                                     class="config-control justify-center w-full">
                                                     <el-select v-model="selectedPOI" filterable remote reserve-keyword
                                                         value-key="id"
-                                                        :placeholder="t('datapage.explore.section1.intext_POI')"
+                                                        :placeholder="t('datapage.explore.data.intext_POI')"
                                                         :remote-method="fetchPOIOptions"
                                                         class="!w-[90%] bg-[#0d1526] text-white"
                                                         popper-class="bg-[#0d1526] text-white">
@@ -85,11 +85,11 @@
                                             <div class="config-label relative">
                                                 <BoltIcon :size="16" class="config-icon" />
                                                 <!-- 格网分辨率 -->
-                                                <span>{{ t('datapage.explore.section1.subtitle2') }}</span>
+                                                <span>{{ t('datapage.explore.data.subtitle2') }}</span>
                                             </div>
                                             <div class="config-control flex-col !items-start">
                                                 <div class="flex flex-row gap-2 items-center w-full">
-                                                    <!-- {{ t('datapage.explore.section1.resolution') }} -->
+                                                    <!-- {{ t('datapage.explore.data.resolution') }} -->
                                                     <select v-model="selectedGridResolution"
                                                         class="w-40 scale-88 appearance-none rounded-lg border border-[#2c3e50] bg-[#0d1526] px-4 py-2 pr-8 text-white transition-all duration-200 hover:border-[#206d93] focus:border-[#3b82f6] focus:outline-none">
                                                         <option v-for="option in gridOptions" :key="option"
@@ -98,20 +98,20 @@
                                                         </option>
                                                     </select>
                                                     <a-button class="a-button" type="primary" @click="getAllGrid">
-                                                        {{ t('datapage.explore.section1.button') }}
+                                                        {{ t('datapage.explore.data.button') }}
                                                     </a-button>
                                                 </div>
                                                 <div class="flex flex-row mt-2 ml-2">
                                                     <div class="text-red-500">*</div>
                                                     <span class="text-xs text-gray-400">{{
-                                                        t('datapage.explore.section1.advice')
+                                                        t('datapage.explore.data.advice')
                                                         }}</span>
                                                 </div>
                                             </div>
                                         </div>
                                         <!-- <button @click="getAllGrid"
                                             class="cursor-pointer scale-98 rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-93">
-                                            {{ t('datapage.explore.section1.button') }}
+                                            {{ t('datapage.explore.data.button') }}
                                         </button> -->
                                     </div>
                                     <div class="config-container">

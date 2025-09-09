@@ -58,7 +58,7 @@ export const useFilter = () => {
      */
     const tabs = computed<FilterTab[]>(() =>  [{
         value: 'region',
-        label: t('datapage.explore.section1.admin')
+        label: t('datapage.explore.data.admin')
     }, {
         value: 'poi',
         label: 'POI'
