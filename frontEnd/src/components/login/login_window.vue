@@ -83,6 +83,7 @@ import { login, getUsers } from '@/api/http/user'
 import { ElMessage } from 'element-plus'
 
 import { useI18n } from 'vue-i18n'
+import { getRole } from '@/api/http/user/role.api'
 const { t } = useI18n()
 
 const emit= defineEmits(['close', 'switch']);
@@ -106,7 +107,9 @@ const handleLogin = async () => {
         console.log('用户信息', loginRes.data.userId)
 
         let userRes = await getUsers(loginRes.data.userId)
+        let roleRes = await getRole(userRes.roleId)
         console.log('用户信息', userRes)
+        console.log('角色信息', roleRes)
 
         userStore.login({
             id: loginRes.data.userId,
@@ -117,8 +120,16 @@ const handleLogin = async () => {
             name: userRes.userName,
             title: userRes.title,
             organization: userRes.organization,
-            introduction: userRes.introduction 
+            introduction: userRes.introduction,
+            roleId: userRes.roleId,
+            roleName: roleRes.data.name,
+            roleDesc: roleRes.data.description,
+            maxCpu: roleRes.data.maxCpu,
+            maxStorage: roleRes.data.maxStorage,
+            maxJob: roleRes.data.maxJob,
+            isSuperAdmin: roleRes.data.isSuperAdmin
         })
+        console.log(userStore.user)
         ElMessage({
             type: 'success',
             message: t('login.message.success'),
