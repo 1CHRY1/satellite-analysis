@@ -13,6 +13,7 @@ import {
 	ProductOutlined,
 	DashboardOutlined,
 	VerticalRightOutlined,
+	InboxOutlined,
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 type MenuItem = Required<MenuProps>["items"][number];
@@ -59,12 +60,12 @@ export const items: MenuItem[] = [
 			{
 				key: "/product",
 				label: "产品信息管理",
-				icon: <GlobalOutlined />,
+				icon: <InboxOutlined />,
 			},
 			{
 				key: "/satellite",
 				label: "遥感数据管理",
-				icon: <GlobalOutlined />,
+				icon: <DatabaseOutlined />,
 			},
 			{
 				key: "/vector",

@@ -109,7 +109,8 @@ public class ModelCodingService {
     @Autowired
     private MinioProperties minioProperties;
 
-    private final String projectDataBucket = "project-data-bucket";
+    //    private final String projectDataBucket = "project-data-bucket";
+    private final String userBucket = "user";
 
     public String getRemoteConfig(Project project) {
         JSONObject projectConfig = JSONObject.of(
@@ -175,7 +176,7 @@ public class ModelCodingService {
 
         Project project = Project.builder()
                 .projectId(projectId).projectName(projectName)
-                .environment(env).createTime(LocalDateTime.now()).dataBucket(projectDataBucket)
+                .environment(env).createTime(LocalDateTime.now()).dataBucket(userBucket)
                 .workDir(workDir).serverDir(serverDir).description(createProjectDTO.getDescription())
                 .createUser(userId).createUserEmail(user.getEmail()).createUserName(user.getUserName())
                 .pyPath(pyPath).serverPyPath(serverPyPath)
