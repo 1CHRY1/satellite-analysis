@@ -1,6 +1,10 @@
 import { type RouteConfig, index, route } from "@react-router/dev/routes";
 
 export default [
-    index("routes/dashboard.tsx", {id : 'dashboard'}),
-    route("dashboard", "routes/dashboard.tsx")
+    // 对应文件不能用具名导出
+    route("/", "routes/dashboard.tsx", [
+        index("routes/home.tsx"),
+        route("dashboard", "welcome/welcome.tsx"),
+        route("user", "welcome/welcome.tsx", {id: "?"})
+    ]),
 ] satisfies RouteConfig;

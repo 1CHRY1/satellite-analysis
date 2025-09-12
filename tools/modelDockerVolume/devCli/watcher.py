@@ -224,7 +224,7 @@ def get_object_name(file_path):
     print("get_object_name file_path :: ", file_path)
     file_path_clone = file_path.replace('\\', '/')
     print("get_object_name file_path_clone :: ", file_path_clone)
-    return '/' + USER_ID + '/' + PROJECT_ID + '/' + file_path_clone.split('/')[-1]
+    return '/user-files/' + USER_ID + '/' + PROJECT_ID + '/' + file_path_clone.split('/')[-1]
 
 def is_tif(filepath):
     return filepath.endswith('.tif') or filepath.endswith('.TIF') or filepath.endswith('.tiff') or filepath.endswith('.TIFF')
