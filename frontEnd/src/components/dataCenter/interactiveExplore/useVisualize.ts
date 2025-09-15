@@ -348,21 +348,16 @@ export const useVisualize = () => {
             return targetAttr
         })
     
-        for (const attr of attrList) {
-            const url = getVectorUrl({
-                landId,
-                source_layer,
-                spatialFilterMethod: searchedSpatialFilterMethod.value,
-                resolution: selectedGridResolution.value,
-                type: attr?.type
-            })
-    
-            // 生成 baseId，要和 map_addMVTLayer 内保持一致
-            const baseId = `${source_layer}-${attr?.type || 0}-mvt-layer`
+        const url = getVectorUrl({
+            landId,
+            source_layer,
+            spatialFilterMethod: searchedSpatialFilterMethod.value,
+            resolution: selectedGridResolution.value,
+            type: attrList.map((attr) => {if(attr?.type!==undefined) return attr.type}) as number[]
+        })
 
-            // 添加到地图 - 点击事件处理已经在 map_addMVTLayer 函数中实现
-            InteractiveExploreMapOps.map_addMVTLayer(source_layer, url, attr?.color || '#0066cc', attr?.type)
-        }
+        // 添加到地图 - 点击事件处理已经在 map_addMVTLayer 函数中实现
+        InteractiveExploreMapOps.map_addMVTLayer(source_layer, url, attrList as any)
     }
     const destroyVector = (index?: number) => {
         if (index !== undefined) {

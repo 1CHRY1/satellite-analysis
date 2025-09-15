@@ -503,7 +503,7 @@ export function map_addMVTLayer(source_layer: string, url: string, attrList: {co
 
       layerIds.forEach(layerId => {
         // 移除已存在的点击事件监听器（如果有）
-        m.off('click', layerId)
+        m.off('click', layerId as any)
 
         // 添加新的点击事件监听器
         m.on('click', layerId, (e) => {
@@ -562,9 +562,9 @@ export function map_destroyMVTLayer() {
                  layer.id.endsWith('-line') ||
                  layer.id.endsWith('-point'))) {
                 // 移除事件监听器
-                m.off('click', layer.id);
-                m.off('mouseenter', layer.id);
-                m.off('mouseleave', layer.id);
+                m.off('click', layer.id as any);
+                m.off('mouseenter', layer.id as any);
+                m.off('mouseleave', layer.id as any);
 
                 // 移除图层
                 m.removeLayer(layer.id);
