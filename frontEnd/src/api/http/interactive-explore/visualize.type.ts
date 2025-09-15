@@ -18,6 +18,7 @@ export type RGBCompositeParams = {
     g_max: number
     b_min: number
     b_max: number
+    stretch_method?: 'linear' | 'standard' | 'gamma' | ''
     normalize_level?: number
     nodata?: number
 }

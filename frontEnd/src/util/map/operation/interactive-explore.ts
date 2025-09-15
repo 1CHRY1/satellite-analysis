@@ -5,7 +5,7 @@ import bus from '@/store/bus'
 import { createApp, type ComponentInstance, ref, type Ref, reactive } from 'vue'
 import PopContent from '@/components/feature/map/popContent/popContent.vue'
 import Antd from 'ant-design-vue'
-
+import type { Expression } from 'mapbox-gl'
 
 /**
  * 0. 公用函数/初始化等
@@ -353,9 +353,15 @@ export function map_fitViewToTargetZoom(zoom: number) {
  * @param landId 行政区id
  * @param cb 回调函数
  */
-export function map_addMVTLayer(source_layer: string, url: string, color: string, type?: number) {
-    const baseId = `${source_layer}-${type || 0}-mvt-layer`
+export function map_addMVTLayer(source_layer: string, url: string, attrList: {color: string, type: number}[]) {
+    const baseId = `${source_layer}-mvt-layer`
     const srcId = baseId + '-source'
+    const matchColor: Expression = [
+        'match',
+        ['get', 'type'], // MVT属性字段
+        ...attrList.flatMap(tc => [tc.type, tc.color]),
+        'rgba(0,0,0,0)' // 默认颜色
+    ]
     
     mapManager.withMap((m) => {
     //   // 移除已存在的图层和数据源
@@ -390,7 +396,7 @@ export function map_addMVTLayer(source_layer: string, url: string, color: string
         filter: ['==', '$type', 'Polygon'], // 只显示面要素
         paint: {
         //   'fill-color': '#0066cc',
-          'fill-color': color,
+          'fill-color': matchColor,
         //   'fill-opacity': 0.5,
           'fill-outline-color': '#004499'
         }
@@ -404,7 +410,7 @@ export function map_addMVTLayer(source_layer: string, url: string, color: string
         'source-layer': source_layer,
         filter: ['==', '$type', 'LineString'], // 只显示线要素
         paint: {
-          'line-color': color,
+          'line-color': matchColor,
           'line-width': 2,
           'line-opacity': 0.8
         }
@@ -418,7 +424,7 @@ export function map_addMVTLayer(source_layer: string, url: string, color: string
         'source-layer': source_layer,
         filter: ['==', '$type', 'Point'], // 只显示点要素
         paint: {
-          'circle-color': color,
+          'circle-color': matchColor,
           'circle-radius': 6,
           'circle-opacity': 0.8,
           'circle-stroke-color': '#ffffff',

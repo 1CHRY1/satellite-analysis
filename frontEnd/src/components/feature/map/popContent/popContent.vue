@@ -6,25 +6,13 @@
             </div>
 
             <div class="tabs">
-                <button
-                    class="tab-btn"
-                    :class="{ active: activeTab === 'scene' }"
-                    @click="activeTab = 'scene'"
-                >
+                <button class="tab-btn" :class="{ active: activeTab === 'scene' }" @click="activeTab = 'scene'">
                     遥感影像
                 </button>
-                <button
-                    class="tab-btn"
-                    :class="{ active: activeTab === 'vector' }"
-                    @click="activeTab = 'vector'"
-                >
+                <button class="tab-btn" :class="{ active: activeTab === 'vector' }" @click="activeTab = 'vector'">
                     矢量专题
                 </button>
-                <button
-                    class="tab-btn"
-                    :class="{ active: activeTab === 'theme' }"
-                    @click="activeTab = 'theme'"
-                >
+                <button class="tab-btn" :class="{ active: activeTab === 'theme' }" @click="activeTab = 'theme'">
                     栅格专题
                 </button>
             </div>
@@ -41,16 +29,12 @@
                         </option>
                     </select>
                 </div>
-                
+
                 <!-- 传感器选择 -->
                 <div class="band-selection">
                     <label for="sensor-select">传感器:</label>
-                    <select
-                        id="sensor-select"
-                        v-model="selectedSensor"
-                        class="band-select"
-                        @change="handleSensorChange(selectedSensor)"
-                    >
+                    <select id="sensor-select" v-model="selectedSensor" class="band-select"
+                        @change="handleSensorChange(selectedSensor)">
                         <option disabled value="">请选择</option>
                         <option v-for="sensor in sensors" :key="sensor" :value="sensor">
                             {{ sensor }}
@@ -60,18 +44,11 @@
 
                 <!-- 增强方法Tab -->
                 <div class="tabs" v-show="showBandSelector">
-                    <button
-                        class="tab-btn"
-                        :class="{ active: activeMethod === 'rgb' }"
-                        @click="activeMethod = 'rgb'"
-                    >
+                    <button class="tab-btn" :class="{ active: activeMethod === 'rgb' }" @click="activeMethod = 'rgb'">
                         波段增强
                     </button>
-                    <button
-                        class="tab-btn"
-                        :class="{ active: activeMethod === 'superresolution' }"
-                        @click="activeMethod = 'superresolution'"
-                    >
+                    <button class="tab-btn" :class="{ active: activeMethod === 'superresolution' }"
+                        @click="activeMethod = 'superresolution'">
                         信息增强
                     </button>
                 </div>
@@ -109,8 +86,7 @@
 
                 <!-- 超分增强Tab -->
                 <div class="btns flex justify-center" v-show="showBandSelector && activeMethod === 'superresolution'">
-                    <button class="visualize-btn" 
-                        @click="handleSuperResolution">
+                    <button class="visualize-btn" @click="handleSuperResolution">
                         <span class="btn-icon">
                             <GalleryHorizontalIcon :size="18" />
                         </span>
@@ -137,21 +113,23 @@
                 </div>
 
                 <!-- 原亮度拉伸，现为拉伸增强 -->
-                <div
-                    class="mr-1 grid grid-cols-[2fr_3fr]"
-                    @mousedown="handleScaleMouseDown"
-                    @mouseup="handleScaleMouseUp"
-                    v-show="activeMethod === 'rgb'"
-                >
-                    <span class="sp text-white">拉伸增强:</span>
-                    <a-slider
-                        :tip-formatter="scaleRateFormatter"
-                        v-model:value="scaleRate"
-                        :min="0.10"
-                        :max="10"
-                        :step="0.01"
-                        @afterChange="onAfterScaleRateChange"
-                    />
+                <div @mousedown="handleScaleMouseDown" @mouseup="handleScaleMouseUp" v-show="activeMethod === 'rgb'">
+                    <div class="band-selection">
+                        <label for="r-band-select">拉伸方法:</label>
+                        <select id="r-band-select" v-model="selectedStretchMethod" class="band-select">
+                            <option disabled value="">请选择</option>
+                            <option v-for="method in stretchMethods" :key="method.value" :value="method.value">
+                                {{ method.label }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="mr-1 grid grid-cols-[2fr_3fr]">
+                        <span class="sp text-white">拉伸增强:</span>
+                        <a-slider v-if="selectedStretchMethod === 'linear'" :tip-formatter="(value) => `${value}级`" v-model:value="scaleRate" :min="0" :max="10"
+                            :step="1" @afterChange="onAfterScaleRateChange" />
+                        <a-slider v-if="selectedStretchMethod === 'gamma'" :tip-formatter="scaleRateFormatter" v-model:value="scaleRate" :min="0.10" :max="10"
+                            :step="0.01" @afterChange="onAfterScaleRateChange" />
+                    </div>
                 </div>
 
                 <!-- 可视化按钮 -->
@@ -174,11 +152,7 @@
             <div v-show="activeTab === 'vector'">
                 <div class="band-selection">
                     <label for="sensor-select">数据集:</label>
-                    <select
-                        id="sensor-select"
-                        v-model="selectedVector"
-                        class="band-select"
-                    >
+                    <select id="sensor-select" v-model="selectedVector" class="band-select">
                         <option disabled value="">请选择</option>
                         <option v-for="(item, index) in gridData.vectors" :key="item.tableName" :value="item">
                             {{ item.vectorName }}
@@ -187,8 +161,7 @@
                 </div>
                 <div class="config-container" v-if="gridVectorSymbology[selectedVector.tableName]">
                     <div class="flex items-center justify-between gap-2">
-                        <el-checkbox
-                            v-model="gridVectorSymbology[selectedVector.tableName].checkAll"
+                        <el-checkbox v-model="gridVectorSymbology[selectedVector.tableName].checkAll"
                             :indeterminate="gridVectorSymbology[selectedVector.tableName].isIndeterminate"
                             @change="(val) => handleCheckAllChange(selectedVector.tableName, val as boolean)">
                             <template #default>
@@ -198,19 +171,19 @@
                     </div>
                     <div class="w-full max-h-[248px] overflow-y-auto">
                         <el-checkbox-group v-model="gridVectorSymbology[selectedVector.tableName].checkedAttrs"
-                            @change="(val) => handleCheckedAttrsChange(selectedVector.tableName, val as string[])" >
+                            @change="(val) => handleCheckedAttrsChange(selectedVector.tableName, val as string[])">
                             <template v-if="gridVectorSymbology[selectedVector.tableName].attrs.length">
                                 <div v-for="(attr, attrIndex) in gridVectorSymbology[selectedVector.tableName].attrs"
                                     :key="attrIndex"
                                     class="flex items-center justify-between bg-[#01314e] px-3 mb-1.5 py-2 rounded">
                                     <div class="flex items-center gap-2">
-                                        <el-checkbox class="config-label mt-1" :key="attr.type" :label="attr.label" >
+                                        <el-checkbox class="config-label mt-1" :key="attr.type" :label="attr.label">
                                             <template default></template>
                                         </el-checkbox>
                                         <span class="config-label mt-1">{{ attr.label }}</span>
                                     </div>
-                                    <el-color-picker v-model="attr.color" size="small"
-                                        show-alpha :predefine="predefineColors" />
+                                    <el-color-picker v-model="attr.color" size="small" show-alpha
+                                        :predefine="predefineColors" />
                                 </div>
                             </template>
                         </el-checkbox-group>
@@ -260,12 +233,8 @@
                 <!-- 产品选择 -->
                 <div class="band-selection">
                     <label for="sensor-select">产品名:</label>
-                    <select
-                        id="sensor-select"
-                        v-model="selectedProduct"
-                        class="band-select"
-                        @change="handleSensorChange(selectedProduct)"
-                    >
+                    <select id="sensor-select" v-model="selectedProduct" class="band-select"
+                        @change="handleSensorChange(selectedProduct)">
                         <option disabled value="">请选择</option>
                         <option v-for="product in products" :key="product" :value="product">
                             {{ product }}
@@ -274,17 +243,11 @@
                 </div>
 
                 <!-- 透明度 -->
-                <div
-                    class="mr-1 grid grid-cols-[2fr_3fr]"
-                    @mousedown="handleScaleMouseDown"
-                    @mouseup="handleScaleMouseUp"
-                >
+                <div class="mr-1 grid grid-cols-[2fr_3fr]" @mousedown="handleScaleMouseDown"
+                    @mouseup="handleScaleMouseUp">
                     <span class="sp text-white">透明度:</span>
-                    <a-slider
-                        :tip-formatter="opacityFormatter"
-                        v-model:value="opacity"
-                        @afterChange="onAfterOpacityChange"
-                    />
+                    <a-slider :tip-formatter="opacityFormatter" v-model:value="opacity"
+                        @afterChange="onAfterOpacityChange" />
                 </div>
 
                 <!-- 可视化按钮 -->
@@ -309,7 +272,7 @@
 <script setup lang="ts">
 import { ElCheckbox, ElCheckboxGroup, ElColorPicker } from 'element-plus'
 import { ref, computed, onMounted, onUnmounted, type Ref, reactive } from 'vue'
-import { DatabaseIcon, GalleryHorizontalIcon, RectangleEllipsisIcon, Trash2Icon,CircleOff } from 'lucide-vue-next'
+import { DatabaseIcon, GalleryHorizontalIcon, RectangleEllipsisIcon, Trash2Icon, CircleOff } from 'lucide-vue-next'
 import bus from '@/store/bus'
 import Vue3DraggableResizable from 'vue3-draggable-resizable'
 import 'vue3-draggable-resizable/dist/Vue3DraggableResizable.css'
@@ -317,8 +280,10 @@ import { ezStore } from '@/store'
 import { getThemesInGrid } from '@/api/http/interactive-explore/grid.api'
 import { getScenesInGrid } from '@/api/http/interactive-explore/grid.api'
 import * as GridExploreMapOps from '@/util/map/operation/grid-explore'
-import { activeTab, gridData, canVisualize, showBandSelector,
-      activeMethod, gridID } from './shared'
+import {
+    activeTab, gridData, canVisualize, showBandSelector,
+    activeMethod, gridID
+} from './shared'
 import { useGridScene } from './useGridScene'
 import { useGridVector } from './useGridVector'
 import { useGridTheme } from './useGridTheme'
@@ -363,30 +328,30 @@ const handleRemove = () => {
 // 请求锁
 let themeResLoading = false
 const handleInitGrid = async (info) => {
-  if (themeResLoading) return
-  themeResLoading = true
-  try {
-    gridData.value = {
-        ...info,  // 拷贝原有属性
-        vectors: ezStore.get('vectorStats'),
-        themeRes: await getThemesInGrid(info),
-        sceneRes: await getScenesInGrid(info)
-    }
-    let timer = setInterval(() => {
-        const data = ezStore.get("vectorSymbology");
-        if (data) {
-            gridVectorSymbology.value = JSON.parse(JSON.stringify(data)); // 深拷贝
-            console.log("✅ vectorSymbology 初始化成功");
-            clearInterval(timer); // 成功后停止重试
-        } else {
-            console.log("⏳ vectorSymbology 未准备好，继续重试...");
+    if (themeResLoading) return
+    themeResLoading = true
+    try {
+        gridData.value = {
+            ...info,  // 拷贝原有属性
+            vectors: ezStore.get('vectorStats'),
+            themeRes: await getThemesInGrid(info),
+            sceneRes: await getScenesInGrid(info)
         }
-    }, 500);
-    // gridVectorSymbology.value = JSON.parse(JSON.stringify(ezStore.get("vectorSymbology"))) // 深拷贝
-    console.log(gridData.value, 'gridData')
-  } finally {
-    themeResLoading = false
-  }
+        let timer = setInterval(() => {
+            const data = ezStore.get("vectorSymbology");
+            if (data) {
+                gridVectorSymbology.value = JSON.parse(JSON.stringify(data)); // 深拷贝
+                console.log("✅ vectorSymbology 初始化成功");
+                clearInterval(timer); // 成功后停止重试
+            } else {
+                console.log("⏳ vectorSymbology 未准备好，继续重试...");
+            }
+        }, 500);
+        // gridVectorSymbology.value = JSON.parse(JSON.stringify(ezStore.get("vectorSymbology"))) // 深拷贝
+        console.log(gridData.value, 'gridData')
+    } finally {
+        themeResLoading = false
+    }
 }
 bus.on('update:gridPopupData', handleInitGrid)
 
@@ -412,35 +377,35 @@ onUnmounted(() => {
  * 2. 遥感影像Tab
  */
 const { // ------------------------------ 1. 分辨率选项 ------------------------------//
-        selectedResolution, resolutions,
-        // ------------------------------ 2. 传感器选项 ------------------------------//
-        selectedSensor, sensors, handleSensorChange,
-        // ------------------------------ 3. 波段选项 ------------------------------//
-        selectedBand, selectedRBand, selectedGBand, selectedBBand, bands,
-        // ------------------------------ 4. 拉伸增强选项 ------------------------------//
-        handleScaleMouseDown, handleScaleMouseUp, scaleRateFormatter, onAfterScaleRateChange, scaleRate, enableDraggable,
-        // ------------------------------ 5. 立方体可视化 ------------------------------//
-        handleSceneVisualize } = useGridScene()
+    selectedResolution, resolutions,
+    // ------------------------------ 2. 传感器选项 ------------------------------//
+    selectedSensor, sensors, handleSensorChange,
+    // ------------------------------ 3. 波段选项 ------------------------------//
+    selectedBand, selectedRBand, selectedGBand, selectedBBand, bands,
+    // ------------------------------ 4. 拉伸增强选项 ------------------------------//
+    handleScaleMouseDown, handleScaleMouseUp, scaleRateFormatter, onAfterScaleRateChange, scaleRate, enableDraggable, stretchMethods, selectedStretchMethod,
+    // ------------------------------ 5. 立方体可视化 ------------------------------//
+    handleSceneVisualize } = useGridScene()
 
 /**
  * 3. 矢量Tab
  */
 const { // ------------------------------ 1. 矢量符号化 ------------------------------//
-        handleCheckAllChange, handleCheckedAttrsChange, predefineColors, gridVectorSymbology,
-        // ------------------------------ 2. 矢量选择 -------------------------------//
-        previewIndex, selectedVector,
-        // ------------------------------ 3. 立方体可视化 ------------------------------//
-        handleVectorVisualize, cleanupGridVectorEvents } = useGridVector()
+    handleCheckAllChange, handleCheckedAttrsChange, predefineColors, gridVectorSymbology,
+    // ------------------------------ 2. 矢量选择 -------------------------------//
+    previewIndex, selectedVector,
+    // ------------------------------ 3. 立方体可视化 ------------------------------//
+    handleVectorVisualize, cleanupGridVectorEvents } = useGridVector()
 
 /**
  * 4. 栅格专题Tab
  */
 const { // ------------------------------ 1. 产品选项 ------------------------------//
-        selectedProductType, selectedProduct, productTypes, products,
-        // ------------------------------ 2. 透明度选项 ------------------------------//
-        opacityFormatter, onAfterOpacityChange, opacity,
-        // ------------------------------ 3. 立方体可视化 ------------------------------//
-        handleProductVisualize } = useGridTheme()   
+    selectedProductType, selectedProduct, productTypes, products,
+    // ------------------------------ 2. 透明度选项 ------------------------------//
+    opacityFormatter, onAfterOpacityChange, opacity,
+    // ------------------------------ 3. 立方体可视化 ------------------------------//
+    handleProductVisualize } = useGridTheme()
 
 
 /**
@@ -664,6 +629,7 @@ const { handleSuperResolution, isSuperRes } = useSuperResolution()
     padding: 0.75rem;
     transition: all 0.2s;
 }
+
 :deep(.vector-tag.ant-tag-checkable-checked) {
     background-color: #075985 !important;
     color: #4dabf7 !important;

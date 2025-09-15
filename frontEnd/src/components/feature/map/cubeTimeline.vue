@@ -103,6 +103,7 @@ const show = defineModel<boolean>()
 const multiImages = ref<MultiImageInfoType[]>([])
 const productImages = ref<MultiImageInfoType[]>([])
 const scaleRate = ref(1.00)
+const stretchMethod = ref<'linear' | 'gamma' | 'standard' | ''>('gamma')
 const grid = ref<GridData>({ rowId: 0, columnId: 0, resolution: 0, opacity: 0, normalize_level: 0, sceneRes: { total: 0, category: [] }, vectors: [], themeRes: { total: 0, category: [] } })
 const activeIndex = ref(-1)
 const visualMode = ref<'rgb' | 'product'>('rgb')
@@ -334,6 +335,7 @@ const handleClick = async (index: number) => {
             b_min: min_b,   
             b_max: max_b,
             normalize_level: scaleRate.value,
+            stretch_method: stretchMethod.value,
             nodata: img.nodata
         })
         GridExploreMapOps.map_addGridSceneLayer(
@@ -435,6 +437,7 @@ const handleClick = async (index: number) => {
 const updateHandler = (
     _data: ImageInfoType[] | MultiImageInfoType[],
     _grid: GridData,
+    _strechMethod: 'linear' | 'gamma' | 'standard' | '',
     _scaleRate: number,
     mode: 'rgb' | 'product',
 
@@ -453,6 +456,7 @@ const updateHandler = (
     console.log('product', productImages.value)
     console.log('scalerate', _scaleRate)
     scaleRate.value = _scaleRate
+    stretchMethod.value = _strechMethod
 
     startDateFilter.value = ''
     endDateFilter.value = ''
@@ -466,6 +470,7 @@ const clearState = () => {
   multiImages.value = [];
   productImages.value = [];
   scaleRate.value = 1.00;
+  stretchMethod.value = 'gamma'
 }
 
 const superResOverride = ref<Map<string, {
@@ -505,6 +510,7 @@ onMounted(() => {
         multiImages.value = []
         productImages.value = []
         scaleRate.value = 1.00
+        stretchMethod.value = 'gamma'
         // 清除当前格网的超分状态
         const currentGridKey = `${grid.value.rowId}-${grid.value.columnId}-${grid.value.resolution}`
         superResOverride.value.delete(currentGridKey)

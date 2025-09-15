@@ -203,6 +203,7 @@ export function getGrid3DUrl(grid: GridData, param: RGBCompositeParams) {
     requestParams.append('min_b', param.b_min.toString())
     requestParams.append('max_b', param.b_max.toString())
     if (param.normalize_level) requestParams.append('normalize_level', param.normalize_level.toString())
+    if (param.stretch_method) requestParams.append('stretch_method', param.stretch_method.toString())
     if (param.nodata) requestParams.append('nodata', param.nodata.toString())
     // if (grid.opacity) requestParams.append('normalize_level', grid.opacity.toString())
     return baseUrl + '?' + requestParams.toString()

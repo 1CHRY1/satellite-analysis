@@ -1,3 +1,4 @@
+from typing import Literal
 from fastapi import APIRouter, Query, Response
 from rio_tiler.io import COGReader
 from rio_tiler.utils import render
@@ -191,8 +192,10 @@ def rgb_box_tile(
     max_g: int = Query(5000),
     max_b: int = Query(5000),
     nodata: float = Query(0.0, description="No data value"),
+    stretch_method: Literal["linear", "gamma", "standard"]=Query('gamma', description="The Stretch Method"),
     # normalize_level: int = Query(0, ge=0, le=10, description="归一化分位区间级别，0=全范围，10=50%-50%"
-    normalize_level: float = Query(0, ge=0.1, le=10, description="gamma")
+    # normalize_level: float = Query(0, ge=0.1, le=10, description="gamma")
+    normalize_level: float = Query(0, description="level of stretching")
 ):
     try: 
         '''Get the box RGB tile, too many parameters'''
@@ -240,6 +243,39 @@ def rgb_box_tile(
         final_mask = np.logical_and(mask == 255, bbox_mask)
         final_mask_uint8 = final_mask.astype("uint8") * 255
 
+        match stretch_method:
+            case 'linear':
+                if normalize_level == 0:
+                    b_min_r, b_max_r = float(min_r), float(max_r)
+                    b_min_g, b_max_g = float(min_g), float(max_g)
+                    b_min_b, b_max_b = float(min_b), float(max_b)
+                else:
+                    b_min_r, b_max_r = get_percentile_range(min_r, max_r, normalize_level)
+                    b_min_g, b_max_g = get_percentile_range(min_g, max_g, normalize_level)
+                    b_min_b, b_max_b = get_percentile_range(min_b, max_b, normalize_level)
+
+                r = normalize(tile_r.squeeze(), b_min_r, b_max_r)
+                g = normalize(tile_g.squeeze(), b_min_g, b_max_g)
+                b = normalize(tile_b.squeeze(), b_min_b, b_max_b)
+            case 'gamma':
+                b_min_r, b_max_r = float(min_r), float(max_r)
+                b_min_g, b_max_g = float(min_g), float(max_g)
+                b_min_b, b_max_b = float(min_b), float(max_b)
+
+                r = normalize(tile_r.squeeze(), b_min_r, b_max_r)
+                g = normalize(tile_g.squeeze(), b_min_g, b_max_g)
+                b = normalize(tile_b.squeeze(), b_min_b, b_max_b)
+
+                if normalize_level is not None and normalize_level > 0:
+                    gamma = float(normalize_level)
+                    r = np.clip(((r / 255.0) ** gamma) * 255, 0, 255).astype("uint8")
+                    g = np.clip(((g / 255.0) ** gamma) * 255, 0, 255).astype("uint8")
+                    b = np.clip(((b / 255.0) ** gamma) * 255, 0, 255).astype("uint8")
+            case 'standard':
+                # TODO
+                pass
+
+
         ####################### OLD START - 线性拉伸 #########################
         # # Step 5: 分别对每个波段做分位区间拉伸
         # if normalize_level == 0:
@@ -257,21 +293,21 @@ def rgb_box_tile(
         #####################################################################
 
         ####################### NEW START - gamma拉伸 ########################
-        # Step 5: 分别对每个波段做分位gamma拉伸
-        b_min_r, b_max_r = float(min_r), float(max_r)
-        b_min_g, b_max_g = float(min_g), float(max_g)
-        b_min_b, b_max_b = float(min_b), float(max_b)
+        # # Step 5: 分别对每个波段做分位gamma拉伸
+        # b_min_r, b_max_r = float(min_r), float(max_r)
+        # b_min_g, b_max_g = float(min_g), float(max_g)
+        # b_min_b, b_max_b = float(min_b), float(max_b)
 
-        r = normalize(tile_r.squeeze(), b_min_r, b_max_r)
-        g = normalize(tile_g.squeeze(), b_min_g, b_max_g)
-        b = normalize(tile_b.squeeze(), b_min_b, b_max_b)
+        # r = normalize(tile_r.squeeze(), b_min_r, b_max_r)
+        # g = normalize(tile_g.squeeze(), b_min_g, b_max_g)
+        # b = normalize(tile_b.squeeze(), b_min_b, b_max_b)
 
-        if normalize_level is not None and normalize_level > 0:
-            gamma = float(normalize_level)
-            r = np.clip(((r / 255.0) ** gamma) * 255, 0, 255).astype("uint8")
-            g = np.clip(((g / 255.0) ** gamma) * 255, 0, 255).astype("uint8")
-            b = np.clip(((b / 255.0) ** gamma) * 255, 0, 255).astype("uint8")
-        #####################################################################
+        # if normalize_level is not None and normalize_level > 0:
+        #     gamma = float(normalize_level)
+        #     r = np.clip(((r / 255.0) ** gamma) * 255, 0, 255).astype("uint8")
+        #     g = np.clip(((g / 255.0) ** gamma) * 255, 0, 255).astype("uint8")
+        #     b = np.clip(((b / 255.0) ** gamma) * 255, 0, 255).astype("uint8")
+        # #####################################################################
 
 
         rgb = np.stack([r,g,b])
