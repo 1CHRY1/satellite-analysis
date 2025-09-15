@@ -129,7 +129,7 @@ const handleLogin = async () => {
             maxJob: roleRes.data.maxJob,
             isSuperAdmin: roleRes.data.isSuperAdmin
         })
-        console.log(userStore.user)
+        
         ElMessage({
             type: 'success',
             message: t('login.message.success'),
