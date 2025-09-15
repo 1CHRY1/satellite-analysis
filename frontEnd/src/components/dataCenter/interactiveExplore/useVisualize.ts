@@ -360,38 +360,8 @@ export const useVisualize = () => {
             // 生成 baseId，要和 map_addMVTLayer 内保持一致
             const baseId = `${source_layer}-${attr?.type || 0}-mvt-layer`
 
+            // 添加到地图 - 点击事件处理已经在 map_addMVTLayer 函数中实现
             InteractiveExploreMapOps.map_addMVTLayer(source_layer, url, attr?.color || '#0066cc', attr?.type)
-    
-            mapManager.withMap((map) => {
-
-                // console.log(map.getStyle())
-                map.on('click', (e) => {
-                    //注意传真正的 layer.id而不是 source_layer
-                    const features = map.queryRenderedFeatures(e.point, { 
-                        layers: [
-                            `${baseId}-fill`, 
-                            `${baseId}-line`, 
-                            `${baseId}-point`
-                        ]
-                    })
-                    if (features.length > 0) {
-                        const feature = features[0]
-                        const properties = feature.properties || {}
-                        
-                        // 通过事件总线触发弹窗显示
-                        bus.emit('mvt:feature:click', {
-                            feature,
-                            properties,
-                            lngLat: e.lngLat
-                        })
-                        
-                        // 保留控制台输出用于调试
-                        console.log('Mapbox Layer ID:', feature.layer?.id)    
-                        console.log('MVT Source Layer:', feature.sourceLayer)
-                        console.log('Feature properties:', properties)
-                    }
-                })
-            })
         }
     }
     const destroyVector = (index?: number) => {

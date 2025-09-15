@@ -425,6 +425,47 @@ export function map_addMVTLayer(source_layer: string, url: string, color: string
           'circle-stroke-width': 2
         }
       })
+
+      // 为所有图层添加点击事件处理器
+      const layerIds = [`${baseId}-fill`, `${baseId}-line`, `${baseId}-point`]
+
+      layerIds.forEach(layerId => {
+        // 移除已存在的点击事件监听器（如果有）
+        m.off('click', layerId)
+
+        // 添加新的点击事件监听器
+        m.on('click', layerId, (e) => {
+          const features = m.queryRenderedFeatures(e.point, {
+            layers: [layerId]
+          })
+
+          if (features.length > 0) {
+            const feature = features[0]
+            const properties = feature.properties || {}
+
+            // 通过事件总线触发弹窗显示
+            bus.emit('mvt:feature:click', {
+              feature,
+              properties,
+              lngLat: e.lngLat
+            })
+
+            // 保留控制台输出用于调试
+            console.log('Clicked on layer:', layerId)
+            console.log('MVT Source Layer:', feature.sourceLayer)
+            console.log('Feature properties:', properties)
+          }
+        })
+
+        // 鼠标悬停时显示手型光标
+        m.on('mouseenter', layerId, () => {
+          m.getCanvas().style.cursor = 'pointer'
+        })
+
+        m.on('mouseleave', layerId, () => {
+          m.getCanvas().style.cursor = ''
+        })
+      })
     })
   }
 
@@ -439,10 +480,16 @@ export function map_destroyMVTLayer() {
         // 1. 删除所有匹配 `mvt-layer-*-fill/line/point` 的图层
         const layers = style.layers || [];
         layers.forEach(layer => {
-            if (layer.id.includes('mvt-layer-') && 
-                (layer.id.endsWith('-fill') || 
-                 layer.id.endsWith('-line') || 
+            if (layer.id.includes('mvt-layer-') &&
+                (layer.id.endsWith('-fill') ||
+                 layer.id.endsWith('-line') ||
                  layer.id.endsWith('-point'))) {
+                // 移除事件监听器
+                m.off('click', layer.id);
+                m.off('mouseenter', layer.id);
+                m.off('mouseleave', layer.id);
+
+                // 移除图层
                 m.removeLayer(layer.id);
                 console.log(`已移除图层: ${layer.id}`);
             }
@@ -456,6 +503,9 @@ export function map_destroyMVTLayer() {
                 console.log(`已移除数据源: ${sourceId}`);
             }
         });
+
+        // 重置鼠标光标
+        m.getCanvas().style.cursor = '';
     });
 }
 
