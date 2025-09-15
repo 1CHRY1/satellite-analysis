@@ -7,7 +7,7 @@
             <button @click="handleZoomOut" class="map-button">➖</button>
             <button @click="handleRightRotate" class="map-button">↩️</button>
             <button @click="handleLeftRotate" class="map-button">↪️</button>
-            <button @click="handle3DTiles" class="map-button">⛰️</button>
+            <button @click="handle3DTiles" :class="['map-button', is3D ? '' : 'grayscale']">⛰️</button>
             <!-- <button @click="handle3DTiles" class="map-button !text-gray-900">{{ is3DMode ? '3D' : '2D' }}</button>-->
             <button @click="localTian" class="map-button text-gray-900!">{{ t('datapage.mapcomp.vector') }}</button>
             <button @click="localImg" class="map-button text-gray-900!">{{ t('datapage.mapcomp.imagery') }}</button>
@@ -183,6 +183,11 @@ onUnmounted(() => {
 
 .map-button {
     @apply cursor-pointer rounded-md bg-white p-2 shadow-md shadow-gray-300 hover:bg-gray-50;
+}
+
+.map-button.grayscale {
+    filter: grayscale(100%);
+    opacity: 0.7;
 }
 
 :deep(.mapboxgl-popup-content) {
