@@ -11,6 +11,13 @@ export interface UserInfo {
     title: string
     organization: string
     introduction: string
+    isSuperAdmin: boolean
+    roleName: string
+    roleDesc: string
+    maxCpu: number
+    maxStorage: number
+    maxJob: number
+    roleId: number
 }
 
 interface User {
@@ -48,7 +55,14 @@ export const useUserStore = defineStore('user-store', {
                 title: '',
                 organization: '',
                 role: '',
-                introduction:''
+                introduction:'',
+                roleId: 2,
+                roleName: '',
+                roleDesc: '',
+                maxCpu: 2,
+                maxStorage: 5,
+                maxJob: 3,
+                isSuperAdmin: false
             }
         })(),
     }),
@@ -71,6 +85,13 @@ export const useUserStore = defineStore('user-store', {
             title: string
             organization: string
             introduction: string
+            isSuperAdmin: boolean
+            roleName: string
+            roleDesc: string
+            maxCpu: number
+            maxStorage: number
+            maxJob: number
+            roleId: number
         }) {
             this.authenticated = true
             this.user.id = credentials.id
@@ -83,6 +104,13 @@ export const useUserStore = defineStore('user-store', {
             this.user.organization = credentials.organization
             this.user.introduction = credentials.introduction
             this.user.role = 'user'
+            this.user.roleId = credentials.roleId
+            this.user.roleName = credentials.roleName
+            this.user.roleDesc = credentials.roleDesc
+            this.user.maxCpu = credentials.maxCpu
+            this.user.maxStorage = credentials.maxStorage
+            this.user.maxJob = credentials.maxJob
+            this.user.isSuperAdmin = credentials.isSuperAdmin
             localStorage.setItem('user', JSON.stringify(this.user))
         },
         logout() {
