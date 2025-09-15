@@ -41,81 +41,147 @@
                 </el-button>
             </div>
 
-            <el-dialog title="工具发布" v-model="publishView" width="400px"> 
-                <el-form :model="publishToolData" label-width="100px">
-                    <el-form-item label="工具名称" required>
-                        <el-input v-model="publishToolData.toolName" placeholder="请输入工具名称" />
-                    </el-form-item>
-                    <el-form-item label="运行环境">
-                        <el-select v-model="publishToolData.environment" disabled>
-                            <el-option label="Python 3.9" value="python3.9" />
-                        </el-select>
-                    </el-form-item>
-                    <el-form-item label="分类" required>
-                        <el-input v-model="publishToolData.category" placeholder="请输入工具分类" />
-                    </el-form-item>
-                    <el-form-item label="描述" required>
-                        <el-input 
-                            v-model="publishToolData.description" 
-                            type="textarea" 
-                            :rows="3" 
-                            placeholder="请输入工具功能描述" 
-                        />
-                    </el-form-item>
-                    <el-form-item label="标签">
-                        <el-tag
-                            v-for="tag in publishToolData.tags"
-                            :key="tag"
-                            closable
-                            @close="removeTag(tag)"
-                            style="margin-right: 8px; margin-bottom: 8px"
-                        >
-                            {{ tag }}
-                        </el-tag>
-                        <el-input
-                            v-if="tagsInput !== undefined"
-                            v-model="tagsInput"
-                            ref="tagInputRef"
-                            size="small"
-                            style="width: 120px"
-                            @keyup.enter="addTag"
-                            @blur="addTag"
-                        />
-                        <el-button 
-                            v-else 
-                            size="small" 
-                            @click="showTagInput"
-                            style="margin-bottom: 8px"
-                        >
-                            + 添加标签
-                        </el-button>
-                    </el-form-item>
-                    
-                    <el-form-item label="参数配置">
-                        <div v-for="(param, index) in publishToolData.parameters" :key="index" class="param-item">
-                            <el-input v-model="param.Name" placeholder="参数名" style="width: 100px" />
-                            <el-input v-model="param.Flags" placeholder="Flags" style="width: 120px; margin-left: 8px" />
-                            <el-select v-model="param.Type" style="width: 100px; margin-left: 8px">
-                                <el-option label="String" value="String" />
-                                <el-option label="Number" value="Number" />
-                                <el-option label="Boolean" value="Boolean" />
+                        <el-dialog title="工具发布" v-model="publishView" width="500px" class="custom-dialog" style="max-height: 80vh; overflow-y: auto;"> 
+                <el-card class="mb-4">
+                    <template #header>
+                        <span>基础配置</span>
+                    </template>
+
+                    <el-form :model="publishToolData" label-width="100px">
+                        <el-form-item label="工具名称" required>
+                            <el-input v-model="publishToolData.toolName" placeholder="请输入工具名称" />
+                        </el-form-item>
+                        <el-form-item label="运行环境">
+                            <el-select v-model="publishToolData.environment" disabled>
+                                <el-option label="Python 3.9" value="python3.9" />
                             </el-select>
-                            <el-input v-model="param.Description" placeholder="描述" style="width: 150px; margin-left: 8px" />
+                        </el-form-item>
+                        <el-form-item label="分类" required>
+                            <el-input v-model="publishToolData.category" placeholder="请输入工具分类" />
+                        </el-form-item>
+                        <el-form-item label="描述" required>
                             <el-input 
-                                v-model="param.default_value" 
-                                placeholder="默认值" 
-                                style="width: 120px; margin-left: 8px" 
-                                :disabled="param.Type === 'Boolean'"
+                                v-model="publishToolData.description" 
+                                type="textarea" 
+                                :rows="3" 
+                                placeholder="请输入工具功能描述" 
                             />
-                            <el-button type="danger" @click="removeParameter(index)" style="margin-left: 8px">删除</el-button>
+                        </el-form-item>
+                        <el-form-item label="标签">
+                            <el-tag
+                                v-for="tag in publishToolData.tags"
+                                :key="tag"
+                                closable
+                                @close="removeTag(tag)"
+                                style="margin-right: 8px; margin-bottom: 8px"
+                            >
+                                {{ tag }}
+                            </el-tag>
+                            <el-input
+                                v-if="tagsInput !== undefined"
+                                v-model="tagsInput"
+                                ref="tagInputRef"
+                                size="small"
+                                style="width: 120px"
+                                @keyup.enter="addTag"
+                                @blur="addTag"
+                            />
+                            <el-button 
+                                v-else 
+                                size="small" 
+                                @click="showTagInput"
+                                style="margin-bottom: 8px"
+                            >
+                                + 添加标签
+                            </el-button>
+                        </el-form-item>
+                        
+                        <!-- <el-form-item label="参数配置">
+                            <div v-for="(param, index) in publishToolData.parameters" :key="index" class="param-item">
+                                <el-input v-model="param.Name" placeholder="参数名" style="width: 100px" />
+                                <el-input v-model="param.Flags" placeholder="Flags" style="width: 120px; margin-left: 8px" />
+                                <el-select v-model="param.Type" style="width: 100px; margin-left: 8px">
+                                    <el-option label="String" value="String" />
+                                    <el-option label="Number" value="Number" />
+                                    <el-option label="Boolean" value="Boolean" />
+                                </el-select>
+                                <el-input v-model="param.Description" placeholder="描述" style="width: 150px; margin-left: 8px" />
+                                <el-input 
+                                    v-model="param.default_value" 
+                                    placeholder="默认值" 
+                                    style="width: 120px; margin-left: 8px" 
+                                    :disabled="param.Type === 'Boolean'"
+                                />
+                                <el-button type="danger" @click="removeParameter(index)" style="margin-left: 8px">删除</el-button>
+                            </div>
+                            <el-button type="primary" @click="addParameter" style="margin-top: 10px">添加参数</el-button>
+                        </el-form-item> -->
+                    </el-form>
+                </el-card>
+                <el-card class="mb-4">
+                    <template #header>
+                        <span>参数配置</span>
+                    </template>
+
+                    <div>
+                        <el-input
+                            type="textarea"
+                            :rows="10"
+                            v-model="jsonText"
+                            :readonly="!isEditing"
+                            placeholder="JSON 内容"
+                        ></el-input>
                         </div>
-                        <el-button type="primary" @click="addParameter" style="margin-top: 10px">添加参数</el-button>
-                    </el-form-item>
-                </el-form>
-            
+                        <div style="margin-top: 10px; text-align: right;">
+                        <el-button type="primary" @click="toggleEdit">
+                            {{ isEditing ? '保存修改' : '编辑说明文档' }}
+                        </el-button>
+                    </div>
+
+                </el-card>
+
+                <el-card>
+                    <template #header>
+                        <span>测试结果</span>
+                    </template>
+
+
+                </el-card>
+                    
                 <template #footer>
                     <el-button @click="publishView = false">取消</el-button>
+                    <el-button @click="testOpen" >测试</el-button>  
+                    <!-- 发布按钮 -->
                     <el-button type="primary" @click="publishFunction" :loading="publishLoading">发布</el-button>
+                </template>
+            </el-dialog>
+
+            <el-dialog title="工具测试" v-model="testLoading" width="500px">
+                <el-form :model="formData" label-width="100px">
+                   <el-form-item label="数据选取">
+                        <el-upload 
+                            style="" 
+                            accept=".tif,.tiff"
+                            :before-upload="beforeUpload"
+                            :on-success="handleUploadSuccess"
+                            :on-error="handleUploadError"
+                            action="#"
+                            :auto-upload="false"
+                        >
+                            <el-button type="primary">选择文件</el-button>
+                            <template #tip>
+                                <div class="el-upload__tip">只能上传 TIF 格式文件</div>
+                            </template>
+                        </el-upload>
+                   </el-form-item>
+                    <el-form-item v-for="key in keywords" :key="key" :label="key">
+                    <el-input v-model="formData[key]" placeholder="请输入内容" />
+                    </el-form-item>
+                </el-form>
+
+                <template #footer>
+                    <el-button @click="testLoading = false; publishView = true">返回</el-button>
+                    <el-button type="primary" @click="runTest" >运行</el-button>
                 </template>
             </el-dialog>
 
@@ -243,7 +309,7 @@ import {
     unpublishService,
     getServiceStatus,
 } from '@/api/http/analysis'
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount,watch, computed } from 'vue'
 import { Codemirror } from 'vue-codemirror'
 import { python } from '@codemirror/lang-python'
 import { ElMessage } from 'element-plus'
@@ -427,6 +493,115 @@ const onCmReady = (editor: any) => {
 const onCmInput = (value: string) => {
     if (0) {
         console.log('Code updated:', value)
+    }
+}
+
+//说明文档
+const jsonText = ref('{\n\n}')
+const jsonData = ref({})
+const isEditing = ref(false)
+
+
+const toggleEdit = () => {
+  if (isEditing.value) {
+    // 保存前先检查格式
+    try {
+      const parsed = JSON.parse(jsonText.value)
+      jsonData.value = parsed
+      jsonText.value = JSON.stringify(jsonData.value, null, 2)
+      ElMessage.success(' JSON 已保存')
+      isEditing.value = false
+    } catch (error) {
+      if (error instanceof Error) {
+        ElMessage.error('JSON 格式错误: ' + error.message)
+      } else {
+        ElMessage.error('JSON 格式错误')
+      }
+    }
+  } else {
+    // 切换到编辑状态
+    isEditing.value = true
+  }
+}
+
+
+//工具测试'
+
+const testLoading = ref(false)
+const testOpen = async() =>{
+    if (jsonText.value && jsonText.value.trim() !== '' && jsonText.value.trim() !== '{\n\n}'&& jsonText.value.trim() !== '{}') {
+        publishView.value = false
+        testLoading.value = true
+    }else{
+        ElMessage.error('请输入正确的说明文档')
+    }
+    
+}
+
+// 文件上传前的验证
+const beforeUpload = (file) => {
+    const isLimit = file.size / 1024 / 1024 < 100
+    const isTif = file.name.toLowerCase().endsWith('.tif') || file.name.toLowerCase().endsWith('.tiff')
+    if (!isTif) {
+        ElMessage.error('只能上传 TIF 格式的文件！')
+        return false
+    }
+    if (!isLimit) {
+        ElMessage.error('文件大小不能超过100MB！')
+        return false
+    }
+    return true
+}
+
+// 存储上传的文件信息
+const uploadedFile = ref(null)
+
+// 文件上传成功处理
+const handleUploadSuccess = (response, file) => {
+    uploadedFile.value = file
+    ElMessage.success(`文件 ${file.name} 上传成功！`)
+    console.log('上传的文件信息:', file)
+}
+
+// 文件上传失败处理
+const handleUploadError = (error, file) => {
+    ElMessage.error(`文件 ${file.name} 上传失败！`)
+    console.error('上传失败:', error)
+}
+
+// 从json文本中提取关键词
+const keywords = computed(() => {
+  try {
+    const parsed = JSON.parse(jsonText.value)
+    return Object.keys(parsed)
+  } catch {
+    return []
+  }
+})
+
+
+const formData = ref({})
+
+
+watch(keywords, (newKeywords) => {
+  const newFormData = {}
+  newKeywords.forEach((key) => {
+    newFormData[key] = formData.value[key] || ""
+  })
+  formData.value = newFormData
+}, { immediate: true })
+
+const runTest = async() =>{
+    try {
+        let param = {
+            projectId: props.projectId,
+            userId: props.userId,
+            file: uploadedFile.value,
+            params: formData.value,
+        }
+        
+    } catch (error) {
+        
     }
 }
 
