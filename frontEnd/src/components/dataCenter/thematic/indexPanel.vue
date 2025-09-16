@@ -223,8 +223,8 @@
                                 </el-dialog>
                         
                         
-                            <div class="color-palette-selector mb-6 border border-[#247699] rounded mt-2 mb-4 w-full" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
-                                <span class="ml-4">选择指数</span>
+                            <div class="color-palette-selector mb-6 border border-[#247699] rounded mt-2 mb-4 w-full p-3 " style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
+                                <span class="block mb-2">选择指数</span>
                                 <select
                                     v-model="selectedIndex"
                                     class="w-full rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white appearance-none hover:border-[#2bb2ff] hover:bg-[#1a2b4c] focus:outline-none focus:border-[#3b82f6]"
@@ -243,8 +243,8 @@
                                 </select>
                             </div>
                         
-                        <div class="color-palette-selector  mb-6  border border-[#247699] rounded mt-2 mb-4 w-full " style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
-                                <label class="ml-4">配色方案:</label>
+                        <div class="color-palette-selector  mb-6  border border-[#247699] rounded mt-2 mb-4 w-full p-3 " style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
+                                <label class="block mb-2">配色方案</label>
                                 <select
                                     v-model="selectedColorMap"
                                     class="w-full rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white appearance-none hover:border-[#2bb2ff] hover:bg-[#1a2b4c] focus:outline-none focus:border-[#3b82f6]"
