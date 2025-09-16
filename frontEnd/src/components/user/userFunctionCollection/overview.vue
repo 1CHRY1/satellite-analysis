@@ -48,8 +48,12 @@
         </div>
       </section> -->
   
-      <section class="h-[calc(100vh-400px)/2] overflow-y-auto">
-        <h2 class="text-xl font-semibold mb-4 text-black">
+      <section
+        ref="scrollContainer"
+        class="max-h-[600px] overflow-y-auto border border-gray-200 rounded-lg p-4"
+        @scroll="handleScroll"
+      >
+        <h2 class="text-xl font-semibold mb-4 text-black sticky top-0 bg-white z-10">
           {{ t("userpage.userFunction.dynamic") }}
         </h2>
         <div class="block">
@@ -80,40 +84,22 @@
             </h3>
           </div>
         </div>
-        <el-button
-          style="
-            width: 100%;
-            height: 30px;
-            margin-top: 1%;
-            border-color: white !important  ;
-            background-color: white !important;
-            color: black !important;
-          "
-          @click="loadmoreAll"
-          v-if="TotalElement > 5 && historyData.length < TotalElement"
-        >
-          {{ t("userpage.userFunction.load") }}
-        </el-button>
+        <!-- Loading indicator -->
+        <!-- <div v-if="isLoading" class="text-center py-4">
+          <el-loading-spinner />
+          <p class="text-gray-500 mt-2">{{ "加载中..." }}</p>
+        </div> -->
 
-        <!--动态获取调试 -->
-        <!-- <el-button  
-        style="
-            width: 100%;
-            height: 30px;
-            margin-top: 1%;
-            border-color: white !important  ;
-            background-color: white !important;
-            color: black !important;
-          "
-        @click="loadHistroy()">
-          调试
-        </el-button> -->
+        <!-- End of data indicator -->
+        <!-- <div v-else-if="historyData.length >= TotalElement && TotalElement > 0" class="text-center py-4">
+          <p class="text-gray-500">{{ "没有更多数据了" }}</p>
+        </div> -->
       </section>
     </div>
   </template>
   
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { getUserProjects } from "@/api/http/analysis";
@@ -156,14 +142,18 @@ interface historyType  {
 }
 
 const projectList = ref<Project[]>([])
+const scrollContainer = ref<HTMLElement>()
+const isLoading = ref(false)
 
- 
   // 历史数据demo
 const historyData = ref<historyType[]>([]);
 
 
 const page = ref(1)
 const loadHistroy = async(pagePara = page ) => {
+  if (isLoading.value) return;
+
+  isLoading.value = true;
   let param = {
       userId : userStore.user.id,
       page: pagePara.value,
@@ -172,17 +162,23 @@ const loadHistroy = async(pagePara = page ) => {
       sortField: "actionTime",
       };
   try{
-  let res = await getHistoryData(param)
-  console.log(res);
-    
-  if (res.status == 1){
-    res.data.records.sort((a,b) => b.actionTime.localeCompare(a.actionTime))
-    historyData.value.push(...res.data.records)
-    console.log(historyData.value)
-    page.value += 1
+    let res = await getHistoryData(param)
+    console.log(res);
+
+    if (res.status == 1){
+      res.data.records.sort((a,b) => b.actionTime.localeCompare(a.actionTime))
+      historyData.value.push(...res.data.records)
+      console.log(historyData.value)
+      page.value += 1
+      // Update total count if available
+      if (res.data.total) {
+        TotalElement.value = res.data.total;
+      }
     }
   } catch(error){
     console.error('loadHistroy 报错:', error);
+  } finally {
+    isLoading.value = false;
   }
 }
 
@@ -203,12 +199,19 @@ function handleInvite(action: string, id: number) {
     console.log(`处理邀请: ${action}, ID: ${id}`);
   }
   
-  // 加载更多
-function loadmoreAll() {
-    console.log("加载更多数据");
-    loadHistroy()
-    // 这里可以添加加载更多数据的逻辑
+  // 处理滚动事件，实现无限滚动
+function handleScroll(event: Event) {
+  const target = event.target as HTMLElement;
+  const { scrollTop, scrollHeight, clientHeight } = target;
+
+  // 当滚动到距离底部 50px 时触发加载
+  if (scrollHeight - scrollTop - clientHeight < 50) {
+    // 检查是否还有更多数据要加载
+    if (historyData.value.length < TotalElement.value && !isLoading.value) {
+      loadHistroy();
+    }
   }
+}
 
 onMounted(async () => {
   try {
@@ -221,5 +224,29 @@ onMounted(async () => {
 })
   </script>
   
-  <style lang="less" scoped></style>
+  <style scoped>
+  /* Custom scrollbar styling */
+  section {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 #f7fafc;
+  }
+
+  section::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  section::-webkit-scrollbar-track {
+    background: #f7fafc;
+    border-radius: 3px;
+  }
+
+  section::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 3px;
+  }
+
+  section::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+  }
+  </style>
   
