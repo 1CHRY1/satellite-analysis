@@ -296,13 +296,13 @@ const handleClick = async (index: number) => {
 
         const cache = ezStore.get('statisticCache')
         const promises: any = []
-        let [min_r, max_r, min_g, max_g, min_b, max_b] = [0, 0, 0, 0, 0, 0]
+        let [min_r, max_r, min_g, max_g, min_b, max_b, mean_r, mean_g, mean_b, std_r, std_g, std_b] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
         if (cache.get(redPath) && cache.get(greenPath) && cache.get(bluePath)) {
             console.log('cache hit!')
-            ;[min_r, max_r] = cache.get(redPath)
-            ;[min_g, max_g] = cache.get(greenPath)
-            ;[min_b, max_b] = cache.get(bluePath)
+            ;[min_r, max_r, mean_r, std_r] = cache.get(redPath)
+            ;[min_g, max_g, mean_g, std_g] = cache.get(greenPath)
+            ;[min_b, max_b, mean_b, std_b] = cache.get(bluePath)
         } else if (img.dataType !== 'dem' && img.dataType !== 'dsm') {
             promises.push(
                 getImgStats(getMinIOUrl(redPath)),
@@ -316,14 +316,20 @@ const handleClick = async (index: number) => {
                 max_g = values[1].b1.max
                 min_b = values[2].b1.min
                 max_b = values[2].b1.max
+                mean_r = values[0].b1.mean
+                std_r = values[0].b1.std
+                mean_g = values[1].b1.mean
+                std_g = values[1].b1.std
+                mean_b = values[2].b1.mean
+                std_b = values[2].b1.std
             })
 
-            cache.set(redPath, [min_r, max_r])
-            cache.set(greenPath, [min_g, max_g])
-            cache.set(bluePath, [min_b, max_b])
+            cache.set(redPath, [min_r, max_r, mean_r, std_r])
+            cache.set(greenPath, [min_g, max_g, mean_g, std_g])
+            cache.set(bluePath, [min_b, max_b, mean_b, std_b])
         }
 
-        console.log(min_r, max_r, min_g, max_g, min_b, max_b)
+        console.log(min_r, max_r, min_g, max_g, min_b, max_b, mean_r, mean_g, mean_b, std_r, std_g, std_b)
         const url = getGridSceneUrl(grid.value, {
             redPath,
             greenPath,
@@ -336,7 +342,8 @@ const handleClick = async (index: number) => {
             b_max: max_b,
             normalize_level: scaleRate.value,
             stretch_method: stretchMethod.value,
-            nodata: img.nodata
+            nodata: img.nodata,
+            std_config: JSON.stringify({mean_r, mean_g, mean_b, std_r, std_g, std_b})
         })
         GridExploreMapOps.map_addGridSceneLayer(
             grid.value,

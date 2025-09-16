@@ -12,6 +12,7 @@ from shapely.ops import unary_union
 from rasterio.features import geometry_mask
 from rasterio.transform import from_bounds
 from config import minio_config, TRANSPARENT_CONTENT
+from pydantic import BaseModel
 
 ####### Helper ########################################################################################
 
@@ -177,6 +178,13 @@ def rgb_tile(
         return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
 
 
+class StdStretchConfig(BaseModel):
+    mean_r: float
+    std_r: float
+    mean_g: float
+    std_g: float
+    mean_b: float
+    std_b: float
 
 @router.get("/box/{z}/{x}/{y}.png")
 def rgb_box_tile(
@@ -195,9 +203,17 @@ def rgb_box_tile(
     stretch_method: Literal["linear", "gamma", "standard"]=Query('gamma', description="The Stretch Method"),
     # normalize_level: int = Query(0, ge=0, le=10, description="归一化分位区间级别，0=全范围，10=50%-50%"
     # normalize_level: float = Query(0, ge=0.1, le=10, description="gamma")
-    normalize_level: float = Query(0, description="level of stretching")
+    normalize_level: float = Query(0, description="level of stretching"),
+    std_config: str = Query("{}", description="标准差配置JSON字符串，例如: {\"mean_r\":120.5,\"std_r\":15.3,...}"),
 ):
     try: 
+        try:
+            if stretch_method is 'standard':
+                config_dict = json.loads(std_config)
+                config = StdStretchConfig(**config_dict)
+        except:
+            return Response(status_code=400, content=b"Invalid JSON std format")
+
         '''Get the box RGB tile, too many parameters'''
         # Step 1: Parse the bbox
         try:
@@ -245,6 +261,7 @@ def rgb_box_tile(
 
         match stretch_method:
             case 'linear':
+                normalize_level = int(normalize_level)
                 if normalize_level == 0:
                     b_min_r, b_max_r = float(min_r), float(max_r)
                     b_min_g, b_max_g = float(min_g), float(max_g)
@@ -258,6 +275,7 @@ def rgb_box_tile(
                 g = normalize(tile_g.squeeze(), b_min_g, b_max_g)
                 b = normalize(tile_b.squeeze(), b_min_b, b_max_b)
             case 'gamma':
+                normalize_level = float(normalize_level)
                 b_min_r, b_max_r = float(min_r), float(max_r)
                 b_min_g, b_max_g = float(min_g), float(max_g)
                 b_min_b, b_max_b = float(min_b), float(max_b)
@@ -272,8 +290,20 @@ def rgb_box_tile(
                     g = np.clip(((g / 255.0) ** gamma) * 255, 0, 255).astype("uint8")
                     b = np.clip(((b / 255.0) ** gamma) * 255, 0, 255).astype("uint8")
             case 'standard':
-                # TODO
-                pass
+                normalize_level = int(normalize_level)
+                # 计算波段统计值
+                mean_r, std_r = config.mean_r, config.std_r
+                mean_g, std_g = config.mean_g, config.std_g
+                mean_b, std_b = config.mean_b, config.std_b
+                # 确定拉伸区间
+                n = normalize_level if normalize_level > 0 else 2  # 默认 2σ
+                b_min_r, b_max_r = mean_r - n * std_r, mean_r + n * std_r
+                b_min_g, b_max_g = mean_g - n * std_g, mean_g + n * std_g
+                b_min_b, b_max_b = mean_b - n * std_b, mean_b + n * std_b
+                # 用已有的normalize拉伸到[0,255]
+                r = normalize(tile_r.squeeze(), b_min_r, b_max_r)
+                g = normalize(tile_g.squeeze(), b_min_g, b_max_g)
+                b = normalize(tile_b.squeeze(), b_min_b, b_max_b)
 
 
         ####################### OLD START - 线性拉伸 #########################

@@ -74,6 +74,7 @@ export const getVectorUrl = (vectorUrlParam: VectorUrlParam) => {
     }
     let types = '?' + requestParams.toString()
     let baseUrl = ''
+    // types = ''
     switch (spatialFilterMethod) {
         case 'region':
             baseUrl = `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/region/${landId}/${source_layer}/{z}/{x}/{y}${types}`
@@ -217,6 +218,7 @@ export function getGrid3DUrl(grid: GridData, param: RGBCompositeParams) {
     if (param.normalize_level) requestParams.append('normalize_level', param.normalize_level.toString())
     if (param.stretch_method) requestParams.append('stretch_method', param.stretch_method.toString())
     if (param.nodata) requestParams.append('nodata', param.nodata.toString())
+    if (param.std_config) requestParams.append('std_config', param.std_config.toString())
     // if (grid.opacity) requestParams.append('normalize_level', grid.opacity.toString())
     return baseUrl + '?' + requestParams.toString()
 }

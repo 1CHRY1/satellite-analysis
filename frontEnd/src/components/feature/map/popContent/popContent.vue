@@ -98,7 +98,7 @@
                         </span>
                     </button>
                 </div>
-                <div class="btns flex justify-center" v-show="showBandSelector && activeMethod === 'superresolution'">
+                <!-- <div class="btns flex justify-center" v-show="showBandSelector && activeMethod === 'superresolution'">
                     <button class="visualize-btn">
                         <span class="btn-icon">
                             <GalleryHorizontalIcon :size="18" />
@@ -110,7 +110,7 @@
                             <Trash2Icon :size="18" />
                         </span>
                     </button>
-                </div>
+                </div> -->
 
                 <!-- 原亮度拉伸，现为拉伸增强 -->
                 <div @mousedown="handleScaleMouseDown" @mouseup="handleScaleMouseUp" v-show="activeMethod === 'rgb'">
@@ -129,6 +129,8 @@
                             :step="1" @afterChange="onAfterScaleRateChange" />
                         <a-slider v-if="selectedStretchMethod === 'gamma'" :tip-formatter="scaleRateFormatter" v-model:value="scaleRate" :min="0.10" :max="10"
                             :step="0.01" @afterChange="onAfterScaleRateChange" />
+                        <a-slider v-if="selectedStretchMethod === 'standard'" :tip-formatter="(value) => `${value}σ`" v-model:value="scaleRate" :min="0" :max="3"
+                            :step="1" @afterChange="onAfterScaleRateChange" />
                     </div>
                 </div>
 

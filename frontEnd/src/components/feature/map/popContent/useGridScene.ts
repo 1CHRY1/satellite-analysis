@@ -117,8 +117,8 @@ export const useGridScene = () => {
      */
     const stretchMethods = [
         {label: "线性拉伸", value: "linear"},
-        {label: "gamma拉伸", value: "gamma"},
-        // {label: "标准差拉伸", value: "standard"},
+        {label: "γ 拉伸", value: "gamma"},
+        {label: "标准差拉伸", value: "standard"},
     ]
     type StretchMethod = "linear" | "gamma" | "standard"
     const selectedStretchMethod = ref<StretchMethod>("gamma")
