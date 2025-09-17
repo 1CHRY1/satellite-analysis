@@ -531,14 +531,24 @@
         <MapComp class="flex-1" :style="'local'" :proj="'globe'" :isPicking="isPicking" />
         <!-- MVT属性信息弹窗 - 已改用Mapbox原生弹窗 -->
         <!-- <MvtPop /> -->
+
+        <teleport to="body">
+            <div class="grid-popup-layer" v-show="gridPopupVisible">
+                <div class="grid-popup-panel">
+                    <PopContent />
+                </div>
+            </div>
+        </teleport>
     </div>
 </template>
 
 <script setup lang="ts">
+import bus from '@/store/bus'
 import MapComp from '@/components/feature/map/mapComp.vue'
+import PopContent from '@/components/feature/map/popContent/popContent.vue'
 import segmented from '@/components/common/segmented.vue';
 // import MvtPop from '@/components/feature/map/popContent/mvtPop.vue' // 已改用Mapbox原生弹窗
-import { ref, computed, type Ref, watch, reactive, onMounted, provide, inject, onUnmounted } from 'vue'
+import { ref, computed, type Ref, watch, reactive, onMounted, provide, inject, onUnmounted, nextTick } from 'vue'
 import { RegionSelects } from 'v-region'
 import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'
 import { formatTime } from '@/util/common'
@@ -650,11 +660,39 @@ const toNoCloud = () => {
 // 地图展示
 const isPicking = ref(false)
 
+// Grid popup visibility
+const gridPopupVisible = ref(false)
+const handleGridPopupVisible = (visible: boolean) => {
+    gridPopupVisible.value = !!visible
+}
+
+// Critical: when visibility turns true, schedule reset AFTER DOM shows
+watch(gridPopupVisible, (v) => {
+    if (!v) return
+    nextTick(() => {
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                bus.emit('gridPopup:reset-position')
+            })
+        })
+    })
+})
+
 onMounted(async () => {
     setInitialListExpand()
 
     if (!ezStore.get('statisticCache')) ezStore.set('statisticCache', new Map())
     if (!ezStore.get('sceneNodataMap')) ezStore.set('sceneNodataMap', new Map())
+
+    // Add grid popup visibility listener
+    bus.on('gridPopup:visible', handleGridPopupVisible)
+    // Lock/unlock page scroll when popup visible
+    bus.on('gridPopup:visible', (v: boolean) => {
+        try {
+            document.documentElement.style.overflow = v ? 'hidden' : ''
+            document.body.style.overflow = v ? 'hidden' : ''
+        } catch {}
+    })
 
     await mapManager.waitForInit();
 
@@ -679,6 +717,9 @@ onMounted(async () => {
 
 onUnmounted(() => {
     destroyExploreLayers()
+    bus.off('gridPopup:visible', handleGridPopupVisible)
+    try { document.documentElement.style.overflow = '' } catch {}
+    try { document.body.style.overflow = '' } catch {}
 })
 
 </script>
@@ -696,5 +737,39 @@ onUnmounted(() => {
 
 .config-item {
     background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);
+}
+
+.grid-popup-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 2200;
+    pointer-events: none;
+}
+
+.grid-popup-panel {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+:deep(.grid-popup-panel .vdr) {
+    pointer-events: auto;
+}
+::deep(.grid-popup-panel .vdr * ) {
+    pointer-events: auto;
+}
+
+.grid-popup-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 2200;
+    pointer-events: none;
+    overflow: hidden; /* NEW: prevent body scrolling */
+}
+.grid-popup-panel {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden; /* NEW: clip inner overflow */
 }
 </style>
