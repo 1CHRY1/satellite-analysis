@@ -21,7 +21,7 @@ export const setCurrentPanel = (panel: string) => {
 
 // 控制无云一版图内容的折叠状态
 export const isNoCloudExpand = ref<boolean>(true)
-export const isComplexExpand = ref<boolean>(false)
+export const isComplexExpand = ref<boolean>(true)
 
 // 地图展示
 export const isPicking = ref(false)

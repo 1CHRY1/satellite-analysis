@@ -2,7 +2,10 @@ import { mapManager, initMap, type Style } from '../mapManager'
 import { ezStore, useGridStore } from '@/store'
 import { Popup, GeoJSONSource, MapMouseEvent } from 'mapbox-gl'
 import bus from '@/store/bus'
-
+import { createApp, type ComponentInstance, ref, type Ref, reactive } from 'vue'
+import PopContent from '@/components/feature/map/popContent/popContent.vue'
+import Antd from 'ant-design-vue'
+import type { Expression } from 'mapbox-gl'
 
 /**
  * 0. 公用函数/初始化等
@@ -409,9 +412,15 @@ function getOrCreateVectorPopup(): Popup {
  * @param landId 行政区id
  * @param cb 回调函数
  */
-export function map_addMVTLayer(source_layer: string, url: string, color: string, type?: number) {
-    const baseId = `${source_layer}-${type || 0}-mvt-layer`
+export function map_addMVTLayer(source_layer: string, url: string, attrList: {color: string, type: number}[]) {
+    const baseId = `${source_layer}-mvt-layer`
     const srcId = baseId + '-source'
+    const matchColor: Expression = [
+        'match',
+        ['get', 'type'], // MVT属性字段
+        ...attrList.flatMap(tc => [tc.type, tc.color]),
+        'rgba(0,0,0,0)' // 默认颜色
+    ]
     
     mapManager.withMap((m) => {
     //   // 移除已存在的图层和数据源
@@ -446,7 +455,7 @@ export function map_addMVTLayer(source_layer: string, url: string, color: string
         filter: ['==', '$type', 'Polygon'], // 只显示面要素
         paint: {
         //   'fill-color': '#0066cc',
-          'fill-color': color,
+          'fill-color': matchColor,
         //   'fill-opacity': 0.5,
           'fill-outline-color': '#004499'
         }
@@ -460,7 +469,7 @@ export function map_addMVTLayer(source_layer: string, url: string, color: string
         'source-layer': source_layer,
         filter: ['==', '$type', 'LineString'], // 只显示线要素
         paint: {
-          'line-color': color,
+          'line-color': matchColor,
           'line-width': 2,
           'line-opacity': 0.8
         }
@@ -474,7 +483,7 @@ export function map_addMVTLayer(source_layer: string, url: string, color: string
         'source-layer': source_layer,
         filter: ['==', '$type', 'Point'], // 只显示点要素
         paint: {
-          'circle-color': color,
+          'circle-color': matchColor,
           'circle-radius': 6,
           'circle-opacity': 0.8,
           'circle-stroke-color': '#ffffff',
@@ -487,7 +496,7 @@ export function map_addMVTLayer(source_layer: string, url: string, color: string
 
       layerIds.forEach(layerId => {
         // 移除已存在的点击事件监听器（如果有）
-        m.off('click', layerId)
+        m.off('click', layerId as any)
 
         // 添加新的点击事件监听器
         m.on('click', layerId, (e) => {
@@ -558,9 +567,9 @@ export function map_destroyMVTLayer() {
                  layer.id.endsWith('-line') ||
                  layer.id.endsWith('-point'))) {
                 // 移除事件监听器
-                m.off('click', layer.id);
-                m.off('mouseenter', layer.id);
-                m.off('mouseleave', layer.id);
+                m.off('click', layer.id as any);
+                m.off('mouseenter', layer.id as any);
+                m.off('mouseleave', layer.id as any);
                 m.off('contextmenu', layer.id);
 
                 // 移除图层

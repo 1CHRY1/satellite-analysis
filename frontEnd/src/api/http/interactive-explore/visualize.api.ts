@@ -66,16 +66,24 @@ export async function getLargeSceneMosaicUrl (param: LargeScaleSceneParam): Prom
  */
 export const getVectorUrl = (vectorUrlParam: VectorUrlParam) => {
     const { landId, source_layer, spatialFilterMethod, resolution, type } = vectorUrlParam
+    const requestParams = new URLSearchParams()
+    if (type) {
+        for(let t in type) {
+            requestParams.append('type', t.toString())
+        }
+    }
+    let types = '?' + requestParams.toString()
     let baseUrl = ''
+    // types = ''
     switch (spatialFilterMethod) {
         case 'region':
-            baseUrl = `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/region/${landId}/${source_layer}/{z}/{x}/{y}?type=${type}`
+            baseUrl = `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/region/${landId}/${source_layer}/{z}/{x}/{y}${types}`
             break
         case 'poi':
-            baseUrl = `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/location/${landId}/${resolution}/${source_layer}/{z}/{x}/{y}?type=${type}`
+            baseUrl = `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/location/${landId}/${resolution}/${source_layer}/{z}/{x}/{y}${types}`
             break
         default:
-            baseUrl = `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/region/${landId}/${source_layer}/{z}/{x}/{y}?type=${type}`
+            baseUrl = `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/region/${landId}/${source_layer}/{z}/{x}/{y}${types}`
             break
     }
     const fullUrl = baseUrl
@@ -164,8 +172,13 @@ export const getGridSceneUrl = (grid: GridData, param: RGBCompositeParams) => {
 /**
  * 格网矢量Url
  */
-export const getGridVectorUrl = (grid: GridData, source_layer: string, type?: number) => {
-    return `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/grid/${grid.columnId}/${grid.rowId}/${grid.resolution}/${source_layer}/{z}/{x}/{y}?type=${type}`
+export const getGridVectorUrl = (grid: GridData, source_layer: string, type?: number[]) => {
+    const requestParams = new URLSearchParams()
+    for(let t in type) {
+        requestParams.append('type', t.toString())
+    }
+    let types = '?' + requestParams.toString()
+    return `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/grid/${grid.columnId}/${grid.rowId}/${grid.resolution}/${source_layer}/{z}/{x}/{y}${types}`
 }
 
 /**
@@ -203,7 +216,9 @@ export function getGrid3DUrl(grid: GridData, param: RGBCompositeParams) {
     requestParams.append('min_b', param.b_min.toString())
     requestParams.append('max_b', param.b_max.toString())
     if (param.normalize_level) requestParams.append('normalize_level', param.normalize_level.toString())
+    if (param.stretch_method) requestParams.append('stretch_method', param.stretch_method.toString())
     if (param.nodata) requestParams.append('nodata', param.nodata.toString())
+    if (param.std_config) requestParams.append('std_config', param.std_config.toString())
     // if (grid.opacity) requestParams.append('normalize_level', grid.opacity.toString())
     return baseUrl + '?' + requestParams.toString()
 }

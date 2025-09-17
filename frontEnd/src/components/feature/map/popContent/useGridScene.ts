@@ -115,6 +115,13 @@ export const useGridScene = () => {
     /**
      * 拉伸增强选项
      */
+    const stretchMethods = [
+        {label: "线性拉伸", value: "linear"},
+        {label: "γ 拉伸", value: "gamma"},
+        {label: "标准差拉伸", value: "standard"},
+    ]
+    type StretchMethod = "linear" | "gamma" | "standard"
+    const selectedStretchMethod = ref<StretchMethod>("gamma")
     const enableDraggable = ref(true)
     
     const scaleRateFormatter = (value: number) => {
@@ -200,7 +207,7 @@ export const useGridScene = () => {
                 })
             }
             
-            bus.emit('cubeVisualize', rgbImageData, gridInfo, scaleRate.value, 'rgb')
+            bus.emit('cubeVisualize', rgbImageData, gridInfo, selectedStretchMethod.value, scaleRate.value, 'rgb')
         } else {
             // 针对具体传感器、具体波段组合
             const rgbImageData: MultiImageInfoType[] = []
@@ -254,7 +261,7 @@ export const useGridScene = () => {
                     nodata: scene.noData,
                 })
             }
-            bus.emit('cubeVisualize', rgbImageData, gridInfo, scaleRate.value, 'rgb')
+            bus.emit('cubeVisualize', rgbImageData, gridInfo, selectedStretchMethod.value, scaleRate.value, 'rgb')
         }
     
         bus.emit('openTimeline')
@@ -279,7 +286,9 @@ export const useGridScene = () => {
         selectedRBand,
         selectedGBand,
         selectedBBand,
-        bands
+        bands,
+        stretchMethods,
+        selectedStretchMethod
     }
 }
 

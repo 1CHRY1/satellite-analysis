@@ -5,7 +5,7 @@ export type VectorUrlParam = {
     source_layer: string
     spatialFilterMethod: SpatialFilterMethod,
     resolution?: number,
-    type?: number
+    type?: number[]
 }
 
 export type RGBCompositeParams = {
@@ -18,8 +18,10 @@ export type RGBCompositeParams = {
     g_max: number
     b_min: number
     b_max: number
+    stretch_method?: 'linear' | 'standard' | 'gamma' | ''
     normalize_level?: number
-    nodata?: number
+    nodata?: number,
+    std_config?: string
 }
 
 export type OneBandColorLayerParam = {
