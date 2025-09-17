@@ -542,6 +542,18 @@ export function map_addMVTLayer(source_layer: string, url: string, attrList: {co
         m.on('mouseleave', layerId, () => {
           m.getCanvas().style.cursor = ''
         })
+
+        // 添加右键点击事件处理器 - 关闭左键弹窗
+        m.on('contextmenu', layerId, (e) => {
+          // 阻止浏览器默认右键菜单
+          e.preventDefault()
+
+          // 关闭现有的矢量弹窗
+          const existingPopup = ezStore.get('vectorPopup') as Popup
+          if (existingPopup) {
+            existingPopup.remove()
+          }
+        })
       })
     })
   }
@@ -565,6 +577,7 @@ export function map_destroyMVTLayer() {
                 m.off('click', layer.id as any);
                 m.off('mouseenter', layer.id as any);
                 m.off('mouseleave', layer.id as any);
+                m.off('contextmenu', layer.id);
 
                 // 移除图层
                 m.removeLayer(layer.id);
