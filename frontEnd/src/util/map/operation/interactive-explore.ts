@@ -577,7 +577,7 @@ export function map_destroyMVTLayer() {
                 m.off('click', layer.id as any);
                 m.off('mouseenter', layer.id as any);
                 m.off('mouseleave', layer.id as any);
-                m.off('contextmenu', layer.id);
+                m.off('contextmenu', layer.id as any);
 
                 // 移除图层
                 m.removeLayer(layer.id);
