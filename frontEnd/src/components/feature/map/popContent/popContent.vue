@@ -1,6 +1,26 @@
 <template>
-    <Vue3DraggableResizable :draggable="enableDraggable" :resizable="false" :initW="250">
-        <div class="popup-content">
+    <Vue3DraggableResizable
+        :draggable="true"
+        :resizable="true"
+        :parent="false"
+        v-model:x="popX"
+        v-model:y="popY"
+        v-model:w="popW"
+        v-model:h="popH"
+        :minW="260"
+        :minH="364"
+        :initW="popW"
+        :initH="popH"
+        :lockAspectRatio="true"
+        :handles="['br']"
+        classNameHandle="custom-handle"
+        classNameDraggable="draggable-popup"
+        classNameActive=""
+    >
+        <div class="popup-content" :style="popupContentStyle">
+            <button class="popup-cancel-btn" @click="() => bus.emit('gridPopup:closeByUser')">
+                <CircleOff :size="16" />
+            </button>
             <div class="grid-id">
                 <p>时空立方体编号: {{ gridID }}</p>
             </div>
@@ -309,7 +329,7 @@
 <script setup lang="ts">
 import { ElCheckbox, ElCheckboxGroup, ElColorPicker } from 'element-plus'
 import { ref, computed, onMounted, onUnmounted, type Ref, reactive } from 'vue'
-import { DatabaseIcon, GalleryHorizontalIcon, RectangleEllipsisIcon, Trash2Icon,CircleOff } from 'lucide-vue-next'
+import { DatabaseIcon, GalleryHorizontalIcon, RectangleEllipsisIcon, Trash2Icon, CircleOff } from 'lucide-vue-next'
 import bus from '@/store/bus'
 import Vue3DraggableResizable from 'vue3-draggable-resizable'
 import 'vue3-draggable-resizable/dist/Vue3DraggableResizable.css'
@@ -323,6 +343,82 @@ import { useGridScene } from './useGridScene'
 import { useGridVector } from './useGridVector'
 import { useGridTheme } from './useGridTheme'
 import { useSuperResolution } from './useSuperResolution'
+
+// Popup position and size state
+const popX = ref(0)
+const popY = ref(0)
+const popW = ref(300)
+const popH = ref(420)
+const VIEW_MARGIN = 16
+
+// Base dimensions for the popup content
+const baseWidth = 300
+const baseHeight = 420
+
+// Calculate zoom factor based on current dimensions
+const zoomFactor = computed(() => {
+    // Use width for scaling since we have lockAspectRatio=true
+    return popW.value / baseWidth
+})
+
+// Computed style using zoom for true proportional scaling
+const popupContentStyle = computed(() => ({
+    width: '100%',
+    height: '100%',
+    zoom: zoomFactor.value
+}))
+
+function resetToBottomRightFullyVisible() {
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    const w = Math.min(popW.value || 300, vw - VIEW_MARGIN * 2)
+    const h = Math.min(popH.value || 420, vh - VIEW_MARGIN * 2)
+    popW.value = w
+    popH.value = h
+    popX.value = Math.max(0, vw - w - VIEW_MARGIN)
+    popY.value = Math.max(0, vh - h - VIEW_MARGIN)
+}
+
+// Set initial position before first paint so it does not flash at (0,0)
+if (typeof window !== 'undefined') {
+    // Use default popW/popH to compute a safe initial bottom-right position
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    const w = Math.min(popW.value || 300, vw - VIEW_MARGIN * 2)
+    const h = Math.min(popH.value || 420, vh - VIEW_MARGIN * 2)
+    popW.value = w
+    popH.value = h
+    popX.value = Math.max(0, vw - w - VIEW_MARGIN)
+    popY.value = Math.max(0, vh - h - VIEW_MARGIN)
+}
+
+function measureAndReset() {
+    try {
+        const el = document.querySelector('.popup-content') as HTMLElement
+        if (el) {
+            popW.value = Math.min(
+                Math.max(el.offsetWidth || 300, 260),
+                window.innerWidth - VIEW_MARGIN * 2
+            )
+            const desiredH = Math.min(
+                Math.max((el.scrollHeight || el.offsetHeight || 420), 200),
+                window.innerHeight - VIEW_MARGIN * 2
+            )
+            popH.value = desiredH
+        }
+    } catch {}
+    resetToBottomRightFullyVisible()
+}
+
+// Window resize handler
+function handleWindowResize() {
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    popW.value = Math.min(popW.value, vw - VIEW_MARGIN * 2)
+    popH.value = Math.min(popH.value, vh - VIEW_MARGIN * 2)
+    popX.value = Math.min(Math.max(0, popX.value), vw - popW.value)
+    popY.value = Math.min(Math.max(0, popY.value), vh - popH.value)
+}
 
 /**
  * 1-1.可视化函数
@@ -356,6 +452,7 @@ const handleRemove = () => {
         isSuperRes.value = false
     }
     GridExploreMapOps.map_destroySuperResolution(gridData.value)
+    bus.emit('gridPopup:visible', false)
 }
 /**
  * 1-3.初始化网格
@@ -384,6 +481,12 @@ const handleInitGrid = async (info) => {
     }, 500);
     // gridVectorSymbology.value = JSON.parse(JSON.stringify(ezStore.get("vectorSymbology"))) // 深拷贝
     console.log(gridData.value, 'gridData')
+    // after console.log(gridData.value, 'gridData') and before themeResLoading=false:
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            measureAndReset()
+        })
+    })
   } finally {
     themeResLoading = false
   }
@@ -402,10 +505,38 @@ onMounted(async () => {
         selectedBBand.value = ''
         selectedSensor.value = ''
     })
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            measureAndReset()
+        })
+    })
+    bus.on('gridPopup:reset-position', () => {
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                measureAndReset()
+            })
+        })
+    })
+
+    // Listen for visibility changes and reset position
+    bus.on('gridPopup:visible', (visible: boolean) => {
+        if (!visible) return
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                measureAndReset()
+            })
+        })
+    })
+
+    // Add window resize listener
+    window.addEventListener('resize', handleWindowResize)
 })
 
 onUnmounted(() => {
     bus.off('update:gridPopupData', handleInitGrid)
+    // Note: bus.off() requires both event and handler, so we only remove those we have handlers for
+    window.removeEventListener('resize', handleWindowResize)
 })
 
 /**
@@ -456,9 +587,37 @@ const { handleSuperResolution, isSuperRes } = useSuperResolution()
     color: #e6f1ff;
     padding: 0.75rem;
     border-radius: 0.5rem;
-    width: 100%;
-    max-width: 250px;
+    overflow: auto;
     user-select: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    box-sizing: border-box;
+}
+
+.popup-cancel-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.popup-cancel-btn:hover {
+    background-color: rgba(255, 59, 48, 0.2);
+    border-color: rgba(255, 59, 48, 0.4);
+    color: #ff3b30;
 }
 
 .grid-id {
@@ -674,5 +833,60 @@ const { handleSuperResolution, isSuperRes } = useSuperResolution()
     .popup-content {
         padding: 1rem;
     }
+}
+</style>
+
+<style>
+/* Global styles for Vue3DraggableResizable */
+.vdr, .draggable-popup {
+    border: none !important;
+    outline: none !important;
+}
+
+.vdr:before, .vdr:after,
+.draggable-popup:before, .draggable-popup:after {
+    display: none !important;
+}
+
+/* Hide all resize handles except bottom-right */
+.vdr-handle {
+    display: none !important;
+}
+
+.vdr-handle-br {
+    display: block !important;
+    background: none !important;
+    border: none !important;
+    width: 20px !important;
+    height: 20px !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    cursor: nwse-resize !important;
+    z-index: 100 !important;
+}
+
+/* Custom resize handle appearance */
+.vdr-handle-br::after {
+    content: '';
+    position: absolute;
+    bottom: 3px;
+    right: 3px;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 0 10px 10px;
+    border-color: transparent transparent #4dabf7 transparent;
+}
+
+/* Remove all selection borders and outlines */
+.vdr.active, .vdr.active:before {
+    border: none !important;
+    outline: none !important;
+}
+
+/* Remove focus and active state styles */
+.vdr:focus {
+    outline: none !important;
+    border: none !important;
 }
 </style>
