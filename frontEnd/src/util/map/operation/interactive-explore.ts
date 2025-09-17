@@ -114,20 +114,18 @@ export function map_destroyUniqueLayer() {
  * 2. 数据检索 - 检索后
  */
 
-/**
- * 创建网格信息弹窗
- * @returns 网格信息弹窗DOM
- */
-function createPopoverContent() {
-    const div = document.createElement('div')
-    div.id = 'popover-content'
-    document.body.appendChild(div)
 
-    const app = createApp(PopContent, {
-        // gridData: gridDataRef,
-    }).use(Antd)
-    app.mount('#popover-content') as ComponentInstance<typeof PopContent>
-    return div
+/**
+ * 关闭网格弹窗并清除高亮
+ */
+function closeGridPopupAndClearHighlight(): void {
+    bus.emit('gridPopup:visible', false)
+    const id = 'grid-layer'
+    const highlightId = id + '-highlight'
+    const map = ezStore.get('map')
+    if (map && map.getLayer(highlightId)) {
+        map.setFilter(highlightId, ['in', 'id', ''])
+    }
 }
 
 /**
@@ -144,14 +142,18 @@ function grid_fill_click_handler(e: MapMouseEvent): void {
             columnId: features[0].properties!.columnId,
             resolution: features[0].properties!.resolution,
         }
-        bus.emit('update:gridPopupData', gridInfo)
-
-        const popup = ezStore.get('gridPopup') as Popup
-        popup.setLngLat(e.lngLat).addTo(ezStore.get('map'))
 
         const id = 'grid-layer'
         const highlightId = id + '-highlight'
         ezStore.get('map').setFilter(highlightId, ['in', 'id', e.features![0].properties!.id])
+
+        bus.emit('update:gridPopupData', gridInfo)
+        bus.emit('gridPopup:visible', true)
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                bus.emit('gridPopup:reset-position')
+            })
+        })
     }
 }
 
@@ -168,25 +170,6 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
 
     mapManager.withMap((m) => {
         ezStore.set('map', m)
-        // Add a popup to show grid info
-        if (!ezStore.get('gridPopup')) {
-            const popup = new Popup({
-                closeButton: false,
-                closeOnMove: false,
-                closeOnClick: true,
-            })
-            popup.on('close', () => {
-                bus.emit('closeTimeline')
-                const id = 'grid-layer'
-                const highlightId = id + '-highlight'
-                // 取消高亮个别网格
-                ezStore.get('map').setFilter(highlightId, ['in', 'id', ''])
-            })
-            const dom = createPopoverContent()
-            popup.setDOMContent(dom).addTo(m)
-
-            ezStore.set('gridPopup', popup)
-        }
 
         // Add a geojson source
         m.addSource(srcId, {
@@ -232,6 +215,16 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
 
         // Add a click event listener to the invisible fill layer
         m.on('contextmenu', fillId, grid_fill_click_handler)
+
+        // Ensure left-click map hides popup
+        m.on('click', () => {
+            closeGridPopupAndClearHighlight()
+        })
+
+        // Ensure listening to "cancel button" event
+        bus.on('gridPopup:closeByUser', () => {
+            closeGridPopupAndClearHighlight()
+        })
 
         // ezStore.set('grid-layer-cancel-watch', cancelWatch)
         ezStore.set('grid-layer-fill-id', fillId)
