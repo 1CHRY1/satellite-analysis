@@ -74,12 +74,11 @@ export const useGridVector = () => {
             return targetAttr
         })
         console.log(attrList)
-        for (const attr of attrList) {
-            const url = getGridVectorUrl(gridData.value, tableName, attr?.type)
-            console.log(url)
-            console.log(tableName)
-            GridExploreMapOps.map_addGridMVTLayer(tableName, url, attr?.color || '#0066cc', attr?.type, undefined, gridData.value)
-        }
+        let type = attrList.map((attr) => attr?.type) as number[]
+        const url = getGridVectorUrl(gridData.value, tableName, type)
+        console.log(url)
+        console.log(tableName)
+        GridExploreMapOps.map_addGridMVTLayer(tableName, url, attrList as any, undefined, gridData.value)
 
         // 添加一次性的点击事件监听器
         mapManager.withMap((map) => {

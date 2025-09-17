@@ -2,6 +2,7 @@ import { mapManager } from '../mapManager'
 import { ezStore } from '@/store'
 import type { GridData } from '@/type/interactive-explore/grid'
 import bus from '@/store/bus'
+import type { Expression } from 'mapbox-gl'
 
 
 /**
@@ -224,8 +225,14 @@ export function map_destroyGridNDVIOrSVRLayer(gridInfo: GridData) {
     })
 }
 
-export function map_addGridMVTLayer(source_layer: string, url: string, color: string, type?: number, cb?: () => void, gridInfo?: GridData) {
-    const prefix = `GridMVT-${type || 0}`
+export function map_addGridMVTLayer(source_layer: string, url: string, attrList: {color: string, type: number}[], cb?: () => void, gridInfo?: GridData) {
+    const prefix = `GridMVT`
+    const matchColor: Expression = [
+        'match',
+        ['get', 'type'], // MVT属性字段
+        ...attrList.flatMap(tc => [tc.type, tc.color]),
+        'rgba(0,0,0,0)' // 默认颜色
+    ]
     let layeridStore: any = null
     if (!ezStore.get('GridMVTLayerIds')) ezStore.set('GridMVTLayerIds', [])
     
@@ -271,7 +278,7 @@ export function map_addGridMVTLayer(source_layer: string, url: string, color: st
             filter: ['==', '$type', 'Polygon'], // 只显示面要素
             paint: {
             //   'fill-color': '#0066cc',
-            'fill-color': color,
+            'fill-color': matchColor,
             //   'fill-opacity': 0.5,
             'fill-outline-color': '#004499'
             }
@@ -285,7 +292,7 @@ export function map_addGridMVTLayer(source_layer: string, url: string, color: st
             'source-layer': source_layer,
             filter: ['==', '$type', 'LineString'], // 只显示线要素
             paint: {
-            'line-color': color,
+            'line-color': matchColor,
             'line-width': 2,
             'line-opacity': 0.8
             }
@@ -299,7 +306,7 @@ export function map_addGridMVTLayer(source_layer: string, url: string, color: st
             'source-layer': source_layer,
             filter: ['==', '$type', 'Point'], // 只显示点要素
             paint: {
-            'circle-color': color,
+            'circle-color': matchColor,
             'circle-radius': 6,
             'circle-opacity': 0.8,
             'circle-stroke-color': '#ffffff',
