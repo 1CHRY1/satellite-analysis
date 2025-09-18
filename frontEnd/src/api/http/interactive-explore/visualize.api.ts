@@ -67,12 +67,13 @@ export async function getLargeSceneMosaicUrl (param: LargeScaleSceneParam): Prom
 export const getVectorUrl = (vectorUrlParam: VectorUrlParam) => {
     const { landId, source_layer, spatialFilterMethod, resolution, type } = vectorUrlParam
     const requestParams = new URLSearchParams()
-    if (type) {
-        for(let t in type) {
+    if (type && type.length) {
+        for (const t of type) {
             requestParams.append('type', t.toString())
         }
     }
-    let types = '?' + requestParams.toString()
+    const qs = requestParams.toString()
+    const types = qs ? '?' + qs : ''
     let baseUrl = ''
     // types = ''
     switch (spatialFilterMethod) {
@@ -174,10 +175,13 @@ export const getGridSceneUrl = (grid: GridData, param: RGBCompositeParams) => {
  */
 export const getGridVectorUrl = (grid: GridData, source_layer: string, type?: number[]) => {
     const requestParams = new URLSearchParams()
-    for(let t in type) {
-        requestParams.append('type', t.toString())
+    if (type && type.length) {
+        for (const t of type) {
+            requestParams.append('type', t.toString())
+        }
     }
-    let types = '?' + requestParams.toString()
+    const qs = requestParams.toString()
+    const types = qs ? '?' + qs : ''
     return `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/grid/${grid.columnId}/${grid.rowId}/${grid.resolution}/${source_layer}/{z}/{x}/{y}${types}`
 }
 
