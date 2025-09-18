@@ -26,7 +26,20 @@ export const useSuperResolution = () => {
             return
         }
         if (visualLoad.value){
-            isSuperRes.value = !isSuperRes.value 
+            isSuperRes.value = !isSuperRes.value
+
+            if (!isSuperRes.value) {
+                bus.emit('SuperResTimeLine', {
+                    data: { R: '', G: '', B: '' },
+                    gridInfo: {
+                        rowId: gridData.value.rowId,
+                        columnId: gridData.value.columnId,
+                        resolution: gridData.value.resolution
+                    }
+                }, false)
+                return
+            }
+
             try{
                 // handleRemove()
                 let currentScene
@@ -49,13 +62,13 @@ export const useSuperResolution = () => {
                 }
 
                 currentScene.images.forEach((bandImg) => {
-                            if (bandImg.band === selectedRBand.value) {
+                            if (bandImg.band == Number(selectedRBand.value)) {
                                 bands.R = bandImg.bucket + '/' + bandImg.tifPath
                             }
-                            if (bandImg.band === selectedGBand.value) {
+                            if (bandImg.band == Number(selectedGBand.value)) {
                                 bands.G = bandImg.bucket + '/' + bandImg.tifPath
                             }
-                            if (bandImg.band === selectedBBand.value) {
+                            if (bandImg.band == Number(selectedBBand.value)) {
                                 bands.B = bandImg.bucket + '/' + bandImg.tifPath
                             }
                         })
@@ -113,8 +126,10 @@ export const useSuperResolution = () => {
                             rowId: gridData.value.rowId,
                             columnId: gridData.value.columnId,
                             resolution: gridData.value.resolution
-                        }
-                    }, isSuperRes.value)
+                        },
+                        sceneId: currentScene.sceneId,
+                        time: currentScene.sceneTime
+                    }, true)
                     
                 } catch (error) {
                     calTask.value.calState = 'failed'
