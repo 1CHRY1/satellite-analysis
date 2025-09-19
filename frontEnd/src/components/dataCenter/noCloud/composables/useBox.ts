@@ -1,4 +1,4 @@
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { exploreData } from './shared'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import * as DataPreparationMapOps from '@/util/map/operation/data-preparation'
@@ -121,6 +121,12 @@ export const useBox = () => {
         dates: [] as Dayjs[],
     })
 
+    watch(selectedGrid, () => {
+        formData.sensors = []
+        formData.dates = []
+        formData.bands = []
+    })
+
     // 波段option
     const bandOptions = ref([
         { value: 'R', label: 'Red', color: '#ff4d4f' },
@@ -171,7 +177,9 @@ export const useBox = () => {
         console.log('表单提交:', values)
         handleSynthesis()
     }
+
     const showCubeContentDialog = ref(false)
+    
     const cubeContent = computed(() => {
         return {
             ...formData,
