@@ -119,6 +119,8 @@ export function map_destroyUniqueLayer() {
  * 关闭网格弹窗并清除高亮
  */
 function closeGridPopupAndClearHighlight(): void {
+    // 关闭时间轴/年份月份选择弹窗
+    bus.emit('closeTimeline')
     bus.emit('gridPopup:visible', false)
     const id = 'grid-layer'
     const highlightId = id + '-highlight'
