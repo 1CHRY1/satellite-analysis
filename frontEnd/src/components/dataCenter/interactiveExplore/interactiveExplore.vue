@@ -668,14 +668,18 @@ const handleGridPopupVisible = (visible: boolean) => {
 
 // Critical: when visibility turns true, schedule reset AFTER DOM shows
 watch(gridPopupVisible, (v) => {
-    if (!v) return
-    nextTick(() => {
-        requestAnimationFrame(() => {
+    if (v) {
+        nextTick(() => {
             requestAnimationFrame(() => {
-                bus.emit('gridPopup:reset-position')
+                requestAnimationFrame(() => {
+                    bus.emit('gridPopup:reset-position')
+                })
             })
         })
-    })
+    } else {
+        // 弹窗关闭时，同时关闭时间轴（年份/月份选择）
+        bus.emit('closeTimeline')
+    }
 })
 
 onMounted(async () => {
