@@ -282,13 +282,13 @@ const handleClick = async (index: number) => {
         const currentGridKey = `${grid.value.rowId}-${grid.value.columnId}-${grid.value.resolution}`
         const gridSuperRes = superResOverride.value.get(currentGridKey)
 
-        if(gridSuperRes?.load == true){
-             redPath = gridSuperRes.redPath 
-             greenPath = gridSuperRes.greenPath 
-             bluePath = gridSuperRes.bluePath 
+        if (gridSuperRes?.load === true && gridSuperRes.sceneId === img.sceneId) {
+            redPath = gridSuperRes.redPath
+            greenPath = gridSuperRes.greenPath
+            bluePath = gridSuperRes.bluePath
         } else {
-            redPath =  img.redPath
-            greenPath =  img.greenPath
+            redPath = img.redPath
+            greenPath = img.greenPath
             bluePath = img.bluePath
         }
         
@@ -485,32 +485,37 @@ const superResOverride = ref<Map<string, {
   greenPath: string
   bluePath: string
   load: boolean
+  sceneId?: string
 }>>(new Map())
 
 onMounted(() => {
     clearState()
     bus.on('cubeVisualize', updateHandler)
 
-    bus.on('SuperResTimeLine', (SuperData: { data: { R: string, G: string, B: string }, gridInfo: { rowId: number, columnId: number, resolution: number } }, loadSuper : boolean) => {
-    console.log('收到 SuperResTimeLine 数据:', SuperData, loadSuper)
-    const gridKey = `${SuperData.gridInfo.rowId}-${SuperData.gridInfo.columnId}-${SuperData.gridInfo.resolution}`
-    const currentGridKey = `${grid.value.rowId}-${grid.value.columnId}-${grid.value.resolution}`
-    
-    if (gridKey === currentGridKey) {
-        // 只有匹配的格网才更新状态
-        superResOverride.value.set(gridKey, {
-            redPath: SuperData.data.R,
-            greenPath: SuperData.data.G,
-            bluePath: SuperData.data.B,
-            load: loadSuper
-        })
-        
-        // 只有在启用超分时才重新加载，清除时不重新加载
-        if (loadSuper && activeIndex.value >= 0) {
-            handleClick(activeIndex.value)
+    bus.on('SuperResTimeLine', (
+      SuperData: { data: { R: string, G: string, B: string }, gridInfo: { rowId: number, columnId: number, resolution: number }, sceneId?: string },
+      loadSuper: boolean
+    ) => {
+      const gridKey = `${SuperData.gridInfo.rowId}-${SuperData.gridInfo.columnId}-${SuperData.gridInfo.resolution}`
+      const currentGridKey = `${grid.value.rowId}-${grid.value.columnId}-${grid.value.resolution}`
+
+      if (gridKey === currentGridKey) {
+        if (!loadSuper) {
+          superResOverride.value.delete(gridKey)
+          return
         }
-    }
-})
+        superResOverride.value.set(gridKey, {
+          redPath: SuperData.data.R,
+          greenPath: SuperData.data.G,
+          bluePath: SuperData.data.B,
+          load: true,
+          sceneId: SuperData.sceneId
+        })
+        if (activeIndex.value >= 0) {
+          handleClick(activeIndex.value)
+        }
+      }
+    })
 
     bus.on('closeTimeline', () => {
         activeIndex.value = -1
