@@ -575,7 +575,7 @@
                                                 </a-button>
 
                                             </div>
-                                            <a-modal v-model:open="showCubeContentDialog" title="时序立方体">
+                                            <a-modal v-model:open="showCubeContentDialog" title="时序立方体" @ok="() => showCubeContentDialog = false">
                                                 <a-card style="max-height: 400px; overflow: auto; position: relative;">
                                                     <pre
                                                         style="white-space: pre-wrap; word-break: break-word; user-select: text;"

@@ -167,8 +167,20 @@ export const useBox = () => {
 
     const handleSynthesis = async () => {
         try {
+            DataPreparationMapOps.map_destrod3DBoxLayer()
             showCubeContentDialog.value = true
+            console.log(exploreData)
+            let gridGeoJson = {}
+            for (const grid of exploreData.grids) {
+                if (selectedGrid.value?.columnId === grid.columnId && selectedGrid.value?.resolution === grid.resolution && selectedGrid.value?.rowId === grid.rowId) {
+                    gridGeoJson = grid.boundary
+                }
+            }
+            console.log(gridGeoJson)
+            console.log(cubeContent)
+            DataPreparationMapOps.map_add3DBoxLayer(gridGeoJson, cubeContent.value)
         } catch (error) {
+            console.log(error)
         } finally {
         }
     }
@@ -182,8 +194,11 @@ export const useBox = () => {
     
     const cubeContent = computed(() => {
         return {
-            ...formData,
-            scenes: sceneList.value.filter(item => formData.sensors.includes(item.sensorName) && formData.dates.some(d => dayjs(d).isSame(dayjs(item.sceneTime), 'day')))
+            CubeId: `${selectedGrid.value?.rowId}-${selectedGrid.value?.columnId}-${selectedGrid.value?.resolution}`,
+            Dimension_Sensors: formData.sensors,
+            Dimension_Dates: formData.dates,
+            Dimension_Bands: formData.bands,
+            Dimension_Scenes: sceneList.value.filter(item => formData.sensors.includes(item.sensorName) && formData.dates.some(d => dayjs(d).isSame(dayjs(item.sceneTime), 'day')))
         }
     })
     return {
