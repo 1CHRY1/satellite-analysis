@@ -100,3 +100,55 @@ export function map_destroyGridLayer(): void {
         ezStore.delete('grid-layer-cancel-watch')
     })
 }
+
+/**
+ * 添加立方体图层
+ * @param gridGeoJson 立方体的GeoJSON
+ * @param boxJson 立方体对应的时序立方体数据JSON
+ */
+export function map_add3DBoxLayer(gridGeoJson, boxJson): void {
+    const id = '3d-box-layer'
+    const srcId = id + '-source'
+    const fillId = id + '-fill'
+    mapManager.withMap((map) => {
+        // 添加数据源
+        map.addSource(srcId, {
+            type: 'geojson',
+            data: gridGeoJson,
+        })
+        const preset_colors = ['#845ec2', '#d65db1', '#ff6f91', '#ff9671', '#ffc75f', '#f9f871']
+        for (const [i, date] of boxJson.Dimension_Dates.entries()) {
+            map.addLayer({
+                id: `${id}-date-${i}`,
+                type: 'fill-extrusion',
+                source: srcId,
+                paint: {
+                    'fill-extrusion-color': preset_colors[i % preset_colors.length],
+                    'fill-extrusion-base': i * 100,        // 每层往上堆
+                    'fill-extrusion-height': (i + 1) * 100, // 每层高度一样
+                    'fill-extrusion-opacity': 0.45,
+                },
+            })
+        }
+
+        // 设置摄像机视角为 3D
+        map.setPitch(60) // 倾斜角度
+        map.setBearing(-20) // 旋转方向
+        // map.setCenter([120.5, 30.5]) // 中心点
+        // map.setZoom(13)
+    })
+}
+
+/**
+ * 删除立体网格图层
+ */
+export function map_destrod3DBoxLayer(): void {
+    const gridLayer = ezStore.get('3d-box-layer')
+    const gridSourceId = ezStore.get('3d-box-layer-source')
+
+    mapManager.withMap((m) => {
+        gridLayer && m.getLayer(gridLayer) && m.off('click', gridLayer, clickHandler)
+        gridLayer && m.getLayer(gridLayer) && m.removeLayer(gridLayer)
+        gridSourceId && m.getSource(gridSourceId) && m.removeSource(gridSourceId)
+    })
+}

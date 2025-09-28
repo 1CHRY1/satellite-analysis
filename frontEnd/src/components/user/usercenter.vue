@@ -392,7 +392,7 @@ const updateUserInfo = async() => {
             title: newData.title,
             organization: newData.organization,
             introduction:newData.introduction 
-        })
+        } as any)
       dialogFormVisible.value = false;
     } else {
       ElMessage.error(res.message);
