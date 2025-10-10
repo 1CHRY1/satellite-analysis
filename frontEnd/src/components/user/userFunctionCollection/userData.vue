@@ -1,94 +1,71 @@
 <template>
-    <div class="flex flex-col h-full">
-        <header class="flex  p-4 border-b" style="flex-direction: column;">
-            <div class="flex gap-2">
-                <button
-                :icon="CircleChevronLeft"
-                @click="back"
-                class="back-button"
-                style=" "
-                >
-                {{ $t("userpage.userFunction.back") }}
+    <div class="mission-control">
+        <header class="control-header">
+            <div class="navigation-section">
+                <button @click="back" class="nav-button back-btn">
+                    <span class="nav-icon">←</span>
+                    {{ $t("userpage.userFunction.back") }}
                 </button>
-                <div class="flex items-center">
-                    <span class="text-lg font-medium text-gray-600 mr-2">当前位置：</span>
-                    <el-breadcrumb :separator-icon="ArrowRight" class="flex items-center">
-                        <el-breadcrumb-item
-                            v-for="item in breadcrumbs"
+                <div class="location-display">
+                    <span class="location-label">🗺️ 当前位置：</span>
+                    <div class="breadcrumb-nav">
+                        <span
+                            v-for="(item, index) in breadcrumbs"
                             :key="item"
-                            class="inline-flex items-center text-lg font-medium text-gray-600 hover:text-gray-800 transition-colors"
-                            >{{ item }}</el-breadcrumb-item
+                            class="breadcrumb-item"
+                            :class="{ active: index === breadcrumbs.length - 1 }"
                         >
-                    </el-breadcrumb>
+                            {{ item }}
+                            <span v-if="index < breadcrumbs.length - 1" class="breadcrumb-separator">▶</span>
+                        </span>
+                    </div>
                 </div>
             </div>
-            <el-divider></el-divider>
+            <div class="divider-line"></div>
             
-            <div class="flex justify-between">
-            <!-- 搜索框 -->
-            <div class="flex items-center ml-4">
-                <el-input
-                    v-model="searchKeyword"
-                    placeholder="搜索文件和文件夹..."
-                    @input="handleSearch"
-                    @clear="clearSearch"
-                    clearable
-                    class="max-w-md"
-                >
-                    <template #prefix>
-                        <font-awesome-icon :icon="['fas', 'search']" class="text-gray-400" />
-                    </template>
-                </el-input>
-                <el-button v-if="isSearching" @click="clearSearch" type="info" class="ml-2">
-                    退出搜索
-                </el-button>
-            </div>
-            <div class="flex !justify-end space-x-2 ml-2 gap-3" style="justify-content: flex-end;">
-                
-                <button
-                @click="refresh"
-                class="inline-flex bg-blue-500 hover:bg-blue-100 items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-4 py-2"
-                >
-                <font-awesome-icon
-                    class="relative right-2"
-                    :icon="['fas', 'rotate']"
-                />
-                {{ $t("userpage.userFunction.refresh") }}
-                </button>
-                <button
-                
-                @click="uploadVisible = true"
-                class="inline-flex bg-blue-500 hover:bg-blue-400 items-center justify-center whitespace-nowrap rounded-md text-sm font-medium text-white ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input h-8 px-4 py-2"
-                >
-                <!-- <font-awesome-icon
-                    class="relative right-2"
-                    :icon="['fas', 'file-arrow-up']"
-                /> -->
-                {{ $t("userpage.userFunction.upload") }}
-                </button>
+            <div class="controls-section">
+                <div class="search-control">
+                    <div class="search-wrapper">
+                        <span class="search-icon">🔍</span>
+                        <input
+                            v-model="searchKeyword"
+                            placeholder="搜索卫星数据文件..."
+                            @input="handleSearch"
+                            class="search-input"
+                        />
+                        <button v-if="isSearching" @click="clearSearch" class="clear-search">
+                            ✕
+                        </button>
+                    </div>
+                </div>
 
-                <button
-                
-                @click="newFolderVisible=true"
-                class="inline-flex bg-blue-500 hover:bg-blue-400 items-center justify-center whitespace-nowrap rounded-md text-sm font-medium text-white ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-4 py-2"
-                >
-                <!-- <font-awesome-icon
-                    class="relative right-2"
-                    :icon="['fas', 'folder-plus']"
-                /> -->
-                {{ $t("userpage.userFunction.newfolder") }}
-                </button>
-                
+                <div class="action-controls">
+                    <button @click="refresh" class="control-btn refresh-btn">
+                        <span class="btn-icon">🔄</span>
+                        <span>{{ $t("userpage.userFunction.refresh") }}</span>
+                        <div class="btn-glow"></div>
+                    </button>
+
+                    <button @click="uploadVisible = true" class="control-btn upload-btn">
+                        <span class="btn-icon">📡</span>
+                        <span>{{ $t("userpage.userFunction.upload") }}</span>
+                        <div class="btn-glow"></div>
+                    </button>
+
+                    <button @click="newFolderVisible=true" class="control-btn folder-btn">
+                        <span class="btn-icon">📁</span>
+                        <span>{{ $t("userpage.userFunction.newfolder") }}</span>
+                        <div class="btn-glow"></div>
+                    </button>
+                </div>
             </div>
-            </div>
-            <el-divider></el-divider>
+            <div class="divider-line"></div>
         </header>
    
-        <main class="flex flex-1 " >
-            <div class="flex-1 p-4 border-r bg-color-gray-100 overflow-auto">
-                
-                <div class="file_container w-full h-full bg-gray-100 p-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+        <main class="control-main">
+            <div class="data-grid-section">
+                <div class="grid-container">
+                    <div class="satellite-data-grid">
                         <div 
                             v-for="file in fileList" 
                             @click="selectFile(file)"
@@ -989,12 +966,60 @@ const download = async() =>{
     }
 }
 
+// 文件图标映射
+const getFileIcon = (fileName: string) => {
+  if (!fileName) return '📄'
+  const extension = fileName.split('.').pop()?.toLowerCase()
+
+  const iconMap: Record<string, string> = {
+    'pdf': '📄',
+    'doc': '📝',
+    'docx': '📝',
+    'txt': '📃',
+    'csv': '📊',
+    'xlsx': '📊',
+    'xls': '📊',
+    'ppt': '📽️',
+    'pptx': '📽️',
+    'jpg': '🖼️',
+    'jpeg': '🖼️',
+    'png': '🖼️',
+    'gif': '🖼️',
+    'tif': '🛰️',
+    'tiff': '🛰️',
+    'geotiff': '🛰️',
+    'shp': '🗺️',
+    'kml': '🗺️',
+    'gpx': '🗺️',
+    'json': '⚙️',
+    'xml': '⚙️',
+    'zip': '📦',
+    'rar': '📦',
+    '7z': '📦',
+    'tar': '📦'
+  }
+
+  return iconMap[extension || ''] || '📄'
+}
+
+// 格式化文件日期
+const formatFileDate = (dateString: string) => {
+  if (!dateString) return '--'
+  const date = new Date(dateString)
+  return date.toLocaleDateString('zh-CN', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
 const downFile  = (data) => {
-    
+
     return new Promise<void>((resolve, reject) => {
         try {
             const dataServer = 'http://223.2.34.8:30901'
-            window.location.href = dataServer + '/userRes/downloadDataItem/' + data.filePath    
+            window.location.href = dataServer + '/userRes/downloadDataItem/' + data.filePath
             resolve()
         } catch (error) {
             reject(error)
@@ -1053,38 +1078,519 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* Mission Control Interface Styling */
+.mission-control {
+  background: transparent;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  color: #F8FAFC;
+}
+
+/* Control Header */
+.control-header {
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 16px 16px 0 0;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.navigation-section {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 1rem;
+}
+
+.nav-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.8), rgba(139, 92, 246, 0.8));
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.nav-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+}
+
+.nav-icon {
+  font-size: 1.2rem;
+}
+
+.location-display {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.location-label {
+  font-weight: 600;
+  color: #CBD5E1;
+  font-size: 1rem;
+}
+
+.breadcrumb-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.breadcrumb-item {
+  padding: 0.25rem 0.75rem;
+  background: rgba(30, 41, 59, 0.6);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #94A3B8;
+  transition: all 0.2s ease;
+}
+
+.breadcrumb-item.active {
+  background: rgba(99, 102, 241, 0.3);
+  color: #6366F1;
+  font-weight: 600;
+}
+
+.breadcrumb-separator {
+  color: #64748B;
+  font-size: 0.8rem;
+  margin: 0 0.25rem;
+}
+
+.divider-line {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.5), transparent);
+  margin: 1rem 0;
+}
+
+.controls-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+}
+
+/* Search Control */
+.search-control {
+  flex: 1;
+  max-width: 400px;
+}
+
+.search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 12px;
+  padding: 0.75rem;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.search-wrapper:focus-within {
+  border-color: rgba(99, 102, 241, 0.6);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.search-icon {
+  margin-right: 0.75rem;
+  font-size: 1.1rem;
+}
+
+.search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #F8FAFC;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.search-input::placeholder {
+  color: #64748B;
+}
+
+.clear-search {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 6px;
+  color: #EF4444;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  margin-left: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.clear-search:hover {
+  background: rgba(239, 68, 68, 0.3);
+}
+
+/* Action Controls */
+.action-controls {
+  display: flex;
+  gap: 1rem;
+}
+
+.control-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.control-btn:hover {
+  transform: translateY(-2px);
+}
+
+.refresh-btn {
+  background: linear-gradient(135deg, #10B981, #06B6D4);
+  color: white;
+}
+
+.refresh-btn:hover {
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+}
+
+.upload-btn {
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  color: white;
+}
+
+.upload-btn:hover {
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+}
+
+.folder-btn {
+  background: linear-gradient(135deg, #F59E0B, #F97316);
+  color: white;
+}
+
+.folder-btn:hover {
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+}
+
+.btn-icon {
+  font-size: 1rem;
+}
+
+.btn-glow {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.6s ease;
+}
+
+.control-btn:hover .btn-glow {
+  left: 100%;
+}
+
+/* Main Control Area */
+.control-main {
+  display: flex;
+  flex: 1;
+  gap: 1rem;
+}
+
+.data-grid-section {
+  flex: 1;
+  background: rgba(15, 23, 42, 0.3);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 16px;
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+}
+
+.grid-container {
+  padding: 2rem;
+  height: 100%;
+}
+
+.satellite-data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.5) transparent;
+}
+
+.satellite-data-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.satellite-data-grid::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.3);
+  border-radius: 4px;
+}
+
+.satellite-data-grid::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.5);
+  border-radius: 4px;
+}
+
+/* Data File Cards */
+.data-file-card {
+  position: relative;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 16px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  backdrop-filter: blur(15px);
+}
+
+.data-file-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow:
+    0 15px 35px rgba(0, 0, 0, 0.2),
+    0 0 25px rgba(99, 102, 241, 0.15);
+}
+
+.data-file-card.selected {
+  border-color: rgba(99, 102, 241, 0.8);
+  background: rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+}
+
+.data-file-card.is-folder {
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.data-file-card.is-folder:hover {
+  border-color: rgba(245, 158, 11, 0.5);
+  box-shadow:
+    0 15px 35px rgba(0, 0, 0, 0.2),
+    0 0 25px rgba(245, 158, 11, 0.15);
+}
+
+.file-type-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  margin: 0 auto 1rem;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.folder-icon,
+.file-icon {
+  font-size: 2rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.file-info {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.file-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #F8FAFC;
+  margin-bottom: 0.5rem;
+  word-break: break-word;
+  line-height: 1.3;
+}
+
+.file-path {
+  font-size: 0.75rem;
+  color: #64748B;
+  margin-bottom: 0.5rem;
+  word-break: break-all;
+  line-height: 1.3;
+}
+
+.path-label {
+  color: #6366F1;
+  font-weight: 600;
+}
+
+.file-size {
+  font-size: 0.8rem;
+  color: #94A3B8;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.file-meta {
+  border-top: 1px solid rgba(99, 102, 241, 0.1);
+  padding-top: 0.75rem;
+}
+
+.meta-item {
+  font-size: 0.75rem;
+  color: #64748B;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.file-status {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: pulse-dot 2s infinite;
+}
+
+.folder-status {
+  background: #F59E0B;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
+}
+
+.file-status {
+  background: #10B981;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.2); }
+}
+
+.card-glow {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(45deg, transparent, rgba(99, 102, 241, 0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.data-file-card:hover .card-glow {
+  opacity: 1;
+}
+
+/* Side Panel (keeping original structure but with new styling) */
+aside {
+  width: 300px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 0 16px 16px 0;
+  padding: 2rem;
+  backdrop-filter: blur(15px);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .control-main {
+    flex-direction: column;
+  }
+
+  aside {
+    width: 100%;
+    border-radius: 16px;
+  }
+
+  .satellite-data-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .controls-section {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .action-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .control-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .satellite-data-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+
+  .navigation-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}
+
+/* Legacy button styles for compatibility */
 .move_button {
-    color: gray;              
-    border: 1px solid lightgray; 
-    background-color: white;  
-    border-radius: 0.375rem; 
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;      
-    font-weight: 500;        
-    cursor: pointer;
-    transition: all 0.2s;
-  }
+  color: #64748B;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  background: rgba(30, 41, 59, 0.6);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
 
-  .move_button:hover {
-    color: white;           
-    background-color: #cbdfff; 
-    border-color: #cbdfff;    
-  }
+.move_button:hover {
+  color: white;
+  background: rgba(99, 102, 241, 0.3);
+  border-color: rgba(99, 102, 241, 0.5);
+  transform: translateY(-1px);
+}
 
-  .back-button {
-    color: gray;              
-    border: 1px solid lightgray; 
-    background-color: white;  
-    border-radius: 0.375rem; 
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;      
-    font-weight: 500;        
-    cursor: pointer;
-    transition: all 0.2s;
-  }
+.back-button {
+  color: #64748B;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  background: rgba(30, 41, 59, 0.6);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
 
-  .back-button:hover {         
-    background-color: #f0f0f0; 
-    border-color: #cbdfff;    
-  }
+.back-button:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #F8FAFC;
+  transform: translateY(-1px);
+}
 </style>
