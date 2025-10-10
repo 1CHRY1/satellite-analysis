@@ -2,7 +2,7 @@
     <div class="relative flex flex-1 flex-row bg-black">
         <subtitle class="z-10 absolute" style="margin-top: 60px; " />
         <div class=" absolute left-18 h-[calc(100vh-100px)] p-4 text-gray-200 mb-0 gap-0 z-10"
-            :class="showPanel ? 'w-[28vw]' : 'w-16 transition-all duration-300'">
+            :class="showPanel ? 'w-[545px]' : 'w-16 transition-all duration-300'">
             <button @click="showPanel = !showPanel" class="absolute top-1/2 right-0 -translate-y-1/2 h-12 w-6 text-white rounded-l-lg shadow-lg 
                  items-center justify-center transition-all z-10"
                 :class="showPanel ? 'bg-blue-600 hover:bg-blue-500' : 'bg-gray-800 hover:bg-gray-700'">

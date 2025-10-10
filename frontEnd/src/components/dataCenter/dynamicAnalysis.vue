@@ -1,200 +1,196 @@
 <template>
     <div class="relative flex flex-1 h-full flex-row bg-black ">
-        <subtitle class="z-10 absolute" style="margin-top: 60px; "/>
-        <div class="absolute left-16 z-10 h-[calc(100vh-100px)] p-4 text-gray-200" :class="isToolbarOpen ? 'w-[28vw]' : 'w-16 transition-all duration-300'">
-            <button
-                @click="isToolbarOpen = !isToolbarOpen"
-                class="absolute top-1/2 right-0 -translate-y-1/2 h-12 w-6 text-white rounded-l-lg shadow-lg
+        <subtitle class="z-10 absolute" style="margin-top: 60px; " />
+        <div class="absolute left-16 z-10 h-[calc(100vh-100px)] p-4 text-gray-200"
+            :class="isToolbarOpen ? 'w-[545px]' : 'w-16 transition-all duration-300'">
+            <button @click="isToolbarOpen = !isToolbarOpen" class="absolute top-1/2 right-0 -translate-y-1/2 h-12 w-6 text-white rounded-l-lg shadow-lg
                  items-center justify-center transition-all z-10"
-                :class="isToolbarOpen ? 'bg-blue-600 hover:bg-blue-500' : 'bg-gray-800 hover:bg-gray-700'"
-            >
-                <ChevronRightIcon
-                    :size="16"
-                    class="transition-transform duration-300"
-                    :class="{ 'transform rotate-180': isToolbarOpen }"
-                />
+                :class="isToolbarOpen ? 'bg-blue-600 hover:bg-blue-500' : 'bg-gray-800 hover:bg-gray-700'">
+                <ChevronRightIcon :size="16" class="transition-transform duration-300"
+                    :class="{ 'transform rotate-180': isToolbarOpen }" />
             </button>
             <div v-if="isToolbarOpen">
-            <!--顶部标题+历史记录图标-->
-            <section class="panel-section ml-2 mr-2" style="margin-top: 0rem; margin-bottom: 0.5rem;">
-                <div class="section-header">
-                    <div class="section-icon">
-                        📈
+                <!--顶部标题+历史记录图标-->
+                <section class="panel-section ml-2 mr-2" style="margin-top: 0rem; margin-bottom: 0.5rem;">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            📈
+                        </div>
+                        <span class="page-title">展示分析</span>
                     </div>
-                    <span class="page-title">展示分析</span>
-                </div>
-            </section>
-            <!-- 内容区域 -->
-            <div class="custom-panel px-2">
-                <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]">
-                    <!--主容器-->
-                    <div class="main-container">
-                        <!-- 设置部分 -->
-                        <section class="panel-section">
-                            <!--设置标题-->
-                            <div class="section-header">
-                                <div class="section-icon">
-                                    <Settings :size="18" />
-                                </div>
-                                <h2 class="section-title">设置</h2>
-                                <div class="absolute right-2 cursor-pointer">
-                                    <ChevronDown v-if="isSettingExpand" :size="22" @click="isSettingExpand = false" />
-                                    <ChevronUp v-else @click="isSettingExpand = true" :size="22" />
-                                </div>
-                            </div>
-
-                            <!--设置内容区域-->
-                            <div v-show="isSettingExpand" class="section-content">
-                                <div class="config-container">
-                                    <!-- 空间位置配置 -->
-                                    <div class="config-item" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
-                                        <div class="config-label relative">
-                                            <MapIcon :size="16" class="config-icon" />
-                                            <span>{{t('datapage.analysis.section1.area')}}</span>
-                                        </div>
-                                        <div class="config-control justify-center">
-                                            <RegionSelects v-model="region" class="flex gap-2"
-                                                select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
-                                        </div>
+                </section>
+                <!-- 内容区域 -->
+                <div class="custom-panel px-2">
+                    <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]">
+                        <!--主容器-->
+                        <div class="main-container">
+                            <!-- 设置部分 -->
+                            <section class="panel-section">
+                                <!--设置标题-->
+                                <div class="section-header">
+                                    <div class="section-icon">
+                                        <Settings :size="18" />
                                     </div>
+                                    <h2 class="section-title">设置</h2>
+                                    <div class="absolute right-2 cursor-pointer">
+                                        <ChevronDown v-if="isSettingExpand" :size="22"
+                                            @click="isSettingExpand = false" />
+                                        <ChevronUp v-else @click="isSettingExpand = true" :size="22" />
+                                    </div>
+                                </div>
 
-                                    <!-- 数据集配置 -->
-                                    <div class="config-item" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
-                                        <div class="config-label relative">
-                                            <ChartColumn :size="16" class="config-icon" />
-                                            <span>数据集</span>
+                                <!--设置内容区域-->
+                                <div v-show="isSettingExpand" class="section-content">
+                                    <div class="config-container">
+                                        <!-- 空间位置配置 -->
+                                        <div class="config-item"
+                                            style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
+                                            <div class="config-label relative">
+                                                <MapIcon :size="16" class="config-icon" />
+                                                <span>{{ t('datapage.analysis.section1.area') }}</span>
+                                            </div>
+                                            <div class="config-control justify-center">
+                                                <RegionSelects v-model="region" class="flex gap-2"
+                                                    select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
+                                            </div>
                                         </div>
-                                        <div class="config-control">
-                                            <button @click="showHistory = !showHistory"
-                                                class="bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-4 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6] truncate">
-                                                前序数据
-                                            </button>
-                                            <el-dialog v-model="showHistory"
-                                                class="max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-[60vw]"
-                                                style="background-color: #111827; color: white;">
-                                                <div class="mb-6 text-gray-100">前序数据集</div>
 
-                                                <div v-if="completedCases.length > 0" class="max-h-[500px] overflow-y-auto">
-                                                    <div v-for="item in completedCases"
-                                                        :key="item.caseId"
-                                                        class="p-4 mb-3 border border-gray-200 rounded-md
+                                        <!-- 数据集配置 -->
+                                        <div class="config-item"
+                                            style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
+                                            <div class="config-label relative">
+                                                <ChartColumn :size="16" class="config-icon" />
+                                                <span>数据集</span>
+                                            </div>
+                                            <div class="config-control">
+                                                <button @click="showHistory = !showHistory"
+                                                    class="bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-4 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6] truncate">
+                                                    前序数据
+                                                </button>
+                                                <el-dialog v-model="showHistory"
+                                                    class="max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-[60vw]"
+                                                    style="background-color: #111827; color: white;">
+                                                    <div class="mb-6 text-gray-100">前序数据集</div>
+
+                                                    <div v-if="completedCases.length > 0"
+                                                        class="max-h-[500px] overflow-y-auto">
+                                                        <div v-for="item in completedCases" :key="item.caseId" class="p-4 mb-3 border border-gray-200 rounded-md
                                                             cursor-pointer transition-all duration-300
                                                             hover:bg-gray-50 hover:shadow-md"
-                                                        @click="showResult(item.caseId, item.regionId)">
-                                                        <h3 class="mt-0 text-blue-500">{{ item.address }}无云一版图</h3>
-                                                        <p class="my-1 text-blue-300">分辨率: {{ item.resolution }}km</p>
-                                                        <p class="my-1 text-blue-300">创建时间: {{ formatTimeToText(item.createTime) }}</p>
-                                                        <p class="my-1 text-blue-300">数据集: {{ item.dataSet }}</p>
+                                                            @click="showResult(item.caseId, item.regionId)">
+                                                            <h3 class="mt-0 text-blue-500">{{ item.address }}无云一版图</h3>
+                                                            <p class="my-1 text-blue-300">分辨率: {{ item.resolution }}km
+                                                            </p>
+                                                            <p class="my-1 text-blue-300">创建时间: {{
+                                                                formatTimeToText(item.createTime) }}</p>
+                                                            <p class="my-1 text-blue-300">数据集: {{ item.dataSet }}</p>
+                                                        </div>
                                                     </div>
+                                                    <div v-else>
+                                                        <p class="item-center text-center text-gray-100">暂无数据</p>
+                                                    </div>
+                                                </el-dialog>
+                                                <div class="absolute right-2 cursor-pointer" @click="clearImages">
+                                                    <a-tooltip>
+                                                        <template
+                                                            #title>{{ t('datapage.analysis.section2.clear') }}</template>
+                                                        <Trash2Icon :size="20" />
+                                                    </a-tooltip>
                                                 </div>
-                                                <div v-else>
-                                                    <p class="item-center text-center text-gray-100">暂无数据</p>
-                                                </div>
-                                            </el-dialog>
-                                            <div class="absolute right-2 cursor-pointer" @click="clearImages">
-                                                <a-tooltip>
-                                                    <template #title>{{t('datapage.analysis.section2.clear')}}</template>
-                                                    <Trash2Icon :size="20" />
-                                                </a-tooltip>
+                                            </div>
+                                        </div>
+
+                                        <!-- 立方体配置 -->
+                                        <div class="config-item"
+                                            style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
+                                            <div class="config-label relative">
+                                                <BoxIcon :size="16" class="config-icon" />
+                                                <span>时序立方体</span>
+                                            </div>
+                                            <div class="config-control">
+                                                <button
+                                                    class="bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-4 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6] truncate">
+                                                    前序立方体
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </section>
+                            </section>
 
-                        <!-- 工具目录部分 -->
-                        <section class="panel-section">
-                            <!--工具目录标题-->
-                            <div class="section-header">
-                                <div class="section-icon">
-                                    <LayersIcon :size="18" />
-                                </div>
-                                <h2 class="section-title">工具目录</h2>
-                                <div class="absolute right-2 cursor-pointer">
-                                    <ChevronDown v-if="isToolsExpand" :size="22" @click="isToolsExpand = false" />
-                                    <ChevronUp v-else @click="isToolsExpand = true" :size="22" />
-                                </div>
-                            </div>
-
-                            <!--工具目录内容区域-->
-                            <div v-show="isToolsExpand" class="section-content">
-                                <div class="config-container">
-                                    <div class="config-item" style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
-                                        <div class="config-label relative">
-                                            <SearchIcon :size="16" class="config-icon" />
-                                            <span>搜索工具</span>
-                                        </div>
-                                        <div class="config-control">
-                                            <input
-                                                v-model="searchQuery"
-                                                placeholder="输入关键词..."
-                                                class="w-full bg-[#0d1526] text-white px-3 py-1 rounded border border-[#2c3e50]
-                                                focus:outline-none focus:border-[#2bb2ff]"
-                                            />
-                                        </div>
+                            <!-- 工具目录部分 -->
+                            <section class="panel-section">
+                                <!--工具目录标题-->
+                                <div class="section-header">
+                                    <div class="section-icon">
+                                        <LayersIcon :size="18" />
+                                    </div>
+                                    <h2 class="section-title">工具目录</h2>
+                                    <div class="absolute right-2 cursor-pointer">
+                                        <ChevronDown v-if="isToolsExpand" :size="22" @click="isToolsExpand = false" />
+                                        <ChevronUp v-else @click="isToolsExpand = true" :size="22" />
                                     </div>
                                 </div>
 
-                                <!-- 分类工具列表 -->
-                                <div class="mt-4">
-                                    <div v-for="category in filteredCategories" :key="category.name" class="mb-4">
-                                        <div class="flex items-center cursor-pointer px-2 py-1 hover:bg-gray-800 rounded"
-                                             @click="toggleCategory(category.name)">
-                                            <ChevronRightIcon
-                                                :size="16"
-                                                class="mr-2 transition-transform duration-200"
-                                                :class="{ 'transform rotate-90': expandedCategories.includes(category.name) }"
-                                            />
-                                            <span class="text-gray-300 font-medium">{{ category.name }}</span>
+                                <!--工具目录内容区域-->
+                                <div v-show="isToolsExpand" class="section-content">
+                                    <div class="config-container">
+                                        <div class="config-item"
+                                            style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
+                                            <div class="config-label relative">
+                                                <SearchIcon :size="16" class="config-icon" />
+                                                <span>搜索工具</span>
+                                            </div>
+                                            <div class="config-control">
+                                                <input v-model="searchQuery" placeholder="输入关键词..." class="w-full bg-[#0d1526] text-white px-3 py-1 rounded border border-[#2c3e50]
+                                                focus:outline-none focus:border-[#2bb2ff]" />
+                                            </div>
                                         </div>
+                                    </div>
 
-                                        <div
-                                            v-show="expandedCategories.includes(category.name) || searchQuery"
-                                            class="ml-6 mt-1 space-y-1"
-                                        >
-                                            <div
-                                                v-for="tool in category.tools"
-                                                :key="tool.value"
-                                                @click="selectedTask = tool.value"
-                                                :class="{
-                                                    'bg-[#1e3a8a] text-white': selectedTask === tool.value,
-                                                    'bg-[#0d1526] text-gray-300 hover:bg-[#1e293b]': selectedTask !== tool.value && !tool.disabled,
-                                                    'opacity-50 cursor-not-allowed': tool.disabled,
-                                                    'cursor-pointer': !tool.disabled
-                                                }"
-                                                class="px-3 py-1 rounded-lg transition-colors w-full text-left truncate"
-                                                :disabled="tool.disabled"
-                                            >
-                                                {{ tool.label }}
+                                    <!-- 分类工具列表 -->
+                                    <div class="mt-4">
+                                        <div v-for="category in filteredCategories" :key="category.name" class="mb-4">
+                                            <div class="flex items-center cursor-pointer px-2 py-1 hover:bg-gray-800 rounded"
+                                                @click="toggleCategory(category.name)">
+                                                <ChevronRightIcon :size="16"
+                                                    class="mr-2 transition-transform duration-200"
+                                                    :class="{ 'transform rotate-90': expandedCategories.includes(category.name) }" />
+                                                <span class="text-gray-300 font-medium">{{ category.name }}</span>
+                                            </div>
+
+                                            <div v-show="expandedCategories.includes(category.name) || searchQuery"
+                                                class="ml-6 mt-1 space-y-1">
+                                                <div v-for="tool in category.tools" :key="tool.value"
+                                                    @click="selectedTask = tool.value" :class="{
+                                                        'bg-[#1e3a8a] text-white': selectedTask === tool.value,
+                                                        'bg-[#0d1526] text-gray-300 hover:bg-[#1e293b]': selectedTask !== tool.value && !tool.disabled,
+                                                        'opacity-50 cursor-not-allowed': tool.disabled,
+                                                        'cursor-pointer': !tool.disabled
+                                                    }" class="px-3 py-1 rounded-lg transition-colors w-full text-left truncate"
+                                                    :disabled="tool.disabled">
+                                                    {{ tool.label }}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </section>
+                            </section>
 
-                    </div>
-                </dv-border-box12>
-            </div>
+                        </div>
+                    </dv-border-box12>
+                </div>
             </div>
         </div>
         <!-- <ImageSearcher class="h-full w-[28vw] mt-10" /> -->
-        
+
         <!-- 展示页面 -->
-        <div class="absolute right-0 top-0 h-full flex items-center z-10 " >
+        <div class="absolute right-0 top-0 h-full flex items-center z-10 ">
             <!-- Toggle button -->
-            <button 
-                @click="showPanel = !showPanel"
-                class="mt-10 h-12 w-6 bg-gray-800 hover:bg-gray-700 text-white rounded-l-lg shadow-lg 
-                flex items-center justify-center transition-all z-10"
-                :class="{ '!bg-blue-600': showPanel }"
-            >
-                <ChevronLeftIcon 
-                    :size="16" 
-                    class="transition-transform duration-300"
-                    :class="{ 'transform rotate-180': showPanel }"
-                />
+            <button @click="showPanel = !showPanel" class="mt-10 h-12 w-6 bg-gray-800 hover:bg-gray-700 text-white rounded-l-lg shadow-lg 
+                flex items-center justify-center transition-all z-10" :class="{ '!bg-blue-600': showPanel }">
+                <ChevronLeftIcon :size="16" class="transition-transform duration-300"
+                    :class="{ 'transform rotate-180': showPanel }" />
             </button>
             <!-- <section class="panel-section ml-2 mr-2" style="margin-top: 0rem; margin-bottom: 0.5rem;">
                     <div class="section-header">
@@ -204,14 +200,15 @@
                         <span class="page-title">展示分析</span>
                     </div>
                 </section> -->
-            <div v-if="showPanel" >
+            <div v-if="showPanel">
                 <div class="custom-panel px-2 mt-20">
                     <!-- <dv-border-box12 class=" !h-full"> -->
-                    <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]" style="width:426px; background-color: rgba(20, 20, 21, 0.6);">
-                        
-                            <component :is="currentTaskComponent" :thematicConfig="thematicConfig" />
-                            <ResultComponent @response="handleResultLoaded" />
-                        
+                    <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]"
+                        style="width:426px; background-color: rgba(20, 20, 21, 0.6);">
+
+                        <component :is="currentTaskComponent" :thematicConfig="thematicConfig" />
+                        <ResultComponent @response="handleResultLoaded" />
+
                     </dv-border-box12>
                 </div>
             </div>
@@ -261,11 +258,12 @@ import {
     ChevronUp,
     SearchIcon,
     ChevronDownIcon,
-    Settings
+    Settings,
+    BoxIcon
 } from 'lucide-vue-next'
 import { ElMessage } from 'element-plus'
 import { mapManager } from '@/util/map/mapManager'
-import { formatTimeToText } from '@/util/common'; 
+import { formatTimeToText } from '@/util/common';
 import { ElDialog } from 'element-plus'
 import { type Case } from '@/api/http/satellite-data'
 import subtitle from './subtitle.vue'
@@ -282,6 +280,7 @@ const isSettingExpand = ref(true)
 const isToolsExpand = ref(true)
 
 import MapComp from '@/components/feature/map/mapComp.vue'
+import { getCube } from '@/api/http/analytics-display'
 const isPicking = ref(false)
 
 //左模块显示
@@ -349,13 +348,13 @@ const toolCategories = [
 
 const filteredCategories = computed(() => {
     if (!searchQuery.value) return toolCategories
-    
+
     const query = searchQuery.value.toLowerCase()
     return toolCategories
         .map(category => ({
             ...category,
-            tools: category.tools.filter(tool => 
-                tool.label.toLowerCase().includes(query) || 
+            tools: category.tools.filter(tool =>
+                tool.label.toLowerCase().includes(query) ||
                 category.name.toLowerCase().includes(query)
             )
         }))
@@ -403,7 +402,7 @@ const currentTaskComponent = computed(() => taskComponentMap[selectedTask.value]
 const selectedResult = ref(null);
 
 const handleResultLoaded = (result) => {
-  selectedResult.value = result;
+    selectedResult.value = result;
 }
 // 获取根据行政区选择的原始数据
 const originImages = ref([])
@@ -520,30 +519,30 @@ const addLocalInternalLayer = () => {
 const historyComponent = ref(null)
 const showHistory = ref(false)
 interface Case {
-        caseId: string,
-        address: string,
-        regionId: number,
-        resolution: string,
-        sceneList: Array<string>,
-        dataSet: string,
-        status: string,
-        result: {
-            bucket: string,
-            object_path: string
-        },
-        createTime: string
-    }
+    caseId: string,
+    address: string,
+    regionId: number,
+    resolution: string,
+    sceneList: Array<string>,
+    dataSet: string,
+    status: string,
+    result: {
+        bucket: string,
+        object_path: string
+    },
+    createTime: string
+}
 
-const { 
-  caseList, 
-  currentPage, 
-  pageSize, 
-  total, 
-  getCaseList,
-  activeTab,
-  handleSelectTab,
-  showResult,
-  onResultSelected
+const {
+    caseList,
+    currentPage,
+    pageSize,
+    total,
+    getCaseList,
+    activeTab,
+    handleSelectTab,
+    showResult,
+    onResultSelected
 } = useViewHistoryModule();
 
 const completedCases = ref<any[]>([]); // 仅存储已完成的任务
@@ -551,38 +550,42 @@ const isLoading = ref(false);
 
 // 加载已完成任务
 const loadCompletedCases = async () => {
-  isLoading.value = true;
-  activeTab.value = 'COMPLETE';
-  
+    isLoading.value = true;
+    activeTab.value = 'COMPLETE';
 
-  await getCaseList();
-  
-  completedCases.value = caseList.value;
-  
-  isLoading.value = false;
+
+    await getCaseList();
+
+    completedCases.value = caseList.value;
+
+    isLoading.value = false;
 };
 
 // 效果测试
 const mockCompletedCases = ref([
     {
-    caseId: 'mock_003',
-    address: '广州市天河区',
-    resolution: '10',
-    createTime: '2023-10-17 16:45:33',
-    dataSet: 'MODIS'
-  },
-  {
-    caseId: 'mock_002',
-    address: '上海市浦东新区',
-    resolution: '5',
-    createTime: '2023-10-16 09:15:47',
-    dataSet: 'Landsat-8'
-  },
+        caseId: 'mock_003',
+        address: '广州市天河区',
+        resolution: '10',
+        createTime: '2023-10-17 16:45:33',
+        dataSet: 'MODIS'
+    },
+    {
+        caseId: 'mock_002',
+        address: '上海市浦东新区',
+        resolution: '5',
+        createTime: '2023-10-16 09:15:47',
+        dataSet: 'Landsat-8'
+    },
 ])
 
+const getCubeList = async () => {
+    const cubeList = await getCube()
+    console.log(cubeList)
+}
 
-onMounted(() => {
-    
+
+onMounted(async () => {
     // 设置结果选择的回调
     onResultSelected.value = (result) => {
         selectedResult.value = result
@@ -595,9 +598,10 @@ onMounted(() => {
         showHistory.value = false
         ElMessage.success('已选择数据集')
     }
-    
+
     loadCompletedCases();
     addLocalInternalLayer()
+    await getCubeList()
 })
 
 onUnmounted(() => {
@@ -617,12 +621,16 @@ onUnmounted(() => {
 </script>
 
 <style scoped src="./tabStyle.css">
-html, body, #app {
-  margin: 0;
-  padding: 0;
-  height: 100vh; /* 确保根元素占满视口 */
-  overflow: hidden; /* 防止滚动条导致异常 */
-  overscroll-behavior-y: none; 
+html,
+body,
+#app {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    /* 确保根元素占满视口 */
+    overflow: hidden;
+    /* 防止滚动条导致异常 */
+    overscroll-behavior-y: none;
 }
 
 .chart-wrapper {
