@@ -8,10 +8,57 @@ import {
 	ProFormCheckbox,
 	ProFormText,
 } from "@ant-design/pro-components";
-import { theme } from "antd";
+import { message, theme } from "antd";
+import { getRole, getUsers, login } from "~/apis/https/user/user.api";
+import { useUserContext } from "~/features/user/provider";
+import { useNavigate } from "react-router";
 
 const Page = () => {
 	const { token } = theme.useToken();
+    const {state, dispatch} = useUserContext()
+    const navigate = useNavigate();
+
+    const handleLogin = async (values: any) => {
+        const loginRes = await login(values)
+        if (loginRes.status === 1) {
+            localStorage.setItem('token', loginRes.data.accessToken)
+            localStorage.setItem('refreshToken', loginRes.data.refreshToken)
+            localStorage.setItem('userId', loginRes.data.userId)
+            console.log('用户信息', loginRes.data.userId)
+    
+            let userRes = await getUsers(loginRes.data.userId)
+            let roleRes = await getRole(userRes.roleId)
+            console.log('用户信息', userRes)
+            console.log('角色信息', roleRes)
+            dispatch({
+                type: 'LOGIN',
+                payload: {
+                    id: loginRes.data.userId,
+                    phone: userRes.phone,
+                    province:userRes.province,
+                    city:userRes.city,
+                    email: userRes.email,
+                    name: userRes.userName,
+                    title: userRes.title,
+                    organization: userRes.organization,
+                    introduction: userRes.introduction,
+                    roleId: userRes.roleId,
+                    roleName: roleRes.data.name,
+                    roleDesc: roleRes.data.description,
+                    maxCpu: roleRes.data.maxCpu,
+                    maxStorage: roleRes.data.maxStorage,
+                    maxJob: roleRes.data.maxJob,
+                    isSuperAdmin: roleRes.data.isSuperAdmin
+                }
+            })
+            message.success("登录成功")
+            navigate('/')
+        } else if (loginRes.status === -1) {
+            message.warning("邮箱或密码错误")
+        } else {
+            message.warning("登录失败")
+        }
+    }
 	return (
 		<div
 			style={{
@@ -27,7 +74,7 @@ const Page = () => {
 					backgroundColor: "rgba(0, 0, 0,0.65)",
 					backdropFilter: "blur(4px)",
 				}}
-                onFinish={(values) => {console.log(values)}}
+                onFinish={(values) => handleLogin(values)}
 				subTitle="专注多源遥感应用支撑云平台后台"
 				activityConfig={{
 					style: {
@@ -60,7 +107,7 @@ const Page = () => {
 			>
 				<>
                     <ProFormText
-                        name="username"
+                        name="email"
                         fieldProps={{
                             size: "large",
                             prefix: (

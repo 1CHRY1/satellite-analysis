@@ -8,6 +8,10 @@ import { getScenesInGrid } from '@/api/http/interactive-explore/grid.api'
 import type { Grid } from '@/api/http/interactive-explore/grid.type'
 import type { Dayjs } from 'dayjs'
 import dayjs from 'dayjs'
+import { addCube, getCube } from '@/api/http/analytics-display/cube.api'
+import type { CubeRequest } from '@/api/http/analytics-display/cube.type'
+import { NumberFormat } from 'vue-i18n'
+
 
 type GridInfo = {
     columnId: number
@@ -23,6 +27,7 @@ type Scene = {
     noData: number
     images: any[]
     bandMapper: any
+    boundingBox: any
 }
 // 选中的格网数据信息
 export const selectedGrid = ref<GridInfo>()
@@ -169,20 +174,30 @@ export const useBox = () => {
         try {
             DataPreparationMapOps.map_destrod3DBoxLayer()
             showCubeContentDialog.value = true
-            console.log(exploreData)
+            const res = await addCube(cubeContent.value)
+            currentCacheKey.value = res.data
+            console.log(await getCube())
             let gridGeoJson = {}
             for (const grid of exploreData.grids) {
                 if (selectedGrid.value?.columnId === grid.columnId && selectedGrid.value?.resolution === grid.resolution && selectedGrid.value?.rowId === grid.rowId) {
                     gridGeoJson = grid.boundary
                 }
             }
-            console.log(gridGeoJson)
-            console.log(cubeContent)
-            DataPreparationMapOps.map_add3DBoxLayer(gridGeoJson, cubeContent.value)
+            // 取消高亮格网，并展示3D图层
+            const id = 'grid-layer'
+            const highlightId = id + '-highlight'
+            ezStore.get('map').setFilter(highlightId, ['in', 'id', ''])
+            DataPreparationMapOps.map_add3DBoxLayer(gridGeoJson, cubeSceneListByDate.value, cubeContent.value)
         } catch (error) {
             console.log(error)
         } finally {
         }
+    }
+
+    const handleReset = () => {
+        DataPreparationMapOps.map_destrod3DBoxLayer()
+        selectedGrid.value = undefined
+        sensorOptions.value = []
     }
 
     const onFinish = (values: any) => {
@@ -191,16 +206,25 @@ export const useBox = () => {
     }
 
     const showCubeContentDialog = ref(false)
+
+    const currentCacheKey = ref('')
     
     const cubeContent = computed(() => {
         return {
-            CubeId: `${selectedGrid.value?.rowId}-${selectedGrid.value?.columnId}-${selectedGrid.value?.resolution}`,
-            Dimension_Sensors: formData.sensors,
-            Dimension_Dates: formData.dates,
-            Dimension_Bands: formData.bands,
-            Dimension_Scenes: sceneList.value.filter(item => formData.sensors.includes(item.sensorName) && formData.dates.some(d => dayjs(d).isSame(dayjs(item.sceneTime), 'day')))
+            cubeId: `${selectedGrid.value?.rowId}-${selectedGrid.value?.columnId}-${selectedGrid.value?.resolution}`,
+            dimensionSensors: formData.sensors,
+            dimensionDates: formData.dates,
+            dimensionBands: formData.bands,
+            dimensionScenes: sceneList.value.filter(item => formData.sensors.includes(item.sensorName) && formData.dates.some(d => dayjs(d).isSame(dayjs(item.sceneTime), 'day')))
         }
     })
+
+    const cubeSceneListByDate = computed(() => {
+        return Object.fromEntries(cubeContent.value.dimensionDates.map(date => {
+            return [date, sceneList.value.filter(item => dayjs(date).isSame(dayjs(item.sceneTime), 'day'))]
+        }))
+    })
+
     return {
         selectedGrid,
         updateGridLayer,
@@ -213,8 +237,11 @@ export const useBox = () => {
         handleBandChange,
         handleDateChange,
         handleSynthesis,
+        handleReset,
         onFinish,
         cubeContent,
+        cubeSceneListByDate,
+        currentCacheKey,
         showCubeContentDialog
     }
 }
