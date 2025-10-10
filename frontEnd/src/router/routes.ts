@@ -43,7 +43,7 @@ export const routes = [
     },
     {
         path: '/analysis',
-        component: () => import('@/components/dataCenter/dynamicAnalysis.vue'),
+        component: () => import('@/components/dataCenter/dynamicAnalysis/dynamicAnalysis.vue'),
         meta: {
             requiresAuth: true,
         },

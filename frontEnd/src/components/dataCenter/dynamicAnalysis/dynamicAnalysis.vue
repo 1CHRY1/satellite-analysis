@@ -107,11 +107,55 @@
                                                 <BoxIcon :size="16" class="config-icon" />
                                                 <span>时序立方体</span>
                                             </div>
-                                            <div class="config-control">
-                                                <button
-                                                    class="bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-4 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6] truncate">
-                                                    前序立方体
-                                                </button>
+                                            <a-alert v-if="exploreData.grids.length===0"
+                                                :message="`已选择${ cubeList.filter(item => item.isSelect).length }个时序立方体`"
+                                                type="info" show-icon class="status-alert">
+                                            </a-alert>
+                                            <a-form layout="inline" >
+                                                <a-form-item class="w-full">
+                                                    <a-input v-model:value="inputCacheKey" placeholder="键入CacheKey（按Enter以选择）" @keyup.enter="handleSelectCube(inputCacheKey)">
+                                                        <template #prefix><CommandIcon :size="14" style="color: rgba(255, 255, 255, 0.25)" /></template>
+                                                    </a-input>
+                                                </a-form-item>
+                                            </a-form>
+                                            <div class="max-h-[268px] overflow-y-auto">
+                                                <a-modal v-model:open="currentCacheKey" title="时序立方体" @ok="() => {cubeList.filter(cube => cube.cacheKey === currentCacheKey)[0].isShow=false;currentCacheKey = undefined}" @cancel="() => {cubeList.filter(cube => cube.cacheKey === currentCacheKey)[0].isShow=false;currentCacheKey = undefined}">
+                                                    <a-card style="max-height: 400px; overflow: auto; position: relative;">
+                                                        <pre
+                                                            style="white-space: pre-wrap; word-break: break-word; user-select: text;"
+                                                            >
+                                                            {{ cubeList.filter(cube => cube.cacheKey === currentCacheKey)[0] }}
+                                                        </pre>
+                                                    </a-card>
+                                                </a-modal>  
+                                                <a-list item-layout="horizontal" class="w-full" :data-source="cubeList">
+                                                    <template #renderItem="{ item }">
+                                                        <a-list-item>
+                                                            <template #actions>
+                                                                <div>
+                                                                    <Eye v-if="item.isShow" :size="16" class="cursor-pointer" @click="currentCacheKey = undefined;item.isShow = false"></Eye>
+                                                                    <EyeOff v-else :size="16" class="cursor-pointer" @click="currentCacheKey = item.cacheKey;item.isShow = true"></EyeOff>
+                                                                </div>
+                                                                <div>
+                                                                    <Square v-if="!item.isSelect" :size="16" class="cursor-pointer" @click="handleSelectCube(item.cacheKey)"></Square>
+                                                                    <SquareCheck v-else :size="16" class="cursor-pointer" @click="handleSelectCube(item.cacheKey)"></SquareCheck>
+                                                                </div>
+                                                            </template>
+                                                            <a-list-item-meta
+                                                                :description="`${item.dimensionDates.length}维时序立方体, 包含${item.dimensionSensors.length}类传感器, ${item.dimensionScenes.length}景影像`"
+                                                            >
+                                                                <template #title>
+                                                                    {{formatTimeToText(item.cacheTime)}}
+                                                                </template>
+                                                                <template #avatar>
+                                                                    <div class="section-icon">
+                                                                        <BoxIcon :size="14" />
+                                                                    </div>
+                                                                </template>
+                                                            </a-list-item-meta>
+                                                        </a-list-item>
+                                                        </template>
+                                                </a-list>
                                             </div>
                                         </div>
                                     </div>
@@ -231,7 +275,7 @@ import type { RegionValues } from 'v-region'
 import { RegionSelects } from 'v-region'
 import { getSceneByConfig, getBoundary } from '@/api/http/satellite-data'
 import { getRGBTileLayerParamFromSceneObject } from '@/util/visualizeHelper'
-import { useViewHistoryModule } from './noCloud/viewHistory'
+import { useViewHistoryModule } from '../noCloud/viewHistory'
 import {
     ChartColumn,
     Earth,
@@ -259,14 +303,21 @@ import {
     SearchIcon,
     ChevronDownIcon,
     Settings,
-    BoxIcon
+    BoxIcon,
+    Eye,
+    EyeOff,
+    Circle,
+    CircleOff,
+    Square,
+    SquareCheck,
+    CommandIcon
 } from 'lucide-vue-next'
 import { ElMessage } from 'element-plus'
 import { mapManager } from '@/util/map/mapManager'
 import { formatTimeToText } from '@/util/common';
 import { ElDialog } from 'element-plus'
 import { type Case } from '@/api/http/satellite-data'
-import subtitle from './subtitle.vue'
+import subtitle from '../subtitle.vue'
 import { useExploreStore } from '@/store'
 import { useTaskStore } from '@/store'
 const exploreData = useExploreStore()
@@ -281,6 +332,7 @@ const isToolsExpand = ref(true)
 
 import MapComp from '@/components/feature/map/mapComp.vue'
 import { getCube } from '@/api/http/analytics-display'
+import { useCube } from './composables/useCube'
 const isPicking = ref(false)
 
 //左模块显示
@@ -387,14 +439,14 @@ const selectedTask = ref(toolCategories[0].tools[0].value)
 
 // 专题组件映射
 const taskComponentMap = {
-    '伪彩色分割': defineAsyncComponent(() => import('./thematic/colorThresholdPanel.vue')),
-    '指数分析': defineAsyncComponent(() => import('./thematic/indexPanel.vue')),
-    'NDVI时序计算': defineAsyncComponent(() => import('./thematic/ndviPanel.vue')),
-    '光谱分析': defineAsyncComponent(() => import('./thematic/spectrumPanel.vue')),
-    'DSM分析': defineAsyncComponent(() => import('./thematic/dsmPanel.vue')),
-    'DEM分析': defineAsyncComponent(() => import('./thematic/demPanel.vue')),
-    '红绿立体': defineAsyncComponent(() => import('./thematic/RBbandsPanel.vue')),
-    '形变速率': defineAsyncComponent(() => import('./thematic/deformationRate.vue')),
+    '伪彩色分割': defineAsyncComponent(() => import('../thematic/colorThresholdPanel.vue')),
+    '指数分析': defineAsyncComponent(() => import('../thematic/indexPanel.vue')),
+    'NDVI时序计算': defineAsyncComponent(() => import('../thematic/ndviPanel.vue')),
+    '光谱分析': defineAsyncComponent(() => import('../thematic/spectrumPanel.vue')),
+    'DSM分析': defineAsyncComponent(() => import('../thematic/dsmPanel.vue')),
+    'DEM分析': defineAsyncComponent(() => import('../thematic/demPanel.vue')),
+    '红绿立体': defineAsyncComponent(() => import('../thematic/RBbandsPanel.vue')),
+    '形变速率': defineAsyncComponent(() => import('../thematic/deformationRate.vue')),
 }
 
 const currentTaskComponent = computed(() => taskComponentMap[selectedTask.value] || null)
@@ -579,12 +631,7 @@ const mockCompletedCases = ref([
     },
 ])
 
-const getCubeList = async () => {
-    const cubeList = await getCube()
-    console.log(cubeList)
-}
-
-
+const {cubeObj, cubeList, inputCacheKey, handleSelectCube, updateGridLayer, currentCacheKey, getCubeObj} = useCube()
 onMounted(async () => {
     // 设置结果选择的回调
     onResultSelected.value = (result) => {
@@ -601,7 +648,8 @@ onMounted(async () => {
 
     loadCompletedCases();
     addLocalInternalLayer()
-    await getCubeList()
+    await getCubeObj()
+    updateGridLayer(cubeList.value)
 })
 
 onUnmounted(() => {
@@ -620,7 +668,7 @@ onUnmounted(() => {
 
 </script>
 
-<style scoped src="./tabStyle.css">
+<style scoped src="../tabStyle.css">
 html,
 body,
 #app {

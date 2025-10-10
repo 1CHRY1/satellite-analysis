@@ -36,3 +36,20 @@ export interface GridRequest {
     columnId: number,
     resolution: number
 }
+
+export interface CubeItem {
+    cubeId: string
+    cacheTime: number
+    dimensionSensors: any[]
+    dimensionScenes: any[]
+    dimensionDates: any[]
+}
+
+export interface CubeDisplayItem extends CubeItem {
+    cacheKey: string
+    isSelect: boolean
+    isShow: boolean
+    gridGeoJson: any
+}
+
+export type CubeObj = Record<string, CubeItem>
