@@ -1,8 +1,5 @@
-import { clickHandler, selectedGrid } from '@/components/dataCenter/noCloud/composables/useBox'
 import { mapManager } from '../mapManager'
 import { ezStore } from '@/store'
-import bus from '@/store/bus'
-import { watch, watchEffect } from 'vue'
 import * as turf from '@turf/turf'
 
 /**
@@ -61,15 +58,6 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
             filter: ['in', 'id', ''],
         })
 
-        // 左键点击 fill 区域，更新高亮
-        m.on('click', fillId, clickHandler)
-
-        // Add a click event listener to the invisible fill layer
-        m.on('contextmenu', fillId, () => {
-            // TODO
-        })
-
-        // ezStore.set('grid-layer-cancel-watch', cancelWatch)
         ezStore.set('grid-layer-fill-id', fillId)
         ezStore.set('grid-layer-line-id', lineId)
         ezStore.set('grid-layer-highlight-id', highlightId)
@@ -88,7 +76,6 @@ export function map_destroyGridLayer(): void {
     const cancelWatch = ezStore.get('grid-layer-cancel-watch')
 
     mapManager.withMap((m) => {
-        gridLayer && m.getLayer(gridLayer) && m.off('click', gridLayer, clickHandler)
         gridLayer && m.getLayer(gridLayer) && m.removeLayer(gridLayer)
         gridLineLayer && m.getLayer(gridLineLayer) && m.removeLayer(gridLineLayer)
         gridHighlightLayer && m.getLayer(gridHighlightLayer) && m.removeLayer(gridHighlightLayer)
@@ -203,7 +190,6 @@ export function map_destrod3DBoxLayer(): void {
         const layers = style.layers || []
         layers.forEach((layer) => {
             if (layer.id.includes('3d-box-layer')) {
-                m.getLayer(layer.id) && m.off('click', layer.id, clickHandler)
                 m.getLayer(layer.id) && m.removeLayer(layer.id)
             }
         })

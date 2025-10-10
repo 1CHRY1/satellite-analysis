@@ -4,7 +4,7 @@
         <subtitle class="z-10 absolute" style="margin-top: 60px; " />
         <!-- 左侧面板栏 -->
         <div class=" absolute left-16 z-10 h-[calc(100vh-100px)] p-4 text-gray-200"
-            :class="showPanel ? 'w-[28vw]' : 'w-16 transition-all duration-300'">
+            :class="showPanel ? 'w-[545px]' : 'w-16 transition-all duration-300'">
             <button @click="showPanel = !showPanel" class="absolute top-1/2 right-0 -translate-y-1/2 h-12 w-6 text-white rounded-l-lg shadow-lg 
                  items-center justify-center transition-all z-10"
                 :class="showPanel ? 'bg-blue-600 hover:bg-blue-500' : 'bg-gray-800 hover:bg-gray-700'">
@@ -32,6 +32,14 @@
                     <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]">
                         <!--无云数据合成和时空立方体合成-->
                         <div class="main-container">
+                            <a-alert v-if="exploreData.grids.length===0"
+                                description="请先完成交互探索"
+                                type="warning" show-icon class="status-alert">
+                                <template #action>
+                                    <a-button size="small" @click="router.push('/explore')">前往</a-button>
+                                </template>
+                            </a-alert>
+                            <br v-if="exploreData.grids.length===0"/>
                             <!--无云数据合成-->
                             <section class="panel-section" v-show="currentPanel === 'noCloud'" key="complex">
                                 <!--无云数据合成标题-->
@@ -507,7 +515,7 @@
                                     <div class="config-container">
                                         <a-alert
                                             :description="selectedGrid ? `已选择立方体${selectedGrid.rowId}-${selectedGrid.columnId}-${selectedGrid.resolution}` : '请先在地图中选择立方体'"
-                                            type="info" show-icon class="status-alert" />
+                                            :type="selectedGrid ? 'info' : 'warning'" show-icon class="status-alert" />
                                         <div class="config-item"
                                             style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
                                             <div class="config-label relative">
@@ -568,15 +576,22 @@
                                             </div>
 
                                             <!-- 操作按钮区域 -->
-                                            <div class="config-control justify-center" :bordered="false">
+                                            <div class="config-control justify-end" :bordered="false">
+                                                <a-button size="large" style="margin-right: 1rem;" :disabled="!canSynthesize"
+                                                    @click="handleReset">
+                                                    重置
+                                                </a-button>
                                                 <a-button type="primary" size="large" :disabled="!canSynthesize"
                                                     @click="handleSynthesis">
                                                     合成立方体
                                                 </a-button>
 
                                             </div>
-                                            <a-modal v-model:open="showCubeContentDialog" title="时序立方体">
+                                            <a-modal v-model:open="showCubeContentDialog" title="时序立方体" @ok="() => showCubeContentDialog = false">
                                                 <a-card style="max-height: 400px; overflow: auto; position: relative;">
+                                                    <a-alert
+                                                        :description="`请牢记时序立方体CacheKey: ${currentCacheKey}`"
+                                                        type="warning" show-icon class="status-alert" />
                                                     <pre
                                                         style="white-space: pre-wrap; word-break: break-word; user-select: text;"
                                                         >
@@ -612,11 +627,12 @@ import noCloudHistory from '@/components/dataCenter/noCloud/noCloudHistory.vue'
 import { formatTime } from '@/util/common'
 import { ElMessage } from 'element-plus'
 import * as MapOperation from '@/util/map/operation'
+import * as CommonMapOps from '@/util/map/operation/common'
 import { mapManager } from '@/util/map/mapManager'
 import router from '@/router'
 import subtitle from '../subtitle.vue'
 import { useI18n } from 'vue-i18n'
-
+import bbox from '@turf/bbox'
 
 import {
     Loader,
@@ -743,7 +759,7 @@ const {
 
 // 时空立方体合成
 const {
-    selectedGrid, updateGridLayer, formData, sensorOptions, bandOptions, dateOptions, canSynthesize, handleSensorChange, handleBandChange, handleDateChange, handleSynthesis, onFinish, cubeContent, showCubeContentDialog
+    selectedGrid, updateGridLayer, formData, sensorOptions, bandOptions, dateOptions, canSynthesize, handleSensorChange, handleBandChange, handleDateChange, handleSynthesis, handleReset, onFinish, cubeContent, currentCacheKey, showCubeContentDialog
 } = useBox()
 
 const handleAdd1mDemoticImage = () => add1mDemoticImage(reRenderAllGrids, clearGridRenderingByType)
@@ -782,8 +798,18 @@ onMounted(async () => {
             })
             // 格网底色铺设
             updateGridLayer(exploreData.grids)
+            
         }
     }, 2)
+    // 缩放至研究区
+    setTimeout(() => {
+        const boundsArray = bbox(exploreData.boundary as any)
+        const bounds = [
+            [boundsArray[0], boundsArray[1]],
+            [boundsArray[2], boundsArray[3]]
+        ]
+        CommonMapOps.map_fitView(bounds)
+    },1500)
 })
 </script>
 
