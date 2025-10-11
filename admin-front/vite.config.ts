@@ -11,37 +11,18 @@ const currentEnv = ENV_CONFIG[ENV_TARGET as keyof typeof ENV_CONFIG] || ENV_CONF
 // 代理配置生成器
 const createProxyConfig = () => {
   return {
-      // API v3
-      '/api3': {
-          target: `${currentEnv.api}/api/v3`,
-          changeOrigin: true,
-          rewrite: (path: string) => path.replace(/^\/api3/, ''),
-      },
-      // API v2
-      '/api2': {
-          target: `${currentEnv.api}/api/v2`,
-          changeOrigin: true,
-          rewrite: (path: string) => path.replace(/^\/api2/, ''),
-      },
       // API v1
       '/api': {
           target: `${currentEnv.api}/api/v1`,
           changeOrigin: true,
           rewrite: (path: string) => path.replace(/^\/api/, ''),
       },
-      // WebSocket
-      '/websocket': {
-          target: currentEnv.websocket,
-          ws: true,
-          changeOrigin: true,
-          rewrite: (path: string) => path.replace(/^\/websocket/, ''),
-      },
-      // Tiler
-      '/tiler': {
-          target: currentEnv.tiler,
-          changeOrigin: true,
-          rewrite: (path: string) => path.replace(/^\/tiler/, ''),
-      },
+      // Admin API
+      '/admin': {
+        target: `${currentEnv.api}/admin/api/v1`,
+        changeOrigin: true,
+        rewrite: (path: string) => path.replace(/^\/admin/, ''),
+    },
   }
 }
 

@@ -1,11 +1,14 @@
 import { EllipsisOutlined, PlusOutlined } from "@ant-design/icons";
-import type { ActionType, ProColumns } from "@ant-design/pro-components";
-import {
-	ProTable,
-	TableDropdown,
+import type {
+	ActionType,
+	ParamsType,
+	ProColumns,
 } from "@ant-design/pro-components";
+import { ProTable, TableDropdown } from "@ant-design/pro-components";
 import { Button, Dropdown, Space, Tag } from "antd";
+import type { SortOrder } from "antd/es/table/interface";
 import { useRef } from "react";
+import { getUserPage } from "~/apis/https/user/user.admin.api";
 // import request from 'umi-request';
 export const waitTimePromise = async (time: number = 100) => {
 	return new Promise((resolve) => {
@@ -35,18 +38,140 @@ type GithubIssueItem = {
 	closed_at?: string;
 };
 
-const columns: ProColumns<GithubIssueItem>[] = [
+type UserItem = {
+	userId: string;
+	userName: string;
+	phone: string;
+	province: string;
+	city: string;
+	organization: string;
+	introduction: string;
+	create_time: string;
+	title: string;
+	role: string;
+	email: string;
+	avataPath: string;
+	roleId: number;
+};
+
+const columns: ProColumns<UserItem>[] = [
 	{
 		dataIndex: "index",
 		valueType: "indexBorder",
 		width: 48,
 	},
 	{
-		title: "标题",
-		dataIndex: "title",
+		title: "用户名",
+		dataIndex: "userName",
+		ellipsis: true,
+		formItemProps: {
+			rules: [
+				{
+					required: true,
+					message: "此项为必填项",
+				},
+			],
+		},
+	},
+	{
+		title: "邮箱",
+		dataIndex: "email",
 		copyable: true,
 		ellipsis: true,
-		tooltip: "标题过长会自动收缩",
+		hideInSearch: true,
+		formItemProps: {
+			rules: [
+				{
+					required: true,
+					message: "此项为必填项",
+				},
+			],
+		},
+	},
+	{
+		disable: true,
+		title: "电话",
+		dataIndex: "phone",
+		ellipsis: true,
+		hideInSearch: true,
+	},
+	{
+		disable: true,
+		title: "称谓",
+		dataIndex: "title",
+		ellipsis: true,
+		hideInSearch: true,
+	},
+	{
+		disable: true,
+		title: "组织",
+		dataIndex: "organization",
+		ellipsis: true,
+		hideInSearch: true,
+	},
+	{
+		title: "地址",
+		key: "address",
+		hideInSearch: true,
+		renderFormItem: (_, { defaultRender }) => {
+			return defaultRender(_);
+		},
+		render: (_, record) => <Space>{record.province}{record.city}</Space>,
+	},
+	{
+		disable: true,
+		title: "头像",
+		dataIndex: "avartarPath",
+		ellipsis: true,
+		hideInSearch: true,
+		hideInTable: true,
+	},
+	{
+		title: "创建时间",
+		key: "showTime",
+		dataIndex: "createTime",
+		valueType: "date",
+		sorter: true,
+		hideInSearch: true,
+	},
+	{
+		disable: true,
+		title: "角色",
+		dataIndex: "roleId",
+		ellipsis: true,
+		filters: true,
+		onFilter: true,
+		valueType: "select",
+		valueEnum: {
+			all: { text: "超长".repeat(50) },
+			open: {
+				text: "未解决",
+				status: "Error",
+			},
+			closed: {
+				text: "已解决",
+				status: "Success",
+				disabled: true,
+			},
+			processing: {
+				text: "解决中",
+				status: "Processing",
+			},
+		},
+	},
+];
+
+const oldColumns: ProColumns<GithubIssueItem>[] = [
+	{
+		dataIndex: "index",
+		valueType: "indexBorder",
+		width: 48,
+	},
+	{
+		title: "用户名",
+		dataIndex: "userName",
+		copyable: true,
+		ellipsis: true,
 		formItemProps: {
 			rules: [
 				{
@@ -155,22 +280,43 @@ const columns: ProColumns<GithubIssueItem>[] = [
 	},
 ];
 
+const getAllUser = async (
+	params: ParamsType & {
+		pageSize?: number;
+		current?: number;
+		keyword?: string;
+	},
+	sort: Record<string, SortOrder>,
+	filter: Record<string, (string | number)[] | null>,
+) => {
+	console.log(sort, filter);
+	// await waitTime(2000);
+	const res = await getUserPage({
+		page: params.current as number,
+		pageSize: params.pageSize as number,
+		searchText: params.userName as string,
+	})
+	console.log(params)
+	return {
+		data: res.data.records,
+		success: true,
+		total: res.data.total
+	}
+	// return request<{
+	// 	data: UserItem[];
+	// }>("https://proapi.azurewebsites.net/github/issues", {
+	// 	params,
+	// });
+};
+
 const Table: React.FC = () => {
-	const actionRef = useRef<ActionType>();
+	const actionRef = useRef<ActionType>(undefined);
 	return (
-		<ProTable<GithubIssueItem>
+		<ProTable<UserItem>
 			columns={columns}
 			actionRef={actionRef}
 			cardBordered
-			request={async (params, sort, filter) => {
-				console.log(sort, filter);
-				await waitTime(2000);
-				return request<{
-					data: GithubIssueItem[];
-				}>("https://proapi.azurewebsites.net/github/issues", {
-					params,
-				});
-			}}
+			request={getAllUser}
 			editable={{
 				type: "multiple",
 			}}
@@ -206,7 +352,7 @@ const Table: React.FC = () => {
 				},
 			}}
 			pagination={{
-				pageSize: 5,
+				pageSize: 10,
 				onChange: (page) => console.log(page),
 			}}
 			dateFormatter="string"
