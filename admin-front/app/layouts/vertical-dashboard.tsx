@@ -8,6 +8,9 @@ import menuLogo from "~/assets/menu-logo.svg";
 import menuLogoSlim from "~/assets/menu-logo-slim.svg";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { items } from "./scripts/menus";
+import AppHeader from "./scripts/header";
+import { findMenuItemByKey, useMenuContext } from "~/features/menu/context";
+import type { ItemType } from "antd/es/menu/interface";
 const { Header, Content, Footer, Sider } = Layout;
 
 
@@ -22,9 +25,12 @@ export const VerticalDashboardLayout: React.FC = () => {
 		return [location.pathname];
 	}, [location.pathname]);
 	const navigate = useNavigate();
+	const menuContext = useMenuContext()
+
 
 	const handleMenuClick: MenuProps["onClick"] = ({ key }) => {
-		navigate(key);
+		navigate(key)
+		menuContext.setSelectedMenus([findMenuItemByKey(items, key)] as ItemType[])
 	};
 
 	return (
@@ -68,7 +74,9 @@ export const VerticalDashboardLayout: React.FC = () => {
 				/>
 			</Sider>
 			<Layout className="h-screen overflow-auto">
-				<Header style={{ padding: 0, background: colorBgContainer }} />
+				<Header style={{ padding: 0, background: colorBgContainer }}>
+					<AppHeader />
+				</Header>
 				<Content style={{ margin: "0 16px", paddingTop: "16px" }}>
 					<div
 						style={{

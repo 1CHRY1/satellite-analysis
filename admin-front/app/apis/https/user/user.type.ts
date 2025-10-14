@@ -1,3 +1,5 @@
+import type { PageRequest, PageResponse } from "../common.type";
+
 export interface UserInfo {
     userId: string;
 	userName: string;
@@ -15,21 +17,11 @@ export interface UserInfo {
 	roleId: number;
 }
 
-export interface UserPageRequest {
-    page: number,
-    pageSize: number,
-    asc?: boolean,
-    searchText?: string,
-    sortField?: string,
+export interface UserPageRequest extends PageRequest{
     roleIds?: number[]
 }
 
-export interface UserPageResponse {
-    records: UserInfo[]
-    total: number,
-    size: number,
-    current: number
-}
+export type UserPageResponse = PageResponse<UserInfo>
 
 export interface UserIds {
     userIds: number[]
