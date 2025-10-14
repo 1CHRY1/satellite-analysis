@@ -1,5 +1,6 @@
 package nnu.mnr.satellite.model.po.modeling;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
@@ -52,4 +53,7 @@ public class Project {
     private HashSet<String> joinedUsers;
 
     String description;
+
+    @TableField("is_tool")
+    private Integer isTool;
 }

@@ -331,7 +331,7 @@ const props = defineProps({
     },
 })
 const userStore = useUserStore()
-const emit = defineEmits(['addMessage'])
+const emit = defineEmits(['addMessage', 'servicePublished', 'serviceUnpublished'])
 
 /**
  * 在线编程工具条
@@ -780,6 +780,7 @@ const publishServiceFunction = async () => {
         
         ElMessage.success(`服务发布成功！访问地址: ${response.url}`)
         emit('addMessage', `Service running at: ${response.url}`)
+        emit('servicePublished')
     } catch (error) {
         ElMessage.error('服务发布失败: ' + (error as Error).message)
     } finally {
@@ -798,6 +799,7 @@ const unpublishServiceFunction = async () => {
         serviceStatus.value.running = false
         ElMessage.success('服务已停止')
         emit('addMessage', 'Service stopped')
+        emit('serviceUnpublished')
     } catch (error) {
         ElMessage.error('停止服务失败: ' + (error as Error).message)
     } finally {
