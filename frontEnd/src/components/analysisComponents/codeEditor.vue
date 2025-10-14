@@ -28,12 +28,13 @@
 
                 <div style="border-right: 1.5px dashed #5f6477; height: 20px;"></div>
 
-                <el-button link class="toolItem btHover" @click="publishOpen">
-                    <SendOutlined class="mr-1" />
-                    发布
+                <el-button link class="toolItem btHover" @click="fillTemplate">
+                    模板
                 </el-button>
-                
+
                 <div style="border-right: 1.5px dashed #5f6477; height: 20px;"></div>
+
+                
                 
                 <el-button link class="toolItem btHover" @click="servicePublishOpen">
                     <CloudServerOutlined class="mr-1" />
@@ -295,7 +296,6 @@ import {
     CaretRightOutlined,
     SaveOutlined,
     StopOutlined,
-    SendOutlined,
 } from '@ant-design/icons-vue'
 import {
     projectOperating,
@@ -312,7 +312,7 @@ import {
 import { ref, onMounted, onBeforeUnmount,watch, computed } from 'vue'
 import { Codemirror } from 'vue-codemirror'
 import { python } from '@codemirror/lang-python'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { publishTool} from '@/api/http/tool' 
 import { updateRecord } from '@/api/http/user'
 import { useUserStore } from '@/store'
@@ -452,6 +452,42 @@ const saveCode = async () => {
     } else {
         ElMessage.error('代码保存失败')
     }
+}
+
+// 一键填充工具发布模板（无参函数模板）
+const fillTemplate = async () => {
+    const template = `"""
+工具发布模板 (无参数函数)
+
+说明:
+- 将你的逻辑写入 tool_main() 函数中。
+- 运行脚本或发布工具时，会调用该函数。
+- 当前不考虑输入输出参数，如需扩展可后续调整。
+"""
+
+def tool_main():
+    # TODO: 在此处编写你的工具逻辑
+    print("Hello from your published tool!")
+
+
+if __name__ == "__main__":
+    tool_main()
+`
+    // 如果已有代码，提示是否覆盖
+    const current = (code.value || '').trim()
+    if (current && current !== '代码读取失败，请检查容器运行情况或联系管理员') {
+        try {
+            await ElMessageBox.confirm('将覆盖当前代码，是否继续？', '提示', {
+                confirmButtonText: '覆盖',
+                cancelButtonText: '取消',
+                type: 'warning',
+            })
+        } catch {
+            return
+        }
+    }
+    code.value = template
+    ElMessage.success('已填充模板')
 }
 
 const keyboardSaveCode = (event: KeyboardEvent) => {
@@ -794,7 +830,6 @@ const publishFunction = async () => {
 
     publishLoading.value = true
     try {
-        
         const response = await publishTool(
             props.projectId,
             publishToolData.value.environment,
@@ -808,8 +843,8 @@ const publishFunction = async () => {
             }
         )
         // 提取toolId
-        const toolId = response.toolId
-        console.log('工具发布成功,ID:', toolId)
+        const toolId = (response && (response.toolId || response?.data?.toolId)) || ''
+        console.log('工具发布成功,ID:', toolId || '(未返回)')
 
         ElMessage.success('工具发布成功')
         publishView.value = false

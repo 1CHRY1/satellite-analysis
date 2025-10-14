@@ -74,6 +74,7 @@ public class ToolService {
 
         Tool toolObj = Tool.builder()
                 .toolId(toolId)
+                .projectId(projectId)
                 .environment(environment)
                 .userId(userId)
                 .toolName(toolName)
@@ -89,6 +90,13 @@ public class ToolService {
             toolRepo.insertTool(toolObj);
         } catch (Exception e) {
             throw new RuntimeException("工具发布失败: " + e.getMessage(), e);
+        }
+
+        // 标记项目为工具（is_tool = 1）
+        try {
+            projectRepo.updateIsTool(projectId, 1);
+        } catch (Exception e) {
+            log.warn("工具发布成功，但标记项目 is_tool 失败: {}", e.getMessage());
         }
 
         Map<String, Object> data = new HashMap<>();
@@ -229,7 +237,7 @@ public class ToolService {
 
     public boolean isToolIdExistInTool(String toolId) {
         QueryWrapper<Tool> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("tool_Id", toolId); // 构造查询条件
+        queryWrapper.eq("tool_id", toolId); // 构造查询条件
         return toolRepo.selectCount(queryWrapper) > 0;
     }
 
