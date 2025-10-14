@@ -11,6 +11,7 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import "@ant-design/v5-patch-for-react-19";
 import { UserProvider } from "./features/user/provider";
+import { MenuProvider } from "./features/menu/provider";
 
 export const links: Route.LinksFunction = () => [
 	{ rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -49,7 +50,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
 	return (
 		<UserProvider>
-			<Outlet />
+			<MenuProvider>
+				<Outlet /> {/*<UserProvider children={<Outlet />}></UserProvider> */}
+			</MenuProvider>
 		</UserProvider>
 	);
 }
