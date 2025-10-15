@@ -250,7 +250,7 @@
                     <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]"
                         style="width:426px; background-color: rgba(20, 20, 21, 0.6);">
 
-                        <component :is="currentTaskComponent" :thematicConfig="thematicConfig" />
+                        <component v-if="currentTaskComponent" :is="currentTaskComponent" v-bind="currentTaskProps" />
                         <ResultComponent @response="handleResultLoaded" />
 
                     </dv-border-box12>
@@ -270,7 +270,7 @@ import { getNdviPoint, getCaseStatus, getCaseResult, getSpectrum, getBoundaryByS
 import * as echarts from 'echarts'
 import { getSceneGeojson } from '@/api/http/satellite-data/visualize.api'
 import * as MapOperation from '@/util/map/operation'
-import { useGridStore, ezStore } from '@/store'
+import { ezStore, useExploreStore, useTaskStore, useToolRegistryStore, useUserStore } from '@/store'
 import type { RegionValues } from 'v-region'
 import { RegionSelects } from 'v-region'
 import { getSceneByConfig, getBoundary } from '@/api/http/satellite-data'
@@ -318,10 +318,23 @@ import { formatTimeToText } from '@/util/common';
 import { ElDialog } from 'element-plus'
 import { type Case } from '@/api/http/satellite-data'
 import subtitle from '../subtitle.vue'
-import { useExploreStore } from '@/store'
-import { useTaskStore } from '@/store'
+import DynamicServicePanel from '../thematic/DynamicServicePanel.vue'
 const exploreData = useExploreStore()
 const taskStore = useTaskStore()
+const toolRegistry = useToolRegistryStore()
+const userStore = useUserStore()
+
+const currentUserId = computed(() => userStore.user?.id ?? '')
+
+watch(
+    currentUserId,
+    (id) => {
+        if (id) {
+            toolRegistry.ensureLoaded(id)
+        }
+    },
+    { immediate: true }
+)
 
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
@@ -357,7 +370,7 @@ const displayLabel = computed(() => {
 const searchQuery = ref('')
 const expandedCategories = ref<string[]>(['图像', '影像集合', '要素集合'])
 
-const toolCategories = [
+const builtinToolCategories = [
     {
         name: '图像',
         tools: [
@@ -398,11 +411,80 @@ const toolCategories = [
     },
 ]
 
+const dynamicToolCategories = computed(() => {
+    const categoryMap = new Map<string, { name: string; tools: Array<{ value: string; label: string; disabled: boolean }> }>()
+    toolRegistry.tools.forEach((tool) => {
+        const categoryName = tool.category || '自定义'
+        if (!categoryMap.has(categoryName)) {
+            categoryMap.set(categoryName, {
+                name: categoryName,
+                tools: [],
+            })
+        }
+        categoryMap.get(categoryName)?.tools.push({
+            value: `dynamic:${tool.id}`,
+            label: tool.name,
+            disabled: false,
+        })
+    })
+    return Array.from(categoryMap.values())
+})
+
+const allToolCategories = computed(() => {
+    const categoryMap = new Map<string, { name: string; tools: Array<{ value: string; label: string; disabled: boolean }> }>()
+    builtinToolCategories.forEach((category) => {
+        categoryMap.set(category.name, {
+            name: category.name,
+            tools: [...category.tools],
+        })
+    })
+    dynamicToolCategories.value.forEach((category) => {
+        if (!categoryMap.has(category.name)) {
+            categoryMap.set(category.name, {
+                name: category.name,
+                tools: [],
+            })
+        }
+        categoryMap.get(category.name)?.tools.push(...category.tools)
+    })
+    return Array.from(categoryMap.values())
+})
+
+const selectedTask = ref<string>('')
+
+const fallbackTaskValue = computed(() => {
+    const firstCategory = allToolCategories.value.find((category) => category.tools.length > 0)
+    return firstCategory?.tools[0]?.value ?? ''
+})
+
+watch(
+    fallbackTaskValue,
+    (value) => {
+        if (!selectedTask.value && value) {
+            selectedTask.value = value
+        }
+    },
+    { immediate: true }
+)
+
+watch(
+    () => toolRegistry.tools.map((tool) => tool.id),
+    () => {
+        if (selectedTask.value.startsWith('dynamic:')) {
+            const toolId = selectedTask.value.replace('dynamic:', '')
+            if (!toolRegistry.getToolById(toolId)) {
+                selectedTask.value = fallbackTaskValue.value
+            }
+        }
+    }
+)
+
 const filteredCategories = computed(() => {
-    if (!searchQuery.value) return toolCategories
+    const categories = allToolCategories.value
+    if (!searchQuery.value) return categories
 
     const query = searchQuery.value.toLowerCase()
-    return toolCategories
+    return categories
         .map(category => ({
             ...category,
             tools: category.tools.filter(tool =>
@@ -435,8 +517,6 @@ const toggleCategory = (categoryName: string) => {
 // ]
 
 
-const selectedTask = ref(toolCategories[0].tools[0].value)
-
 // 专题组件映射
 const taskComponentMap = {
     '伪彩色分割': defineAsyncComponent(() => import('../thematic/colorThresholdPanel.vue')),
@@ -449,7 +529,32 @@ const taskComponentMap = {
     '形变速率': defineAsyncComponent(() => import('../thematic/deformationRate.vue')),
 }
 
-const currentTaskComponent = computed(() => taskComponentMap[selectedTask.value] || null)
+const dynamicSelectedTool = computed(() => {
+    if (!selectedTask.value.startsWith('dynamic:')) return null
+    const toolId = selectedTask.value.replace('dynamic:', '')
+    return toolRegistry.getToolById(toolId) ?? null
+})
+
+const currentTaskComponent = computed(() => {
+    if (dynamicSelectedTool.value) {
+        return DynamicServicePanel
+    }
+    return taskComponentMap[selectedTask.value] || null
+})
+
+const thematicConfig = ref({})
+
+const currentTaskProps = computed(() => {
+    if (dynamicSelectedTool.value) {
+        return {
+            thematicConfig: thematicConfig.value,
+            toolMeta: dynamicSelectedTool.value,
+        }
+    }
+    return {
+        thematicConfig: thematicConfig.value,
+    }
+})
 
 const selectedResult = ref(null);
 
@@ -458,7 +563,6 @@ const handleResultLoaded = (result) => {
 }
 // 获取根据行政区选择的原始数据
 const originImages = ref([])
-const thematicConfig = ref({})
 const getOriginImages = async (newRegion: number | '未选择') => {
     if (newRegion === "未选择") {
         ElMessage.warning(t('datapage.analysis.message.region'))
