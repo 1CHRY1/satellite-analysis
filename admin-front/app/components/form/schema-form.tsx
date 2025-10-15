@@ -27,14 +27,14 @@ const componentMap: Record<string, any> = {
     textarea: ProFormTextArea,
 };
 
-export const SchemaForm: React.FC<SchemaFormProps<User>> = ({
+export const SchemaForm = <T,>({
 	schema,
 	initialValues,
 	onFinish,
 	mode = "inline",
 	trigger,
 	title,
-}) => {
+}: SchemaFormProps<T>) => {
 	const [form] = ProForm.useForm();
 
 	const renderField = (field: FormField): React.ReactNode => {
@@ -95,6 +95,12 @@ export const SchemaForm: React.FC<SchemaFormProps<User>> = ({
 				// width={width}
 				onFinish={onFinish}
 				initialValues={initialValues}
+                onOpenChange={(visible) => {
+                    if (visible) {
+                        // 每次打开弹窗时都更新表单值
+                        form.setFieldsValue(initialValues);
+                    }
+                }}
 				modalProps={{
 					destroyOnClose: true,
 				}}
@@ -111,6 +117,12 @@ export const SchemaForm: React.FC<SchemaFormProps<User>> = ({
 				// width={width}
 				onFinish={onFinish}
 				initialValues={initialValues}
+                onOpenChange={(visible) => {
+                    if (visible) {
+                        // 每次打开弹窗时都更新表单值
+                        form.setFieldsValue(initialValues);
+                    }
+                }}
 				drawerProps={{
 					destroyOnClose: true,
 				}}

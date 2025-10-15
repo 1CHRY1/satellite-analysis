@@ -178,7 +178,7 @@ export const CreateUserButton: React.FC<{
 		],
 	};
 	return (
-		<SchemaForm
+		<SchemaForm<User>
 			mode="modal"
 			title="新建用户"
 			trigger={

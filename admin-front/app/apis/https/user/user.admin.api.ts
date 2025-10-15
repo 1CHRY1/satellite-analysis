@@ -7,7 +7,7 @@ export async function getUserPage(userInfo: UserPageRequest): Promise<CommonResp
 }
 
 export async function addUser(userInfo: UserInfo): Promise<CommonResponse<any>> {
-    return http.post<CommonResponse<any>>(`user/insert`, userInfo)
+    return http.put<CommonResponse<any>>(`user/insert`, userInfo)
 }
 
 export async function updateUser(userInfo: UserInfo): Promise<CommonResponse<any>> {

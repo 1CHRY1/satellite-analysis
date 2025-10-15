@@ -13,3 +13,8 @@ export interface RoleInfo {
 export type RolePageRequest = PageRequest
 
 export type RolePageResponse = PageResponse<RoleInfo>
+
+
+export interface RoleIds {
+    roleIds: number[]
+}

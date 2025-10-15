@@ -6,6 +6,7 @@ export default [
     route("/", "routes/dashboard.tsx", [
         index("routes/home.tsx"),
         route("dashboard", "pages/dashboard/index.tsx"),
-        route("user", "pages/user/index.tsx")
+        route("user", "pages/user/index.tsx"),
+        route("role", "pages/role/index.tsx")
     ]),
 ] satisfies RouteConfig;

@@ -33,12 +33,6 @@ export const EditUserButton: React.FC<{
 		groups: [
 			{
 				fields: [
-					{
-						name: "userId",
-						label: "用户ID",
-                        type: "custom",
-                        render: () => (<></>),
-					},
                     {
 						name: "userName",
 						label: "用户名",
@@ -187,7 +181,7 @@ export const EditUserButton: React.FC<{
 		],
 	};
 	return (
-		<SchemaForm
+		<SchemaForm<User>
 			mode="modal"
 			title="编辑用户"
 			trigger={
