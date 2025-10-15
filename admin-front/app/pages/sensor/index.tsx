@@ -17,12 +17,10 @@ import {
 import { Table } from "antd";
 import type { SortOrder } from "antd/es/table/interface";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { getRolePage, batchDelRole } from "~/apis/https/role/role.admin.api";
-import { CreateRoleButton } from "./insert-form";
-import { EditRoleButton } from "./edit-form";
-import type { Role } from "~/types/role";
-import { getUserPage } from "~/apis/https/user/user.admin.api";
-import type { UserInfo } from "~/apis/https/user/user.type";
+import { CreateSensorButton } from "./insert-form";
+import { EditSensorButton } from "./edit-form";
+import type { Sensor } from "~/types/sensor";
+import { batchDelSensor, getSensorPage } from "~/apis/https/sensor/sensor.admin";
 
 // import request from 'umi-request';
 export const waitTimePromise = async (time: number = 100) => {
@@ -37,7 +35,7 @@ export const waitTime = async (time: number = 100) => {
 	await waitTimePromise(time);
 };
 
-const getAllRole = async (
+const getAllSensor = async (
 	params: ParamsType & {
 		pageSize?: number;
 		current?: number;
@@ -45,14 +43,14 @@ const getAllRole = async (
 	},
 	sort: Record<string, SortOrder>,
 	filter: Record<string, (string | number)[] | null>,
-): Promise<Partial<RequestData<Role>>> => {
+): Promise<Partial<RequestData<Sensor>>> => {
 	console.log(sort, filter);
 	console.log(params);
 	// await waitTime(2000);
-	const res = await getRolePage({
+	const res = await getSensorPage({
 		page: params.current as number,
 		pageSize: params.pageSize as number,
-		searchText: params.name,
+		searchText: params.sensorName,
 	});
 	console.log(params);
 	return {
@@ -62,65 +60,27 @@ const getAllRole = async (
 	};
 };
 
-const getAllUser = async (
-	params: ParamsType & {
-		pageSize?: number;
-		current?: number;
-		keyword?: string;
-		roleId?: number[];
-	},
-	sort: Record<string, SortOrder>,
-	filter: Record<string, (string | number)[] | null>,
-): Promise<Partial<RequestData<UserInfo>>> => {
-	console.log(sort, filter);
-	console.log(params);
-	// await waitTime(2000);
-	const res = await getUserPage({
-		page: params.current as number,
-		pageSize: params.pageSize as number,
-		searchText: params.userName,
-		roleIds: params.roleId,
-	});
-	console.log(params);
-	return {
-		data: res.data.records,
-		success: true,
-		total: res.data.total,
-	};
-};
-
-const delRole = async (roleIds: number[]) => {
-	const userRes = await getAllUser(
-		{ pageSize: 999, current: 1, roleId: roleIds },
-		{},
-		{},
-	);
-	if (userRes.total !== undefined && userRes.total === 0) {
-		const res = await batchDelRole({ roleIds });
-		if (res.status === 1) {
-			message.success("删除成功");
-			return true;
-		} else message.warning(res.message);
-		return false;
-	} else {
-        message.warning("请先取消角色关联的用户");
-        return false;
-    }
+const delSensor = async (sensorIds: string[]) => {
+	const res = await batchDelSensor({ sensorIds });
+	if (res.status === 1) {
+		message.success("删除成功");
+		return true;
+	} else message.warning(res.message);
+	return false;
 };
 
 const RoleTable: React.FC = () => {
 	const actionRef = useRef<ActionType>(undefined);
 
-	const columns: ProColumns<Role>[] = [
+	const columns: ProColumns<Sensor>[] = [
 		{
 			dataIndex: "index",
 			valueType: "indexBorder",
 			width: 48,
 		},
 		{
-			title: "角色名",
-			dataIndex: "name",
-			width: 100,
+			title: "传感器ID",
+			dataIndex: "sensorName",
 			ellipsis: true,
 			formItemProps: {
 				rules: [
@@ -133,10 +93,16 @@ const RoleTable: React.FC = () => {
 			hideInSearch: true,
 		},
 		{
-			title: "角色",
-			dataIndex: "name",
+			title: "传感器",
+			dataIndex: "sensorName",
 			ellipsis: true,
 			hideInTable: true,
+		},
+		{
+			title: "传感器名称",
+			dataIndex: "platformName",
+			ellipsis: true,
+			hideInSearch: true,
 		},
 		{
 			title: "描述信息",
@@ -145,31 +111,17 @@ const RoleTable: React.FC = () => {
 			hideInSearch: true,
 		},
 		{
-			title: "最大可用CPU核数",
-			dataIndex: "maxCpu",
-			valueType: "digit",
-			hideInSearch: true,
-		},
-		{
-			title: "最大可用存储空间（GB）",
-			dataIndex: "maxStorage",
-			valueType: "digit",
-			hideInSearch: true,
-		},
-		{
-			title: "最大可同时运行任务数",
-			dataIndex: "maxJob",
-			valueType: "digit",
-			hideInSearch: true,
-		},
-		{
-			title: "是否为超级管理员",
-			dataIndex: "isSuperAdmin",
-			valueType: "select", // 告诉 ProTable 用选择型字段
+			title: "数据类型",
+			dataIndex: "dataType",
+			valueType: "text", // 告诉 ProTable 用选择型字段
 			valueEnum: {
-				0: { text: "否", status: "Default" },
-				1: { text: "是", status: "Success" },
-			},
+                "3d": { text: "红绿立体影像", status: "Default" },
+                satellite: { text: "遥感影像", status: "Processing" },
+                svr: { text: "形变速率产品", status: "Success" },
+                dem: { text: "DEM产品", status: "Warning" },
+                dsm: { text: "DSM产品", status: "Warning" },
+                ndvi: { text: "NDVI产品", status: "Success" },
+              },
 			hideInSearch: true,
 		},
 		{
@@ -179,17 +131,17 @@ const RoleTable: React.FC = () => {
 			valueType: "option",
 			fixed: "right",
 			render: (_, record) => [
-				<EditRoleButton
+				<EditSensorButton
 					onSuccess={() => {
 						actionRef.current?.reload();
 					}}
-					initRole={record}
-				></EditRoleButton>,
+					initSensor={record}
+				></EditSensorButton>,
 				<Popconfirm
 					title="提示"
-					description={"确定删除角色" + record.name + "吗？"}
+					description={"确定删除传感器" + record.platformName + "吗？"}
 					onConfirm={async () => {
-						const result = await delRole([record.roleId]);
+						const result = await delSensor([record.sensorId]);
 						if (result) actionRef.current?.reload();
 					}}
 					okText="确定"
@@ -204,9 +156,9 @@ const RoleTable: React.FC = () => {
 	];
 
 	return (
-		<ProTable<Role>
+		<ProTable<Sensor>
 			columns={columns}
-			rowKey="roleId"
+			rowKey="sensorId"
 			rowSelection={{
 				// 自定义选择项参考: https://ant.design/components/table-cn/#components-table-demo-row-selection-custom
 				// 注释该行则默认不显示下拉选项
@@ -239,8 +191,8 @@ const RoleTable: React.FC = () => {
 							title="提示"
 							description={"确定删除吗？"}
 							onConfirm={async () => {
-								const result = await delRole(
-									selectedRowKeys as number[],
+								const result = await delSensor(
+									selectedRowKeys as string[],
 								);
 								if (result) {
 									actionRef.current?.reload();
@@ -258,7 +210,7 @@ const RoleTable: React.FC = () => {
 			}}
 			actionRef={actionRef}
 			cardBordered
-			request={getAllRole}
+			request={getAllSensor}
 			editable={{
 				type: "multiple",
 			}}
@@ -298,13 +250,13 @@ const RoleTable: React.FC = () => {
 			}}
 			scroll={{ x: 1300 }}
 			dateFormatter="string"
-			headerTitle="角色列表"
+			headerTitle="传感器列表"
 			toolBarRender={() => [
-				<CreateRoleButton
+				<CreateSensorButton
 					onSuccess={() => {
 						actionRef.current?.reload();
 					}}
-				></CreateRoleButton>,
+				></CreateSensorButton>,
 			]}
 		/>
 	);
