@@ -4,16 +4,16 @@ export interface UserInfo {
     userId: string;
 	userName: string;
     password: string;
-	phone: string;
-	province: string;
-	city: string;
-	organization: string;
-	introduction: string;
-	create_time: string;
-	title: string;
-	role: string;
+	phone?: string;
+	province?: string;
+	city?: string;
+	organization?: string;
+	introduction?: string;
+	createTime?: string;
+	title?: string;
+	role?: string;
 	email: string;
-	avataPath: string;
+	avatarPath?: string;
 	roleId: number;
 }
 
@@ -24,5 +24,5 @@ export interface UserPageRequest extends PageRequest{
 export type UserPageResponse = PageResponse<UserInfo>
 
 export interface UserIds {
-    userIds: number[]
+    userIds: string[]
 }

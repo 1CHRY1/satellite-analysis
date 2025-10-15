@@ -8,6 +8,7 @@ type MenuItem = Required<MenuProps>["items"][number];
 export const MenuProvider : React.FC<{children: React.ReactNode}> = ({children}) => {
     const [selectedMenus, setSelectedMenus] = useState<MenuItem[]>([])
     const location = useLocation();
+
     useEffect(() => {
         const path = location.pathname;
         console.log(location.pathname)
@@ -16,6 +17,7 @@ export const MenuProvider : React.FC<{children: React.ReactNode}> = ({children})
 			setSelectedMenus([item]);
 		}
     }, [location])
+    
     return (
         <MenuContext.Provider value={{selectedMenus, setSelectedMenus}}>
             {children}

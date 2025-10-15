@@ -15,5 +15,5 @@ export async function updateUser(userInfo: UserInfo): Promise<CommonResponse<any
 }
 
 export async function batchDelUser(userIds: UserIds): Promise<CommonResponse<any>> {
-    return http.post<CommonResponse<any>>(`user/delete`, userIds)
+    return http.delete<CommonResponse<any>>(`user/delete`, {data: userIds})
 }
