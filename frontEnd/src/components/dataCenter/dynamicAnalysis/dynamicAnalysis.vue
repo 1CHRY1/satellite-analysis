@@ -211,9 +211,15 @@
                                                         'bg-[#0d1526] text-gray-300 hover:bg-[#1e293b]': selectedTask !== tool.value && !tool.disabled,
                                                         'opacity-50 cursor-not-allowed': tool.disabled,
                                                         'cursor-pointer': !tool.disabled
-                                                    }" class="px-3 py-1 rounded-lg transition-colors w-full text-left truncate"
+                                                    }" class="px-3 py-1 rounded-lg transition-colors w-full text-left truncate flex items-center justify-between gap-2"
                                                     :disabled="tool.disabled">
-                                                    {{ tool.label }}
+                                                    <span class="truncate">{{ tool.label }}</span>
+                                                    <CircleX
+                                                        v-if="tool.value.startsWith('dynamic:')"
+                                                        :size="16"
+                                                        class="text-gray-400 hover:text-gray-300 flex-shrink-0"
+                                                        @click.stop="handleRemoveDynamicTool(tool.value)"
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
@@ -310,9 +316,10 @@ import {
     CircleOff,
     Square,
     SquareCheck,
-    CommandIcon
+    CommandIcon,
+    CircleX
 } from 'lucide-vue-next'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { mapManager } from '@/util/map/mapManager'
 import { formatTimeToText } from '@/util/common';
 import { ElDialog } from 'element-plus'
@@ -560,6 +567,32 @@ const selectedResult = ref(null);
 
 const handleResultLoaded = (result) => {
     selectedResult.value = result;
+}
+
+const handleRemoveDynamicTool = async (toolValue: string) => {
+    const toolId = toolValue.replace('dynamic:', '')
+    const toolMeta = toolRegistry.getToolById(toolId)
+    if (!toolMeta) return
+    try {
+        await ElMessageBox.confirm(
+            `确定要取消发布工具“${toolMeta.name}”吗？取消发布后工具将被从工具目录中移除。`,
+            '取消发布',
+            {
+                confirmButtonText: '确认',
+                cancelButtonText: '保留',
+                type: 'warning',
+            },
+        )
+    } catch {
+        return
+    }
+    toolRegistry.removeTool(currentUserId.value, toolId)
+    if (selectedTask.value === toolValue) {
+        nextTick(() => {
+            selectedTask.value = fallbackTaskValue.value
+        })
+    }
+    ElMessage.success('已取消发布工具')
 }
 // 获取根据行政区选择的原始数据
 const originImages = ref([])
