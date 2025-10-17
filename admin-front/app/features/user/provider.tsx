@@ -36,12 +36,27 @@ export const useUserContext = () => {
 
 export const getUserContext = () => {
 	return globalUserContextRef;
-}
+};
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
 	children,
 }) => {
-	const [state, dispatch] = useReducer(userReducer, initialState);
+	const [state, dispatch] = useReducer(userReducer, initialState, (init) => {
+		// 读取 localStorage 初始化 state（LAZY INITIALIZER）
+		try {
+			const storedUser = localStorage.getItem("user");
+			const userId = localStorage.getItem("userId");
+			if (userId && storedUser) {
+				return {
+					authenticated: true,
+					user: JSON.parse(storedUser),
+				};
+			}
+		} catch (e) {
+			console.error(e);
+		}
+		return init; // 默认 state
+	});
 
 	// ✅ 副作用：同步 localStorage
 	useEffect(() => {
@@ -54,27 +69,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
 			localStorage.removeItem("user");
 			localStorage.removeItem("userId");
 		}
-	}, [state]); 
-
-	// 在SSR阶段运行，没有浏览器API localStorage
-	useEffect(() => {
-		initialState = {
-			authenticated: !!localStorage.getItem("userId"),
-			user: (() => {
-				try {
-					const storedUser = localStorage.getItem("user");
-					if (storedUser) return JSON.parse(storedUser);
-				} catch (e) {
-					console.error("Failed to parse user:", e);
-				}
-				return initialState.user;
-			})(),
-		};
-	}); // 没有依赖参数，首次挂载时执行
+	}, [state]);
 
 	useEffect(() => {
 		globalUserContextRef = { state, dispatch };
-	}, []); // 如果空依赖数组，挂载和更新时执行
+	}, [state, dispatch]);
 
 	return (
 		<UserContext.Provider value={{ state, dispatch }}>

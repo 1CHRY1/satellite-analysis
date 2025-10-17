@@ -6,3 +6,18 @@ export interface CommonResponse<T> {
     message: string,
     data: T,
 }
+
+export interface PageRequest {
+    page: number,
+    pageSize: number,
+    asc?: boolean,
+    searchText?: string,
+    sortField?: string,
+}
+
+export interface PageResponse<T> {
+    records: T[]
+    total: number,
+    size: number,
+    current: number
+}
