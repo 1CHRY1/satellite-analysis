@@ -267,12 +267,41 @@ const applyMosaicLayer = (bucket: string, objectPath: string) => {
 
 const runTilerExpression = (context: Record<string, any>) => {
     const { expressionTemplate, colorMap, pixelMethod } = props.toolMeta.invoke
-    const expression = resolveTemplate(expressionTemplate ?? '', context)?.toString().trim()
+
+    // 优先使用表单中的表达式/色带/像元方法
+    const formExpr = (formModel['expression'] !== undefined && String(formModel['expression']).trim()) || ''
+    const formColor = (formModel['color'] !== undefined && String(formModel['color']).trim()) || ''
+    const formPixel = (formModel['pixel_method'] !== undefined && String(formModel['pixel_method']).trim()) || ''
+
+    // 从 schema 中获取 required 与 default
+    const exprSchema = props.toolMeta.paramsSchema.find(p => p.key === 'expression')
+    const exprDefault = exprSchema && (exprSchema as any).default ? String((exprSchema as any).default) : ''
+    const colorSchema = props.toolMeta.paramsSchema.find(p => p.key === 'color')
+    const colorDefault = colorSchema && (colorSchema as any).default ? String((colorSchema as any).default) : ''
+    const pixelSchema = props.toolMeta.paramsSchema.find(p => p.key === 'pixel_method')
+    const pixelDefault = pixelSchema && (pixelSchema as any).default ? String((pixelSchema as any).default) : ''
+
+    // 表达式优先级：表单 > schema.default > 模板占位/固定 > 若必填则报错，否则跳过
+    let expression = formExpr
     if (!expression) {
-        throw new Error('表达式配置为空，请检查工具设置')
+        expression = exprDefault
     }
-    const color = resolveTemplate(colorMap ?? 'rdylgn', context)
-    const pixel = (pixelMethod ?? 'first').toString()
+    if (!expression) {
+        const resolved = resolveTemplate(expressionTemplate ?? '', context)
+        expression = (resolved && String(resolved).trim()) || ''
+    }
+    if (!expression) {
+        if (exprSchema?.required) {
+            throw new Error('表达式为空，请在表单中填写或在模板中提供')
+        } else {
+            // 非必填且未提供时，使用兜底默认表达式，与“指数分析”一致
+            expression = '2*b2-b1-b3'
+            ElMessage.info('未填写表达式，已使用默认表达式 2*b2-b1-b3')
+        }
+    }
+
+    const color = formColor || colorDefault || (resolveTemplate(colorMap ?? 'rdylgn', context) as string)
+    const pixel = formPixel || pixelDefault || ((pixelMethod ?? 'first').toString())
     const url = `/tiler/mosaic/analysis/{z}/{x}/{y}.png?mosaic_url=${encodeURIComponent(
         context.mosaicUrl
     )}&expression=${encodeURIComponent(expression)}&pixel_method=${pixel}&color=${encodeURIComponent(

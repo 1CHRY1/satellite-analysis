@@ -28,9 +28,17 @@
 
                 <div style="border-right: 1.5px dashed #5f6477; height: 20px;"></div>
 
-                <el-button link class="toolItem btHover" @click="fillTemplate">
-                    模板
-                </el-button>
+                <el-dropdown @command="handleTemplateCommand">
+                    <el-button link class="toolItem btHover">
+                        模板
+                    </el-button>
+                    <template #dropdown>
+                        <el-dropdown-menu>
+                            <el-dropdown-item command="expr">表达式（无需服务）</el-dropdown-item>
+                            <el-dropdown-item command="flask">Flask（HTTP 瓦片）</el-dropdown-item>
+                        </el-dropdown-menu>
+                    </template>
+                </el-dropdown>
 
                 <div style="border-right: 1.5px dashed #5f6477; height: 20px;"></div>
 
@@ -428,6 +436,31 @@ const toolWizardForm = reactive({
     params: [] as WizardParamForm[],
 })
 
+const wizardStorageKey = computed(() => `tool_wizard_last:${currentUserId.value || 'anonymous'}:${props.projectId}`)
+
+const saveWizardDraft = () => {
+    try {
+        const data = JSON.stringify(toolWizardForm)
+        localStorage.setItem(wizardStorageKey.value, data)
+    } catch (e) {
+        console.warn('保存发布表单失败:', e)
+    }
+}
+
+const loadWizardDraft = () => {
+    try {
+        const raw = localStorage.getItem(wizardStorageKey.value)
+        if (!raw) return false
+        const parsed = JSON.parse(raw)
+        // 合并而非替换，保留默认字段
+        Object.assign(toolWizardForm, parsed || {})
+        return true
+    } catch (e) {
+        console.warn('读取发布表单失败:', e)
+        return false
+    }
+}
+
 const categoryOptions = computed(() => {
     const set = new Set<string>([...builtinToolCategoryOptions])
     toolRegistry.tools.forEach((tool) => {
@@ -490,7 +523,11 @@ const resetToolWizard = () => {
 }
 
 const openToolWizard = async () => {
-    resetToolWizard()
+    // 优先尝试加载草稿，其次使用默认值
+    const loaded = loadWizardDraft()
+    if (!loaded) {
+        resetToolWizard()
+    }
     toolWizardVisible.value = true
     await checkServiceStatus()
 }
@@ -617,23 +654,108 @@ const saveCode = async () => {
 }
 
 // 一键填充工具发布模板（无参函数模板）
-const fillTemplate = async () => {
-    const template = `"""
-工具发布模板 (无参数函数)
+const handleTemplateCommand = async (cmd: string) => {
+    if (cmd === 'expr') {
+        await applyExpressionTemplate()
+    } else if (cmd === 'flask') {
+        await applyFlaskTemplate()
+    }
+}
 
-说明:
-- 将你的逻辑写入 tool_main() 函数中。
-- 运行脚本或发布工具时，会调用该函数。
-- 当前不考虑输入输出参数，如需扩展可后续调整。
+const applyExpressionTemplate = async () => {
+    // 预置为“表达式（无需服务）”路径，100% 复用指数分析逻辑
+    toolWizardForm.toolName = toolWizardForm.toolName || '表达式工具'
+    toolWizardForm.description = toolWizardForm.description || '基于表达式的分析瓦片（与指数分析相同逻辑）'
+    toolWizardForm.category = toolWizardForm.category || '图像'
+    if (!toolWizardForm.tags || toolWizardForm.tags.length === 0) {
+        toolWizardForm.tags = ['expression', 'tile']
+    }
+    toolWizardForm.invokeType = 'tiler-expression'
+    toolWizardForm.resultType = 'tile'
+    // 使用占位模板，从表单 expression 读取，默认值放在参数 default
+    toolWizardForm.expressionTemplate = '{{expression}}'
+    toolWizardForm.colorMap = 'rdylgn'
+    toolWizardForm.pixelMethod = 'first'
+    toolWizardForm.params.splice(0, toolWizardForm.params.length)
+    toolWizardForm.params.push(
+        { label: '表达式', key: 'expression', type: 'string', required: true, placeholder: '例如 2*b2-b1-b3', source: '', optionsText: '', default: '2*b2-b1-b3' },
+        { label: '色带', key: 'color', type: 'string', required: false, placeholder: '默认 rdylgn', source: '', optionsText: '', default: 'rdylgn' },
+        { label: '像元方法', key: 'pixel_method', type: 'string', required: false, placeholder: '默认 first', source: '', optionsText: '', default: 'first' },
+    )
+    // 可选：在编辑器中放入说明性注释，提示该模板无需后端代码
+    const stub = `# 表达式工具模板（无需服务）\n# 说明：此工具直接在发布向导中配置表达式，\n# 前端会拼接 Titiler 的分析瓦片 URL 并叠加地图，\n# 无需在此处编写后端代码。\n#\n# 快速开始：点击“发布为工具”→ 选择“表达式（无需服务）”，\n# 按需修改表达式/色带/像元方法并发布即可。\n`
+    const current = (code.value || '').trim()
+    if (!current || current === '代码读取失败，请检查容器运行情况或联系管理员') {
+        code.value = stub
+    } else {
+        try {
+            await ElMessageBox.confirm('将覆盖当前代码为说明性注释，是否继续？', '提示', {
+                confirmButtonText: '覆盖',
+                cancelButtonText: '保留',
+                type: 'warning',
+            })
+            code.value = stub
+        } catch {
+            // 用户取消覆盖，保持现有代码
+        }
+    }
+    saveWizardDraft()
+    ElMessage.success('已应用“表达式（无需服务）”模板，可直接发布为工具')
+}
+
+const applyFlaskTemplate = async () => {
+    // 预置为“Flask（HTTP 瓦片）”路径
+    const template = `"""
+Flask-based dynamic tile tool with CORS enabled.
+
+Expose a /run endpoint that takes a Titiler mosaicUrl plus optional
+expression/colormap parameters, and returns a tileTemplate that the
+Dynamic Analysis page can overlay.
 """
 
-def tool_main():
-    # TODO: 在此处编写你的工具逻辑
-    print("Hello from your published tool!")
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+from urllib.parse import quote_plus
+import json
+
+app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})
+
+
+@app.route("/run", methods=["POST"])
+def run():
+    body = request.get_json(force=True, silent=True) or {}
+    mosaic_url = body.get("mosaicUrl")
+    params = body.get("params") or {}
+
+    if isinstance(params, str):
+        try:
+            params = json.loads(params)
+        except json.JSONDecodeError:
+            params = {}
+
+    if not isinstance(params, dict):
+        params = {}
+
+    if not mosaic_url:
+        return jsonify({"error": "mosaicUrl is required"}), 400
+
+    expression = params.get("expression") or "2*b2-b1-b3"
+    color = params.get("color") or "rdylgn"
+    pixel_method = params.get("pixel_method") or "first"
+
+    tile_template = (
+        "/tiler/mosaic/analysis/{z}/{x}/{y}.png?"
+        f"mosaic_url={quote_plus(mosaic_url)}"
+        f"&expression={quote_plus(expression)}"
+        f"&pixel_method={quote_plus(pixel_method)}"
+        f"&color={quote_plus(color)}"
+    )
+    return jsonify({"tileTemplate": tile_template})
 
 
 if __name__ == "__main__":
-    tool_main()
+    app.run(host="0.0.0.0", port=20080, debug=False)
 `
     // 如果已有代码，提示是否覆盖
     const current = (code.value || '').trim()
@@ -649,7 +771,26 @@ if __name__ == "__main__":
         }
     }
     code.value = template
-    ElMessage.success('已填充模板')
+
+    // 预填基础信息，方便直接发布
+    toolWizardForm.toolName = toolWizardForm.toolName || 'Flask动态指数'
+    toolWizardForm.description = toolWizardForm.description || 'Flask 服务返回指数分析瓦片（与指数分析相同逻辑）'
+    toolWizardForm.category = toolWizardForm.category || '图像'
+    if (!toolWizardForm.tags || toolWizardForm.tags.length === 0) {
+        toolWizardForm.tags = ['flask', 'tile']
+    }
+    toolWizardForm.invokeType = 'http+tile'
+    toolWizardForm.resultType = 'tile'
+    toolWizardForm.serviceMethod = 'POST'
+    // 端口由发布时后端分配；服务地址在启动服务成功后复制“运行中”URL
+    toolWizardForm.params.splice(0, toolWizardForm.params.length)
+    toolWizardForm.params.push(
+        { label: '表达式', key: 'expression', type: 'string', required: true, placeholder: '例如 2*b2-b1-b3', source: '', optionsText: '', default: '2*b2-b1-b3' },
+        { label: '色带', key: 'color', type: 'string', required: false, placeholder: '默认 rdylgn', source: '', optionsText: '', default: 'rdylgn' },
+        { label: '像元方法', key: 'pixel_method', type: 'string', required: false, placeholder: '默认 first', source: '', optionsText: '', default: 'first' },
+    )
+    saveWizardDraft()
+    ElMessage.success('已填充 Flask 模板，请保存代码后启动服务再发布')
 }
 
 const keyboardSaveCode = (event: KeyboardEvent) => {
@@ -940,6 +1081,7 @@ const publishDynamicTool = async () => {
     toolWizardSubmitting.value = true
     try {
         toolRegistry.registerTool(activeUserId, toolMeta)
+        saveWizardDraft()
         emit('servicePublished')
         await logToolPublish(name, description)
         ElMessage.success('工具发布成功，可前往动态分析页面使用')
