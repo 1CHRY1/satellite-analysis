@@ -755,6 +755,13 @@ public class ModelCodingService {
             // Notify via WebSocket
             modelSocketService.sendMessageByProject(userId, projectId, "Service running at: " + url);
 
+            // 标记项目为工具（is_tool = 1），便于其他页面识别为可复用工具
+            try {
+                projectRepo.updateIsTool(projectId, 1);
+            } catch (Exception e) {
+                log.warn("Service published but failed to mark project is_tool: {}", e.getMessage());
+            }
+
             return ServicePublishVO.builder()
                     .status("running")
                     .url(url)

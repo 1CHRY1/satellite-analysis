@@ -50,9 +50,9 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
         proxymap: 'http://localhost:5003',
     },
     zzw: {
-        api: 'http://localhost:8999',
-        realtime: 'http://localhost:5001',
-        websocket: 'http://localhost:9888/model/websocket',
+        api: 'http://192.168.1.104:8999',
+        realtime: 'http://192.168.1.104:5001',
+        websocket: 'http://192.168.1.104:9888/model/websocket',
         tiler: 'http://223.2.34.8:31800',
         proxymap: 'http://localhost:5003',
     }

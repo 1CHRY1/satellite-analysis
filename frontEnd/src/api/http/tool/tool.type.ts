@@ -1,10 +1,10 @@
 export interface ToolParameter {
-  Name?; string;
+  Name?: string;
   Flags?: string;
   Type?: 'String' | 'Number' | 'Boolean';
   Description?: string;
   default_value?: any;
-  Optional?: boolean; // 
+  Optional?: boolean; // 选填
 }
 
 export interface ToolData {
@@ -22,10 +22,10 @@ export interface ToolData {
 }
 
 export interface ToolResponse{
-    status:number
-    message:string
-    date: any
-    toolId:string
+  status: number
+  message: string
+  data?: any
+  toolId?: string
 }
 
 export interface PaginatedToolResponse {
