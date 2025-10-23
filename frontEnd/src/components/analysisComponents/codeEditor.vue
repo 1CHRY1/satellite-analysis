@@ -28,202 +28,245 @@
 
                 <div style="border-right: 1.5px dashed #5f6477; height: 20px;"></div>
 
-                <el-button link class="toolItem btHover" @click="publishOpen">
-                    <SendOutlined class="mr-1" />
-                    发布
-                </el-button>
-                
+                <el-dropdown @command="handleTemplateCommand">
+                    <el-button link class="toolItem btHover">
+                        模板
+                    </el-button>
+                    <template #dropdown>
+                        <el-dropdown-menu>
+                            <el-dropdown-item command="expr">表达式（无需服务）</el-dropdown-item>
+                            <el-dropdown-item command="flask">Flask（HTTP 瓦片）</el-dropdown-item>
+                        </el-dropdown-menu>
+                    </template>
+                </el-dropdown>
+
                 <div style="border-right: 1.5px dashed #5f6477; height: 20px;"></div>
-                
-                <el-button link class="toolItem btHover" @click="servicePublishOpen">
-                    <CloudServerOutlined class="mr-1" />
-                    服务发布
+
+                <el-button link class="toolItem btHover" @click="openToolWizard">
+                    <ToolOutlined class="mr-1" />
+                    发布为工具
                 </el-button>
             </div>
 
-                        <el-dialog title="工具发布" v-model="publishView" width="500px" class="custom-dialog" style="max-height: 80vh; overflow-y: auto;"> 
-                <el-card class="mb-4">
-                    <template #header>
-                        <span>基础配置</span>
-                    </template>
-
-                    <el-form :model="publishToolData" label-width="100px">
+            <el-dialog
+                title="发布为工具"
+                v-model="toolWizardVisible"
+                width="720px"
+                class="tool-wizard-dialog"
+                :close-on-click-modal="false"
+            >
+                <div class="max-h-[70vh] overflow-y-auto pr-1">
+                    <el-form :model="toolWizardForm" label-width="110px" label-position="left">
                         <el-form-item label="工具名称" required>
-                            <el-input v-model="publishToolData.toolName" placeholder="请输入工具名称" />
-                        </el-form-item>
-                        <el-form-item label="运行环境">
-                            <el-select v-model="publishToolData.environment" disabled>
-                                <el-option label="Python 3.9" value="python3.9" />
-                            </el-select>
-                        </el-form-item>
-                        <el-form-item label="分类" required>
-                            <el-input v-model="publishToolData.category" placeholder="请输入工具分类" />
+                            <el-input v-model="toolWizardForm.toolName" placeholder="请输入工具名称" />
                         </el-form-item>
                         <el-form-item label="描述" required>
-                            <el-input 
-                                v-model="publishToolData.description" 
-                                type="textarea" 
-                                :rows="3" 
-                                placeholder="请输入工具功能描述" 
+                            <el-input
+                                v-model="toolWizardForm.description"
+                                type="textarea"
+                                :rows="3"
+                                placeholder="请简要说明工具功能"
                             />
+                        </el-form-item>
+                        <el-form-item label="分类" required>
+                            <el-select
+                                v-model="toolWizardForm.category"
+                                filterable
+                                allow-create
+                                default-first-option
+                                placeholder="选择或输入分类"
+                            >
+                                <el-option
+                                    v-for="option in categoryOptions"
+                                    :key="option"
+                                    :label="option"
+                                    :value="option"
+                                />
+                            </el-select>
                         </el-form-item>
                         <el-form-item label="标签">
-                            <el-tag
-                                v-for="tag in publishToolData.tags"
-                                :key="tag"
-                                closable
-                                @close="removeTag(tag)"
-                                style="margin-right: 8px; margin-bottom: 8px"
+                            <el-select
+                                v-model="toolWizardForm.tags"
+                                multiple
+                                allow-create
+                                filterable
+                                placeholder="输入标签后回车"
+                                class="w-full"
                             >
-                                {{ tag }}
-                            </el-tag>
-                            <el-input
-                                v-if="tagsInput !== undefined"
-                                v-model="tagsInput"
-                                ref="tagInputRef"
-                                size="small"
-                                style="width: 120px"
-                                @keyup.enter="addTag"
-                                @blur="addTag"
-                            />
-                            <el-button 
-                                v-else 
-                                size="small" 
-                                @click="showTagInput"
-                                style="margin-bottom: 8px"
-                            >
-                                + 添加标签
-                            </el-button>
-                        </el-form-item>
-                        
-                        <!-- <el-form-item label="参数配置">
-                            <div v-for="(param, index) in publishToolData.parameters" :key="index" class="param-item">
-                                <el-input v-model="param.Name" placeholder="参数名" style="width: 100px" />
-                                <el-input v-model="param.Flags" placeholder="Flags" style="width: 120px; margin-left: 8px" />
-                                <el-select v-model="param.Type" style="width: 100px; margin-left: 8px">
-                                    <el-option label="String" value="String" />
-                                    <el-option label="Number" value="Number" />
-                                    <el-option label="Boolean" value="Boolean" />
-                                </el-select>
-                                <el-input v-model="param.Description" placeholder="描述" style="width: 150px; margin-left: 8px" />
-                                <el-input 
-                                    v-model="param.default_value" 
-                                    placeholder="默认值" 
-                                    style="width: 120px; margin-left: 8px" 
-                                    :disabled="param.Type === 'Boolean'"
+                                <el-option
+                                    v-for="tag in toolWizardForm.tags"
+                                    :key="tag"
+                                    :label="tag"
+                                    :value="tag"
                                 />
-                                <el-button type="danger" @click="removeParameter(index)" style="margin-left: 8px">删除</el-button>
-                            </div>
-                            <el-button type="primary" @click="addParameter" style="margin-top: 10px">添加参数</el-button>
-                        </el-form-item> -->
-                    </el-form>
-                </el-card>
-                <el-card class="mb-4">
-                    <template #header>
-                        <span>参数配置</span>
-                    </template>
+                            </el-select>
+                        </el-form-item>
 
-                    <div>
-                        <el-input
-                            type="textarea"
-                            :rows="10"
-                            v-model="jsonText"
-                            :readonly="!isEditing"
-                            placeholder="JSON 内容"
-                        ></el-input>
+                        <el-divider content-position="left">执行方式</el-divider>
+                        <el-form-item label="调用方式" required>
+                            <el-radio-group v-model="toolWizardForm.invokeType">
+                                <el-radio-button label="tiler-expression">表达式</el-radio-button>
+                                <el-radio-button label="http+tile">HTTP 瓦片</el-radio-button>
+                                <el-radio-button label="http+mosaic">HTTP Mosaic</el-radio-button>
+                                <el-radio-button label="http+geojson">HTTP 矢量</el-radio-button>
+                            </el-radio-group>
+                        </el-form-item>
+
+                        <template v-if="toolWizardForm.invokeType === 'tiler-expression'">
+                            <el-form-item label="表达式模板" required>
+                                <el-input
+                                    v-model="toolWizardForm.expressionTemplate"
+                                    type="textarea"
+                                    :rows="3"
+                                    placeholder="示例：(b3 - b5) / (b3 + b5)"
+                                />
+                            </el-form-item>
+                            <el-form-item label="颜色映射">
+                                <el-input
+                                    v-model="toolWizardForm.colorMap"
+                                    placeholder="如 rdylgn，可在服务端扩展"
+                                />
+                            </el-form-item>
+                            <el-form-item label="像元方法">
+                                <el-select v-model="toolWizardForm.pixelMethod">
+                                    <el-option label="first" value="first" />
+                                    <el-option label="mean" value="mean" />
+                                    <el-option label="max" value="max" />
+                                </el-select>
+                            </el-form-item>
+                        </template>
+
+                        <template v-else>
+                            <el-form-item label="服务地址" required>
+                                <el-input
+                                    v-model="toolWizardForm.serviceEndpoint"
+                                    placeholder="例如 http://localhost:20080/run"
+                                />
+                            </el-form-item>
+                            <el-form-item label="HTTP 方法">
+                                <el-select v-model="toolWizardForm.serviceMethod">
+                                    <el-option label="POST" value="POST" />
+                                    <el-option label="GET" value="GET" />
+                                </el-select>
+                            </el-form-item>
+                            <el-form-item label="请求模板">
+                                <el-input
+                                    v-model="toolWizardForm.payloadTemplate"
+                                    type="textarea"
+                                    :rows="4"
+                                    placeholder='默认模板: { "mosaicUrl": "{{mosaicUrl}}", "params": "{{params}}" }'
+                                />
+                            </el-form-item>
+                            <el-form-item label="结果路径">
+                                <el-input
+                                    v-model="toolWizardForm.responsePath"
+                                    placeholder="可选，例如 data.result"
+                                />
+                            </el-form-item>
+                            <el-form-item label="服务状态">
+                                <div class="rounded border border-dashed border-gray-400 px-3 py-2 text-sm">
+                                    <div class="mb-2 flex items-center justify-between">
+                                        <span>
+                                            <span v-if="serviceStatus.running" class="text-green-500">服务运行中</span>
+                                            <span v-else class="text-red-400">服务未运行</span>
+                                        </span>
+                                        <el-button size="small" @click="checkServiceStatus">刷新</el-button>
+                                    </div>
+                                    <div v-if="serviceStatus.running" class="text-xs text-gray-500">
+                                        {{ serviceStatus.url || 'URL 未返回' }}
+                                    </div>
+                                    <div class="mt-2 flex flex-wrap items-center gap-2">
+                                        <el-input
+                                            v-model="toolWizardForm.servicePort"
+                                            placeholder="指定端口 (可选)"
+                                            class="w-32"
+                                        />
+                                        <el-button
+                                            type="primary"
+                                            size="small"
+                                            :loading="servicePublishLoading"
+                                            @click="startServiceForWizard"
+                                        >
+                                            启动服务
+                                        </el-button>
+                                        <el-button
+                                            type="danger"
+                                            size="small"
+                                            :loading="servicePublishLoading"
+                                            @click="stopServiceForWizard"
+                                        >
+                                            停止服务
+                                        </el-button>
+                                    </div>
+                                </div>
+                            </el-form-item>
+                        </template>
+
+                        <el-divider content-position="left">参数配置</el-divider>
+                        <div class="mb-2 flex items-center justify-between">
+                            <span class="text-sm text-gray-200">表单参数 (可选)</span>
+                            <el-button type="primary" plain size="small" @click="addWizardParam">
+                                添加参数
+                            </el-button>
                         </div>
-                        <div style="margin-top: 10px; text-align: right;">
-                        <el-button type="primary" @click="toggleEdit">
-                            {{ isEditing ? '保存修改' : '编辑说明文档' }}
-                        </el-button>
-                    </div>
-
-                </el-card>
-
-                <el-card>
-                    <template #header>
-                        <span>测试结果</span>
-                    </template>
-
-
-                </el-card>
-                    
-                <template #footer>
-                    <el-button @click="publishView = false">取消</el-button>
-                    <el-button @click="testOpen" >测试</el-button>  
-                    <!-- 发布按钮 -->
-                    <el-button type="primary" @click="publishFunction" :loading="publishLoading">发布</el-button>
-                </template>
-            </el-dialog>
-
-            <el-dialog title="工具测试" v-model="testLoading" width="500px">
-                <el-form :model="formData" label-width="100px">
-                   <el-form-item label="数据选取">
-                        <el-upload 
-                            style="" 
-                            accept=".tif,.tiff"
-                            :before-upload="beforeUpload"
-                            :on-success="handleUploadSuccess"
-                            :on-error="handleUploadError"
-                            action="#"
-                            :auto-upload="false"
+                        <div v-if="toolWizardForm.params.length === 0" class="rounded bg-gray-100/10 p-3 text-xs text-gray-400">
+                            暂无参数。若工具需要用户输入，请点击“添加参数”。
+                        </div>
+                        <div
+                            v-for="(param, index) in toolWizardForm.params"
+                            :key="index"
+                            class="mb-3 rounded border border-gray-600/60 p-3"
                         >
-                            <el-button type="primary">选择文件</el-button>
-                            <template #tip>
-                                <div class="el-upload__tip">只能上传 TIF 格式文件</div>
-                            </template>
-                        </el-upload>
-                   </el-form-item>
-                    <el-form-item v-for="key in keywords" :key="key" :label="key">
-                    <el-input v-model="formData[key]" placeholder="请输入内容" />
-                    </el-form-item>
-                </el-form>
-
-                <template #footer>
-                    <el-button @click="testLoading = false; publishView = true">返回</el-button>
-                    <el-button type="primary" @click="runTest" >运行</el-button>
-                </template>
-            </el-dialog>
-
-            <el-dialog title="服务发布" v-model="servicePublishView" width="400px">
-                <el-form :model="servicePublishData" label-width="100px">
-                    <el-form-item label="服务端口">
-                        <el-input 
-                            v-model="servicePublishData.servicePort" 
-                            type="number" 
-                            placeholder="留空自动分配端口" 
-                        />
-                        <div class="text-xs text-gray-500 mt-1">端口范围: 20080-20180</div>
-                    </el-form-item>
-                    <el-form-item v-if="serviceStatus.isPublished">
-                        <div class="text-sm">
-                            <div class="text-green-600 mb-2" v-if="serviceStatus.running">
-                                ✅ 服务运行中: <a :href="serviceStatus.url" target="_blank" class="text-blue-600 underline">{{ serviceStatus.url }}</a>
+                            <div class="flex flex-wrap gap-3">
+                                <el-input
+                                    v-model="param.label"
+                                    placeholder="显示名称"
+                                    class="w-40"
+                                />
+                                <el-input
+                                    v-model="param.key"
+                                    placeholder="参数键"
+                                    class="w-40"
+                                />
+                                <el-select v-model="param.type" class="w-36">
+                                    <el-option label="字符串" value="string" />
+                                    <el-option label="数字" value="number" />
+                                    <el-option label="布尔" value="boolean" />
+                                    <el-option label="下拉" value="select" />
+                                </el-select>
+                                <el-checkbox v-model="param.required">必填</el-checkbox>
+                                <el-select v-model="param.source" class="w-40" placeholder="数据来源">
+                                    <el-option label="手动输入" value="" />
+                                    <el-option label="影像波段" value="bands" />
+                                </el-select>
                             </div>
-                            <div class="text-red-600 mb-2" v-else>
-                                ❌ 服务已停止
+                            <div class="mt-2 flex flex-wrap gap-3">
+                                <el-input
+                                    v-model="param.placeholder"
+                                    placeholder="占位提示"
+                                    class="w-64"
+                                />
+                                <el-input
+                                    v-model="param.optionsText"
+                                    :disabled="param.source === 'bands' || param.type !== 'select'"
+                                    placeholder="选项，示例: 红光:band3, 近红外:band5"
+                                    class="flex-1"
+                                />
+                                <el-button type="danger" text @click="removeWizardParam(index)">
+                                    删除
+                                </el-button>
                             </div>
                         </div>
-                    </el-form-item>
-                </el-form>
-                
+                    </el-form>
+                </div>
                 <template #footer>
-                    <el-button @click="servicePublishView = false">取消</el-button>
-                    <el-button 
-                        v-if="!serviceStatus.isPublished || !serviceStatus.running" 
-                        type="primary" 
-                        @click="publishServiceFunction" 
-                        :loading="servicePublishLoading"
+                    <el-button @click="toolWizardVisible = false" :disabled="toolWizardSubmitting">取消</el-button>
+                    <el-button
+                        type="primary"
+                        @click="publishDynamicTool"
+                        :loading="toolWizardSubmitting"
                     >
-                        启动服务
-                    </el-button>
-                    <el-button 
-                        v-if="serviceStatus.isPublished && serviceStatus.running" 
-                        type="danger" 
-                        @click="unpublishServiceFunction" 
-                        :loading="servicePublishLoading"
-                    >
-                        停止服务
+                        发布
                     </el-button>
                 </template>
             </el-dialog>
@@ -295,7 +338,7 @@ import {
     CaretRightOutlined,
     SaveOutlined,
     StopOutlined,
-    SendOutlined,
+    ToolOutlined,
 } from '@ant-design/icons-vue'
 import {
     projectOperating,
@@ -309,13 +352,18 @@ import {
     unpublishService,
     getServiceStatus,
 } from '@/api/http/analysis'
-import { ref, onMounted, onBeforeUnmount,watch, computed } from 'vue'
+import { ref, reactive, onMounted, onBeforeUnmount,watch, computed } from 'vue'
 import { Codemirror } from 'vue-codemirror'
 import { python } from '@codemirror/lang-python'
-import { ElMessage } from 'element-plus'
-import { publishTool} from '@/api/http/tool' 
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { updateRecord } from '@/api/http/user'
-import { useUserStore } from '@/store'
+import { useUserStore, useToolRegistryStore, generateToolId } from '@/store'
+import type {
+    DynamicToolInvokeType,
+    DynamicToolResultType,
+    DynamicToolParamSchema,
+    DynamicToolMeta,
+} from '@/store/toolRegistry'
 
 // import type { analysisResponse } from "@/type/analysis";
 // import { oneDarkTheme } from "@codemirror/theme-one-dark";
@@ -331,7 +379,158 @@ const props = defineProps({
     },
 })
 const userStore = useUserStore()
-const emit = defineEmits(['addMessage'])
+const toolRegistry = useToolRegistryStore()
+const emit = defineEmits(['addMessage', 'servicePublished', 'serviceUnpublished'])
+
+const currentUserId = computed(() => userStore.user?.id ?? '')
+
+watch(
+    currentUserId,
+    (id) => {
+        if (id) {
+            toolRegistry.ensureLoaded(id)
+        }
+    },
+    { immediate: true }
+)
+
+type WizardParamForm = {
+    label: string
+    key: string
+    type: 'string' | 'number' | 'select' | 'boolean'
+    required: boolean
+    placeholder: string
+    source: '' | 'bands'
+    optionsText: string
+}
+
+const builtinToolCategoryOptions = ['图像', '影像集合', '要素集合'] as const
+
+const toolWizardVisible = ref(false)
+const toolWizardSubmitting = ref(false)
+
+const defaultPayloadTemplate = JSON.stringify(
+    {
+        mosaicUrl: '{{mosaicUrl}}',
+        params: '{{params}}',
+    },
+    null,
+    2
+)
+
+const toolWizardForm = reactive({
+    toolName: '',
+    description: '',
+    category: builtinToolCategoryOptions[0],
+    tags: [] as string[],
+    invokeType: 'tiler-expression' as DynamicToolInvokeType,
+    resultType: 'tile' as DynamicToolResultType,
+    expressionTemplate: '',
+    colorMap: 'rdylgn',
+    pixelMethod: 'first',
+    serviceEndpoint: '',
+    serviceMethod: 'POST',
+    servicePort: '',
+    payloadTemplate: defaultPayloadTemplate,
+    responsePath: '',
+    params: [] as WizardParamForm[],
+})
+
+const wizardStorageKey = computed(() => `tool_wizard_last:${currentUserId.value || 'anonymous'}:${props.projectId}`)
+
+const saveWizardDraft = () => {
+    try {
+        const data = JSON.stringify(toolWizardForm)
+        localStorage.setItem(wizardStorageKey.value, data)
+    } catch (e) {
+        console.warn('保存发布表单失败:', e)
+    }
+}
+
+const loadWizardDraft = () => {
+    try {
+        const raw = localStorage.getItem(wizardStorageKey.value)
+        if (!raw) return false
+        const parsed = JSON.parse(raw)
+        // 合并而非替换，保留默认字段
+        Object.assign(toolWizardForm, parsed || {})
+        return true
+    } catch (e) {
+        console.warn('读取发布表单失败:', e)
+        return false
+    }
+}
+
+const categoryOptions = computed(() => {
+    const set = new Set<string>([...builtinToolCategoryOptions])
+    toolRegistry.tools.forEach((tool) => {
+        if (tool.category) {
+            set.add(tool.category)
+        }
+    })
+    if (toolWizardForm.category) {
+        set.add(toolWizardForm.category)
+    }
+    return Array.from(set)
+})
+
+watch(
+    () => toolWizardForm.invokeType,
+    (type) => {
+        if (type === 'http+geojson') {
+            toolWizardForm.resultType = 'geojson'
+        } else if (type === 'http+mosaic') {
+            toolWizardForm.resultType = 'mosaic'
+        } else {
+            toolWizardForm.resultType = 'tile'
+        }
+    },
+    { immediate: true }
+)
+
+const addWizardParam = () => {
+    toolWizardForm.params.push({
+        label: '',
+        key: '',
+        type: 'string',
+        required: false,
+        placeholder: '',
+        source: '',
+        optionsText: '',
+    })
+}
+
+const removeWizardParam = (index: number) => {
+    toolWizardForm.params.splice(index, 1)
+}
+
+const resetToolWizard = () => {
+    toolWizardForm.toolName = ''
+    toolWizardForm.description = ''
+    toolWizardForm.category = builtinToolCategoryOptions[0]
+    toolWizardForm.tags = []
+    toolWizardForm.invokeType = 'tiler-expression'
+    toolWizardForm.resultType = 'tile'
+    toolWizardForm.expressionTemplate = ''
+    toolWizardForm.colorMap = 'rdylgn'
+    toolWizardForm.pixelMethod = 'first'
+    toolWizardForm.serviceEndpoint = ''
+    toolWizardForm.serviceMethod = 'POST'
+    toolWizardForm.servicePort = ''
+    toolWizardForm.payloadTemplate = defaultPayloadTemplate
+    toolWizardForm.responsePath = ''
+    toolWizardForm.params.splice(0, toolWizardForm.params.length)
+}
+
+const openToolWizard = async () => {
+    // 优先尝试加载草稿，其次使用默认值
+    const loaded = loadWizardDraft()
+    if (!loaded) {
+        resetToolWizard()
+    }
+    toolWizardVisible.value = true
+    await checkServiceStatus()
+}
 
 /**
  * 在线编程工具条
@@ -454,6 +653,146 @@ const saveCode = async () => {
     }
 }
 
+// 一键填充工具发布模板（无参函数模板）
+const handleTemplateCommand = async (cmd: string) => {
+    if (cmd === 'expr') {
+        await applyExpressionTemplate()
+    } else if (cmd === 'flask') {
+        await applyFlaskTemplate()
+    }
+}
+
+const applyExpressionTemplate = async () => {
+    // 预置为“表达式（无需服务）”路径，100% 复用指数分析逻辑
+    toolWizardForm.toolName = toolWizardForm.toolName || '表达式工具'
+    toolWizardForm.description = toolWizardForm.description || '基于表达式的分析瓦片（与指数分析相同逻辑）'
+    toolWizardForm.category = toolWizardForm.category || '图像'
+    if (!toolWizardForm.tags || toolWizardForm.tags.length === 0) {
+        toolWizardForm.tags = ['expression', 'tile']
+    }
+    toolWizardForm.invokeType = 'tiler-expression'
+    toolWizardForm.resultType = 'tile'
+    // 使用占位模板，从表单 expression 读取，默认值放在参数 default
+    toolWizardForm.expressionTemplate = '{{expression}}'
+    toolWizardForm.colorMap = 'rdylgn'
+    toolWizardForm.pixelMethod = 'first'
+    toolWizardForm.params.splice(0, toolWizardForm.params.length)
+    toolWizardForm.params.push(
+        { label: '表达式', key: 'expression', type: 'string', required: true, placeholder: '例如 2*b2-b1-b3', source: '', optionsText: '', default: '2*b2-b1-b3' },
+        { label: '色带', key: 'color', type: 'string', required: false, placeholder: '默认 rdylgn', source: '', optionsText: '', default: 'rdylgn' },
+        { label: '像元方法', key: 'pixel_method', type: 'string', required: false, placeholder: '默认 first', source: '', optionsText: '', default: 'first' },
+    )
+    // 可选：在编辑器中放入说明性注释，提示该模板无需后端代码
+    const stub = `# 表达式工具模板（无需服务）\n# 说明：此工具直接在发布向导中配置表达式，\n# 前端会拼接 Titiler 的分析瓦片 URL 并叠加地图，\n# 无需在此处编写后端代码。\n#\n# 快速开始：点击“发布为工具”→ 选择“表达式（无需服务）”，\n# 按需修改表达式/色带/像元方法并发布即可。\n`
+    const current = (code.value || '').trim()
+    if (!current || current === '代码读取失败，请检查容器运行情况或联系管理员') {
+        code.value = stub
+    } else {
+        try {
+            await ElMessageBox.confirm('将覆盖当前代码为说明性注释，是否继续？', '提示', {
+                confirmButtonText: '覆盖',
+                cancelButtonText: '保留',
+                type: 'warning',
+            })
+            code.value = stub
+        } catch {
+            // 用户取消覆盖，保持现有代码
+        }
+    }
+    saveWizardDraft()
+    ElMessage.success('已应用“表达式（无需服务）”模板，可直接发布为工具')
+}
+
+const applyFlaskTemplate = async () => {
+    // 预置为“Flask（HTTP 瓦片）”路径
+    const template = `"""
+Flask-based dynamic tile tool with CORS enabled.
+
+Expose a /run endpoint that takes a Titiler mosaicUrl plus optional
+expression/colormap parameters, and returns a tileTemplate that the
+Dynamic Analysis page can overlay.
+"""
+
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+from urllib.parse import quote_plus
+import json
+
+app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})
+
+
+@app.route("/run", methods=["POST"])
+def run():
+    body = request.get_json(force=True, silent=True) or {}
+    mosaic_url = body.get("mosaicUrl")
+    params = body.get("params") or {}
+
+    if isinstance(params, str):
+        try:
+            params = json.loads(params)
+        except json.JSONDecodeError:
+            params = {}
+
+    if not isinstance(params, dict):
+        params = {}
+
+    if not mosaic_url:
+        return jsonify({"error": "mosaicUrl is required"}), 400
+
+    expression = params.get("expression") or "2*b2-b1-b3"
+    color = params.get("color") or "rdylgn"
+    pixel_method = params.get("pixel_method") or "first"
+
+    tile_template = (
+        "/tiler/mosaic/analysis/{z}/{x}/{y}.png?"
+        f"mosaic_url={quote_plus(mosaic_url)}"
+        f"&expression={quote_plus(expression)}"
+        f"&pixel_method={quote_plus(pixel_method)}"
+        f"&color={quote_plus(color)}"
+    )
+    return jsonify({"tileTemplate": tile_template})
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=20080, debug=False)
+`
+    // 如果已有代码，提示是否覆盖
+    const current = (code.value || '').trim()
+    if (current && current !== '代码读取失败，请检查容器运行情况或联系管理员') {
+        try {
+            await ElMessageBox.confirm('将覆盖当前代码，是否继续？', '提示', {
+                confirmButtonText: '覆盖',
+                cancelButtonText: '取消',
+                type: 'warning',
+            })
+        } catch {
+            return
+        }
+    }
+    code.value = template
+
+    // 预填基础信息，方便直接发布
+    toolWizardForm.toolName = toolWizardForm.toolName || 'Flask动态指数'
+    toolWizardForm.description = toolWizardForm.description || 'Flask 服务返回指数分析瓦片（与指数分析相同逻辑）'
+    toolWizardForm.category = toolWizardForm.category || '图像'
+    if (!toolWizardForm.tags || toolWizardForm.tags.length === 0) {
+        toolWizardForm.tags = ['flask', 'tile']
+    }
+    toolWizardForm.invokeType = 'http+tile'
+    toolWizardForm.resultType = 'tile'
+    toolWizardForm.serviceMethod = 'POST'
+    // 端口由发布时后端分配；服务地址在启动服务成功后复制“运行中”URL
+    toolWizardForm.params.splice(0, toolWizardForm.params.length)
+    toolWizardForm.params.push(
+        { label: '表达式', key: 'expression', type: 'string', required: true, placeholder: '例如 2*b2-b1-b3', source: '', optionsText: '', default: '2*b2-b1-b3' },
+        { label: '色带', key: 'color', type: 'string', required: false, placeholder: '默认 rdylgn', source: '', optionsText: '', default: 'rdylgn' },
+        { label: '像元方法', key: 'pixel_method', type: 'string', required: false, placeholder: '默认 first', source: '', optionsText: '', default: 'first' },
+    )
+    saveWizardDraft()
+    ElMessage.success('已填充 Flask 模板，请保存代码后启动服务再发布')
+}
+
 const keyboardSaveCode = (event: KeyboardEvent) => {
     if (event.ctrlKey && event.key === 's') {
         event.preventDefault(); // 阻止浏览器默认的保存页面行为
@@ -496,200 +835,8 @@ const onCmInput = (value: string) => {
     }
 }
 
-//说明文档
-const jsonText = ref('{\n\n}')
-const jsonData = ref({})
-const isEditing = ref(false)
-
-
-const toggleEdit = () => {
-  if (isEditing.value) {
-    // 保存前先检查格式
-    try {
-      const parsed = JSON.parse(jsonText.value)
-      jsonData.value = parsed
-      jsonText.value = JSON.stringify(jsonData.value, null, 2)
-      ElMessage.success(' JSON 已保存')
-      isEditing.value = false
-    } catch (error) {
-      if (error instanceof Error) {
-        ElMessage.error('JSON 格式错误: ' + error.message)
-      } else {
-        ElMessage.error('JSON 格式错误')
-      }
-    }
-  } else {
-    // 切换到编辑状态
-    isEditing.value = true
-  }
-}
-
-
-//工具测试'
-
-const testLoading = ref(false)
-const testOpen = async() =>{
-    if (jsonText.value && jsonText.value.trim() !== '' && jsonText.value.trim() !== '{\n\n}'&& jsonText.value.trim() !== '{}') {
-        publishView.value = false
-        testLoading.value = true
-    }else{
-        ElMessage.error('请输入正确的说明文档')
-    }
-    
-}
-
-// 文件上传前的验证
-const beforeUpload = (file) => {
-    const isLimit = file.size / 1024 / 1024 < 100
-    const isTif = file.name.toLowerCase().endsWith('.tif') || file.name.toLowerCase().endsWith('.tiff')
-    if (!isTif) {
-        ElMessage.error('只能上传 TIF 格式的文件！')
-        return false
-    }
-    if (!isLimit) {
-        ElMessage.error('文件大小不能超过100MB！')
-        return false
-    }
-    return true
-}
-
-// 存储上传的文件信息
-const uploadedFile = ref(null)
-
-// 文件上传成功处理
-const handleUploadSuccess = (response, file) => {
-    uploadedFile.value = file
-    ElMessage.success(`文件 ${file.name} 上传成功！`)
-    console.log('上传的文件信息:', file)
-}
-
-// 文件上传失败处理
-const handleUploadError = (error, file) => {
-    ElMessage.error(`文件 ${file.name} 上传失败！`)
-    console.error('上传失败:', error)
-}
-
-// 从json文本中提取关键词
-const keywords = computed(() => {
-  try {
-    const parsed = JSON.parse(jsonText.value)
-    return Object.keys(parsed)
-  } catch {
-    return []
-  }
-})
-
-
-const formData = ref({})
-
-
-watch(keywords, (newKeywords) => {
-  const newFormData = {}
-  newKeywords.forEach((key) => {
-    newFormData[key] = formData.value[key] || ""
-  })
-  formData.value = newFormData
-}, { immediate: true })
-
-const runTest = async() =>{
-    try {
-        let param = {
-            projectId: props.projectId,
-            userId: props.userId,
-            file: uploadedFile.value,
-            params: formData.value,
-        }
-        
-    } catch (error) {
-        
-    }
-}
-
-
-const publishView = ref(false)
-
-const publishOpen = async() =>{
-    publishView.value = true
-}
-
-
-const publishLoading = ref(false)
-
-//记录上传
-const action = ref()
-//记录上传
-const uploadRecord = async(typeParam = action) =>{
-    let param = {
-        userId : userStore.user.id,
-        actionDetail:{
-            projectName:publishToolData.value.toolName,
-            projectType:"Tool",
-            description: publishToolData.value.description
-        },
-        actionType:typeParam.value,
-    }
-
-    let res = await updateRecord(param)
-    console.log(res, "记录")
-}
-
-
-// 发布结构
-const publishToolData = ref({
-    toolName: '',
-    environment: 'python3.9',
-    description: '',
-    category: '',
-    tags: [] as string[],
-    parameters: [] as Array<{
-        Name: string
-        Flags: string
-        Type: string
-        Description: string
-        default_value: any
-        Optional: boolean
-    }>
-})
-
-const tagsInput = ref<string>()
-const addParameter = () => {
-    publishToolData.value.parameters.push({
-        Name: '',
-        Flags: '',
-        Type: 'String',
-        Description: '',
-        default_value: null,
-        Optional: false
-    })
-}
-
-const showTagInput = () => {
-    tagsInput.value = ''
-}
-
-const addTag = () => {
-    if (tagsInput.value && tagsInput.value.trim()) {
-        if (!publishToolData.value.tags.includes(tagsInput.value.trim())) {
-            publishToolData.value.tags.push(tagsInput.value.trim())
-        }
-        tagsInput.value = undefined
-    }
-}
-
-const removeTag = (tag: string) => {
-    publishToolData.value.tags = publishToolData.value.tags.filter(t => t !== tag)
-}
-
-const removeParameter = (index) => {
-    publishToolData.value.parameters.splice(index, 1)
-}
-
 // 服务发布相关
-const servicePublishView = ref(false)
 const servicePublishLoading = ref(false)
-const servicePublishData = ref({
-    servicePort: null
-})
 const serviceStatus = ref({
     isPublished: false,
     running: false,
@@ -697,11 +844,6 @@ const serviceStatus = ref({
     host: '',
     port: null
 })
-
-const servicePublishOpen = async () => {
-    servicePublishView.value = true
-    await checkServiceStatus()
-}
 
 const checkServiceStatus = async () => {
     try {
@@ -722,15 +864,15 @@ const checkServiceStatus = async () => {
     }
 }
 
-const publishServiceFunction = async () => {
+const publishServiceFunction = async (preferredPort?: number) => {
     servicePublishLoading.value = true
     try {
         const param: any = {
             projectId: props.projectId,
             userId: props.userId
         }
-        if (servicePublishData.value.servicePort) {
-            param.servicePort = parseInt(servicePublishData.value.servicePort)
+        if (preferredPort) {
+            param.servicePort = preferredPort
         }
         
         const response = await publishService(param)
@@ -744,6 +886,7 @@ const publishServiceFunction = async () => {
         
         ElMessage.success(`服务发布成功！访问地址: ${response.url}`)
         emit('addMessage', `Service running at: ${response.url}`)
+        emit('servicePublished')
     } catch (error) {
         ElMessage.error('服务发布失败: ' + (error as Error).message)
     } finally {
@@ -758,10 +901,11 @@ const unpublishServiceFunction = async () => {
             projectId: props.projectId,
             userId: props.userId
         })
-        
+
         serviceStatus.value.running = false
         ElMessage.success('服务已停止')
         emit('addMessage', 'Service stopped')
+        emit('serviceUnpublished')
     } catch (error) {
         ElMessage.error('停止服务失败: ' + (error as Error).message)
     } finally {
@@ -769,88 +913,218 @@ const unpublishServiceFunction = async () => {
     }
 }
 
-// 发布工具
-const publishFunction = async () => {
-    if (!publishToolData.value.toolName) {
-        ElMessage.error('工具名称不能为空')
+const startServiceForWizard = async () => {
+    const port = parseInt(toolWizardForm.servicePort, 10)
+    const preferredPort = Number.isNaN(port) ? undefined : port
+    await publishServiceFunction(preferredPort)
+}
+
+const stopServiceForWizard = async () => {
+    if (!serviceStatus.value.running) {
+        ElMessage.info('服务未运行')
         return
     }
-    if (!publishToolData.value.description) {
-        ElMessage.error('工具描述不能为空')
+    await unpublishServiceFunction()
+}
+
+const parseSelectOptions = (text: string) => {
+    return text
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .map((item) => {
+            const [labelPart, valuePart] = item.split(':')
+            const label = (labelPart ?? '').trim()
+            const value = (valuePart ?? labelPart ?? '').trim()
+            return {
+                label: label || value,
+                value: value || label,
+            }
+        })
+        .filter((option) => option.label && option.value)
+}
+
+const buildParamsSchema = (): DynamicToolParamSchema[] => {
+    return toolWizardForm.params
+        .map((param) => {
+            const key = param.key.trim()
+            const label = param.label.trim() || key
+            const schema: DynamicToolParamSchema = {
+                key,
+                label,
+                type: param.type,
+                required: param.required,
+            }
+            if (param.placeholder) {
+                schema.placeholder = param.placeholder
+            }
+            if (param.source) {
+                schema.source = param.source
+            }
+            if (param.type === 'select' && !param.source) {
+                const options = parseSelectOptions(param.optionsText)
+                schema.options = options
+            }
+            return schema
+        })
+        .filter((schema) => schema.key)
+}
+
+const logToolPublish = async (toolName: string, description: string) => {
+    try {
+        await updateRecord({
+            userId: userStore.user.id,
+            actionDetail: {
+                projectName: toolName,
+                projectType: 'Tool',
+                description,
+            },
+            actionType: '发布',
+        })
+    } catch (error) {
+        console.error('记录工具发布失败:', error)
+    }
+}
+
+const publishDynamicTool = async () => {
+    if (toolWizardSubmitting.value) return
+    const activeUserId = currentUserId.value || props.userId
+    if (!activeUserId) {
+        ElMessage.error('未获取到用户信息，无法发布工具')
         return
     }
-    if (!publishToolData.value.category) {
-        ElMessage.error('工具分类不能为空')
+    const name = toolWizardForm.toolName.trim()
+    if (!name) {
+        ElMessage.error('请填写工具名称')
+        return
+    }
+    const category = toolWizardForm.category.trim()
+    if (!category) {
+        ElMessage.error('请填写工具分类')
+        return
+    }
+    const description = toolWizardForm.description.trim()
+    if (!description) {
+        ElMessage.error('请填写工具描述')
+        return
+    }
+    if (toolWizardForm.invokeType === 'tiler-expression' && !toolWizardForm.expressionTemplate.trim()) {
+        ElMessage.error('请填写表达式模板')
+        return
+    }
+    if (toolWizardForm.invokeType !== 'tiler-expression' && !toolWizardForm.serviceEndpoint.trim()) {
+        ElMessage.error('请填写服务地址')
         return
     }
 
-    // 验证参数
-    for (const param of publishToolData.value.parameters) {
-        if (!param.Name || !param.Flags) {
-            ElMessage.error('参数名称和Flags不能为空')
+    const keySet = new Set<string>()
+    for (const param of toolWizardForm.params) {
+        const key = param.key.trim()
+        if (!key) {
+            ElMessage.error('参数键不能为空')
+            return
+        }
+        if (keySet.has(key)) {
+            ElMessage.error(`参数键重复：${key}`)
+            return
+        }
+        keySet.add(key)
+        if (param.type === 'select' && !param.source && !param.optionsText.trim()) {
+            ElMessage.error(`请选择或输入参数“${param.label || param.key}”的枚举项`)
             return
         }
     }
 
-    publishLoading.value = true
-    try {
-        
-        const response = await publishTool(
-            props.projectId,
-            publishToolData.value.environment,
-            props.userId,
-            {
-                toolName: publishToolData.value.toolName,
-                description: publishToolData.value.description,
-                category: publishToolData.value.category,
-                tags: publishToolData.value.tags,
-                parameters: publishToolData.value.parameters
+    let payloadTemplate: any = undefined
+    if (toolWizardForm.invokeType !== 'tiler-expression') {
+        const payloadText = toolWizardForm.payloadTemplate.trim()
+        if (payloadText) {
+            try {
+                payloadTemplate = JSON.parse(payloadText)
+            } catch (error) {
+                ElMessage.error('请求模板需要是合法的 JSON 格式')
+                return
             }
-        )
-        // 提取toolId
-        const toolId = response.toolId
-        console.log('工具发布成功,ID:', toolId)
-
-        ElMessage.success('工具发布成功')
-        publishView.value = false
-        // 重置表单
-        publishToolData.value = {
-            toolName: '',
-            environment: 'python3.9',
-            description: '',
-            category: '',
-            tags: [],
-            parameters: []
         }
-        try{
-                action.value = '发布'
-                uploadRecord(action)
-            } catch(error){
-                console.error('upload 报错:', error);
-            }
+    }
+
+    const paramsSchema = buildParamsSchema()
+
+    const invokeConfig: DynamicToolMeta['invoke'] = toolWizardForm.invokeType === 'tiler-expression'
+        ? {
+              type: 'tiler-expression',
+              expressionTemplate: toolWizardForm.expressionTemplate,
+              colorMap: toolWizardForm.colorMap || 'rdylgn',
+              pixelMethod: toolWizardForm.pixelMethod || 'first',
+          }
+        : {
+              type: toolWizardForm.invokeType,
+              endpoint: toolWizardForm.serviceEndpoint.trim(),
+              method: toolWizardForm.serviceMethod as 'GET' | 'POST',
+              payloadTemplate: payloadTemplate ?? undefined,
+              responsePath: toolWizardForm.responsePath.trim() || undefined,
+          }
+
+    const toolMeta: DynamicToolMeta = {
+        id: generateToolId('dynamic'),
+        name,
+        category,
+        description,
+        tags: [...toolWizardForm.tags],
+        paramsSchema,
+        invoke: invokeConfig,
+        resultType: toolWizardForm.resultType,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+    }
+
+    toolWizardSubmitting.value = true
+    try {
+        toolRegistry.registerTool(activeUserId, toolMeta)
+        saveWizardDraft()
+        emit('servicePublished')
+        await logToolPublish(name, description)
+        ElMessage.success('工具发布成功，可前往动态分析页面使用')
+        toolWizardVisible.value = false
     } catch (error) {
-        ElMessage.error('工具发布失败: ' + (error as Error).message)
+        console.error('注册工具失败:', error)
+        ElMessage.error('注册工具失败，请重试')
     } finally {
-        publishLoading.value = false
+        toolWizardSubmitting.value = false
     }
 }
 
 onMounted(async () => {
-    code.value = await getScript({
-        projectId: props.projectId,
-        userId: props.userId,
-    })
-    let result = await projectOperating({
-        projectId: props.projectId,
-        userId: props.userId,
-        action: 'open',
-    })
-
-    if (result.status === 1) {
-        ElMessage.success('项目启动成功')
-    } else {
-        ElMessage.error('启动失败，请刷新页面或联系管理员')
+    try {
+        const script = await getScript({
+            projectId: props.projectId,
+            userId: props.userId,
+        })
+        if (script) {
+            code.value = script
+        }
+    } catch (error) {
+        console.error('加载代码失败:', error)
+        ElMessage.error('加载代码失败，请检查后端服务是否运行')
     }
+
+    try {
+        const result = await projectOperating({
+            projectId: props.projectId,
+            userId: props.userId,
+            action: 'open',
+        })
+
+        if (result.status === 1) {
+            ElMessage.success('项目启动成功')
+        } else {
+            ElMessage.error('启动失败，请刷新页面或联系管理员')
+        }
+    } catch (error) {
+        console.error('项目启动失败:', error)
+        ElMessage.error('项目启动失败，请检查后端服务')
+    }
+
     window.addEventListener('keydown', keyboardSaveCode);
 })
 onBeforeUnmount(async () => {

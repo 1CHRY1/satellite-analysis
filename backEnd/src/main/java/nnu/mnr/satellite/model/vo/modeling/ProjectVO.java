@@ -25,5 +25,6 @@ public class ProjectVO {
     private String createUserEmail;
     private HashSet<String> joinedUsers;
     private String description;
+    private Integer isTool;
 
 }

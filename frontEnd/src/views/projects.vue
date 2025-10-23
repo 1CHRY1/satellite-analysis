@@ -52,8 +52,8 @@
                         ? searchedProjects
                         : myProjectsVisible
                             ? myProjectList
-                            : projectList" :key="item.projectId" :project="item" @click="enterProject(item)"
-                        @deleteProject=afterDeleteProject>
+                            : projectList" :key="item.projectId" :project="item" :is-service="isService(item)"
+                        @click="enterProject(item)" @deleteProject=afterDeleteProject>
                     </projectCard>
                 </div>
 
@@ -140,10 +140,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, type Ref } from 'vue'
+import { ref, onMounted, onUnmounted, onActivated, type Ref } from 'vue'
 import projectsBg from '@/components/projects/projectsBg.vue'
 import { Search } from 'lucide-vue-next'
-import { getProjects, createProject } from '@/api/http/analysis'
+import { getProjects, createProject, getServiceStatus } from '@/api/http/analysis'
 import projectCard from '@/components/projects/projectCard.vue'
 import { Loading } from "@element-plus/icons-vue"
 import type { project, newProject } from '@/type/analysis'
@@ -193,6 +193,7 @@ const viewMyProjects = () => {
  * 工具列表模块
  */
 const projectList: Ref<project[]> = ref([])
+const serviceMap = ref<Record<string, boolean>>({})
 const createProjectView = ref(false)
 const createLoading = ref(false)
 const newProject = ref({
@@ -257,6 +258,26 @@ const afterDeleteProject = async () => {
 const getProjectsInOrder = async () => {
     projectList.value = await getProjects()
     projectList.value.sort((a, b) => b.createTime.localeCompare(a.createTime))
+    await ensureServiceFlags()
+}
+
+const clearProjectsRefreshFlag = () => {
+    try {
+        localStorage.removeItem('projectsNeedRefresh')
+    } catch (error) {
+        console.warn('清理项目刷新标记失败', error)
+    }
+}
+
+const refreshProjectsIfNeeded = async () => {
+    try {
+        if (localStorage.getItem('projectsNeedRefresh')) {
+            await getProjectsInOrder()
+            clearProjectsRefreshFlag()
+        }
+    } catch (error) {
+        console.error('刷新项目列表失败', error)
+    }
 }
 
 const action = ref()
@@ -279,6 +300,7 @@ const uploadRecord = async(typeParam = action) =>{
 
 onMounted(async () => {
     await getProjectsInOrder()
+    clearProjectsRefreshFlag()
 
     console.log("所有工具：", projectList.value)
     updateColumns();
@@ -287,9 +309,50 @@ onMounted(async () => {
 
 })
 
+onActivated(async () => {
+    await refreshProjectsIfNeeded()
+})
+
 onUnmounted(() => {
     window.removeEventListener('resize', updateColumns)
 })
+
+// 计算是否为服务卡：后台标志优先，其次兜底检测
+const isService = (item: project) => {
+    return Number((item as any).isTool ?? 0) === 1 || serviceMap.value[item.projectId] === true
+}
+
+const ensureServiceFlags = async () => {
+    try {
+        const userIdLocal = userId || localStorage.getItem('userId')
+        if (!userIdLocal) return
+        const promises: Promise<void>[] = []
+        for (const item of projectList.value) {
+            // 已标服务的卡片不重复探测
+            if (Number((item as any).isTool ?? 0) === 1) continue
+            if (serviceMap.value[item.projectId] === true) continue
+            promises.push(checkAndSetService(item.projectId, userIdLocal))
+        }
+        // 控制并发（简单分批）
+        const batchSize = 6
+        for (let i = 0; i < promises.length; i += batchSize) {
+            await Promise.all(promises.slice(i, i + batchSize))
+        }
+    } catch (e) {
+        console.warn('ensureServiceFlags error', e)
+    }
+}
+
+const checkAndSetService = async (pid: string, uid: string | null) => {
+    try {
+        const res = await getServiceStatus({ projectId: pid, userId: uid })
+        if (res && (res.isPublished === true || res.running === true)) {
+            serviceMap.value[pid] = true
+        }
+    } catch (e) {
+        // 静默失败即可
+    }
+}
 </script>
 
 <style scoped lang="scss">

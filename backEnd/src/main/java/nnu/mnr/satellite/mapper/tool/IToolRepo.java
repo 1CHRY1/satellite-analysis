@@ -10,12 +10,12 @@ import org.apache.ibatis.annotations.Update;
 //@Repository("IToolRepo")
 @DS("mysql_ard_dev")
 public interface IToolRepo extends BaseMapper<Tool> {
-    @Insert("INSERT INTO tool_table (tool_id, environment, user_id, tool_name, description, tags, category_id, parameters, output_type) " +
-            "VALUES (#{toolId}, #{environment}, #{userId}, #{toolName}, #{description}, #{tags}, #{categoryId}, #{parameters}, #{outputType})")
+    @Insert("INSERT INTO tool_table (tool_id, project_id, environment, user_id, tool_name, description, tags, category_id, parameters, output_type) " +
+            "VALUES (#{toolId}, #{projectId}, #{environment}, #{userId}, #{toolName}, #{description}, #{tags}, #{categoryId}, #{parameters}, #{outputType})")
     int insertTool(Tool toolObj);
 
     @Update("UPDATE tool_table SET environment = #{environment}, tool_name = #{toolName}, description = #{description}, output_type = #{outputType}, " +
-            "tags = #{tags}, category = #{category}, parameters = #{parameters} " +
+            "tags = #{tags}, category_id = #{categoryId}, parameters = #{parameters} " +
             "WHERE tool_id = #{toolId}")
     int updateToolById(Tool toolObj);
 
