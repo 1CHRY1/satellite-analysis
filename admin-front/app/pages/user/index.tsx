@@ -53,7 +53,7 @@ const getAllUser = async (
 		page: params.current as number,
 		pageSize: params.pageSize as number,
 		searchText: params.userName,
-		roleIds: params.roleId,
+		roleIds: (typeof params.roleId === 'string') ? [params.roleId] : params.roleId,
 	});
 	console.log(params);
 	return {

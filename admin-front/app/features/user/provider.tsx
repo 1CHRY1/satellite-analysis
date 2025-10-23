@@ -60,8 +60,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
 
 	// ✅ 副作用：同步 localStorage
 	useEffect(() => {
-		// 不会在 SSR 阶段运行
-		// 只会在浏览器完成首次渲染后执行
 		if (state.authenticated) {
 			localStorage.setItem("user", JSON.stringify(state.user));
 			localStorage.setItem("userId", state.user.id);
