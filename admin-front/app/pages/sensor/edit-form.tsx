@@ -78,6 +78,7 @@ export const EditSensorButton: React.FC<{
             initialValues={initSensor}
 			schema={schema}
 			onFinish={async(values) => {
+				values.sensorId = initSensor.sensorId;
                 const result = await editSensor(values)
                 if (result) 
                     onSuccess()
