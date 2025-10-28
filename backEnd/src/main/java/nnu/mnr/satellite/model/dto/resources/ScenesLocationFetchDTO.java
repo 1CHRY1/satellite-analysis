@@ -19,6 +19,6 @@ public class ScenesLocationFetchDTO {
     private String endTime;
     private String locationId;
     private Integer resolution;
-    private Integer cloud;
+    private float cloud;
 
 }

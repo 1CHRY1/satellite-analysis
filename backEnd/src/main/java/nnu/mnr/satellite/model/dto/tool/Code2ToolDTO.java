@@ -8,7 +8,6 @@ import java.util.List;
 public class Code2ToolDTO {
 
     private String projectId;
-    private String environment;
     private String userId;
 
     private String toolName;
@@ -16,6 +15,7 @@ public class Code2ToolDTO {
     private List<String> tags;
     private Integer categoryId;
     private List<JSONObject> parameters;
-    private String outputType;
+    private Integer servicePort;
+    private boolean share;
 }
 

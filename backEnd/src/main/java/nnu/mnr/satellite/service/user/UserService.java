@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-@DS("mysql_ard_iam")
+@DS("mysql-ard-iam")
 public class UserService {
 
     private final IUserRepo userRepo;
@@ -217,7 +217,7 @@ public class UserService {
 
         userRepo.updateById(user);
         return CommonResultVO.builder()
-                .message(String.format(UserConstants.USER_INFO_UPDATE, userName)).status(1).build();
+                .message(String.format(UserConstants.USER_INFO_UPDATE, userRepo.selectById(userId).getUserName())).status(1).build();
     }
 
     public CommonResultVO updateUserPasswordById(UserPasswordDTO userPasswordDTO) {
@@ -431,19 +431,19 @@ public class UserService {
         }
     }
 
-    private Optional<User> getUserByName(String name) {
+    public Optional<User> getUserByName(String name) {
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_name", name);
         return Optional.ofNullable(userRepo.selectOne(queryWrapper));
     }
 
-    private Optional<User> getUserByEmail(String email) {
+    public Optional<User> getUserByEmail(String email) {
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("email", email);
         return Optional.ofNullable(userRepo.selectOne(queryWrapper));
     }
 
-    private Optional<User> getUserByPhone(String phone) {
+    public Optional<User> getUserByPhone(String phone) {
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("phone", phone);
         return Optional.ofNullable(userRepo.selectOne(queryWrapper));

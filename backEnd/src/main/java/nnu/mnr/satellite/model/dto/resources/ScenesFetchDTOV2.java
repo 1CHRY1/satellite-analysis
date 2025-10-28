@@ -19,7 +19,7 @@ public class ScenesFetchDTOV2 {
     private String startTime;
     private String endTime;
     private Integer regionId;
-    private Integer cloud;
+    private float cloud;
     private Integer resolution;
 
 }

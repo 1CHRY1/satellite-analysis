@@ -20,7 +20,7 @@ import java.util.Map;
 
 @Service
 @Slf4j
-@DS("mysql_ard_iam")
+@DS("mysql-ard-iam")
 public class MinIOService {
     private final MinioClient minioClient;
     private final MinioUtil minioUtil;

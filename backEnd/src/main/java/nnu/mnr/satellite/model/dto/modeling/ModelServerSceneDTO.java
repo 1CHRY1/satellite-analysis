@@ -22,7 +22,7 @@ public class ModelServerSceneDTO {
 
     private String sceneId;
     private String cloudPath;
-    private Float cloud;
+    private float cloud;
     private String bucket;
     private LocalDateTime sceneTime;
     private String resolution;

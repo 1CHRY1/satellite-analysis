@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
-@DS("mysql_ard_iam")
+@DS("mysql-ard-iam")
 public class UserServiceV3 {
 
 }

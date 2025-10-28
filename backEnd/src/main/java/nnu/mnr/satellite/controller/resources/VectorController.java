@@ -46,7 +46,7 @@ public class VectorController {
     @GetMapping("/region/{regionId}/{tableName}/{z}/{x}/{y}")
     public void getVectorByRegionAndTableName(@PathVariable Integer regionId, @PathVariable String tableName,
                                               @PathVariable int z, @PathVariable int x,
-                                              @PathVariable int y, @RequestParam(value = "type", required = false) Integer type,
+                                              @PathVariable int y, @RequestParam(value = "types", required = false) List<Integer> types,
                                               HttpServletResponse response,
                                               @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
                                               @CookieValue(value = "encrypted_request_body", required = false) String encryptedRequestBody) {
@@ -55,7 +55,7 @@ public class VectorController {
         userId = IdUtil.parseUserIdFromAuthHeader(authorizationHeader);
 
         String cacheKey = userId + "_" + encryptedRequestBody;
-        byte[] tile = vectorDataService.getVectorByRegionAndTableName(tableName, z, x, y, cacheKey, type);
+        byte[] tile = vectorDataService.getVectorByRegionAndTableName(tableName, z, x, y, cacheKey, types);
         sendVectorTileResponse(tile, response);
     }
 
@@ -65,9 +65,9 @@ public class VectorController {
                                               @PathVariable Integer resolution,
                                               @PathVariable String tableName,
                                               @PathVariable int z, @PathVariable int x,
-                                              @PathVariable int y, @RequestParam(value = "type", required = false) Integer type,
+                                              @PathVariable int y, @RequestParam(value = "types", required = false) List<Integer> types,
                                                       HttpServletResponse response) {
-        byte[] tile = vectorDataService.getVectorByGridResolutionAndTableName(columnId, rowId, resolution, tableName, z, x, y, type);
+        byte[] tile = vectorDataService.getVectorByGridResolutionAndTableName(columnId, rowId, resolution, tableName, z, x, y, types);
         sendVectorTileResponse(tile, response);
     }
 
@@ -76,9 +76,9 @@ public class VectorController {
                                               @PathVariable Integer resolution,
                                               @PathVariable String tableName,
                                               @PathVariable int z, @PathVariable int x,
-                                              @PathVariable int y, @RequestParam(value = "type", required = false) Integer type,
+                                              @PathVariable int y, @RequestParam(value = "types", required = false) List<Integer> types,
                                                 HttpServletResponse response) {
-        byte[] tile = vectorDataService.getVectorByLocationAndTableName(locationId, resolution, tableName, z, x, y, type);
+        byte[] tile = vectorDataService.getVectorByLocationAndTableName(locationId, resolution, tableName, z, x, y, types);
         sendVectorTileResponse(tile, response);
     }
 

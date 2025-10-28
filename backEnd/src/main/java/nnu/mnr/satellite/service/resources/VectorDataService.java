@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 
 import static nnu.mnr.satellite.utils.geom.TileCalculateUtil.getTileGeomByIdsAndResolution;
 
-@DS("pg_satellite")
+@DS("pg-satellite")
 @Service("VectorDataService")
 public class VectorDataService {
 
@@ -56,25 +56,25 @@ public class VectorDataService {
         return vectorRepo.getVectorTypeByTableName(tableName);
     }
 
-    public byte[] getVectorByRegionAndTableName(String tableName, int z, int x, int y, String cacheKey, Integer type){
+    public byte[] getVectorByRegionAndTableName(String tableName, int z, int x, int y, String cacheKey, List<Integer> types){
         SceneDataCache.UserRegionInfoCache userRegionInfoCache = SceneDataCache.getUserRegionInfoCacheMap(cacheKey);
         Geometry gridBoundary = userRegionInfoCache.gridsBoundary;
         String wkt = gridBoundary.toText();
-        return getMvtTile(tableName, wkt, z, x, y, type);
+        return getMvtTile(tableName, wkt, z, x, y, types);
     }
 
-    public byte[] getVectorByLocationAndTableName(String locationId, Integer resolution, String tableName, int z, int x, int y, Integer type){
+    public byte[] getVectorByLocationAndTableName(String locationId, Integer resolution, String tableName, int z, int x, int y, List<Integer> types){
         String wkt = locationService.getLocationBoundary(resolution, locationId).toText();
-        return getMvtTile(tableName, wkt, z, x, y, type);
+        return getMvtTile(tableName, wkt, z, x, y, types);
     }
 
-    public byte[] getVectorByGridResolutionAndTableName(Integer columnId, Integer rowId, Integer resolution, String tableName, int z, int x, int y, Integer type){
+    public byte[] getVectorByGridResolutionAndTableName(Integer columnId, Integer rowId, Integer resolution, String tableName, int z, int x, int y, List<Integer> types){
         String wkt = getTileGeomByIdsAndResolution(rowId,  columnId, resolution).toString();
-        return getMvtTile(tableName, wkt, z, x, y, type);
+        return getMvtTile(tableName, wkt, z, x, y, types);
     }
 
     // 获取矢量数据并发布成瓦片服务
-    public byte[] getMvtTile(String tableName, String wkt, int z, int x, int y, Integer type){
+    public byte[] getMvtTile(String tableName, String wkt, int z, int x, int y, List<Integer> types){
         // 参数校验，防止sql注入
         validateParams(tableName, z, x, y);
         // 查询表的非几何字段列表（排除 'geom' 字段）
@@ -85,7 +85,7 @@ public class VectorDataService {
                 tableName
         );
         // 调用Mapper查询MVT数据
-        Object mvtResult = vectorRepo.getVectorByTableNameAndGeometry(tableName, wkt, z, x, y, columns, type);
+        Object mvtResult = vectorRepo.getVectorByTableNameAndGeometry(tableName, wkt, z, x, y, columns, types);
         // 类型转换与返回
         if (mvtResult instanceof byte[]) {
             return (byte[]) mvtResult;

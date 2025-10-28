@@ -5,6 +5,7 @@ import com.jcraft.jsch.SftpException;
 import nnu.mnr.satellite.model.dto.common.FileData;
 import nnu.mnr.satellite.model.dto.modeling.*;
 import nnu.mnr.satellite.model.pojo.common.DFileInfo;
+import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.model.vo.modeling.*;
 import nnu.mnr.satellite.model.vo.tool.Code2ToolVO;
 import nnu.mnr.satellite.service.modeling.ModelCodingService;
@@ -149,21 +150,5 @@ public class ModelCodingController {
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(resultData.getStream());
-    }
-
-    // Service Controller
-    @PostMapping("/project/service/publish")
-    public ResponseEntity<ServicePublishVO> publishService(@RequestBody ProjectServicePublishDTO projectServicePublishDTO) {
-        return ResponseEntity.ok(modelCodingService.publishService(projectServicePublishDTO));
-    }
-
-    @PostMapping("/project/service/unpublish")
-    public ResponseEntity<CodingProjectVO> unpublishService(@RequestBody ProjectBasicDTO projectBasicDTO) {
-        return ResponseEntity.ok(modelCodingService.unpublishService(projectBasicDTO));
-    }
-
-    @PostMapping("/project/service/status")
-    public ResponseEntity<ServiceStatusVO> getServiceStatus(@RequestBody ProjectBasicDTO projectBasicDTO) {
-        return ResponseEntity.ok(modelCodingService.getServiceStatus(projectBasicDTO));
     }
 }

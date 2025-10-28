@@ -13,7 +13,7 @@ import org.apache.ibatis.annotations.Select;
  * @Date: 2025/3/21 22:38
  * @Description:
  */
-@DS("mysql_ard_dev")
+@DS("mysql-ard-dev")
 public interface IProjectRepo extends BaseMapper<Project> {
     @Select("SELECT COUNT(1) > 0 FROM project_table WHERE project_id = #{projectId}")
     boolean existsById(@Param("projectId") String projectId);

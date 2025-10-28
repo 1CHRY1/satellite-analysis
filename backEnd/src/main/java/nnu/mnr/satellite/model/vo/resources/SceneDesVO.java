@@ -35,7 +35,7 @@ public class SceneDesVO {
     private String description;
     private Integer bandNum;
     private HashSet<String> bands;
-    private Float cloud;
+    private float cloud;
 
     @TableField(typeHandler = FastJson2TypeHandler.class)
     private JSONObject tags;
