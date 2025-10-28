@@ -23,6 +23,7 @@ export namespace Grid {
             Green: number,
             Blue: number,
         },
+        boundingBox: any,
     }
 
     export interface SceneDetailStatsResponse {

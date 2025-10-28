@@ -671,5 +671,4 @@ public class ModelCodingService {
         responseInfo = "Package " + name + version + " has been " + conditionStr;
         return CodingProjectVO.builder().status(1).info(responseInfo).projectId(projectId).build();
     }
-
 }

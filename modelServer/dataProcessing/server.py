@@ -16,7 +16,7 @@ def init_ray():
             address='auto',
             # 可预留内存：12GB（约60%）
             # 用于任务执行过程中的内存分配
-            _memory=CONFIG.RAY_MEMORY,
+            # _memory=CONFIG.RAY_MEMORY, # 集群不需要，因为已经在ray start中声明
             
             # 启用资源隔离（推荐）
             # enable_resource_isolation=True,

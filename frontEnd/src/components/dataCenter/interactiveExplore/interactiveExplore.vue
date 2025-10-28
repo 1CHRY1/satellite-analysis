@@ -2,7 +2,7 @@
     <div class="relative flex flex-1 flex-row bg-black">
         <subtitle class="z-10 absolute" style="margin-top: 60px; " />
         <div class=" absolute left-18 h-[calc(100vh-100px)] p-4 text-gray-200 mb-0 gap-0 z-10"
-            :class="showPanel ? 'w-[28vw]' : 'w-16 transition-all duration-300'">
+            :class="showPanel ? 'w-[545px]' : 'w-16 transition-all duration-300'">
             <button @click="showPanel = !showPanel" class="absolute top-1/2 right-0 -translate-y-1/2 h-12 w-6 text-white rounded-l-lg shadow-lg 
                  items-center justify-center transition-all z-10"
                 :class="showPanel ? 'bg-blue-600 hover:bg-blue-500' : 'bg-gray-800 hover:bg-gray-700'">
@@ -55,7 +55,7 @@
                                                 <div v-if="activeTab === 'region'"
                                                     class="config-control justify-center">
                                                     <RegionSelects v-model="selectedRegion"
-                                                        :placeholder="[t('datapage.explore.section1.intext_choose')]"
+                                                        :placeholder="[t('datapage.explore.data.intext_choose')]"
                                                         class="flex gap-2"
                                                         select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
                                                 </div>
@@ -67,7 +67,7 @@
                                                     class="config-control justify-center w-full">
                                                     <el-select v-model="selectedPOI" filterable remote reserve-keyword
                                                         value-key="id"
-                                                        :placeholder="t('datapage.explore.section1.intext_POI')"
+                                                        :placeholder="t('datapage.explore.data.intext_POI')"
                                                         :remote-method="fetchPOIOptions"
                                                         class="!w-[90%] bg-[#0d1526] text-white"
                                                         popper-class="bg-[#0d1526] text-white">
@@ -85,11 +85,11 @@
                                             <div class="config-label relative">
                                                 <BoltIcon :size="16" class="config-icon" />
                                                 <!-- 格网分辨率 -->
-                                                <span>{{ t('datapage.explore.section1.subtitle2') }}</span>
+                                                <span>{{ t('datapage.explore.data.subtitle2') }}</span>
                                             </div>
                                             <div class="config-control flex-col !items-start">
                                                 <div class="flex flex-row gap-2 items-center w-full">
-                                                    <!-- {{ t('datapage.explore.section1.resolution') }} -->
+                                                    <!-- {{ t('datapage.explore.data.resolution') }} -->
                                                     <select v-model="selectedGridResolution"
                                                         class="w-40 scale-88 appearance-none rounded-lg border border-[#2c3e50] bg-[#0d1526] px-4 py-2 pr-8 text-white transition-all duration-200 hover:border-[#206d93] focus:border-[#3b82f6] focus:outline-none">
                                                         <option v-for="option in gridOptions" :key="option"
@@ -98,20 +98,20 @@
                                                         </option>
                                                     </select>
                                                     <a-button class="a-button" type="primary" @click="getAllGrid">
-                                                        {{ t('datapage.explore.section1.button') }}
+                                                        {{ t('datapage.explore.data.button') }}
                                                     </a-button>
                                                 </div>
                                                 <div class="flex flex-row mt-2 ml-2">
                                                     <div class="text-red-500">*</div>
                                                     <span class="text-xs text-gray-400">{{
-                                                        t('datapage.explore.section1.advice')
+                                                        t('datapage.explore.data.advice')
                                                         }}</span>
                                                 </div>
                                             </div>
                                         </div>
                                         <!-- <button @click="getAllGrid"
                                             class="cursor-pointer scale-98 rounded-lg border border-[#247699] bg-[#0d1526] px-4 py-2 text-white transition-all duration-200 hover:border-[#2bb2ff] hover:bg-[#1a2b4c] active:scale-93">
-                                            {{ t('datapage.explore.section1.button') }}
+                                            {{ t('datapage.explore.data.button') }}
                                         </button> -->
                                     </div>
                                     <div class="config-container">
@@ -529,16 +529,26 @@
             </div>
         </div>
         <MapComp class="flex-1" :style="'local'" :proj="'globe'" :isPicking="isPicking" />
-        <!-- MVT属性信息弹窗 -->
-        <MvtPop />
+        <!-- MVT属性信息弹窗 - 已改用Mapbox原生弹窗 -->
+        <!-- <MvtPop /> -->
+
+        <teleport to="body">
+            <div class="grid-popup-layer" v-show="gridPopupVisible">
+                <div class="grid-popup-panel">
+                    <PopContent />
+                </div>
+            </div>
+        </teleport>
     </div>
 </template>
 
 <script setup lang="ts">
+import bus from '@/store/bus'
 import MapComp from '@/components/feature/map/mapComp.vue'
+import PopContent from '@/components/feature/map/popContent/popContent.vue'
 import segmented from '@/components/common/segmented.vue';
-import MvtPop from '@/components/feature/map/popContent/mvtPop.vue'
-import { ref, computed, type Ref, watch, reactive, onMounted, provide, inject, onUnmounted } from 'vue'
+// import MvtPop from '@/components/feature/map/popContent/mvtPop.vue' // 已改用Mapbox原生弹窗
+import { ref, computed, type Ref, watch, reactive, onMounted, provide, inject, onUnmounted, nextTick } from 'vue'
 import { RegionSelects } from 'v-region'
 import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'
 import { formatTime } from '@/util/common'
@@ -650,11 +660,43 @@ const toNoCloud = () => {
 // 地图展示
 const isPicking = ref(false)
 
+// Grid popup visibility
+const gridPopupVisible = ref(false)
+const handleGridPopupVisible = (visible: boolean) => {
+    gridPopupVisible.value = !!visible
+}
+
+// Critical: when visibility turns true, schedule reset AFTER DOM shows
+watch(gridPopupVisible, (v) => {
+    if (v) {
+        nextTick(() => {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    bus.emit('gridPopup:reset-position')
+                })
+            })
+        })
+    } else {
+        // 弹窗关闭时，同时关闭时间轴（年份/月份选择）
+        bus.emit('closeTimeline')
+    }
+})
+
 onMounted(async () => {
     setInitialListExpand()
 
     if (!ezStore.get('statisticCache')) ezStore.set('statisticCache', new Map())
     if (!ezStore.get('sceneNodataMap')) ezStore.set('sceneNodataMap', new Map())
+
+    // Add grid popup visibility listener
+    bus.on('gridPopup:visible', handleGridPopupVisible)
+    // Lock/unlock page scroll when popup visible
+    bus.on('gridPopup:visible', (v: boolean) => {
+        try {
+            document.documentElement.style.overflow = v ? 'hidden' : ''
+            document.body.style.overflow = v ? 'hidden' : ''
+        } catch {}
+    })
 
     await mapManager.waitForInit();
 
@@ -679,6 +721,9 @@ onMounted(async () => {
 
 onUnmounted(() => {
     destroyExploreLayers()
+    bus.off('gridPopup:visible', handleGridPopupVisible)
+    try { document.documentElement.style.overflow = '' } catch {}
+    try { document.body.style.overflow = '' } catch {}
 })
 
 </script>
@@ -696,5 +741,39 @@ onUnmounted(() => {
 
 .config-item {
     background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);
+}
+
+.grid-popup-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 2200;
+    pointer-events: none;
+}
+
+.grid-popup-panel {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+:deep(.grid-popup-panel .vdr) {
+    pointer-events: auto;
+}
+::deep(.grid-popup-panel .vdr * ) {
+    pointer-events: auto;
+}
+
+.grid-popup-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 2200;
+    pointer-events: none;
+    overflow: hidden; /* NEW: prevent body scrolling */
+}
+.grid-popup-panel {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden; /* NEW: clip inner overflow */
 }
 </style>

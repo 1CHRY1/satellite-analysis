@@ -65,7 +65,6 @@ public class ToolService {
     @Autowired
     ModelSocketService modelSocketService;
 
-
     public CommonResultVO publishTool(Code2ToolDTO code2ToolDTO) {
 
         String toolId = IdUtil.generateToolId();
@@ -469,7 +468,7 @@ public class ToolService {
 
     public boolean isToolIdExistInTool(String toolId) {
         QueryWrapper<Tool> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("tool_Id", toolId); // 构造查询条件
+        queryWrapper.eq("tool_id", toolId); // 构造查询条件
         return toolRepo.selectCount(queryWrapper) > 0;
     }
 

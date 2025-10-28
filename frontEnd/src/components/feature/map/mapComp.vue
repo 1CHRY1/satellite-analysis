@@ -7,7 +7,7 @@
             <button @click="handleZoomOut" class="map-button">➖</button>
             <button @click="handleRightRotate" class="map-button">↩️</button>
             <button @click="handleLeftRotate" class="map-button">↪️</button>
-            <button @click="handle3DTiles" class="map-button">⛰️</button>
+            <button @click="handle3DTiles" :class="['map-button', is3D ? '' : 'grayscale']">⛰️</button>
             <!-- <button @click="handle3DTiles" class="map-button !text-gray-900">{{ is3DMode ? '3D' : '2D' }}</button>-->
             <button @click="localTian" class="map-button text-gray-900!">{{ t('datapage.mapcomp.vector') }}</button>
             <button @click="localImg" class="map-button text-gray-900!">{{ t('datapage.mapcomp.imagery') }}</button>
@@ -185,6 +185,11 @@ onUnmounted(() => {
     @apply cursor-pointer rounded-md bg-white p-2 shadow-md shadow-gray-300 hover:bg-gray-50;
 }
 
+.map-button.grayscale {
+    filter: grayscale(100%);
+    opacity: 0.7;
+}
+
 :deep(.mapboxgl-popup-content) {
     /* @apply  font-medium text-black; */
     background-color: transparent;
@@ -199,6 +204,114 @@ onUnmounted(() => {
 :deep(.mapboxgl-popup-close-button) {
     font-size: 20px;
     margin-top: 12px;
+}
+
+/* Vector Popup Styles */
+:deep(.vector-popup-container .mapboxgl-popup-content) {
+    background-color: #0a1929;
+    border: 1px solid #1e3a5f;
+    border-radius: 8px;
+    padding: 0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+:deep(.vector-popup-container .mapboxgl-popup-tip) {
+    border-top-color: #0a1929;
+}
+
+:deep(.vector-popup-container .mapboxgl-popup-close-button) {
+    color: #a5d8ff;
+    font-size: 20px;
+    padding: 4px 8px;
+    margin: 0;
+}
+
+:deep(.vector-popup-container .mapboxgl-popup-close-button:hover) {
+    background-color: rgba(165, 216, 255, 0.1);
+    border-radius: 4px;
+}
+
+:deep(.vector-popup-content) {
+    color: #e6f1ff;
+    min-width: 200px;
+}
+
+:deep(.vector-popup-content .popup-header) {
+    padding: 12px 16px;
+    border-bottom: 1px solid #1e3a5f;
+    background-color: #132f4c;
+    border-radius: 8px 8px 0 0;
+}
+
+:deep(.vector-popup-content .popup-header h4) {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #7eb3dd;
+}
+
+:deep(.vector-popup-content .popup-body) {
+    padding: 12px 16px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+:deep(.vector-popup-content .no-data) {
+    text-align: center;
+    color: #a5d8ff;
+    font-style: italic;
+    padding: 12px 0;
+}
+
+:deep(.vector-popup-content .attributes-table) {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+:deep(.vector-popup-content .attributes-table tr) {
+    border-bottom: 1px solid #1e3a5f;
+}
+
+:deep(.vector-popup-content .attributes-table tr:last-child) {
+    border-bottom: none;
+}
+
+:deep(.vector-popup-content .attributes-table td) {
+    padding: 8px 4px;
+    vertical-align: top;
+}
+
+:deep(.vector-popup-content .attr-key) {
+    font-weight: 600;
+    color: #4dabf7;
+    font-size: 12px;
+    width: 40%;
+    word-break: break-word;
+}
+
+:deep(.vector-popup-content .attr-value) {
+    color: #e6f1ff;
+    font-size: 13px;
+    word-break: break-word;
+}
+
+/* Scrollbar styling for popup */
+:deep(.vector-popup-content .popup-body::-webkit-scrollbar) {
+    width: 6px;
+}
+
+:deep(.vector-popup-content .popup-body::-webkit-scrollbar-track) {
+    background: #132f4c;
+    border-radius: 3px;
+}
+
+:deep(.vector-popup-content .popup-body::-webkit-scrollbar-thumb) {
+    background: #1e3a5f;
+    border-radius: 3px;
+}
+
+:deep(.vector-popup-content .popup-body::-webkit-scrollbar-thumb:hover) {
+    background: #4dabf7;
 }
 
 :deep(.vdr-container.active) {

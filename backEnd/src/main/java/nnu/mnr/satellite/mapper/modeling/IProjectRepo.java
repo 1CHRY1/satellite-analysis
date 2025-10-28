@@ -4,6 +4,7 @@ import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import nnu.mnr.satellite.model.po.modeling.Project;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
 import org.apache.ibatis.annotations.Select;
 
 /**
@@ -17,4 +18,7 @@ import org.apache.ibatis.annotations.Select;
 public interface IProjectRepo extends BaseMapper<Project> {
     @Select("SELECT COUNT(1) > 0 FROM project_table WHERE project_id = #{projectId}")
     boolean existsById(@Param("projectId") String projectId);
+
+    @Update("UPDATE project_table SET is_tool = #{isTool} WHERE project_id = #{projectId}")
+    int updateIsTool(@Param("projectId") String projectId, @Param("isTool") Integer isTool);
 }

@@ -22,6 +22,7 @@ import java.util.List;
 public class Tool {
     @TableId
     private String toolId;
+    private String projectId;
     private String environment;
     private String userId;
     private String toolName;

@@ -10,7 +10,9 @@
             <div class="splitHandleVertical" id="splitHandleVertical2Id" style="left: 25%"></div>
             <!-- 上中在线编程 -->
             <div class="codeEditArea pl-2" id="codeEditAreaId">
-                <codeEditor :projectId="projectId" :userId="userId" @addMessage="addMessage" class="h-[100%] w-full" />
+                <codeEditor :projectId="projectId" :userId="userId" @addMessage="addMessage"
+                    @servicePublished="markProjectsStale" @serviceUnpublished="markProjectsStale"
+                    class="h-[100%] w-full" />
             </div>
 
             <div class="splitHandleVertical" id="splitHandleVertical3Id" style="left: 75%"></div>
@@ -86,6 +88,14 @@ const addMessage = (messageContent: string = 'code') => {
         messages.value.push('开始执行代码,请稍候...')
     } else {
         messages.value.push(messageContent)
+    }
+}
+
+const markProjectsStale = () => {
+    try {
+        localStorage.setItem('projectsNeedRefresh', Date.now().toString())
+    } catch (error) {
+        console.warn('标记项目刷新失败', error)
     }
 }
 

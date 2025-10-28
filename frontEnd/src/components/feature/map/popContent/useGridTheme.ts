@@ -149,7 +149,7 @@ export const useGridTheme = () => {
                 nodata: themeInfo.noData,
             })
         }
-        bus.emit('cubeVisualize', imageData, gridInfo, scaleRate.value, 'product')
+        bus.emit('cubeVisualize', imageData, gridInfo, '', scaleRate.value, 'product')
     
         bus.emit('openTimeline')
     }

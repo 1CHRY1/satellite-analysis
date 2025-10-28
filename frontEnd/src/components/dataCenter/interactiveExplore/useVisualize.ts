@@ -281,8 +281,7 @@ export const useVisualize = () => {
         ])
 
     const getVectorSymbology = async () => {
-        for (const vector of vectorStats.value) {
-            let result: Array<AttrSymbology> = []
+        const tasks = vectorStats.value.map(async (vector) => {
             try {
                 // 初始化
                 vectorSymbology.value[vector.tableName] = {
@@ -291,21 +290,17 @@ export const useVisualize = () => {
                     isIndeterminate: true,
                     checkedAttrs: []
                 }
-                result = await getVectorAttr(vector.tableName)
-                console.log('result', result)
-                vectorSymbology.value[vector.tableName].attrs = result.map((item, index) => {
-                    return {
-                        ...item,
-                        color: predefineColors.value[index % predefineColors.value.length],
-                    }
-                })
-                vectorSymbology.value[vector.tableName].checkedAttrs = result.map(item => {
-                    return item.label
-                })
+                const result = await getVectorAttr(vector.tableName)
+                vectorSymbology.value[vector.tableName].attrs = result.map((item, index) => ({
+                    ...item,
+                    color: predefineColors.value[index % predefineColors.value.length],
+                }))
+                vectorSymbology.value[vector.tableName].checkedAttrs = result.map(item => item.label)
             } catch (e) {
-                console.error(`[${vector.tableName}] 请求失败:`, e);
+                console.error(`[${vector.tableName}] 请求失败:`, e)
             }
-        }
+        })
+        await Promise.all(tasks)
         ezStore.set("vectorSymbology", vectorSymbology.value)
         console.log('vectorSymbology', vectorSymbology.value)
     }
@@ -335,8 +330,8 @@ export const useVisualize = () => {
             return
         }
         const stopLoading = message.loading('正在加载，请稍后...', 0)
+        destroyVector()
         previewVectorIndex.value = index
-        previewVectorList.value[index] = true
         handleShowVector(tableName, finalLandId.value)
         setTimeout(() => {
             stopLoading()
@@ -347,57 +342,25 @@ export const useVisualize = () => {
             const targetAttr = vectorSymbology.value[source_layer].attrs.find(i => i.label === item)
             return targetAttr
         })
-    
-        for (const attr of attrList) {
-            const url = getVectorUrl({
-                landId,
-                source_layer,
-                spatialFilterMethod: searchedSpatialFilterMethod.value,
-                resolution: selectedGridResolution.value,
-                type: attr?.type
-            })
-    
-            // 生成 baseId，要和 map_addMVTLayer 内保持一致
-            const baseId = `${source_layer}-${attr?.type || 0}-mvt-layer`
 
-            InteractiveExploreMapOps.map_addMVTLayer(source_layer, url, attr?.color || '#0066cc', attr?.type)
-    
-            mapManager.withMap((map) => {
+        const types = attrList
+            .map(a => a?.type)
+            .filter((v): v is number => typeof v === 'number')
 
-                // console.log(map.getStyle())
-                map.on('click', (e) => {
-                    //注意传真正的 layer.id而不是 source_layer
-                    const features = map.queryRenderedFeatures(e.point, { 
-                        layers: [
-                            `${baseId}-fill`, 
-                            `${baseId}-line`, 
-                            `${baseId}-point`
-                        ]
-                    })
-                    if (features.length > 0) {
-                        const feature = features[0]
-                        const properties = feature.properties || {}
-                        
-                        // 通过事件总线触发弹窗显示
-                        bus.emit('mvt:feature:click', {
-                            feature,
-                            properties,
-                            lngLat: e.lngLat
-                        })
-                        
-                        // 保留控制台输出用于调试
-                        console.log('Mapbox Layer ID:', feature.layer?.id)    
-                        console.log('MVT Source Layer:', feature.sourceLayer)
-                        console.log('Feature properties:', properties)
-                    }
-                })
-            })
-        }
+        const url = getVectorUrl({
+            landId,
+            source_layer,
+            spatialFilterMethod: searchedSpatialFilterMethod.value,
+            resolution: selectedGridResolution.value,
+            type: types
+        })
+
+        // 添加到地图 - 点击事件处理已经在 map_addMVTLayer 函数中实现
+        InteractiveExploreMapOps.map_addMVTLayer(source_layer, url, attrList as any)
     }
     const destroyVector = (index?: number) => {
         if (index !== undefined) {
             previewVectorIndex.value = null
-            previewVectorList.value[index] = false
         }
         InteractiveExploreMapOps.map_destroyMVTLayer()
     }

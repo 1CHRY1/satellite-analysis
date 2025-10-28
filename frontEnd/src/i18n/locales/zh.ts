@@ -443,7 +443,7 @@ export default{
     },
 
     explore:{
-        section1:{
+        data:{
             sectiontitle:"行政区划与格网分辨率",
             admin:"行政区",
             subtitle1:"研究区选择",
@@ -679,7 +679,9 @@ export default{
           multiple: "多数据",
           or: "拖拽至此或",
           addto: "添加数据到项目",
-          add: "选择要添加到的项目"
+          add: "选择要添加到的项目",
+          modifyTime: "修改时间",
+          emptyFolder: "暂无数据",
         }
       },
   }

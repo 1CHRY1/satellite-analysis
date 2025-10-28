@@ -30,6 +30,7 @@ export type project = {
     packages: string
     projectName: string
     projectId: string
+    isTool?: number | null
 }
 
 export type newProject = {

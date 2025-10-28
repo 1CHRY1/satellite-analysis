@@ -5,7 +5,7 @@ import bus from '@/store/bus'
 import { createApp, type ComponentInstance, ref, type Ref, reactive } from 'vue'
 import PopContent from '@/components/feature/map/popContent/popContent.vue'
 import Antd from 'ant-design-vue'
-
+import type { Expression } from 'mapbox-gl'
 
 /**
  * 0. 公用函数/初始化等
@@ -115,19 +115,18 @@ export function map_destroyUniqueLayer() {
  */
 
 /**
- * 创建网格信息弹窗
- * @returns 网格信息弹窗DOM
+ * 关闭网格弹窗并清除高亮
  */
-function createPopoverContent() {
-    const div = document.createElement('div')
-    div.id = 'popover-content'
-    document.body.appendChild(div)
-
-    const app = createApp(PopContent, {
-        // gridData: gridDataRef,
-    }).use(Antd)
-    app.mount('#popover-content') as ComponentInstance<typeof PopContent>
-    return div
+function closeGridPopupAndClearHighlight(): void {
+    // 关闭时间轴/年份月份选择弹窗
+    bus.emit('closeTimeline')
+    bus.emit('gridPopup:visible', false)
+    const id = 'grid-layer'
+    const highlightId = id + '-highlight'
+    const map = ezStore.get('map')
+    if (map && map.getLayer(highlightId)) {
+        map.setFilter(highlightId, ['in', 'id', ''])
+    }
 }
 
 /**
@@ -144,14 +143,18 @@ function grid_fill_click_handler(e: MapMouseEvent): void {
             columnId: features[0].properties!.columnId,
             resolution: features[0].properties!.resolution,
         }
-        bus.emit('update:gridPopupData', gridInfo)
-
-        const popup = ezStore.get('gridPopup') as Popup
-        popup.setLngLat(e.lngLat).addTo(ezStore.get('map'))
 
         const id = 'grid-layer'
         const highlightId = id + '-highlight'
         ezStore.get('map').setFilter(highlightId, ['in', 'id', e.features![0].properties!.id])
+
+        bus.emit('update:gridPopupData', gridInfo)
+        bus.emit('gridPopup:visible', true)
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                bus.emit('gridPopup:reset-position')
+            })
+        })
     }
 }
 
@@ -168,25 +171,6 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
 
     mapManager.withMap((m) => {
         ezStore.set('map', m)
-        // Add a popup to show grid info
-        if (!ezStore.get('gridPopup')) {
-            const popup = new Popup({
-                closeButton: false,
-                closeOnMove: false,
-                closeOnClick: true,
-            })
-            popup.on('close', () => {
-                bus.emit('closeTimeline')
-                const id = 'grid-layer'
-                const highlightId = id + '-highlight'
-                // 取消高亮个别网格
-                ezStore.get('map').setFilter(highlightId, ['in', 'id', ''])
-            })
-            const dom = createPopoverContent()
-            popup.setDOMContent(dom).addTo(m)
-
-            ezStore.set('gridPopup', popup)
-        }
 
         // Add a geojson source
         m.addSource(srcId, {
@@ -233,6 +217,16 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
         // Add a click event listener to the invisible fill layer
         m.on('contextmenu', fillId, grid_fill_click_handler)
 
+        // Ensure left-click map hides popup
+        m.on('click', () => {
+            closeGridPopupAndClearHighlight()
+        })
+
+        // Ensure listening to "cancel button" event
+        bus.on('gridPopup:closeByUser', () => {
+            closeGridPopupAndClearHighlight()
+        })
+
         // ezStore.set('grid-layer-cancel-watch', cancelWatch)
         ezStore.set('grid-layer-fill-id', fillId)
         ezStore.set('grid-layer-line-id', lineId)
@@ -271,7 +265,7 @@ export function map_destroyGridLayer(): void {
  * 3. 交互探索 - 遥感影像可视化
  */
 export function map_addLargeSceneLayer(url: string) {
-    console.log("影像可视化Url：", url)
+    console.log('影像可视化Url：', url)
     const id = 'large-scene-layer'
     const srcId = id + '-source'
     mapManager.withMap((m) => {
@@ -285,7 +279,7 @@ export function map_addLargeSceneLayer(url: string) {
             minzoom: 1,
             maxzoom: 8, // 数据源最大 8 级，不会请求更高
         })
-        
+
         m.addLayer({
             id,
             type: 'raster',
@@ -305,7 +299,7 @@ export function map_destroyLargeSceneLayer() {
     })
 }
 export function map_addSceneLayer(url: string) {
-    console.log("影像可视化Url：", url)
+    console.log('影像可视化Url：', url)
     const id = 'scene-layer'
     const srcId = id + '-source'
     mapManager.withMap((m) => {
@@ -348,115 +342,267 @@ export function map_fitViewToTargetZoom(zoom: number) {
  */
 
 /**
+ * 创建矢量属性弹窗
+ * @param properties 属性对象
+ * @returns HTML字符串
+ */
+function createVectorPopupContent(properties: Record<string, any>): string {
+    const hasProperties = Object.keys(properties).length > 0
+
+    if (!hasProperties) {
+        return `
+            <div class="vector-popup-content">
+                <div class="popup-header">
+                    <h4>属性信息</h4>
+                </div>
+                <div class="popup-body">
+                    <p class="no-data">无属性信息</p>
+                </div>
+            </div>
+        `
+    }
+
+    const rows = Object.entries(properties)
+        .map(
+            ([key, value]) => `
+            <tr>
+                <td class="attr-key">${key}</td>
+                <td class="attr-value">${value ?? ''}</td>
+            </tr>
+        `,
+        )
+        .join('')
+
+    return `
+        <div class="vector-popup-content">
+            <div class="popup-header">
+                <h4>要素属性</h4>
+            </div>
+            <div class="popup-body">
+                <table class="attributes-table">
+                    ${rows}
+                </table>
+            </div>
+        </div>
+    `
+}
+
+/**
+ * 获取或创建矢量弹窗实例
+ * @returns Popup实例
+ */
+function getOrCreateVectorPopup(): Popup {
+    let popup = ezStore.get('vectorPopup') as Popup
+
+    if (!popup) {
+        popup = new Popup({
+            closeButton: true,
+            closeOnClick: true,
+            closeOnMove: false,
+            maxWidth: '320px',
+            className: 'vector-popup-container',
+        })
+
+        ezStore.set('vectorPopup', popup)
+    }
+
+    return popup
+}
+
+/**
  * 添加矢量图层
  * @param source_layer 矢量图层名称
  * @param landId 行政区id
  * @param cb 回调函数
  */
-export function map_addMVTLayer(source_layer: string, url: string, color: string, type?: number) {
-    const baseId = `${source_layer}-${type || 0}-mvt-layer`
+export function map_addMVTLayer(
+    source_layer: string,
+    url: string,
+    attrList: { color: string; type: number }[],
+) {
+    const baseId = `${source_layer}-mvt-layer`
     const srcId = baseId + '-source'
-    
+    const matchColor: Expression = [
+        'match',
+        ['get', 'type'], // MVT属性字段
+        ...attrList.flatMap((tc) => [tc.type, tc.color]),
+        'rgba(0,0,0,0)', // 默认颜色
+    ]
+
     mapManager.withMap((m) => {
-    //   // 移除已存在的图层和数据源
-    //   const layerIds = [
-    //     `${baseId}-fill`,
-    //     `${baseId}-line`, 
-    //     `${baseId}-point`
-    //   ]
-      
-    //   layerIds.forEach(layerId => {
-    //     if (m.getLayer(layerId)) {
-    //       m.removeLayer(layerId)
-    //     }
-    //   })
-      
-    //   if (m.getSource(srcId)) {
-    //     m.removeSource(srcId)
-    //   }
-      
-      // 添加数据源
-      m.addSource(srcId, {
-        type: 'vector',
-        tiles: [url],
-      })
-      
-      // 添加面图层
-      m.addLayer({
-        id: `${baseId}-fill`,
-        type: 'fill',
-        source: srcId,
-        'source-layer': source_layer,
-        filter: ['==', '$type', 'Polygon'], // 只显示面要素
-        paint: {
-        //   'fill-color': '#0066cc',
-          'fill-color': color,
-        //   'fill-opacity': 0.5,
-          'fill-outline-color': '#004499'
-        }
-      })
-      
-      // 添加线图层
-      m.addLayer({
-        id: `${baseId}-line`,
-        type: 'line',
-        source: srcId,
-        'source-layer': source_layer,
-        filter: ['==', '$type', 'LineString'], // 只显示线要素
-        paint: {
-          'line-color': color,
-          'line-width': 2,
-          'line-opacity': 0.8
-        }
-      })
-      
-      // 添加点图层
-      m.addLayer({
-        id: `${baseId}-point`,
-        type: 'circle',
-        source: srcId,
-        'source-layer': source_layer,
-        filter: ['==', '$type', 'Point'], // 只显示点要素
-        paint: {
-          'circle-color': color,
-          'circle-radius': 6,
-          'circle-opacity': 0.8,
-          'circle-stroke-color': '#ffffff',
-          'circle-stroke-width': 2
-        }
-      })
+        //   // 移除已存在的图层和数据源
+        //   const layerIds = [
+        //     `${baseId}-fill`,
+        //     `${baseId}-line`,
+        //     `${baseId}-point`
+        //   ]
+
+        //   layerIds.forEach(layerId => {
+        //     if (m.getLayer(layerId)) {
+        //       m.removeLayer(layerId)
+        //     }
+        //   })
+
+        //   if (m.getSource(srcId)) {
+        //     m.removeSource(srcId)
+        //   }
+
+        // 添加数据源
+        m.addSource(srcId, {
+            type: 'vector',
+            tiles: [url],
+        })
+
+        // 添加面图层
+        m.addLayer({
+            id: `${baseId}-fill`,
+            type: 'fill',
+            source: srcId,
+            'source-layer': source_layer,
+            filter: ['==', '$type', 'Polygon'], // 只显示面要素
+            paint: {
+                //   'fill-color': '#0066cc',
+                'fill-color': matchColor,
+                //   'fill-opacity': 0.5,
+                'fill-outline-color': '#004499',
+            },
+        })
+
+        // 添加线图层
+        m.addLayer({
+            id: `${baseId}-line`,
+            type: 'line',
+            source: srcId,
+            'source-layer': source_layer,
+            filter: ['==', '$type', 'LineString'], // 只显示线要素
+            paint: {
+                'line-color': matchColor,
+                'line-width': 2,
+                'line-opacity': 0.8,
+            },
+        })
+
+        // 添加点图层
+        m.addLayer({
+            id: `${baseId}-point`,
+            type: 'circle',
+            source: srcId,
+            'source-layer': source_layer,
+            filter: ['==', '$type', 'Point'], // 只显示点要素
+            paint: {
+                'circle-color': matchColor,
+                'circle-radius': 6,
+                'circle-opacity': 0.8,
+                'circle-stroke-color': '#ffffff',
+                'circle-stroke-width': 2,
+            },
+        })
+
+        // 为所有图层添加点击事件处理器
+        const layerIds = [`${baseId}-fill`, `${baseId}-line`, `${baseId}-point`]
+
+        layerIds.forEach((layerId) => {
+            // 移除已存在的点击事件监听器（如果有）
+            m.off('click', layerId as any)
+
+            // 添加新的点击事件监听器
+            m.on('click', layerId, (e) => {
+                const features = m.queryRenderedFeatures(e.point, {
+                    layers: [layerId],
+                })
+
+                if (features.length > 0) {
+                    const feature = features[0]
+                    const properties = feature.properties || {}
+
+                    // 获取或创建弹窗实例
+                    const popup = getOrCreateVectorPopup()
+
+                    // 创建弹窗内容
+                    const content = createVectorPopupContent(properties)
+
+                    // 显示弹窗
+                    popup.setLngLat(e.lngLat).setHTML(content).addTo(m)
+
+                    // 保留控制台输出用于调试
+                    console.log('Clicked on layer:', layerId)
+                    console.log('MVT Source Layer:', feature.sourceLayer)
+                    console.log('Feature properties:', properties)
+                }
+            })
+
+            // 鼠标悬停时显示手型光标
+            m.on('mouseenter', layerId, () => {
+                m.getCanvas().style.cursor = 'pointer'
+            })
+
+            m.on('mouseleave', layerId, () => {
+                m.getCanvas().style.cursor = ''
+            })
+
+            // 添加右键点击事件处理器 - 关闭左键弹窗
+            m.on('contextmenu', layerId, (e) => {
+                // 阻止浏览器默认右键菜单
+                e.preventDefault()
+
+                // 关闭现有的矢量弹窗
+                const existingPopup = ezStore.get('vectorPopup') as Popup
+                if (existingPopup) {
+                    existingPopup.remove()
+                }
+            })
+        })
     })
-  }
+}
 
 /**
  * 删除矢量图层
  */
 export function map_destroyMVTLayer() {
     mapManager.withMap((m) => {
-        const style = m.getStyle();
-        if (!style) return;
+        const style = m.getStyle()
+        if (!style) return
 
         // 1. 删除所有匹配 `mvt-layer-*-fill/line/point` 的图层
-        const layers = style.layers || [];
-        layers.forEach(layer => {
-            if (layer.id.includes('mvt-layer-') && 
-                (layer.id.endsWith('-fill') || 
-                 layer.id.endsWith('-line') || 
-                 layer.id.endsWith('-point'))) {
-                m.removeLayer(layer.id);
-                console.log(`已移除图层: ${layer.id}`);
+        const layers = style.layers || []
+        layers.forEach((layer) => {
+            if (
+                layer.id.includes('mvt-layer-') &&
+                (layer.id.endsWith('-fill') ||
+                    layer.id.endsWith('-line') ||
+                    layer.id.endsWith('-point'))
+            ) {
+                // 移除事件监听器
+                m.off('click', layer.id as any)
+                m.off('mouseenter', layer.id as any)
+                m.off('mouseleave', layer.id as any)
+                m.off('contextmenu', layer.id as any)
+
+                // 移除图层
+                m.removeLayer(layer.id)
+                console.log(`已移除图层: ${layer.id}`)
             }
-        });
+        })
 
         // 2. 删除所有匹配 `mvt-layer-source` 的数据源
-        const sources = Object.keys(style.sources || {});
-        sources.forEach(sourceId => {
+        const sources = Object.keys(style.sources || {})
+        sources.forEach((sourceId) => {
             if (sourceId.includes('mvt-layer-source')) {
-                m.removeSource(sourceId);
-                console.log(`已移除数据源: ${sourceId}`);
+                m.removeSource(sourceId)
+                console.log(`已移除数据源: ${sourceId}`)
             }
-        });
-    });
+        })
+
+        // 3. 关闭并移除矢量弹窗
+        const vectorPopup = ezStore.get('vectorPopup') as Popup
+        if (vectorPopup) {
+            vectorPopup.remove()
+            ezStore.set('vectorPopup', null)
+        }
+
+        // 重置鼠标光标
+        m.getCanvas().style.cursor = ''
+    })
 }
 
 /**

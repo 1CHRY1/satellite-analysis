@@ -274,7 +274,8 @@ def analysis_tile(
             return Response(status_code=204)
  
         # Step 5: Render
-        img_uint8 = normalize(img[0], np.min(img[0]), np.max(img[0]))
+        # img_uint8 = normalize(img[0], np.min(img[0]), np.max(img[0]))
+        img_uint8 = normalize(img[0], -1, 1)
         content = render(img_uint8, mask, img_format="png", colormap=cmap.get(color), **img_profiles.get("png"))
         # 不要拉伸
         # content = render(img[0], mask, img_format="png", colormap=cmap.get(color), **img_profiles.get("png"))
