@@ -161,7 +161,7 @@ public class SceneDataServiceV2 {
 
     public List<SceneDesVO> getScenesDesByTimeRegionAndCloud(ScenesFetchDTOV2 scenesFetchDTO) {
         String startTime = scenesFetchDTO.getStartTime(); String endTime = scenesFetchDTO.getEndTime();
-        Integer regionId = scenesFetchDTO.getRegionId(); Integer cloud = scenesFetchDTO.getCloud();
+        Integer regionId = scenesFetchDTO.getRegionId(); float cloud = scenesFetchDTO.getCloud();
         Integer resolution = scenesFetchDTO.getResolution();
         Geometry boundary = regionDataService.getRegionById(regionId).getBoundary();
         List<Integer[]> tileIds = TileCalculateUtil.getRowColByRegionAndResolution(boundary, resolution);
@@ -173,7 +173,7 @@ public class SceneDataServiceV2 {
 
     public List<SceneDesVO> getScenesDesByTimeLocationAndCloud(ScenesLocationFetchDTO scenesFetchDTO) {
         String startTime = scenesFetchDTO.getStartTime(); String endTime = scenesFetchDTO.getEndTime();
-        Integer cloud = scenesFetchDTO.getCloud(); String locationId = scenesFetchDTO.getLocationId();
+        float cloud = scenesFetchDTO.getCloud(); String locationId = scenesFetchDTO.getLocationId();
         Integer resolution = scenesFetchDTO.getResolution();
         Geometry boundary = locationService.getLocationBoundary(resolution, locationId);
         String wkt = boundary.toText();
@@ -191,13 +191,13 @@ public class SceneDataServiceV2 {
 
     public List<Scene> getScenesByTimeRegionAndCloud(ScenesFetchDTOV2 scenesFetchDTO) {
         String startTime = scenesFetchDTO.getStartTime(); String endTime = scenesFetchDTO.getEndTime();
-        Integer regionId = scenesFetchDTO.getRegionId(); Integer cloud = scenesFetchDTO.getCloud();
+        Integer regionId = scenesFetchDTO.getRegionId(); float cloud = scenesFetchDTO.getCloud();
         Region region = regionDataService.getRegionById(regionId);
         Geometry regionBoundary = region.getBoundary();
         return sceneRepo.selectList(getQuaryByTimeCloudAndGeometry(startTime, endTime, cloud, regionBoundary));
     }
     // Get Scene Quary By Time And Geometry
-    private QueryWrapper<Scene> getQuaryByTimeCloudAndGeometry(String startTime, String endTime, Integer cloud, Geometry geometry) {
+    private QueryWrapper<Scene> getQuaryByTimeCloudAndGeometry(String startTime, String endTime, float cloud, Geometry geometry) {
         String wkt = geometry.toText();
         QueryWrapper<Scene> queryWrapper = new QueryWrapper<>();
         queryWrapper.between("scene_time", startTime, endTime);

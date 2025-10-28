@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Update;
 
 //@Repository("IToolRepo")
-@DS("mysql_ard_dev")
+@DS("mysql-ard-dev")
 public interface IToolRepo extends BaseMapper<Tool> {
     @Insert("INSERT INTO tool_table (tool_id, project_id, environment, user_id, tool_name, description, tags, category_id, parameters, output_type) " +
             "VALUES (#{toolId}, #{projectId}, #{environment}, #{userId}, #{toolName}, #{description}, #{tags}, #{categoryId}, #{parameters}, #{outputType})")

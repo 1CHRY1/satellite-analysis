@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nnu.mnr.satellite.utils.typeHandler.Boolean2IntegerTypeHandler;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -52,8 +53,6 @@ public class Project {
     private String createUserEmail;
     private HashSet<String> joinedUsers;
 
-    String description;
-
-    @TableField("is_tool")
-    private Integer isTool;
+    private String description;
+    private boolean isTool;
 }

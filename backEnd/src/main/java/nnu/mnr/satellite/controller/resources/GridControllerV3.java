@@ -4,7 +4,9 @@ import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.model.dto.resources.GridBasicDTO;
 import nnu.mnr.satellite.model.dto.resources.GridsWithFiltersDTO;
+import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.model.vo.resources.CoverageReportVO;
+import nnu.mnr.satellite.model.vo.resources.GridBoundaryVO;
 import nnu.mnr.satellite.model.vo.resources.GridsScenesOverlapVO;
 import nnu.mnr.satellite.service.resources.GridDataServiceV3;
 import nnu.mnr.satellite.utils.common.IdUtil;
@@ -65,4 +67,10 @@ public class GridControllerV3 {
         String cacheKey = userId + "_" + encryptedRequestBody;
         return ResponseEntity.ok(gridDataService.getScenesByGridsAndFilters(gridsWithFiltersDTO, cacheKey));
     }
+
+    @PostMapping("/resolution/columnIdAndRowId")
+    public ResponseEntity<GridBoundaryVO> getBoundaryByResolutionAndId(@RequestBody GridBasicDTO gridBasicDTO) throws IOException {
+        return ResponseEntity.ok(gridDataService.getBoundaryByResolutionAndId(gridBasicDTO));
+    }
+
 }

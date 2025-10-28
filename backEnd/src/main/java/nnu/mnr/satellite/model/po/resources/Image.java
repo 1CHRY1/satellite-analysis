@@ -25,7 +25,7 @@ public class Image {
     private String imageId;
     private String sceneId;
     private String band;
-    private Integer cloud;
+    private float cloud;
     private String tifPath;
     private String bucket;
 }

@@ -15,7 +15,7 @@ import org.locationtech.jts.geom.Geometry;
 import java.util.List;
 
 @Mapper
-@DS("pg_satellite")
+@DS("pg-satellite")
 public interface IVectorRepo  extends BaseMapper<Vector> {
     @Select("SELECT vector_name, table_name, time FROM gis_db.vector_datasets " +
 //            "WHERE ST_Intersects(ST_GeomFromEWKT('SRID=4326;' || #{wkt}), gis_db.vector_datasets.boundary) " +
@@ -58,7 +58,7 @@ public interface IVectorRepo  extends BaseMapper<Vector> {
             @Param("x") int x,
             @Param("y") int y,
             @Param("columns") List<String> columns,
-            @Param("type") Integer type
+            @Param("types") List<Integer> types
     );
 
     @Select({

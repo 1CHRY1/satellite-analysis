@@ -26,4 +26,5 @@ public class Sensor {
     private String sensorName;
     private String platformName;
     private String description;
+    private String dataType;
 }

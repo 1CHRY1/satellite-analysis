@@ -1,10 +1,11 @@
 package nnu.mnr.satellite.service.modeling;
 
 import com.alibaba.fastjson2.JSONObject;
-import javassist.expr.NewArray;
 import lombok.extern.slf4j.Slf4j;
+import nnu.mnr.satellite.cache.EOCubeCache;
 import nnu.mnr.satellite.cache.SceneDataCache;
 import nnu.mnr.satellite.jobs.QuartzSchedulerManager;
+import nnu.mnr.satellite.model.dto.cache.CacheEOCubeDTO;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerImageDTO;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerSceneDTO;
 import nnu.mnr.satellite.model.dto.modeling.VisualizationLowLevelTile;
@@ -18,12 +19,12 @@ import nnu.mnr.satellite.service.common.BandMapperGenerator;
 import nnu.mnr.satellite.service.resources.ImageDataService;
 import nnu.mnr.satellite.service.resources.RegionDataService;
 import nnu.mnr.satellite.service.resources.SceneDataServiceV3;
+import nnu.mnr.satellite.utils.common.IdUtil;
 import nnu.mnr.satellite.utils.common.ProcessUtil;
 import nnu.mnr.satellite.utils.dt.RedisUtil;
 import nnu.mnr.satellite.utils.geom.GeometryUtil;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.MultiPolygon;
 import org.locationtech.jts.geom.Polygon;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -189,6 +190,40 @@ public class ModelExampleServiceV3 {
         return runModelServerModel(visualizationUrl, visualizationParam, expirationTime, headers, cookies);
     }
 
+    public CommonResultVO cacheEOCube(CacheEOCubeDTO cacheEOCubeDTO, String userId){
+        String cacheKey = IdUtil.generateEOCubeCacheKey(userId);
+        String cubeId = cacheEOCubeDTO.getCubeId();
+        List<String> dimensionSensors = cacheEOCubeDTO.getDimensionSensors();
+        List<String> dimensionDates = cacheEOCubeDTO.getDimensionDates();
+        List<String> dimensionBands = cacheEOCubeDTO.getDimensionBands();
+        List<EOCubeCache.Scene> dimensionScenes = cacheEOCubeDTO.getDimensionScenes();
+        EOCubeCache.cacheEOCube(cacheKey, cubeId, dimensionSensors, dimensionDates, dimensionBands, dimensionScenes);
+        return CommonResultVO.builder().status(1).message("EO立方体缓存成功").data(cacheKey).build();
+    }
+
+    public CommonResultVO getEOCube(String cacheKey){
+        EOCubeCache eOCubeCache = EOCubeCache.getCache(cacheKey);
+        return CommonResultVO.builder().status(1).message("获取EO立方体缓存成功").data(eOCubeCache).build();
+    }
+
+    public CommonResultVO getAllEOCube(){
+        Map<String, EOCubeCache> allCaches = EOCubeCache.getAllCaches();
+        return CommonResultVO.builder()
+                .status(1)
+                .message("获取所有EO立方体缓存成功")
+                .data(allCaches)  // 返回整个缓存 Map
+                .build();
+    }
+
+    public CommonResultVO getUserEOCubes(String userId) {
+        Map<String, EOCubeCache> userCaches = EOCubeCache.getUserCaches(userId);
+        return CommonResultVO.builder()
+                .status(1)
+                .message("获取用户EO立方体缓存成功")
+                .data(userCaches)
+                .build();
+    }
+
     // 携带headers和cookies执行modelServer任务
     private CommonResultVO runModelServerModel(String url, JSONObject param, long expirationTime, Map<String, String> headers, Map<String, String> cookies) {
         try {
@@ -202,5 +237,4 @@ public class ModelExampleServiceV3 {
             return CommonResultVO.builder().status(-1).message("Wrong Because of " + e.getMessage()).build();
         }
     }
-
 }

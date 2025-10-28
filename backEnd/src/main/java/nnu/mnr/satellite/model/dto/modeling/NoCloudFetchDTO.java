@@ -21,7 +21,7 @@ public class NoCloudFetchDTO {
 
     private Integer regionId;
     private Integer resolution;
-    private Integer cloud;
+    private float cloud;
     private List<String> sceneIds;
     private String dataSet;
     private List<String> bandList;

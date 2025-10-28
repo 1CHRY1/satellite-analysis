@@ -15,6 +15,6 @@ public class NoCloudConfigVO {
     private String noData;
     private JSONObject bbox;
     private JSONObject path;
-    private Float cloud;
+    private float cloud;
     private double coverage;
 }

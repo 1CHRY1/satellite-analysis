@@ -2,6 +2,8 @@ package nnu.mnr.satellite.mapper.resources;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import nnu.mnr.satellite.model.po.resources.Sensor;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 /**
  * Created with IntelliJ IDEA.
@@ -13,5 +15,12 @@ import nnu.mnr.satellite.model.po.resources.Sensor;
 
 //@Repository("SensorRepo")
 public interface ISensorRepo extends BaseMapper<Sensor> {
-//    List<Sensor> getAllSensorData();
+    @Select("SELECT COUNT(1) > 0 FROM sensor_table WHERE sensor_name = #{sensorName}")
+    boolean existsBySensorName(@Param("sensorName") String sensorName);
+
+    @Select("SELECT * FROM sensor_table WHERE sensor_name = #{sensorName}")
+    Sensor selectBySensorName(@Param("sensorName") String sensorName);
+
+    @Select("SELECT COUNT(1) > 0 FROM sensor_table WHERE sensor_id = #{sensorId}")
+    boolean existsBySensorId(@Param("sensorId") String sensorId);
 }

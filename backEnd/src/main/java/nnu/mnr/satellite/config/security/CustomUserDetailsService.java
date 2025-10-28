@@ -23,7 +23,7 @@ import java.util.Collections;
 
 @Component
 @Slf4j
-@DS("mysql_ard_iam")
+@DS("mysql-ard-iam")
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final IUserRepo userRepo;

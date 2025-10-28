@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
  * @Description:
  */
 
-@DS("mysql_ard_satellite")
+@DS("mysql-ard-satellite")
 @Service("RegionDataService")
 public class RegionDataService {
 

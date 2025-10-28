@@ -1,5 +1,7 @@
 package nnu.mnr.satellite.controller.tool;
 
+import nnu.mnr.satellite.model.dto.modeling.ProjectBasicDTO;
+import nnu.mnr.satellite.model.dto.modeling.ProjectServicePublishDTO;
 import nnu.mnr.satellite.model.dto.tool.*;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.model.vo.tool.Code2ToolVO;
@@ -21,7 +23,7 @@ public class ToolController {
 
     // 创建工具
     @PostMapping("/publish")
-    public ResponseEntity<CommonResultVO> publishCodeTool(@RequestBody Code2ToolDTO code2ToolDTO) {
+    public ResponseEntity<CommonResultVO> publishTool(@RequestBody Code2ToolDTO code2ToolDTO) {
         CommonResultVO result = toolService.publishTool(code2ToolDTO);
         return ResponseEntity.ok(result);
     }
@@ -32,6 +34,11 @@ public class ToolController {
         return ResponseEntity.ok(result);
     }
 
+    @PostMapping("/unpublish")
+    public ResponseEntity<CommonResultVO> unpublishTool(@RequestBody ToolBasicDTO toolBasicDTO) {
+        return ResponseEntity.ok(toolService.unpublishTool(toolBasicDTO));
+    }
+
     // 删除工具
     @DeleteMapping("/delete/{toolId}")
     public ResponseEntity<CommonResultVO> deleteTool(@PathVariable String toolId) {
@@ -39,11 +46,15 @@ public class ToolController {
         return ResponseEntity.ok(result);
     }
 
+    @PostMapping("/status")
+    public ResponseEntity<CommonResultVO> getServiceStatus(@RequestBody ToolBasicDTO toolBasicDTO) {
+        return ResponseEntity.ok(toolService.getServiceStatus(toolBasicDTO));
+    }
+
     // 根据ID获取工具详情
     @GetMapping("/{toolId}")
-    public ResponseEntity<ToolInfoVO> getToolById(@PathVariable String toolId) {
-        ToolInfoVO toolInfoVO = toolService.getToolById(toolId);
-        return ResponseEntity.ok(toolInfoVO);
+    public ResponseEntity<CommonResultVO> getToolById(@PathVariable String toolId) {
+        return ResponseEntity.ok(toolService.getToolById(toolId));
     }
 
     // 根据ID获取工具详情
@@ -60,4 +71,5 @@ public class ToolController {
         CommonResultVO result = toolService.executeTool(executionInputDTO);
         return ResponseEntity.ok(result);
     }
+
 }

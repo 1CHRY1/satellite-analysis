@@ -220,6 +220,16 @@
 <!--            <artifactId>backport-util-concurrent</artifactId>-->
 <!--            <version>3.1</version>-->
 <!--        </dependency>-->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid-spring-boot-starter</artifactId>
+            <version>1.2.20</version>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+            <version>1.11.0</version> <!-- 用于暴露 Prometheus 格式指标 -->
+        </dependency>
     </dependencies>
 
     <repositories>
