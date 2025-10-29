@@ -10,7 +10,7 @@ export interface SceneInfo {
     boundingBox: any,
     description: string
     cloudPath: string
-    bands: string
+    bands: string[]
     bandNum: number
     bucket: string
     cloud: number

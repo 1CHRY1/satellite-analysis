@@ -1,369 +1,121 @@
-import { message, Button, Form, Tooltip } from "antd";
-import { EditOutlined, PlusOutlined } from "@ant-design/icons";
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { SchemaForm } from "~/components/form/schema-form";
-import type { FormSchema } from "~/components/type/form.type";
-import {
-	ProForm,
-	ProFormSelect,
-	ProFormSwitch,
-	ProFormUploadButton,
-	type ProFormInstance,
-} from "@ant-design/pro-components";
+import { useState } from "react";
+import { Popover, InputNumber, Button, Form, message, Space } from "antd";
+import type { Image } from "~/types/image";
+import { getImage, updateImage } from "~/apis/https/image/image.admin";
 import type { Scene } from "~/types/scene";
 import { updateScene } from "~/apis/https/scene/scene.admin";
-import dayjs from "dayjs";
-import { getProductPage } from "~/apis/https/product/product.admin";
-import type { Image } from "~/types/image";
-import { updateImage } from "~/apis/https/image/image.admin";
-const UploadButton = ProFormUploadButton as unknown as React.FC<any>;
-const editImage = async (values: Image) => {
+import type { ImageRequest } from "~/apis/https/image/image.type";
+
+const getSceneImages = async (sceneId: ImageRequest) => {
+    const res = await getImage(sceneId);
+    if (res.status === 1) {
+        return {
+            data: res.data || [],
+            success: true,
+            total: res.data?.length || 0,
+        };
+    } else {
+        return {
+            data: [],
+            success: false,
+            total: 0,
+        };
+    }
+};
+
+const editImage = async (values: Image, scene: Scene) => {
 	console.log(values);
 	const res = await updateImage(values);
-	if (res.status === 1) {
-		message.success("操作成功");
+	if (res.status !== 1) {
+		return false;
+	}
+    const {data: images} = await getSceneImages(scene.sceneId);
+    
+    scene.bands = images.map(image => image.band.toString());
+    scene.bandNum = images.length;
+
+	const sceneRes = await updateScene(scene);
+	if (sceneRes.status === 1) {
+		message.success("编辑成功");
 		return true;
 	} else {
-		message.warning(res.message);
+		message.warning(sceneRes.message);
 		return false;
 	}
 };
 
-export const EditImageButton: React.FC<{
-	onSuccess: () => void | Promise<any>;
-	initImage: Image;
-}> = ({ onSuccess, initImage }) => {
-	const [productOpts, setProductOpts] = useState<
-		{ label: string; value: string }[]
-	>([]);
-	const formRef = useRef<ProFormInstance>(undefined);
+export const BandEdit: React.FC<{
+	record: Image;
+    scene: Scene;
+    onSuccess: () => void;
+}> = ({ record, scene, onSuccess }) => {
+	const [visible, setVisible] = useState(false);
+	const [form] = Form.useForm();
 
-	const schema: FormSchema = {
-		groups: [
-			{
-				fields: [
-					{
-						name: "band",
-						label: "波段",
-						type: "digit",
-						rules: [
-							{ required: true, message: "请输入波段" },
-						],
-					},
-					{
-						name: "bucket",
-						label: "桶",
-						type: "select",
-						rules: [
-							{ required: true, message: "请选择所属传感器" },
-						],
-						options: productOpts,
-					},
-				],
-			},
-			{
-				fields: [
-					{
-						name: "sceneTime",
-						label: "时间",
-						type: "date",
-						rules: [{ required: true, message: "请选择时间" }],
-					},
-					{
-						name: "coordinateSystem",
-						label: "坐标系",
-						type: "text",
-						rules: [
-							{ required: true, message: "请输入坐标系（EPSG）" },
-						],
-					},
-					{
-						name: "cloud",
-						label: "云量",
-						type: "number",
-						rules: [
-							{ required: true, message: "请输入云量值" },
-							{
-								validator: (_, value) => {
-									if (
-										value === undefined ||
-										value === null ||
-										value === ""
-									) {
-										return Promise.resolve(); // 交给 required 去处理
-									}
-									if (
-										Number(value) < 0 ||
-										Number(value) > 100
-									) {
-										return Promise.reject(
-											new Error("云量值需在 0~100 之间"),
-										);
-									}
-									return Promise.resolve();
-								},
-							},
-						],
-					},
-					{
-						name: "noData",
-						label: "NoData",
-						type: "number",
-						rules: [{ required: true, message: "请输入NoData值" }],
-					},
-					{
-						name: "tags",
-						label: "数据标签",
-						type: "custom",
-						render: () => (
-							<>
-								<ProFormSelect
-									name={["tags", "source"]}
-									label="来源"
-									options={[
-										{ label: "国内", value: "national" },
-										{
-											label: "国外",
-											value: "international",
-										},
-									]}
-									rules={[
-										{
-											required: true,
-											message: "请选择来源",
-										},
-									]}
-								/>
-								<ProFormSelect
-									name={["tags", "category"]}
-									label="类别"
-									options={[
-										{ label: "ARD", value: "ard" },
-										{ label: "传统", value: "traditional" },
-									]}
-									rules={[
-										{
-											required: true,
-											message: "请选择类别",
-										},
-									]}
-								/>
-								<ProFormSelect
-									name={["tags", "production"]}
-									label="成像类型"
-									options={[
-										{ label: "光学", value: "light" },
-										{ label: "雷达", value: "radar" },
-									]}
-									rules={[
-										{
-											required: true,
-											message: "请选择成像类型",
-										},
-									]}
-								/>
-							</>
-						),
-					},
-				],
-			},
-			{
-				fields: [
-					{
-						name: "description",
-						label: "描述信息",
-						type: "textarea",
-					},
-				],
-			},
-		],
-	};
-	// const schema: FormSchema = {
-	// 	groups: [
-	// 		{
-	// 			fields: [
-	// 				{
-	// 					name: "sceneName",
-	// 					label: "遥感影像标识",
-	// 					type: "text",
-	// 					rules: [
-	// 						{ required: true, message: "请输入遥感影像标识" },
-	// 					],
-	// 				},
-	// 				{
-	// 					name: "sensorId",
-	// 					label: "所属传感器",
-	// 					type: "select",
-	// 					rules: [
-	// 						{ required: true, message: "请选择所属传感器" },
-	// 					],
-	// 					options: sensorOpts,
-	// 				},
-	// 				{
-	// 					name: "productId",
-	// 					label: "所属产品",
-	// 					type: "select",
-	// 					rules: [
-	// 						{ required: true, message: "请选择所属传感器" },
-	// 					],
-	// 					options: productOpts,
-	// 				},
-	// 			],
-	// 		},
-	// 		{
-	// 			fields: [
-	// 				{
-	// 					name: "sceneTime",
-	// 					label: "时间",
-	// 					type: "date",
-	// 					rules: [{ required: true, message: "请选择时间" }],
-	// 				},
-	// 				{
-	// 					name: "coordinateSystem",
-	// 					label: "坐标系",
-	// 					type: "text",
-	// 					rules: [
-	// 						{ required: true, message: "请输入坐标系（EPSG）" },
-	// 					],
-	// 				},
-	// 				{
-	// 					name: "cloud",
-	// 					label: "云量",
-	// 					type: "number",
-	// 					rules: [
-	// 						{ required: true, message: "请输入云量值" },
-	// 						{
-	// 							validator: (_, value) => {
-	// 								if (
-	// 									value === undefined ||
-	// 									value === null ||
-	// 									value === ""
-	// 								) {
-	// 									return Promise.resolve(); // 交给 required 去处理
-	// 								}
-	// 								if (
-	// 									Number(value) < 0 ||
-	// 									Number(value) > 100
-	// 								) {
-	// 									return Promise.reject(
-	// 										new Error("云量值需在 0~100 之间"),
-	// 									);
-	// 								}
-	// 								return Promise.resolve();
-	// 							},
-	// 						},
-	// 					],
-	// 				},
-	// 				{
-	// 					name: "noData",
-	// 					label: "NoData",
-	// 					type: "number",
-	// 					rules: [{ required: true, message: "请输入NoData值" }],
-	// 				},
-	// 				{
-	// 					name: "tags",
-	// 					label: "数据标签",
-	// 					type: "custom",
-	// 					render: () => (
-	// 						<>
-	// 							<ProFormSelect
-	// 								name={["tags", "source"]}
-	// 								label="来源"
-	// 								options={[
-	// 									{ label: "国内", value: "national" },
-	// 									{
-	// 										label: "国外",
-	// 										value: "international",
-	// 									},
-	// 								]}
-	// 								rules={[
-	// 									{
-	// 										required: true,
-	// 										message: "请选择来源",
-	// 									},
-	// 								]}
-	// 							/>
-	// 							<ProFormSelect
-	// 								name={["tags", "category"]}
-	// 								label="类别"
-	// 								options={[
-	// 									{ label: "ARD", value: "ard" },
-	// 									{ label: "传统", value: "traditional" },
-	// 								]}
-	// 								rules={[
-	// 									{
-	// 										required: true,
-	// 										message: "请选择类别",
-	// 									},
-	// 								]}
-	// 							/>
-	// 							<ProFormSelect
-	// 								name={["tags", "production"]}
-	// 								label="成像类型"
-	// 								options={[
-	// 									{ label: "光学", value: "light" },
-	// 									{ label: "雷达", value: "radar" },
-	// 								]}
-	// 								rules={[
-	// 									{
-	// 										required: true,
-	// 										message: "请选择成像类型",
-	// 									},
-	// 								]}
-	// 							/>
-	// 						</>
-	// 					),
-	// 				},
-	// 			],
-	// 		},
-	// 		{
-	// 			fields: [
-	// 				{
-	// 					name: "description",
-	// 					label: "描述信息",
-	// 					type: "textarea",
-	// 				},
-	// 			],
-	// 		},
-	// 	],
-	// };
 	return (
-		<SchemaForm<Scene>
-			formRef={formRef}
-			mode="modal"
-			key={initScene.sceneId}
-			title="编辑"
-			trigger={
-				<Tooltip title="编辑">
-					<Button
-						type="dashed"
-						shape="circle"
-						onClick={() => {
-							getAllProduct([initScene.sensorId]);
-						}} // onClick可以同时作为初始化和trigger
-						icon={<EditOutlined />}
-					/>
-				</Tooltip>
+		<Popover
+			title="修改波段"
+			trigger="click"
+			open={visible}
+			onOpenChange={(v) => {
+				setVisible(v);
+				if (!v) form.resetFields();
+			}}
+			content={
+				<Form
+					form={form}
+					initialValues={{ band: record.band }}
+					layout="inline"
+					onFinish={async ({band}) => {
+                        record.band = band
+						await editImage(record, scene);
+						setVisible(false);
+                        onSuccess()
+					}}
+					style={{ margin: 0 }}
+				>
+					<Form.Item
+						name="band"
+						style={{ marginBottom: 0 }}
+						rules={[{ required: true, message: "请输入波段号" }]}
+					>
+						<InputNumber
+							size="small"
+                            precision={0}
+							min={1}
+							style={{ width: 80 }}
+						/>
+					</Form.Item>
+					<Form.Item style={{ marginBottom: 0 }}>
+						<Space size={4}>
+							<Button
+								type="primary"
+								size="small"
+								htmlType="submit"
+							>
+								确定
+							</Button>
+							<Button
+								size="small"
+								onClick={() => {
+									setVisible(false);
+									form.resetFields();
+								}}
+							>
+								取消
+							</Button>
+						</Space>
+					</Form.Item>
+				</Form>
 			}
-			initialValues={initScene}
-			schema={schema}
-			onFinish={async (values) => {
-				values.sceneId = initScene.sceneId;
-				values.sceneTime = dayjs(values.sceneTime).format(
-					"YYYY-MM-DDTHH:mm:ss",
-				);
-				console.log(values);
-				const result = await editScene(values);
-				if (result) onSuccess();
-				return result;
+			overlayInnerStyle={{
+				padding: 8,
+				borderRadius: 6,
 			}}
-			onValuesChange={(changedVals, vals) => {
-				if (changedVals.sensorId) {
-					formRef.current?.setFieldValue("productId", undefined);
-					// 有值时才请求产品
-					getAllProduct([changedVals.sensorId]);
-				}
-			}}
-		></SchemaForm>
+		>
+			<Button type="link" size="small">
+				编辑
+			</Button>
+		</Popover>
 	);
 };

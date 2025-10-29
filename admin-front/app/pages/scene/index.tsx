@@ -25,18 +25,23 @@ import {
 } from "antd";
 import { Table } from "antd";
 import type { SortOrder } from "antd/es/table/interface";
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { EditSceneButton } from "./edit-form";
 import type { Scene } from "~/types/scene";
-import { batchDelScene, getScenePage } from "~/apis/https/scene/scene.admin";
+import {
+	batchDelScene,
+	getScenePage,
+	updateScene,
+} from "~/apis/https/scene/scene.admin";
 import { getSensorPage } from "~/apis/https/sensor/sensor.admin";
 import { getProductPage } from "~/apis/https/product/product.admin";
 import type { Image } from "~/types/image";
 import type { ImageRequest } from "~/apis/https/image/image.type";
-import { getImage } from "~/apis/https/image/image.admin";
+import { batchDelImage, getImage } from "~/apis/https/image/image.admin";
 import { useSearchParams } from "react-router";
 import styles from "./scene.module.css";
 import dayjs from "dayjs";
+import { BandEdit } from "./edit-image-form";
 
 // import request from 'umi-request';
 export const waitTimePromise = async (time: number = 100) => {
@@ -98,6 +103,44 @@ const delScene = async (sceneIds: string[]) => {
 	}
 };
 
+const getSceneImages = async (sceneId: ImageRequest) => {
+    const res = await getImage(sceneId);
+    if (res.status === 1) {
+        return {
+            data: res.data || [],
+            success: true,
+            total: res.data?.length || 0,
+        };
+    } else {
+        return {
+            data: [],
+            success: false,
+            total: 0,
+        };
+    }
+};
+
+const delImage = async (images: Image[], scene: Scene) => {
+	const imageIds = images.map((image) => image.imageId);
+	const res = await batchDelImage({ imageIds });
+	if (res.status !== 1) {
+		return false;
+	}
+	const {data} = await getSceneImages(scene.sceneId);
+    
+    scene.bands = data.map(d => d.band.toString());
+    scene.bandNum = data.length;
+	
+	const sceneRes = await updateScene(scene);
+	if (sceneRes.status === 1) {
+		message.success("删除成功");
+		return true;
+	} else {
+		message.warning(sceneRes.message);
+		return false;
+	}
+};
+
 const handleImageDownload = async (record: Image) => {
 	const url = `/minio/console/${record.bucket}/${record.tifPath}`;
 	window.open(url, "_blank", "noopener,noreferrer");
@@ -112,6 +155,7 @@ const handleCloudDownload = async (record: Scene) => {
 
 const SceneTable: React.FC = () => {
 	const actionRef = useRef<ActionType>(undefined);
+	const rowActionRefs = useRef<Record<string, React.RefObject<ActionType | null>>>({});
 	const formRef = useRef<ProFormInstance>(undefined);
 	const [sensorOpts, setSensorOpts] = useState<
 		{ label: string; value: string }[]
@@ -394,6 +438,10 @@ const SceneTable: React.FC = () => {
 	const expandedRowRender = (record: Scene) => {
 		// const data = expandedData[record.sceneId] || [];
 		const currentSelectedKeys = selectedRowsMap[record.sceneId] || [];
+		if (!rowActionRefs.current[record.sceneId]) {
+			rowActionRefs.current[record.sceneId] = React.createRef<ActionType>();
+		}
+		const currentRowRef = rowActionRefs.current[record.sceneId];
 		// // 如果正在加载
 		// if (loadingRows.includes(record.sceneId)) {
 		// 	return <Spin tip="加载中..." />;
@@ -435,30 +483,36 @@ const SceneTable: React.FC = () => {
 							key: "option",
 							valueType: "option",
 							fixed: "right",
-							render: (_, record) => [
+							render: (_, image_record) => [
 								<Button
 									type="link"
 									onClick={() => {
-										handleImageDownload(record);
+										handleImageDownload(image_record);
 									}}
 								>
 									下载
 								</Button>,
-								<Button
-									type="link"
-									onClick={() => {
+								<BandEdit
+									record={image_record}
+									scene={record}
+									onSuccess={() => {
+										currentRowRef.current?.reload()
+										actionRef.current?.reload()
 									}}
-								>编辑</Button>,
+								></BandEdit>,
 								<Popconfirm
 									title="提示"
 									description={
-										"确定删除波段" + record.band + "吗？"
+										"确定删除波段" +
+										image_record.band +
+										"吗？"
 									}
 									onConfirm={async () => {
-										const result = await delScene([
-											record.sceneId,
-										]);
-										if (result) actionRef.current?.reload();
+										const result = await delImage(
+											[image_record],
+											record,
+										);
+										if (result) currentRowRef.current?.reload();
 									}}
 									okText="确定"
 									cancelText="取消"
@@ -523,7 +577,7 @@ const SceneTable: React.FC = () => {
 											selectedRowKeys as string[],
 										);
 										if (result) {
-											actionRef.current?.reload();
+											currentRowRef.current?.reload();
 											setSelectedRowsMap((prev) => ({
 												...prev,
 												[record.sceneId]: [],
@@ -539,7 +593,7 @@ const SceneTable: React.FC = () => {
 							</>
 						);
 					}}
-					actionRef={actionRef}
+					actionRef={currentRowRef}
 					editable={{
 						type: "multiple",
 					}}
@@ -674,11 +728,11 @@ const SceneTable: React.FC = () => {
 						formRef.current?.setFieldsValue({
 							productId: undefined,
 						});
-							const sensorIds =
-								typeof changedVals.sensorId === "string"
-									? [changedVals.sensorId]
-									: changedVals.sensorId;
-							getAllProduct(sensorIds);
+						const sensorIds =
+							typeof changedVals.sensorId === "string"
+								? [changedVals.sensorId]
+								: changedVals.sensorId;
+						getAllProduct(sensorIds);
 					}
 				},
 			}}
