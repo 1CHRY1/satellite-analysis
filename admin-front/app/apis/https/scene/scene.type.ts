@@ -25,7 +25,7 @@ export interface Tag {
 }
 
 export interface ScenePageRequest extends PageRequest {
-    sensorId?: string,
+    sensorIds?: string[],
     productId?: string,
     startTime?: string,
     endTime?: string

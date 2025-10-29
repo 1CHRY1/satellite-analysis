@@ -6,7 +6,19 @@ import type { UserContextType } from '~/features/user/context'
 // import router from '@/router'
 // import { useUserStore } from '@/store/userStore'
 
-
+const logout = (msg?: string) => {
+    const {dispatch} = getUserContext() as UserContextType
+    // 没有 refreshToken，跳转登录页
+    dispatch( {
+        type: "LOGOUT"
+    } )
+    localStorage.removeItem("token")
+    localStorage.removeItem("refreshToken")
+    localStorage.removeItem("userId")
+    if (msg !== undefined)
+        message.warning(msg)
+    window.location.href = "/login";
+}
 
 class HttpClient {
     private instance: AxiosInstance
@@ -47,13 +59,8 @@ class HttpClient {
                     // 🚨 Token 过期，尝试刷新
                     const refreshToken = localStorage.getItem('refreshToken')
                     if (!refreshToken) {
-                        const {dispatch} = getUserContext() as UserContextType
                         // 没有 refreshToken，跳转登录页
-                        dispatch( {
-                            type: "LOGOUT"
-                        } )
-                        message.warning('登录已过期，请重新登录')
-                        window.location.href = "/login";
+                        logout('登录已过期，请重新登录')
                         return Promise.reject(error)
                     }
                     try {
@@ -80,7 +87,7 @@ class HttpClient {
                         }
                     } catch (err) {
                         console.error('刷新 Token 失败', err)
-                        window.location.href = "/login";
+                        logout()
                         return Promise.reject(err)
                     }
                 }

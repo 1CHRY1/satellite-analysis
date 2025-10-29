@@ -1,8 +1,14 @@
-import { EllipsisOutlined } from "@ant-design/icons";
+import {
+	CloudOutlined,
+	DeleteOutlined,
+	EllipsisOutlined,
+	SearchOutlined,
+} from "@ant-design/icons";
 import type {
 	ActionType,
 	ParamsType,
 	ProColumns,
+	ProFormInstance,
 	RequestData,
 } from "@ant-design/pro-components";
 import { ProTable } from "@ant-design/pro-components";
@@ -14,6 +20,8 @@ import {
 	type PopconfirmProps,
 	Space,
 	Spin,
+	Tag,
+	Tooltip,
 } from "antd";
 import { Table } from "antd";
 import type { SortOrder } from "antd/es/table/interface";
@@ -26,6 +34,9 @@ import { getProductPage } from "~/apis/https/product/product.admin";
 import type { Image } from "~/types/image";
 import type { ImageRequest } from "~/apis/https/image/image.type";
 import { getImage } from "~/apis/https/image/image.admin";
+import { useSearchParams } from "react-router";
+import styles from "./scene.module.css";
+import dayjs from "dayjs";
 
 // import request from 'umi-request';
 export const waitTimePromise = async (time: number = 100) => {
@@ -56,8 +67,13 @@ const getAllScene = async (
 		page: params.current as number,
 		pageSize: params.pageSize as number,
 		searchText: params.sceneName,
-		sensorId: params.sensorId,
+		sensorIds:
+			typeof params.sensorId === "string"
+				? [params.sensorId]
+				: params.sensorId,
 		productId: params.productId,
+		// startTime: dayjs(params.startTime).format("YYYY-MM-DD HH:mm:ss"),
+		// endTime: dayjs(params.endTime).format("YYYY-MM-DD HH:mm:ss")
 	});
 	console.log(params);
 	return {
@@ -78,8 +94,21 @@ const delScene = async (sceneIds: string[]) => {
 	}
 };
 
-const RoleTable: React.FC = () => {
+const handleImageDownload = async (record: Image) => {
+	const url = `/minio/console/${record.bucket}/${record.tifPath}`;
+	window.open(url, "_blank", "noopener,noreferrer");
+};
+
+const handleCloudDownload = async (record: Scene) => {
+	if (record.cloudPath) {
+		const url = `/minio/console/${record.bucket}/${record.cloudPath}`;
+		window.open(url, "_blank", "noopener,noreferrer");
+	}
+}
+
+const SceneTable: React.FC = () => {
 	const actionRef = useRef<ActionType>(undefined);
+	const formRef = useRef<ProFormInstance>(undefined)
 	const [sensorOpts, setSensorOpts] = useState<
 		{ label: string; value: string }[]
 	>([]);
@@ -87,7 +116,10 @@ const RoleTable: React.FC = () => {
 		{ label: string; value: string }[]
 	>([]);
 	const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
-	const [selectedRowsMap, setSelectedRowsMap] = useState<Record<string, React.Key[]>>({});
+	const [selectedRowsMap, setSelectedRowsMap] = useState<
+		Record<string, React.Key[]>
+	>({});
+	const [searchParams] = useSearchParams();
 
 	useEffect(() => {
 		const getAllSensor = async () => {
@@ -107,13 +139,15 @@ const RoleTable: React.FC = () => {
 			}
 		};
 		getAllSensor();
+		const sensorIds = searchParams.getAll("sensorId");
+		getAllProduct(sensorIds);
 	}, []); // 去掉中括号请求爆炸
 
-	const getAllProduct = async (sensorId: string) => {
+	const getAllProduct = async (sensorIds: string[]) => {
 		const res = await getProductPage({
 			page: 1,
 			pageSize: 999,
-			sensorIds: [sensorId],
+			sensorIds: sensorIds,
 		});
 		if (res.status === 1) {
 			setProductOpts(
@@ -177,6 +211,11 @@ const RoleTable: React.FC = () => {
 			filters: true,
 			onFilter: true,
 			valueType: "text", // 告诉 ProTable 用选择型字段
+			fieldProps: {
+				mode: "multiple", // ✅ 支持多选
+				allowClear: true, // 可选：允许清空
+				showSearch: true, // 可选：支持搜索
+			},
 			valueEnum: Object.fromEntries(
 				sensorOpts.map((sensor, idx) => [
 					sensor.value,
@@ -244,8 +283,46 @@ const RoleTable: React.FC = () => {
 		{
 			title: "标签",
 			dataIndex: "tags",
-			valueType: "text",
 			hideInSearch: true,
+			width: 180,
+			render: (_, record) => {
+				if (!record.tags) return "-";
+
+				const tags =
+					typeof record.tags === "string"
+						? JSON.parse(record.tags)
+						: record.tags;
+
+				const { source, category, production } = tags;
+
+				const tagConfig = [
+					{
+						key: "source",
+						text: source === "national" ? "国内" : "国外",
+						color: source === "national" ? "red" : "blue",
+					},
+					{
+						key: "category",
+						text: category === "ard" ? "ARD" : "传统",
+						color: category === "ard" ? "orange" : "green",
+					},
+					{
+						key: "production",
+						text: production === "radar" ? "雷达" : "光学",
+						color: production === "radar" ? "purple" : "cyan",
+					},
+				];
+
+				return (
+					<Space wrap>
+						{tagConfig.map((t) => (
+							<Tag key={t.key} color={t.color}>
+								{t.text}
+							</Tag>
+						))}
+					</Space>
+				);
+			},
 		},
 		{
 			title: "云量",
@@ -263,11 +340,19 @@ const RoleTable: React.FC = () => {
 		},
 		{
 			title: "操作",
-			width: 150,
+			width: 130,
 			key: "option",
 			valueType: "option",
 			fixed: "right",
 			render: (_, record) => [
+				record.cloudPath && <Tooltip title="云掩膜">
+					<Button
+						type="dashed"
+						shape="circle"
+						icon={<CloudOutlined />}
+						onClick={() => {handleCloudDownload(record)}}
+					/>
+				</Tooltip>,
 				<EditSceneButton
 					onSuccess={() => {
 						actionRef.current?.reload();
@@ -285,9 +370,14 @@ const RoleTable: React.FC = () => {
 					okText="确定"
 					cancelText="取消"
 				>
-					<Button danger type="link">
-						删除
-					</Button>
+					<Tooltip title="删除">
+						<Button
+							type="dashed"
+							shape="circle"
+							danger
+							icon={<DeleteOutlined />}
+						/>
+					</Tooltip>
 				</Popconfirm>,
 			],
 		},
@@ -302,140 +392,166 @@ const RoleTable: React.FC = () => {
 		// }
 
 		return (
-			<ProTable<Image>
-				rowKey="imageId"
-				bordered={false}
-				size="small"
-				request={async (params) => {
-					return await getSceneImages(record.sceneId)
-				}}
-				
-				columns={[
-					{ 
-						title: "波段",
-						 dataIndex: "band", 
-						 valueType: "digit",
-						 sorter: (a, b)=> a.band - b.band,
-						 defaultSortOrder: "ascend"
-					},
-					{
-						title: "链接",
-						dataIndex: "tifPath",
-						valueType: "text",
-					},
-					{
-						title: "操作",
-						width: 150,
-						key: "option",
-						valueType: "option",
-						fixed: "right",
-						render: (_, record) => [
-							<EditSceneButton
-								onSuccess={() => {
-									actionRef.current?.reload();
-								}}
-								initScene={record}
-								sensorOpts={sensorOpts}
-							></EditSceneButton>,
-							<Popconfirm
-								title="提示"
-								description={"确定删除遥感影像" + record.sceneName + "吗？"}
-								onConfirm={async () => {
-									const result = await delScene([record.sceneId]);
-									if (result) actionRef.current?.reload();
-								}}
-								okText="确定"
-								cancelText="取消"
-							>
-								<Button danger type="link">
-									删除
-								</Button>
-							</Popconfirm>,
-						],
-					},
-				]}
-				headerTitle={false}
-				search={false}
-				options={false}
-				rowSelection={{
-					selectedRowKeys: currentSelectedKeys, // 绑定当前子表格的选中状态
-					onChange: (selectedRowKeys) => {
-						// 更新当前子表格的选中状态
-						setSelectedRowsMap(prev => ({
-							...prev,
-							[record.sceneId]: selectedRowKeys
-						}));
-					},
-					selections: [Table.SELECTION_ALL, Table.SELECTION_INVERT],
-				}}
-				tableAlertRender={({
-					selectedRowKeys,
-					selectedRows,
-					onCleanSelected,
-				}) => {
-					console.log(selectedRowKeys, selectedRows);
-					return (
-						<Space size={20}>
-							<span>
-								已选 {selectedRowKeys.length} 项
-								<a
-									style={{ marginInlineStart: 8 }}
+			<div className={styles.noExpandTable}>
+				<ProTable<Image>
+					rowKey="imageId"
+					bordered={false}
+					size="small"
+					scroll={{ y: 360 }}
+					request={async (params) => {
+						return await getSceneImages(record.sceneId);
+					}}
+					columns={[
+						{
+							title: "波段",
+							dataIndex: "band",
+							valueType: "digit",
+							width: 100,
+							sorter: (a, b) => a.band - b.band,
+							defaultSortOrder: "ascend",
+						},
+						{
+							title: "桶",
+							width: 200,
+							dataIndex: "bucket",
+							valueType: "text",
+						},
+						{
+							title: "路径",
+							dataIndex: "tifPath",
+							valueType: "text",
+						},
+						{
+							title: "操作",
+							width: 220,
+							key: "option",
+							valueType: "option",
+							fixed: "right",
+							render: (_, record) => [
+								<Button
+									type="link"
 									onClick={() => {
-										setSelectedRowsMap(prev => ({
-											...prev,
-											[record.sceneId]: []
-										}));
+										handleImageDownload(record);
 									}}
 								>
-									取消选择
-								</a>
-							</span>
-						</Space>
-					);
-				}}
-				tableAlertOptionRender={({ selectedRowKeys }) => {
-					return (
-						<>
-							<Popconfirm
-								title="提示"
-								description={"确定删除吗？"}
-								onConfirm={async () => {
-									const result = await delScene(
-										selectedRowKeys as string[],
-									);
-									if (result) {
+									下载
+								</Button>,
+								<EditSceneButton
+									onSuccess={() => {
 										actionRef.current?.reload();
-										setSelectedRowsMap(prev => ({
-											...prev,
-											[record.sceneId]: []
-										}));
+									}}
+									initScene={record}
+									sensorOpts={sensorOpts}
+								></EditSceneButton>,
+								<Popconfirm
+									title="提示"
+									description={
+										"确定删除波段" +
+										record.band +
+										"吗？"
 									}
-								}}
-								okText="确定"
-								cancelText="取消"
-							>
-								<Button type="link">批量删除</Button>
-							</Popconfirm>
-							<Button type="link">导出数据</Button>
-						</>
-					);
-				}}
-				actionRef={actionRef}
-				editable={{
-					type: "multiple",
-				}}
-				columnsState={{
-					persistenceKey: "pro-table-singe-demos",
-					persistenceType: "localStorage",
-					defaultValue: {
-						option: { fixed: "right", disable: true },
-					},
-					onChange(value) {
-						console.log("value: ", value);
-					},
-				}}
-				pagination={false}
-			/>
+									onConfirm={async () => {
+										const result = await delScene([
+											record.sceneId,
+										]);
+										if (result) actionRef.current?.reload();
+									}}
+									okText="确定"
+									cancelText="取消"
+								>
+									<Button danger type="link">
+										删除
+									</Button>
+								</Popconfirm>,
+							],
+						},
+					]}
+					headerTitle={false}
+					search={false}
+					options={false}
+					rowSelection={{
+						selectedRowKeys: currentSelectedKeys, // 绑定当前子表格的选中状态
+						onChange: (selectedRowKeys) => {
+							// 更新当前子表格的选中状态
+							setSelectedRowsMap((prev) => ({
+								...prev,
+								[record.sceneId]: selectedRowKeys,
+							}));
+						},
+						selections: [
+							Table.SELECTION_ALL,
+							Table.SELECTION_INVERT,
+						],
+					}}
+					tableAlertRender={({
+						selectedRowKeys,
+						selectedRows,
+						onCleanSelected,
+					}) => {
+						console.log(selectedRowKeys, selectedRows);
+						return (
+							<Space size={20}>
+								<span>
+									已选 {selectedRowKeys.length} 项
+									<a
+										style={{ marginInlineStart: 8 }}
+										onClick={() => {
+											setSelectedRowsMap((prev) => ({
+												...prev,
+												[record.sceneId]: [],
+											}));
+										}}
+									>
+										取消选择
+									</a>
+								</span>
+							</Space>
+						);
+					}}
+					tableAlertOptionRender={({ selectedRowKeys }) => {
+						return (
+							<>
+								<Popconfirm
+									title="提示"
+									description={"确定删除吗？"}
+									onConfirm={async () => {
+										const result = await delScene(
+											selectedRowKeys as string[],
+										);
+										if (result) {
+											actionRef.current?.reload();
+											setSelectedRowsMap((prev) => ({
+												...prev,
+												[record.sceneId]: [],
+											}));
+										}
+									}}
+									okText="确定"
+									cancelText="取消"
+								>
+									<Button type="link">批量删除</Button>
+								</Popconfirm>
+								<Button type="link">导出数据</Button>
+							</>
+						);
+					}}
+					actionRef={actionRef}
+					editable={{
+						type: "multiple",
+					}}
+					columnsState={{
+						persistenceKey: "pro-table-singe-demos",
+						persistenceType: "localStorage",
+						defaultValue: {
+							option: { fixed: "right", disable: true },
+						},
+						onChange(value) {
+							console.log("value: ", value);
+						},
+					}}
+					pagination={false}
+				/>
+			</div>
 		);
 	};
 
@@ -468,6 +584,7 @@ const RoleTable: React.FC = () => {
 				// 注释该行则默认不显示下拉选项
 				selections: [Table.SELECTION_ALL, Table.SELECTION_INVERT],
 			}}
+			formRef={formRef}
 			tableAlertRender={({
 				selectedRowKeys,
 				selectedRows,
@@ -549,7 +666,15 @@ const RoleTable: React.FC = () => {
 				},
 				onValuesChange: (changedVals, allVals) => {
 					if (changedVals.sensorId) {
-						getAllProduct(changedVals.sensorId);
+						const sensorIds =
+							typeof changedVals.sensorId === "string"
+								? [changedVals.sensorId]
+								: changedVals.sensorId;
+						// 传感器选择变化，所选产品清空
+						formRef.current?.setFieldsValue({
+							productId: undefined,
+						});
+						getAllProduct(sensorIds);
 					}
 				},
 			}}
@@ -572,7 +697,7 @@ const RoleTable: React.FC = () => {
 export default function App() {
 	return (
 		<>
-			<RoleTable />
+			<SceneTable />
 		</>
 	);
 }
