@@ -70,5 +70,4 @@ public class ModelExampleController {
     public ResponseEntity<CommonResultVO> getSRResultByBand(@RequestBody SRBandDTO SRBandDTO) {
         return ResponseEntity.ok(modelExampleService.getSRResultByBand(SRBandDTO));
     }
-
 }

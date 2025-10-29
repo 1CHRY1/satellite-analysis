@@ -21,7 +21,7 @@ import java.util.List;
  */
 
 @Service
-@DS("mysql_ard_dev")
+@DS("mysql-ard-dev")
 public class ProjectDataService {
 
     @Autowired

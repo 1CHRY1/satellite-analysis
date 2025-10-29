@@ -31,7 +31,7 @@ import java.util.Objects;
  */
 
 @Service
-@DS("mysql_ard_iam")
+@DS("mysql-ard-iam")
 public class ProjectResultDataService {
 
     @Autowired

@@ -15,6 +15,6 @@ public class ImageInfoVO {
 
     private String imageId;
     private String band;
-    private Integer cloud;
+    private float cloud;
 
 }

@@ -1,6 +1,8 @@
 package nnu.mnr.satellite.controller.modeling;
 
 import io.jsonwebtoken.JwtException;
+import nnu.mnr.satellite.cache.EOCubeCache;
+import nnu.mnr.satellite.model.dto.cache.CacheEOCubeDTO;
 import nnu.mnr.satellite.model.dto.modeling.VisualizationLowLevelTile;
 import nnu.mnr.satellite.model.dto.modeling.VisualizationTileDTO;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
@@ -78,4 +80,40 @@ public class ModelExampleControllerV3 {
 
         return ResponseEntity.ok(result);
     }
+
+    @PostMapping("/cube/cache/save")
+    public ResponseEntity<CommonResultVO> cacheEOCube(@RequestBody CacheEOCubeDTO cacheEOCubeDTO,
+                                                      @RequestHeader(value = "Authorization", required = false) String authorizationHeader){
+        String userId;
+        try {
+            userId = IdUtil.parseUserIdFromAuthHeader(authorizationHeader);
+        } catch (JwtException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+        return ResponseEntity.ok(modelExampleService.cacheEOCube(cacheEOCubeDTO, userId));
+    }
+
+    @GetMapping("/cube/cache/get/{cacheKey}")
+    public ResponseEntity<CommonResultVO> getEOCube(@PathVariable String cacheKey){
+        return ResponseEntity.ok(modelExampleService.getEOCube(cacheKey));
+    }
+
+    @GetMapping("/cube/cache/get/all")
+    public ResponseEntity<CommonResultVO> getAllEOCube(){
+        return ResponseEntity.ok(modelExampleService.getAllEOCube());
+    }
+
+    // 获取属于该用户的所有缓存
+    @GetMapping("/cube/cache/get/user")
+    public ResponseEntity<CommonResultVO> getUserEOCubes(@RequestHeader(value = "Authorization", required = false) String authorizationHeader){
+        String userId;
+        try {
+            userId = IdUtil.parseUserIdFromAuthHeader(authorizationHeader);
+        } catch (JwtException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+        return ResponseEntity.ok(modelExampleService.getUserEOCubes(userId));
+    }
+
+
 }

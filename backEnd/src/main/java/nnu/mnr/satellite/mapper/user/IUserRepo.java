@@ -9,6 +9,8 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
+import java.util.List;
+
 /**
  * Created with IntelliJ IDEA.
  *
@@ -16,8 +18,18 @@ import org.apache.ibatis.annotations.Select;
  * @Date: 2025/3/27 20:26
  * @Description:
  */
-@DS("mysql_ard_iam")
+@DS("mysql-ard-iam")
 public interface IUserRepo extends BaseMapper<User> {
     @Select("SELECT COUNT(1) > 0 FROM user_table WHERE user_id = #{userId}")
     boolean existsById(@Param("userId") String userId);
+
+    @Select({
+            "<script>",
+            "SELECT COUNT(1) > 0 FROM user_table WHERE role_id IN",
+            "<foreach collection='roleIds' item='id' open='(' separator=',' close=')'>",
+            "#{id}",
+            "</foreach>",
+            "</script>"
+    })
+    boolean existsByRoleIds(@Param("roleIds") List<Integer> roleIds);
 }

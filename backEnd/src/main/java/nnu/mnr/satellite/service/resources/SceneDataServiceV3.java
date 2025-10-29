@@ -254,7 +254,7 @@ public class SceneDataServiceV3 {
      // 计算并集后调用覆盖度函数
     public double calculateCoverageRatio(List<SceneDesVO> scenesInfo, Geometry gridsBoundary) {
         // 记录开始时间
-        long startTime = System.nanoTime();
+//        long startTime = System.nanoTime();
         // 1. 计算所有 Scene 的 boundingBox 并集
         List<Geometry> geometries = new ArrayList<>();
         for (SceneDesVO scene : scenesInfo) {
@@ -265,10 +265,10 @@ public class SceneDataServiceV3 {
         }
 
         Geometry unionBoundingBox = geometries.isEmpty() ? null : CascadedPolygonUnion.union(geometries);
-        // 记录结束时间并打印耗时
-        long endTime = System.nanoTime();
-        long durationMs = TimeUnit.NANOSECONDS.toMillis(endTime - startTime);
-        System.out.println("联合计算运行时间: " + durationMs + " ms");
+//        // 记录结束时间并打印耗时
+//        long endTime = System.nanoTime();
+//        long durationMs = TimeUnit.NANOSECONDS.toMillis(endTime - startTime);
+//        System.out.println("联合计算运行时间: " + durationMs + " ms");
 
         // 2. 计算覆盖度
         return calculateCoveragePercentage(unionBoundingBox, gridsBoundary).getKey();
@@ -276,7 +276,7 @@ public class SceneDataServiceV3 {
     // 计算覆盖度函数
     public AbstractMap.SimpleEntry<Double, Geometry> calculateCoveragePercentage(Geometry boundingBox, Geometry gridsBoundary) {
         // 记录开始时间
-        long startTime = System.nanoTime();
+//        long startTime = System.nanoTime();
         if (boundingBox == null || boundingBox.isEmpty() ||
                 gridsBoundary == null || gridsBoundary.isEmpty()) {
             return new AbstractMap.SimpleEntry<>(0.0, null);
@@ -287,9 +287,9 @@ public class SceneDataServiceV3 {
         double gridsArea = gridsBoundary.getArea();
         double coveragePercentage = coverageArea / gridsArea;
         // 记录结束时间并打印耗时
-        long endTime = System.nanoTime();
-        long durationMs = TimeUnit.NANOSECONDS.toMillis(endTime - startTime);
-        System.out.println("相交计算运行时间: " + durationMs + " ms");
+//        long endTime = System.nanoTime();
+//        long durationMs = TimeUnit.NANOSECONDS.toMillis(endTime - startTime);
+//        System.out.println("相交计算运行时间: " + durationMs + " ms");
         return new AbstractMap.SimpleEntry<>(coveragePercentage, intersection);
     }
 

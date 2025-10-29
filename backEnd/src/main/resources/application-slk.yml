@@ -33,7 +33,7 @@ mysql:
 spring:
   datasource:
     dynamic:
-      primary: mysql_ard_satellite
+      primary: mysql-ard-satellite
       strict: false
       datasource:
         #        mysql_satellite:
@@ -43,21 +43,21 @@ spring:
         #          driver-class-name: com.mysql.cj.jdbc.Driver
         #          hikari:
         #            connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
-        mysql_ard_satellite:
+        mysql-ard-satellite:
           url: jdbc:mysql://${mysql.host}:${mysql.port}/ard_satellite
           username: ${mysql.username}
           password: ${mysql.password}
           driver-class-name: com.mysql.cj.jdbc.Driver
           hikari:
             connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
-        mysql_ard_iam:
+        mysql-ard-iam:
           url: jdbc:mysql://${mysql.host}:${mysql.port}/ard_iam
           username: ${mysql.username}
           password: ${mysql.password}
           driver-class-name: com.mysql.cj.jdbc.Driver
           hikari:
             connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
-        mysql_ard_dev:
+        mysql-ard-dev:
           url: jdbc:mysql://${mysql.host}:${mysql.port}/ard_dev
           username: ${mysql.username}
           password: ${mysql.password}
@@ -65,7 +65,7 @@ spring:
           hikari:
             connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
 
-        pg_satellite:
+        pg-satellite:
           url: jdbc:postgresql://${pg.host}:${pg.port}/satellite
           username: ${pg.username}
           password: ${pg.password}

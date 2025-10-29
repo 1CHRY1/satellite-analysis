@@ -1,7 +1,9 @@
 package nnu.mnr.satellite.model.vo.modeling;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * Created with IntelliJ IDEA.
@@ -13,12 +15,12 @@ import lombok.Data;
 
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class ServiceStatusVO {
     
     Boolean isPublished;
-    Boolean running;
+    String status;
     String url;
-    String host;
-    Integer port;
     
 }

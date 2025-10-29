@@ -18,6 +18,9 @@ public class IdUtil {
     private static final int PRO_NUM = 17;
     private static final int USR_NUM = 17;
     private static final int TOL_NUM = 17;
+    private static final int SE_NUM = 5;
+    private static final int P_NUM = 8;
+    private static final int EOC_NUM = 17;
 
     public static String generateProjectId() {
         StringBuilder sb = new StringBuilder("PRJ");
@@ -46,6 +49,38 @@ public class IdUtil {
             int index = random.nextInt(CHARACTERS.length());
             sb.append(CHARACTERS.charAt(index));
         }
+        return sb.toString();
+    }
+
+    public static String generateSensorId() {
+        StringBuilder sb = new StringBuilder("SE");
+        Random random = new Random();
+        for (int i = 0; i < SE_NUM; i++) {
+            int index = random.nextInt(CHARACTERS.length());
+            sb.append(CHARACTERS.charAt(index));
+        }
+        return sb.toString();
+    }
+
+    public static String generateProductId() {
+        StringBuilder sb = new StringBuilder("P");
+        Random random = new Random();
+        for (int i = 0; i < P_NUM; i++) {
+            int index = random.nextInt(CHARACTERS.length());
+            sb.append(CHARACTERS.charAt(index));
+        }
+        return sb.toString();
+    }
+
+    public static String generateEOCubeCacheKey(String userId) {
+        StringBuilder sb = new StringBuilder(userId).append("_");
+        sb.append("EOC");
+        Random random = new Random();
+        for (int i = 0; i < EOC_NUM; i++) {
+            int index = random.nextInt(CHARACTERS.length());
+            sb.append(CHARACTERS.charAt(index));
+        }
+
         return sb.toString();
     }
 

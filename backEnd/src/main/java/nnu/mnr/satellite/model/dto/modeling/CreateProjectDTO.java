@@ -17,5 +17,6 @@ public class CreateProjectDTO {
     private String environment;
     private String userId;
     private String description;
+    private boolean tool;
 
 }

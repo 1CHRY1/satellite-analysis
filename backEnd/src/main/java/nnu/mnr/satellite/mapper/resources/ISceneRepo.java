@@ -1,6 +1,7 @@
 package nnu.mnr.satellite.mapper.resources;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import nnu.mnr.satellite.model.dto.admin.scene.CloudPathsDTO;
 import nnu.mnr.satellite.model.dto.resources.SceneImageDTO;
 import nnu.mnr.satellite.model.po.resources.Scene;
 import nnu.mnr.satellite.model.po.resources.SceneSP;
@@ -13,9 +14,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
-import org.locationtech.jts.geom.Geometry;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -68,7 +67,7 @@ public interface ISceneRepo extends BaseMapper<Scene> {
     List<SceneDesVO> getScenesDesByTimeCloudAndGeometry(
             @Param("startTime") String startTime,
             @Param("endTime") String endTime,
-            @Param("cloud") Integer cloud,
+            @Param("cloud") float cloud,
             @Param("wkt") String wkt,
             @Param("dataType") String dataType);
 
@@ -282,6 +281,25 @@ public interface ISceneRepo extends BaseMapper<Scene> {
     })
     SceneImageDTO getSceneWithImages(@Param("sceneId") String sceneId);
 
+    @Select({
+            "<script>",
+            "SELECT COUNT(1) > 0 FROM scene_table WHERE sensor_id IN",
+            "<foreach collection='sensorIds' item='id' open='(' separator=',' close=')'>",
+            "#{id}",
+            "</foreach>",
+            "</script>"
+    })
+    boolean existsBySensorIds(@Param("sensorIds") List<String> sensorIds);
+
+    @Select("<script>" +
+            "SELECT scene_id, bucket, cloud_path " +
+            "FROM scene_table " +
+            "WHERE scene_id IN " +
+            "<foreach collection='sceneIds' item='id' open='(' separator=',' close=')'>" +
+            "#{id}" +
+            "</foreach>" +
+            "</script>")
+    List<CloudPathsDTO> findFilePathsBySceneIds(@Param("sceneIds") List<String> sceneIds);
 
 
 }

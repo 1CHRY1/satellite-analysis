@@ -19,6 +19,6 @@ public class TilesFetchResultVO extends TilerResultVO {
 
     private String sceneId;
     private String tileId;
-    private Integer cloud;
+    private float cloud;
 
 }

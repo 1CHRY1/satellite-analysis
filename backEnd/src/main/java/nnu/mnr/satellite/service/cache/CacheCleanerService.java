@@ -1,5 +1,6 @@
 package nnu.mnr.satellite.service.cache;
 
+import nnu.mnr.satellite.cache.EOCubeCache;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import nnu.mnr.satellite.cache.SceneDataCache;
@@ -12,9 +13,8 @@ public class CacheCleanerService {
     // 每天凌晨 3 点执行缓存清理（Cron 表达式）
     @Scheduled(cron = "0 0 3 * * ?")
     public void cleanCacheDaily() {
-        // 1. 获取缓存（如 SceneDataCache）
-        // 2. 调用清理方法（如 clear() 或 removeExpired()）
-        SceneDataCache.cleanupExpiredCache(3600000); // 假设缓存提供清理方法
+        SceneDataCache.cleanupExpiredCache(3600000);
+        EOCubeCache.cleanupExpiredCache(3600000);
         System.out.println("Cache cleaned at: " + LocalDateTime.now());
     }
 

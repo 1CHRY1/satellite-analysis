@@ -11,15 +11,19 @@ import nnu.mnr.satellite.model.dto.resources.GridsWithFiltersDTO;
 import nnu.mnr.satellite.model.po.geo.GeoLocation;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.model.vo.resources.CoverageReportVO;
+import nnu.mnr.satellite.model.vo.resources.GridBoundaryVO;
 import nnu.mnr.satellite.model.vo.resources.GridsScenesOverlapVO;
 import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
 import nnu.mnr.satellite.service.common.BandMapperGenerator;
 import com.alibaba.fastjson2.JSONObject;
+import nnu.mnr.satellite.utils.geom.GeometryUtil;
+import nnu.mnr.satellite.utils.geom.TileCalculateUtil;
 import org.locationtech.jts.geom.Geometry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -38,7 +42,7 @@ public class GridDataServiceV3 {
     @Autowired
     private SceneDataServiceV3 sceneDataService;
 
-    public CoverageReportVO<JSONObject> getScenesByGridAndResolution(GridBasicDTO gridBasicDTO, String cacheKey){
+    public CoverageReportVO<JSONObject> getScenesByGridAndResolution(GridBasicDTO gridBasicDTO, String cacheKey) throws IOException {
         Integer columnId = gridBasicDTO.getColumnId();
         Integer rowId = gridBasicDTO.getRowId();
         Integer resolution = gridBasicDTO.getResolution();
@@ -87,7 +91,9 @@ public class GridDataServiceV3 {
                     scene.put("sceneTime", sceneInfo.getSceneTime());
                     scene.put("noData", sceneInfo.getNoData());
                     scene.put("sensorName", sceneInfo.getSensorName());
+                    scene.put("platformName", sceneInfo.getPlatformName());
                     scene.put("productName", sceneInfo.getProductName());
+                    scene.put("boundingBox", GeometryUtil.geometry2Geojson(sceneInfo.getBoundingBox()));
                     List<ModelServerImageDTO> images = imageDataService.getModelServerImageDTOBySceneId(sceneInfo.getSceneId());
                     scene.put("images", images);
                     JSONObject bandMapper = bandMapperGenerator.getSatelliteConfigBySensorName(sceneInfo.getSensorName());
@@ -111,7 +117,7 @@ public class GridDataServiceV3 {
         return report;
     }
 
-    public CoverageReportVO<JSONObject> getThemesByGridAndResolution(GridBasicDTO gridBasicDTO, String cacheKey){
+    public CoverageReportVO<JSONObject> getThemesByGridAndResolution(GridBasicDTO gridBasicDTO, String cacheKey) throws IOException {
         Integer columnId = gridBasicDTO.getColumnId();
         Integer rowId = gridBasicDTO.getRowId();
         Integer resolution = gridBasicDTO.getResolution();
@@ -160,6 +166,7 @@ public class GridDataServiceV3 {
                     scene.put("noData", sceneInfo.getNoData());
                     scene.put("sensorName", sceneInfo.getSensorName());
                     scene.put("productName", sceneInfo.getProductName());
+                    scene.put("boundingBox", GeometryUtil.geometry2Geojson(sceneInfo.getBoundingBox()));
                     List<ModelServerImageDTO> images = imageDataService.getModelServerImageDTOBySceneId(sceneInfo.getSceneId());
                     scene.put("images", images);
                     JSONObject bandMapper = bandMapperGenerator.getSatelliteConfigBySensorName(sceneInfo.getSensorName());
@@ -250,6 +257,13 @@ public class GridDataServiceV3 {
                 .grids(grids)
                 .scenes(scenes)
                 .build();
+    }
+
+    public GridBoundaryVO getBoundaryByResolutionAndId(GridBasicDTO gridBasicDTO) throws IOException {
+        Integer rowId = gridBasicDTO.getRowId();
+        Integer columnId = gridBasicDTO.getColumnId();
+        Integer resolution = gridBasicDTO.getResolution();
+        return TileCalculateUtil.getTileBoundaryByIdsAndResolution(rowId, columnId, resolution);
     }
 
     private boolean isSceneIntersectGrid(SceneDesVO scene, Geometry wkt){

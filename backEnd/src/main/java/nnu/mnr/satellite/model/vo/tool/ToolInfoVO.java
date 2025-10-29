@@ -12,7 +12,6 @@ import java.util.List;
 public class ToolInfoVO {
     private String toolId;
     private String projectId;
-    private String environment;
     private String userId;
     private String toolName;
     private String description;
@@ -20,4 +19,6 @@ public class ToolInfoVO {
     private String category;
     private List<JSONObject> parameters;
     private LocalDateTime createTime;
+    private boolean isShare;
+    private boolean isPublish;
 }
