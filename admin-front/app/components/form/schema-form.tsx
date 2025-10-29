@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
 	ProForm,
 	ProFormText,
@@ -29,13 +29,21 @@ const componentMap: Record<string, any> = {
 
 export const SchemaForm = <T,>({
 	schema,
+	formRef,
 	initialValues,
 	onFinish,
+	onValuesChange,
 	mode = "inline",
 	trigger,
 	title,
 }: SchemaFormProps<T>) => {
 	const [form] = ProForm.useForm();
+
+	useEffect(() => {
+		if (formRef) {
+		  formRef.current = form;
+		}
+	}, [form, formRef]);
 
 	const renderField = (field: FormField): React.ReactNode => {
 		const {
@@ -79,6 +87,7 @@ export const SchemaForm = <T,>({
 				form={form}
 				initialValues={initialValues}
 				onFinish={onFinish}
+				onValuesChange={onValuesChange}
 				submitter={{
 					searchConfig: { submitText: "提交" },
 				}}
@@ -94,6 +103,7 @@ export const SchemaForm = <T,>({
 				trigger={trigger}
 				// width={width}
 				onFinish={onFinish}
+				onValuesChange={onValuesChange}
 				initialValues={initialValues}
                 onOpenChange={(visible) => {
                     if (visible) {
@@ -116,6 +126,7 @@ export const SchemaForm = <T,>({
 				trigger={trigger}
 				// width={width}
 				onFinish={onFinish}
+				onValuesChange={onValuesChange}
 				initialValues={initialValues}
                 onOpenChange={(visible) => {
                     if (visible) {

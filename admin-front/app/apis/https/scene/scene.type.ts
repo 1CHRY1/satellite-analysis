@@ -10,7 +10,7 @@ export interface SceneInfo {
     boundingBox: any,
     description: string
     cloudPath: string
-    bands: string
+    bands: string[]
     bandNum: number
     bucket: string
     cloud: number
@@ -25,7 +25,7 @@ export interface Tag {
 }
 
 export interface ScenePageRequest extends PageRequest {
-    sensorId?: string,
+    sensorIds?: string[],
     productId?: string,
     startTime?: string,
     endTime?: string

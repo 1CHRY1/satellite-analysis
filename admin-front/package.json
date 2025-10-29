@@ -15,6 +15,7 @@
     "@react-router/serve": "^7.7.1",
     "antd": "^5.27.3",
     "axios": "^1.12.2",
+    "dayjs": "^1.11.18",
     "isbot": "^5.1.27",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
