@@ -72,8 +72,12 @@ const getAllScene = async (
 				? [params.sensorId]
 				: params.sensorId,
 		productId: params.productId,
-		// startTime: dayjs(params.startTime).format("YYYY-MM-DD HH:mm:ss"),
-		// endTime: dayjs(params.endTime).format("YYYY-MM-DD HH:mm:ss")
+		...(params.startTime && {
+			startTime: dayjs(params.startTime).format("YYYY-MM-DDTHH:mm:ss"),
+		}),
+		...(params.endTime && {
+			endTime: dayjs(params.endTime).format("YYYY-MM-DDTHH:mm:ss"),
+		}),
 	});
 	console.log(params);
 	return {
@@ -104,11 +108,11 @@ const handleCloudDownload = async (record: Scene) => {
 		const url = `/minio/console/${record.bucket}/${record.cloudPath}`;
 		window.open(url, "_blank", "noopener,noreferrer");
 	}
-}
+};
 
 const SceneTable: React.FC = () => {
 	const actionRef = useRef<ActionType>(undefined);
-	const formRef = useRef<ProFormInstance>(undefined)
+	const formRef = useRef<ProFormInstance>(undefined);
 	const [sensorOpts, setSensorOpts] = useState<
 		{ label: string; value: string }[]
 	>([]);
@@ -345,14 +349,18 @@ const SceneTable: React.FC = () => {
 			valueType: "option",
 			fixed: "right",
 			render: (_, record) => [
-				record.cloudPath && <Tooltip title="云掩膜">
-					<Button
-						type="dashed"
-						shape="circle"
-						icon={<CloudOutlined />}
-						onClick={() => {handleCloudDownload(record)}}
-					/>
-				</Tooltip>,
+				record.cloudPath && (
+					<Tooltip title="云掩膜">
+						<Button
+							type="dashed"
+							shape="circle"
+							icon={<CloudOutlined />}
+							onClick={() => {
+								handleCloudDownload(record);
+							}}
+						/>
+					</Tooltip>
+				),
 				<EditSceneButton
 					onSuccess={() => {
 						actionRef.current?.reload();
@@ -436,19 +444,15 @@ const SceneTable: React.FC = () => {
 								>
 									下载
 								</Button>,
-								<EditSceneButton
-									onSuccess={() => {
-										actionRef.current?.reload();
+								<Button
+									type="link"
+									onClick={() => {
 									}}
-									initScene={record}
-									sensorOpts={sensorOpts}
-								></EditSceneButton>,
+								>编辑</Button>,
 								<Popconfirm
 									title="提示"
 									description={
-										"确定删除波段" +
-										record.band +
-										"吗？"
+										"确定删除波段" + record.band + "吗？"
 									}
 									onConfirm={async () => {
 										const result = await delScene([
@@ -666,15 +670,15 @@ const SceneTable: React.FC = () => {
 				},
 				onValuesChange: (changedVals, allVals) => {
 					if (changedVals.sensorId) {
-						const sensorIds =
-							typeof changedVals.sensorId === "string"
-								? [changedVals.sensorId]
-								: changedVals.sensorId;
 						// 传感器选择变化，所选产品清空
 						formRef.current?.setFieldsValue({
 							productId: undefined,
 						});
-						getAllProduct(sensorIds);
+							const sensorIds =
+								typeof changedVals.sensorId === "string"
+									? [changedVals.sensorId]
+									: changedVals.sensorId;
+							getAllProduct(sensorIds);
 					}
 				},
 			}}

@@ -14,10 +14,12 @@ import type { Scene } from "~/types/scene";
 import { updateScene } from "~/apis/https/scene/scene.admin";
 import dayjs from "dayjs";
 import { getProductPage } from "~/apis/https/product/product.admin";
+import type { Image } from "~/types/image";
+import { updateImage } from "~/apis/https/image/image.admin";
 const UploadButton = ProFormUploadButton as unknown as React.FC<any>;
-const editScene = async (values: Scene) => {
+const editImage = async (values: Image) => {
 	console.log(values);
-	const res = await updateScene(values);
+	const res = await updateImage(values);
 	if (res.status === 1) {
 		message.success("操作成功");
 		return true;
@@ -27,58 +29,30 @@ const editScene = async (values: Scene) => {
 	}
 };
 
-export const EditSceneButton: React.FC<{
+export const EditImageButton: React.FC<{
 	onSuccess: () => void | Promise<any>;
-	initScene: Scene;
-	sensorOpts: { label: string; value: string }[];
-}> = ({ onSuccess, initScene, sensorOpts }) => {
+	initImage: Image;
+}> = ({ onSuccess, initImage }) => {
 	const [productOpts, setProductOpts] = useState<
 		{ label: string; value: string }[]
 	>([]);
 	const formRef = useRef<ProFormInstance>(undefined);
 
-	const getAllProduct = async (sensorIds: string[]) => {
-		const res = await getProductPage({
-			page: 1,
-			pageSize: 999,
-			sensorIds: sensorIds,
-		});
-		if (res.status === 1) {
-			setProductOpts(
-				res.data.records.map((record) => ({
-					label: record.productName,
-					value: record.productId,
-				})),
-			);
-		} else {
-			setProductOpts([]);
-		}
-	};
-
-	const schema: FormSchema = useMemo(() => ({
+	const schema: FormSchema = {
 		groups: [
 			{
 				fields: [
 					{
-						name: "sceneName",
-						label: "遥感影像标识",
-						type: "text",
+						name: "band",
+						label: "波段",
+						type: "digit",
 						rules: [
-							{ required: true, message: "请输入遥感影像标识" },
+							{ required: true, message: "请输入波段" },
 						],
 					},
 					{
-						name: "sensorId",
-						label: "所属传感器",
-						type: "select",
-						rules: [
-							{ required: true, message: "请选择所属传感器" },
-						],
-						options: sensorOpts,
-					},
-					{
-						name: "productId",
-						label: "所属产品",
+						name: "bucket",
+						label: "桶",
 						type: "select",
 						rules: [
 							{ required: true, message: "请选择所属传感器" },
@@ -203,7 +177,7 @@ export const EditSceneButton: React.FC<{
 				],
 			},
 		],
-	}),[sensorOpts, productOpts])
+	};
 	// const schema: FormSchema = {
 	// 	groups: [
 	// 		{
