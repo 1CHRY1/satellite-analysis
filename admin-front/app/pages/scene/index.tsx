@@ -42,6 +42,7 @@ import { useSearchParams } from "react-router";
 import styles from "./scene.module.css";
 import dayjs from "dayjs";
 import { BandEdit } from "./edit-image-form";
+import { getSceneImages } from "./common";
 
 // import request from 'umi-request';
 export const waitTimePromise = async (time: number = 100) => {
@@ -101,23 +102,6 @@ const delScene = async (sceneIds: string[]) => {
 		message.warning(res.message);
 		return false;
 	}
-};
-
-const getSceneImages = async (sceneId: ImageRequest) => {
-    const res = await getImage(sceneId);
-    if (res.status === 1) {
-        return {
-            data: res.data || [],
-            success: true,
-            total: res.data?.length || 0,
-        };
-    } else {
-        return {
-            data: [],
-            success: false,
-            total: 0,
-        };
-    }
 };
 
 const delImage = async (imageIds: string[], scene: Scene) => {

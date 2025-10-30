@@ -1,27 +1,10 @@
 import { useState } from "react";
 import { Popover, InputNumber, Button, Form, message, Space } from "antd";
 import type { Image } from "~/types/image";
-import { getImage, updateImage } from "~/apis/https/image/image.admin";
+import { updateImage } from "~/apis/https/image/image.admin";
 import type { Scene } from "~/types/scene";
 import { updateScene } from "~/apis/https/scene/scene.admin";
-import type { ImageRequest } from "~/apis/https/image/image.type";
-
-const getSceneImages = async (sceneId: ImageRequest) => {
-    const res = await getImage(sceneId);
-    if (res.status === 1) {
-        return {
-            data: res.data || [],
-            success: true,
-            total: res.data?.length || 0,
-        };
-    } else {
-        return {
-            data: [],
-            success: false,
-            total: 0,
-        };
-    }
-};
+import { getSceneImages } from "./common";
 
 const editImage = async (values: Image, scene: Scene) => {
 	console.log(values);
