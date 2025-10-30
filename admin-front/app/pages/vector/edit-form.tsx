@@ -29,37 +29,15 @@ export const EditVectorButton: React.FC<{
 				fields: [
 					{
 						name: "vectorName",
-						label: "传感器ID",
+						label: "矢量名称",
 						type: "text",
-						rules: [{ required: true, message: "请输入传感器ID" }],
+						rules: [{ required: true, message: "请输入矢量名称" }],
 					},
                     {
-						name: "platformName",
-						label: "传感器名称",
+						name: "srid",
+						label: "坐标系（EPSG）",
 						type: "text",
-						rules: [{ required: true, message: "请输入传感器名称" }],
-					},
-				],
-			},
-			{
-				fields: [
-					{
-						name: "description",
-						label: "描述信息",
-						type: "textarea",
-					},
-					{
-						name: "dataType",
-						label: "数据类型",
-						type: "select",
-						options: [
-                            {label: '遥感影像', value: 'satellite'},
-                            {label: '红绿立体影像', value: '3d'},
-                            {label: 'DEM产品', value: 'dem'},
-                            {label: 'DSM产品', value: 'dsm'},
-                            {label: '形变速率产品', value: 'svr'},
-                            {label: 'NDVI产品', value: 'ndvi'},
-                        ]
+						rules: [{ required: true, message: "请输入坐标系（EPSG）" }],
 					},
 				],
 			},
@@ -69,7 +47,7 @@ export const EditVectorButton: React.FC<{
 		<SchemaForm<Vector>
 			mode="modal"
 			key={initVector.id}
-			title="编辑传感器"
+			title="编辑矢量数据集"
 			trigger={
 				<Button type="link">
 					编辑

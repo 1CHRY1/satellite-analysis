@@ -121,38 +121,6 @@ const VectorTable: React.FC = () => {
 		<ProTable<Vector>
 			columns={columns}
 			rowKey="id"
-			rowSelection={{
-				// 自定义选择项参考: https://ant.design/components/table-cn/#components-table-demo-row-selection-custom
-				// 注释该行则默认不显示下拉选项
-				selections: [Table.SELECTION_ALL, Table.SELECTION_INVERT],
-			}}
-			tableAlertRender={({
-				selectedRowKeys,
-				selectedRows,
-				onCleanSelected,
-			}) => {
-				console.log(selectedRowKeys, selectedRows);
-				return (
-					<Space size={24}>
-						<span>
-							已选 {selectedRowKeys.length} 项
-							<a
-								style={{ marginInlineStart: 8 }}
-								onClick={onCleanSelected}
-							>
-								取消选择
-							</a>
-						</span>
-					</Space>
-				);
-			}}
-			tableAlertOptionRender={({ selectedRowKeys, onCleanSelected }) => {
-				return (
-					<>
-						
-					</>
-				);
-			}}
 			actionRef={actionRef}
 			cardBordered
 			request={getAllVector}
