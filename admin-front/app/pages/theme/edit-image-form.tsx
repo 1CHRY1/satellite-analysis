@@ -4,7 +4,7 @@ import type { Image } from "~/types/image";
 import { updateImage } from "~/apis/https/image/image.admin";
 import type { Scene } from "~/types/scene";
 import { updateScene } from "~/apis/https/scene/scene.admin";
-import { getSceneImages } from "./common";
+import { getSceneImages } from "~/pages/scene/common";
 
 const editImage = async (values: Image, scene: Scene) => {
 	console.log(values);

@@ -26,23 +26,22 @@ import {
 import { Table } from "antd";
 import type { SortOrder } from "antd/es/table/interface";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { EditSceneButton } from "./edit-form";
-import type { Scene } from "~/types/scene";
+import { EditThemeButton } from "./edit-form";
+import type { Scene as Theme } from "~/types/scene";
 import {
-	batchDelScene,
-	getScenePage,
-	updateScene,
+	batchDelScene as batchDelTheme,
+	getScenePage as getThemePage,
+	updateScene as updateTheme,
 } from "~/apis/https/scene/scene.admin";
 import { getSensorPage } from "~/apis/https/sensor/sensor.admin";
 import { getProductPage } from "~/apis/https/product/product.admin";
 import type { Image } from "~/types/image";
-import type { ImageRequest } from "~/apis/https/image/image.type";
 import { batchDelImage, getImage } from "~/apis/https/image/image.admin";
 import { useSearchParams } from "react-router";
 import styles from "./scene.module.css";
 import dayjs from "dayjs";
 import { BandEdit } from "./edit-image-form";
-import { getSceneImages } from "./common";
+import { getSceneImages as getThemeImages } from "~/pages/scene/common";
 
 // import request from 'umi-request';
 export const waitTimePromise = async (time: number = 100) => {
@@ -57,8 +56,8 @@ export const waitTime = async (time: number = 100) => {
 	await waitTimePromise(time);
 };
 
-const delScene = async (sceneIds: string[]) => {
-	const res = await batchDelScene({ sceneIds });
+const delTheme = async (themeIds: string[]) => {
+	const res = await batchDelTheme({ sceneIds: themeIds });
 	if (res.status === 1) {
 		message.success("删除成功");
 		return true;
@@ -68,22 +67,22 @@ const delScene = async (sceneIds: string[]) => {
 	}
 };
 
-const delImage = async (imageIds: string[], scene: Scene) => {
+const delImage = async (imageIds: string[], theme: Theme) => {
 	const res = await batchDelImage({ imageIds });
 	if (res.status !== 1) {
 		return false;
 	}
-	const {data} = await getSceneImages(scene.sceneId);
+	const {data} = await getThemeImages(theme.sceneId);
     
-    scene.bands = data.map(d => d.band.toString());
-    scene.bandNum = data.length;
+    theme.bands = data.map(d => d.band.toString());
+    theme.bandNum = data.length;
 	
-	const sceneRes = await updateScene(scene);
-	if (sceneRes.status === 1) {
+	const themeRes = await updateTheme(theme);
+	if (themeRes.status === 1) {
 		message.success("删除成功");
 		return true;
 	} else {
-		message.warning(sceneRes.message);
+		message.warning(themeRes.message);
 		return false;
 	}
 };
@@ -93,14 +92,14 @@ const handleImageDownload = async (record: Image) => {
 	window.open(url, "_blank", "noopener,noreferrer");
 };
 
-const handleCloudDownload = async (record: Scene) => {
+const handleCloudDownload = async (record: Theme) => {
 	if (record.cloudPath) {
 		const url = `/minio/console/${record.bucket}/${record.cloudPath}`;
 		window.open(url, "_blank", "noopener,noreferrer");
 	}
 };
 
-const SceneTable: React.FC = () => {
+const ThemeTable: React.FC = () => {
 	const actionRef = useRef<ActionType>(undefined);
 	const rowActionRefs = useRef<Record<string, React.RefObject<ActionType | null>>>({});
 	const formRef = useRef<ProFormInstance>(undefined);
@@ -121,7 +120,7 @@ const SceneTable: React.FC = () => {
 			const res = await getSensorPage({
 				page: 1,
 				pageSize: 999,
-				dataTypes: ["satellite"]
+				dataTypes: ["dem", "dsm", "3d", "svr", "ndvi"]
 			});
 			if (res.status === 1) {
 				setSensorOpts(
@@ -139,7 +138,7 @@ const SceneTable: React.FC = () => {
 		getAllProduct(sensorIds);
 	}, []); // 去掉中括号请求爆炸
 
-	const getAllScene = async (
+	const getAllTheme = async (
 		params: ParamsType & {
 			pageSize?: number;
 			current?: number;
@@ -147,7 +146,7 @@ const SceneTable: React.FC = () => {
 		},
 		sort: Record<string, SortOrder>,
 		filter: Record<string, (string | number)[] | null>,
-	): Promise<Partial<RequestData<Scene>>> => {
+	): Promise<Partial<RequestData<Theme>>> => {
 		console.log(sort, filter);
 		console.log(params);
 		// await waitTime(2000);
@@ -158,7 +157,7 @@ const SceneTable: React.FC = () => {
 			: [];
 		const sensorIds = idList.length > 0 ? idList : sensorOpts.map(sensor => sensor.value);
 
-		const res = await getScenePage({
+		const res = await getThemePage({
 			page: params.current as number,
 			pageSize: params.pageSize as number,
 			searchText: params.sceneName,
@@ -197,37 +196,20 @@ const SceneTable: React.FC = () => {
 		}
 	};
 
-	const getSceneImages = async (sceneId: ImageRequest) => {
-		const res = await getImage(sceneId);
-		if (res.status === 1) {
-			return {
-				data: res.data || [],
-				success: true,
-				total: res.data?.length || 0,
-			};
-		} else {
-			return {
-				data: [],
-				success: false,
-				total: 0,
-			};
-		}
-	};
-
-	const columns: ProColumns<Scene>[] = [
+	const columns: ProColumns<Theme>[] = [
 		{
 			dataIndex: "index",
 			valueType: "indexBorder",
 			width: 48,
 		},
 		{
-			title: "遥感影像",
+			title: "栅格产品",
 			dataIndex: "sceneName",
 			ellipsis: true,
 			hideInTable: true,
 		},
 		{
-			title: "遥感影像标识",
+			title: "栅格产品标识",
 			dataIndex: "sceneName",
 			width: 400,
 			ellipsis: true,
@@ -393,18 +375,18 @@ const SceneTable: React.FC = () => {
 						/>
 					</Tooltip>
 				),
-				<EditSceneButton
+				<EditThemeButton
 					onSuccess={() => {
 						actionRef.current?.reload();
 					}}
-					initScene={record}
+					initTheme={record}
 					sensorOpts={sensorOpts}
-				></EditSceneButton>,
+				></EditThemeButton>,
 				<Popconfirm
 					title="提示"
-					description={"确定删除遥感影像" + record.sceneName + "吗？"}
+					description={"确定删除栅格产品" + record.sceneName + "吗？"}
 					onConfirm={async () => {
-						const result = await delScene([record.sceneId]);
+						const result = await delTheme([record.sceneId]);
 						if (result) actionRef.current?.reload();
 					}}
 					okText="确定"
@@ -423,7 +405,7 @@ const SceneTable: React.FC = () => {
 		},
 	];
 
-	const expandedRowRender = (record: Scene) => {
+	const expandedRowRender = (record: Theme) => {
 		// const data = expandedData[record.sceneId] || [];
 		const currentSelectedKeys = selectedRowsMap[record.sceneId] || [];
 		if (!rowActionRefs.current[record.sceneId]) {
@@ -443,7 +425,7 @@ const SceneTable: React.FC = () => {
 					size="small"
 					scroll={{ y: 360 }}
 					request={async (params) => {
-						return await getSceneImages(record.sceneId);
+						return await getThemeImages(record.sceneId);
 					}}
 					columns={[
 						{
@@ -608,11 +590,11 @@ const SceneTable: React.FC = () => {
 	};
 
 	const handleExpand = async (expanded: boolean, record: any) => {
-		const sceneId = record.sceneId;
+		const themeId = record.sceneId;
 
 		if (expanded) {
 			// 设置展开状态
-			setExpandedRowKeys((prev) => [...prev, sceneId]);
+			setExpandedRowKeys((prev) => [...prev, themeId]);
 
 			// // 如果该行数据还没加载，发请求
 			// if (!expandedData[sceneId]) {
@@ -623,12 +605,12 @@ const SceneTable: React.FC = () => {
 			// }
 		} else {
 			// 折叠该行
-			setExpandedRowKeys((prev) => prev.filter((key) => key !== sceneId));
+			setExpandedRowKeys((prev) => prev.filter((key) => key !== themeId));
 		}
 	};
 
 	return (
-		<ProTable<Scene>
+		<ProTable<Theme>
 			columns={columns}
 			rowKey="sceneId"
 			rowSelection={{
@@ -664,7 +646,7 @@ const SceneTable: React.FC = () => {
 							title="提示"
 							description={"确定删除吗？"}
 							onConfirm={async () => {
-								const result = await delScene(
+								const result = await delTheme(
 									selectedRowKeys as string[],
 								);
 								if (result) {
@@ -683,7 +665,7 @@ const SceneTable: React.FC = () => {
 			}}
 			actionRef={actionRef}
 			cardBordered
-			request={getAllScene}
+			request={getAllTheme}
 			editable={{
 				type: "multiple",
 			}}
@@ -741,7 +723,7 @@ const SceneTable: React.FC = () => {
 			}}
 			scroll={{ x: 1300 }}
 			dateFormatter="string"
-			headerTitle="遥感影像列表"
+			headerTitle="栅格产品列表"
 		/>
 	);
 };
@@ -749,7 +731,7 @@ const SceneTable: React.FC = () => {
 export default function App() {
 	return (
 		<>
-			<SceneTable />
+			<ThemeTable />
 		</>
 	);
 }
