@@ -11,6 +11,7 @@ export default [
         route("sensor", "pages/sensor/index.tsx"),
         route("product", "pages/product/index.tsx"),
         route("satellite", "pages/scene/index.tsx"),
-        route("vector", "pages/vector/index.tsx")
+        route("vector", "pages/vector/index.tsx"),
+        route("theme", "pages/theme/index.tsx")
     ]),
 ] satisfies RouteConfig;
