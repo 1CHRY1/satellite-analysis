@@ -120,8 +120,7 @@ const getSceneImages = async (sceneId: ImageRequest) => {
     }
 };
 
-const delImage = async (images: Image[], scene: Scene) => {
-	const imageIds = images.map((image) => image.imageId);
+const delImage = async (imageIds: string[], scene: Scene) => {
 	const res = await batchDelImage({ imageIds });
 	if (res.status !== 1) {
 		return false;
@@ -509,10 +508,13 @@ const SceneTable: React.FC = () => {
 									}
 									onConfirm={async () => {
 										const result = await delImage(
-											[image_record],
+											[image_record.imageId],
 											record,
 										);
-										if (result) currentRowRef.current?.reload();
+										if (result) {
+											currentRowRef.current?.reload();
+											actionRef.current?.reload()
+										}
 									}}
 									okText="确定"
 									cancelText="取消"
@@ -573,8 +575,9 @@ const SceneTable: React.FC = () => {
 									title="提示"
 									description={"确定删除吗？"}
 									onConfirm={async () => {
-										const result = await delScene(
+										const result = await delImage(
 											selectedRowKeys as string[],
+											record,
 										);
 										if (result) {
 											currentRowRef.current?.reload();
@@ -582,6 +585,8 @@ const SceneTable: React.FC = () => {
 												...prev,
 												[record.sceneId]: [],
 											}));
+											currentRowRef.current?.clearSelected?.()
+											actionRef.current?.reload()
 										}
 									}}
 									okText="确定"
