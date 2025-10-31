@@ -1,7 +1,5 @@
 import React, { useMemo, useState } from "react";
-import {
-	VerticalRightOutlined,
-} from "@ant-design/icons";
+import { VerticalRightOutlined } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { Breadcrumb, Layout, Menu, theme, Tooltip } from "antd";
 import menuLogo from "~/assets/menu-logo.svg";
@@ -13,7 +11,6 @@ import { findMenuItemByKey, useMenuContext } from "~/features/menu/context";
 import type { ItemType } from "antd/es/menu/interface";
 const { Header, Content, Footer, Sider } = Layout;
 
-
 export const VerticalDashboardLayout: React.FC = () => {
 	const [collapsed, setCollapsed] = useState(false);
 	const {
@@ -22,15 +19,19 @@ export const VerticalDashboardLayout: React.FC = () => {
 	const location = useLocation();
 
 	const selectedMenuItems: string[] = useMemo(() => {
-		return [location.pathname];
+		const segments = location.pathname.split("/").filter(Boolean);
+		const rootPath = segments.length > 0 ? `/${segments[0]}` : "/";
+		return [rootPath];
 	}, [location.pathname]);
-	const navigate = useNavigate();
-	const menuContext = useMenuContext()
 
+	const navigate = useNavigate();
+	const menuContext = useMenuContext();
 
 	const handleMenuClick: MenuProps["onClick"] = ({ key }) => {
-		navigate(key)
-		menuContext.setSelectedMenus([findMenuItemByKey(items, key)] as ItemType[])
+		navigate(key);
+		menuContext.setSelectedMenus([
+			findMenuItemByKey(items, key), // root_path or location.pathname?
+		] as ItemType[]);
 	};
 
 	return (
@@ -89,9 +90,9 @@ export const VerticalDashboardLayout: React.FC = () => {
 						<Outlet />
 					</div>
 				</Content>
-				<Footer style={{ textAlign: "center" }}>
+				{/* <Footer style={{ textAlign: "center" }}>
 					Copyright ©{new Date().getFullYear()} Created by OpenGMS
-				</Footer>
+				</Footer> */}
 			</Layout>
 		</Layout>
 	);

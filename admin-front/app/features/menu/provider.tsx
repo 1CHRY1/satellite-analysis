@@ -10,9 +10,10 @@ export const MenuProvider : React.FC<{children: React.ReactNode}> = ({children})
     const location = useLocation();
 
     useEffect(() => {
-        const path = location.pathname;
         console.log(location.pathname)
-		const item = findMenuItemByKey(items, path);
+        const segments = location.pathname.split("/").filter(Boolean);
+		const rootPath = segments.length > 0 ? `/${segments[0]}` : "/";
+		const item = findMenuItemByKey(items, rootPath);
 		if (item) {
 			setSelectedMenus([item]);
 		}
