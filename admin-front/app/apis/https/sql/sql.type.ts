@@ -420,7 +420,7 @@ export interface FunctionStat {
 export interface TableStat {
 	name: string;
 	selectCount: number;
-	selectInfoCount: number;
+	selectIntoCount: number;
 	insertCount: number;
 	updateCount: number;
 	deleteCount: number;

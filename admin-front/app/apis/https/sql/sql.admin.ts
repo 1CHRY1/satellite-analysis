@@ -14,5 +14,5 @@ export async function getSqlStatInfo(datasourceId: number): Promise<SqlStatInfo[
 }
 
 export async function getWallInfo(datasourceId: number): Promise<WallInfo> {
-    return http.get<WallInfo>(`monitor/sql/${datasourceId}`)
+    return http.get<WallInfo>(`monitor/wall/${datasourceId}`)
 }

@@ -122,7 +122,7 @@ const SqlStatTable: React.FC = () => {
 		{
 			dataIndex: "ExecuteAndResultHoldTimeHistogram",
 			title: "执行+RS时分布",
-			render: (_, record) => `[${record.Histogram.join(",")}]`,
+			render: (_, record) => `[${record.ExecuteAndResultHoldTimeHistogram.join(",")}]`,
 			valueType: "text",
 			hideInSearch: true,
 		},
@@ -130,14 +130,14 @@ const SqlStatTable: React.FC = () => {
 			dataIndex: "FetchRowCountHistogram",
 			title: "读取行分布",
 			valueType: "text",
-			render: (_, record) => `[${record.Histogram.join(",")}]`,
+			render: (_, record) => `[${record.FetchRowCountHistogram.join(",")}]`,
 			hideInSearch: true,
 		},
 		{
 			dataIndex: "EffectedRowCountHistogram",
 			title: "更新行分布",
 			valueType: "text",
-			render: (_, record) => `[${record.Histogram.join(",")}]`,
+			render: (_, record) => `[${record.EffectedRowCountHistogram.join(",")}]`,
 			hideInSearch: true,
 		},
 	];
