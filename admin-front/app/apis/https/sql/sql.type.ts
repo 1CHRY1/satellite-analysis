@@ -88,12 +88,12 @@ export interface DBInfo {
 }
 
 export const DB_INFO_FIELDS = {
-    Identity: {
-		label: "",
+	Identity: {
+		label: "Identity",
 		remark: "",
 	},
 	Name: {
-		label: "",
+		label: "名称",
 		remark: "",
 	},
 	UserName: {
@@ -221,147 +221,255 @@ export const DB_INFO_FIELDS = {
 		remark: "",
 	},
 	WaitThreadCount: {
-		label: "累计总次数",
-		remark: "获取连接时累计等待多少次",
-	},
-	NotEmptyWaitCount: {
-		label: "等待总时长",
-		remark: "获取连接时累计等待多长时间",
-	},
-	NotEmptyWaitMillis: {
 		label: "等待线程数量",
 		remark: "当前等待获取连接的线程数",
 	},
+	NotEmptyWaitCount: {
+		label: "累计总次数",
+		remark: "获取连接时累计等待多少次",
+	},
+	NotEmptyWaitMillis: {
+		label: "等待总时长",
+		remark: "获取连接时累计等待多长时间",
+	},
 	PoolingCount: {
-		label: "事务启动数",
-		remark: "事务开始的个数",
-	},
-	PoolingPeak: {
-		label: "事务时间分布",
-		remark: "事务运行时间分布，分布区间为[0-1 ms, 1-10 ms, 10-100 ms, 100-1 s, 1-10 s, 10-100 s, >100 s]",
-	},
-	PoolingPeakTime: {
 		label: "池中连接数",
 		remark: "当前连接池中的数目",
 	},
-	ActiveCount: {
+	PoolingPeak: {
 		label: "池中连接数峰值",
 		remark: "连接池中数目的峰值",
 	},
-	ActivePeak: {
+	PoolingPeakTime: {
 		label: "池中连接数峰值时间",
 		remark: "连接池数目峰值出现的时间",
 	},
-	ActivePeakTime: {
+	ActiveCount: {
 		label: "活跃连接数",
 		remark: "当前连接池中活跃连接数",
 	},
-	LogicConnectCount: {
+	ActivePeak: {
 		label: "活跃连接数峰值",
 		remark: "连接池中活跃连接数峰值",
 	},
-	LogicCloseCount: {
+	ActivePeakTime: {
 		label: "活跃连接数峰值时间",
-		remark: "活跃连接池数峰值出现的时间",
+		remark: "活跃连接池峰值出现的时间",
 	},
-	LogicConnectErrorCount: {
+	LogicConnectCount: {
 		label: "逻辑连接打开次数",
 		remark: "产生的逻辑连接建立总数",
 	},
-	PhysicalConnectCount: {
+	LogicCloseCount: {
 		label: "逻辑连接关闭次数",
 		remark: "产生的逻辑连接关闭总数",
 	},
-	PhysicalCloseCount: {
+	LogicConnectErrorCount: {
 		label: "逻辑连接错误次数",
 		remark: "产生的逻辑连接出错总数",
 	},
-	PhysicalConnectErrorCount: {
-		label: "校验失败数并关闭连接数",
-		remark: "校验连接失败数并关闭连接次数",
-	},
-	DiscardCount: {
-		label: "逻辑连接回收重用次数",
-		remark: "逻辑连接返回收重用次数",
-	},
-	ExecuteCount: {
+	PhysicalConnectCount: {
 		label: "物理连接打开次数",
 		remark: "产生的物理连接建立总数",
 	},
-	ExecuteUpdateCount: {
+	PhysicalCloseCount: {
 		label: "物理关闭数量",
 		remark: "产生的物理关闭总数",
 	},
-	ExecuteQueryCount: {
+	PhysicalConnectErrorCount: {
 		label: "物理连接错误次数",
 		remark: "产生的物理连接失败总数",
 	},
-	ExecuteBatchCount: {
+	DiscardCount: {
+		label: "校验失败废弃连接数",
+		remark: "校验连接失败丢弃连接次数",
+	},
+	ExecuteCount: {
 		label: "执行数",
+		remark: "",
+	},
+	ExecuteUpdateCount: {
+		label: "ExecuteUpdateCount",
+		remark: "",
+	},
+	ExecuteQueryCount: {
+		label: "ExecuteQueryCount",
+		remark: "",
+	},
+	ExecuteBatchCount: {
+		label: "ExecuteBatchCount",
 		remark: "",
 	},
 	ErrorCount: {
 		label: "错误数",
-		remark: "事务提交次数",
+		remark: "",
 	},
 	CommitCount: {
+		label: "提交数",
+		remark: "事务提交次数",
+	},
+	RollbackCount: {
 		label: "回滚数",
 		remark: "事务回滚次数",
 	},
-	RollbackCount: {
-		label: "真实PreparedStatement打开次数",
-		remark: "真实PreparedStatement打开次数",
-	},
 	PSCacheAccessCount: {
-		label: "真实PreparedStatement关闭次数",
-		remark: "真实PreparedStatement关闭次数",
+		label: "PSCache访问次数",
+		remark: "PSCache访问次数",
 	},
 	PSCacheHitCount: {
-		label: "PSCache访问次数",
-		remark: "PSCache访问总数",
-	},
-	PSCacheMissCount: {
 		label: "PSCache命中次数",
 		remark: "PSCache命中次数",
 	},
-	StartTransactionCount: {
+	PSCacheMissCount: {
 		label: "PSCache不命中次数",
 		remark: "PSCache不命中次数",
 	},
+	StartTransactionCount: {
+		label: "事务启动数",
+		remark: "事务开始的个数",
+	},
 	TransactionHistogram: {
+		label: "事务时间分布",
+		remark: "事务运行时间分布，分布区间为[0-1 ms, 1-10 ms, 10-100 ms, 100-1 s, 1-10 s, 10-100 s, >100 s]",
+	},
+	ConnectionHoldTimeHistogram: {
 		label: "连接持有时间分布",
 		remark: "连接持有时间分布，分布区间为[0-1 ms, 1-10 ms, 10-100 ms, 100ms-1s, 1-10 s, 10-100 s, 100-1000 s, >1000 s]",
 	},
-	ConnectionHoldTimeHistogram: {
-		label: "Clob打开数",
-		remark: "Clob打开数",
-	},
-	RemoveAbandoned: {
-		label: "Blob打开数",
-		remark: "Blob打开数",
-	},
+	// RemoveAbandoned: {
+	// 	label: "Blob打开数",
+	// 	remark: "Blob打开数",
+	// },
 	ClobOpenCount: {
+		label: "Clob打开次数",
+		remark: "Clob打开次数",
+	},
+	BlobOpenCount: {
+		label: "Blob打开次数",
+		remark: "Blob打开次数",
+	},
+	KeepAliveCheckCount: {
 		label: "KeepAlive检测次数",
 		remark: "KeepAlive检测次数",
 	},
-	BlobOpenCount: {
-		label: "活跃连接堆栈查看",
-		remark: "StackTrace for active Connection. [View JSON API]",
-	},
-	KeepAliveCheckCount: {
-		label: "连接池中连接信息",
-		remark: "Info for polling connection. [View JSON API]",
-	},
 	RecycleErrorCount: {
-		label: "sql列表",
-		remark: "Info for SQL. [View JSON API]",
+		label: "逻辑连接回收重用次数",
+		remark: "逻辑连接回收重用次数",
 	},
 	PreparedStatementOpenCount: {
-		label: "",
-		remark: "",
+		label: "真实PreparedStatement打开次数",
+		remark: "真实PreparedStatement打开次数",
 	},
 	PreparedStatementClosedCount: {
-		label: "",
-		remark: "",
+		label: "真实PreparedStatement关闭次数",
+		remark: "真实PreparedStatement关闭次数",
 	},
 } as const;
+
+export interface SqlStatInfo {
+	ExecuteAndResultSetHoldTime: number;
+	EffectedRowCountHistogram: number[];
+	LastErrorMessage: string | null;
+	Histogram: number[];
+	InputStreamOpenCount: number;
+	BatchSizeTotal: number;
+	FetchRowCountMax: number;
+	ErrorCount: number;
+	BatchSizeMax: number;
+	URL: string | null;
+	Name: string;
+	LastErrorTime: string | null;
+	ReaderOpenCount: number;
+	EffectedRowCountMax: number;
+	LastErrorClass: string | null;
+	InTransactionCount: number;
+	LastErrorStackTrace: string | null;
+	ResultSetHoldTime: number;
+	TotalTime: number;
+	ID: number;
+	ConcurrentMax: number;
+	RunningCount: number;
+	FetchRowCount: number;
+	MaxTimespanOccurTime: string | null;
+	LastSlowParameters: string | null;
+	ReadBytesLength: number;
+	DbType: string;
+	DataSource: string | null;
+	SQL: string;
+	HASH: number;
+	LastError: string | null;
+	MaxTimespan: number;
+	BlobOpenCount: number;
+	ExecuteCount: number;
+	EffectedRowCount: number;
+	ReadStringLength: number;
+	ExecuteAndResultHoldTimeHistogram: number[];
+	File: string | null;
+	ClobOpenCount: number;
+	LastTime: string | null;
+	FetchRowCountHistogram: number[];
+}
+
+/** 单个函数的统计信息 */
+export interface FunctionStat {
+	name: string;
+	invokeCount: number;
+}
+
+/** 表操作统计 */
+export interface TableStat {
+	name: string;
+	selectCount: number;
+	selectInfoCount: number;
+	insertCount: number;
+	updateCount: number;
+	deleteCount: number;
+	truncateCount: number;
+	createCount: number;
+	alterCount: number;
+	dropCount: number;
+	replaceCount: number;
+	deleteDataCount: number;
+	updateHistogram: number[];
+	updateDataCount: number;
+	fetchRowCount: number;
+	fetchRowCountHistogram: number[];
+}
+
+/** 白名单 SQL 统计 */
+export interface WhiteListItem {
+	sql: string;
+	executeCount: number;
+	fetchRowCount: number;
+	updateCount: number;
+	sample: string;
+	executeErrorCount: number;
+}
+
+/** 黑名单 SQL 统计（与白名单类似，但多 violationMessage，少 executeErrorCount） */
+export interface BlackListItem {
+	sql: string;
+	executeCount: number;
+	fetchRowCount: number;
+	updateCount: number;
+	sample: string;
+	violationMessage: string;
+}
+
+/** 顶层监控统计结构 */
+export interface WallInfo {
+	checkCount: number;
+	hardCheckCount: number;
+	violationCount: number;
+	violationEffectRowCount: number;
+	blackListHitCount: number;
+	blackListSize: number;
+	whiteListHitCount: number;
+	whiteListSize: number;
+	syntaxErrorCount: number;
+
+	tables: TableStat[];
+	functions: FunctionStat[] | null;
+	blackList: BlackListItem[];
+	whiteList: WhiteListItem[];
+}

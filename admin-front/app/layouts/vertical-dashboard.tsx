@@ -90,9 +90,9 @@ export const VerticalDashboardLayout: React.FC = () => {
 						<Outlet />
 					</div>
 				</Content>
-				<Footer style={{ textAlign: "center" }}>
+				{/* <Footer style={{ textAlign: "center" }}>
 					Copyright ©{new Date().getFullYear()} Created by OpenGMS
-				</Footer>
+				</Footer> */}
 			</Layout>
 		</Layout>
 	);

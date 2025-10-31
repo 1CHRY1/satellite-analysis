@@ -19,5 +19,12 @@ export default [
             route("backend", "pages/cache/backend.tsx"),
             route("redis", "pages/cache/redis.tsx"),
         ]),
+        // ✅ SQL监控模块
+        route("sql", "layouts/sql-layout.tsx", [
+            index("pages/sql/index.tsx"), // 默认进入数据源
+            route("datasource", "pages/sql/datasource.tsx"),
+            route("monitor", "pages/sql/monitor.tsx"),
+            route("wall", "pages/sql/wall.tsx"),
+        ]),
     ]),
 ] satisfies RouteConfig;
