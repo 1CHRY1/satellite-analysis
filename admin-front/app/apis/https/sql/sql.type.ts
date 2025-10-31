@@ -645,3 +645,27 @@ export interface WebURIStat {
 	RequestTimeMillisMax: number;
 	RequestTimeMillisMaxOccurTime: string;
 }
+
+export interface WebSessionStat {
+    SESSIONID: string;
+    Principal: string | null; // 当前会话的用户主体，可能为空
+    RunningCount: number;
+    ConcurrentMax: number;
+    RequestCount: number;
+    RequestTimeMillisTotal: number;
+  
+    CreateTime: string;
+    LastAccessTime: string;
+    RemoteAddress: string;
+  
+    JdbcCommitCount: number;
+    JdbcRollbackCount: number;
+    JdbcExecuteCount: number;
+    JdbcExecuteTimeMillis: number;
+    JdbcFetchRowCount: number;
+    JdbcUpdateCount: number;
+  
+    UserAgent: string;
+    RequestInterval: number[];
+  }
+  

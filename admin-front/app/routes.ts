@@ -27,6 +27,7 @@ export default [
 			route("wall", "pages/sql/wall.tsx"),
 			route("webapp", "pages/sql/webapp.tsx"),
             route("weburi", "pages/sql/weburi.tsx"),
+            route("websession", "pages/sql/session.tsx"),
 		]),
 	]),
 ] satisfies RouteConfig;

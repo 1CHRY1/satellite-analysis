@@ -1,5 +1,5 @@
 import http from '~/apis/clients/adminClient'
-import type { DBInfo, SqlStatInfo, WallInfo, WebAppStat, WebURIStat } from './sql.type'
+import type { DBInfo, SqlStatInfo, WallInfo, WebAppStat, WebSessionStat, WebURIStat } from './sql.type'
 
 export async function getAllDBInfo(): Promise<DBInfo[]> {
     return http.get<DBInfo[]>(`monitor/datasource`)
@@ -23,4 +23,12 @@ export async function getAllWebAppStatInfo(): Promise<WebAppStat[]> {
 
 export async function getAllWebURIStatInfo(): Promise<WebURIStat[]> {
     return http.get<WebURIStat[]>(`monitor/uri`)
+}
+
+export async function getAllWebSessionStatInfo(): Promise<WebSessionStat[]> {
+    return http.get<WebSessionStat[]>(`monitor/session`)
+}
+
+export async function addTestSession()  {
+    return http.get(`monitor/test-session`)
 }
