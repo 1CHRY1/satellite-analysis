@@ -1,97 +1,225 @@
-import { ProDescriptions } from "@ant-design/pro-components";
-import { Collapse, Divider, Tooltip } from "antd";
-import { QuestionCircleOutlined } from "@ant-design/icons";
-import { useEffect, useState } from "react";
-import { DB_INFO_FIELDS } from "~/apis/https/sql/sql.type";
-import { getAllDBInfo } from "~/apis/https/sql/sql.admin";
-import type { DBInfo } from "~/apis/https/sql/sql.type";
+import type {
+	ActionType,
+	ParamsType,
+	ProColumns,
+	RequestData,
+} from "@ant-design/pro-components";
+import { ProTable } from "@ant-design/pro-components";
+import { useRef, useState } from "react";
+import {
+	getAllDBInfo,
+	getAllSqlStatInfo,
+	getSqlStatInfo,
+} from "~/apis/https/sql/sql.admin";
+import type { SqlStatInfo } from "~/apis/https/sql/sql.type";
 
-const DBInfoDisplay = () => {
-	const [dbList, setDbList] = useState<DBInfo[]>([]);
+const SqlStatTable: React.FC = () => {
+	const actionRef = useRef<ActionType>(undefined);
+	const [dbOpts, setDbOpts] = useState<{ label: string; value: number }[]>(
+		[],
+	);
 
-	// 格式化值
-	const formatValue = (key: string, value: any) => {
-		if (value === null || value === undefined) return "null";
-		if (Array.isArray(value)) return value.length ? value.join(", ") : "[]";
-		if (typeof value === "boolean") return value ? "true" : "false";
-		if (
-			key.includes("Time") &&
-			typeof value === "string" &&
-			value.includes("T")
-		) {
-			return new Date(value).toLocaleString("zh-CN");
+	const columns: ProColumns<SqlStatInfo>[] = [
+		{
+			dataIndex: "index",
+			valueType: "indexBorder",
+			width: 48,
+		},
+        {
+			dataIndex: "SQL",
+			title: "SQL",
+			valueType: "text",
+            width: 240,
+            ellipsis: true,
+            copyable: true,
+			hideInSearch: true,
+		},
+		{
+			dataIndex: "ExecuteCount",
+			title: "执行数",
+            width: 70,
+			valueType: "digit",
+			hideInSearch: true,
+		},
+		{
+			dataIndex: "Name",
+			title: "所属数据源",
+			filters: true,
+			onFilter: true,
+			valueType: "text",
+			fieldProps: {
+				allowClear: true,
+				showSearch: true,
+			},
+			valueEnum: Object.fromEntries(
+				dbOpts.map((db, idx) => [
+					db.value,
+					{
+						text: db.label,
+						status: ["Default", "Processing", "Success", "Warning"][
+							idx % 4
+						],
+					},
+				]),
+			),
+		},
+		{
+			dataIndex: "TotalTime",
+			title: "执行时间",
+            width: 70,
+			valueType: "digit",
+			hideInSearch: true,
+		},
+		{
+			dataIndex: "MaxTimespan",
+			title: "最慢",
+            width: 70,
+			valueType: "digit",
+			hideInSearch: true,
+		},
+		{
+			dataIndex: "InTransactionCount",
+			title: "事务执行",
+            width: 70,
+			valueType: "digit",
+			hideInSearch: true,
+		},
+		{
+			dataIndex: "EffectedRowCount",
+			title: "更新行数",
+            width: 70,
+			valueType: "digit",
+			hideInSearch: true,
+		},
+		{
+			dataIndex: "FetchRowCount",
+			title: "读取行数",
+            width: 70,
+			valueType: "digit",
+			hideInSearch: true,
+		},
+		{
+			dataIndex: "RunningCount",
+			title: "执行中",
+            width: 70,
+			valueType: "digit",
+			hideInSearch: true,
+		},
+		{
+			dataIndex: "ConcurrentMax",
+			title: "最大并发",
+            width: 70,
+			valueType: "digit",
+			hideInSearch: true,
+		},
+		{
+			dataIndex: "Histogram",
+			title: "执行时间分布",
+			render: (_, record) => `[${record.Histogram.join(",")}]`,
+			valueType: "text",
+			hideInSearch: true,
+		},
+		{
+			dataIndex: "ExecuteAndResultHoldTimeHistogram",
+			title: "执行+RS时分布",
+			render: (_, record) => `[${record.Histogram.join(",")}]`,
+			valueType: "text",
+			hideInSearch: true,
+		},
+		{
+			dataIndex: "FetchRowCountHistogram",
+			title: "读取行分布",
+			valueType: "text",
+			render: (_, record) => `[${record.Histogram.join(",")}]`,
+			hideInSearch: true,
+		},
+		{
+			dataIndex: "EffectedRowCountHistogram",
+			title: "更新行分布",
+			valueType: "text",
+			render: (_, record) => `[${record.Histogram.join(",")}]`,
+			hideInSearch: true,
+		},
+	];
+
+	const getAllSqlStat = async (
+		params: ParamsType & {
+			pageSize?: number;
+			current?: number;
+			keyword?: string;
+		},
+	): Promise<Partial<RequestData<SqlStatInfo>>> => {
+		const dbRes = await getAllDBInfo();
+		setDbOpts(dbRes.map((db) => ({ label: db.Name, value: db.Identity })));
+		let res;
+		if (params.Name) {
+			res = await getSqlStatInfo(params.Name);
+		} else {
+			res = await getAllSqlStatInfo();
 		}
-		return String(value);
+		console.log(params);
+		return {
+			data: res,
+			success: true,
+			total: res.length,
+		};
 	};
 
-	// 获取所有 DB
-	useEffect(() => {
-		getAllDBInfo().then((res) => {
-			if (Array.isArray(res)) {
-				setDbList(res);
-			}
-		});
-	}, []);
-
-	// 列配置
-	const columns = Object.entries(DB_INFO_FIELDS).map(([key, config]) => {
-		const { label, remark } = config;
-
-		return {
-			title: remark ? (
-				<span>
-					{label}{" "}
-					<Tooltip title={remark}>
-						<QuestionCircleOutlined
-							style={{ color: "#1890ff", cursor: "help" }}
-						/>
-					</Tooltip>
-				</span>
-			) : (
-				label
-			),
-			dataIndex: key,
-			render: (_: any, record: DBInfo) =>
-				formatValue(key, record?.[key as keyof DBInfo]),
-		};
-	});
-
 	return (
-		<>
-			<h2
-				style={{
-					marginBottom: "24px",
-					fontSize: "20px",
-					fontWeight: 600,
-				}}
-			>
-				数据库连接池信息
-			</h2>
-			{dbList.map((db, index) => (
-				<div key={index}>
-					<Divider orientation="left">{db.Name}</Divider>
-					<Collapse
-						items={[
-							{
-								key: String(index),
-								label: `数据源${index + 1} - ${db.URL}`,
-								children: (
-									<ProDescriptions<DBInfo>
-										column={2}
-										dataSource={db}
-										columns={columns}
-										bordered
-										size="small"
-										emptyText="-"
-									/>
-								),
-							},
-						]}
-					/>
-				</div>
-			))}
-		</>
+		<ProTable<SqlStatInfo>
+			columns={columns}
+			rowKey="ID"
+			actionRef={actionRef}
+			cardBordered
+			request={getAllSqlStat}
+			editable={{
+				type: "multiple",
+			}}
+			columnsState={{
+				persistenceKey: "pro-table-singe-demos",
+				persistenceType: "localStorage",
+				defaultValue: {
+					option: { fixed: "right", disable: true },
+				},
+				onChange(value) {
+					console.log("value: ", value);
+				},
+			}}
+			search={{
+				labelWidth: "auto",
+			}}
+			options={{
+				setting: {
+					listsHeight: 400,
+				},
+			}}
+			form={{
+				// 由于配置了 transform，提交的参数与定义的不同这里需要转化一下
+				syncToUrl: (values, type) => {
+					if (type === "get") {
+						return {
+							...values,
+							created_at: [values.startTime, values.endTime],
+						};
+					}
+					return values;
+				},
+			}}
+			pagination={{
+				pageSize: 10,
+				onChange: (page) => console.log(page),
+			}}
+			scroll={{ x: 1300 }}
+			dateFormatter="string"
+			headerTitle="SQL列表"
+		/>
 	);
 };
 
-export default DBInfoDisplay;
+export default function App() {
+	return (
+		<>
+			<SqlStatTable />
+		</>
+	);
+}
