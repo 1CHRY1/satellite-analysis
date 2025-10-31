@@ -473,3 +473,175 @@ export interface WallInfo {
 	blackList: BlackListItem[];
 	whiteList: WhiteListItem[];
 }
+
+export interface WebAppStat {
+	ContextPath: string;
+	RunningCount: number;
+	ConcurrentMax: number;
+	RequestCount: number;
+	SessionCount: number;
+	JdbcCommitCount: number;
+	JdbcRollbackCount: number;
+	JdbcExecuteCount: number;
+	JdbcExecuteTimeMillis: number;
+	JdbcFetchRowCount: number;
+	JdbcUpdateCount: number;
+
+	// OS 统计
+	OSMacOSXCount: number;
+	OSWindowsCount: number;
+	OSLinuxCount: number;
+	OSSymbianCount: number;
+	OSFreeBSDCount: number;
+	OSOpenBSDCount: number;
+	OSAndroidCount: number;
+	OSWindows98Count: number;
+	OSWindowsXPCount: number;
+	OSWindows2000Count: number;
+	OSWindowsVistaCount: number;
+	OSWindows7Count: number;
+	OSWindows8Count: number;
+
+	// Android 版本统计
+	OSAndroid15Count: number;
+	OSAndroid16Count: number;
+	OSAndroid20Count: number;
+	OSAndroid21Count: number;
+	OSAndroid22Count: number;
+	OSAndroid23Count: number;
+	OSAndroid30Count: number;
+	OSAndroid31Count: number;
+	OSAndroid32Count: number;
+	OSAndroid40Count: number;
+	OSAndroid41Count: number;
+	OSAndroid42Count: number;
+	OSAndroid43Count: number;
+	OSLinuxUbuntuCount: number;
+
+	// 浏览器统计
+	BrowserIECount: number;
+	BrowserFirefoxCount: number;
+	BrowserChromeCount: number;
+	BrowserSafariCount: number;
+	BrowserOperaCount: number;
+	BrowserIE5Count: number;
+	BrowserIE6Count: number;
+	BrowserIE7Count: number;
+	BrowserIE8Count: number;
+	BrowserIE9Count: number;
+	BrowserIE10Count: number;
+	Browser360SECount: number;
+
+	// 设备统计
+	DeviceAndroidCount: number;
+	DeviceIpadCount: number;
+	DeviceIphoneCount: number;
+	DeviceWindowsPhoneCount: number;
+
+	// 爬虫统计
+	BotCount: number;
+	BotBaiduCount: number;
+	BotYoudaoCount: number;
+	BotGoogleCount: number;
+	BotMsnCount: number;
+	BotBingCount: number;
+	BotSosoCount: number;
+	BotSogouCount: number;
+	BotYahooCount: number;
+}
+
+export const WEBAPP_INFO_FIELDS = {
+	ContextPath: "",
+	RunningCount: "执行中",
+	ConcurrentMax: "最大并发",
+	RequestCount: "请求次数",
+	JdbcCommitCount: "事务提交数",
+	JdbcRollbackCount: "事务回滚数",
+	JdbcExecuteCount: "Jdbc执行数",
+	JdbcExecuteTimeMillis: "Jdbc时间",
+	JdbcFetchRowCount: "Jdbc读取行数",
+	JdbcUpdateCount: "Jdbc更新行数",
+	SessionCount: "",
+	OSMacOSXCount: "",
+	OSWindowsCount: "",
+	OSLinuxCount: "",
+	OSSymbianCount: "",
+	OSFreeBSDCount: "",
+	OSOpenBSDCount: "",
+	OSAndroidCount: "",
+	OSWindows98Count: "",
+	OSWindowsXPCount: "",
+	OSWindows2000Count: "",
+	OSWindowsVistaCount: "",
+	OSWindows7Count: "",
+	OSWindows8Count: "",
+	OSAndroid15Count: "",
+	OSAndroid16Count: "",
+	OSAndroid20Count: "",
+	OSAndroid21Count: "",
+	OSAndroid22Count: "",
+	OSAndroid23Count: "",
+	OSAndroid30Count: "",
+	OSAndroid31Count: "",
+	OSAndroid32Count: "",
+	OSAndroid40Count: "",
+	OSAndroid41Count: "",
+	OSAndroid42Count: "",
+	OSAndroid43Count: "",
+	OSLinuxUbuntuCount: "",
+	BrowserIECount: "",
+	BrowserFirefoxCount: "",
+	BrowserChromeCount: "",
+	BrowserSafariCount: "",
+	BrowserOperaCount: "",
+	BrowserIE5Count: "",
+	BrowserIE6Count: "",
+	BrowserIE7Count: "",
+	BrowserIE8Count: "",
+	BrowserIE9Count: "",
+	BrowserIE10Count: "",
+	Browser360SECount: "",
+	DeviceAndroidCount: "",
+	DeviceIpadCount: "",
+	DeviceIphoneCount: "",
+	DeviceWindowsPhoneCount: "",
+	BotCount: "",
+	BotBaiduCount: "",
+	BotYoudaoCount: "",
+	BotGoogleCount: "",
+	BotMsnCount: "",
+	BotBingCount: "",
+	BotSosoCount: "",
+	BotSogouCount: "",
+	BotYahooCount: "",
+} as const;
+
+export interface WebURIStat {
+	URI: string;
+	RunningCount: number;
+	ConcurrentMax: number;
+	RequestCount: number;
+	RequestTimeMillis: number;
+	ErrorCount: number;
+	LastAccessTime: string;
+
+	JdbcCommitCount: number;
+	JdbcRollbackCount: number;
+	JdbcExecuteCount: number;
+	JdbcExecuteErrorCount: number;
+	JdbcExecutePeak: number;
+	JdbcExecuteTimeMillis: number;
+	JdbcFetchRowCount: number;
+	JdbcFetchRowPeak: number;
+	JdbcUpdateCount: number;
+	JdbcUpdatePeak: number;
+	JdbcPoolConnectionOpenCount: number;
+	JdbcPoolConnectionCloseCount: number;
+	JdbcResultSetOpenCount: number;
+	JdbcResultSetCloseCount: number;
+
+	Histogram: number[];
+	Profiles: any[]; // 若有具体结构，可再细化
+	RequestTimeMillisMax: number;
+	RequestTimeMillisMaxOccurTime: string;
+}
