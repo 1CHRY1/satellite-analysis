@@ -12,6 +12,12 @@ export default [
         route("product", "pages/product/index.tsx"),
         route("satellite", "pages/scene/index.tsx"),
         route("vector", "pages/vector/index.tsx"),
-        route("theme", "pages/theme/index.tsx")
+        route("theme", "pages/theme/index.tsx"),
+        // ✅ 缓存管理模块
+        route("cache", "layouts/cache-layout.tsx", [
+            index("pages/cache/index.tsx"), // 默认进入后端缓存
+            route("backend", "pages/cache/backend.tsx"),
+            route("redis", "pages/cache/redis.tsx"),
+        ]),
     ]),
 ] satisfies RouteConfig;
