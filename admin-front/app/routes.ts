@@ -29,5 +29,6 @@ export default [
             route("weburi", "pages/sql/weburi.tsx"),
             route("websession", "pages/sql/session.tsx"),
 		]),
+        route("log", "pages/log/index.tsx"),
 	]),
 ] satisfies RouteConfig;
