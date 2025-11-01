@@ -7,6 +7,7 @@ export interface EnvConfig {
     api: string
     minio: string,
     minio_console: string,
+    log: string,
 }
 
 export const ENV_CONFIG: Record<string, EnvConfig> = {
@@ -15,27 +16,32 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
         api: 'http://localhost:8999',
         minio: 'http://223.2.34.8:30901',
         minio_console: 'http://223.2.34.8:30900',
+        log: 'ws://223.2.34.8:9888',
     },
     // 集群环境
     cluster: {
         api: 'http://223.2.34.8:31584',
         minio: 'http://223.2.34.8:30901',
         minio_console: 'http://223.2.34.8:30900',
+        log: 'ws://223.2.34.8:9888',
     },
     // HXF开发环境
     hxf: {
         api: 'http://223.2.43.238:8999',
         minio: 'http://223.2.34.8:30901',
         minio_console: 'http://223.2.34.8:30900',
+        log: 'ws://223.2.34.8:9888',
     },
     slk: {
         api: 'http://223.2.34.8:31584',
         minio: 'http://223.2.34.8:30901',
         minio_console: 'http://223.2.34.8:30900',
+        log: 'ws://223.2.34.8:9888',
     },
     zzw: {
         api: 'http://localhost:8999',
         minio: 'http://223.2.34.8:30901',
         minio_console: 'http://223.2.34.8:30900',
+        log: 'ws://223.2.34.8:9888',
     }
 }
