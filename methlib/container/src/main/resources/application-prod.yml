@@ -1,0 +1,91 @@
+spring:
+    datasource:
+        type: com.alibaba.druid.pool.DruidDataSource
+        druid:
+            driver-class-name: com.mysql.cj.jdbc.Driver
+            url: jdbc:mysql://94.191.49.160:8090/dge_container?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+            username: root
+            password: root
+            initial-size: 10
+            max-active: 100
+            min-idle: 10
+            max-wait: 60000
+            pool-prepared-statements: true
+            max-pool-prepared-statement-per-connection-size: 20
+            time-between-eviction-runs-millis: 60000
+            min-evictable-idle-time-millis: 300000
+            #Oracle需要打开注释
+            #validation-query: SELECT 1 FROM DUAL
+            test-while-idle: true
+            test-on-borrow: false
+            test-on-return: false
+            stat-view-servlet:
+                enabled: true
+                url-pattern: /druid/*
+                #login-username: admin
+                #login-password: admin
+            filter:
+                stat:
+                    log-slow-sql: true
+                    slow-sql-millis: 1000
+                    merge-sql: false
+                wall:
+                    config:
+                        multi-statement-allow: true
+
+
+##多数据源的配置
+#dynamic:
+#  datasource:
+#    slave1:
+#      driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+#      url: jdbc:sqlserver://localhost:1433;DatabaseName=renren_security
+#      username: sa
+#      password: 123456
+#    slave2:
+#      driver-class-name: org.postgresql.Driver
+#      url: jdbc:postgresql://localhost:5432/renren_security
+#      username: renren
+#      password: 123456
+
+    redis:
+        open: true  # 是否开启redis缓存  true开启   false关闭
+        database: 0
+        host: 127.0.0.1
+        port: 6379
+        password:    # 密码（默认为空）
+        timeout: 1800000  # 连接超时时长（毫秒）
+        jedis:
+            pool:
+                max-active: 1000  # 连接池最大连接数（使用负值表示没有限制）
+                max-wait: -1ms      # 连接池最大阻塞等待时间（使用负值表示没有限制）
+                max-idle: 10      # 连接池中的最大空闲连接
+                min-idle: 5       # 连接池中的最小空闲连接
+
+container:
+    redis:
+        open: true
+    shiro:
+        redis: false
+    # APP模块，是通过jwt认证的，如果要使用APP模块，则需要修改【加密秘钥】
+    jwt:
+        # 加密秘钥
+        secret: f4e2e52034348f86b67cde581c0f9eb5[www.renren.io]
+        # token有效时长，7天，单位秒
+        expire: 604800
+        header: token
+
+    method:
+        wd: "D:\\DGE\\container\\backend\\container\\method\\wd\\" # working directory方法工作路径
+        pd: "D:\\DGE\\container\\backend\\container\\method\\pd\\" # package directory方法库存储路径
+    data:
+        fd: "D:\\DGE\\container\\backend\\container\\data\\file\\" # file directory文件存储路径
+        td: "D:\\DGE\\container\\backend\\container\\data\\temp\\" # temp directory临时文件存储路径
+        server: "http://221.224.35.86:38083/data" # 数据中转服务器地址
+        dsd: "D:\\DGE\\container\\backend\\container\\data\\ds\\" # data source数据源实体存储路径
+    env:
+        py: "C:\\Python312\\"
+
+# 项目目录
+project:
+    folder: E:\\DataServiceContainer\\AppData\\container\\
