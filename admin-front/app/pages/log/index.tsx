@@ -37,12 +37,12 @@ export interface LogMessage {
   
 
 export default function RealtimeLogViewer({
-	urlBase = "ws://223.2.43.238:9888/log",
 	initialLines = 200,
 	maxBuffer = 2000,
 	autoConnect = true,
 	showTimestamps = true,
 }) {
+	const urlBase = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/wslog`;
 	const [lines, setLines] = useState(initialLines);
 	const [connected, setConnected] = useState(false);
 	const [autoscroll, setAutoscroll] = useState(true);

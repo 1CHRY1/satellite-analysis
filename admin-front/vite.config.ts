@@ -24,17 +24,23 @@ const createProxyConfig = () => {
 			changeOrigin: true,
 			rewrite: (path: string) => path.replace(/^\/admin/, ""),
 		},
-    // MinIO Console API
+		// MinIO Console API
 		"/minio/console": {
 			target: `${currentEnv.minio_console}`,
 			changeOrigin: true,
 			rewrite: (path: string) => path.replace(/^\/minio\/console/, ""),
 		},
-    // MinIO Front API
+		// MinIO Front API
 		"/minio": {
 			target: `${currentEnv.minio}/browser`,
 			changeOrigin: true,
 			rewrite: (path: string) => path.replace(/^\/minio/, ""),
+		},
+		"/wslog": {
+			target: `${currentEnv.wslog}`,
+			ws: true, // 启用 websocket 代理
+			changeOrigin: true,
+			rewrite: (path: string) => path.replace(/^\/wslog/, "/log"),
 		},
 	};
 };
