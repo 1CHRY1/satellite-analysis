@@ -26,9 +26,10 @@ export default [
 			route("monitor", "pages/sql/monitor.tsx"),
 			route("wall", "pages/sql/wall.tsx"),
 			route("webapp", "pages/sql/webapp.tsx"),
-            route("weburi", "pages/sql/weburi.tsx"),
-            route("websession", "pages/sql/session.tsx"),
+			route("weburi", "pages/sql/weburi.tsx"),
+			route("websession", "pages/sql/session.tsx"),
 		]),
-        route("log", "pages/log/index.tsx"),
+		route("log", "pages/log/index.tsx"),
+		route("task", "pages/task/index.tsx"),
 	]),
 ] satisfies RouteConfig;
