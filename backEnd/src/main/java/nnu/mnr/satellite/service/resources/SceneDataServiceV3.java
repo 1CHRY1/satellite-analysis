@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.cache.SceneDataCache;
 import nnu.mnr.satellite.enums.common.SceneTypeByResolution;
+import nnu.mnr.satellite.enums.common.SceneTypeByTheme;
 import nnu.mnr.satellite.mapper.resources.ISceneRepoV3;
 import nnu.mnr.satellite.model.dto.cache.CacheDataDTO;
 import nnu.mnr.satellite.model.dto.resources.ScenesFetchDTOV3;
@@ -70,16 +71,19 @@ public class SceneDataServiceV3 {
             Geometry boundary = regionDataService.getRegionById(regionId).getBoundary();
             List<Integer[]> tileIds = TileCalculateUtil.getRowColByRegionAndResolution(boundary, resolution);
             Geometry gridsBoundary = GeometryUtil.getGridsBoundaryByTilesAndResolution(tileIds, resolution);
-            String dataType = "'satellite', 'dem', 'dsm', 'ndvi', 'svr', '3d'";
+            String themeCodes = SceneTypeByTheme.getAllCodes().stream()
+                    .map(code -> "'" + code + "'")  // 给每个 code 加上单引号
+                    .collect(Collectors.joining(", "));
+            String dataType = "'satellite', " + themeCodes;
 
             List<SceneDesVO> allScenesInfo = getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, dataType);
             List<SceneDesVO> scenesInfo = new ArrayList<>();
             List<SceneDesVO> themesInfo = new ArrayList<>();
             for (SceneDesVO scene : allScenesInfo) {
-                String sceneDataType = scene.getDataType(); // 假设 SceneDesVO 有 getDataType() 方法
+                String sceneDataType = scene.getDataType();
                 if ("satellite".equals(sceneDataType)) {
                     scenesInfo.add(scene);
-                } else if (Arrays.asList("dem", "dsm", "ndvi", "svr", "3d").contains(sceneDataType)) {
+                } else if (SceneTypeByTheme.getAllCodes().contains(sceneDataType)) {
                     themesInfo.add(scene);
                 }
             }
@@ -148,7 +152,10 @@ public class SceneDataServiceV3 {
         if (userSceneCache == null && userThemeCache == null) {
             // 缓存未命中，从数据库中读数据
             Geometry gridsBoundary = locationService.getLocationBoundary(resolution, locationId);
-            String dataType = "'satellite', 'dem', 'dsm', 'ndvi', 'svr', '3d'";
+            String themeCodes = SceneTypeByTheme.getAllCodes().stream()
+                    .map(code -> "'" + code + "'")
+                    .collect(Collectors.joining(", "));
+            String dataType = "'satellite', " + themeCodes;
 
             List<SceneDesVO> allScenesInfo = getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, dataType);
             allScenesInfo.sort((s1, s2) -> s2.getSceneTime().compareTo(s1.getSceneTime()));
@@ -158,7 +165,7 @@ public class SceneDataServiceV3 {
                 String sceneDataType = scene.getDataType(); // 假设 SceneDesVO 有 getDataType() 方法
                 if ("satellite".equals(sceneDataType)) {
                     scenesInfo.add(scene);
-                } else if (Arrays.asList("dem", "dsm", "ndvi", "svr", "3d").contains(sceneDataType)) {
+                } else if (SceneTypeByTheme.getAllCodes().contains(sceneDataType)) {
                     themesInfo.add(scene);
                 }
             }
@@ -314,7 +321,7 @@ public class SceneDataServiceV3 {
         }
     }
 
-    public static double parseResolutionToMeters(String resolution) {
+    public double parseResolutionToMeters(String resolution) {
         if (resolution == null || !resolution.endsWith("m")) {
             throw new IllegalArgumentException("Invalid resolution format: " + resolution);
         }

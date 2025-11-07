@@ -2,6 +2,7 @@ package nnu.mnr.satellite.mapper.resources;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import nnu.mnr.satellite.model.po.resources.Scene;
+import nnu.mnr.satellite.model.vo.admin.SceneSimpleInfoVO;
 import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
 import nnu.mnr.satellite.utils.typeHandler.FastJson2TypeHandler;
 import org.apache.ibatis.annotations.Param;
@@ -51,4 +52,15 @@ public interface ISceneRepoV3 extends BaseMapper<Scene> {
             @Param("endTime") String endTime,
             @Param("wkt") String wkt,
             @Param("dataType") String dataType);
+
+    @Select("SELECT sc.scene_id, pd.resolution, ss.data_type " +
+            "FROM scene_table sc " +
+            "LEFT JOIN sensor_table ss ON sc.sensor_id = ss.sensor_id " +
+            "LEFT JOIN product_table pd ON sc.product_id = pd.product_id ")
+    @Results({
+            @Result(property = "sceneId", column = "scene_id"),
+            @Result(property = "resolution", column = "resolution"),
+            @Result(property = "dataType", column = "data_type"),
+    })
+    List<SceneSimpleInfoVO> getAllScenes();
 }

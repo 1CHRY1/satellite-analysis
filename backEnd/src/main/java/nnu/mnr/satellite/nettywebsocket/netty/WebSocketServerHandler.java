@@ -1,10 +1,9 @@
 package nnu.mnr.satellite.nettywebsocket.netty;
 
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.*;
 import io.netty.handler.codec.http.websocketx.*;
+
+import java.util.concurrent.ConcurrentHashMap;
 
 
 @ChannelHandler.Sharable

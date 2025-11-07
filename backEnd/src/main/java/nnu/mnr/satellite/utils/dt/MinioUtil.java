@@ -1,17 +1,28 @@
 package nnu.mnr.satellite.utils.dt;
 
+import com.alibaba.fastjson2.JSONObject;
 import io.minio.*;
+import io.minio.admin.MinioAdminClient;
+import io.minio.admin.messages.BucketUsageInfo;
+import io.minio.admin.messages.info.MemStats;
+import io.minio.admin.messages.info.Message;
 import io.minio.errors.ErrorResponseException;
 import io.minio.http.Method;
 import jakarta.servlet.http.HttpServletResponse;
 import nnu.mnr.satellite.model.pojo.modeling.MinioProperties;
+import nnu.mnr.satellite.model.vo.admin.StatsReportVO;
 import org.apache.commons.compress.utils.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
+import io.minio.admin.messages.info.ServerProperties;
 
 import java.io.*;
+import java.math.BigDecimal;
 import java.net.URLEncoder;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -27,6 +38,9 @@ public class MinioUtil {
 
     @Autowired
     private MinioClient minioClient;
+
+    @Autowired
+    private MinioAdminClient minioAdminClient;
 
     @Autowired
     private MinioProperties configuration;
@@ -277,6 +291,43 @@ public class MinioUtil {
 
         // 4. 执行复制
         minioClient.copyObject(copyArgsBuilder.build());
+    }
+
+    public JSONObject getServerStorageInfo() throws IOException, NoSuchAlgorithmException, InvalidKeyException {
+        List<ServerProperties> servers = minioAdminClient.getServerInfo().servers();
+        Set<BigDecimal> totalSpaceSet = new HashSet<>();
+        Set<BigDecimal> availSpaceSet = new HashSet<>();
+        Set<BigDecimal> usedSpaceSet = new HashSet<>();
+        servers.forEach(server -> {
+            server.disks().forEach(disk -> {
+                totalSpaceSet.add(disk.totalspace());
+                availSpaceSet.add(disk.availspace());
+                usedSpaceSet.add(disk.usedspace());
+            });
+        });
+        BigDecimal totalSpace = totalSpaceSet.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal availSpace = availSpaceSet.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal usedSpace = usedSpaceSet.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+        JSONObject serverStorageInfo = new JSONObject();
+        serverStorageInfo.put("totalSpace", totalSpace);
+        serverStorageInfo.put("availSpace", availSpace);
+        serverStorageInfo.put("usedSpace", usedSpace);
+        return serverStorageInfo;
+    }
+
+    public List<JSONObject> getBucketsInfo() throws IOException, NoSuchAlgorithmException, InvalidKeyException {
+        Map<String, BucketUsageInfo> bucketUsageInfo =  minioAdminClient.getDataUsageInfo().bucketsUsageInfo();
+        List<JSONObject> bucketsInfo = new ArrayList<>();
+        bucketUsageInfo.forEach((key, value) -> {
+            JSONObject bucketInfo = new JSONObject();
+            Long bucketUsedSize = value.size();
+            Long objectsCount = value.objectsCount();
+            bucketInfo.put("bucketName", key);
+            bucketInfo.put("bucketUsedSize", bucketUsedSize);
+            bucketInfo.put("objectsCount", objectsCount);
+            bucketsInfo.add(bucketInfo);
+        });
+        return bucketsInfo;
     }
 
 }

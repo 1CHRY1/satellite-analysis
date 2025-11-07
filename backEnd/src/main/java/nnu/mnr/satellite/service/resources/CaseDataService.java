@@ -7,9 +7,11 @@ import nnu.mnr.satellite.model.po.resources.Case;
 import nnu.mnr.satellite.model.po.resources.Region;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.model.vo.resources.CaseInfoVO;
+import nnu.mnr.satellite.utils.dt.MinioUtil;
 import nnu.mnr.satellite.utils.geom.GeometryUtil;
 import org.locationtech.jts.geom.Geometry;
 import org.modelmapper.TypeToken;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 //分页
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -37,12 +39,14 @@ public class CaseDataService {
     private final ICaseRepo caseRepo;
     private final ModelMapper caseModelMapper;
     private final RegionDataService regionDataService;
+    private final MinioUtil minioUtil;
 
 
     public CaseDataService(ICaseRepo caseRepo, ModelMapper caseModelMapper, RegionDataService regionDataService) {
         this.caseRepo = caseRepo;
         this.caseModelMapper = caseModelMapper;
         this.regionDataService = regionDataService;
+        this.minioUtil = new MinioUtil();
     }
 
     public void addCaseFromParamAndCaseId(String caseId, JSONObject param) {
@@ -92,7 +96,16 @@ public class CaseDataService {
     }
 
     public void removeCaseById(String caseId) {
-        caseRepo.deleteById(caseId);
+        Case caseObj = caseRepo.selectById(caseId);
+        if (caseObj != null) {
+            JSONObject result = caseObj.getResult();
+            if (result != null && !result.isEmpty()) {
+                String bucket = result.get("bucket").toString();
+                String objectPath = result.get("Object_path").toString();
+                minioUtil.delete(objectPath, bucket);
+            }
+            caseRepo.deleteById(caseId);
+        }
     }
 
     public Case selectById(String caseId) {
@@ -251,11 +264,18 @@ public class CaseDataService {
                     .message("未找到对应的 Case")
                     .data(null)
                     .build();
+        }
+        JSONObject result = caseEntity.getResult();
+        if (result == null || result.isEmpty()) {
+            return CommonResultVO.builder()
+                    .status(1)
+                    .message("该文件路径为空，该任务可能未完成或者失败")
+                    .build();
         } else {
             return CommonResultVO.builder()
                     .status(1)
-                    .message("success")
-                    .data(caseEntity.getResult())
+                    .message("文件路径获取成功")
+                    .data(result)
                     .build();
         }
     }

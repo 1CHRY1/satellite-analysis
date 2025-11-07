@@ -5,7 +5,6 @@ import nnu.mnr.satellite.model.dto.minIO.FileEditDTO;
 import nnu.mnr.satellite.model.dto.minIO.FileUploadDTO;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.service.minIO.MinIOService;
-import nnu.mnr.satellite.service.user.UserServiceV3;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
