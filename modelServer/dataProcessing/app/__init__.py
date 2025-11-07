@@ -5,6 +5,8 @@ from dataProcessing.Utils.cronFuncUtils import delete_old_objects, reset_schedul
 from dataProcessing.app.routes import bp
 from apscheduler.schedulers.background import BackgroundScheduler
 
+from dataProcessing.model.methlib import init_handler_factory
+
 cron_scheduler = BackgroundScheduler()
 
 
@@ -21,6 +23,7 @@ def create_app(profile=None):
     app.register_blueprint(bp)
     CORS(app)
     create_cron_scheduler()
+    init_handler_factory()
 
     return app
 

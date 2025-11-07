@@ -156,6 +156,13 @@ def create_low_level_mosaic_threads():
     task_id = scheduler.start_task('create_low_level_mosaic_threads', data)
     return api_response(data={'taskId': task_id})
 
+@bp.route(CONFIG.API_METHLIB, methods=['POST'])
+def do_methlib():
+    scheduler = init_scheduler()
+    data = request.json
+    task_id = scheduler.start_task('methlib', data)
+    return api_response(data={'taskId': task_id})
+
 
 # ==================== 调试路由 ====================
 @bp.route('/test/task', methods=['POST'])
