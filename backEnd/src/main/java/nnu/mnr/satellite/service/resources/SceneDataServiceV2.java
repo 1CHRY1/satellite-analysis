@@ -2,6 +2,7 @@ package nnu.mnr.satellite.service.resources;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import nnu.mnr.satellite.enums.common.SceneTypeByTheme;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerImageDTO;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerSceneDTO;
 import nnu.mnr.satellite.model.dto.resources.*;
@@ -28,6 +29,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created with IntelliJ IDEA.
@@ -167,7 +169,10 @@ public class SceneDataServiceV2 {
         List<Integer[]> tileIds = TileCalculateUtil.getRowColByRegionAndResolution(boundary, resolution);
         Geometry gridsBoundary = GeometryUtil.getGridsBoundaryByTilesAndResolution(tileIds, resolution);
         String wkt = gridsBoundary.toText();
-        String dataType = "'satellite', 'dem', 'dsm', 'ndvi', 'svr', '3d'";
+        String themeCodes = SceneTypeByTheme.getAllCodes().stream()
+                .map(code -> "'" + code + "'")
+                .collect(Collectors.joining(", "));
+        String dataType = "'satellite', " + themeCodes;
         return sceneRepo.getScenesDesByTimeCloudAndGeometry(startTime, endTime, cloud, wkt, dataType);
     }
 
@@ -177,7 +182,10 @@ public class SceneDataServiceV2 {
         Integer resolution = scenesFetchDTO.getResolution();
         Geometry boundary = locationService.getLocationBoundary(resolution, locationId);
         String wkt = boundary.toText();
-        String dataType = "'satellite', 'dem', 'dsm', 'ndvi', 'svr', '3d'";
+        String themeCodes = SceneTypeByTheme.getAllCodes().stream()
+                .map(code -> "'" + code + "'")
+                .collect(Collectors.joining(", "));
+        String dataType = "'satellite', " + themeCodes;
         return sceneRepo.getScenesDesByTimeCloudAndGeometry(startTime, endTime, cloud, wkt, dataType);
     }
 

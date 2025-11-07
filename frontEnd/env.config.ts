@@ -38,7 +38,7 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
     hxf: {
         api: 'http://223.2.43.238:8999',
         realtime: 'http://223.2.43.238:5001',
-        websocket: 'http://223.2.43.238:9000/model/websocket',
+        websocket: 'http://223.2.43.238:9888/model/websocket',
         tiler: 'http://223.2.43.238:8000',
         proxymap: 'http://localhost:5003',
     },

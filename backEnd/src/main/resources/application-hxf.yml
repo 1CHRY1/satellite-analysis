@@ -51,7 +51,6 @@ spring:
             init-connection-sqls: SET SESSION group_concat_max_len = 18446744073709551615
             filters: stat,wall
             wall:
-              enable: true
               table-check: true
               drop-table-allow: false
               alter-table-allow: false
@@ -74,7 +73,6 @@ spring:
             init-connection-sqls: SET SESSION group_concat_max_len = 18446744073709551615
             filters: stat,wall
             wall:
-              enable: true
               table-check: true
               drop-table-allow: false
               alter-table-allow: false
@@ -97,7 +95,6 @@ spring:
             init-connection-sqls: SET SESSION group_concat_max_len = 18446744073709551615
             filters: stat,wall
             wall:
-              enable: true
               table-check: true
               drop-table-allow: false
               alter-table-allow: false
@@ -119,7 +116,6 @@ spring:
             validation-query: SELECT 1
             filters: stat,wall
             wall:
-              enable: true
               table-check: true
               drop-table-allow: false
               alter-table-allow: false
@@ -220,5 +216,4 @@ tiler:
 
 satelliteConfig:
   path: D:/IdeaProjects/satellite-analysis/backEnd/src/main/resources/config/band_config.json
-#  path: F:/satellite-analysis/backEnd/src/main/resources/config/band_config.json
 
