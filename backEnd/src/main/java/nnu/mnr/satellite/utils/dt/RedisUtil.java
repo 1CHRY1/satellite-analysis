@@ -3,10 +3,13 @@ package nnu.mnr.satellite.utils.dt;
 import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.connection.DataType;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -26,6 +29,25 @@ public class RedisUtil {
 
     public void removeValue(String key) {
         redisTemplate.opsForHash().delete(key);
+    }
+    // 获取所有键
+    public Set<String> getKeys() {
+        return redisTemplate.keys("*");
+    }
+    // 获取键值类型
+    public String getKeyType(String key) {
+        // 使用type操作
+        DataType type = redisTemplate.type(key);
+        return type.code();
+    }
+    // 获取键值长度
+    public Long getStringSize(String key) {
+        // 对于String类型，大小就是其值的长度
+        return redisTemplate.opsForValue().size(key);
+    }
+    // 批量删除键
+    public void deleteMultipleKeys(List<String> keys) {
+        redisTemplate.delete(keys); // 批量删除
     }
 
     // Time

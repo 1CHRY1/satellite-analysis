@@ -207,7 +207,7 @@ public class ModelExampleServiceV3 {
     }
 
     public CommonResultVO getAllEOCube(){
-        Map<String, EOCubeCache> allCaches = EOCubeCache.getAllCaches();
+        Map<String, Object> allCaches = EOCubeCache.getAllCaches();
         return CommonResultVO.builder()
                 .status(1)
                 .message("获取所有EO立方体缓存成功")

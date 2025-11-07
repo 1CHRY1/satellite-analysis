@@ -35,7 +35,6 @@ public class Tool {
     private String outputType;
     @TableField("create_time")
     private LocalDateTime createTime;
-    private String projectId;
     private boolean isShare;
     private boolean isPublish;
 }
