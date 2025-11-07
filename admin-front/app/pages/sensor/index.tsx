@@ -88,7 +88,7 @@ const delSensor = async (sensorIds: string[]) => {
     }
 };
 
-const RoleTable: React.FC = () => {
+const SensorTable: React.FC = () => {
 	const actionRef = useRef<ActionType>(undefined);
 
 	const columns: ProColumns<Sensor>[] = [
@@ -286,7 +286,7 @@ const RoleTable: React.FC = () => {
 export default function App() {
 	return (
 		<>
-			<RoleTable />
+			<SensorTable />
 		</>
 	);
 }

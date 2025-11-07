@@ -115,7 +115,7 @@ const delProduct = async (productIds: string[]) => {
 	}
 };
 
-const RoleTable: React.FC = () => {
+const ProductTable: React.FC = () => {
 	const actionRef = useRef<ActionType>(undefined);
 	const [sensorOpts, setSensorOpts] = useState<
 		{ label: string; value: string }[]
@@ -338,7 +338,7 @@ const RoleTable: React.FC = () => {
 export default function App() {
 	return (
 		<>
-			<RoleTable />
+			<ProductTable />
 		</>
 	);
 }

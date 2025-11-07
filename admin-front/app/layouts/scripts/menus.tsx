@@ -95,7 +95,7 @@ export const items: MenuItem[] = [
 				icon: <ConsoleSqlOutlined />,
 			},
 			{
-				key: "/audit",
+				key: "/log",
 				label: "日志审查",
 				icon: <FileProtectOutlined />,
 			},

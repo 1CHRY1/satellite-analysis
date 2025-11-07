@@ -1,3 +1,4 @@
+import type { ProFormInstance } from "@ant-design/pro-components";
 import type { Rule } from "antd/es/form";
 
 export interface FormSchema {
@@ -27,8 +28,10 @@ export interface RegExpRule {
 
 export interface SchemaFormProps<T> {
 	schema: FormSchema;
+	formRef?: React.RefObject<ProFormInstance | undefined>
 	initialValues?: Record<string, any>;
 	onFinish?: (formData: T) => Promise<any>;
+	onValuesChange?: ((changedValues: any, values: any) => void) | undefined
 	mode?: "inline" | "modal" | "drawer";
 	trigger?: React.ReactNode; // 用于 modal/drawer 触发按钮
 	title?: string;
