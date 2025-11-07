@@ -32,6 +32,9 @@ class BaseConfig:
     API_MOSAIC_RESULT                               =       API_VERSION + '/mosaic/result'
     API_MOSAIC_LIST                                 =       API_VERSION + '/mosaic/list'
 
+    # API for MethLib (新增)
+    API_METHLIB                                     =       API_VERSION + '/methlib'
+
     # Status Flag
     STATUS_UNLOCK                                   =       0b1
     STATUS_LOCK                                     =       0b10
@@ -256,6 +259,11 @@ class slkConfig(BaseConfig):
     RAY_SYSTEM_RESERVED_CPU                         =       0.5
     RAY_SYSTEM_RESERVED_MEMORY                      =       2 * 1024**3
 
+    # MethLib Config
+    METHOD_WD                                       =       "/Users/paxton/Documents/4_tools/method_wd"
+    DATA_FD                                         =       "/app/data/final/"
+    METHOD_PD                                       =       "/Users/paxton/Documents/4_tools/method_pd"
+
 # --------------- class ProdConfig(BaseConfig): ---------------
 
 # 配置映射字典 - 类似Spring Boot的profile机制
@@ -281,7 +289,7 @@ def get_current_config():
     """获取当前环境的配置类"""
     return get_config(CURRENT_PROFILE)
 
-os.environ['APP_PROFILE'] = 'hxf'
+os.environ['APP_PROFILE'] = 'slk'
 # 获取当前环境配置 - 类似Spring Boot的 spring.profiles.active
 CURRENT_PROFILE = os.getenv('APP_PROFILE', 'k8s')  # 默认使用k8s
 

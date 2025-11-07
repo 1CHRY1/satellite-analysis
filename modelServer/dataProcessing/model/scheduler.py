@@ -20,6 +20,7 @@ from dataProcessing.model.cloud.calc_no_cloud_grid import calc_no_cloud_grid
 from dataProcessing.model.cloud.calc_no_cloud_complex import calc_no_cloud_complex
 from dataProcessing.model.vis.create_low_level_mosaic import create_low_level_mosaic
 from dataProcessing.model.vis.create_low_level_mosaic_threads import create_low_level_mosaic_threads
+from dataProcessing.model.methlib.model import MethLib
 from dataProcessing.model.test_task import TestTask
 import ray
 STATUS_RUNNING = CONFIG.STATUS_RUNNING
@@ -114,6 +115,7 @@ class TaskScheduler:
             'calc_no_cloud_complex': calc_no_cloud_complex,
             'create_low_level_mosaic': create_low_level_mosaic,
             'create_low_level_mosaic_threads': create_low_level_mosaic_threads,
+            'methlib': MethLib,
             'test': TestTask,
             # 可以在这里扩展其他类型的任务
         }
