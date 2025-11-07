@@ -9,17 +9,17 @@ import json
 import hashlib
 from dataProcessing.config import current_config as CONFIG
 
-from dataProcessing.model.mergeTifTask import MergeTifTask
-from dataProcessing.model.mergeTifTaskV2 import MergeTifTaskV2
-from dataProcessing.model.calc_NDVI import calc_NDVI
-from dataProcessing.model.get_spectral_profile import get_spectral_profile
-from dataProcessing.model.calc_raster_point import calc_raster_point
-from dataProcessing.model.calc_raster_line import calc_raster_line
-from dataProcessing.model.calc_no_cloud import calc_no_cloud
-from dataProcessing.model.calc_no_cloud_grid import calc_no_cloud_grid
-from dataProcessing.model.calc_no_cloud_complex import calc_no_cloud_complex
-from dataProcessing.model.create_low_level_mosaic import create_low_level_mosaic
-from dataProcessing.model.create_low_level_mosaic_threads import create_low_level_mosaic_threads
+from dataProcessing.model.common.mergeTifTask import MergeTifTask
+from dataProcessing.model.common.mergeTifTaskV2 import MergeTifTaskV2
+from dataProcessing.model.common.calc_NDVI import calc_NDVI
+from dataProcessing.model.common.get_spectral_profile import get_spectral_profile
+from dataProcessing.model.common.calc_raster_point import calc_raster_point
+from dataProcessing.model.common.calc_raster_line import calc_raster_line
+from dataProcessing.model.cloud.calc_no_cloud import calc_no_cloud
+from dataProcessing.model.cloud.calc_no_cloud_grid import calc_no_cloud_grid
+from dataProcessing.model.cloud.calc_no_cloud_complex import calc_no_cloud_complex
+from dataProcessing.model.vis.create_low_level_mosaic import create_low_level_mosaic
+from dataProcessing.model.vis.create_low_level_mosaic_threads import create_low_level_mosaic_threads
 from dataProcessing.model.test_task import TestTask
 import ray
 STATUS_RUNNING = CONFIG.STATUS_RUNNING
