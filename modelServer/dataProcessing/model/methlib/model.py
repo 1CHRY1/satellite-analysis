@@ -7,6 +7,7 @@ import uuid
 
 import ray
 
+from dataProcessing.app.resTemplate import TaskResult
 from dataProcessing.model.methlib.parsers.command_processor import CommandProcessor
 from dataProcessing.model.methlib.schemas.command import CmdDto
 from dataProcessing.model.methlib.schemas.method import MethodEntity
@@ -39,11 +40,11 @@ class MethLib(Task):
             except TypeError as e:
                 # 捕获因字段不匹配导致的错误
                 print(f"错误: 无法将方法数据字典转换为 MethodEntity 实例: {e}")
-                return {"error": "Invalid Method Entity structure"}
+                return TaskResult.error("Invalid Method Entity structure")
 
         if not isinstance(method_data, MethodEntity):
             print("错误: method_data 既不是 MethodEntity 实例也无法转换为 MethodEntity 字典。")
-            return {"error": "Invalid Method Entity"}
+            return TaskResult.error("Invalid Method Entity")
 
         # ----------- 2. 核心业务逻辑：调用 CommandProcessor 构建命令 -----------
         
@@ -68,7 +69,7 @@ class MethLib(Task):
         )
 
         if not cmd_dto:
-            return {"error": "Failed to build command"}
+            return TaskResult.error("Failed to build command")
 
         print("\n--- CommandProcessor 构建结果 ---")
         print(f"最终命令行: {cmd_dto.cmd}")

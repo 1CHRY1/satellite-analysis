@@ -144,76 +144,186 @@ class TaskScheduler:
                 print(f"Scheduler worker error: {e}", flush=True)
                 traceback.print_exc()
 
-    def _execute_task(self, task_id: str):
-        # --------- Execute the task ----------------------------
-        print(f"[Exec] start to exec task: {task_id}", flush=True)
-        try:
-            task_instance = self.task_info[task_id]
-            print(f"[Exec] get task instance: {task_instance.__class__.__name__}", flush=True)
-            self.task_status[task_id] = STATUS_RUNNING
-            # Reuse the result of the task
+    # def _execute_task(self, task_id: str):
+    #     # --------- Execute the task ----------------------------
+    #     print(f"[Exec] start to exec task: {task_id}", flush=True)
+    #     try:
+    #         task_instance = self.task_info[task_id]
+    #         print(f"[Exec] get task instance: {task_instance.__class__.__name__}", flush=True)
+    #         self.task_status[task_id] = STATUS_RUNNING
+    #         # Reuse the result of the task
             
-            print(f"[Exec] invoke task {task_id} run method", flush=True)
-            result = task_instance.run()
-            print(f"[Exec] task {task_id} finished", flush=True)
+    #         print(f"[Exec] invoke task {task_id} run method", flush=True)
+    #         result = task_instance.run()
+    #         print(f"[Exec] task {task_id} finished", flush=True)
 
-            # --------- Update the status and queue ---------------------------
-            with self.condition:
-                # 显式移除特定任务ID
-                # TODO RUNNING 数组
-                temp_queue = queue.Queue()
-                found = False
-                while not self.running_queue.empty():
-                    current_task = self.running_queue.get()
-                    if current_task == task_id:
-                        found = True
-                    else:
-                        temp_queue.put(current_task)
+    #         # --------- Update the status and queue ---------------------------
+    #         with self.condition:
+    #             # 显式移除特定任务ID
+    #             # TODO RUNNING 数组
+    #             temp_queue = queue.Queue()
+    #             found = False
+    #             while not self.running_queue.empty():
+    #                 current_task = self.running_queue.get()
+    #                 if current_task == task_id:
+    #                     found = True
+    #                 else:
+    #                     temp_queue.put(current_task)
 
-                # 恢复其他任务
-                while not temp_queue.empty():
-                    self.running_queue.put(temp_queue.get())
+    #             # 恢复其他任务
+    #             while not temp_queue.empty():
+    #                 self.running_queue.put(temp_queue.get())
 
-                if not found:
-                    print(f"Warning: Task {task_id} not found in running queue", flush=True)
+    #             if not found:
+    #                 print(f"Warning: Task {task_id} not found in running queue", flush=True)
 
-                self.complete_queue.put((datetime.now(), task_id))
+    #             self.complete_queue.put((datetime.now(), task_id))
 
-                # Update the result and status
-                self.task_results[task_id] = result
-                self.task_status[task_id] = STATUS_COMPLETE
-                self.condition.notify_all()
+    #             # Update the result and status
+    #             self.task_results[task_id] = result
+    #             self.task_status[task_id] = STATUS_COMPLETE
+    #             self.condition.notify_all()
+
+    #     except Exception as e:
+    #         # --------- Handle Exceptions --------------------------------
+    #         with self.condition:
+    #             del self.task_md5[task_id]
+                
+    #             temp_queue = queue.Queue()
+    #             found = False
+    #             while not self.running_queue.empty():
+    #                 current_task = self.running_queue.get()
+    #                 if current_task == task_id:
+    #                     found = True
+    #                 else:
+    #                     temp_queue.put(current_task)
+
+    #             while not temp_queue.empty():
+    #                 self.running_queue.put(temp_queue.get())
+
+    #             if not found:
+    #                 print(f"Warning: Task {task_id} not found in running queue", flush=True)
+    #             self.error_queue.put(task_id)
+
+    #             # Update the result and status
+    #             self.task_status[task_id] = STATUS_ERROR
+    #             self.task_results[task_id] = str(e)
+    #             self.condition.notify_all()
+    #     finally:
+    #         if self.get_status(task_id) != 'COMPLETE':
+    #             return
+    #         # 持久化任务记录至history
+    #         self.save_to_history(task_id)
+
+    def _execute_task(self, task_id: str):
+        """
+        [主函数] 负责协调任务的执行流程、异常捕获和持久化。
+        新增逻辑：检查任务结果是否为 TaskResult 标准错误格式。
+        """
+        print(f"[Exec] start to exec task: {task_id}", flush=True)
+        task_final_status = None 
+        
+        try:
+            # 1. 准备和执行
+            result: Any = self._prepare_and_run_task(task_id)
+
+            # 2. 处理结果
+            # 检查 result 是否是标准返回结果TaskResult，并且包含 'status'和‘data’ 键
+            if isinstance(result, dict) and 'status' in result and 'data' in result:
+                # 如果结果内部已经反馈了异常
+                if result["status"] == 'ERROR':
+                    error_message = result.get("data", "Unknown task error from TaskResult")
+                    print(f"[Exec] Task {task_id} reported internal ERROR: {error_message}", flush=True)
+                    self._handle_task_exception(task_id, Exception(error_message))
+                    task_final_status = 'ERROR'  # 标记最终状态
+                    return # 内部错误处理完毕，直接退出 try 块
+                elif result["status"] == 'SUCCESS':
+                    self._handle_successful_completion(task_id, result["data"])
+                    task_final_status = 'COMPLETE' # 标记最终状态
+            else:
+                self._handle_successful_completion(task_id, result)
+                task_final_status = 'COMPLETE' # 标记最终状态
 
         except Exception as e:
-            # --------- Handle Exceptions --------------------------------
-            with self.condition:
-                del self.task_md5[task_id]
-                
-                temp_queue = queue.Queue()
-                found = False
-                while not self.running_queue.empty():
-                    current_task = self.running_queue.get()
-                    if current_task == task_id:
-                        found = True
-                    else:
-                        temp_queue.put(current_task)
+            self._handle_task_exception(task_id, e)
+            task_final_status = 'ERROR' # 标记最终状态
 
-                while not temp_queue.empty():
-                    self.running_queue.put(temp_queue.get())
-
-                if not found:
-                    print(f"Warning: Task {task_id} not found in running queue", flush=True)
-                self.error_queue.put(task_id)
-
-                # Update the result and status
-                self.task_status[task_id] = STATUS_ERROR
-                self.task_results[task_id] = str(e)
-                self.condition.notify_all()
         finally:
-            if self.get_status(task_id) != 'COMPLETE':
-                return
-            # 持久化任务记录至history
-            self.save_to_history(task_id)
+            if task_final_status == 'COMPLETE':
+                self.save_to_history(task_id)
+
+
+    # --- 任务执行和状态更新相关的私有函数 ---
+
+    def _prepare_and_run_task(self, task_id: str) -> Any:
+        """
+        负责获取任务实例、更新为 RUNNING 状态并执行任务的 run 方法。
+        """
+        task_instance = self.task_info[task_id]
+        print(f"[Exec] get task instance: {task_instance.__class__.__name__}", flush=True)
+
+        with self.condition:
+            self.task_status[task_id] = STATUS_RUNNING
+
+        print(f"[Exec] invoke task {task_id} run method", flush=True)
+        result = task_instance.run()
+        print(f"[Exec] task {task_id} finished", flush=True)
+        return result
+
+    def _remove_from_running_queue(self, task_id: str):
+        """
+        负责从 self.running_queue 中安全移除指定的 task_id。
+        """
+        temp_queue = queue.Queue()
+        found = False
+        while not self.running_queue.empty():
+            current_task = self.running_queue.get()
+            if current_task == task_id:
+                found = True
+            else:
+                temp_queue.put(current_task)
+
+        # 恢复其他任务
+        while not temp_queue.empty():
+            self.running_queue.put(temp_queue.get())
+
+        if not found:
+            print(f"Warning: Task {task_id} not found in running queue", flush=True)
+
+    def _handle_successful_completion(self, task_id: str, result: Any):
+        """
+        负责任务成功完成后的队列、状态和结果更新。
+        """
+        with self.condition:
+            # 移除 Running Queue
+            self._remove_from_running_queue(task_id)
+
+            self.complete_queue.put((datetime.now(), task_id))
+
+            # 更新结果和状态
+            self.task_results[task_id] = result
+            self.task_status[task_id] = STATUS_COMPLETE
+            self.condition.notify_all()
+
+    def _handle_task_exception(self, task_id: str, error: Exception):
+        """
+        负责任务执行过程中发生异常时的清理和状态更新。
+        """
+        print(f"[Exec] Task {task_id} failed with error: {error}", flush=True)
+        with self.condition:
+            # 清理
+            if task_id in self.task_md5: # 假设 self.task_md5 是一个字典
+                del self.task_md5[task_id]
+            
+            # 移除 Running Queue
+            self._remove_from_running_queue(task_id)
+
+            self.error_queue.put(task_id)
+
+            # 更新结果和状态
+            self.task_status[task_id] = STATUS_ERROR
+            self.task_results[task_id] = str(error)
+            self.condition.notify_all()
 
     def get_status(self, task_id):
         

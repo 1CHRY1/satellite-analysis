@@ -1,3 +1,4 @@
+import json
 import shutil
 import subprocess
 import time
@@ -6,6 +7,7 @@ from pathlib import Path
 import logging
 import sys
 import ray
+from dataProcessing.app.resTemplate import TaskResult
 from dataProcessing.config import current_config as CONFIG
 from dataProcessing.model.methlib.parsers.command_processor import CommandProcessor
 from dataProcessing.model.methlib.schemas.command import CmdDto
@@ -17,28 +19,10 @@ logging.basicConfig(
     level=logging.INFO, # 设置全局最低级别为 INFO
     format='%(asctime)s | %(levelname)s | %(filename)s:%(lineno)d | %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
-    stream=sys.stderr 
+    stream=sys.stderr
 )
 logger = logging.getLogger(__name__) 
 # =========================================================================
-
-
-class R:
-    """
-    对应 Java 的 CmdDto。
-    所有字段均按照 Java 原始定义完整复现，使用 Pythonic 的 snake_case 命名。
-    """
-    def ok(info: Any):
-        return {
-            "status": 'SUCCESS',
-            "result": info
-        }
-    
-    def error(msg: str):
-        return {
-            "status": 'ERROR',
-            "result": msg
-        }
 
 @ray.remote(num_cpus=CONFIG.RAY_NUM_CPUS, memory=CONFIG.RAY_MEMORY_PER_TASK)
 def invoke(cmdDto: CmdDto) -> Dict[str, Any]:
@@ -51,7 +35,7 @@ def invoke(cmdDto: CmdDto) -> Dict[str, Any]:
     if cmdDto is None:
         error_msg = "CmdDto 获取失败：缺少必要参数或文件下载失败。"
         logger.error(error_msg)
-        return R.error("Failed to download file or missing necessary parameters.")
+        return TaskResult.error("Failed to download file or missing necessary parameters.")
 
     # 初始化结果变量
     info = ""
@@ -102,7 +86,7 @@ def invoke(cmdDto: CmdDto) -> Dict[str, Any]:
         if process_result.returncode != 0:
             logger.error(f"进程执行失败。返回码: {process_result.returncode}")
             info += "\r\n Process finished with errors."
-            return R.error(info)
+            return TaskResult.error(info)
         else:
             # 5. 处理输出文件上传
             if cmdDto.has_output:
@@ -135,7 +119,7 @@ def invoke(cmdDto: CmdDto) -> Dict[str, Any]:
                             all_file_id.append(fileId)
                         except Exception as e:
                             logger.error(f"文件上传失败: {file} - {e}")
-                            return R.error(f"File upload failed: {e}")
+                            return TaskResult.error(f"File upload failed: {e}")
 
                     fileIdMap[key] = fileIdList
 
@@ -151,7 +135,7 @@ def invoke(cmdDto: CmdDto) -> Dict[str, Any]:
                         all_file_id.append(fileId)
                     except Exception as e:
                         logger.error(f"文件上传失败: {file} - {e}")
-                        return R.error(f"File upload failed: {e}")
+                        return TaskResult.error(f"File upload failed: {e}")
                 
                 fileIdMap["Origin"] = fileIdList
 
@@ -160,12 +144,12 @@ def invoke(cmdDto: CmdDto) -> Dict[str, Any]:
         error_msg = f"Error: Command '{cmdDto.cmd.split()[0]}' not found."
         logger.error(error_msg)
         info += f"\r\n{error_msg}"
-        return R.error(info)
+        return TaskResult.error(info)
     except Exception as e:
         # 捕获其他执行异常
         logger.exception("执行命令时发生内部异常") 
         info += f"\r\nError executing command: {type(e).__name__}: {e}"
-        return R.error(info)
+        return TaskResult.error(info)
     finally:
         # 清理临时工作目录 (无论成功失败都尝试清理)
         if tmp_path.exists():
@@ -180,4 +164,4 @@ def invoke(cmdDto: CmdDto) -> Dict[str, Any]:
     }
     
     # 8. 返回成功响应
-    return R.ok(result)
+    return TaskResult.ok(result)
