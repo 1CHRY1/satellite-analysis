@@ -7,7 +7,10 @@ from datetime import datetime
 from abc import ABC, abstractmethod
 import requests # 引入 requests 库用于 HTTP 请求
 from urllib.parse import urlparse, unquote # 引入用于 URL 解析和解码的库
-import re # 引入正则表达式库
+import re
+from dataProcessing.config import current_config as CONFIG
+
+from dataProcessing.Utils.osUtils import uploadLocalFile # 引入正则表达式库
 
 # ----------------------------------------------------
 # 模拟文件操作工具类 (替换 Java FileUtils)
@@ -177,3 +180,36 @@ class FileUtils:
             new_paths.append(dest_file_path)
         
         return new_paths
+
+
+    @staticmethod
+    def delete_files_from_directory(files: List[Path]):
+        """删除指定路径列表中的文件。"""
+        print(f"[FileUtils] 正在删除临时输入文件: {[f.name for f in files]}")
+        for file in files:
+            try:
+                # 确保只删除文件
+                if file.is_file():
+                    os.unlink(file)
+            except OSError as e:
+                # 仅打印错误，不中断执行
+                print(f"[ERROR] 无法删除文件 {file}: {e}")
+
+    @staticmethod
+    def get_all_files_from_directory(directory_path: Path) -> List[Path]:
+        """递归获取指定目录下的所有文件。"""
+        file_list = []
+        if directory_path.is_dir():
+            # 使用 rglob 递归遍历所有文件和目录
+            for item in directory_path.rglob('*'):
+                if item.is_file():
+                    file_list.append(item)
+        else:
+            print(f"[FileUtils] 提供的路径不是有效的目录: {directory_path}")
+        return file_list
+
+    @staticmethod
+    def upload_file_to_server(file_path, wd) -> str:
+        object_name = f"{wd}/{Path(file_path).name}"
+        uploadLocalFile(file_path, CONFIG.MINIO_TEMP_FILES_BUCKET, object_name)
+        return f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}/{CONFIG.MINIO_TEMP_FILES_BUCKET}/{object_name}"
