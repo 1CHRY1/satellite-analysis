@@ -1,3 +1,4 @@
+import logging
 from flask import Flask
 from flask_cors import CORS
 
@@ -6,7 +7,6 @@ from dataProcessing.app.routes import bp
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from dataProcessing.model.methlib import init_handler_factory
-
 cron_scheduler = BackgroundScheduler()
 
 
@@ -24,7 +24,6 @@ def create_app(profile=None):
     CORS(app)
     create_cron_scheduler()
     init_handler_factory()
-
     return app
 
 
