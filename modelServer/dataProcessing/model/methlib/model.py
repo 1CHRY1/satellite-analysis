@@ -5,6 +5,8 @@ from pathlib import Path
 import os
 import uuid
 
+import ray
+
 from dataProcessing.model.methlib.parsers.command_processor import CommandProcessor
 from dataProcessing.model.methlib.schemas.command import CmdDto
 from dataProcessing.model.methlib.schemas.method import MethodEntity
@@ -75,6 +77,10 @@ class MethLib(Task):
 
 
         # ----------- 3. 调用并返回结果 -----------
-        result = invoke(cmdDto=cmd_dto)
+        ray_task = invoke.remote(cmdDto=cmd_dto)
+        from dataProcessing.model.scheduler import init_scheduler
+        scheduler = init_scheduler()
+        scheduler.set_task_refs(self.task_id, [ray_task])
+        result = ray.get(ray_task)
         # 执行成功
         return result
