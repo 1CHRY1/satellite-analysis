@@ -31,7 +31,7 @@ public class CommandProcessor {
     private String method_wd;
 
     @Value("${container.data.fd}")
-    private String data_fd;s
+    private String data_fd;
 
     @Value("${container.data.td}")
     private String data_td;

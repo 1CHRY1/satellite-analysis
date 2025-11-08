@@ -8,6 +8,7 @@ import uuid
 from dataProcessing.model.methlib.parsers.command_processor import CommandProcessor
 from dataProcessing.model.methlib.schemas.command import CmdDto
 from dataProcessing.model.methlib.schemas.method import MethodEntity
+from dataProcessing.model.methlib.services.invoke import invoke
 from dataProcessing.model.task import Task
 
 class MethLib(Task):
@@ -63,25 +64,17 @@ class MethLib(Task):
             start_time=start_time,
             is_external_call=is_external_call
         )
-        
+
         if not cmd_dto:
             return {"error": "Failed to build command"}
 
         print("\n--- CommandProcessor 构建结果 ---")
         print(f"最终命令行: {cmd_dto.cmd}")
         print(f"临时工作路径: {cmd_dto.tmp_file_path}")
-        
-        # ----------- 3. 返回模拟结果 -----------
-        # 在实际系统中，接下来会使用 cmd_dto.cmd 去调用命令行工具
-        
-        method_name = method_data.name
-        
-        # 模拟执行成功
-        result = {
-            "method": method_name,
-            "received_params": req_params,
-            "generated_command": cmd_dto.cmd,
-            "executed_at": datetime.utcnow().isoformat()
-        }
 
+
+
+        # ----------- 3. 调用并返回结果 -----------
+        result = invoke(cmdDto=cmd_dto)
+        # 执行成功
         return result
