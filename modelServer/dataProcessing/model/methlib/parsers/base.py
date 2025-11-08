@@ -16,7 +16,7 @@ class ParameterHandler(ABC):
         pass
 
     @abstractmethod
-    def parse(self, parameter_type: Any, raw_value: Any, val_index: int, context: CmdContext, is_external: bool):
+    def parse(self, parameter_type: Any, raw_value: Any, val_index: int, context: CmdContext, is_external_call: bool):
         """解析参数"""
         pass
 

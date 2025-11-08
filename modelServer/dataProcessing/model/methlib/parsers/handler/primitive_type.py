@@ -11,7 +11,7 @@ class PrimitiveTypeHandler(ParameterHandler):
             return parameter_type in self.SUPPORTED_TYPES
         return False
 
-    def parse(self, parameter_type, raw_value, val_index, context, is_external):
+    def parse(self, parameter_type, raw_value, val_index, context, is_external_call):
         if raw_value is None:
             self.handle_null(raw_value, context.cmd_builder, context.param_specs)
         else:
