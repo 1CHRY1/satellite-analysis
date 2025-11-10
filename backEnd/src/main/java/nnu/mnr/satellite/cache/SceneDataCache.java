@@ -1,12 +1,13 @@
 package nnu.mnr.satellite.cache;
 
-import nnu.mnr.satellite.model.dto.resources.ScenesFetchDTOV3;
+import lombok.Data;
 import nnu.mnr.satellite.model.vo.resources.CoverageReportVO;
 import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.index.strtree.STRtree; // 空间索引（R-Tree）
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,6 +22,7 @@ public class SceneDataCache {
     // ===============================================缓存景============================================================
 
     // 用户景缓存结构   后续不采用空间索引的情况下，求相交耗时0ms，似乎没必要建立空间索引
+    @Data
     public static class UserSceneCache {
         public List<SceneDesVO> scenesInfo;       // 原始数据
         public CoverageReportVO<Map<String, Object>> coverageReportVO;
@@ -68,6 +70,7 @@ public class SceneDataCache {
     // ===============================================缓存专题=========================================================
 
     // 用户专题缓存结构
+    @Data
     public static class UserThemeCache {
         public List<SceneDesVO> scenesInfo;       // 原始数据
         public CoverageReportVO<String> coverageReportVO;
@@ -90,6 +93,7 @@ public class SceneDataCache {
 
     // =============================================缓存格网边界==========================================================
     // 格网边界信息缓存结构
+    @Data
     public static class UserRegionInfoCache {
         public Geometry gridsBoundary;
         private final long cacheTime;                    // 缓存时间（用于超时清理）
@@ -103,12 +107,49 @@ public class SceneDataCache {
     public static UserRegionInfoCache getUserRegionInfoCacheMap(String cacheKey) {
         return userRegionInfoCacheMap.get(cacheKey);
     }
+
     // 缓存格网边界数据
     public static void cacheUserRegionInfo(String cacheKey, Geometry gridsBoundary) {
         userRegionInfoCacheMap.put(cacheKey, new UserRegionInfoCache(gridsBoundary));
     }
 
     // ===============================================================================================================
+
+    // 获取所有缓存内容
+    public static Map<String, Map<String, Object>> getAllCaches() {
+        Map<String, Map<String, Object>> allCaches = new HashMap<>();
+
+        // 1. 用户景缓存
+        Map<String, Object> sceneCaches = new HashMap<>(userSceneCacheMap);
+        allCaches.put("allSceneCache", sceneCaches);
+
+        // 2. 用户专题缓存
+        Map<String, Object> themeCaches = new HashMap<>(userThemeCacheMap);
+        allCaches.put("allThemeCache", themeCaches);
+
+        // 3. 用户格网边界缓存
+        Map<String, Object> regionCaches = new HashMap<>(userRegionInfoCacheMap);
+        allCaches.put("allRegionInfoCache", regionCaches);
+
+        return allCaches;
+    }
+
+    // 删除缓存
+    public static void deleteCacheByKey(String cacheKey, String cacheType) {
+        switch (cacheType) {
+            case "sceneCache":
+                userSceneCacheMap.remove(cacheKey);
+                return;
+            case "themeCache":
+                userThemeCacheMap.remove(cacheKey);
+                return;
+            case "regionInfoCache":
+                userRegionInfoCacheMap.remove(cacheKey);
+                return;
+            default:
+                throw new IllegalArgumentException("Invalid cacheType. Supported types: 'sceneCache', 'themeCache', 'regionInfoCache'");
+        }
+    }
 
     // 提供两个方法，以供后续调试
     // 获取当前缓存大小

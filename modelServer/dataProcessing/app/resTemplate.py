@@ -1,6 +1,15 @@
 import datetime
+from typing import Any
 from flask import jsonify
 
+class TaskResult:
+    """
+    """
+    def ok(info: Any):
+        return {"status": 'SUCCESS', "data": info}
+    
+    def error(msg: str):
+        return {"status": 'ERROR', "data": msg}
 
 def api_response(code=200, message="success", data=None):
     """

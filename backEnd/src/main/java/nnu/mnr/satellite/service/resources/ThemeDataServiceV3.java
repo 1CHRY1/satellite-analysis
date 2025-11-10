@@ -68,7 +68,10 @@ public class ThemeDataServiceV3 {
             Geometry boundary = regionDataService.getRegionById(regionId).getBoundary();
             List<Integer[]> tileIds = TileCalculateUtil.getRowColByRegionAndResolution(boundary, resolution);
             Geometry gridsBoundary = GeometryUtil.getGridsBoundaryByTilesAndResolution(tileIds, resolution);
-            String dataType = "'satellite', 'dem', 'dsm', 'ndvi', 'svr', '3d'";
+            String themeCodes = SceneTypeByTheme.getAllCodes().stream()
+                    .map(code -> "'" + code + "'")
+                    .collect(Collectors.joining(", "));
+            String dataType = "'satellite', " + themeCodes;
             List<SceneDesVO> allScenesInfo = sceneDataService.getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, dataType);
             allScenesInfo.sort((s1, s2) -> s2.getSceneTime().compareTo(s1.getSceneTime()));
             List<SceneDesVO> scenesInfo = new ArrayList<>();
@@ -77,7 +80,7 @@ public class ThemeDataServiceV3 {
                 String sceneDataType = scene.getDataType(); // 假设 SceneDesVO 有 getDataType() 方法
                 if ("satellite".equals(sceneDataType)) {
                     scenesInfo.add(scene);
-                } else if (Arrays.asList("dem", "dsm", "ndvi", "svr", "3d").contains(sceneDataType)) {
+                } else if (SceneTypeByTheme.getAllCodes().contains(sceneDataType)) {
                     themesInfo.add(scene);
                 }
             }
@@ -92,7 +95,9 @@ public class ThemeDataServiceV3 {
             Geometry boundary = regionDataService.getRegionById(regionId).getBoundary();
             List<Integer[]> tileIds = TileCalculateUtil.getRowColByRegionAndResolution(boundary, resolution);
             Geometry gridsBoundary = GeometryUtil.getGridsBoundaryByTilesAndResolution(tileIds, resolution);
-            String dataType = "'dem', 'dsm', 'ndvi', 'svr', '3d'";
+            String dataType = SceneTypeByTheme.getAllCodes().stream()
+                    .map(code -> "'" + code + "'")
+                    .collect(Collectors.joining(", "));
 
             List<SceneDesVO> themesInfo = sceneDataService.getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, dataType);
             themesInfo.sort((s1, s2) -> s2.getSceneTime().compareTo(s1.getSceneTime()));
@@ -139,7 +144,10 @@ public class ThemeDataServiceV3 {
         if (userThemeCache == null && userSceneCache == null) {
             // 缓存未命中，从数据库中读数据
             Geometry gridsBoundary = locationService.getLocationBoundary(resolution, locationId);
-            String dataType = "'satellite', 'dem', 'dsm', 'ndvi', 'svr', '3d'";
+            String themeCodes = SceneTypeByTheme.getAllCodes().stream()
+                    .map(code -> "'" + code + "'")
+                    .collect(Collectors.joining(", "));
+            String dataType = "'satellite', " + themeCodes;
             List<SceneDesVO> allScenesInfo = sceneDataService.getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, dataType);
             List<SceneDesVO> scenesInfo = new ArrayList<>();
             List<SceneDesVO> themesInfo = new ArrayList<>();
@@ -147,7 +155,7 @@ public class ThemeDataServiceV3 {
                 String sceneDataType = scene.getDataType(); // 假设 SceneDesVO 有 getDataType() 方法
                 if ("satellite".equals(sceneDataType)) {
                     scenesInfo.add(scene);
-                } else if (Arrays.asList("dem", "dsm", "ndvi", "svr", "3d").contains(sceneDataType)) {
+                } else if (SceneTypeByTheme.getAllCodes().contains(sceneDataType)) {
                     themesInfo.add(scene);
                 }
             }
@@ -160,7 +168,9 @@ public class ThemeDataServiceV3 {
         } else if (userThemeCache == null) {
             // 缓存未命中，从数据库中读数据
             Geometry gridsBoundary = locationService.getLocationBoundary(resolution, locationId);
-            String dataType = "'dem', 'dsm', 'ndvi', 'svr', '3d'";
+            String dataType = SceneTypeByTheme.getAllCodes().stream()
+                    .map(code -> "'" + code + "'")
+                    .collect(Collectors.joining(", "));
 
             List<SceneDesVO> themesInfo = sceneDataService.getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, dataType);
 

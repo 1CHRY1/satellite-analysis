@@ -5,6 +5,7 @@ import nnu.mnr.satellite.model.dto.admin.scene.CloudPathsDTO;
 import nnu.mnr.satellite.model.dto.resources.SceneImageDTO;
 import nnu.mnr.satellite.model.po.resources.Scene;
 import nnu.mnr.satellite.model.po.resources.SceneSP;
+import nnu.mnr.satellite.model.vo.admin.SceneSimpleInfoVO;
 import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
 import nnu.mnr.satellite.utils.typeHandler.FastJson2TypeHandler;
 import nnu.mnr.satellite.utils.typeHandler.GeometryTypeHandler;
@@ -300,6 +301,4 @@ public interface ISceneRepo extends BaseMapper<Scene> {
             "</foreach>" +
             "</script>")
     List<CloudPathsDTO> findFilePathsBySceneIds(@Param("sceneIds") List<String> sceneIds);
-
-
 }

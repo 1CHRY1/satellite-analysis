@@ -18,7 +18,4 @@ import org.apache.ibatis.annotations.Select;
 public interface IProjectRepo extends BaseMapper<Project> {
     @Select("SELECT COUNT(1) > 0 FROM project_table WHERE project_id = #{projectId}")
     boolean existsById(@Param("projectId") String projectId);
-
-    @Update("UPDATE project_table SET is_tool = #{isTool} WHERE project_id = #{projectId}")
-    int updateIsTool(@Param("projectId") String projectId, @Param("isTool") Integer isTool);
 }

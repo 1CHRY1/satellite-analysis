@@ -14,9 +14,9 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Home() {
-  const navigate = useNavigate();
+	const navigate = useNavigate();
 	useEffect(() => {
-    navigate("/dashboard")
-  });
+		navigate("/dashboard");
+	});
 	return null;
 }

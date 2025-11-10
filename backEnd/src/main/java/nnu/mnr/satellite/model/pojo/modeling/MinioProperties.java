@@ -1,6 +1,7 @@
 package nnu.mnr.satellite.model.pojo.modeling;
 
 import io.minio.MinioClient;
+import io.minio.admin.MinioAdminClient;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -28,6 +29,14 @@ public class MinioProperties {
         return MinioClient.builder()
                 .endpoint(url)
                 .credentials(accessKey,secretKey)
+                .build();
+    }
+
+    @Bean
+    public MinioAdminClient minioAdminClient() {
+        return MinioAdminClient.builder()
+                .endpoint(url)
+                .credentials(accessKey, secretKey)
                 .build();
     }
 

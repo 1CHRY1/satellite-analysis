@@ -39,7 +39,7 @@ public class EOCubeCache {
     }
 
     // 获取所有缓存
-    public static Map<String, EOCubeCache> getAllCaches() {
+    public static Map<String, Object> getAllCaches() {
         return new ConcurrentHashMap<>(EOCubeCacheMap); // 返回副本，避免外部修改
     }
 
@@ -55,6 +55,11 @@ public class EOCubeCache {
             }
         }
         return result;
+    }
+
+    // 删除缓存
+    public static void deleteCaches(String cacheKey) {
+        EOCubeCacheMap.remove(cacheKey);
     }
 
     @Data
