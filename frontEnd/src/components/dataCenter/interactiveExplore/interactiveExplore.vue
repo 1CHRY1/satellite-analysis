@@ -318,7 +318,7 @@
                                                                     t('datapage.explore.include') }}</div>
                                                                 <div class="result-info-value">
                                                                     {{ sceneStats?.dataset?.[category]?.total }}{{
-                                                                    t('datapage.explore.scene') }}
+                                                                        t('datapage.explore.scene') }}
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -376,8 +376,8 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            <a-empty v-if="sceneStats.total === 0" class="mt-2"/>
                                         </div>
-                                        <a-empty v-if="sceneStats.total === 0" />
                                     </div>
                                     <div class="stats"
                                         style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
@@ -408,10 +408,11 @@
                                                         :size="22" class="config-icon cursor-pointer" />
                                                     <span>{{ item.vectorName }}</span>
                                                 </div>
-                                                <div v-if="isVectorItemExpand[index]" class="space-y-3 p-4 rounded-md text-white w-full">
-                                                    <div v-if="vectorSymbology[item.tableName].attrs.length" class="flex items-center justify-between gap-2">
-                                                        <el-checkbox
-                                                            v-model="vectorSymbology[item.tableName].checkAll"
+                                                <div v-if="isVectorItemExpand[index]"
+                                                    class="space-y-3 p-4 rounded-md text-white w-full">
+                                                    <div v-if="vectorSymbology[item.tableName].attrs.length"
+                                                        class="flex items-center justify-between gap-2">
+                                                        <el-checkbox v-model="vectorSymbology[item.tableName].checkAll"
                                                             :indeterminate="vectorSymbology[item.tableName].isIndeterminate"
                                                             @change="(val: boolean) => handleCheckAllChange(item.tableName, val)">
                                                             <template #default>
@@ -419,8 +420,8 @@
                                                             </template>
                                                         </el-checkbox>
                                                         <a-tooltip>
-                                                            <template
-                                                                #title>{{ t('datapage.history.preview') }}</template>
+                                                            <template #title>{{ t('datapage.history.preview')
+                                                            }}</template>
                                                             <Eye v-if="previewVectorList[index]"
                                                                 @click="destroyVector(index)" :size="16"
                                                                 class="cursor-pointer" />
@@ -430,17 +431,21 @@
                                                         </a-tooltip>
                                                     </div>
                                                     <div class="w-full max-h-[248px] overflow-y-auto">
-                                                        <el-checkbox-group v-model="vectorSymbology[item.tableName].checkedAttrs"
-                                                            @change="(val: string[]) => handleCheckedAttrsChange(item.tableName, val)" >
-                                                            <template v-if="vectorSymbology[item.tableName].attrs.length">
+                                                        <el-checkbox-group
+                                                            v-model="vectorSymbology[item.tableName].checkedAttrs"
+                                                            @change="(val: string[]) => handleCheckedAttrsChange(item.tableName, val)">
+                                                            <template
+                                                                v-if="vectorSymbology[item.tableName].attrs.length">
                                                                 <div v-for="(attr, attrIndex) in vectorSymbology[item.tableName].attrs"
                                                                     :key="attrIndex"
                                                                     class="flex items-center justify-between bg-[#01314e] px-3 mb-1.5 py-2 rounded">
                                                                     <div class="flex items-center gap-2">
-                                                                        <el-checkbox class="config-label mt-1" :key="attr.type" :label="attr.label" >
+                                                                        <el-checkbox class="config-label mt-1"
+                                                                            :key="attr.type" :label="attr.label">
                                                                             <template default></template>
                                                                         </el-checkbox>
-                                                                        <span class="config-label mt-1">{{ attr.label }}</span>
+                                                                        <span class="config-label mt-1">{{ attr.label
+                                                                        }}</span>
                                                                     </div>
                                                                     <el-color-picker v-model="attr.color" size="small"
                                                                         show-alpha :predefine="predefineColors" />
@@ -448,7 +453,8 @@
                                                             </template>
                                                         </el-checkbox-group>
                                                     </div>
-                                                    <div v-if="vectorSymbology[item.tableName].attrs.length === 0" class="flex justify-center items-center">
+                                                    <div v-if="vectorSymbology[item.tableName].attrs.length === 0"
+                                                        class="flex justify-center items-center">
                                                         <a-space>
                                                             <a-spin size="large" />
                                                         </a-space>
@@ -504,8 +510,8 @@
                                                             <span>{{ themeName }}</span>
                                                             <div class="absolute right-0 cursor-pointer">
                                                                 <a-tooltip>
-                                                                    <template
-                                                                        #title>{{ t('datapage.history.preview') }}</template>
+                                                                    <template #title>{{ t('datapage.history.preview')
+                                                                    }}</template>
                                                                     <Eye v-if="shouldShowEyeOff(category, idx)"
                                                                         @click="toggleEye(category, idx, themeName)"
                                                                         :size="16" class="cursor-pointer" />
@@ -518,8 +524,8 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            <a-empty v-if="themeStats.total === 0" />
                                         </div>
-                                        <a-empty v-if="themeStats.total === 0" />
                                     </div>
                                 </div>
                             </section>
@@ -695,7 +701,7 @@ onMounted(async () => {
         try {
             document.documentElement.style.overflow = v ? 'hidden' : ''
             document.body.style.overflow = v ? 'hidden' : ''
-        } catch {}
+        } catch { }
     })
 
     await mapManager.waitForInit();
@@ -722,8 +728,8 @@ onMounted(async () => {
 onUnmounted(() => {
     destroyExploreLayers()
     bus.off('gridPopup:visible', handleGridPopupVisible)
-    try { document.documentElement.style.overflow = '' } catch {}
-    try { document.body.style.overflow = '' } catch {}
+    try { document.documentElement.style.overflow = '' } catch { }
+    try { document.body.style.overflow = '' } catch { }
 })
 
 </script>
@@ -759,7 +765,8 @@ onUnmounted(() => {
 :deep(.grid-popup-panel .vdr) {
     pointer-events: auto;
 }
-::deep(.grid-popup-panel .vdr * ) {
+
+::deep(.grid-popup-panel .vdr *) {
     pointer-events: auto;
 }
 
@@ -768,12 +775,15 @@ onUnmounted(() => {
     inset: 0;
     z-index: 2200;
     pointer-events: none;
-    overflow: hidden; /* NEW: prevent body scrolling */
+    overflow: hidden;
+    /* NEW: prevent body scrolling */
 }
+
 .grid-popup-panel {
     position: absolute;
     inset: 0;
     pointer-events: none;
-    overflow: hidden; /* NEW: clip inner overflow */
+    overflow: hidden;
+    /* NEW: clip inner overflow */
 }
 </style>

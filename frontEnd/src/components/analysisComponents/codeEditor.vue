@@ -1,37 +1,32 @@
 <template>
-    <div>
-        <div class="flex h-[44px] w-full justify-between">
-            <div class="my-1.5 ml-2 flex w-fit items-center rounded bg-[#eaeaea] shadow-md">
-                <el-button link class="toolItem btHover" @click="showPackageList">
-                    <CloudServerOutlined class="mr-1" />
+    <div class="bg-[#161b22]">
+        <div class="flex h-[44px] w-full justify-between bg-[#161b22]">
+            <a-space :size="5" style="padding-top: 5px; padding-left:5px">
+                <a-button class="toolItem btHover" :icon="h(CloudServerOutlined)"
+                    style="display: flex; align-items: center; justify-content: center" size="small"
+                    @click="showPackageList">
                     依赖管理
-                </el-button>
-                <div style="border-right: 1.5px dashed #5f6477; height: 20px;"></div>
-
-                <el-button link class="toolItem" :class="{ 'btHover': !isRunning }" @click="runCode"
-                    :disabled="isRunning">
-                    <CaretRightOutlined class="mr-1" />
+                </a-button>
+                <a-button class="toolItem" :class="{ 'btHover': !isRunning }"
+                    style="display: flex; align-items: center; justify-content: center" :icon="h(CaretRightOutlined)"
+                    size="small" @click="runCode" :disabled="isRunning">
                     运行
-                </el-button>
-                <div style="border-right: 1.5px dashed #5f6477; height: 20px;"></div>
-
-                <el-button link class="toolItem" :class="{ 'btHover': isRunning }" @click="stopCode"
-                    :disabled="!isRunning">
-                    <StopOutlined class="mr-1" />
+                </a-button>
+                <a-button class="toolItem" :class="{ 'btHover': isRunning }"
+                    style="display: flex; align-items: center; justify-content: center" :icon="h(StopOutlined)"
+                    size="small" @click="stopCode" :disabled="!isRunning">
                     结束
-                </el-button>
-                <!-- <div style="border-right: 1.5px dashed #5f6477; height: 20px;"></div> -->
-                <el-button link class="toolItem btHover" @click="saveCode">
-                    <SaveOutlined class="mr-1" />
+                </a-button>
+                <a-button class="toolItem btHover" style="display: flex; align-items: center; justify-content: center"
+                    size="small" :icon="h(SaveOutlined)" @click="saveCode">
                     保存
-                </el-button>
-
-                <div style="border-right: 1.5px dashed #5f6477; height: 20px;"></div>
-
+                </a-button>
                 <el-dropdown @command="handleTemplateCommand">
-                    <el-button link class="toolItem btHover">
+                    <a-button class="toolItem btHover"
+                        style="display: flex; align-items: center; justify-content: center" :icon="h(DownOutlined)"
+                        size="small">
                         模板
-                    </el-button>
+                    </a-button>
                     <template #dropdown>
                         <el-dropdown-menu>
                             <el-dropdown-item command="expr">表达式（无需服务）</el-dropdown-item>
@@ -40,65 +35,34 @@
                     </template>
                 </el-dropdown>
 
-                <div style="border-right: 1.5px dashed #5f6477; height: 20px;"></div>
-
-                <el-button link class="toolItem btHover" @click="openToolWizard">
-                    <ToolOutlined class="mr-1" />
+                <a-button class="toolItem btHover" style="display: flex; align-items: center; justify-content: center"
+                    size="small" :icon="h(ToolOutlined)" @click="openToolWizard">
                     发布为工具
-                </el-button>
-            </div>
+                </a-button>
+            </a-space>
 
-            <el-dialog
-                title="发布为工具"
-                v-model="toolWizardVisible"
-                width="720px"
-                class="tool-wizard-dialog"
-                :close-on-click-modal="false"
-            >
+            <el-dialog title="发布为工具" v-model="toolWizardVisible" width="720px" class="tool-wizard-dialog"
+                :close-on-click-modal="false">
                 <div class="max-h-[70vh] overflow-y-auto pr-1">
                     <el-form :model="toolWizardForm" label-width="110px" label-position="left">
                         <el-form-item label="工具名称" required>
                             <el-input v-model="toolWizardForm.toolName" placeholder="请输入工具名称" />
                         </el-form-item>
                         <el-form-item label="描述" required>
-                            <el-input
-                                v-model="toolWizardForm.description"
-                                type="textarea"
-                                :rows="3"
-                                placeholder="请简要说明工具功能"
-                            />
+                            <el-input v-model="toolWizardForm.description" type="textarea" :rows="3"
+                                placeholder="请简要说明工具功能" />
                         </el-form-item>
                         <el-form-item label="分类" required>
-                            <el-select
-                                v-model="toolWizardForm.category"
-                                filterable
-                                allow-create
-                                default-first-option
-                                placeholder="选择或输入分类"
-                            >
-                                <el-option
-                                    v-for="option in categoryOptions"
-                                    :key="option"
-                                    :label="option"
-                                    :value="option"
-                                />
+                            <el-select v-model="toolWizardForm.category" filterable allow-create default-first-option
+                                placeholder="选择或输入分类">
+                                <el-option v-for="option in categoryOptions" :key="option" :label="option"
+                                    :value="option" />
                             </el-select>
                         </el-form-item>
                         <el-form-item label="标签">
-                            <el-select
-                                v-model="toolWizardForm.tags"
-                                multiple
-                                allow-create
-                                filterable
-                                placeholder="输入标签后回车"
-                                class="w-full"
-                            >
-                                <el-option
-                                    v-for="tag in toolWizardForm.tags"
-                                    :key="tag"
-                                    :label="tag"
-                                    :value="tag"
-                                />
+                            <el-select v-model="toolWizardForm.tags" multiple allow-create filterable
+                                placeholder="输入标签后回车" class="w-full">
+                                <el-option v-for="tag in toolWizardForm.tags" :key="tag" :label="tag" :value="tag" />
                             </el-select>
                         </el-form-item>
 
@@ -114,18 +78,11 @@
 
                         <template v-if="toolWizardForm.invokeType === 'tiler-expression'">
                             <el-form-item label="表达式模板" required>
-                                <el-input
-                                    v-model="toolWizardForm.expressionTemplate"
-                                    type="textarea"
-                                    :rows="3"
-                                    placeholder="示例：(b3 - b5) / (b3 + b5)"
-                                />
+                                <el-input v-model="toolWizardForm.expressionTemplate" type="textarea" :rows="3"
+                                    placeholder="示例：(b3 - b5) / (b3 + b5)" />
                             </el-form-item>
                             <el-form-item label="颜色映射">
-                                <el-input
-                                    v-model="toolWizardForm.colorMap"
-                                    placeholder="如 rdylgn，可在服务端扩展"
-                                />
+                                <el-input v-model="toolWizardForm.colorMap" placeholder="如 rdylgn，可在服务端扩展" />
                             </el-form-item>
                             <el-form-item label="像元方法">
                                 <el-select v-model="toolWizardForm.pixelMethod">
@@ -138,10 +95,8 @@
 
                         <template v-else>
                             <el-form-item label="服务地址" required>
-                                <el-input
-                                    v-model="toolWizardForm.serviceEndpoint"
-                                    placeholder="例如 http://localhost:20080/run"
-                                />
+                                <el-input v-model="toolWizardForm.serviceEndpoint"
+                                    placeholder="例如 http://localhost:20080/run" />
                             </el-form-item>
                             <el-form-item label="HTTP 方法">
                                 <el-select v-model="toolWizardForm.serviceMethod">
@@ -150,18 +105,11 @@
                                 </el-select>
                             </el-form-item>
                             <el-form-item label="请求模板">
-                                <el-input
-                                    v-model="toolWizardForm.payloadTemplate"
-                                    type="textarea"
-                                    :rows="4"
-                                    placeholder='默认模板: { "mosaicUrl": "{{mosaicUrl}}", "params": "{{params}}" }'
-                                />
+                                <el-input v-model="toolWizardForm.payloadTemplate" type="textarea" :rows="4"
+                                    placeholder='默认模板: { "mosaicUrl": "{{mosaicUrl}}", "params": "{{params}}" }' />
                             </el-form-item>
                             <el-form-item label="结果路径">
-                                <el-input
-                                    v-model="toolWizardForm.responsePath"
-                                    placeholder="可选，例如 data.result"
-                                />
+                                <el-input v-model="toolWizardForm.responsePath" placeholder="可选，例如 data.result" />
                             </el-form-item>
                             <el-form-item label="服务状态">
                                 <div class="rounded border border-dashed border-gray-400 px-3 py-2 text-sm">
@@ -176,25 +124,14 @@
                                         {{ serviceStatus.url || 'URL 未返回' }}
                                     </div>
                                     <div class="mt-2 flex flex-wrap items-center gap-2">
-                                        <el-input
-                                            v-model="toolWizardForm.servicePort"
-                                            placeholder="指定端口 (可选)"
-                                            class="w-32"
-                                        />
-                                        <el-button
-                                            type="primary"
-                                            size="small"
-                                            :loading="servicePublishLoading"
-                                            @click="startServiceForWizard"
-                                        >
+                                        <el-input v-model="toolWizardForm.servicePort" placeholder="指定端口 (可选)"
+                                            class="w-32" />
+                                        <el-button type="primary" size="small" :loading="servicePublishLoading"
+                                            @click="startServiceForWizard">
                                             启动服务
                                         </el-button>
-                                        <el-button
-                                            type="danger"
-                                            size="small"
-                                            :loading="servicePublishLoading"
-                                            @click="stopServiceForWizard"
-                                        >
+                                        <el-button type="danger" size="small" :loading="servicePublishLoading"
+                                            @click="stopServiceForWizard">
                                             停止服务
                                         </el-button>
                                     </div>
@@ -209,25 +146,15 @@
                                 添加参数
                             </el-button>
                         </div>
-                        <div v-if="toolWizardForm.params.length === 0" class="rounded bg-gray-100/10 p-3 text-xs text-gray-400">
+                        <div v-if="toolWizardForm.params.length === 0"
+                            class="rounded bg-gray-100/10 p-3 text-xs text-gray-400">
                             暂无参数。若工具需要用户输入，请点击“添加参数”。
                         </div>
-                        <div
-                            v-for="(param, index) in toolWizardForm.params"
-                            :key="index"
-                            class="mb-3 rounded border border-gray-600/60 p-3"
-                        >
+                        <div v-for="(param, index) in toolWizardForm.params" :key="index"
+                            class="mb-3 rounded border border-gray-600/60 p-3">
                             <div class="flex flex-wrap gap-3">
-                                <el-input
-                                    v-model="param.label"
-                                    placeholder="显示名称"
-                                    class="w-40"
-                                />
-                                <el-input
-                                    v-model="param.key"
-                                    placeholder="参数键"
-                                    class="w-40"
-                                />
+                                <el-input v-model="param.label" placeholder="显示名称" class="w-40" />
+                                <el-input v-model="param.key" placeholder="参数键" class="w-40" />
                                 <el-select v-model="param.type" class="w-36">
                                     <el-option label="字符串" value="string" />
                                     <el-option label="数字" value="number" />
@@ -241,17 +168,10 @@
                                 </el-select>
                             </div>
                             <div class="mt-2 flex flex-wrap gap-3">
-                                <el-input
-                                    v-model="param.placeholder"
-                                    placeholder="占位提示"
-                                    class="w-64"
-                                />
-                                <el-input
-                                    v-model="param.optionsText"
+                                <el-input v-model="param.placeholder" placeholder="占位提示" class="w-64" />
+                                <el-input v-model="param.optionsText"
                                     :disabled="param.source === 'bands' || param.type !== 'select'"
-                                    placeholder="选项，示例: 红光:band3, 近红外:band5"
-                                    class="flex-1"
-                                />
+                                    placeholder="选项，示例: 红光:band3, 近红外:band5" class="flex-1" />
                                 <el-button type="danger" text @click="removeWizardParam(index)">
                                     删除
                                 </el-button>
@@ -261,18 +181,14 @@
                 </div>
                 <template #footer>
                     <el-button @click="toolWizardVisible = false" :disabled="toolWizardSubmitting">取消</el-button>
-                    <el-button
-                        type="primary"
-                        @click="publishDynamicTool"
-                        :loading="toolWizardSubmitting"
-                    >
+                    <el-button type="primary" @click="publishDynamicTool" :loading="toolWizardSubmitting">
                         发布
                     </el-button>
                 </template>
             </el-dialog>
 
-            <el-dialog title="依赖管理" v-model="dialogVisible" width="400px">
-                <!-- 表格 -->
+            <!-- ###################### OLD VERSION ####################### -->
+            <!-- <el-dialog title="依赖管理" v-model="dialogVisible" width="400px">
                 <el-table :data="packageList" style="width: 100%">
                     <el-table-column prop="package" label="包名" />
                     <el-table-column prop="version" label="版本">
@@ -288,7 +204,6 @@
                 </el-table>
                 <div class="mt-1 flex items-center" v-show="addPackageShow">
                     <div class="">
-                        <!-- <font-awesome-icon style="margin-left: 2px; font-size: 10px; color: red" icon="star-of-life" /> -->
                         <label><span style="color: red">*</span>包名: </label>
                         <el-input v-model="addedPackageInfo.name" placeholder="package name"
                             style="width: 120px; font-size: 14px" />
@@ -302,30 +217,113 @@
                         <el-button link type="primary" @click="installPackage()">安装</el-button>
                     </div>
                 </div>
-                <!-- 底部按钮 -->
                 <template #footer>
                     <span class="dialog-footer">
                         <el-button @click="addPackageShow = !addPackageShow">安装依赖</el-button>
                         <el-button type="primary" @click="dialogVisible = false">关闭</el-button>
                     </span>
                 </template>
-            </el-dialog>
+            </el-dialog> -->
 
-            <div class="relative my-1.5 ml-2 flex w-fit items-center rounded">
-                <div class="relative my-1 mr-2 flex h-full cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-xs shadow-md"
+            <a-modal title="依赖管理" :visible="dialogVisible" @cancel="dialogVisible = false" width="400px">
+                <template #footer>
+                    <a-button @click="addPackageShow = !addPackageShow">
+                        {{ addPackageShow ? '取消安装' : '安装依赖' }}
+                    </a-button>
+                    <a-button type="primary" @click="dialogVisible = false">关闭</a-button>
+                </template>
+                <a-table :data-source="packageList" :columns="[
+                    {
+                        title: '包名',
+                        dataIndex: 'package',
+                        key: 'package',
+                    },
+                    {
+                        title: '版本',
+                        dataIndex: 'version',
+                        key: 'version',
+                    },
+                    {
+                        title: '操作',
+                        key: 'operation', // 使用 key: operation 来匹配 template #bodyCell 的逻辑
+                        width: 80,
+                    },
+                ]" :pagination="false" row-key="package" style="width: 100%; margin-bottom: 16px;">
+                    <template #bodyCell="{ column, record }">
+
+                        <template v-if="column.key === 'version'">
+                            {{ record.version || '-' }}
+                        </template>
+
+                        <template v-else-if="column.key === 'operation'">
+                            <a-button type="link" @click="removePackage(record)">移除</a-button>
+                        </template>
+                    </template>
+                </a-table>
+
+                <div v-show="addPackageShow" style="margin-top: 8px; display: flex; align-items: center;">
+
+                    <div style="display: flex; align-items: center;">
+                        <label style="margin-right: 4px;">
+                            <span style="color: red; margin-right: 2px;">*</span>包名:
+                        </label>
+                        <a-input v-model:value="addedPackageInfo.name" placeholder="package name"
+                            style="width: 120px; font-size: 14px" />
+                    </div>
+
+                    <div style="margin-left: 16px; display: flex; align-items: center;">
+                        <label style="margin-right: 4px;">版本: </label>
+                        <a-input v-model:value="addedPackageInfo.version" placeholder="version"
+                            style="width: 70px; font-size: 14px" />
+                    </div>
+
+                    <div style="margin-left: 16px;">
+                        <a-button type="link" @click="installPackage()">安装</a-button>
+                    </div>
+                </div>
+            </a-modal>
+
+            <a-dropdown :trigger="['click']">
+                <div class="my-1.5 ml-2 mr-2 flex w-fit items-center rounded"
+                    style="padding-top: 5px; padding-bottom: 2px;">
+                    <a-button type="text" class="ant-dropdown-link" @click.prevent style="
+                        background-color: #09314c; 
+                        color: white; 
+                        border-radius: 4px;
+                        font-size: 12px;
+                        height: 24px;
+                        padding: 0 8px;
+                        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* 模拟 shadow-md */
+                    ">
+                        当前环境：{{ selectedEnv }}
+                        <!-- <DownOutlined /> -->
+                    </a-button>
+                </div>
+                <!-- ##################### OLD VERSION ##################### -->
+                <!-- <template #overlay>
+                    <a-menu @click="handleEnvChange">
+                        <a-menu-item v-for="env in envOptions" :key="env">
+                            {{ env }}
+                        </a-menu-item>
+                    </a-menu>
+                </template> -->
+            </a-dropdown>
+            <!-- ##################### OLD VERSION ##################### -->
+            <!-- <div class="relative my-1.5 ml-2 flex w-fit items-center rounded">
+                <div class="relative my-1 mr-2 flex h-full cursor-pointer items-center rounded bg-[#09314c] px-2 text-xs shadow-md"
                     @click="">
                     当前环境：{{ selectedEnv }}
                 </div>
                 <div v-if="showDropdown"
-                    class="absolute top-8 left-0 z-10 mt-1 w-fit rounded border border-gray-300 bg-white shadow-md">
+                    class="absolute top-8 left-0 z-10 mt-1 w-fit rounded border border-[#0a4975]-300 bg-black shadow-md">
                     <div v-for="env in envOptions" :key="env" class="cursor-pointer px-3 py-2 text-sm hover:bg-gray-200"
                         @click="">
                         {{ env }}
                     </div>
                 </div>
-            </div>
+            </div> -->
         </div>
-        <div class="code-editor !bg-[#f9fafb]">
+        <div class="code-editor">
             <Codemirror class="!p-0 !text-[12px]" v-model="code" :extensions="extensions" @ready="onCmReady"
                 @update:model-value="onCmInput" />
         </div>
@@ -333,12 +331,14 @@
 </template>
 
 <script setup lang="ts">
+import { h } from 'vue';
 import {
     CloudServerOutlined,
     CaretRightOutlined,
     SaveOutlined,
     StopOutlined,
     ToolOutlined,
+    DownOutlined,
 } from '@ant-design/icons-vue'
 import {
     projectOperating,
@@ -350,10 +350,10 @@ import {
     getPackages,
 } from '@/api/http/analysis'
 import { publishTool, getToolStatus, unpublishTool, getAllTools } from '@/api/http/tool'
-import { ref, reactive, onMounted, onBeforeUnmount,watch, computed } from 'vue'
+import { ref, reactive, onMounted, onBeforeUnmount, watch, computed } from 'vue'
 import { Codemirror } from 'vue-codemirror'
 import { python } from '@codemirror/lang-python'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessageBox } from 'element-plus'
 import { updateRecord } from '@/api/http/user'
 import { useUserStore, useToolRegistryStore, generateToolId } from '@/store'
 import type {
@@ -362,6 +362,7 @@ import type {
     DynamicToolParamSchema,
     DynamicToolMeta,
 } from '@/store/toolRegistry'
+import { message } from 'ant-design-vue';
 
 // import type { analysisResponse } from "@/type/analysis";
 // import { oneDarkTheme } from "@codemirror/theme-one-dark";
@@ -571,7 +572,7 @@ const installPackage = async () => {
                 name: addedPackageInfo.value.name,
             }
     } else {
-        ElMessage.warning('请输入要安装的依赖包名')
+        message.warning('请输入要安装的依赖包名')
     }
     emit('addMessage', '正在安装依赖：' + addedPackageInfo.value.name + '，请等待并关注安装信息')
     await operatePackage(requestJson)
@@ -618,12 +619,12 @@ const runCode = async () => {
             userId: props.userId,
         })
         if (runResult.status === 1) {
-            ElMessage.success('脚本启动')
+            message.success('脚本启动')
         } else {
-            ElMessage.error('启动失败，请重试或者联系管理员')
+            message.error('启动失败，请重试或者联系管理员')
         }
     } else {
-        ElMessage.error('保存失败，请重试或者联系管理员')
+        message.error('保存失败，请重试或者联系管理员')
     }
 }
 
@@ -635,7 +636,7 @@ const stopCode = async () => {
     })
     console.log(stopResult, 'stopResult');
 
-    ElMessage.info('正在停止运行')
+    message.info('正在停止运行')
 }
 const saveCode = async () => {
     // 保存代码内容
@@ -645,9 +646,9 @@ const saveCode = async () => {
         content: code.value,
     })
     if (result.status === 1) {
-        ElMessage.success('代码保存成功')
+        message.success('代码保存成功')
     } else {
-        ElMessage.error('代码保存失败')
+        message.error('代码保存失败')
     }
 }
 
@@ -698,7 +699,7 @@ const applyExpressionTemplate = async () => {
         }
     }
     saveWizardDraft()
-    ElMessage.success('已应用“表达式（无需服务）”模板，可直接发布为工具')
+    message.success('已应用“表达式（无需服务）”模板，可直接发布为工具')
 }
 
 const applyFlaskTemplate = async () => {
@@ -788,7 +789,7 @@ if __name__ == "__main__":
         { label: '像元方法', key: 'pixel_method', type: 'string', required: false, placeholder: '默认 first', source: '', optionsText: '', default: 'first' },
     )
     saveWizardDraft()
-    ElMessage.success('已填充 Flask 模板，请保存代码后启动服务再发布')
+    message.success('已填充 Flask 模板，请保存代码后启动服务再发布')
 }
 
 const keyboardSaveCode = (event: KeyboardEvent) => {
@@ -846,7 +847,7 @@ const currentToolId = ref<string | null>(null)
 const parseHostPortFromUrl = (url: string): { host: string; port: number | null } => {
     try {
         const u = new URL(url)
-        const host = u.hostname || '' 
+        const host = u.hostname || ''
         const port = u.port ? Number(u.port) : null
         return { host, port }
     } catch {
@@ -943,11 +944,11 @@ const publishServiceFunction = async (preferredPort?: number) => {
         }
         const url = data.url || ''
         currentToolId.value = data.toolId
-        ElMessage.success(url ? `服务发布成功！访问地址: ${url}` : '服务发布成功！')
+        message.success(url ? `服务发布成功！访问地址: ${url}` : '服务发布成功！')
         emit('addMessage', url ? `Service running at: ${url}` : 'Service running')
         emit('servicePublished')
     } catch (error) {
-        ElMessage.error('服务发布失败: ' + (error as Error).message)
+        message.error('服务发布失败: ' + (error as Error).message)
     } finally {
         servicePublishLoading.value = false
     }
@@ -958,17 +959,17 @@ const unpublishServiceFunction = async () => {
     try {
         const toolId = await resolveCurrentToolId()
         if (!toolId) {
-            ElMessage.warning('未找到已发布的工具')
+            message.warning('未找到已发布的工具')
             return
         }
         const res = await unpublishTool({ userId: props.userId, toolId })
         if (res?.status !== 1) throw new Error(res?.message ?? '停止服务失败')
         serviceStatus.value = { isPublished: false, running: false, url: '', host: '', port: null }
-        ElMessage.success('服务已停止')
+        message.success('服务已停止')
         emit('addMessage', 'Service stopped')
         emit('serviceUnpublished')
     } catch (error) {
-        ElMessage.error('停止服务失败: ' + (error as Error).message)
+        message.error('停止服务失败: ' + (error as Error).message)
     } finally {
         servicePublishLoading.value = false
     }
@@ -982,7 +983,7 @@ const startServiceForWizard = async () => {
 
 const stopServiceForWizard = async () => {
     if (!serviceStatus.value.running) {
-        ElMessage.info('服务未运行')
+        message.info('服务未运行')
         return
     }
     await unpublishServiceFunction()
@@ -1051,30 +1052,30 @@ const publishDynamicTool = async () => {
     if (toolWizardSubmitting.value) return
     const activeUserId = currentUserId.value || props.userId
     if (!activeUserId) {
-        ElMessage.error('未获取到用户信息，无法发布工具')
+        message.error('未获取到用户信息，无法发布工具')
         return
     }
     const name = toolWizardForm.toolName.trim()
     if (!name) {
-        ElMessage.error('请填写工具名称')
+        message.error('请填写工具名称')
         return
     }
     const category = toolWizardForm.category.trim()
     if (!category) {
-        ElMessage.error('请填写工具分类')
+        message.error('请填写工具分类')
         return
     }
     const description = toolWizardForm.description.trim()
     if (!description) {
-        ElMessage.error('请填写工具描述')
+        message.error('请填写工具描述')
         return
     }
     if (toolWizardForm.invokeType === 'tiler-expression' && !toolWizardForm.expressionTemplate.trim()) {
-        ElMessage.error('请填写表达式模板')
+        message.error('请填写表达式模板')
         return
     }
     if (toolWizardForm.invokeType !== 'tiler-expression' && !toolWizardForm.serviceEndpoint.trim()) {
-        ElMessage.error('请填写服务地址')
+        message.error('请填写服务地址')
         return
     }
 
@@ -1082,16 +1083,16 @@ const publishDynamicTool = async () => {
     for (const param of toolWizardForm.params) {
         const key = param.key.trim()
         if (!key) {
-            ElMessage.error('参数键不能为空')
+            message.error('参数键不能为空')
             return
         }
         if (keySet.has(key)) {
-            ElMessage.error(`参数键重复：${key}`)
+            message.error(`参数键重复：${key}`)
             return
         }
         keySet.add(key)
         if (param.type === 'select' && !param.source && !param.optionsText.trim()) {
-            ElMessage.error(`请选择或输入参数“${param.label || param.key}”的枚举项`)
+            message.error(`请选择或输入参数“${param.label || param.key}”的枚举项`)
             return
         }
     }
@@ -1103,7 +1104,7 @@ const publishDynamicTool = async () => {
             try {
                 payloadTemplate = JSON.parse(payloadText)
             } catch (error) {
-                ElMessage.error('请求模板需要是合法的 JSON 格式')
+                message.error('请求模板需要是合法的 JSON 格式')
                 return
             }
         }
@@ -1113,18 +1114,18 @@ const publishDynamicTool = async () => {
 
     const invokeConfig: DynamicToolMeta['invoke'] = toolWizardForm.invokeType === 'tiler-expression'
         ? {
-              type: 'tiler-expression',
-              expressionTemplate: toolWizardForm.expressionTemplate,
-              colorMap: toolWizardForm.colorMap || 'rdylgn',
-              pixelMethod: toolWizardForm.pixelMethod || 'first',
-          }
+            type: 'tiler-expression',
+            expressionTemplate: toolWizardForm.expressionTemplate,
+            colorMap: toolWizardForm.colorMap || 'rdylgn',
+            pixelMethod: toolWizardForm.pixelMethod || 'first',
+        }
         : {
-              type: toolWizardForm.invokeType,
-              endpoint: toolWizardForm.serviceEndpoint.trim(),
-              method: toolWizardForm.serviceMethod as 'GET' | 'POST',
-              payloadTemplate: payloadTemplate ?? undefined,
-              responsePath: toolWizardForm.responsePath.trim() || undefined,
-          }
+            type: toolWizardForm.invokeType,
+            endpoint: toolWizardForm.serviceEndpoint.trim(),
+            method: toolWizardForm.serviceMethod as 'GET' | 'POST',
+            payloadTemplate: payloadTemplate ?? undefined,
+            responsePath: toolWizardForm.responsePath.trim() || undefined,
+        }
 
     const toolMeta: DynamicToolMeta = {
         id: generateToolId('dynamic'),
@@ -1145,11 +1146,11 @@ const publishDynamicTool = async () => {
         saveWizardDraft()
         emit('servicePublished')
         await logToolPublish(name, description)
-        ElMessage.success('工具发布成功，可前往动态分析页面使用')
+        message.success('工具发布成功，可前往动态分析页面使用')
         toolWizardVisible.value = false
     } catch (error) {
         console.error('注册工具失败:', error)
-        ElMessage.error('注册工具失败，请重试')
+        message.error('注册工具失败，请重试')
     } finally {
         toolWizardSubmitting.value = false
     }
@@ -1166,7 +1167,7 @@ onMounted(async () => {
         }
     } catch (error) {
         console.error('加载代码失败:', error)
-        ElMessage.error('加载代码失败，请检查后端服务是否运行')
+        message.error('加载代码失败，请检查后端服务是否运行')
     }
 
     try {
@@ -1177,13 +1178,13 @@ onMounted(async () => {
         })
 
         if (result.status === 1) {
-            ElMessage.success('项目启动成功')
+            message.success('项目启动成功')
         } else {
-            ElMessage.error('启动失败，请刷新页面或联系管理员')
+            message.error('启动失败，请刷新页面或联系管理员')
         }
     } catch (error) {
         console.error('项目启动失败:', error)
-        ElMessage.error('项目启动失败，请检查后端服务')
+        message.error('项目启动失败，请检查后端服务')
     }
 
     window.addEventListener('keydown', keyboardSaveCode);
@@ -1202,39 +1203,153 @@ onBeforeUnmount(async () => {
     window.removeEventListener('keydown', keyboardSaveCode);
 })
 </script>
-
 <style scoped>
 @reference 'tailwindcss';
 
+/* 确保 Codemirror 容器和内部滚动条样式正确 */
 :deep(.cm-scroller) {
     overflow-x: hidden !important;
+    background-color: #161b22;
+    /* Codemirror 背景色 */
 }
 
+:deep(.cm-editor) {
+    background-color: #161b22;
+    /* Codemirror 整体背景色 */
+    height: 100%;
+    border-radius: 0 !important;
+}
+
+:deep(.cm-content) {
+    caret-color: #58a6ff;
+    /* 光标颜色 */
+    color: #c9d1d9;
+    /* 代码文本颜色 */
+}
+
+:deep(.cm-gutters) {
+    background-color: #161b22;
+    /* 行号背景 */
+    border-right: 1px solid #21262d;
+    /* 行号分隔线 */
+}
+
+:deep(.cm-lineNumbers .cm-gutterElement) {
+    color: #8b949e;
+    /* 行号颜色 */
+}
+
+/* 代码编辑器容器 */
 .code-editor {
-    @apply h-[90%] w-full overflow-x-hidden overflow-y-auto rounded-lg bg-gray-100 font-sans text-sm;
+    /* 适配 h-[90%] w-full，移除冲突的亮色背景和字体 */
+    @apply h-[calc(100%-44px)] w-full overflow-x-hidden overflow-y-auto rounded-lg font-sans text-sm;
+    background-color: #161b22;
+    border: 1px solid #21262d;
+    /* 增加轻微边框 */
 }
 
+:deep(.cm-selectionBackground) {
+    background-color: #3b5074 !important;
+    /* 修改为你想要的颜色 */
+}
 
+/* 兼容性补充：针对激活的行（如果启用了 line selection） */
+:deep(.cm-activeLine) {
+    background-color: #1a2a47 !important;
+    /* 修改为活动行的背景色，通常比编辑器背景稍亮或稍暗 */
+}
 
+/* 兼容性补充：针对被选中的文本（如果 cm-selectionBackground 不生效） */
+:deep(::selection),
+:deep(.cm-content ::selection) {
+    background-color: #3b5074 !important;
+    /* Fallback for native selection */
+    color: #ffffff;
+    /* 可选：设置选中时的文本颜色 */
+}
+
+/* 顶部工具栏按钮样式 */
 .toolItem {
     font-size: 14px;
     padding: 0 12px;
-    /* border-right: 1.5px dashed #5f6477; */
-    color: #4c5160;
+    color: #c9d1d9;
+    /* 默认文本为柔和浅色 */
 }
 
+/* 运行/保存/依赖 hover 状态 */
 .btHover:hover {
-    color: #1479d7;
-    /* cursor: pointer; */
+    color: #58a6ff;
+    /* 亮蓝色强调色 */
 }
 
-.toolItem:last-child {
-    border-right: none;
+/* 覆盖 Element Plus 输入框/选择框，以适应暗黑主题 */
+:deep(.el-input__wrapper),
+:deep(.el-select__wrapper),
+:deep(.el-textarea__inner) {
+    background-color: #21262d !important;
+    /* 组件背景深于 Pane 背景 */
+    box-shadow: none !important;
 }
-:deep(.el-input__wrapper) {
-  background-color: white !important;
+
+:deep(.el-input__inner),
+:deep(.el-select__placeholder),
+:deep(.el-textarea__inner) {
+    color: #c9d1d9 !important;
+    /* 文本颜色 */
 }
-:deep(.el-input__inner) {
-  color: black !important;
+
+/* 解决 Tool Wizard 中，Element Plus Dialog 的暗黑主题问题 */
+:deep(.el-dialog) {
+    background-color: #161b22 !important;
+    color: #c9d1d9 !important;
+    border: 1px solid #21262d;
+
+    .el-dialog__header,
+    .el-dialog__title {
+        color: #c9d1d9 !important;
+    }
+
+    .el-dialog__footer {
+        border-top: 1px solid #21262d;
+    }
+}
+
+:deep(.el-form-item__label) {
+    color: #c9d1d9 !important;
+}
+
+:deep(.el-divider__text) {
+    color: #58a6ff !important;
+    background-color: #161b22 !important;
+}
+
+/* 修正 Tool Wizard 中的服务状态框 */
+:deep(.border-gray-400) {
+    border-color: #30363d !important;
+}
+
+:deep(.bg-gray-100\/10) {
+    background-color: #21262d !important;
+    color: #8b949e !important;
+}
+
+/* 修正 Tool Wizard 中的参数配置框 */
+:deep(.border-gray-600\/60) {
+    border-color: #30363d !important;
+}
+
+/* 修正表格内部的颜色 (依赖管理) */
+:deep(.el-table) {
+    background-color: #161b22 !important;
+    color: #c9d1d9;
+
+    .el-table__header-wrapper,
+    .el-table__body tr {
+        background-color: #161b22 !important;
+    }
+
+    .el-table__header-wrapper th {
+        color: #c9d1d9 !important;
+    }
 }
 </style>

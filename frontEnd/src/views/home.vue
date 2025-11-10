@@ -29,8 +29,8 @@
                 </div>
             </div>
         </section> -->
-        <login_window v-if="showLogin" @close="closeWindow" @switch="switchWindow"/>
-        <register_window v-if="showRegister" @close="closeWindow" @switch="switchWindow"/>
+        <login_window v-if="showLogin" @close="closeWindow" @switch="switchWindow" />
+        <register_window v-if="showRegister" @close="closeWindow" @switch="switchWindow" />
         <!-- Hero Section -->
         <section class="relative h-[calc(100vh-56px)] w-full bg-cover bg-center bg-no-repeat"
             :style="{ backgroundImage: `url(${banner})` }">
@@ -40,18 +40,18 @@
             <div class="relative z-10 flex h-full flex-col items-center justify-center text-center text-white px-6">
                 <h1 class="!text-[3vw] font-bold md:text-6xl leading-tight">{{ t('homepage.title.maintitle') }}</h1>
                 <p class="mt-4 !text-[0.9vw] text-slate-300 md:text-xl ">
-                    {{t("homepage.text.hero_description")}}
+                    {{ t("homepage.text.hero_description") }}
                 </p>
                 <div class="mt-6 flex flex-col gap-3 sm:flex-row">
                     <button
                         class="bg-blue-600 hover:bg-blue-700 rounded-xl px-6 py-3 text-white font-semibold transition cursor-pointer"
                         @click="gotoPages('explore')">
-                         {{t("homepage.button.explore")}}
+                        {{ t("homepage.button.explore") }}
                     </button>
                     <button
                         class="rounded-xl border border-slate-500 px-6 py-3 text-white hover:bg-white/10 transition cursor-pointer"
                         @click="gotoPages('projects')">
-                        {{t("homepage.button.analysis")}}
+                        {{ t("homepage.button.analysis") }}
                     </button>
                 </div>
             </div>
@@ -61,8 +61,8 @@
         <section class="bg-white py-16">
             <div class="container mx-auto px-4">
                 <div class="mb-16 text-center">
-                    <h2 class="text-3xl font-bold text-slate-800">{{t("homepage.title.subtitle_tool")}}</h2>
-                    <p class="mx-auto mt-4 max-w-2xl text-slate-600">{{t("homepage.text.tool_description")}}</p>
+                    <h2 class="text-3xl font-bold text-slate-800">{{ t("homepage.title.subtitle_tool") }}</h2>
+                    <p class="mx-auto mt-4 max-w-2xl text-slate-600">{{ t("homepage.text.tool_description") }}</p>
                 </div>
 
                 <div class="grid gap-8 md:grid-cols-3">
@@ -70,17 +70,18 @@
                         <div class="bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
                             <Search class="text-primary h-6 w-6" />
                         </div>
-                        <h3 class="mb-2 text-xl font-semibold text-slate-800">{{t("homepage.text.tool_search")}}</h3>
-                        <p class="text-slate-600">{{t("homepage.text.tool_search_description")}}</p>
+                        <h3 class="mb-2 text-xl font-semibold text-slate-800">{{ t("homepage.text.tool_search") }}</h3>
+                        <p class="text-slate-600">{{ t("homepage.text.tool_search_description") }}</p>
                     </div>
 
                     <div class="rounded-xl bg-slate-50 p-6 shadow-sm transition-shadow hover:shadow-md">
                         <div class="bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
                             <bar-chart-2 class="text-primary h-6 w-6" />
                         </div>
-                        <h3 class="mb-2 text-xl font-semibold text-slate-800">{{t("homepage.text.tool_visualisation")}}</h3>
+                        <h3 class="mb-2 text-xl font-semibold text-slate-800">{{ t("homepage.text.tool_visualisation") }}
+                        </h3>
                         <p class="text-slate-600">
-                            {{t("homepage.text.tool_visualisation_description")}}
+                            {{ t("homepage.text.tool_visualisation_description") }}
                         </p>
                     </div>
 
@@ -88,8 +89,8 @@
                         <div class="bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
                             <SquareChevronRight class="text-primary h-6 w-6" />
                         </div>
-                        <h3 class="mb-2 text-xl font-semibold text-slate-800">{{t("homepage.text.tool_analysis")}}</h3>
-                        <p class="text-slate-600">{{t("homepage.text.tool_analysis_description")}}</p>
+                        <h3 class="mb-2 text-xl font-semibold text-slate-800">{{ t("homepage.text.tool_analysis") }}</h3>
+                        <p class="text-slate-600">{{ t("homepage.text.tool_analysis_description") }}</p>
                     </div>
                 </div>
             </div>
@@ -106,12 +107,12 @@
                         </div>
                     </div>
                     <div class="order-1 space-y-6 md:order-2">
-                        <h2 class="text-3xl font-bold text-slate-800">{{t("homepage.title.subtitle_explore")}}</h2>
-                        <p class="text-slate-600">{{t("homepage.text.explore_description")}}</p>
+                        <h2 class="text-3xl font-bold text-slate-800">{{ t("homepage.title.subtitle_explore") }}</h2>
+                        <p class="text-slate-600">{{ t("homepage.text.explore_description") }}</p>
                         <ul class="space-y-3">
                             <li class="flex items-start">
                                 <check-circle class="mt-0.5 mr-2 h-6 w-6 flex-shrink-0 text-green-500" />
-                                <span class="text-slate-700">{{t("homepage.text.explore_visualisation")}}</span>
+                                <span class="text-slate-700">{{ t("homepage.text.explore_visualisation") }}</span>
                             </li>
                             <!-- <li class="flex items-start">
                                 <check-circle class="mt-0.5 mr-2 h-6 w-6 flex-shrink-0 text-green-500" />
@@ -119,17 +120,17 @@
                             </li> -->
                             <li class="flex items-start">
                                 <check-circle class="mt-0.5 mr-2 h-6 w-6 flex-shrink-0 text-green-500" />
-                                <span class="text-slate-700">{{t("homepage.text.explore_fliter")}}</span>
+                                <span class="text-slate-700">{{ t("homepage.text.explore_fliter") }}</span>
                             </li>
                             <li class="flex items-start">
                                 <check-circle class="mt-0.5 mr-2 h-6 w-6 flex-shrink-0 text-green-500" />
-                                <span class="text-slate-700">{{t("homepage.text.explore_onlineview")}}</span>
+                                <span class="text-slate-700">{{ t("homepage.text.explore_onlineview") }}</span>
                             </li>
                         </ul>
                         <button
                             class="bg-primary hover:bg-primary/90 rounded-md px-6 py-3 font-medium text-white transition-colors cursor-pointer"
                             @click=" gotoPages('explore')">
-                            {{t("homepage.button.exploremore")}}
+                            {{ t("homepage.button.exploremore") }}
                         </button>
                     </div>
                 </div>
@@ -145,12 +146,12 @@
                         </div>
                     </div>
                     <div class="order-1 space-y-6 md:order-1">
-                        <h2 class="text-3xl font-bold text-slate-800">{{t("homepage.title.subtitle_program")}}</h2>
-                        <p class="text-slate-600">{{t("homepage.text.program_description")}}</p>
+                        <h2 class="text-3xl font-bold text-slate-800">{{ t("homepage.title.subtitle_program") }}</h2>
+                        <p class="text-slate-600">{{ t("homepage.text.program_description") }}</p>
                         <ul class="space-y-3">
                             <li class="flex items-start">
                                 <check-circle class="mt-0.5 mr-2 h-6 w-6 flex-shrink-0 text-green-500" />
-                                <span class="text-slate-700">{{t("homepage.text.program_base")}}</span>
+                                <span class="text-slate-700">{{ t("homepage.text.program_base") }}</span>
                             </li>
                             <!-- <li class="flex items-start">
                                 <check-circle class="mt-0.5 mr-2 h-6 w-6 flex-shrink-0 text-green-500" />
@@ -158,17 +159,17 @@
                             </li> -->
                             <li class="flex items-start">
                                 <check-circle class="mt-0.5 mr-2 h-6 w-6 flex-shrink-0 text-green-500" />
-                                <span class="text-slate-700">{{t("homepage.text.program_language")}}</span>
+                                <span class="text-slate-700">{{ t("homepage.text.program_language") }}</span>
                             </li>
                             <li class="flex items-start">
                                 <check-circle class="mt-0.5 mr-2 h-6 w-6 flex-shrink-0 text-green-500" />
-                                <span class="text-slate-700">{{t("homepage.text.program_feedback")}}</span>
+                                <span class="text-slate-700">{{ t("homepage.text.program_feedback") }}</span>
                             </li>
                         </ul>
                         <button
                             class="bg-primary hover:bg-primary/90 rounded-md px-6 py-3 font-medium text-white transition-colors cursor-pointer"
                             @click=" gotoPages('/projects')">
-                            {{t("homepage.button.exploremore")}}
+                            {{ t("homepage.button.exploremore") }}
                         </button>
                     </div>
                 </div>
@@ -224,7 +225,7 @@
         <section class="bg-slate-50 py-16">
             <div class="container mx-auto px-4">
                 <div class="mb-8 flex items-center justify-between">
-                    <h2 class="text-2xl font-bold text-slate-800">{{t("homepage.case.title")}}</h2>
+                    <h2 class="text-2xl font-bold text-slate-800">{{ t("homepage.case.title") }}</h2>
                     <!-- <button class="text-primary flex items-center font-medium" @click=" gotoPages('projects')">
                         查看更多
                         <chevron-right class="ml-1 h-5 w-5" />
@@ -241,8 +242,9 @@
                                 <span
                                     class="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">已完成</span>
                             </div> -->
-                            <h3 class="mb-2 text-lg font-semibold text-slate-800">{{t("homepage.case.urbananalysis")}}</h3>
-                            <p class="mb-4 text-sm text-slate-600">{{t("homepage.case.urban_description")}}</p>
+                            <h3 class="mb-2 text-lg font-semibold text-slate-800">{{ t("homepage.case.urbananalysis") }}
+                            </h3>
+                            <p class="mb-4 text-sm text-slate-600">{{ t("homepage.case.urban_description") }}</p>
                             <!-- <button class="text-primary text-sm font-medium">查阅细节</button> -->
                         </div>
                     </div>
@@ -256,8 +258,9 @@
                                 <span
                                     class="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">已完成</span>
                             </div> -->
-                            <h3 class="mb-2 text-lg font-semibold text-slate-800">{{t("homepage.case.indexanalysis")}}</h3>
-                            <p class="mb-4 text-sm text-slate-600">{{t("homepage.case.index_description")}}</p>
+                            <h3 class="mb-2 text-lg font-semibold text-slate-800">{{ t("homepage.case.indexanalysis") }}
+                            </h3>
+                            <p class="mb-4 text-sm text-slate-600">{{ t("homepage.case.index_description") }}</p>
                             <!-- <button class="text-primary text-sm font-medium">查阅细节</button> -->
                         </div>
                     </div>
@@ -271,8 +274,9 @@
                                 <span
                                     class="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">进行中</span>
                             </div> -->
-                            <h3 class="mb-2 text-lg font-semibold text-slate-800">{{t("homepage.case.erosionstudy")}}</h3>
-                            <p class="mb-4 text-sm text-slate-600">{{t("homepage.case.erosion_description")}}</p>
+                            <h3 class="mb-2 text-lg font-semibold text-slate-800">{{ t("homepage.case.erosionstudy") }}
+                            </h3>
+                            <p class="mb-4 text-sm text-slate-600">{{ t("homepage.case.erosion_description") }}</p>
                             <!-- <button class="text-primary text-sm font-medium">查阅细节</button> -->
                         </div>
                     </div>
@@ -283,9 +287,9 @@
         <!-- CTA Section -->
         <section class="bg-gradient-to-br from-slate-800 to-slate-900 py-16 text-white">
             <div class="container mx-auto px-4 text-center">
-                <h2 class="mb-6 text-3xl font-bold">{{t("homepage.CTA.title")}}</h2>
+                <h2 class="mb-6 text-3xl font-bold">{{ t("homepage.CTA.title") }}</h2>
                 <p class="mx-auto mb-8  text-slate-300">
-                    {{t("homepage.CTA.CTAtext")}}
+                    {{ t("homepage.CTA.CTAtext") }}
                 </p>
                 <!-- <div class="flex flex-col justify-center space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4">
                     <button
@@ -304,53 +308,53 @@
                         <div class="mb-4 flex items-center space-x-2">
                             <img :src="logo" alt="Logo" class="h-10 w-auto  cursor-pointer mr-12" @click="jumpToOGMS" />
                             <satellite class="text-primary h-8 w-8" />
-                            <span class="text-xl font-bold text-white">{{t("homepage.Footer.logo")}}</span>
+                            <span class="text-xl font-bold text-white">{{ t("homepage.Footer.logo") }}</span>
 
                         </div>
-                        <p class="text-sm">{{t("homepage.Footer.text_forgroups")}}</p>
+                        <p class="text-sm">{{ t("homepage.Footer.text_forgroups") }}</p>
                     </div>
                     <div>
-                        <h3 class="mb-4 font-semibold text-white">{{t("homepage.Footer.subtitle_OpenGMS")}}</h3>
+                        <h3 class="mb-4 font-semibold text-white">{{ t("homepage.Footer.subtitle_OpenGMS") }}</h3>
                         <ul class="space-y-2 text-sm">
                             <li>
                                 <a href="https://geomodeling.njnu.edu.cn/home" target="_blank"
-                                    class="transition-colors hover:text-white">{{t("homepage.Footer.OpenGMS_platform")}}</a>
+                                    class="transition-colors hover:text-white">{{ t("homepage.Footer.OpenGMS_platform") }}</a>
                             </li>
                             <li>
                                 <a href="https://geomodeling.njnu.edu.cn/OpenGMP/#/" target="_blank"
-                                    class="transition-colors hover:text-white">{{t("homepage.Footer.platform_open")}}</a>
+                                    class="transition-colors hover:text-white">{{ t("homepage.Footer.platform_open") }}</a>
                             </li>
                             <li>
                                 <a href="https://geomodeling.njnu.edu.cn/PExploration/home" target="_blank"
-                                    class="transition-colors hover:text-white">{{t("homepage.Footer.platform_geo")}}</a>
+                                    class="transition-colors hover:text-white">{{ t("homepage.Footer.platform_geo") }}</a>
                             </li>
                             <li>
                                 <a href="https://geomodeling.njnu.edu.cn/PMIP/" target="_blank"
-                                    class="transition-colors hover:text-white">{{t("homepage.Footer.platform_comp")}}</a>
+                                    class="transition-colors hover:text-white">{{ t("homepage.Footer.platform_comp") }}</a>
                             </li>
                             <li>
                                 <a href="https://geomodeling.njnu.edu.cn/YangtzeVGLab/#/" target="_blank"
-                                    class="transition-colors hover:text-white">{{t("homepage.Footer.platform_changsanjiao")}}</a>
+                                    class="transition-colors hover:text-white">{{ t("homepage.Footer.platform_changsanjiao") }}</a>
                             </li>
                         </ul>
                     </div>
 
                     <div>
-                        <h3 class="mb-4 font-semibold text-white">{{t("homepage.Footer.subtitle_about")}}</h3>
+                        <h3 class="mb-4 font-semibold text-white">{{ t("homepage.Footer.subtitle_about") }}</h3>
                         <ul class="space-y-2 text-sm">
                             <li>
                                 <a href="http://opengmsteam.com/" target="_blank"
-                                    class="transition-colors hover:text-white">{{t("homepage.Footer.about")}}</a>
+                                    class="transition-colors hover:text-white">{{ t("homepage.Footer.about") }}</a>
                             </li>
                             <li>
                                 <a href="https://geomodeling.njnu.edu.cn/user/register" target="_blank"
-                                    class="transition-colors hover:text-white">{{t("homepage.Footer.join")}}</a>
+                                    class="transition-colors hover:text-white">{{ t("homepage.Footer.join") }}</a>
                             </li>
                         </ul>
                     </div>
 
                     <div>
-                        <h3 class="mb-4 font-semibold text-white">{{t("homepage.Footer.subtitle_contact")}}</h3>
+                        <h3 class="mb-4 font-semibold text-white">{{ t("homepage.Footer.subtitle_contact") }}</h3>
                         <ul class="space-y-2 text-sm">
                             <li>
                                 <a href="#" class="transition-colors hover:text-white">
@@ -369,7 +373,8 @@
                                 </a>
                             </li>
                             <li>
-                                <a href="#" class="transition-colors hover:text-white">{{t("homepage.Footer.wechat")}}:VGETeam</a>
+                                <a href="#"
+                                    class="transition-colors hover:text-white">{{ t("homepage.Footer.wechat") }}:VGETeam</a>
                             </li>
                         </ul>
                     </div>
@@ -398,7 +403,7 @@
 <script setup lang="ts">
 import login_window from '@/components/login/login_window.vue';
 import register_window from '@/components/login/register_window.vue';
-import { ref,computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import {
     Satellite,
     // MenuIcon,
@@ -428,7 +433,7 @@ const userData = useUserStore()
 const showLogin = ref(false)
 
 const updateShowLogin = () => {
-  showLogin.value = !userData.user || !userData.user.id || userData.user.id === '???'
+    showLogin.value = !userData.user || !userData.user.id || userData.user.id === '???'
 }
 
 // 调用此方法来更新 showLogin
@@ -436,21 +441,19 @@ updateShowLogin()
 
 const showRegister = ref(false)
 
-const switchWindow = () =>{
+const switchWindow = () => {
     showLogin.value = !showLogin.value
     console.log(showRegister.value)
     showRegister.value = !showRegister.value
-    console.log('切换成功',showRegister.value)
+    console.log('切换成功', showRegister.value)
 }
 
 // 关闭弹窗的函数
 const closeWindow = () => {
-  console.log('弹窗已关闭')
-  showLogin.value = false 
-  showRegister.value = false
+    console.log('弹窗已关闭')
+    showLogin.value = false
+    showRegister.value = false
 }
-
-
 
 const jumpToOGMS = () => {
     const OGMS_URL = 'https://geomodeling.njnu.edu.cn/'
@@ -460,6 +463,8 @@ const jumpToOGMS = () => {
 const gotoPages = (path: string) => {
     router.push(path);
 }
+
+watch(() => userData.user, updateShowLogin, { immediate: true, deep: true })
 </script>
 
 <style>

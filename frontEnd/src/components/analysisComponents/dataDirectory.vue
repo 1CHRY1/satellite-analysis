@@ -1,7 +1,7 @@
 <template>
     <div>
-        <div class="flex h-[44px] w-full justify-between">
-            <div class="mx-2.5 my-1.5 flex w-fit items-center rounded bg-[#eaeaea] px-2 text-[14px] shadow-md">
+        <div class="flex h-[44px] w-full justify-between bg-[#161b22]">
+            <div class="mx-2.5 my-1.5 flex w-fit items-center rounded bg-[#181d25] px-2 text-[14px] shadow-md">
                 <div @click="handleClick('data')"
                     class="mr-2 cursor-pointer border-r-1 border-dashed border-gray-500 pr-2"
                     :class="activeDataBase === 'data' ? 'text-[#1479d7]' : 'text-[#818999]'">
@@ -15,12 +15,12 @@
 
             <div class="flex">
                 <div @click="refreshTableData"
-                    class="mr-2.5 my-1.5 flex w-fit cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-[14px] text-[#818999] shadow-md"
+                    class="mr-2.5 my-1.5 flex w-fit cursor-pointer items-center rounded bg-[#1f3d88] text-[#c9d1d9] px-2 text-[14px] shadow-md"
                     title="刷新数据">
                     <RefreshCcw :size="16" class="text-primary" />
                 </div>
                 <div @click="triggerFileSelect"
-                    class="mr-2.5 my-1.5 flex w-fit cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-[14px] text-[#818999] shadow-md"
+                    class="mr-2.5 my-1.5 flex w-fit cursor-pointer items-center rounded bg-[#1f3d88] text-[#c9d1d9] px-2 text-[14px] shadow-md"
                     title="上传geojson">
                     <Upload :size="16" class="text-primary" />
                 </div>
@@ -35,10 +35,10 @@
             </div>
 
         </div>
-        <div class="h-[calc(100%-44px)] max-w-full overflow-x-auto">
+        <div class="h-[calc(100%-44px)] max-w-full overflow-x-auto bg-[#161b22]">
             <table class="w-full table-auto border-collapse">
                 <thead>
-                    <tr class="sticky top-0 bg-gray-200 text-[#818999]">
+                    <tr class="sticky top-0 bg-[#06162a] text-[#c9d1d9] border-[#262b32]">
                         <th class="w-auto min-w-[100px] px-4 py-2 text-left">文件名</th>
                         <th class="w-[100px] px-4 py-2 text-left">更新时间</th>
                         <th class="w-[60px] px-4 py-2 text-left">文件大小</th>
@@ -103,7 +103,7 @@
                         </a-select-option>
                     </a-select>
                     <a-select v-model:value="selectedBidx" style="width: 100%" placeholder="请选择可视化波段"
-                        :dropdownStyle="{backgroundColor: '#ffffff',borderRadius: '4px',}">
+                        :dropdownStyle="{backgroundColor: 'black',borderRadius: '4px',}">
                         <a-select-option v-for="item in bidxOptions" :key="item" :value="item">
                             <span>{{ item }}</span>
                         </a-select-option>
@@ -549,7 +549,7 @@ td {
 }
 
 thead {
-    background-color: #f3f4f6;
+    background-color: #293f6b;
 }
 
 th {

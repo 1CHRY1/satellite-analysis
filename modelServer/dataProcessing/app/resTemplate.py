@@ -2,6 +2,7 @@ import datetime
 from typing import Any
 from flask import jsonify
 
+# 任务单元建议采用TaskResult统一返回结果，便于精准捕捉异常
 class TaskResult:
     """
     """
