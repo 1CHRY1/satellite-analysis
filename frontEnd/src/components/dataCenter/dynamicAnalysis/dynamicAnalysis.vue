@@ -92,8 +92,8 @@
                                                 </el-dialog>
                                                 <div class="absolute right-2 cursor-pointer" @click="clearImages">
                                                     <a-tooltip>
-                                                        <template
-                                                            #title>{{ t('datapage.analysis.section2.clear') }}</template>
+                                                        <template #title>{{ t('datapage.analysis.section2.clear')
+                                                            }}</template>
                                                         <Trash2Icon :size="20" />
                                                     </a-tooltip>
                                                 </div>
@@ -107,45 +107,62 @@
                                                 <BoxIcon :size="16" class="config-icon" />
                                                 <span>时序立方体</span>
                                             </div>
-                                            <a-alert v-if="exploreData.grids.length===0"
-                                                :message="`已选择${ cubeList.filter(item => item.isSelect).length }个时序立方体`"
+                                            <a-alert v-if="exploreData.grids.length === 0"
+                                                :message="`已选择${cubeList.filter(item => item.isSelect).length}个时序立方体`"
                                                 type="info" show-icon class="status-alert">
                                             </a-alert>
-                                            <a-form layout="inline" >
+                                            <a-form layout="inline">
                                                 <a-form-item class="w-full">
-                                                    <a-input v-model:value="inputCacheKey" placeholder="键入CacheKey（按Enter以选择）" @keyup.enter="handleSelectCube(inputCacheKey)">
-                                                        <template #prefix><CommandIcon :size="14" style="color: rgba(255, 255, 255, 0.25)" /></template>
+                                                    <a-input v-model:value="inputCacheKey"
+                                                        placeholder="键入CacheKey（按Enter以选择）"
+                                                        @keyup.enter="handleSelectCube(inputCacheKey)">
+                                                        <template #prefix>
+                                                            <CommandIcon :size="14"
+                                                                style="color: rgba(255, 255, 255, 0.25)" />
+                                                        </template>
                                                     </a-input>
                                                 </a-form-item>
                                             </a-form>
                                             <div class="max-h-[268px] overflow-y-auto">
-                                                <a-modal v-model:open="currentCacheKey" title="时序立方体" @ok="() => {cubeList.filter(cube => cube.cacheKey === currentCacheKey)[0].isShow=false;currentCacheKey = undefined}" @cancel="() => {cubeList.filter(cube => cube.cacheKey === currentCacheKey)[0].isShow=false;currentCacheKey = undefined}">
-                                                    <a-card style="max-height: 400px; overflow: auto; position: relative;">
+                                                <a-modal v-model:open="currentCacheKey" title="时序立方体"
+                                                    @ok="() => { cubeList.filter(cube => cube.cacheKey === currentCacheKey)[0].isShow = false; currentCacheKey = undefined }"
+                                                    @cancel="() => { cubeList.filter(cube => cube.cacheKey === currentCacheKey)[0].isShow = false; currentCacheKey = undefined }">
+                                                    <a-card
+                                                        style="max-height: 400px; overflow: auto; position: relative;">
                                                         <pre
-                                                            style="white-space: pre-wrap; word-break: break-word; user-select: text;"
-                                                            >
-                                                            {{ cubeList.filter(cube => cube.cacheKey === currentCacheKey)[0] }}
-                                                        </pre>
+                                                            style="white-space: pre-wrap; word-break: break-word; user-select: text;">
+                    {{cubeList.filter(cube => cube.cacheKey === currentCacheKey)[0]}}
+                </pre>
                                                     </a-card>
-                                                </a-modal>  
+                                                </a-modal>
                                                 <a-list item-layout="horizontal" class="w-full" :data-source="cubeList">
                                                     <template #renderItem="{ item }">
                                                         <a-list-item>
                                                             <template #actions>
                                                                 <div>
-                                                                    <Eye v-if="item.isShow" :size="16" class="cursor-pointer" @click="currentCacheKey = undefined;item.isShow = false"></Eye>
-                                                                    <EyeOff v-else :size="16" class="cursor-pointer" @click="currentCacheKey = item.cacheKey;item.isShow = true"></EyeOff>
+                                                                    <Eye v-if="item.isShow" :size="16"
+                                                                        class="cursor-pointer"
+                                                                        @click="currentCacheKey = undefined; item.isShow = false">
+                                                                    </Eye>
+                                                                    <EyeOff v-else :size="16" class="cursor-pointer"
+                                                                        @click="currentCacheKey = item.cacheKey; item.isShow = true">
+                                                                    </EyeOff>
                                                                 </div>
                                                                 <div>
-                                                                    <Square v-if="!item.isSelect" :size="16" class="cursor-pointer" @click="handleSelectCube(item.cacheKey)"></Square>
-                                                                    <SquareCheck v-else :size="16" class="cursor-pointer" @click="handleSelectCube(item.cacheKey)"></SquareCheck>
+                                                                    <Square v-if="!item.isSelect" :size="16"
+                                                                        class="cursor-pointer"
+                                                                        @click="handleSelectCube(item.cacheKey)">
+                                                                    </Square>
+                                                                    <SquareCheck v-else :size="16"
+                                                                        class="cursor-pointer"
+                                                                        @click="handleSelectCube(item.cacheKey)">
+                                                                    </SquareCheck>
                                                                 </div>
                                                             </template>
                                                             <a-list-item-meta
-                                                                :description="`${item.dimensionDates.length}维时序立方体, 包含${item.dimensionSensors.length}类传感器, ${item.dimensionScenes.length}景影像`"
-                                                            >
+                                                                :description="`${item.dimensionDates.length}维时序立方体, 包含${item.dimensionSensors.length}类传感器, ${item.dimensionScenes.length}景影像`">
                                                                 <template #title>
-                                                                    {{formatTimeToText(item.cacheTime)}}
+                                                                    {{ formatTimeToText(item.cacheTime) }}
                                                                 </template>
                                                                 <template #avatar>
                                                                     <div class="section-icon">
@@ -154,7 +171,7 @@
                                                                 </template>
                                                             </a-list-item-meta>
                                                         </a-list-item>
-                                                        </template>
+                                                    </template>
                                                 </a-list>
                                             </div>
                                         </div>
@@ -185,45 +202,141 @@
                                                 <SearchIcon :size="16" class="config-icon" />
                                                 <span>搜索工具</span>
                                             </div>
+                                            <a-input-search v-model:value="searchQuery" placeholder="输入关键词..."
+                                                enter-button="搜索" size="large" @search="getCaseList" />
+                                            <div class="config-control relative">
+                                                <!-- 分类工具列表 -->
+                                                <div class="mt-4 w-full mr-4">
+                                                    <div v-for="category in filteredCategories" :key="category.name"
+                                                        class="mb-4">
+                                                        <div class="flex items-center cursor-pointer px-2 py-1 hover:bg-gray-800 rounded"
+                                                            @click="toggleCategory(category.name)">
+                                                            <ChevronRightIcon :size="16"
+                                                                class="mr-2 transition-transform duration-200"
+                                                                :class="{ 'transform rotate-90': expandedCategories.includes(category.name) }" />
+                                                            <span class="text-gray-300 font-medium">{{ category.name
+                                                                }}</span>
+                                                        </div>
+
+                                                        <div v-show="expandedCategories.includes(category.name) || searchQuery"
+                                                            class="ml-6 mt-2 grid grid-cols-2 gap-2">
+                                                            <div v-for="tool in category.tools" :key="tool.value"
+                                                                @click="selectedTask = tool.value" :class="{
+                                                                    'bg-[#1e3a8a] text-white': selectedTask === tool.value,
+                                                                    'bg-[#0d1526] text-gray-300 hover:bg-[#1e293b]': selectedTask !== tool.value && !tool.disabled,
+                                                                    'opacity-50 cursor-not-allowed': tool.disabled,
+                                                                    'cursor-pointer': !tool.disabled
+                                                                }" class="px-3 py-1 rounded-lg transition-colors w-full text-left flex items-center justify-between"
+                                                                :disabled="tool.disabled">
+
+                                                                <div class="flex-grow min-w-0" :title="tool.label">
+                                                                    <span class="truncate block">{{ tool.label }}</span>
+                                                                </div>
+
+                                                                <CircleX v-if="tool.value.startsWith('dynamic:')"
+                                                                    :size="16"
+                                                                    class="text-gray-400 hover:text-gray-300 flex-shrink-0 ml-1"
+                                                                    @click.stop="handleRemoveDynamicTool(tool.value)" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                             <div class="config-control">
-                                                <input v-model="searchQuery" placeholder="输入关键词..." class="w-full bg-[#0d1526] text-white px-3 py-1 rounded border border-[#2c3e50]
-                                                focus:outline-none focus:border-[#2bb2ff]" />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- 分类工具列表 -->
-                                    <div class="mt-4">
-                                        <div v-for="category in filteredCategories" :key="category.name" class="mb-4">
-                                            <div class="flex items-center cursor-pointer px-2 py-1 hover:bg-gray-800 rounded"
-                                                @click="toggleCategory(category.name)">
-                                                <ChevronRightIcon :size="16"
-                                                    class="mr-2 transition-transform duration-200"
-                                                    :class="{ 'transform rotate-90': expandedCategories.includes(category.name) }" />
-                                                <span class="text-gray-300 font-medium">{{ category.name }}</span>
-                                            </div>
-
-                                            <div v-show="expandedCategories.includes(category.name) || searchQuery"
-                                                class="ml-6 mt-1 space-y-1">
-                                                <div v-for="tool in category.tools" :key="tool.value"
-                                                    @click="selectedTask = tool.value" :class="{
-                                                        'bg-[#1e3a8a] text-white': selectedTask === tool.value,
-                                                        'bg-[#0d1526] text-gray-300 hover:bg-[#1e293b]': selectedTask !== tool.value && !tool.disabled,
-                                                        'opacity-50 cursor-not-allowed': tool.disabled,
-                                                        'cursor-pointer': !tool.disabled
-                                                    }" class="px-3 py-1 rounded-lg transition-colors w-full text-left truncate flex items-center justify-between gap-2"
-                                                    :disabled="tool.disabled">
-                                                    <span class="truncate">{{ tool.label }}</span>
-                                                    <CircleX
-                                                        v-if="tool.value.startsWith('dynamic:')"
-                                                        :size="16"
-                                                        class="text-gray-400 hover:text-gray-300 flex-shrink-0"
-                                                        @click.stop="handleRemoveDynamicTool(tool.value)"
-                                                    />
+                                                <div class="flex justify-between gap-3 items-center w-full">
+                                                    <span class="result-info-label">共找到 {{ total }} 条记录</span>
+                                                    <div class="flex gap-3">
+                                                        <a-button type="primary" class="a-button"
+                                                            @click="getCaseList">{{
+                                                                t('datapage.history.fliter') }}</a-button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                    <div class="config-container">
+                                        <div v-for="(item, index) in caseList" class="config-item" :key="item.caseId">
+                                            <div class="config-label relative">
+                                                <Image :size="16" class="config-icon" />
+                                                <span>{{ `${item.address}无云一版图` }}</span>
+                                                <div class="absolute right-0 cursor-pointer">
+                                                    <a-tooltip>
+                                                        <template #title>{{ t('datapage.history.preview') }}</template>
+                                                        <Eye v-if="previewList[index]" @click="unPreview" :size="16"
+                                                            class="cursor-pointer" />
+                                                        <EyeOff v-else :size="16"
+                                                            @click="showResult(item.caseId, item.regionId)"
+                                                            class="cursor-pointer" />
+                                                    </a-tooltip>
+                                                </div>
+                                            </div>
+                                            <div class="config-control flex-col !items-start">
+                                                <div class="flex w-full flex-col gap-2">
+                                                    <div class="result-info-container">
+                                                        <div class="result-info-item">
+                                                            <div class="result-info-icon">
+                                                                <Grid3x3 :size="12" />
+                                                            </div>
+                                                            <div class="result-info-content">
+                                                                <div class="result-info-label">
+                                                                    {{ t('datapage.history.resolution') }}</div>
+                                                                <div class="result-info-value">
+                                                                    {{ item.resolution }}km
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="result-info-item">
+                                                            <div class="result-info-icon">
+                                                                <CalendarIcon :size="12" />
+                                                            </div>
+                                                            <div class="result-info-content">
+                                                                <div class="result-info-label">
+                                                                    {{ t('datapage.history.create_time') }}</div>
+                                                                <div class="result-info-value">
+                                                                    {{ formatTimeToText(item.createTime) }}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="result-info-item">
+                                                            <div class="result-info-icon">
+                                                                <DatabaseIcon :size="12" />
+                                                            </div>
+                                                            <div class="result-info-content">
+                                                                <div class="result-info-label">
+                                                                    {{ t('datapage.history.data') }}</div>
+                                                                <div>
+                                                                    {{ item.dataSet }}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- 下载按钮和发布按钮 -->
+                                                    <div class="flex gap-2 mt-2">
+                                                        <a-button type="primary" size="middle"
+                                                            @click="handlePublish(item)">
+                                                            <Upload :size="14" class="mr-1" />
+                                                        </a-button>
+                                                        <a-button size="middle" @click="handleDownload(item)">
+                                                            <Download :size="14" class="mr-1" />
+                                                        </a-button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <a-empty v-if="total === 0" />
+                                    </div>
+
+                                    <!-- Content-4 Pagination -->
+                                    <div class="config-container">
+                                        <div class="flex h-[60px] justify-around">
+                                            <el-pagination v-if="total > 0" background layout="prev, pager, next"
+                                                v-model:current-page="currentPage" :total="total" :page-size="pageSize"
+                                                @current-change="getCaseList" @next-click="" @prev-click="">
+                                            </el-pagination>
+                                        </div>
+                                    </div>
+
+
                                 </div>
                             </section>
 
@@ -381,7 +494,7 @@ const builtinToolCategories = [
     {
         name: '图像',
         tools: [
-            { value: '指数分析', label: '指数分析', disabled: false },
+            { value: '指数分析', label: 'Math and Stats Tools', disabled: false },
             { value: 'NDVI时序计算', label: t('datapage.analysis.optionallab.task_NDVI'), disabled: false },
             { value: '光谱分析', label: t('datapage.analysis.optionallab.task_spectral'), disabled: false },
             { value: 'DSM分析', label: t('datapage.analysis.optionallab.task_DSM'), disabled: false },
@@ -511,19 +624,6 @@ const toggleCategory = (categoryName: string) => {
     }
 }
 
-// const optionalTasks = [
-//     { value: 'NDVI时序计算', label: t('datapage.analysis.optionallab.task_NDVI'), disabled: false },
-//     { value: '光谱分析', label: t('datapage.analysis.optionallab.task_spectral'), disabled: false },
-//     { value: 'DSM分析', label: t('datapage.analysis.optionallab.task_DSM'), disabled: false },
-//     { value: 'DEM分析', label: t('datapage.analysis.optionallab.task_DEM'), disabled: false },
-//     { value: '红绿立体', label: t('datapage.analysis.optionallab.task_red_green'), disabled: false },
-//     { value: '形变速率', label: t('datapage.analysis.optionallab.task_rate'), disabled: false },
-//     { value: '伪彩色分割', label: '伪彩色分割', disabled: false },
-//     { value: '指数分析', label: '指数分析', disabled: false },
-//     { value: '空间分析', label: '空间分析', disabled: false },
-// ]
-
-
 // 专题组件映射
 const taskComponentMap = {
     '伪彩色分割': defineAsyncComponent(() => import('../thematic/colorThresholdPanel.vue')),
@@ -638,24 +738,6 @@ const getOriginImages = async (newRegion: number | '未选择') => {
     }
 }
 
-const handleThematicChange = async () => {
-    // if (selectedTask.value === '红绿立体') {
-    //     // const stopLoading = message.loading('正在加载影像', 0)
-    //     let rasterParam = {
-    //         startTime,
-    //         endTime,
-    //         regionId: displayLabel.value,
-    //         dataType: '3d'
-    //     }
-    //     const sceneObject = await getRasterScenesDes(rasterParam)
-    //     console.log(sceneObject, '红绿立体');
-    //     const rgbLayerParam = await getRGBTileLayerParamFromSceneObject(sceneObject)
-    //     MapOperation.map_addRGBImageTileLayer(rgbLayerParam)
-    // }
-
-
-
-}
 
 const clearImages = () => {
     MapOperation.map_destroyTerrain()
@@ -750,25 +832,7 @@ const loadCompletedCases = async () => {
     isLoading.value = false;
 };
 
-// 效果测试
-const mockCompletedCases = ref([
-    {
-        caseId: 'mock_003',
-        address: '广州市天河区',
-        resolution: '10',
-        createTime: '2023-10-17 16:45:33',
-        dataSet: 'MODIS'
-    },
-    {
-        caseId: 'mock_002',
-        address: '上海市浦东新区',
-        resolution: '5',
-        createTime: '2023-10-16 09:15:47',
-        dataSet: 'Landsat-8'
-    },
-])
-
-const {cubeObj, cubeList, inputCacheKey, handleSelectCube, updateGridLayer, currentCacheKey, getCubeObj} = useCube()
+const { cubeObj, cubeList, inputCacheKey, handleSelectCube, updateGridLayer, currentCacheKey, getCubeObj } = useCube()
 onMounted(async () => {
     // 设置结果选择的回调
     onResultSelected.value = (result) => {
