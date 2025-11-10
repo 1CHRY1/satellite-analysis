@@ -17,5 +17,7 @@ public class Code2ToolDTO {
     private List<JSONObject> parameters;
     private Integer servicePort;
     private boolean share;
+    // 工具输出类型（例如 tile/mosaic/geojson），用于落库到 tool_table.output_type
+    private String outputType;
 }
 

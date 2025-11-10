@@ -143,7 +143,8 @@
 import { ref, onMounted, onUnmounted, onActivated, type Ref } from 'vue'
 import projectsBg from '@/components/projects/projectsBg.vue'
 import { Search } from 'lucide-vue-next'
-import { getProjects, createProject, getServiceStatus } from '@/api/http/analysis'
+import { getProjects, createProject } from '@/api/http/analysis'
+import { getAllTools, getToolStatus } from '@/api/http/tool'
 import projectCard from '@/components/projects/projectCard.vue'
 import { Loading } from "@element-plus/icons-vue"
 import type { project, newProject } from '@/type/analysis'
@@ -194,6 +195,7 @@ const viewMyProjects = () => {
  */
 const projectList: Ref<project[]> = ref([])
 const serviceMap = ref<Record<string, boolean>>({})
+const toolIdMap = ref<Record<string, string>>({})
 const createProjectView = ref(false)
 const createLoading = ref(false)
 const newProject = ref({
@@ -326,11 +328,21 @@ const ensureServiceFlags = async () => {
     try {
         const userIdLocal = userId || localStorage.getItem('userId')
         if (!userIdLocal) return
+        // 构建 projectId -> toolId 映射
+        toolIdMap.value = {}
+        try {
+            const toolsRes = await getAllTools({ current: 1, size: 200, userId: userIdLocal })
+            const records = toolsRes?.data?.records || []
+            for (const rec of records) {
+                if (rec?.projectId && rec?.toolId) toolIdMap.value[rec.projectId] = rec.toolId
+            }
+        } catch {}
         const promises: Promise<void>[] = []
         for (const item of projectList.value) {
             // 已标服务的卡片不重复探测
             if (Number((item as any).isTool ?? 0) === 1) continue
             if (serviceMap.value[item.projectId] === true) continue
+            if (!toolIdMap.value[item.projectId]) continue
             promises.push(checkAndSetService(item.projectId, userIdLocal))
         }
         // 控制并发（简单分批）
@@ -345,8 +357,10 @@ const ensureServiceFlags = async () => {
 
 const checkAndSetService = async (pid: string, uid: string | null) => {
     try {
-        const res = await getServiceStatus({ projectId: pid, userId: uid })
-        if (res && (res.isPublished === true || res.running === true)) {
+        const toolId = uid ? toolIdMap.value[pid] : undefined
+        if (!toolId) return
+        const res = await getToolStatus({ userId: uid as string, toolId })
+        if (res?.status === 1 && res.data?.status === 'running') {
             serviceMap.value[pid] = true
         }
     } catch (e) {

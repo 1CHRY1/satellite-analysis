@@ -8,19 +8,21 @@ import type {
 } from './tool.type'
 
 
-export async function publishTool(
-    projectId: string,
-    environment: string,
-    userId: string,
-    toolData: any
-): Promise<ToolResponse> {
-    return http.post<ToolResponse>('/tools/publish', {
-        projectId,
-        environment,
-        userId,
-        ...toolData
-    })
+// 发布工具（与后端 /api/v1/tools/publish 对齐，传入 Code2ToolDTO 形状的 body）
+export async function publishTool(body: any): Promise<ToolResponse> {
+    return http.post<ToolResponse>('/tools/publish', body)
 }
+// 停止工具服务（ToolBasicDTO：{ userId, toolId }）
+export async function unpublishTool(body: { userId: string; toolId: string }): Promise<ToolResponse> {
+    return http.post<ToolResponse>('/tools/unpublish', body)
+}
+
+// 查询工具服务状态（ToolBasicDTO：{ userId, toolId }）
+export async function getToolStatus(body: { userId: string; toolId: string }): Promise<ToolResponse> {
+    return http.post<ToolResponse>('/tools/status', body)
+}
+
+
 //更新工具
 export async function  updateTool(
     toolId: string,

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import nnu.mnr.satellite.model.po.tool.Tool;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 
 //@Repository("IToolRepo")
@@ -21,4 +22,7 @@ public interface IToolRepo extends BaseMapper<Tool> {
 
     @Delete("DELETE FROM tool_table WHERE tool_id = #{toolId}")
     int deleteToolById(Tool toolObj);
+
+    @Update("UPDATE tool_table SET is_publish = #{isPublish} WHERE tool_id = #{toolId}")
+    int updatePublishState(@Param("toolId") String toolId, @Param("isPublish") boolean isPublish);
 }

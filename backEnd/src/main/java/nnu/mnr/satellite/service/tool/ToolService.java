@@ -79,6 +79,7 @@ public class ToolService {
                 .orElseThrow(() -> new IllegalArgumentException("userId 不能为空"));
         String projectId = Optional.ofNullable(code2ToolDTO.getProjectId())
                 .orElseThrow(() -> new IllegalArgumentException("projectID 不能为空"));
+        String outputType = Optional.ofNullable(code2ToolDTO.getOutputType()).filter(s -> !s.isBlank()).orElse("tile");
 
         // 校验用户和项目是否存在
         if (!userRepo.existsById(userId)) {
@@ -88,8 +89,12 @@ public class ToolService {
             throw new IllegalArgumentException("工程不存在: " + projectId);
         }
 
-        if (isProjectIdExistInTool(projectId) != null) {
-            throw new IllegalArgumentException("程序对应工具已存在: " + isProjectIdExistInTool(projectId));
+        // 仅当该工程存在已发布工具时拦截
+        List<Tool> publishedList = toolRepo.selectList(new QueryWrapper<Tool>()
+                .eq("project_id", projectId)
+                .eq("is_publish", true));
+        if (publishedList != null && !publishedList.isEmpty()) {
+            throw new IllegalArgumentException("程序对应工具已存在: " + publishedList.get(0).getToolId());
         }
 
         // 发布工具并插入数据库
@@ -97,6 +102,7 @@ public class ToolService {
             int hostPort;
             int internalPort = dockerServerProperties.getServiceDefaults().getInternalPort();
             Project project = projectDataService.getProjectById(projectId);
+            String environment = Optional.ofNullable(project.getEnvironment()).orElse("Python3_9");
 
             if (servicePort != null) {
                 // Validate provided port is in range
@@ -128,13 +134,31 @@ public class ToolService {
             project.setContainerId(containerId);
             projectRepo.updateById(project);
 
-            // Install Flask if not already installed
-            String installFlaskCommand = "pip show flask || pip install flask";
-            dockerService.runCMDInContainerSilent(containerId, installFlaskCommand);
+            // ************************** 开发环境需要安装库，部署的时候应该不需要 ******************************
+            // Install Flask and Flask-CORS from offline wheels if not installed
+            String workDir = project.getWorkDir();
+            if (workDir == null) {
+                workDir = "/usr/local/coding/"; // fallback
+            }
+            String slkDir = workDir.endsWith("/") ? workDir + "slk" : workDir + "/slk";
+            // 串行执行安装 + 校验，阻塞等待直至完成
+            String installCmd = String.join(" && ",
+                    "python -m pip show flask || python -m pip install --no-index --find-links=" + slkDir + " flask",
+                    "python -m pip show flask_cors || python -m pip install --no-index --find-links=" + slkDir + " flask-cors",
+                    "python -c \"import flask, flask_cors; print('deps ok')\""
+            );
+            dockerService.runCMDInContainer(userId, projectId, containerId, installCmd);
 
             // Start Flask application in background
-            String flaskCommand = "nohup python -u " + project.getPyPath() + " > service.out 2>&1 &";
+            String logPathPrefix = project.getWorkDir();
+            if (logPathPrefix == null || logPathPrefix.isEmpty()) {
+                logPathPrefix = "/usr/local/coding/";
+            }
+            String flaskCommand = "nohup python -u " + project.getPyPath() +
+                    " > " + (logPathPrefix.endsWith("/") ? logPathPrefix : (logPathPrefix + "/")) +
+                    "service.out 2>&1 &";
             dockerService.runCMDInContainerSilent(containerId, flaskCommand);
+            // ************************** 开发环境需要安装库，部署的时候应该不需要 ******************************
 
             // Create service metadata
             String dockerHost = dockerServerProperties.getDefaultServer().get("host");
@@ -159,19 +183,44 @@ public class ToolService {
             // Notify via WebSocket
             modelSocketService.sendMessageByProject(userId, projectId, "Service running at: " + url);
 
-            Tool toolObj = Tool.builder()
-                    .toolId(toolId)
-                    .userId(userId)
-                    .projectId(projectId)
-                    .toolName(toolName)
-                    .description(description)
-                    .tags(tags)
-                    .categoryId(categoryId)
-                    .parameters(parameters.toString())
-                    .isShare(share)
-                    .isPublish(true)
-                    .build();
-            toolRepo.insertTool(toolObj);
+            // 复用已有记录（若存在且 is_publish=0），否则插入新记录
+            Tool anyTool = toolRepo.selectOne(new QueryWrapper<Tool>()
+                    .eq("project_id", projectId)
+                    .orderByDesc("create_time"));
+
+            if (anyTool == null) {
+                Tool toolObj = Tool.builder()
+                        .toolId(toolId)
+                        .userId(userId)
+                        .projectId(projectId)
+                        .environment(environment)
+                        .toolName(toolName)
+                        .description(description)
+                        .tags(tags)
+                        .categoryId(Optional.ofNullable(categoryId).orElse(0))
+                        .parameters(parameters.toString())
+                        .outputType(outputType)
+                        .isShare(share)
+                        .isPublish(true)
+                        .build();
+                toolRepo.insertTool(toolObj);
+            } else {
+                String reuseToolId = anyTool.getToolId();
+                Tool update = Tool.builder()
+                        .toolId(reuseToolId)
+                        .environment(environment)
+                        .toolName(toolName)
+                        .description(description)
+                        .tags(tags)
+                        .categoryId(Optional.ofNullable(categoryId).orElse(0))
+                        .parameters(parameters.toString())
+                        .outputType(outputType)
+                        .isShare(share)
+                        .build();
+                toolRepo.updateToolById(update);
+                toolRepo.updatePublishState(reuseToolId, true);
+                toolId = reuseToolId;
+            }
 
             Map<String, Object> data = new HashMap<>();
             data.put("toolId", toolId);
@@ -273,6 +322,7 @@ public class ToolService {
             modelSocketService.sendMessageByProject(userId, projectId, "Service stopped");
             tool.setPublish(false);
             toolRepo.updateToolById(tool);
+            toolRepo.updatePublishState(toolId, false);
             return CommonResultVO.builder()
                     .status(1)
                     .message("工具服务停止成功")

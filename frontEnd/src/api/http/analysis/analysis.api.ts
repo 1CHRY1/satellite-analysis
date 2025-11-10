@@ -89,14 +89,4 @@ export async function cmdOperation(param: any): Promise<any> {
 }
 
 //-----------------------------  -----------------------------//
-export async function publishService(param: any): Promise<any> {
-    return http.post<any>(`modeling/coding/project/service/publish`, param)
-}
-
-export async function unpublishService(param: any): Promise<any> {
-    return http.post<any>(`modeling/coding/project/service/unpublish`, param)
-}
-
-export async function getServiceStatus(param: any): Promise<any> {
-    return http.post<any>(`modeling/coding/project/service/status`, param)
-}
+// 已迁移至 tools API：/tools/publish、/tools/unpublish、/tools/status
