@@ -46,8 +46,9 @@ class MapManager {
                 center: [117, 36],
                 zoom: 2,
                 maxZoom: 22,
-                // important: 注释打开，则使用本地底图影像，否则使用mapbox默认在线底图
+                // important: 第一行注释打开，则使用本地底图影像，否则使用mapbox默认在线底图
                 // style: StyleMap[style],
+                style: 'mapbox://styles/mapbox/satellite-streets-v12',
                 transformRequest: (url) => {
                     // if (url.indexOf(conf['back_app']) > -1) {
                     //     const token = localStorage.getItem('token')
