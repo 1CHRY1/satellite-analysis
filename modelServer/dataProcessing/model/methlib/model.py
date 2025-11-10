@@ -25,6 +25,7 @@ class MethLib(Task):
         data = self.args[0]
         req_params = data.get('params', {}) # 前端传入的参数 (Dict)
         method_data = data.get('method', {}) # 方法实体 (MethodEntity 或 Dict)
+        user_id = data.get('userId', '') # 用户ID
 
         print("--- 接收到的输入数据 ---")
         print(f"请求参数: {req_params}")
@@ -52,7 +53,6 @@ class MethLib(Task):
         processor = CommandProcessor()
 
         # 模拟其他必要的上下文信息
-        user_id = 'USRyM76hPQaVXhAM6MG3'
         service_base_path = "/srv/api/v1/" # 没用
         service_uuid = "svc-ext-2024" # 没用
         start_time = datetime.now()
