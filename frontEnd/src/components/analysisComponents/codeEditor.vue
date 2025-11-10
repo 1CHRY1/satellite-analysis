@@ -348,10 +348,8 @@ import {
     stopScript,
     operatePackage,
     getPackages,
-    publishService,
-    unpublishService,
-    getServiceStatus,
 } from '@/api/http/analysis'
+import { publishTool, getToolStatus, unpublishTool, getAllTools } from '@/api/http/tool'
 import { ref, reactive, onMounted, onBeforeUnmount,watch, computed } from 'vue'
 import { Codemirror } from 'vue-codemirror'
 import { python } from '@codemirror/lang-python'
@@ -836,8 +834,26 @@ const onCmInput = (value: string) => {
 }
 
 // 服务发布相关
+type ServiceStatus = {
+    isPublished: boolean
+    running: boolean
+    url: string
+    host: string
+    port: number | null
+}
 const servicePublishLoading = ref(false)
-const serviceStatus = ref({
+const currentToolId = ref<string | null>(null)
+const parseHostPortFromUrl = (url: string): { host: string; port: number | null } => {
+    try {
+        const u = new URL(url)
+        const host = u.hostname || '' 
+        const port = u.port ? Number(u.port) : null
+        return { host, port }
+    } catch {
+        return { host: '', port: null }
+    }
+}
+const serviceStatus = ref<ServiceStatus>({
     isPublished: false,
     running: false,
     url: '',
@@ -845,47 +861,90 @@ const serviceStatus = ref({
     port: null
 })
 
+const resolveCurrentToolId = async (): Promise<string | null> => {
+    if (currentToolId.value) return currentToolId.value
+    try {
+        const res = await getAllTools({ current: 1, size: 100, userId: props.userId })
+        const list = res?.data?.records || []
+        const found = list.find((it: any) => it?.projectId === props.projectId)
+        currentToolId.value = found?.toolId ?? null
+    } catch {
+        currentToolId.value = null
+    }
+    return currentToolId.value
+}
+
 const checkServiceStatus = async () => {
     try {
-        const response = await getServiceStatus({
-            projectId: props.projectId,
-            userId: props.userId
-        })
-        serviceStatus.value = response
+        const toolId = await resolveCurrentToolId()
+        if (!toolId) {
+            serviceStatus.value = { isPublished: false, running: false, url: '', host: '', port: null }
+            return
+        }
+        const res = await getToolStatus({ userId: props.userId, toolId })
+        if (res?.status === 1) {
+            const data = res.data || {}
+            const { host, port } = parseHostPortFromUrl(data.url || '')
+            serviceStatus.value = {
+                isPublished: true,
+                running: data.status === 'running',
+                url: data.url || '',
+                host,
+                port,
+            }
+        } else {
+            serviceStatus.value = { isPublished: false, running: false, url: '', host: '', port: null }
+        }
     } catch (error) {
         console.error('检查服务状态失败:', error)
-        serviceStatus.value = {
-            isPublished: false,
-            running: false,
-            url: '',
-            host: '',
-            port: null
-        }
+        serviceStatus.value = { isPublished: false, running: false, url: '', host: '', port: null }
     }
 }
 
 const publishServiceFunction = async (preferredPort?: number) => {
     servicePublishLoading.value = true
     try {
-        const param: any = {
+        // 适配 /tools/publish（CommonResultVO 包装）
+        // 构造 Code2ToolDTO 形状的请求体
+        const parameters = (toolWizardForm.params || []).map((item: any) => ({
+            label: item.label,
+            key: item.key,
+            type: item.type,
+            required: item.required,
+            placeholder: item.placeholder,
+            source: item.source,
+            optionsText: item.optionsText,
+        }))
+
+        const body: any = {
             projectId: props.projectId,
-            userId: props.userId
+            userId: props.userId,
+            toolName: (toolWizardForm.toolName || '').trim(),
+            description: (toolWizardForm.description || '').trim(),
+            tags: Array.isArray(toolWizardForm.tags) ? [...toolWizardForm.tags] : [],
+            categoryId: null,
+            parameters,
+            share: false,
+            outputType: toolWizardForm.resultType || 'tile',
         }
-        if (preferredPort) {
-            param.servicePort = preferredPort
+        if (preferredPort) body.servicePort = preferredPort
+        const res = await publishTool(body)
+        if (!res || res.status !== 1) {
+            throw new Error(res?.message ?? '发布失败')
         }
-        
-        const response = await publishService(param)
+        const data = res.data ?? {}
+        const { host, port } = parseHostPortFromUrl(data.url || '')
         serviceStatus.value = {
             isPublished: true,
             running: true,
-            url: response.url,
-            host: response.host,
-            port: response.port
+            url: data.url || '',
+            host,
+            port,
         }
-        
-        ElMessage.success(`服务发布成功！访问地址: ${response.url}`)
-        emit('addMessage', `Service running at: ${response.url}`)
+        const url = data.url || ''
+        currentToolId.value = data.toolId
+        ElMessage.success(url ? `服务发布成功！访问地址: ${url}` : '服务发布成功！')
+        emit('addMessage', url ? `Service running at: ${url}` : 'Service running')
         emit('servicePublished')
     } catch (error) {
         ElMessage.error('服务发布失败: ' + (error as Error).message)
@@ -897,12 +956,14 @@ const publishServiceFunction = async (preferredPort?: number) => {
 const unpublishServiceFunction = async () => {
     servicePublishLoading.value = true
     try {
-        await unpublishService({
-            projectId: props.projectId,
-            userId: props.userId
-        })
-
-        serviceStatus.value.running = false
+        const toolId = await resolveCurrentToolId()
+        if (!toolId) {
+            ElMessage.warning('未找到已发布的工具')
+            return
+        }
+        const res = await unpublishTool({ userId: props.userId, toolId })
+        if (res?.status !== 1) throw new Error(res?.message ?? '停止服务失败')
+        serviceStatus.value = { isPublished: false, running: false, url: '', host: '', port: null }
         ElMessage.success('服务已停止')
         emit('addMessage', 'Service stopped')
         emit('serviceUnpublished')
