@@ -187,8 +187,8 @@
                 </template>
             </el-dialog>
 
-            <el-dialog title="依赖管理" v-model="dialogVisible" width="400px">
-                <!-- 表格 -->
+            <!-- ###################### OLD VERSION ####################### -->
+            <!-- <el-dialog title="依赖管理" v-model="dialogVisible" width="400px">
                 <el-table :data="packageList" style="width: 100%">
                     <el-table-column prop="package" label="包名" />
                     <el-table-column prop="version" label="版本">
@@ -204,7 +204,6 @@
                 </el-table>
                 <div class="mt-1 flex items-center" v-show="addPackageShow">
                     <div class="">
-                        <!-- <font-awesome-icon style="margin-left: 2px; font-size: 10px; color: red" icon="star-of-life" /> -->
                         <label><span style="color: red">*</span>包名: </label>
                         <el-input v-model="addedPackageInfo.name" placeholder="package name"
                             style="width: 120px; font-size: 14px" />
@@ -218,14 +217,71 @@
                         <el-button link type="primary" @click="installPackage()">安装</el-button>
                     </div>
                 </div>
-                <!-- 底部按钮 -->
                 <template #footer>
                     <span class="dialog-footer">
                         <el-button @click="addPackageShow = !addPackageShow">安装依赖</el-button>
                         <el-button type="primary" @click="dialogVisible = false">关闭</el-button>
                     </span>
                 </template>
-            </el-dialog>
+            </el-dialog> -->
+
+            <a-modal title="依赖管理" :visible="dialogVisible" @cancel="dialogVisible = false" width="400px">
+                <template #footer>
+                    <a-button @click="addPackageShow = !addPackageShow">
+                        {{ addPackageShow ? '取消安装' : '安装依赖' }}
+                    </a-button>
+                    <a-button type="primary" @click="dialogVisible = false">关闭</a-button>
+                </template>
+                <a-table :data-source="packageList" :columns="[
+                    {
+                        title: '包名',
+                        dataIndex: 'package',
+                        key: 'package',
+                    },
+                    {
+                        title: '版本',
+                        dataIndex: 'version',
+                        key: 'version',
+                    },
+                    {
+                        title: '操作',
+                        key: 'operation', // 使用 key: operation 来匹配 template #bodyCell 的逻辑
+                        width: 80,
+                    },
+                ]" :pagination="false" row-key="package" style="width: 100%; margin-bottom: 16px;">
+                    <template #bodyCell="{ column, record }">
+
+                        <template v-if="column.key === 'version'">
+                            {{ record.version || '-' }}
+                        </template>
+
+                        <template v-else-if="column.key === 'operation'">
+                            <a-button type="link" @click="removePackage(record)">移除</a-button>
+                        </template>
+                    </template>
+                </a-table>
+
+                <div v-show="addPackageShow" style="margin-top: 8px; display: flex; align-items: center;">
+
+                    <div style="display: flex; align-items: center;">
+                        <label style="margin-right: 4px;">
+                            <span style="color: red; margin-right: 2px;">*</span>包名:
+                        </label>
+                        <a-input v-model:value="addedPackageInfo.name" placeholder="package name"
+                            style="width: 120px; font-size: 14px" />
+                    </div>
+
+                    <div style="margin-left: 16px; display: flex; align-items: center;">
+                        <label style="margin-right: 4px;">版本: </label>
+                        <a-input v-model:value="addedPackageInfo.version" placeholder="version"
+                            style="width: 70px; font-size: 14px" />
+                    </div>
+
+                    <div style="margin-left: 16px;">
+                        <a-button type="link" @click="installPackage()">安装</a-button>
+                    </div>
+                </div>
+            </a-modal>
 
             <a-dropdown :trigger="['click']">
                 <div class="my-1.5 ml-2 mr-2 flex w-fit items-center rounded"
@@ -297,7 +353,7 @@ import { publishTool, getToolStatus, unpublishTool, getAllTools } from '@/api/ht
 import { ref, reactive, onMounted, onBeforeUnmount, watch, computed } from 'vue'
 import { Codemirror } from 'vue-codemirror'
 import { python } from '@codemirror/lang-python'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessageBox } from 'element-plus'
 import { updateRecord } from '@/api/http/user'
 import { useUserStore, useToolRegistryStore, generateToolId } from '@/store'
 import type {
@@ -306,6 +362,7 @@ import type {
     DynamicToolParamSchema,
     DynamicToolMeta,
 } from '@/store/toolRegistry'
+import { message } from 'ant-design-vue';
 
 // import type { analysisResponse } from "@/type/analysis";
 // import { oneDarkTheme } from "@codemirror/theme-one-dark";
@@ -515,7 +572,7 @@ const installPackage = async () => {
                 name: addedPackageInfo.value.name,
             }
     } else {
-        ElMessage.warning('请输入要安装的依赖包名')
+        message.warning('请输入要安装的依赖包名')
     }
     emit('addMessage', '正在安装依赖：' + addedPackageInfo.value.name + '，请等待并关注安装信息')
     await operatePackage(requestJson)
@@ -562,12 +619,12 @@ const runCode = async () => {
             userId: props.userId,
         })
         if (runResult.status === 1) {
-            ElMessage.success('脚本启动')
+            message.success('脚本启动')
         } else {
-            ElMessage.error('启动失败，请重试或者联系管理员')
+            message.error('启动失败，请重试或者联系管理员')
         }
     } else {
-        ElMessage.error('保存失败，请重试或者联系管理员')
+        message.error('保存失败，请重试或者联系管理员')
     }
 }
 
@@ -579,7 +636,7 @@ const stopCode = async () => {
     })
     console.log(stopResult, 'stopResult');
 
-    ElMessage.info('正在停止运行')
+    message.info('正在停止运行')
 }
 const saveCode = async () => {
     // 保存代码内容
@@ -589,9 +646,9 @@ const saveCode = async () => {
         content: code.value,
     })
     if (result.status === 1) {
-        ElMessage.success('代码保存成功')
+        message.success('代码保存成功')
     } else {
-        ElMessage.error('代码保存失败')
+        message.error('代码保存失败')
     }
 }
 
@@ -642,7 +699,7 @@ const applyExpressionTemplate = async () => {
         }
     }
     saveWizardDraft()
-    ElMessage.success('已应用“表达式（无需服务）”模板，可直接发布为工具')
+    message.success('已应用“表达式（无需服务）”模板，可直接发布为工具')
 }
 
 const applyFlaskTemplate = async () => {
@@ -732,7 +789,7 @@ if __name__ == "__main__":
         { label: '像元方法', key: 'pixel_method', type: 'string', required: false, placeholder: '默认 first', source: '', optionsText: '', default: 'first' },
     )
     saveWizardDraft()
-    ElMessage.success('已填充 Flask 模板，请保存代码后启动服务再发布')
+    message.success('已填充 Flask 模板，请保存代码后启动服务再发布')
 }
 
 const keyboardSaveCode = (event: KeyboardEvent) => {
@@ -887,11 +944,11 @@ const publishServiceFunction = async (preferredPort?: number) => {
         }
         const url = data.url || ''
         currentToolId.value = data.toolId
-        ElMessage.success(url ? `服务发布成功！访问地址: ${url}` : '服务发布成功！')
+        message.success(url ? `服务发布成功！访问地址: ${url}` : '服务发布成功！')
         emit('addMessage', url ? `Service running at: ${url}` : 'Service running')
         emit('servicePublished')
     } catch (error) {
-        ElMessage.error('服务发布失败: ' + (error as Error).message)
+        message.error('服务发布失败: ' + (error as Error).message)
     } finally {
         servicePublishLoading.value = false
     }
@@ -902,17 +959,17 @@ const unpublishServiceFunction = async () => {
     try {
         const toolId = await resolveCurrentToolId()
         if (!toolId) {
-            ElMessage.warning('未找到已发布的工具')
+            message.warning('未找到已发布的工具')
             return
         }
         const res = await unpublishTool({ userId: props.userId, toolId })
         if (res?.status !== 1) throw new Error(res?.message ?? '停止服务失败')
         serviceStatus.value = { isPublished: false, running: false, url: '', host: '', port: null }
-        ElMessage.success('服务已停止')
+        message.success('服务已停止')
         emit('addMessage', 'Service stopped')
         emit('serviceUnpublished')
     } catch (error) {
-        ElMessage.error('停止服务失败: ' + (error as Error).message)
+        message.error('停止服务失败: ' + (error as Error).message)
     } finally {
         servicePublishLoading.value = false
     }
@@ -926,7 +983,7 @@ const startServiceForWizard = async () => {
 
 const stopServiceForWizard = async () => {
     if (!serviceStatus.value.running) {
-        ElMessage.info('服务未运行')
+        message.info('服务未运行')
         return
     }
     await unpublishServiceFunction()
@@ -995,30 +1052,30 @@ const publishDynamicTool = async () => {
     if (toolWizardSubmitting.value) return
     const activeUserId = currentUserId.value || props.userId
     if (!activeUserId) {
-        ElMessage.error('未获取到用户信息，无法发布工具')
+        message.error('未获取到用户信息，无法发布工具')
         return
     }
     const name = toolWizardForm.toolName.trim()
     if (!name) {
-        ElMessage.error('请填写工具名称')
+        message.error('请填写工具名称')
         return
     }
     const category = toolWizardForm.category.trim()
     if (!category) {
-        ElMessage.error('请填写工具分类')
+        message.error('请填写工具分类')
         return
     }
     const description = toolWizardForm.description.trim()
     if (!description) {
-        ElMessage.error('请填写工具描述')
+        message.error('请填写工具描述')
         return
     }
     if (toolWizardForm.invokeType === 'tiler-expression' && !toolWizardForm.expressionTemplate.trim()) {
-        ElMessage.error('请填写表达式模板')
+        message.error('请填写表达式模板')
         return
     }
     if (toolWizardForm.invokeType !== 'tiler-expression' && !toolWizardForm.serviceEndpoint.trim()) {
-        ElMessage.error('请填写服务地址')
+        message.error('请填写服务地址')
         return
     }
 
@@ -1026,16 +1083,16 @@ const publishDynamicTool = async () => {
     for (const param of toolWizardForm.params) {
         const key = param.key.trim()
         if (!key) {
-            ElMessage.error('参数键不能为空')
+            message.error('参数键不能为空')
             return
         }
         if (keySet.has(key)) {
-            ElMessage.error(`参数键重复：${key}`)
+            message.error(`参数键重复：${key}`)
             return
         }
         keySet.add(key)
         if (param.type === 'select' && !param.source && !param.optionsText.trim()) {
-            ElMessage.error(`请选择或输入参数“${param.label || param.key}”的枚举项`)
+            message.error(`请选择或输入参数“${param.label || param.key}”的枚举项`)
             return
         }
     }
@@ -1047,7 +1104,7 @@ const publishDynamicTool = async () => {
             try {
                 payloadTemplate = JSON.parse(payloadText)
             } catch (error) {
-                ElMessage.error('请求模板需要是合法的 JSON 格式')
+                message.error('请求模板需要是合法的 JSON 格式')
                 return
             }
         }
@@ -1089,11 +1146,11 @@ const publishDynamicTool = async () => {
         saveWizardDraft()
         emit('servicePublished')
         await logToolPublish(name, description)
-        ElMessage.success('工具发布成功，可前往动态分析页面使用')
+        message.success('工具发布成功，可前往动态分析页面使用')
         toolWizardVisible.value = false
     } catch (error) {
         console.error('注册工具失败:', error)
-        ElMessage.error('注册工具失败，请重试')
+        message.error('注册工具失败，请重试')
     } finally {
         toolWizardSubmitting.value = false
     }
@@ -1110,7 +1167,7 @@ onMounted(async () => {
         }
     } catch (error) {
         console.error('加载代码失败:', error)
-        ElMessage.error('加载代码失败，请检查后端服务是否运行')
+        message.error('加载代码失败，请检查后端服务是否运行')
     }
 
     try {
@@ -1121,13 +1178,13 @@ onMounted(async () => {
         })
 
         if (result.status === 1) {
-            ElMessage.success('项目启动成功')
+            message.success('项目启动成功')
         } else {
-            ElMessage.error('启动失败，请刷新页面或联系管理员')
+            message.error('启动失败，请刷新页面或联系管理员')
         }
     } catch (error) {
         console.error('项目启动失败:', error)
-        ElMessage.error('项目启动失败，请检查后端服务')
+        message.error('项目启动失败，请检查后端服务')
     }
 
     window.addEventListener('keydown', keyboardSaveCode);
