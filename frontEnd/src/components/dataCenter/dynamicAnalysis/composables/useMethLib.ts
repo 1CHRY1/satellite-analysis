@@ -12,7 +12,7 @@ export const useMethLib = () => {
      */
     const builtinToolCategories = [
         {
-            name: 'Whitebox Geospatial',
+            name: '景级分析工具',
             tools: [
                 { value: '1', label: 'Math and Stats Tools', disabled: false },
                 { value: '2', label: 'Image Processing Tools', disabled: false },
@@ -32,7 +32,7 @@ export const useMethLib = () => {
             ],
         },
         {
-            name: '图像',
+            name: '自定义分析工具',
             tools: [
                 { value: '指数分析', label: '指数分析', disabled: false },
                 {
@@ -75,29 +75,11 @@ export const useMethLib = () => {
                 { value: 'PixelLonLat', label: '像元经纬度坐标', disabled: false },
             ],
         },
-        {
-            name: '影像集合',
-            tools: [
-                { value: 'Clipped Composite', label: '裁剪合成影像', disabled: false },
-                { value: 'Filtered Composite', label: '滤波合成影像', disabled: false },
-                { value: 'Linear Fit', label: '线性拟合', disabled: false },
-                { value: 'Simple Cloud Score', label: '简易云量评分', disabled: false },
-            ],
-        },
-        {
-            name: '要素集合',
-            tools: [
-                { value: 'Buffer', label: '缓冲区分析', disabled: false },
-                { value: 'Distance', label: '距离计算', disabled: false },
-                { value: 'Join', label: '空间连接', disabled: false },
-                { value: 'Computed Area Filter', label: '基于计算面积的筛选', disabled: false },
-            ],
-        },
     ]
 
     const searchQuery = ref('')
 
-    const expandedCategories = ref<string[]>(['Whitebox Geospatial'])
+    const expandedCategories = ref<string[]>(['景级分析工具'])
 
     // const filteredCategories = computed(() => {
     //     const categories = allToolCategories.value
