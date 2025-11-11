@@ -211,7 +211,7 @@ const ThemeTable: React.FC = () => {
 		{
 			title: "栅格产品标识",
 			dataIndex: "sceneName",
-			width: 400,
+			width: 300,
 			ellipsis: true,
 			formItemProps: {
 				rules: [
@@ -287,14 +287,12 @@ const ThemeTable: React.FC = () => {
 		{
 			title: "坐标系",
 			dataIndex: "coordinateSystem",
-			width: 80,
 			valueType: "text",
 			hideInSearch: true,
 		},
 		{
 			title: "波段数",
 			dataIndex: "bandNum",
-			width: 80,
 			valueType: "digit",
 			hideInSearch: true,
 		},
@@ -345,14 +343,12 @@ const ThemeTable: React.FC = () => {
 		{
 			title: "云量",
 			dataIndex: "cloud",
-			width: 80,
 			valueType: "digit",
 			hideInSearch: true,
 		},
 		{
 			title: "NoData",
 			dataIndex: "noData",
-			width: 80,
 			valueType: "digit",
 			hideInSearch: true,
 		},
