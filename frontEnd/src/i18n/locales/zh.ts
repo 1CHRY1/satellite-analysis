@@ -5,7 +5,7 @@ export default{
         source: "资源中心",
         models: "模型中心",
         data: "数据中心",
-        tools: "工具发布",
+        tools: "开发中心",
         about: "关于我们",
     
         button: {
@@ -135,6 +135,33 @@ export default{
   },
 
   projectpage:{
+    searchbar:"根据工程名称、创建人或工程信息进行搜索，搜索词为空则显示所有工程",
+    search:"搜索",
+    createtool:"创建工程",
+    canceltool:"取消创建",
+    mytool:"我的工程",
+    alltool:"所有工程",
+    toolname:"工程名称",
+    envir: "运行环境",
+
+    button:{
+        create:"创建",
+        cancel:"取消",
+    },
+
+    message:{
+        error:{
+            entererr:"您没有访问该工程的权限，请联系工程创建者",
+            create_name_empty:"工程名称不能为空",
+            create_description_empty:"描述不能为空",
+            createrr_name_exist:"该工程已存在，请更换工程名称",
+        },
+
+        success:"创建成功"
+
+    }
+  },
+  toolpage:{
     searchbar:"根据工具名称、创建人或工具信息进行搜索，搜索词为空则显示所有工具",
     search:"搜索",
     createtool:"创建工具",
