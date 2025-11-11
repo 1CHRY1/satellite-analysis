@@ -93,7 +93,7 @@
                                                 <div class="absolute right-2 cursor-pointer" @click="clearImages">
                                                     <a-tooltip>
                                                         <template #title>{{ t('datapage.analysis.section2.clear')
-                                                            }}</template>
+                                                        }}</template>
                                                         <Trash2Icon :size="20" />
                                                     </a-tooltip>
                                                 </div>
@@ -202,12 +202,11 @@
                                                 <SearchIcon :size="16" class="config-icon" />
                                                 <span>搜索工具</span>
                                             </div>
-                                            <a-input-search v-model:value="searchQuery" placeholder="输入关键词..."
-                                                enter-button="搜索" size="large" @search="getCaseList" />
+
                                             <div class="config-control relative">
                                                 <!-- 分类工具列表 -->
                                                 <div class="mt-4 w-full mr-4">
-                                                    <div v-for="category in filteredCategories" :key="category.name"
+                                                    <div v-for="category in builtinToolCategories" :key="category.name"
                                                         class="mb-4">
                                                         <div class="flex items-center cursor-pointer px-2 py-1 hover:bg-gray-800 rounded"
                                                             @click="toggleCategory(category.name)">
@@ -226,12 +225,15 @@
                                                                     'bg-[#0d1526] text-gray-300 hover:bg-[#1e293b]': selectedTask !== tool.value && !tool.disabled,
                                                                     'opacity-50 cursor-not-allowed': tool.disabled,
                                                                     'cursor-pointer': !tool.disabled
-                                                                }" class="px-3 py-1 rounded-lg transition-colors w-full text-left flex items-center justify-between"
+                                                                }"
+                                                                class="px-3 py-1 rounded-lg transition-colors w-full text-left flex items-center justify-between"
                                                                 :disabled="tool.disabled">
 
-                                                                <div class="flex-grow min-w-0" :title="tool.label">
-                                                                    <span class="truncate block">{{ tool.label }}</span>
-                                                                </div>
+                                                                <a-tooltip :title="tool.label"
+                                                                    class="flex-grow min-w-0">
+                                                                    <span class="truncate block text-sm">{{ tool.label
+                                                                    }}</span>
+                                                                </a-tooltip>
 
                                                                 <CircleX v-if="tool.value.startsWith('dynamic:')"
                                                                     :size="16"
@@ -242,7 +244,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="config-control">
+                                            <!-- <div class="config-control">
                                                 <div class="flex justify-between gap-3 items-center w-full">
                                                     <span class="result-info-label">共找到 {{ total }} 条记录</span>
                                                     <div class="flex gap-3">
@@ -251,95 +253,50 @@
                                                                 t('datapage.history.fliter') }}</a-button>
                                                     </div>
                                                 </div>
+                                            </div> -->
+                                            <div class="config-control">
+                                                <a-input-search v-model:value="searchQuery" placeholder="输入关键词..."
+                                                    enter-button="搜索" size="large" @search="getMethLibList" />
                                             </div>
+
                                         </div>
                                     </div>
+
                                     <div class="config-container">
-                                        <div v-for="(item, index) in caseList" class="config-item" :key="item.caseId">
+                                        <div v-for="(item, index) in methLibList" class="config-item" :key="item.id">
                                             <div class="config-label relative">
                                                 <Image :size="16" class="config-icon" />
-                                                <span>{{ `${item.address}无云一版图` }}</span>
+                                                <span>{{ `${item.name}` }}</span>
                                                 <div class="absolute right-0 cursor-pointer">
                                                     <a-tooltip>
-                                                        <template #title>{{ t('datapage.history.preview') }}</template>
-                                                        <Eye v-if="previewList[index]" @click="unPreview" :size="16"
-                                                            class="cursor-pointer" />
-                                                        <EyeOff v-else :size="16"
-                                                            @click="showResult(item.caseId, item.regionId)"
-                                                            class="cursor-pointer" />
+                                                        <template #title>调用</template>
+                                                        <LogInIcon class="cursor-pointer" :size="16" />
                                                     </a-tooltip>
                                                 </div>
                                             </div>
                                             <div class="config-control flex-col !items-start">
                                                 <div class="flex w-full flex-col gap-2">
                                                     <div class="result-info-container">
-                                                        <div class="result-info-item">
-                                                            <div class="result-info-icon">
-                                                                <Grid3x3 :size="12" />
-                                                            </div>
-                                                            <div class="result-info-content">
-                                                                <div class="result-info-label">
-                                                                    {{ t('datapage.history.resolution') }}</div>
-                                                                <div class="result-info-value">
-                                                                    {{ item.resolution }}km
-                                                                </div>
-                                                            </div>
+                                                        <div class="result-info-value">
+                                                            <span class="text-sm">{{ item.description }}</span>
                                                         </div>
-                                                        <div class="result-info-item">
-                                                            <div class="result-info-icon">
-                                                                <CalendarIcon :size="12" />
-                                                            </div>
-                                                            <div class="result-info-content">
-                                                                <div class="result-info-label">
-                                                                    {{ t('datapage.history.create_time') }}</div>
-                                                                <div class="result-info-value">
-                                                                    {{ formatTimeToText(item.createTime) }}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="result-info-item">
-                                                            <div class="result-info-icon">
-                                                                <DatabaseIcon :size="12" />
-                                                            </div>
-                                                            <div class="result-info-content">
-                                                                <div class="result-info-label">
-                                                                    {{ t('datapage.history.data') }}</div>
-                                                                <div>
-                                                                    {{ item.dataSet }}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <!-- 下载按钮和发布按钮 -->
-                                                    <div class="flex gap-2 mt-2">
-                                                        <a-button type="primary" size="middle"
-                                                            @click="handlePublish(item)">
-                                                            <Upload :size="14" class="mr-1" />
-                                                        </a-button>
-                                                        <a-button size="middle" @click="handleDownload(item)">
-                                                            <Download :size="14" class="mr-1" />
-                                                        </a-button>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <a-empty v-if="total === 0" />
+                                        <a-empty v-if="methLibTotal === 0" />
                                     </div>
-
-                                    <!-- Content-4 Pagination -->
                                     <div class="config-container">
                                         <div class="flex h-[60px] justify-around">
-                                            <el-pagination v-if="total > 0" background layout="prev, pager, next"
-                                                v-model:current-page="currentPage" :total="total" :page-size="pageSize"
-                                                @current-change="getCaseList" @next-click="" @prev-click="">
+                                            <el-pagination v-if="methLibTotal > 0" background layout="prev, pager, next"
+                                                v-model:current-page="currentMethLibPage" :total="methLibTotal"
+                                                :page-size="methLibPageSize" @current-change="getMethLibList"
+                                                @next-click="" @prev-click="">
                                             </el-pagination>
                                         </div>
                                     </div>
-
-
                                 </div>
                             </section>
-
                         </div>
                     </dv-border-box12>
                 </div>
@@ -367,11 +324,9 @@
                 <div class="custom-panel px-2 mt-20">
                     <!-- <dv-border-box12 class=" !h-full"> -->
                     <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]"
-                        style="width:426px; background-color: rgba(20, 20, 21, 0.6);">
-
+                        style="width:426px; background-color: rgba(20, 20, 21, 0.6); border-radius: 3%;">
                         <component v-if="currentTaskComponent" :is="currentTaskComponent" v-bind="currentTaskProps" />
                         <ResultComponent @response="handleResultLoaded" />
-
                     </dv-border-box12>
                 </div>
             </div>
@@ -430,7 +385,9 @@ import {
     Square,
     SquareCheck,
     CommandIcon,
-    CircleX
+    CircleX,
+    FormInputIcon,
+    LogInIcon
 } from 'lucide-vue-next'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { mapManager } from '@/util/map/mapManager'
@@ -441,10 +398,10 @@ import subtitle from '../subtitle.vue'
 import DynamicServicePanel from '../thematic/DynamicServicePanel.vue'
 const exploreData = useExploreStore()
 const taskStore = useTaskStore()
-const toolRegistry = useToolRegistryStore()
 const userStore = useUserStore()
 
 const currentUserId = computed(() => userStore.user?.id ?? '')
+const toolRegistry = useToolRegistryStore()
 
 watch(
     currentUserId,
@@ -457,7 +414,9 @@ watch(
 )
 
 import { useI18n } from 'vue-i18n'
+import { useMethLib } from './composables/useMethLib'
 const { t } = useI18n()
+const { builtinToolCategories, searchQuery, expandedCategories, allToolCategories, getMethLibList, currentPage: currentMethLibPage, pageSize: methLibPageSize, total: methLibTotal, methLibList, selectedTask } = useMethLib()
 
 const isToolbarOpen = ref(true)
 const isSettingExpand = ref(true)
@@ -487,90 +446,7 @@ const displayLabel = computed(() => {
 })
 
 //工具目录
-const searchQuery = ref('')
-const expandedCategories = ref<string[]>(['图像', '影像集合', '要素集合'])
 
-const builtinToolCategories = [
-    {
-        name: '图像',
-        tools: [
-            { value: '指数分析', label: 'Math and Stats Tools', disabled: false },
-            { value: 'NDVI时序计算', label: t('datapage.analysis.optionallab.task_NDVI'), disabled: false },
-            { value: '光谱分析', label: t('datapage.analysis.optionallab.task_spectral'), disabled: false },
-            { value: 'DSM分析', label: t('datapage.analysis.optionallab.task_DSM'), disabled: false },
-            { value: 'DEM分析', label: t('datapage.analysis.optionallab.task_DEM'), disabled: false },
-            { value: '红绿立体', label: t('datapage.analysis.optionallab.task_red_green'), disabled: false },
-            { value: '形变速率', label: t('datapage.analysis.optionallab.task_rate'), disabled: false },
-            { value: '伪彩色分割', label: '伪彩色分割', disabled: false },
-            { value: '空间分析', label: '空间分析', disabled: false },
-            { value: 'boxSelect', label: '归一化差异', disabled: false },
-            { value: 'hillShade', label: '地形渲染', disabled: false },
-            { value: 'landcoverClean', label: '地表覆盖数据清洗', disabled: false },
-            { value: 'ReduceReg', label: '区域归约', disabled: false },
-            { value: 'PixelArea', label: '像元面积', disabled: false },
-            { value: 'PixelLonLat', label: '像元经纬度坐标', disabled: false }
-        ]
-    },
-    {
-        name: '影像集合',
-        tools: [
-            { value: 'Clipped Composite', label: '裁剪合成影像', disabled: false },
-            { value: 'Filtered Composite', label: '滤波合成影像', disabled: false },
-            { value: 'Linear Fit', label: '线性拟合', disabled: false },
-            { value: 'Simple Cloud Score', label: '简易云量评分', disabled: false }
-        ]
-    },
-    {
-        name: '要素集合',
-        tools: [
-            { value: 'Buffer', label: '缓冲区分析', disabled: false },
-            { value: 'Distance', label: '距离计算', disabled: false },
-            { value: 'Join', label: '空间连接', disabled: false },
-            { value: 'Computed Area Filter', label: '基于计算面积的筛选', disabled: false }
-        ]
-    },
-]
-
-const dynamicToolCategories = computed(() => {
-    const categoryMap = new Map<string, { name: string; tools: Array<{ value: string; label: string; disabled: boolean }> }>()
-    toolRegistry.tools.forEach((tool) => {
-        const categoryName = tool.category || '自定义'
-        if (!categoryMap.has(categoryName)) {
-            categoryMap.set(categoryName, {
-                name: categoryName,
-                tools: [],
-            })
-        }
-        categoryMap.get(categoryName)?.tools.push({
-            value: `dynamic:${tool.id}`,
-            label: tool.name,
-            disabled: false,
-        })
-    })
-    return Array.from(categoryMap.values())
-})
-
-const allToolCategories = computed(() => {
-    const categoryMap = new Map<string, { name: string; tools: Array<{ value: string; label: string; disabled: boolean }> }>()
-    builtinToolCategories.forEach((category) => {
-        categoryMap.set(category.name, {
-            name: category.name,
-            tools: [...category.tools],
-        })
-    })
-    dynamicToolCategories.value.forEach((category) => {
-        if (!categoryMap.has(category.name)) {
-            categoryMap.set(category.name, {
-                name: category.name,
-                tools: [],
-            })
-        }
-        categoryMap.get(category.name)?.tools.push(...category.tools)
-    })
-    return Array.from(categoryMap.values())
-})
-
-const selectedTask = ref<string>('')
 
 const fallbackTaskValue = computed(() => {
     const firstCategory = allToolCategories.value.find((category) => category.tools.length > 0)
@@ -598,22 +474,6 @@ watch(
         }
     }
 )
-
-const filteredCategories = computed(() => {
-    const categories = allToolCategories.value
-    if (!searchQuery.value) return categories
-
-    const query = searchQuery.value.toLowerCase()
-    return categories
-        .map(category => ({
-            ...category,
-            tools: category.tools.filter(tool =>
-                tool.label.toLowerCase().includes(query) ||
-                category.name.toLowerCase().includes(query)
-            )
-        }))
-        .filter(category => category.tools.length > 0)
-})
 
 const toggleCategory = (categoryName: string) => {
     const index = expandedCategories.value.indexOf(categoryName)
@@ -646,6 +506,7 @@ const currentTaskComponent = computed(() => {
     if (dynamicSelectedTool.value) {
         return DynamicServicePanel
     }
+    
     return taskComponentMap[selectedTask.value] || null
 })
 
@@ -850,6 +711,7 @@ onMounted(async () => {
     loadCompletedCases();
     addLocalInternalLayer()
     await getCubeObj()
+    await getMethLibList()
     updateGridLayer(cubeList.value)
 })
 
