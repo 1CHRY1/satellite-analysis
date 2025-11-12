@@ -17,6 +17,13 @@
                             📈
                         </div>
                         <span class="page-title">展示分析</span>
+                        <div class="absolute right-2 cursor-pointer" @click="clearImages">
+                            <a-tooltip>
+                                <template #title>{{ t('datapage.analysis.section2.clear')
+                                }}</template>
+                                <Trash2Icon :size="20" />
+                            </a-tooltip>
+                        </div>
                     </div>
                 </section>
                 <!-- 内容区域 -->
@@ -54,7 +61,173 @@
                                                     select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+                            </section>
 
+                            <!-- 工具目录部分 -->
+                            <section class="panel-section">
+                                <!--工具目录标题-->
+                                <div class="section-header">
+                                    <div class="section-icon">
+                                        <LayersIcon :size="18" />
+                                    </div>
+                                    <h2 class="section-title">景级分析</h2>
+                                    <div class="absolute right-2 cursor-pointer">
+                                        <ChevronDown v-if="isToolsExpand" :size="22" @click="isToolsExpand = false" />
+                                        <ChevronUp v-else @click="isToolsExpand = true" :size="22" />
+                                    </div>
+                                </div>
+                                <div class="section-content">
+                                    <div class="stats"
+                                        style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
+                                        <div class="stats-header">
+                                            <div class="config-label relative">
+                                                <BoltIcon :size="16" class="config-icon" />
+                                                <span class="text-sm">通用分析工具</span>
+                                            </div>
+                                            <div class="absolute right-2 cursor-pointer">
+                                                <ChevronDown v-if="isMethLibExpand" :size="22"
+                                                    @click="isMethLibExpand = false" />
+                                                <ChevronUp v-else @click="isMethLibExpand = true" :size="22" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-content" v-show="isMethLibExpand">
+                                            <div class="stats-item">
+                                                <div class="config-label relative">
+                                                    <BoltIcon :size="16" class="config-icon" />
+                                                    <span>工具检索</span>
+                                                </div>
+                                                <div class="config-control pr-5">
+                                                    在此展示方法标签条目
+                                                </div>
+                                                <div class="config-control pr-5">
+                                                    <a-input-search v-model:value="searchQuery" placeholder="输入关键词..."
+                                                        enter-button="搜索" @search="getMethLibList" />
+                                                </div>
+                                            </div>
+
+
+                                            <div>
+                                                <!-- 分类工具列表 -->
+                                                <div v-for="(item, index) in methLibList" class="config-item mb-1"
+                                                    :key="item.id">
+                                                    <div class="config-label relative">
+                                                        <Image :size="16" class="config-icon" />
+                                                        <span>{{ `${item.name}` }}</span>
+                                                        <div class="absolute right-0 cursor-pointer">
+                                                            <a-tooltip>
+                                                                <template #title>调用</template>
+                                                                <LogInIcon class="cursor-pointer" :size="16" />
+                                                            </a-tooltip>
+                                                        </div>
+                                                    </div>
+                                                    <div class="config-control flex-col !items-start">
+                                                        <div class="flex w-full flex-col gap-2">
+                                                            <div class="result-info-container">
+                                                                <div class="result-info-value">
+                                                                    <span class="text-sm">{{ item.description }}</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <a-empty v-if="methLibTotal === 0" />
+                                                <div class="config-container">
+                                                    <div class="flex h-[60px] justify-around">
+                                                        <el-pagination v-if="methLibTotal > 0" background
+                                                            layout="prev, pager, next"
+                                                            v-model:current-page="currentMethLibPage"
+                                                            :total="methLibTotal" :page-size="methLibPageSize"
+                                                            @current-change="getMethLibList" @next-click=""
+                                                            @prev-click="">
+                                                        </el-pagination>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="section-content">
+                                    <div class="stats"
+                                        style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
+                                        <div class="stats-header">
+                                            <div class="config-label relative">
+                                                <BoltIcon :size="16" class="config-icon" />
+                                                <span class="text-sm">自定义分析工具</span>
+                                            </div>
+                                            <div class="absolute right-2 cursor-pointer">
+                                                <ChevronDown v-if="isToolsExpand" :size="22"
+                                                    @click="isToolsExpand = false" />
+                                                <ChevronUp v-else @click="isToolsExpand = true" :size="22" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-content" v-show="isToolsExpand">
+                                            <div class="config-control relative">
+                                                <!-- 分类工具列表 -->
+                                                <div class="mt-4 w-full mr-4">
+                                                    <div v-for="category in builtinToolCategories" :key="category.name"
+                                                        class="mb-4">
+                                                        <div class="flex items-center cursor-pointer px-2 py-1 hover:bg-gray-800 rounded"
+                                                            @click="toggleCategory(category.name)">
+                                                            <ChevronRightIcon :size="16"
+                                                                class="mr-2 transition-transform duration-200"
+                                                                :class="{ 'transform rotate-90': expandedCategories.includes(category.name) }" />
+                                                            <span class="text-gray-300 font-medium">{{ category.name
+                                                            }}</span>
+                                                        </div>
+
+                                                        <div v-show="expandedCategories.includes(category.name) || searchQuery"
+                                                            class="ml-6 mt-2 grid grid-cols-2 gap-2">
+                                                            <div v-for="tool in category.tools" :key="tool.value"
+                                                                @click="selectedTask = tool.value" :class="{
+                                                                    'bg-[#1e3a8a] text-white': selectedTask === tool.value,
+                                                                    'bg-[#0d1526] text-gray-300 hover:bg-[#1e293b]': selectedTask !== tool.value && !tool.disabled,
+                                                                    'opacity-50 cursor-not-allowed': tool.disabled,
+                                                                    'cursor-pointer': !tool.disabled
+                                                                }"
+                                                                class="px-3 py-1 rounded-lg transition-colors w-full text-left flex items-center justify-between"
+                                                                :disabled="tool.disabled">
+
+                                                                <a-tooltip :title="tool.label"
+                                                                    class="flex-grow min-w-0">
+                                                                    <span class="truncate block text-sm">{{
+                                                                        tool.label
+                                                                    }}</span>
+                                                                </a-tooltip>
+
+                                                                <CircleX v-if="tool.value.startsWith('dynamic:')"
+                                                                    :size="16"
+                                                                    class="text-gray-400 hover:text-gray-300 flex-shrink-0 ml-1"
+                                                                    @click.stop="handleRemoveDynamicTool(tool.value)" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- 前序数据分析部分 -->
+                            <section class="panel-section">
+                                <!--标题-->
+                                <div class="section-header">
+                                    <div class="section-icon">
+                                        <Settings :size="18" />
+                                    </div>
+                                    <h2 class="section-title">前序数据分析</h2>
+                                    <div class="absolute right-2 cursor-pointer">
+                                        <ChevronDown v-if="isPrevExpand" :size="22" @click="isPrevExpand = false" />
+                                        <ChevronUp v-else @click="isPrevExpand = true" :size="22" />
+                                    </div>
+                                </div>
+
+                                <!--内容区域-->
+                                <div v-show="isPrevExpand" class="section-content">
+                                    <div class="config-container">
                                         <!-- 数据集配置 -->
                                         <div class="config-item"
                                             style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
@@ -90,13 +263,7 @@
                                                         <p class="item-center text-center text-gray-100">暂无数据</p>
                                                     </div>
                                                 </el-dialog>
-                                                <div class="absolute right-2 cursor-pointer" @click="clearImages">
-                                                    <a-tooltip>
-                                                        <template #title>{{ t('datapage.analysis.section2.clear')
-                                                        }}</template>
-                                                        <Trash2Icon :size="20" />
-                                                    </a-tooltip>
-                                                </div>
+
                                             </div>
                                         </div>
 
@@ -131,8 +298,8 @@
                                                         style="max-height: 400px; overflow: auto; position: relative;">
                                                         <pre
                                                             style="white-space: pre-wrap; word-break: break-word; user-select: text;">
-                    {{cubeList.filter(cube => cube.cacheKey === currentCacheKey)[0]}}
-                </pre>
+                                            {{cubeList.filter(cube => cube.cacheKey === currentCacheKey)[0]}}
+                                        </pre>
                                                     </a-card>
                                                 </a-modal>
                                                 <a-list item-layout="horizontal" class="w-full" :data-source="cubeList">
@@ -179,124 +346,7 @@
                                 </div>
                             </section>
 
-                            <!-- 工具目录部分 -->
-                            <section class="panel-section">
-                                <!--工具目录标题-->
-                                <div class="section-header">
-                                    <div class="section-icon">
-                                        <LayersIcon :size="18" />
-                                    </div>
-                                    <h2 class="section-title">工具目录</h2>
-                                    <div class="absolute right-2 cursor-pointer">
-                                        <ChevronDown v-if="isToolsExpand" :size="22" @click="isToolsExpand = false" />
-                                        <ChevronUp v-else @click="isToolsExpand = true" :size="22" />
-                                    </div>
-                                </div>
 
-                                <!--工具目录内容区域-->
-                                <div v-show="isToolsExpand" class="section-content">
-                                    <div class="config-container">
-                                        <div class="config-item"
-                                            style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
-                                            <div class="config-label relative">
-                                                <SearchIcon :size="16" class="config-icon" />
-                                                <span>搜索工具</span>
-                                            </div>
-
-                                            <div class="config-control relative">
-                                                <!-- 分类工具列表 -->
-                                                <div class="mt-4 w-full mr-4">
-                                                    <div v-for="category in builtinToolCategories" :key="category.name"
-                                                        class="mb-4">
-                                                        <div class="flex items-center cursor-pointer px-2 py-1 hover:bg-gray-800 rounded"
-                                                            @click="toggleCategory(category.name)">
-                                                            <ChevronRightIcon :size="16"
-                                                                class="mr-2 transition-transform duration-200"
-                                                                :class="{ 'transform rotate-90': expandedCategories.includes(category.name) }" />
-                                                            <span class="text-gray-300 font-medium">{{ category.name
-                                                                }}</span>
-                                                        </div>
-
-                                                        <div v-show="expandedCategories.includes(category.name) || searchQuery"
-                                                            class="ml-6 mt-2 grid grid-cols-2 gap-2">
-                                                            <div v-for="tool in category.tools" :key="tool.value"
-                                                                @click="selectedTask = tool.value" :class="{
-                                                                    'bg-[#1e3a8a] text-white': selectedTask === tool.value,
-                                                                    'bg-[#0d1526] text-gray-300 hover:bg-[#1e293b]': selectedTask !== tool.value && !tool.disabled,
-                                                                    'opacity-50 cursor-not-allowed': tool.disabled,
-                                                                    'cursor-pointer': !tool.disabled
-                                                                }"
-                                                                class="px-3 py-1 rounded-lg transition-colors w-full text-left flex items-center justify-between"
-                                                                :disabled="tool.disabled">
-
-                                                                <a-tooltip :title="tool.label"
-                                                                    class="flex-grow min-w-0">
-                                                                    <span class="truncate block text-sm">{{ tool.label
-                                                                    }}</span>
-                                                                </a-tooltip>
-
-                                                                <CircleX v-if="tool.value.startsWith('dynamic:')"
-                                                                    :size="16"
-                                                                    class="text-gray-400 hover:text-gray-300 flex-shrink-0 ml-1"
-                                                                    @click.stop="handleRemoveDynamicTool(tool.value)" />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <!-- <div class="config-control">
-                                                <div class="flex justify-between gap-3 items-center w-full">
-                                                    <span class="result-info-label">共找到 {{ total }} 条记录</span>
-                                                    <div class="flex gap-3">
-                                                        <a-button type="primary" class="a-button"
-                                                            @click="getCaseList">{{
-                                                                t('datapage.history.fliter') }}</a-button>
-                                                    </div>
-                                                </div>
-                                            </div> -->
-                                            <div class="config-control">
-                                                <a-input-search v-model:value="searchQuery" placeholder="输入关键词..."
-                                                    enter-button="搜索" size="large" @search="getMethLibList" />
-                                            </div>
-
-                                        </div>
-                                    </div>
-
-                                    <div class="config-container">
-                                        <div v-for="(item, index) in methLibList" class="config-item" :key="item.id">
-                                            <div class="config-label relative">
-                                                <Image :size="16" class="config-icon" />
-                                                <span>{{ `${item.name}` }}</span>
-                                                <div class="absolute right-0 cursor-pointer">
-                                                    <a-tooltip>
-                                                        <template #title>调用</template>
-                                                        <LogInIcon class="cursor-pointer" :size="16" />
-                                                    </a-tooltip>
-                                                </div>
-                                            </div>
-                                            <div class="config-control flex-col !items-start">
-                                                <div class="flex w-full flex-col gap-2">
-                                                    <div class="result-info-container">
-                                                        <div class="result-info-value">
-                                                            <span class="text-sm">{{ item.description }}</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <a-empty v-if="methLibTotal === 0" />
-                                    </div>
-                                    <div class="config-container">
-                                        <div class="flex h-[60px] justify-around">
-                                            <el-pagination v-if="methLibTotal > 0" background layout="prev, pager, next"
-                                                v-model:current-page="currentMethLibPage" :total="methLibTotal"
-                                                :page-size="methLibPageSize" @current-change="getMethLibList"
-                                                @next-click="" @prev-click="">
-                                            </el-pagination>
-                                        </div>
-                                    </div>
-                                </div>
-                            </section>
                         </div>
                     </dv-border-box12>
                 </div>
@@ -340,7 +390,6 @@ import { ref, type PropType, computed, type Ref, nextTick, onUpdated, onMounted,
 import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'
 import { type interactiveExplore } from '@/components/dataCenter/type'
 import { formatTime } from '@/util/common'
-import { getNdviPoint, getCaseStatus, getCaseResult, getSpectrum, getBoundaryBySceneId, getRegionPosition, getRasterScenesDes } from '@/api/http/satellite-data'
 import * as echarts from 'echarts'
 import { getSceneGeojson } from '@/api/http/satellite-data/visualize.api'
 import * as MapOperation from '@/util/map/operation'
@@ -352,41 +401,22 @@ import { getRGBTileLayerParamFromSceneObject } from '@/util/visualizeHelper'
 import { useViewHistoryModule } from '../noCloud/viewHistory'
 import {
     ChartColumn,
-    Earth,
-    MapPinIcon,
-    CalendarIcon,
-    UploadCloudIcon,
-    RefreshCwIcon,
-    HexagonIcon,
-    CloudIcon,
-    ApertureIcon,
-    ClockIcon,
-    ImageIcon,
     LayersIcon,
-    DownloadIcon,
-    FilePlus2Icon,
-    BoltIcon,
-    BanIcon,
     MapIcon,
     Trash2Icon,
     ChevronLeftIcon,
     ChevronRightIcon,
-    ChevronRight,
     ChevronDown,
     ChevronUp,
     SearchIcon,
-    ChevronDownIcon,
     Settings,
     BoxIcon,
     Eye,
     EyeOff,
-    Circle,
-    CircleOff,
     Square,
     SquareCheck,
     CommandIcon,
     CircleX,
-    FormInputIcon,
     LogInIcon
 } from 'lucide-vue-next'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -395,276 +425,54 @@ import { formatTimeToText } from '@/util/common';
 import { ElDialog } from 'element-plus'
 import { type Case } from '@/api/http/satellite-data'
 import subtitle from '../subtitle.vue'
-import DynamicServicePanel from '../thematic/DynamicServicePanel.vue'
-const exploreData = useExploreStore()
-const taskStore = useTaskStore()
-const userStore = useUserStore()
-
-const currentUserId = computed(() => userStore.user?.id ?? '')
-const toolRegistry = useToolRegistryStore()
-
-watch(
-    currentUserId,
-    (id) => {
-        if (id) {
-            toolRegistry.ensureLoaded(id)
-        }
-    },
-    { immediate: true }
-)
-
+import { useSettings } from './composables/useSettings'
 import { useI18n } from 'vue-i18n'
-import { useMethLib } from './composables/useMethLib'
-const { t } = useI18n()
-const { builtinToolCategories, searchQuery, expandedCategories, allToolCategories, getMethLibList, currentPage: currentMethLibPage, pageSize: methLibPageSize, total: methLibTotal, methLibList, selectedTask } = useMethLib()
-
-const isToolbarOpen = ref(true)
-const isSettingExpand = ref(true)
-const isToolsExpand = ref(true)
-
+import { useTool } from './composables/useTool'
 import MapComp from '@/components/feature/map/mapComp.vue'
 import { getCube } from '@/api/http/analytics-display'
 import { useCube } from './composables/useCube'
+import { useMethLib } from './composables/useMethLib'
+
+const { t } = useI18n()
 const isPicking = ref(false)
 
-//左模块显示
+/**
+ * 左模块显示
+ */
 const showPanel = ref(false)
+const isToolbarOpen = ref(true)
 
-const startTime = '1900-01-01'
-const endTime = '2050-01-01'
-const region = ref<RegionValues>({
-    province: '370000',
-    city: '370100',
-    area: '',
-})
-const displayLabel = computed(() => {
-    let info = region.value
-    if (info.area) return Number(`${info.area}`)
-    if (info.city) return Number(`${info.city}`)
-    if (info.province) return Number(`${info.province}`)
-    return '未选择'
-})
+/**
+ * 设置section
+ */
+const { isSettingExpand,
+    region,
+    thematicConfig,
+    originImages,
+    exploreData,
+    selectedResult,
+    displayLabel,
+    getOriginImages } = useSettings()
 
-//工具目录
+/**
+ * 工具Section
+ */
+// 自定义工具
+const { builtinToolCategories, expandedCategories, allToolCategories, selectedTask, isToolsExpand, currentTaskComponent,
+    currentTaskProps,
+    handleResultLoaded,
+    handleRemoveDynamicTool,
+    toggleCategory } = useTool()
+// 方法库工具
+const { searchQuery, isMethLibExpand, getMethLibList, currentPage: currentMethLibPage, pageSize: methLibPageSize, total: methLibTotal, methLibList, } = useMethLib()
 
-
-const fallbackTaskValue = computed(() => {
-    const firstCategory = allToolCategories.value.find((category) => category.tools.length > 0)
-    return firstCategory?.tools[0]?.value ?? ''
-})
-
-watch(
-    fallbackTaskValue,
-    (value) => {
-        if (!selectedTask.value && value) {
-            selectedTask.value = value
-        }
-    },
-    { immediate: true }
-)
-
-watch(
-    () => toolRegistry.tools.map((tool) => tool.id),
-    () => {
-        if (selectedTask.value.startsWith('dynamic:')) {
-            const toolId = selectedTask.value.replace('dynamic:', '')
-            if (!toolRegistry.getToolById(toolId)) {
-                selectedTask.value = fallbackTaskValue.value
-            }
-        }
-    }
-)
-
-const toggleCategory = (categoryName: string) => {
-    const index = expandedCategories.value.indexOf(categoryName)
-    if (index >= 0) {
-        expandedCategories.value.splice(index, 1)
-    } else {
-        expandedCategories.value.push(categoryName)
-    }
-}
-
-// 专题组件映射
-const taskComponentMap = {
-    '伪彩色分割': defineAsyncComponent(() => import('../thematic/colorThresholdPanel.vue')),
-    '指数分析': defineAsyncComponent(() => import('../thematic/indexPanel.vue')),
-    'NDVI时序计算': defineAsyncComponent(() => import('../thematic/ndviPanel.vue')),
-    '光谱分析': defineAsyncComponent(() => import('../thematic/spectrumPanel.vue')),
-    'DSM分析': defineAsyncComponent(() => import('../thematic/dsmPanel.vue')),
-    'DEM分析': defineAsyncComponent(() => import('../thematic/demPanel.vue')),
-    '红绿立体': defineAsyncComponent(() => import('../thematic/RBbandsPanel.vue')),
-    '形变速率': defineAsyncComponent(() => import('../thematic/deformationRate.vue')),
-}
-
-const dynamicSelectedTool = computed(() => {
-    if (!selectedTask.value.startsWith('dynamic:')) return null
-    const toolId = selectedTask.value.replace('dynamic:', '')
-    return toolRegistry.getToolById(toolId) ?? null
-})
-
-const currentTaskComponent = computed(() => {
-    if (dynamicSelectedTool.value) {
-        return DynamicServicePanel
-    }
-    
-    return taskComponentMap[selectedTask.value] || null
-})
-
-const thematicConfig = ref({})
-
-const currentTaskProps = computed(() => {
-    if (dynamicSelectedTool.value) {
-        return {
-            thematicConfig: thematicConfig.value,
-            toolMeta: dynamicSelectedTool.value,
-        }
-    }
-    return {
-        thematicConfig: thematicConfig.value,
-    }
-})
-
-const selectedResult = ref(null);
-
-const handleResultLoaded = (result) => {
-    selectedResult.value = result;
-}
-
-const handleRemoveDynamicTool = async (toolValue: string) => {
-    const toolId = toolValue.replace('dynamic:', '')
-    const toolMeta = toolRegistry.getToolById(toolId)
-    if (!toolMeta) return
-    try {
-        await ElMessageBox.confirm(
-            `确定要取消发布工具“${toolMeta.name}”吗？取消发布后工具将被从工具目录中移除。`,
-            '取消发布',
-            {
-                confirmButtonText: '确认',
-                cancelButtonText: '保留',
-                type: 'warning',
-            },
-        )
-    } catch {
-        return
-    }
-    toolRegistry.removeTool(currentUserId.value, toolId)
-    if (selectedTask.value === toolValue) {
-        nextTick(() => {
-            selectedTask.value = fallbackTaskValue.value
-        })
-    }
-    ElMessage.success('已取消发布工具')
-}
-// 获取根据行政区选择的原始数据
-const originImages = ref([])
-const getOriginImages = async (newRegion: number | '未选择') => {
-    if (newRegion === "未选择") {
-        ElMessage.warning(t('datapage.analysis.message.region'))
-        return
-    }
-    let filterData = {
-        startTime,
-        endTime,
-        cloud: 100,
-        regionId: newRegion,
-    }
-    originImages.value = await getSceneByConfig(filterData)
-
-    MapOperation.map_destroyImagePolygon()
-    MapOperation.map_destroyImagePreviewLayer()
-    MapOperation.map_destroyGridLayer()
-
-    let boundaryRes = await exploreData.boundary
-    let window = await getRegionPosition(newRegion)
-
-    // 先清除现有的矢量边界，然后再添加新的  
-    MapOperation.map_addPolygonLayer({
-        geoJson: boundaryRes,
-        id: 'UniqueLayer',
-        lineColor: '#8fffff',
-        fillColor: '#a4ffff',
-        fillOpacity: 0.2,
-    })
-    // fly to
-    MapOperation.map_fitView([
-        [window.bounds[0], window.bounds[1]],
-        [window.bounds[2], window.bounds[3]],
-    ])
-    thematicConfig.value = {
-        allImages: originImages.value,
-        regionId: displayLabel.value,
-        endTime,
-        startTime,
-        dataset: selectedResult.value
-    }
-}
-
-
-const clearImages = () => {
-    MapOperation.map_destroyTerrain()
-    MapOperation.map_destroyRGBImageTileLayer()
-    MapOperation.map_destroyOneBandColorLayer()
-    mapManager.withMap((map) => {
-        if (map.getLayer('UniqueSceneLayer-fill')) map.removeLayer('UniqueSceneLayer-fill')
-        if (map.getLayer('UniqueSceneLayer-line')) map.removeLayer('UniqueSceneLayer-line')
-        if (map.getSource('UniqueSceneLayer-source')) map.removeSource('UniqueSceneLayer-source')
-    })
-}
-
-
-
-watch(displayLabel, getOriginImages, { immediate: true })
-
-const addLocalInternalLayer = () => {
-    mapManager.withMap((map) => {
-        const sourceId = 'Local-Interal-Source'
-        const layerId = 'Local-Interal-Layer'
-
-        // 防止重复添加
-        if (map.getLayer(layerId)) {
-            map.removeLayer(layerId)
-        }
-        if (map.getSource(sourceId)) {
-            map.removeSource(sourceId)
-        }
-
-        // 添加 source
-        map.addSource(sourceId, {
-            type: 'raster',
-            tiles: [
-                `http://${window.location.host}${ezStore.get('conf')['fk_url']}`
-            ],
-            tileSize: 256,
-        })
-
-        // 添加 layer
-        map.addLayer({
-            id: layerId,
-            type: 'raster',
-            source: sourceId,
-        })
-    })
-}
-
-
-// 数据集
+/**
+ * 前序数据Section
+ */
+const isPrevExpand = ref(false)
+// 前序无云一版图数据
 const historyComponent = ref(null)
 const showHistory = ref(false)
-interface Case {
-    caseId: string,
-    address: string,
-    regionId: number,
-    resolution: string,
-    sceneList: Array<string>,
-    dataSet: string,
-    status: string,
-    result: {
-        bucket: string,
-        object_path: string
-    },
-    createTime: string
-}
-
 const {
     caseList,
     currentPage,
@@ -676,24 +484,65 @@ const {
     showResult,
     onResultSelected
 } = useViewHistoryModule();
-
 const completedCases = ref<any[]>([]); // 仅存储已完成的任务
-const isLoading = ref(false);
-
-// 加载已完成任务
 const loadCompletedCases = async () => {
-    isLoading.value = true;
     activeTab.value = 'COMPLETE';
-
-
     await getCaseList();
-
     completedCases.value = caseList.value;
-
-    isLoading.value = false;
 };
-
+// 前序时序立方体数据
 const { cubeObj, cubeList, inputCacheKey, handleSelectCube, updateGridLayer, currentCacheKey, getCubeObj } = useCube()
+
+/**
+ * 通用方法
+ */
+const clearImages = () => {
+    MapOperation.map_destroyTerrain()
+    MapOperation.map_destroyRGBImageTileLayer()
+    MapOperation.map_destroyOneBandColorLayer()
+    mapManager.withMap((map) => {
+        if (map.getLayer('UniqueSceneLayer-fill')) map.removeLayer('UniqueSceneLayer-fill')
+        if (map.getLayer('UniqueSceneLayer-line')) map.removeLayer('UniqueSceneLayer-line')
+        if (map.getSource('UniqueSceneLayer-source')) map.removeSource('UniqueSceneLayer-source')
+    })
+}
+
+watch(displayLabel, getOriginImages, { immediate: true })
+
+// const addLocalInternalLayer = () => {
+//     mapManager.withMap((map) => {
+//         const sourceId = 'Local-Interal-Source'
+//         const layerId = 'Local-Interal-Layer'
+
+//         // 防止重复添加
+//         if (map.getLayer(layerId)) {
+//             map.removeLayer(layerId)
+//         }
+//         if (map.getSource(sourceId)) {
+//             map.removeSource(sourceId)
+//         }
+
+//         // 添加 source
+//         map.addSource(sourceId, {
+//             type: 'raster',
+//             tiles: [
+//                 `http://${window.location.host}${ezStore.get('conf')['fk_url']}`
+//             ],
+//             tileSize: 256,
+//         })
+
+//         // 添加 layer
+//         map.addLayer({
+//             id: layerId,
+//             type: 'raster',
+//             source: sourceId,
+//         })
+//     })
+// }
+
+
+// 数据集
+
 onMounted(async () => {
     // 设置结果选择的回调
     onResultSelected.value = (result) => {
@@ -709,24 +558,10 @@ onMounted(async () => {
     }
 
     loadCompletedCases();
-    addLocalInternalLayer()
+    // addLocalInternalLayer()
     await getCubeObj()
-    await getMethLibList()
     updateGridLayer(cubeList.value)
-})
-
-onUnmounted(() => {
-    mapManager.withMap((map) => {
-        const sourceId = 'Local-Interal-Source'
-        const layerId = 'Local-Interal-Layer'
-
-        if (map.getLayer(layerId)) {
-            map.removeLayer(layerId)
-        }
-        if (map.getSource(sourceId)) {
-            map.removeSource(sourceId)
-        }
-    })
+    // await getMethLibList()
 })
 
 </script>

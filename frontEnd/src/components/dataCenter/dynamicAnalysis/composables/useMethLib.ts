@@ -1,169 +1,13 @@
 import { getMethLibPage } from '@/api/http/analytics-display/methlib.api'
 import type { MethLib } from '@/api/http/analytics-display/methlib.type'
-import { useToolRegistryStore } from '@/store'
-import { computed, ref } from 'vue'
-const toolRegistry = useToolRegistryStore()
-import { useI18n } from 'vue-i18n'
+import { ref } from 'vue'
 
 export const useMethLib = () => {
-    const { t } = useI18n()
-    /**
-     * Category相关变量
-     */
-    const builtinToolCategories = [
-        {
-            name: 'Whitebox Geospatial',
-            tools: [
-                { value: '1', label: 'Math and Stats Tools', disabled: false },
-                { value: '2', label: 'Image Processing Tools', disabled: false },
-                { value: '3', label: 'Filters', disabled: false },
-                { value: '4', label: 'Data Tools', disabled: false },
-                { value: '5', label: 'GIS Analysis', disabled: false },
-                { value: '6', label: 'LiDAR Tools', disabled: false },
-                { value: '7', label: 'Geomorphometric Analysis', disabled: false },
-                { value: '8', label: 'Hydrological Analysis', disabled: false },
-                { value: '9', label: 'Overlay Tools', disabled: false },
-                { value: '10', label: 'Image Enhancement', disabled: false },
-                { value: '11', label: 'Patch Shape Tools', disabled: false },
-                { value: '12', label: 'Distance Tools', disabled: false },
-                { value: '13', label: 'Stream Network Analysis', disabled: false },
-                { value: '14', label: 'Whitebox Utilities', disabled: false },
-                { value: '15', label: 'Machine Learning', disabled: false },
-            ],
-        },
-        {
-            name: '图像',
-            tools: [
-                { value: '指数分析', label: '指数分析', disabled: false },
-                {
-                    value: 'NDVI时序计算',
-                    label: t('datapage.analysis.optionallab.task_NDVI'),
-                    disabled: false,
-                },
-                {
-                    value: '光谱分析',
-                    label: t('datapage.analysis.optionallab.task_spectral'),
-                    disabled: false,
-                },
-                {
-                    value: 'DSM分析',
-                    label: t('datapage.analysis.optionallab.task_DSM'),
-                    disabled: false,
-                },
-                {
-                    value: 'DEM分析',
-                    label: t('datapage.analysis.optionallab.task_DEM'),
-                    disabled: false,
-                },
-                {
-                    value: '红绿立体',
-                    label: t('datapage.analysis.optionallab.task_red_green'),
-                    disabled: false,
-                },
-                {
-                    value: '形变速率',
-                    label: t('datapage.analysis.optionallab.task_rate'),
-                    disabled: false,
-                },
-                { value: '伪彩色分割', label: '伪彩色分割', disabled: false },
-                { value: '空间分析', label: '空间分析', disabled: false },
-                { value: 'boxSelect', label: '归一化差异', disabled: false },
-                { value: 'hillShade', label: '地形渲染', disabled: false },
-                { value: 'landcoverClean', label: '地表覆盖数据清洗', disabled: false },
-                { value: 'ReduceReg', label: '区域归约', disabled: false },
-                { value: 'PixelArea', label: '像元面积', disabled: false },
-                { value: 'PixelLonLat', label: '像元经纬度坐标', disabled: false },
-            ],
-        },
-        {
-            name: '影像集合',
-            tools: [
-                { value: 'Clipped Composite', label: '裁剪合成影像', disabled: false },
-                { value: 'Filtered Composite', label: '滤波合成影像', disabled: false },
-                { value: 'Linear Fit', label: '线性拟合', disabled: false },
-                { value: 'Simple Cloud Score', label: '简易云量评分', disabled: false },
-            ],
-        },
-        {
-            name: '要素集合',
-            tools: [
-                { value: 'Buffer', label: '缓冲区分析', disabled: false },
-                { value: 'Distance', label: '距离计算', disabled: false },
-                { value: 'Join', label: '空间连接', disabled: false },
-                { value: 'Computed Area Filter', label: '基于计算面积的筛选', disabled: false },
-            ],
-        },
-    ]
-
-    const searchQuery = ref('')
-
-    const expandedCategories = ref<string[]>(['Whitebox Geospatial'])
-
-    // const filteredCategories = computed(() => {
-    //     const categories = allToolCategories.value
-    //     if (!searchQuery.value) return categories
-
-    //     const query = searchQuery.value.toLowerCase()
-    //     return categories
-    //         .map(category => ({
-    //             ...category,
-    //             tools: category.tools.filter(tool =>
-    //                 tool.label.toLowerCase().includes(query) ||
-    //                 category.name.toLowerCase().includes(query)
-    //             )
-    //         }))
-    //         .filter(category => category.tools.length > 0)
-    // })
-
-    const dynamicToolCategories = computed(() => {
-        const categoryMap = new Map<
-            string,
-            { name: string; tools: Array<{ value: string; label: string; disabled: boolean }> }
-        >()
-        toolRegistry.tools.forEach((tool) => {
-            const categoryName = tool.category || '自定义'
-            if (!categoryMap.has(categoryName)) {
-                categoryMap.set(categoryName, {
-                    name: categoryName,
-                    tools: [],
-                })
-            }
-            categoryMap.get(categoryName)?.tools.push({
-                value: `dynamic:${tool.id}`,
-                label: tool.name,
-                disabled: false,
-            })
-        })
-        return Array.from(categoryMap.values())
-    })
-
-    const allToolCategories = computed(() => {
-        const categoryMap = new Map<
-            string,
-            { name: string; tools: Array<{ value: string; label: string; disabled: boolean }> }
-        >()
-        builtinToolCategories.forEach((category) => {
-            categoryMap.set(category.name, {
-                name: category.name,
-                tools: [...category.tools],
-            })
-        })
-        dynamicToolCategories.value.forEach((category) => {
-            if (!categoryMap.has(category.name)) {
-                categoryMap.set(category.name, {
-                    name: category.name,
-                    tools: [],
-                })
-            }
-            categoryMap.get(category.name)?.tools.push(...category.tools)
-        })
-        return Array.from(categoryMap.values())
-    })
-    const selectedTask = ref<string>('')
-
+    const isMethLibExpand = ref(true)
     /**
      * 列表相关变量
      */
+    const searchQuery = ref('')
     const methLibList = ref<MethLib.Method[]>([])
     const currentPage = ref<number>(1)
     const pageSize = ref<number>(3)
@@ -312,23 +156,20 @@ export const useMethLib = () => {
             pageSize: pageSize.value,
             asc: false,
             searchText: searchQuery.value,
-            tags: [selectedTask.value],
+            // tags: [selectedTask.value],
+            tags: ['1'],
         })
         methLibList.value = res.data.records
         total.value = res.data.total
     }
 
     return {
-        builtinToolCategories,
-        searchQuery,
-        expandedCategories,
-        dynamicToolCategories,
-        allToolCategories,
         getMethLibList,
         currentPage,
         pageSize,
         total,
         methLibList,
-        selectedTask,
+        searchQuery,
+        isMethLibExpand
     }
 }
