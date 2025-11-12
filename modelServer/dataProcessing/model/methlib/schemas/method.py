@@ -17,7 +17,7 @@ class MethodEntity:
 
     # 附加字段 (来自完整的 container_method 表，通常为描述或元数据)
     description: Optional[str] = None  # varchar(255) 描述信息
-    long_desc: Optional[str] = None    # text 详细描述信息
+    longDesc: Optional[str] = None    # text 详细描述信息
     copyright: Optional[str] = None    # varchar(255) 版权信息
     type: Optional[str] = None         # varchar(50) 方法类型
-    create_time: Optional[datetime] = None # datetime 创建时间
+    createTime: Optional[datetime] = None # datetime 创建时间

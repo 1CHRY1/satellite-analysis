@@ -46,6 +46,12 @@ export namespace MethLib {
         createTime: string,
     }
 
+    export interface Tag {
+        id: number,
+        name: string,
+        createTime: string,
+    }
+
     export interface MethLibResponse extends Common.CommonResult<Method> { }
 
     export interface MethLibPageResponse extends Common.PageResponse<Method> {

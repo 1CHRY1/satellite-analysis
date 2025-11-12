@@ -20,7 +20,7 @@
                         <div class="absolute right-2 cursor-pointer" @click="clearImages">
                             <a-tooltip>
                                 <template #title>{{ t('datapage.analysis.section2.clear')
-                                }}</template>
+                                    }}</template>
                                 <Trash2Icon :size="20" />
                             </a-tooltip>
                         </div>
@@ -93,22 +93,25 @@
                                             </div>
                                         </div>
                                         <div class="stats-content" v-show="isMethLibExpand">
-                                            <div class="stats-item">
+                                            <div class="config-item-no-hover">
                                                 <div class="config-label relative">
                                                     <BoltIcon :size="16" class="config-icon" />
                                                     <span>工具检索</span>
                                                 </div>
-                                                <div class="config-control pr-5">
-                                                    在此展示方法标签条目
+                                                <div class="grid grid-cols-2 gap-3">
+                                                    <a-checkable-tag v-for="(tag, index) in tagList" :key="tag.id"
+                                                        v-model:checked="selectTags[index]">
+                                                        {{ tag.name }}
+                                                    </a-checkable-tag>
                                                 </div>
-                                                <div class="config-control pr-5">
+                                                <div class="config-control">
                                                     <a-input-search v-model:value="searchQuery" placeholder="输入关键词..."
                                                         enter-button="搜索" @search="getMethLibList" />
                                                 </div>
                                             </div>
 
 
-                                            <div>
+                                            <div class="mt-5">
                                                 <!-- 分类工具列表 -->
                                                 <div v-for="(item, index) in methLibList" class="config-item mb-1"
                                                     :key="item.id">
@@ -118,7 +121,8 @@
                                                         <div class="absolute right-0 cursor-pointer">
                                                             <a-tooltip>
                                                                 <template #title>调用</template>
-                                                                <LogInIcon class="cursor-pointer" :size="16" />
+                                                                <LogInIcon class="cursor-pointer" :size="16"
+                                                                    @click="openModal(item)" />
                                                             </a-tooltip>
                                                         </div>
                                                     </div>
@@ -132,18 +136,18 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <a-empty v-if="methLibTotal === 0" />
-                                                <div class="config-container">
-                                                    <div class="flex h-[60px] justify-around">
-                                                        <el-pagination v-if="methLibTotal > 0" background
-                                                            layout="prev, pager, next"
-                                                            v-model:current-page="currentMethLibPage"
-                                                            :total="methLibTotal" :page-size="methLibPageSize"
-                                                            @current-change="getMethLibList" @next-click=""
-                                                            @prev-click="">
-                                                        </el-pagination>
-                                                    </div>
+                                                <div class="flex h-[60px] justify-around">
+                                                    <el-pagination v-if="methLibTotal > 0" background
+                                                        layout="prev, pager, next"
+                                                        v-model:current-page="currentMethLibPage" :total="methLibTotal"
+                                                        :page-size="methLibPageSize" @current-change="getMethLibList"
+                                                        @next-click="" @prev-click="">
+                                                    </el-pagination>
                                                 </div>
+                                                <a-empty v-if="methLibTotal === 0" />
+                                                <!-- ✅ 调用弹窗组件 -->
+                                                <invoke-modal v-if="showModal" v-model="showModal"
+                                                    :method-item="selectedItem as any" @close="showModal = false" />
                                             </div>
                                         </div>
                                     </div>
@@ -175,7 +179,7 @@
                                                                 class="mr-2 transition-transform duration-200"
                                                                 :class="{ 'transform rotate-90': expandedCategories.includes(category.name) }" />
                                                             <span class="text-gray-300 font-medium">{{ category.name
-                                                            }}</span>
+                                                                }}</span>
                                                         </div>
 
                                                         <div v-show="expandedCategories.includes(category.name) || searchQuery"
@@ -194,7 +198,7 @@
                                                                     class="flex-grow min-w-0">
                                                                     <span class="truncate block text-sm">{{
                                                                         tool.label
-                                                                    }}</span>
+                                                                        }}</span>
                                                                 </a-tooltip>
 
                                                                 <CircleX v-if="tool.value.startsWith('dynamic:')"
@@ -399,6 +403,14 @@ import { RegionSelects } from 'v-region'
 import { getSceneByConfig, getBoundary } from '@/api/http/satellite-data'
 import { getRGBTileLayerParamFromSceneObject } from '@/util/visualizeHelper'
 import { useViewHistoryModule } from '../noCloud/viewHistory'
+import InvokeModal from "@/components/dataCenter/dynamicAnalysis/InvokeModal.vue"
+const showModal = ref(false)
+const selectedItem = ref(null)
+
+function openModal(item) {
+  selectedItem.value = item
+  showModal.value = true
+}
 import {
     ChartColumn,
     LayersIcon,
@@ -464,7 +476,9 @@ const { builtinToolCategories, expandedCategories, allToolCategories, selectedTa
     handleRemoveDynamicTool,
     toggleCategory } = useTool()
 // 方法库工具
-const { searchQuery, isMethLibExpand, getMethLibList, currentPage: currentMethLibPage, pageSize: methLibPageSize, total: methLibTotal, methLibList, } = useMethLib()
+const { searchQuery, isMethLibExpand, getMethLibList, currentPage: currentMethLibPage, pageSize: methLibPageSize, total: methLibTotal, methLibList,
+    tagList, getTagList, selectTags
+} = useMethLib()
 
 /**
  * 前序数据Section
@@ -561,7 +575,8 @@ onMounted(async () => {
     // addLocalInternalLayer()
     await getCubeObj()
     updateGridLayer(cubeList.value)
-    // await getMethLibList()
+    await getTagList()
+    await getMethLibList()
 })
 
 </script>
