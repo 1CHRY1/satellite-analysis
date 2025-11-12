@@ -14,6 +14,7 @@ import {
     getRegionPosition,
     getRasterScenesDes,
 } from '@/api/http/satellite-data'
+import { selectedResult, thematicConfig } from '../shared'
 
 export const useSettings = () => {
     const { t } = useI18n()
@@ -34,14 +35,11 @@ export const useSettings = () => {
     const startTime = '1900-01-01'
     const endTime = '2050-01-01'
 
-    const thematicConfig = ref({})
-
     // 获取根据行政区选择的原始数据
     const originImages = ref([])
 
     
     const exploreData = useExploreStore()
-    const selectedResult = ref(null);
     const displayLabel = computed(() => {
         let info = region.value
         if (info.area) return Number(`${info.area}`)

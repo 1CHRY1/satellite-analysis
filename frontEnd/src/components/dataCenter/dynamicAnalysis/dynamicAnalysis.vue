@@ -20,7 +20,7 @@
                         <div class="absolute right-2 cursor-pointer" @click="clearImages">
                             <a-tooltip>
                                 <template #title>{{ t('datapage.analysis.section2.clear')
-                                    }}</template>
+                                }}</template>
                                 <Trash2Icon :size="20" />
                             </a-tooltip>
                         </div>
@@ -78,83 +78,35 @@
                                         <ChevronUp v-else @click="isToolsExpand = true" :size="22" />
                                     </div>
                                 </div>
-
-                                <!--工具目录内容区域-->
-                                <div v-show="isToolsExpand" class="section-content">
-                                    <div class="config-container">
-                                        <div class="config-item"
-                                            style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
+                                <div class="section-content">
+                                    <div class="stats"
+                                        style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
+                                        <div class="stats-header">
                                             <div class="config-label relative">
-                                                <SearchIcon :size="16" class="config-icon" />
-                                                <span>搜索工具</span>
+                                                <BoltIcon :size="16" class="config-icon" />
+                                                <span class="text-sm">通用分析工具</span>
                                             </div>
-
-                                            <div class="config-control relative">
-                                                <!-- 分类工具列表 -->
-                                                <div class="mt-4 w-full mr-4">
-                                                    <div v-for="category in builtinToolCategories" :key="category.name"
-                                                        class="mb-4">
-                                                        <div class="flex items-center cursor-pointer px-2 py-1 hover:bg-gray-800 rounded"
-                                                            @click="toggleCategory(category.name)">
-                                                            <ChevronRightIcon :size="16"
-                                                                class="mr-2 transition-transform duration-200"
-                                                                :class="{ 'transform rotate-90': expandedCategories.includes(category.name) }" />
-                                                            <span class="text-gray-300 font-medium">{{ category.name
-                                                                }}</span>
-                                                        </div>
-
-                                                        <div v-show="expandedCategories.includes(category.name) || searchQuery"
-                                                            class="ml-6 mt-2 grid grid-cols-2 gap-2">
-                                                            <div v-for="tool in category.tools" :key="tool.value"
-                                                                @click="selectedTask = tool.value" :class="{
-                                                                    'bg-[#1e3a8a] text-white': selectedTask === tool.value,
-                                                                    'bg-[#0d1526] text-gray-300 hover:bg-[#1e293b]': selectedTask !== tool.value && !tool.disabled,
-                                                                    'opacity-50 cursor-not-allowed': tool.disabled,
-                                                                    'cursor-pointer': !tool.disabled
-                                                                }"
-                                                                class="px-3 py-1 rounded-lg transition-colors w-full text-left flex items-center justify-between"
-                                                                :disabled="tool.disabled">
-
-                                                                <a-tooltip :title="tool.label"
-                                                                    class="flex-grow min-w-0">
-                                                                    <span class="truncate block text-sm">{{ tool.label
-                                                                    }}</span>
-                                                                </a-tooltip>
-
-                                                                <CircleX v-if="tool.value.startsWith('dynamic:')"
-                                                                    :size="16"
-                                                                    class="text-gray-400 hover:text-gray-300 flex-shrink-0 ml-1"
-                                                                    @click.stop="handleRemoveDynamicTool(tool.value)" />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                            <div class="absolute right-2 cursor-pointer">
+                                                <ChevronDown v-if="isMethLibExpand" :size="22"
+                                                    @click="isMethLibExpand = false" />
+                                                <ChevronUp v-else @click="isMethLibExpand = true" :size="22" />
                                             </div>
-                                            <!-- <div class="config-control">
-                                                <div class="flex justify-between gap-3 items-center w-full">
-                                                    <span class="result-info-label">共找到 {{ total }} 条记录</span>
-                                                    <div class="flex gap-3">
-                                                        <a-button type="primary" class="a-button"
-                                                            @click="getCaseList">{{
-                                                                t('datapage.history.fliter') }}</a-button>
-                                                    </div>
-                                                </div>
-                                            </div> -->
-                                            <div class="config-control">
-                                                <a-input-search v-model:value="searchQuery" placeholder="输入关键词..."
-                                                    enter-button="搜索" size="large" @search="getMethLibList" />
-                                            </div>
-
                                         </div>
-                                    </div>
-
-                                    <div class="config-container">
-                                        <div class="config-item"
-                                            style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
-                                            <div class="config-label relative">
-                                                <SearchIcon :size="16" class="config-icon" />
-                                                <span>工具列表</span>
+                                        <div class="stats-content" v-show="isMethLibExpand">
+                                            <div class="stats-item">
+                                                <div class="config-label relative">
+                                                    <BoltIcon :size="16" class="config-icon" />
+                                                    <span>工具检索</span>
+                                                </div>
+                                                <div class="config-control pr-5">
+                                                    在此展示方法标签条目
+                                                </div>
+                                                <div class="config-control pr-5">
+                                                    <a-input-search v-model:value="searchQuery" placeholder="输入关键词..."
+                                                        enter-button="搜索" @search="getMethLibList" />
+                                                </div>
                                             </div>
+
 
                                             <div>
                                                 <!-- 分类工具列表 -->
@@ -195,7 +147,67 @@
                                             </div>
                                         </div>
                                     </div>
+                                </div>
 
+                                <div class="section-content">
+                                    <div class="stats"
+                                        style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
+                                        <div class="stats-header">
+                                            <div class="config-label relative">
+                                                <BoltIcon :size="16" class="config-icon" />
+                                                <span class="text-sm">自定义分析工具</span>
+                                            </div>
+                                            <div class="absolute right-2 cursor-pointer">
+                                                <ChevronDown v-if="isToolsExpand" :size="22"
+                                                    @click="isToolsExpand = false" />
+                                                <ChevronUp v-else @click="isToolsExpand = true" :size="22" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-content" v-show="isToolsExpand">
+                                            <div class="config-control relative">
+                                                <!-- 分类工具列表 -->
+                                                <div class="mt-4 w-full mr-4">
+                                                    <div v-for="category in builtinToolCategories" :key="category.name"
+                                                        class="mb-4">
+                                                        <div class="flex items-center cursor-pointer px-2 py-1 hover:bg-gray-800 rounded"
+                                                            @click="toggleCategory(category.name)">
+                                                            <ChevronRightIcon :size="16"
+                                                                class="mr-2 transition-transform duration-200"
+                                                                :class="{ 'transform rotate-90': expandedCategories.includes(category.name) }" />
+                                                            <span class="text-gray-300 font-medium">{{ category.name
+                                                            }}</span>
+                                                        </div>
+
+                                                        <div v-show="expandedCategories.includes(category.name) || searchQuery"
+                                                            class="ml-6 mt-2 grid grid-cols-2 gap-2">
+                                                            <div v-for="tool in category.tools" :key="tool.value"
+                                                                @click="selectedTask = tool.value" :class="{
+                                                                    'bg-[#1e3a8a] text-white': selectedTask === tool.value,
+                                                                    'bg-[#0d1526] text-gray-300 hover:bg-[#1e293b]': selectedTask !== tool.value && !tool.disabled,
+                                                                    'opacity-50 cursor-not-allowed': tool.disabled,
+                                                                    'cursor-pointer': !tool.disabled
+                                                                }"
+                                                                class="px-3 py-1 rounded-lg transition-colors w-full text-left flex items-center justify-between"
+                                                                :disabled="tool.disabled">
+
+                                                                <a-tooltip :title="tool.label"
+                                                                    class="flex-grow min-w-0">
+                                                                    <span class="truncate block text-sm">{{
+                                                                        tool.label
+                                                                    }}</span>
+                                                                </a-tooltip>
+
+                                                                <CircleX v-if="tool.value.startsWith('dynamic:')"
+                                                                    :size="16"
+                                                                    class="text-gray-400 hover:text-gray-300 flex-shrink-0 ml-1"
+                                                                    @click.stop="handleRemoveDynamicTool(tool.value)" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </section>
 
@@ -413,15 +425,26 @@ import { formatTimeToText } from '@/util/common';
 import { ElDialog } from 'element-plus'
 import { type Case } from '@/api/http/satellite-data'
 import subtitle from '../subtitle.vue'
-import DynamicServicePanel from '../thematic/DynamicServicePanel.vue'
 import { useSettings } from './composables/useSettings'
 import { useI18n } from 'vue-i18n'
-import { useMethLib } from './composables/useMethLib'
+import { useTool } from './composables/useTool'
 import MapComp from '@/components/feature/map/mapComp.vue'
 import { getCube } from '@/api/http/analytics-display'
 import { useCube } from './composables/useCube'
+import { useMethLib } from './composables/useMethLib'
 
-const userStore = useUserStore()
+const { t } = useI18n()
+const isPicking = ref(false)
+
+/**
+ * 左模块显示
+ */
+const showPanel = ref(false)
+const isToolbarOpen = ref(true)
+
+/**
+ * 设置section
+ */
 const { isSettingExpand,
     region,
     thematicConfig,
@@ -432,143 +455,47 @@ const { isSettingExpand,
     getOriginImages } = useSettings()
 
 /**
- * 左模块显示
+ * 工具Section
  */
-const showPanel = ref(false)
+// 自定义工具
+const { builtinToolCategories, expandedCategories, allToolCategories, selectedTask, isToolsExpand, currentTaskComponent,
+    currentTaskProps,
+    handleResultLoaded,
+    handleRemoveDynamicTool,
+    toggleCategory } = useTool()
+// 方法库工具
+const { searchQuery, isMethLibExpand, getMethLibList, currentPage: currentMethLibPage, pageSize: methLibPageSize, total: methLibTotal, methLibList, } = useMethLib()
 
 /**
- * 用户变化，重新加载工具
+ * 前序数据Section
  */
-const currentUserId = computed(() => userStore.user?.id ?? '')
-const toolRegistry = useToolRegistryStore()
-watch(
-    currentUserId,
-    (id) => {
-        if (id) {
-            toolRegistry.ensureLoaded(id)
-        }
-    },
-    { immediate: true }
-)
-
-const { t } = useI18n()
-const { builtinToolCategories, searchQuery, expandedCategories, allToolCategories, getMethLibList, currentPage: currentMethLibPage, pageSize: methLibPageSize, total: methLibTotal, methLibList, selectedTask } = useMethLib()
-
-const isToolbarOpen = ref(true)
-
-const isToolsExpand = ref(true)
 const isPrevExpand = ref(false)
+// 前序无云一版图数据
+const historyComponent = ref(null)
+const showHistory = ref(false)
+const {
+    caseList,
+    currentPage,
+    pageSize,
+    total,
+    getCaseList,
+    activeTab,
+    handleSelectTab,
+    showResult,
+    onResultSelected
+} = useViewHistoryModule();
+const completedCases = ref<any[]>([]); // 仅存储已完成的任务
+const loadCompletedCases = async () => {
+    activeTab.value = 'COMPLETE';
+    await getCaseList();
+    completedCases.value = caseList.value;
+};
+// 前序时序立方体数据
+const { cubeObj, cubeList, inputCacheKey, handleSelectCube, updateGridLayer, currentCacheKey, getCubeObj } = useCube()
 
-const isPicking = ref(false)
-
-//工具目录
-const fallbackTaskValue = computed(() => {
-    const firstCategory = allToolCategories.value.find((category) => category.tools.length > 0)
-    return firstCategory?.tools[0]?.value ?? ''
-})
-
-watch(
-    fallbackTaskValue,
-    (value) => {
-        if (!selectedTask.value && value) {
-            selectedTask.value = value
-        }
-    },
-    { immediate: true }
-)
-
-watch(
-    () => toolRegistry.tools.map((tool) => tool.id),
-    () => {
-        if (selectedTask.value.startsWith('dynamic:')) {
-            const toolId = selectedTask.value.replace('dynamic:', '')
-            if (!toolRegistry.getToolById(toolId)) {
-                selectedTask.value = fallbackTaskValue.value
-            }
-        }
-    }
-)
-
-const toggleCategory = (categoryName: string) => {
-    const index = expandedCategories.value.indexOf(categoryName)
-    if (index >= 0) {
-        expandedCategories.value.splice(index, 1)
-    } else {
-        expandedCategories.value.push(categoryName)
-    }
-}
-
-// 专题组件映射
-const taskComponentMap = {
-    '伪彩色分割': defineAsyncComponent(() => import('../thematic/colorThresholdPanel.vue')),
-    '指数分析': defineAsyncComponent(() => import('../thematic/indexPanel.vue')),
-    'NDVI时序计算': defineAsyncComponent(() => import('../thematic/ndviPanel.vue')),
-    '光谱分析': defineAsyncComponent(() => import('../thematic/spectrumPanel.vue')),
-    'DSM分析': defineAsyncComponent(() => import('../thematic/dsmPanel.vue')),
-    'DEM分析': defineAsyncComponent(() => import('../thematic/demPanel.vue')),
-    '红绿立体': defineAsyncComponent(() => import('../thematic/RBbandsPanel.vue')),
-    '形变速率': defineAsyncComponent(() => import('../thematic/deformationRate.vue')),
-}
-
-const dynamicSelectedTool = computed(() => {
-    if (!selectedTask.value.startsWith('dynamic:')) return null
-    const toolId = selectedTask.value.replace('dynamic:', '')
-    return toolRegistry.getToolById(toolId) ?? null
-})
-
-const currentTaskComponent = computed(() => {
-    if (dynamicSelectedTool.value) {
-        return DynamicServicePanel
-    }
-
-    return taskComponentMap[selectedTask.value] || null
-})
-
-
-const currentTaskProps = computed(() => {
-    if (dynamicSelectedTool.value) {
-        return {
-            thematicConfig: thematicConfig.value,
-            toolMeta: dynamicSelectedTool.value,
-        }
-    }
-    return {
-        thematicConfig: thematicConfig.value,
-    }
-})
-
-
-
-const handleResultLoaded = (result) => {
-    selectedResult.value = result;
-}
-
-const handleRemoveDynamicTool = async (toolValue: string) => {
-    const toolId = toolValue.replace('dynamic:', '')
-    const toolMeta = toolRegistry.getToolById(toolId)
-    if (!toolMeta) return
-    try {
-        await ElMessageBox.confirm(
-            `确定要取消发布工具“${toolMeta.name}”吗？取消发布后工具将被从工具目录中移除。`,
-            '取消发布',
-            {
-                confirmButtonText: '确认',
-                cancelButtonText: '保留',
-                type: 'warning',
-            },
-        )
-    } catch {
-        return
-    }
-    toolRegistry.removeTool(currentUserId.value, toolId)
-    if (selectedTask.value === toolValue) {
-        nextTick(() => {
-            selectedTask.value = fallbackTaskValue.value
-        })
-    }
-    ElMessage.success('已取消发布工具')
-}
-
+/**
+ * 通用方法
+ */
 const clearImages = () => {
     MapOperation.map_destroyTerrain()
     MapOperation.map_destroyRGBImageTileLayer()
@@ -616,30 +543,6 @@ watch(displayLabel, getOriginImages, { immediate: true })
 
 // 数据集
 
-const historyComponent = ref(null)
-const showHistory = ref(false)
-
-const {
-    caseList,
-    currentPage,
-    pageSize,
-    total,
-    getCaseList,
-    activeTab,
-    handleSelectTab,
-    showResult,
-    onResultSelected
-} = useViewHistoryModule();
-
-const completedCases = ref<any[]>([]); // 仅存储已完成的任务
-// 加载已完成任务
-const loadCompletedCases = async () => {
-    activeTab.value = 'COMPLETE';
-    await getCaseList();
-    completedCases.value = caseList.value;
-};
-
-const { cubeObj, cubeList, inputCacheKey, handleSelectCube, updateGridLayer, currentCacheKey, getCubeObj } = useCube()
 onMounted(async () => {
     // 设置结果选择的回调
     onResultSelected.value = (result) => {
