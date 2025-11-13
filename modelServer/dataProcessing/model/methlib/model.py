@@ -78,10 +78,14 @@ class MethLib(Task):
 
 
         # ----------- 3. 调用并返回结果 -----------
-        ray_task = invoke.remote(cmdDto=cmd_dto)
+        # 分布式执行
+        ray_task = invoke.remote(cmdDto=cmd_dto, req_params=req_params)
         from dataProcessing.model.scheduler import init_scheduler
         scheduler = init_scheduler()
         scheduler.set_task_refs(self.task_id, [ray_task])
         result = ray.get(ray_task)
+
+        # 本地
+        # result = invoke(cmdDto=cmd_dto, req_params=req_params)
         # 执行成功
         return result

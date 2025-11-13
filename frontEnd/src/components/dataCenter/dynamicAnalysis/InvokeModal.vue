@@ -398,19 +398,19 @@ const handleConfirm = (selection: SelectionResult) => {
         case "file":
             if (selection.paths !== undefined) {
                 result.label = selection.paths?.map(path => path.name).join(', ')
-                result.value = selection.paths?.map(path => `${minioEndPoint}/${path.path}`)
+                result.value = selection.paths?.map(path => `${minioEndPoint}/${path.path}`.replace(/\/$/, ""))
             } else if (selection.path !== undefined) {
                 result.label = selection.name as string
-                result.value = `${minioEndPoint}/${selection.path}`
+                result.value = `${minioEndPoint}/${selection.path}`.replace(/\/$/, "")
             }
             break
         case "folder":
             result.label = selection.path as string
-            result.value = `${minioEndPoint}/${selection.path}`
+            result.value = `${minioEndPoint}/${selection.path}`.replace(/\/$/, "")
             break
         case "output":
             result.label = selection.fullPath as string
-            result.value = `${minioEndPoint}/${selection.fullPath}`
+            result.value = `${minioEndPoint}/${selection.fullPath}`.replace(/\/$/, "")
             break
     }
     formData['val' + selection.index] = result

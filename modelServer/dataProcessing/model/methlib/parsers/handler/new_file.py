@@ -1,4 +1,5 @@
 import os
+from urllib.parse import urlparse
 import uuid
 from typing import Any, Dict, Optional, Union
 from pathlib import Path
@@ -71,7 +72,11 @@ class NewFileHandler(ParameterHandler):
 
         # 3. 确定最终输出文件名
         cmdDto.has_output = True
-        
+
+        if raw_value is not None:
+            # 解析 URL 并取出文件名
+            path = urlparse(raw_value).path
+            raw_value = os.path.basename(path.rstrip('/'))
         raw_value_str = str(raw_value) if raw_value is not None else None
         
         # 获取不带后缀的名称 (可能来自 raw_value 或生成 UUID)
