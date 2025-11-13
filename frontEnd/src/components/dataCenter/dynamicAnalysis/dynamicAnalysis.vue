@@ -20,7 +20,7 @@
                         <div class="absolute right-2 cursor-pointer" @click="clearImages">
                             <a-tooltip>
                                 <template #title>{{ t('datapage.analysis.section2.clear')
-                                    }}</template>
+                                }}</template>
                                 <Trash2Icon :size="20" />
                             </a-tooltip>
                         </div>
@@ -31,6 +31,13 @@
                     <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]">
                         <!--主容器-->
                         <div class="main-container">
+                            <a-alert v-if="exploreData.grids.length === 0" description="请先完成交互探索" type="warning"
+                                show-icon class="status-alert">
+                                <template #action>
+                                    <a-button size="small" @click="router.push('/explore')">前往</a-button>
+                                </template>
+                            </a-alert>
+                            <br v-if="exploreData.grids.length === 0" />
                             <!-- 设置部分 -->
                             <section class="panel-section">
                                 <!--设置标题-->
@@ -60,6 +67,14 @@
                                                 <RegionSelects v-model="region" class="flex gap-2"
                                                     select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
                                             </div>
+                                            <!-- 传感器选择 -->
+                                            <a-form-item label="传感器选择" name="sensors">
+                                                <a-select v-model:value="selectedSensorName" placeholder="请选择传感器..."
+                                                    :options="exploreData.sensors.map(sensor => ({ label: sensor.platformName, value: sensor.sensorName }))"
+                                                    allow-clear 
+                                                    @change="(value: string) => getPlatformDataFile(value)">
+                                                </a-select>
+                                            </a-form-item>
                                         </div>
                                     </div>
                                 </div>
@@ -146,7 +161,7 @@
                                                 </div>
                                                 <a-empty v-if="methLibTotal === 0" />
                                                 <!-- ✅ 调用弹窗组件 -->
-                                                <invoke-modal v-if="showModal" v-model="showModal"
+                                                <invoke-modal v-if="showModal" v-model="showModal" @invoke-method="(params) => handleInvoke(params)"
                                                     :method-item="selectedItem as any" @close="showModal = false" />
                                             </div>
                                         </div>
@@ -179,7 +194,7 @@
                                                                 class="mr-2 transition-transform duration-200"
                                                                 :class="{ 'transform rotate-90': expandedCategories.includes(category.name) }" />
                                                             <span class="text-gray-300 font-medium">{{ category.name
-                                                                }}</span>
+                                                            }}</span>
                                                         </div>
 
                                                         <div v-show="expandedCategories.includes(category.name) || searchQuery"
@@ -198,7 +213,7 @@
                                                                     class="flex-grow min-w-0">
                                                                     <span class="truncate block text-sm">{{
                                                                         tool.label
-                                                                        }}</span>
+                                                                    }}</span>
                                                                 </a-tooltip>
 
                                                                 <CircleX v-if="tool.value.startsWith('dynamic:')"
@@ -404,12 +419,14 @@ import { getSceneByConfig, getBoundary } from '@/api/http/satellite-data'
 import { getRGBTileLayerParamFromSceneObject } from '@/util/visualizeHelper'
 import { useViewHistoryModule } from '../noCloud/viewHistory'
 import InvokeModal from "@/components/dataCenter/dynamicAnalysis/InvokeModal.vue"
+import router from '@/router'
+
 const showModal = ref(false)
 const selectedItem = ref(null)
 
 function openModal(item) {
-  selectedItem.value = item
-  showModal.value = true
+    selectedItem.value = item
+    showModal.value = true
 }
 import {
     ChartColumn,
@@ -464,7 +481,9 @@ const { isSettingExpand,
     exploreData,
     selectedResult,
     displayLabel,
-    getOriginImages } = useSettings()
+    getOriginImages,
+    getPlatformDataFile,
+    selectedSensorName } = useSettings()
 
 /**
  * 工具Section
@@ -477,7 +496,7 @@ const { builtinToolCategories, expandedCategories, allToolCategories, selectedTa
     toggleCategory } = useTool()
 // 方法库工具
 const { searchQuery, isMethLibExpand, getMethLibList, currentPage: currentMethLibPage, pageSize: methLibPageSize, total: methLibTotal, methLibList,
-    tagList, getTagList, selectTags
+    tagList, getTagList, selectTags, handleInvoke
 } = useMethLib()
 
 /**
@@ -577,6 +596,7 @@ onMounted(async () => {
     updateGridLayer(cubeList.value)
     await getTagList()
     await getMethLibList()
+    await getPlatformDataFile(exploreData.sensors?.[0].sensorName)
 })
 
 </script>

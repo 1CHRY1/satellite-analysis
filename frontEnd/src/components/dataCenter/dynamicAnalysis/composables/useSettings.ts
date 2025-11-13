@@ -5,6 +5,8 @@ import { useI18n } from 'vue-i18n'
 import { getSceneByConfig, getBoundary } from '@/api/http/satellite-data'
 import * as MapOperation from '@/util/map/operation'
 import { useExploreStore } from '@/store'
+import { getScenesInfo } from '@/api/http/interactive-explore'
+import type { RawFileNode } from '@/type/file'
 import {
     getNdviPoint,
     getCaseStatus,
@@ -14,19 +16,22 @@ import {
     getRegionPosition,
     getRasterScenesDes,
 } from '@/api/http/satellite-data'
-import { selectedResult, thematicConfig } from '../shared'
+import { platformDataFile, selectedResult, thematicConfig } from '../shared'
+import { bbox } from '@turf/turf'
 
 export const useSettings = () => {
     const { t } = useI18n()
+    const exploreData = useExploreStore()
 
     /**
      * 控制设置面板展开
-     */ 
+     */
     const isSettingExpand = ref(true)
 
     /**
      * 数据过滤条件设置
      */
+    const selectedSensorName = ref<string>()
     const region = ref<RegionValues>({
         province: '370000',
         city: '370100',
@@ -38,8 +43,6 @@ export const useSettings = () => {
     // 获取根据行政区选择的原始数据
     const originImages = ref([])
 
-    
-    const exploreData = useExploreStore()
     const displayLabel = computed(() => {
         let info = region.value
         if (info.area) return Number(`${info.area}`)
@@ -90,6 +93,54 @@ export const useSettings = () => {
         }
     }
 
+    const getPlatformDataFile = async (sensorName: string) => {
+        function buildSceneTree(res): RawFileNode[] {
+            const tree: RawFileNode[] = []
+
+            for (const scene of res.data.scenesConfig) {
+                const files: string[] = Object.values(scene.path)
+                if (files.length === 0) continue
+
+                // 提取景目录名与路径
+                const firstPath = files[0] as string
+                const pathParts = firstPath.split('/')
+                const sceneName = pathParts[pathParts.length - 2]
+                const sceneDir = pathParts.slice(0, -1).join('/')
+
+                // 构建景节点（文件夹）
+                const sceneNode: RawFileNode = {
+                    name: sceneName,
+                    dir: true,
+                    path: `${scene.bucket}/${sceneDir}`,
+                    size: 0,
+                    lastModified: '',
+                    children: [],
+                }
+
+                // 构建文件节点
+                for (let filePath of files) {
+                    const fileName = filePath.split('/').pop()!
+                    sceneNode.children!.push({
+                        name: fileName,
+                        dir: false,
+                        path: `${scene.bucket}/${filePath}`,
+                        size: 0,
+                        lastModified: '',
+                        children: []
+                    })
+                }
+
+                tree.push(sceneNode)
+            }
+
+            return tree
+        }
+        if (sensorName) {
+            const res = await getScenesInfo(sensorName, bbox(exploreData.boundary as any))
+            platformDataFile.value = buildSceneTree(res)
+        }
+    }
+
     return {
         isSettingExpand,
         region,
@@ -98,6 +149,8 @@ export const useSettings = () => {
         exploreData,
         selectedResult,
         displayLabel,
-        getOriginImages
+        getOriginImages,
+        getPlatformDataFile,
+        selectedSensorName,
     }
 }
