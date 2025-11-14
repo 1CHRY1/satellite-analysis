@@ -1,5 +1,6 @@
 <template>
     <div class="relative flex flex-1 h-full flex-row bg-black ">
+        <a-tour v-model:current="current" :open="openTour" :steps="steps" @close="handleOpenTour(false)" />
         <subtitle class="z-10 absolute" style="margin-top: 60px; " />
         <div class="absolute left-16 z-10 h-[calc(100vh-100px)] p-4 text-gray-200"
             :class="isToolbarOpen ? 'w-[545px]' : 'w-16 transition-all duration-300'">
@@ -17,13 +18,26 @@
                             📈
                         </div>
                         <span class="page-title">展示分析</span>
-                        <div class="absolute right-2 cursor-pointer" @click="clearImages">
+                        <div class="ml-2 cursor-pointer" @click="handleOpenTour(true)"
+                            v-if="currentPanel === 'analysis'">
+                            <a-tooltip>
+                                <template #title>点击查看帮助</template>
+                                <QuestionCircleOutlined :size="20" />
+                            </a-tooltip>
+                        </div>
+                        <div class="section-icon absolute right-12 cursor-pointer" @click="clearImages">
                             <a-tooltip>
                                 <template #title>{{ t('datapage.analysis.section2.clear')
                                 }}</template>
                                 <Trash2Icon :size="20" />
                             </a-tooltip>
                         </div>
+                        <a-space class="section-icon absolute right-2 cursor-pointer" ref="ref3">
+                            <a-tooltip>
+                                <template #title>历史记录</template>
+                                <History :size="18" @click="setCurrentPanel('history')" />
+                            </a-tooltip>
+                        </a-space>
                     </div>
                 </section>
                 <!-- 内容区域 -->
@@ -31,17 +45,17 @@
                     <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]">
                         <!--主容器-->
                         <div class="main-container">
-                            <a-alert v-if="exploreData.grids.length === 0" description="请先完成交互探索" type="warning"
+                            <a-alert v-if="exploreData.grids.length === 0 && currentPanel !== 'history'" description="请先完成交互探索" type="warning"
                                 show-icon class="status-alert">
                                 <template #action>
                                     <a-button size="small" @click="router.push('/explore')">前往</a-button>
                                 </template>
                             </a-alert>
-                            <br v-if="exploreData.grids.length === 0" />
+                            <br v-if="exploreData.grids.length === 0 && currentPanel !== 'history'" />
                             <!-- 设置部分 -->
-                            <section class="panel-section">
+                            <section class="panel-section" v-if="currentPanel !== 'history'">
                                 <!--设置标题-->
-                                <div class="section-header">
+                                <a-space class="section-header" ref="ref1">
                                     <div class="section-icon">
                                         <Settings :size="18" />
                                     </div>
@@ -51,7 +65,7 @@
                                             @click="isSettingExpand = false" />
                                         <ChevronUp v-else @click="isSettingExpand = true" :size="22" />
                                     </div>
-                                </div>
+                                </a-space>
 
                                 <!--设置内容区域-->
                                 <div v-show="isSettingExpand" class="section-content">
@@ -61,29 +75,57 @@
                                             style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
                                             <div class="config-label relative">
                                                 <MapIcon :size="16" class="config-icon" />
-                                                <span>{{ t('datapage.analysis.section1.area') }}</span>
+                                                <span>数据筛选与配置</span>
                                             </div>
-                                            <div class="config-control justify-center">
-                                                <RegionSelects v-model="region" class="flex gap-2"
-                                                    select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
-                                            </div>
-                                            <!-- 传感器选择 -->
-                                            <a-form-item label="传感器选择" name="sensors">
-                                                <a-select v-model:value="selectedSensorName" placeholder="请选择传感器..."
-                                                    :options="exploreData.sensors.map(sensor => ({ label: sensor.platformName, value: sensor.sensorName }))"
-                                                    allow-clear 
-                                                    @change="(value: string) => getPlatformDataFile(value)">
-                                                </a-select>
-                                            </a-form-item>
+                                            <a-row :gutter="[16, 8]" align="middle">
+                                                <a-col :span="8">
+                                                    <a-form-item label="当前格网分辨率" :label-col="{ span: 24 }"
+                                                        :wrapper-col="{ span: 24 }" style="margin-bottom: 0;">
+                                                        <a-statistic :value="exploreData.gridResolution" suffix="km"
+                                                            :value-style="{ color: '#40a9ff', fontSize: '16px', fontWeight: 'bold' }"
+                                                            :title-style="{ fontSize: '12px', color: '#a0a0a0' }" />
+                                                    </a-form-item>
+                                                </a-col>
+
+                                                <a-col :span="16">
+                                                    <a-form-item label="当前时间范围" :label-col="{ span: 24 }"
+                                                        :wrapper-col="{ span: 24 }" style="margin-bottom: 0;">
+                                                        <span style="font-size: 14px; color: #ffffff;">
+                                                            {{ dayjs(exploreData.dataRange[0]).format("YYYY-MM-DD") }}
+                                                            <a-divider type="vertical" style="border-color: #6a6a6a;" />
+                                                            {{ dayjs(exploreData.dataRange[1]).format("YYYY-MM-DD") }}
+                                                        </span>
+                                                    </a-form-item>
+                                                </a-col>
+                                            </a-row>
+                                            <a-row>
+                                                <a-col :span="24">
+                                                    <a-form-item label="传感器选择" name="sensors" :label-col="{ span: 24 }"
+                                                        :wrapper-col="{ span: 24 }">
+                                                        <a-select v-model:value="selectedSensorName"
+                                                            placeholder="请选择传感器..." :options="exploreData.sensors.map(sensor => ({
+                                                                label: sensor.platformName,
+                                                                value: sensor.sensorName
+                                                            }))" allow-clear
+                                                            @change="(value: string) => getPlatformDataFile(value)"
+                                                            style="width: 100%;" :style="{
+                                                                backgroundColor: '#383838',
+                                                                borderColor: '#4d4d4d',
+                                                                color: '#ffffff'
+                                                            }">
+                                                        </a-select>
+                                                    </a-form-item>
+                                                </a-col>
+                                            </a-row>
                                         </div>
                                     </div>
                                 </div>
                             </section>
 
                             <!-- 工具目录部分 -->
-                            <section class="panel-section">
+                            <section class="panel-section" v-if="currentPanel !== 'history'">
                                 <!--工具目录标题-->
-                                <div class="section-header">
+                                <a-space class="section-header" ref="ref2">
                                     <div class="section-icon">
                                         <LayersIcon :size="18" />
                                     </div>
@@ -92,7 +134,7 @@
                                         <ChevronDown v-if="isToolsExpand" :size="22" @click="isToolsExpand = false" />
                                         <ChevronUp v-else @click="isToolsExpand = true" :size="22" />
                                     </div>
-                                </div>
+                                </a-space>
                                 <div class="section-content">
                                     <div class="stats"
                                         style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
@@ -161,7 +203,8 @@
                                                 </div>
                                                 <a-empty v-if="methLibTotal === 0" />
                                                 <!-- ✅ 调用弹窗组件 -->
-                                                <invoke-modal v-if="showModal" v-model="showModal" @invoke-method="(params) => handleInvoke(params)"
+                                                <invoke-modal v-if="showModal" v-model="showModal"
+                                                    @invoke-method="(params) => handleInvoke(params)"
                                                     :method-item="selectedItem as any" @close="showModal = false" />
                                             </div>
                                         </div>
@@ -231,7 +274,7 @@
                             </section>
 
                             <!-- 前序数据分析部分 -->
-                            <section class="panel-section">
+                            <section class="panel-section" v-if="currentPanel !== 'history'">
                                 <!--标题-->
                                 <div class="section-header">
                                     <div class="section-icon">
@@ -364,8 +407,10 @@
                                     </div>
                                 </div>
                             </section>
-
-
+                            <!--历史记录-->
+                            <section class="panel-section" v-if="currentPanel === 'history'" key="history">
+                                <InvokeHistory @toggle="setCurrentPanel" />
+                            </section>
                         </div>
                     </dv-border-box12>
                 </div>
@@ -407,27 +452,12 @@
 <script setup lang="ts">
 import { ref, type PropType, computed, type Ref, nextTick, onUpdated, onMounted, reactive, onBeforeUnmount, watch, defineAsyncComponent, type ComponentPublicInstance, onUnmounted } from 'vue'
 import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'
-import { type interactiveExplore } from '@/components/dataCenter/type'
-import { formatTime } from '@/util/common'
-import * as echarts from 'echarts'
-import { getSceneGeojson } from '@/api/http/satellite-data/visualize.api'
 import * as MapOperation from '@/util/map/operation'
-import { ezStore, useExploreStore, useTaskStore, useToolRegistryStore, useUserStore } from '@/store'
-import type { RegionValues } from 'v-region'
-import { RegionSelects } from 'v-region'
-import { getSceneByConfig, getBoundary } from '@/api/http/satellite-data'
-import { getRGBTileLayerParamFromSceneObject } from '@/util/visualizeHelper'
 import { useViewHistoryModule } from '../noCloud/viewHistory'
 import InvokeModal from "@/components/dataCenter/dynamicAnalysis/InvokeModal.vue"
 import router from '@/router'
 
-const showModal = ref(false)
-const selectedItem = ref(null)
 
-function openModal(item) {
-    selectedItem.value = item
-    showModal.value = true
-}
 import {
     ChartColumn,
     LayersIcon,
@@ -446,9 +476,10 @@ import {
     SquareCheck,
     CommandIcon,
     CircleX,
-    LogInIcon
+    LogInIcon,
+    History
 } from 'lucide-vue-next'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { dayjs, ElMessage, ElMessageBox } from 'element-plus'
 import { mapManager } from '@/util/map/mapManager'
 import { formatTimeToText } from '@/util/common';
 import { ElDialog } from 'element-plus'
@@ -461,6 +492,9 @@ import MapComp from '@/components/feature/map/mapComp.vue'
 import { getCube } from '@/api/http/analytics-display'
 import { useCube } from './composables/useCube'
 import { useMethLib } from './composables/useMethLib'
+import { QuestionCircleOutlined } from '@ant-design/icons-vue'
+import InvokeHistory from './invokeHistory.vue'
+import { currentPanel, setCurrentPanel } from './shared'
 
 const { t } = useI18n()
 const isPicking = ref(false)
@@ -496,7 +530,9 @@ const { builtinToolCategories, expandedCategories, allToolCategories, selectedTa
     toggleCategory } = useTool()
 // 方法库工具
 const { searchQuery, isMethLibExpand, getMethLibList, currentPage: currentMethLibPage, pageSize: methLibPageSize, total: methLibTotal, methLibList,
-    tagList, getTagList, selectTags, handleInvoke
+    tagList, getTagList, selectTags, handleInvoke, showModal, selectedItem, openModal,
+    // ------------------- Tour 相关 -----------------------
+    ref1, ref2, ref3, current, steps, handleOpenTour, openTour
 } = useMethLib()
 
 /**

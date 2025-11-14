@@ -127,6 +127,11 @@
                                     :rows="3" style="width: 100%" />
                             </template>
                         </a-form-item>
+                        <a-typography-paragraph style="margin: 0;">
+                            <blockquote style="margin: 0; padding-left: 10px; border-left: 4px solid #1890ff; ">
+                                方法调用后，您可以在「历史记录」中查看执行进度和结果
+                            </blockquote>
+                        </a-typography-paragraph>
                     </a-form>
                 </a-col>
 

@@ -1,8 +1,9 @@
-import { getCaseById, pollStatus, type ModelStatus } from "@/api/http/satellite-data"
 import { useTaskStore } from "@/store"
 import { computed, ref } from "vue"
 import Bus from '@/store/bus'
 import { message } from "ant-design-vue"
+import { getMethLibCaseById } from "@/api/http/analytics-display/methlib.api"
+import type { ModelStatus } from "@/api/http/satellite-data"
 
 export function useTaskPollModule() {
     const taskStore = useTaskStore()
@@ -22,17 +23,17 @@ export function useTaskPollModule() {
         console.log('pollPending')
         pendingTaskList.forEach(async (taskId) => {
 
-            const res = await getCaseById(taskId)
+            const res = await getMethLibCaseById(taskId)
             if (res.data) {
                 taskStore.setTaskStatus(taskId, res.data.status as ModelStatus)
                 // 刷新列表
-                Bus.emit('case-list-refresh')
+                Bus.emit('methlib-case-list-refresh')
                 // 因为pollPending和pollRunning的间隔时间不一样，所以需要额外处理
                 if (res.data.status === 'COMPLETE') {
-                    message.success(`${res.data.address}无云一版图计算成功`)
+                    message.success(`计算成功`)
                     taskStore.deleteTask(taskId)
                 } else if (res.data.status === 'ERROR') {
-                    message.error(`${res.data.address}无云一版图计算失败`)
+                    message.error(`计算失败`)
                     taskStore.deleteTask(taskId)
                 }
             }
@@ -52,16 +53,16 @@ export function useTaskPollModule() {
         if (runningTaskList.length === 0) return
         console.log('pollRunning')
         runningTaskList.forEach(async (taskId) => {
-            const res = await getCaseById(taskId)
+            const res = await getMethLibCaseById(taskId)
             if (res.data) {
                 if (res.data.status === 'COMPLETE') {
                     taskStore.setTaskStatus(taskId, res.data.status as ModelStatus)
-                    message.success(`${res.data.address}无云一版图计算成功`)
+                    message.success(`计算成功`)
                     taskStore.deleteTask(taskId)
                     // 刷新列表
-                    Bus.emit('case-list-refresh')
+                    Bus.emit('methlib-case-list-refresh')
                 } else if (res.data.status === 'ERROR') {
-                    message.error(`${res.data.address}无云一版图计算失败`)
+                    message.error(`计算失败`)
                     taskStore.deleteTask(taskId)
                 }
             }

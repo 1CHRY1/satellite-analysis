@@ -230,11 +230,11 @@ const selectionSummary = computed(() => {
 const modalTitle = computed(() => {
     switch (props.mode) {
         case 'file':
-            return props.multiple ? '选择多个文件' : '选择单个文件';
+            return props.multiple ? '选择文件' : '选择文件';
         case 'folder':
-            return '选择目标文件夹';
+            return '选择文件夹';
         case 'output':
-            return '选择输出路径与命名';
+            return '选择输出路径';
         default:
             return '文件选择器';
     }
@@ -242,9 +242,9 @@ const modalTitle = computed(() => {
 
 const selectTip = computed(() => {
     if (props.mode === 'file') {
-        return props.multiple ? '请在文件树中勾选多个文件' : '请在文件树中选择一个文件';
+        return props.multiple ? '请在下方目录中选择文件（支持多选）' : '请在下方目录中选择文件';
     }
-    return '请在文件树中选择一个文件夹';
+    return '请在下方目录中选择文件夹';
 });
 
 const outputFolderPath = computed<string>(() => {
@@ -462,7 +462,7 @@ const handleOk = () => {
 .file-tree-container {
     max-height: 400px;
     overflow-y: auto;
-    border: 1px solid #d9d9d9;
+    border: 1px solid rgb(21, 50, 91);
     border-radius: 4px;
     padding: 8px;
 }
