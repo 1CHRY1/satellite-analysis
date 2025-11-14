@@ -32,14 +32,14 @@
                     <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]">
                         <!--无云数据合成和时空立方体合成-->
                         <div class="main-container">
-                            <a-alert v-if="exploreData.grids.length===0"
+                            <a-alert v-if="exploreData.grids.length===0 && currentPanel === 'noCloud'"
                                 description="请先完成交互探索"
                                 type="warning" show-icon class="status-alert">
                                 <template #action>
                                     <a-button size="small" @click="router.push('/explore')">前往</a-button>
                                 </template>
                             </a-alert>
-                            <br v-if="exploreData.grids.length===0"/>
+                            <br v-if="exploreData.grids.length===0  && currentPanel === 'noCloud'"/>
                             <!--无云数据合成-->
                             <section class="panel-section" v-show="currentPanel === 'noCloud'" key="complex">
                                 <!--无云数据合成标题-->
