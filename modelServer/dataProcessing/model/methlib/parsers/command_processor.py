@@ -19,7 +19,7 @@ class CommandProcessor:
 
         # 模拟 @Value 配置
         self.method_wd = CONFIG.METHOD_WD
-        self.data_fd = CONFIG.DATA_FD
+        # self.data_fd = CONFIG.DATA_FD
         self.method_pd = CONFIG.METHOD_PD
 
     def get_cmd(self, user_id: str, method: MethodEntity, service_base_path: str, service_uuid: str, req_params: Dict[str, Any], start_time: datetime, is_external_call: bool) -> CmdDto | None:
@@ -106,7 +106,8 @@ class CommandProcessor:
         
         # 路径设置
         if not is_external_call:
-            cmd_dto.output_file_path = str(Path(self.data_fd) / str(user_id))
+            pass
+            # cmd_dto.output_file_path = str(Path(self.data_fd) / str(user_id))
         
         cmd_dto.tmp_file_path = str(wd_folder_path.absolute().as_posix())
         

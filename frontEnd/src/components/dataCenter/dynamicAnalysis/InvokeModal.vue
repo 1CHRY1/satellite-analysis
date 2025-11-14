@@ -1,6 +1,7 @@
 <template>
     <a-modal v-model:open="innerVisible" :title="methodItem?.name" @cancel="close" @ok="handleOk"
         :confirm-loading="isExecuting" :width="1200" wrapClassName="wide-modal">
+
         <a-spin :spinning="!isReady" tip="正在加载方法参数...">
             <a-row :gutter="24">
 
@@ -26,14 +27,11 @@
                             <template
                                 v-if="param.parameter_type?.ExistingFile !== undefined || param.parameter_type?.FileList !== undefined">
                                 <a-input-group compact style="display: flex;">
-                                    <a-input class="file-input-field"
-                                        :value="param.parameter_type?.FileList !== undefined ? displayFileListName(index) : displayFileName(index)"
-                                        v-model:value="formData['val' + index]"
+                                    <a-input class="file-input-field" :value="formData['val' + index]?.label || ''"
                                         :placeholder="param.parameter_type?.FileList !== undefined ? '请选择多个文件' : '请选择文件'"
-                                        @focus="showFileSelect(index, param.parameter_type?.FileList !== undefined ? 'multiple' : 'single')"
                                         @change="updateIsChangedList(index)" readonly />
                                     <a-button type="default"
-                                        @click="showFileSelect(index, param.parameter_type?.FileList !== undefined ? 'multiple' : 'single')">
+                                        @click="openModal(index, 'file', param.parameter_type?.FileList !== undefined)">
                                         <template #icon>
                                             <UploadOutlined />
                                         </template>
@@ -49,10 +47,9 @@
                                 </div>
 
                                 <a-input-group compact style="display: flex;" v-if="!switchStates[index]">
-                                    <a-input class="file-input-field" :value="displayFileName(index)"
-                                        v-model:value="formData['val' + index]" placeholder="请选择文件"
-                                        @focus="showFileSelect(index)" @change="updateIsChangedList(index)" readonly />
-                                    <a-button type="default" @click="showFileSelect(index)">
+                                    <a-input class="file-input-field" :value="formData['val' + index]?.label || ''"
+                                        placeholder="请选择文件" @change="updateIsChangedList(index)" readonly />
+                                    <a-button type="default" @click="openModal(index, 'file', false)">
                                         <template #icon>
                                             <UploadOutlined />
                                         </template>
@@ -65,15 +62,25 @@
                             </template>
 
                             <template v-else-if="
-                                param.parameter_type?.NewFile !== undefined ||
-                                param.parameter_type === 'Directory'
+                                param.parameter_type?.NewFile !== undefined
                             ">
                                 <a-input-group compact style="display: flex;">
-                                    <a-input class="file-input-field" :value="displayFileName(index, 'output')"
-                                        v-model:value="formData['val' + index]" placeholder="请选择输出路径/文件夹"
-                                        @focus="showFolderSelect(index)" @change="updateIsChangedList(index)"
-                                        readonly />
-                                    <a-button type="default" @click="showFolderSelect(index)">
+                                    <a-input class="file-input-field" :value="formData['val' + index]?.label || ''"
+                                        placeholder="请选择输出路径" @change="updateIsChangedList(index)" readonly />
+                                    <a-button type="default" @click="openModal(index, 'output', false)">
+                                        <template #icon>
+                                            <FolderOpenOutlined />
+                                        </template>
+                                        选择
+                                    </a-button>
+                                </a-input-group>
+                            </template>
+
+                            <template v-else-if="param.parameter_type === 'Directory'">
+                                <a-input-group compact style="display: flex;">
+                                    <a-input class="file-input-field" :value="formData['val' + index]?.label"
+                                        placeholder="请选择输出文件夹" @change="updateIsChangedList(index)" readonly />
+                                    <a-button type="default" @click="openModal(index, 'folder', false)">
                                         <template #icon>
                                             <FolderOpenOutlined />
                                         </template>
@@ -147,12 +154,15 @@
             </a-button>
         </template>
     </a-modal>
+    <file-modal :visible="modalVisible" :mode="currentMode" :multiple="isMultiple" :index="currentIndex"
+        @update:visible="modalVisible = $event" @confirm="handleConfirm" />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, watch, reactive } from "vue"
 import { UploadOutlined, FolderOpenOutlined, RocketOutlined } from '@ant-design/icons-vue';
-import { Empty } from 'ant-design-vue';
+import { Empty, message, type FormInstance } from 'ant-design-vue';
+import fileModal from "./fileModal.vue";
 
 // 导入 Antdv 组件
 import {
@@ -175,7 +185,11 @@ import {
     Tooltip as ATooltip,
     Spin as ASpin, // 引入加载动画
 } from 'ant-design-vue';
+import type { SelectorMode } from "@/type/file";
+import type { SelectionResult } from "@/type/file";
+import { ezStore } from "@/store";
 
+const minioEndPoint = ezStore.get('conf')['minioIpAndPort']
 // Antd Empty 简化图片
 const simpleImage = Empty.PRESENTED_IMAGE_SIMPLE;
 
@@ -194,8 +208,8 @@ const isExecuting = ref(false)
 const isReady = ref(false)
 
 // 表单核心数据
-const formRef = ref(null)
-const formData = reactive({})
+const formRef = ref<FormInstance | null>(null)
+const formData = reactive<Record<string, any>>({})
 const formRules = reactive({})
 const switchStates = reactive({})
 
@@ -339,8 +353,8 @@ async function handleOk() {
         console.log("表单验证通过，准备执行方法:", formData);
 
         emit("invokeMethod", {
-            methodName: props.methodItem?.name,
-            params: formData,
+            method: props.methodItem,
+            formData: formData,
         });
 
         close();
@@ -350,31 +364,6 @@ async function handleOk() {
     } finally {
         isExecuting.value = false;
     }
-}
-
-function displayFileName(index, type = 'input') {
-    const path = formData['val' + index];
-    if (!path || typeof path !== 'string') return '';
-    const parts = path.split(/[\/\\]/); // 支持 Unix 和 Windows 路径分隔符
-    return parts[parts.length - 1];
-}
-
-function displayFileListName(index) {
-    const value = formData['val' + index];
-    if (Array.isArray(value) && value.length > 0) {
-        return `已选择 ${value.length} 个文件`;
-    }
-    return '';
-}
-
-function showFileSelect(index, mode = 'single') {
-    console.log(`弹出文件选择框，索引: ${index}, 模式: ${mode}`);
-    // 实际业务中，在此处执行文件选择操作
-}
-
-function showFolderSelect(index) {
-    console.log(`弹出文件夹选择框，索引: ${index}`);
-    // 实际业务中，在此处执行文件夹选择操作
 }
 
 function updateIsChangedList(index) {
@@ -387,6 +376,45 @@ function formatJson(type) {
     }
     return type;
 }
+
+// --- 状态 ---
+const modalVisible = ref(false);
+const currentMode = ref<SelectorMode>('file');
+const currentIndex = ref<number>(0)
+const isMultiple = ref(false); // 新增状态
+
+// --- 方法 ---
+const openModal = (index: number, mode: SelectorMode, multiple: boolean) => {
+    currentIndex.value = index
+    currentMode.value = mode;
+    isMultiple.value = multiple;
+    modalVisible.value = true;
+};
+
+const handleConfirm = (selection: SelectionResult) => {
+    console.log('选择结果:', selection);
+    let result = { label: '', value: '' } as { label: string, value: any }
+    switch (selection.type) {
+        case "file":
+            if (selection.paths !== undefined) {
+                result.label = selection.paths?.map(path => path.name).join(', ')
+                result.value = selection.paths?.map(path => `${minioEndPoint}/${path.path}`.replace(/\/$/, ""))
+            } else if (selection.path !== undefined) {
+                result.label = selection.name as string
+                result.value = `${minioEndPoint}/${selection.path}`.replace(/\/$/, "")
+            }
+            break
+        case "folder":
+            result.label = selection.path as string
+            result.value = `${minioEndPoint}/${selection.path}`.replace(/\/$/, "")
+            break
+        case "output":
+            result.label = selection.fullPath as string
+            result.value = `${minioEndPoint}/${selection.fullPath}`.replace(/\/$/, "")
+            break
+    }
+    formData['val' + selection.index] = result
+};
 
 initFormData();
 

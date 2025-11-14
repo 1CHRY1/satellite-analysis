@@ -268,6 +268,11 @@ export const useFilter = () => {
      * 同步到数据准备: 同步数据准备所需的变量
      */
     const syncToDataPrepare = () => {
+        let sensors = []
+        for (let [key, value] of Object.entries(sceneStats.value.dataset!)) {
+            sensors.push(...(value.dataList as []))
+        }
+        console.log(sensors)
         exploreData.updateFields({
             searchtab: searchedSpatialFilterMethod.value,
             regionCode: finalLandId.value,
@@ -278,7 +283,8 @@ export const useFilter = () => {
             // images: allScenes.value,
             grids: allGrids.value,
             boundary: curRegionBounds.value,
-            load: true
+            load: true,
+            sensors
         });
     }
 

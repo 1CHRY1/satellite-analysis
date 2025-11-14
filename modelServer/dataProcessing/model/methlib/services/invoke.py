@@ -1,4 +1,5 @@
 import json
+import os
 import shutil
 import subprocess
 import time
@@ -6,6 +7,7 @@ from typing import Any, Dict, List
 from pathlib import Path
 import logging
 import sys
+from urllib.parse import urlparse
 import ray
 from dataProcessing.app.resTemplate import TaskResult
 from dataProcessing.config import current_config as CONFIG
@@ -24,8 +26,22 @@ logging.basicConfig(
 logger = logging.getLogger(__name__) 
 # =========================================================================
 
+def parse_output_value(output_raw_value: str):
+    if not output_raw_value:  # 空字符串
+        return None, None
+
+    parsed = urlparse(output_raw_value)
+    path = parsed.path.strip('/')  # 去掉首尾斜杠
+
+    parts = path.split('/', 1)  # 分成两段：bucket / 剩余路径
+    if len(parts) < 2:
+        # 如果路径里只有 bucket，没有 object_path
+        return parts[0], ''
+    bucket, object_path = parts
+    return bucket, object_path
+
 @ray.remote(num_cpus=CONFIG.RAY_NUM_CPUS, memory=CONFIG.RAY_MEMORY_PER_TASK)
-def invoke(cmdDto: CmdDto) -> Dict[str, Any]:
+def invoke(cmdDto: CmdDto, req_params: Dict[str, Any]) -> Dict[str, Any]:
     """
     Python 同步版本命令调度方法。
     忽略了事务和异步并发逻辑，使用同步进程执行。
@@ -88,6 +104,7 @@ def invoke(cmdDto: CmdDto) -> Dict[str, Any]:
             info += "\r\n Process finished with errors."
             return TaskResult.error(info)
         else:
+            output_raw_value = ''
             # 5. 处理输出文件上传
             if cmdDto.has_output:
                 for key, value in cmdDto.output_file_name_list.items():
@@ -109,18 +126,23 @@ def invoke(cmdDto: CmdDto) -> Dict[str, Any]:
                             for file in tmp_path.iterdir():
                                 if file.is_file() and file.name.lower() == value.lower():
                                     files_to_upload.append(file)
-                        
+                    
+                    # 输出文件通过原输入值得到桶信息
+                    output_raw_value = req_params[key]
+                    bucket, object_path = parse_output_value(output_raw_value)
                     # 上传匹配到的文件
                     for file in files_to_upload:
                         try:
-                            # 假设 FileUtils.upload_file_to_server 存在
-                            fileId = FileUtils.upload_file_to_server(file_path=file, wd=Path(tmp_path).name)
+                            # 如果是输出TIF，需要经历转COG步骤
+                            if Path(file).suffix.lower() in ['.tif', '.tiff']:
+                                fileId = FileUtils.convert_to_cog_and_upload(file_path=file, bucket=bucket, object_path=f"{os.path.dirname(object_path.strip('/'))}/{Path(file).name}")
+                            else:
+                                fileId = FileUtils.upload_file_to_server(file_path=file, wd=Path(tmp_path).name)
                             fileIdList.append(fileId)
                             all_file_id.append(fileId)
                         except Exception as e:
                             logger.error(f"文件上传失败: {file} - {e}")
                             return TaskResult.error(f"File upload failed: {e}")
-
                     fileIdMap[key] = fileIdList
 
             else:

@@ -1,4 +1,4 @@
-import { getAllTag, getMethLibPage } from '@/api/http/analytics-display/methlib.api'
+import { getAllTag, getMethLibPage, invokeMethod } from '@/api/http/analytics-display/methlib.api'
 import type { MethLib } from '@/api/http/analytics-display/methlib.type'
 import { computed, reactive, ref } from 'vue'
 
@@ -43,6 +43,16 @@ export const useMethLib = () => {
         tagList.value = res.data
     }
 
+    const handleInvoke = async (params: any) => {
+        for (let [key, val] of Object.entries(params.formData)) {
+            if (params.formData[key].value !== undefined) {
+                params.formData[key] = params.formData[key].value
+            }
+        }
+        console.log(params.formData)
+        await invokeMethod(params.method.id, params.formData)
+    }
+
     return {
         getMethLibList,
         currentPage,
@@ -54,5 +64,6 @@ export const useMethLib = () => {
         tagList,
         getTagList,
         selectTags,
+        handleInvoke,
     }
 }
