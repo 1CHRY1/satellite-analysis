@@ -106,7 +106,8 @@ class CommandProcessor:
         
         # 路径设置
         if not is_external_call:
-            cmd_dto.output_file_path = str(Path(self.data_fd) / str(user_id))
+            pass
+            # cmd_dto.output_file_path = str(Path(self.data_fd) / str(user_id))
         
         cmd_dto.tmp_file_path = str(wd_folder_path.absolute().as_posix())
         
