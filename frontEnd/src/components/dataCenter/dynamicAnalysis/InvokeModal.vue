@@ -1,5 +1,5 @@
 <template>
-    <a-modal v-model:open="innerVisible" :title="methodItem?.name" @cancel="close" @ok="handleOk"
+    <a-modal v-model:open="innerVisible" :title="`🛠️ ${methodItem?.name}`" @cancel="close" @ok="handleOk"
         :confirm-loading="isExecuting" :width="1200" wrapClassName="wide-modal">
 
         <a-spin :spinning="!isReady" tip="正在加载方法参数...">

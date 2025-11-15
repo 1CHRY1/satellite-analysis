@@ -80,10 +80,10 @@ import { onMounted, ref ,reactive} from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store'
 import { login, getUsers } from '@/api/http/user'
-import { ElMessage } from 'element-plus'
 
 import { useI18n } from 'vue-i18n'
 import { getRole } from '@/api/http/user/role.api'
+import { message } from 'ant-design-vue'
 const { t } = useI18n()
 
 const emit= defineEmits(['close', 'switch']);
@@ -129,23 +129,13 @@ const handleLogin = async () => {
             maxJob: roleRes.data.maxJob,
             isSuperAdmin: roleRes.data.isSuperAdmin
         })
-        
-        ElMessage({
-            type: 'success',
-            message: t('login.message.success'),
-        })
+        message.success(t('login.message.success'))
         router.push('/home')
         emit('close')
     } else if (loginRes.status === -1) {
-        ElMessage({
-            type: 'error',
-            message: t('login.message.error_wrongdetail'),
-        })
+        message.error(t('login.message.error_wrongdetail'))
     } else {
-        ElMessage({
-            type: 'error',
-            message: t('login.message.error_fail'),
-        })
+        message.error(t('login.message.error_fail'))
     }
 }
 

@@ -625,7 +625,6 @@ import { onMounted } from 'vue'
 import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'
 import noCloudHistory from '@/components/dataCenter/noCloud/noCloudHistory.vue'
 import { formatTime } from '@/util/common'
-import { ElMessage } from 'element-plus'
 import * as MapOperation from '@/util/map/operation'
 import * as CommonMapOps from '@/util/map/operation/common'
 import { mapManager } from '@/util/map/mapManager'
@@ -693,6 +692,7 @@ import { useSensorSelection } from './composables/useSensorSelection'
 import { useNoCloudCalculation } from './composables/useNoCloudCalculation'
 import { useComplexSynthesis } from './composables/useComplexSynthesis'
 import { useBox } from './composables/useBox'
+import { message } from 'ant-design-vue'
 
 
 const { t } = useI18n()
@@ -776,7 +776,7 @@ onMounted(async () => {
     }
 
     if (!exploreData.load) {
-        ElMessage.error(t('nav.disabled_message'))
+        message.error(t('nav.disabled_message'))
         router.push('/')
     }
 

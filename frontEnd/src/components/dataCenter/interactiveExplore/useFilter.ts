@@ -2,7 +2,7 @@ import { ref, computed } from 'vue'
 import { type SpatialFilterMethod, type POIInfo, type FilterTab } from '@/type/interactive-explore/filter'
 import { useExploreStore } from '@/store/exploreStore'
 import { useI18n } from 'vue-i18n'
-import { dayjs, ElMessage } from 'element-plus'
+import { dayjs } from 'element-plus'
 import { message } from 'ant-design-vue'
 import {
     // ------------------------ V1/V2版本API ------------------------ //
@@ -120,7 +120,7 @@ export const useFilter = () => {
         let gridRes: any = []
         let window: any = []
         if (tempLandId.value === 'None') {
-             ElMessage.warning(t('datapage.explore.message.POIerror'))
+             message.warning(t('datapage.explore.message.POIerror'))
             return
         }
         const stopLoading = message.loading('正在获取格网，请稍后...', 100)
@@ -165,7 +165,7 @@ export const useFilter = () => {
                 // 未登录错误，页面会自动跳转到首页，不需要显示错误提示
                 return
             }
-            ElMessage.error('获取格网失败，请重试')
+            message.error('获取格网失败，请重试')
         }
     }
 
@@ -192,10 +192,10 @@ export const useFilter = () => {
     const doFilter = async () => {
         // ------------------- Step1: 前序判断操作 -------------------- //
         if (finalLandId.value === 'None') {
-            ElMessage.warning(t('datapage.explore.message.filtererror_choose'))
+            message.warning(t('datapage.explore.message.filtererror_choose'))
             return
         } else if (allGrids.value.length === 0) {
-            ElMessage.warning(t('datapage.explore.message.filtererror_grid'))
+            message.warning(t('datapage.explore.message.filtererror_grid'))
             return
         }
         const stopLoading = message.loading('正在检索数据，请稍后...', 500)

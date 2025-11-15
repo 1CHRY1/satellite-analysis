@@ -166,7 +166,6 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch, type ComponentPublicInstance, type ComputedRef, type Ref } from 'vue'
 import * as MapOperation from '@/util/map/operation'
 import { getBoundaryBySceneId, getCaseResult, getCaseStatus, getNdviPoint, getRasterScenesDes } from '@/api/http/satellite-data'
-import { ElMessage } from 'element-plus'
 import bus from '@/store/bus'
 import mapboxgl from 'mapbox-gl'
 import * as echarts from 'echarts'
@@ -200,6 +199,7 @@ import { useGridStore } from '@/store'
 import { mapManager } from '@/util/map/mapManager'
 
 import { useI18n } from 'vue-i18n'
+import { message } from 'ant-design-vue'
 const { t } = useI18n()
 const selectedSceneId = ref('')
 type ThematicConfig = {
@@ -261,10 +261,10 @@ const showImageBBox = async () => {
             fillColor: '#a4ffff',
             fillOpacity: 0.2,
         })
-        ElMessage.success(t('datapage.optional_thematic.spectrum.message.success_poin'))
+        message.success(t('datapage.optional_thematic.spectrum.message.success_poin'))
     } catch (e) {
         console.error("有错误找后端", e)
-        ElMessage.error(t('datapage.optional_thematic.spectrum.message.info_fail'))
+        message.error(t('datapage.optional_thematic.spectrum.message.info_fail'))
     }
 }
 

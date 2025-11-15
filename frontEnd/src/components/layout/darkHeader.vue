@@ -132,13 +132,13 @@ import menuList from '@/components/user/menuList.vue'
 // import logo from '@/assets/image/logo2.png'
 import avator from '@/assets/image/avator.png'
 import { Satellite } from 'lucide-vue-next'
-import { ElMessage } from 'element-plus';
 
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
 import { useExploreStore } from '@/store';
 import type { AnyPaint } from 'mapbox-gl';
+import { message } from 'ant-design-vue';
 const exploreData = useExploreStore()
 const load = exploreData.load 
 
@@ -205,7 +205,7 @@ const navItems: ComputedRef<NavItem[]> = computed(() =>[
 //     window.open(OGMS_URL, '_blank')
 // }
 const showDisabledMessage = () => {
-    ElMessage.warning(t('nav.disabled_message')) // 使用国际化消息
+    message.warning(t('nav.disabled_message')) // 使用国际化消息
 }
 /////// User //////////////////////////////////
 const userStore = useUserStore()

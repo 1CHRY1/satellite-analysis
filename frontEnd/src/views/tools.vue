@@ -56,10 +56,10 @@ import projectsBg from '@/components/projects/projectsBg.vue'
 import { Search } from 'lucide-vue-next'
 import { getAllTools } from '@/api/http/tool/tool.api'
 import ToolCard from '@/components/tools/ToolCard.vue'
-import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/store'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
+import { message } from 'ant-design-vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -115,10 +115,10 @@ const enterTool = (tool: any) => {
     if (tool?.projectId) {
       router.push(`/project/${tool.projectId}`)
     } else {
-      ElMessage.error('该工具缺少关联工程，无法打开')
+      message.error('该工具缺少关联工程，无法打开')
     }
   } else {
-    ElMessage.error(t('toolpage.message.error.entererr'))
+    message.error(t('toolpage.message.error.entererr'))
   }
 }
 
@@ -134,7 +134,7 @@ const fetchTools = async () => {
     const records = res?.data?.records || []
     toolList.value = records
   } catch (e) {
-    ElMessage.error('获取工具列表失败')
+    message.error('获取工具列表失败')
   }
 }
 
