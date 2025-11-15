@@ -27,37 +27,81 @@ import {
 const gridStore = useGridStore()
 let resizeObserver: ResizeObserver | null = null
 
+// ---------------------- OLD STRAT ---------------------//
+// export async function map_initiliaze(
+//     id: string,
+//     style: Style = 'local',
+//     proj: 'mercator' | 'globe' = 'mercator',
+// ) {
+//     // return initMap(id)
+//     setTimeout(() => {
+//         initMap(id, style, proj).then((m) => {
+//             m.resize()
+//             const container = document.getElementById(id)
+//             if (container) {
+//                 resizeObserver = new ResizeObserver(() => {
+//                     m.resize()
+//                 })
+//                 resizeObserver.observe(container)
+//             }
+//             m.fitBounds(CN_Bounds, {
+//                 linear: true,
+//                 animate: true,
+//                 duration: 1000,
+//             })
+//         })
+//     }, 0)
+// }
+// ------------------------OLD END -----------------------//
+
 export async function map_initiliaze(
     id: string,
     style: Style = 'local',
     proj: 'mercator' | 'globe' = 'mercator',
-) {
-    // return initMap(id)
-    setTimeout(() => {
-        initMap(id, style, proj).then((m) => {
-            m.resize()
-            const container = document.getElementById(id)
-            if (container) {
-                resizeObserver = new ResizeObserver(() => {
-                    m.resize()
-                })
-                resizeObserver.observe(container)
-            }
-            m.fitBounds(CN_Bounds, {
-                linear: true,
-                animate: true,
-                duration: 1000,
-            })
-        })
-    }, 0)
+): Promise<mapboxgl.Map> {
+    
+    // 移除 setTimeout(..., 0)，直接返回 Promise 链，确保返回值可追踪
+    const mapInstance = await initMap(id, style, proj);
+
+    // 在地图实例创建完成后执行副作用操作
+    mapInstance.resize();
+    const container = document.getElementById(id);
+
+    if (container) {
+        // 清理旧的 observer，以防万一
+        if (resizeObserver) {
+            resizeObserver.disconnect();
+        }
+        
+        // 注册新的 observer
+        resizeObserver = new ResizeObserver(() => {
+            mapInstance.resize();
+        });
+        resizeObserver.observe(container);
+    }
+
+    mapInstance.fitBounds(CN_Bounds, {
+        linear: true,
+        animate: true,
+        duration: 1000,
+    });
+    
+    return mapInstance;
 }
 
-export async function map_destroy() {
+export function map_destroy_observers() {
     if (resizeObserver) {
-        resizeObserver.disconnect()
-        resizeObserver = null
+        resizeObserver.disconnect();
+        resizeObserver = null;
     }
-    mapManager.destroy()
+}
+
+/**
+ * 最终销毁地图实例和状态时调用（例如，应用退出或用户登出）。
+ */
+export function map_destroy_full() {
+    map_destroy_observers();
+    mapManager.destroy();
 }
 
 export function map_checkoutStyle(s: Style): void {

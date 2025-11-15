@@ -174,7 +174,7 @@
                                                     :key="item.id">
                                                     <div class="config-label relative">
                                                         <Image :size="16" class="config-icon" />
-                                                        <span>{{ `${item.name}` }}</span>
+                                                        <span>🛠️ {{ `${item.name}` }}</span>
                                                         <div class="absolute right-0 cursor-pointer">
                                                             <a-tooltip>
                                                                 <template #title>调用</template>
@@ -479,7 +479,7 @@ import {
     LogInIcon,
     History
 } from 'lucide-vue-next'
-import { dayjs, ElMessage, ElMessageBox } from 'element-plus'
+import { dayjs } from 'element-plus'
 import { mapManager } from '@/util/map/mapManager'
 import { formatTimeToText } from '@/util/common';
 import { ElDialog } from 'element-plus'
@@ -495,6 +495,7 @@ import { useMethLib } from './composables/useMethLib'
 import { QuestionCircleOutlined } from '@ant-design/icons-vue'
 import InvokeHistory from './invokeHistory.vue'
 import { currentPanel, setCurrentPanel } from './shared'
+import { message } from 'ant-design-vue'
 
 const { t } = useI18n()
 const isPicking = ref(false)
@@ -623,7 +624,7 @@ onMounted(async () => {
         }
         // 关闭弹窗
         showHistory.value = false
-        ElMessage.success('已选择数据集')
+        message.success('已选择数据集')
     }
 
     loadCompletedCases();

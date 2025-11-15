@@ -270,7 +270,6 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch, type ComponentPublicInstance, type ComputedRef, type Ref, reactive } from 'vue'
 import * as MapOperation from '@/util/map/operation'
 import { getBoundaryBySceneId, getCaseResult, getCaseStatus, getNdviPoint, getRasterScenesDes } from '@/api/http/satellite-data'
-import { ElMessage } from 'element-plus'
 import bus from '@/store/bus'
 import mapboxgl from 'mapbox-gl'
 import * as echarts from 'echarts'
@@ -304,6 +303,7 @@ import { mapManager } from '@/util/map/mapManager'
 import { getNoCloudUrl4MosaicJson, getMosaicJsonUrl } from '@/api/http/satellite-data/visualize.api';
 import { useI18n } from 'vue-i18n'
 import { Item } from 'ant-design-vue/es/menu'
+import { message } from 'ant-design-vue'
 const { t } = useI18n()
 const dbData = useAnalysisStore()
 const selectedSceneId = ref('')
@@ -414,7 +414,7 @@ const saveLocal = async() => {
     const isEditing = selectedItem.value && selectedItem.value.basisIndex === false
     
     if (existingIndex && !isEditing) {
-        ElMessage.warning('已存在同名指数，请使用不同的名称')
+        message.warning('已存在同名指数，请使用不同的名称')
         return
     }
 
@@ -423,12 +423,12 @@ const saveLocal = async() => {
         const indexToUpdate = existingCustomIndexes.findIndex(item => item.name === selectedItem.value?.name && item.userId === userId.value)
         if (indexToUpdate !== -1) {
             existingCustomIndexes[indexToUpdate] = { ...form, userId: userId.value }
-            ElMessage.success('已成功更新自定义指数')
+            message.success('已成功更新自定义指数')
         }
     } else {
         const newCustomIndex = { ...form, userId: userId.value }
         existingCustomIndexes.push(newCustomIndex)
-        ElMessage.success('已成功保存自定义指数')
+        message.success('已成功保存自定义指数')
     }
     
     localStorage.setItem('custom_indexes', JSON.stringify(existingCustomIndexes))
@@ -503,7 +503,7 @@ const deleteCustomIndex = (index: number) => {
     
     loadAllCustomIndexes()
     
-    ElMessage.success('已删除自定义指数')
+    message.success('已删除自定义指数')
 }
 
 
@@ -596,13 +596,13 @@ const selectLabel  = async(item:string ) => {
 
         const selectedBands = inputHistory.value.filter(char => reBands.value.includes(char))
         if (selectedBands.length >= 3) {
-            ElMessage.warning('最多只能选择3个波段')
+            message.warning('最多只能选择3个波段')
             return
         }
         
 
         if (selectedBands.includes(item)) {
-            ElMessage.warning('不能重复选择相同波段')
+            message.warning('不能重复选择相同波段')
             return
         }
     }
@@ -669,11 +669,11 @@ const handleCloudTiles = async () => {
         console.log('props',props.thematicConfig)
         console.log('来自store的', dbData)
         // if(!props.thematicConfig.dataset){
-        //     ElMessage.warning('请先从"前序数据"中选择一个数据集')
+        //     message.warning('请先从"前序数据"中选择一个数据集')
         //     return
         // }
         if (!dbData){
-            ElMessage.warning('请先从"前序数据"中选择一个数据集')
+            message.warning('请先从"前序数据"中选择一个数据集')
         //     return
         }
         let bucket, object_path
@@ -700,7 +700,7 @@ const handleCloudTiles = async () => {
         if(target){
              encodedExpr = encodeURIComponent(target.expression)
         }else{
-            ElMessage.error("没有指数")
+            message.error("没有指数")
             return
         }
 
@@ -755,10 +755,10 @@ const showImageBBox = async () => {
             fillColor: '#a4ffff',
             fillOpacity: 0.2,
         })
-        ElMessage.success(t('datapage.optional_thematic.spectrum.message.success_poin'))
+        message.success(t('datapage.optional_thematic.spectrum.message.success_poin'))
     } catch (e) {
         console.error("有错误找后端", e)
-        ElMessage.error(t('datapage.optional_thematic.spectrum.message.info_fail'))
+        message.error(t('datapage.optional_thematic.spectrum.message.info_fail'))
     }
 }
 

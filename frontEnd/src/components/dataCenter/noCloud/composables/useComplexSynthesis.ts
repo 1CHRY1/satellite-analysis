@@ -1,8 +1,8 @@
 import { reactive, computed, watch, ref } from 'vue'
-import { ElMessage } from 'element-plus'
 import { getNoCloud } from '@/api/http/satellite-data'
 import { exploreData, taskStore, setCurrentPanel, additionalData, dataReconstruction, complexProgress, showComplexProgress, complexSynthesisLoading, hasComplexResult, calTask } from './shared'
 import {demotic1mImages,demotic2mImages,internationalImages,radarImages} from './useDataPreparation'
+import { message } from 'ant-design-vue'
 
 /**
  * 复杂合成相关的组合式函数
@@ -96,13 +96,13 @@ export const useComplexSynthesis = (allScenes: any) => {
     const handleMultiSourceData = async () => {
         // 检查是否选择了波段
         if (multiSourceData.selectedBands.length === 0) {
-            ElMessage.warning('请选择至少一个波段')
+            message.warning('请选择至少一个波段')
             return
         }
 
         // 检查是否选择了可视化波段
         if (!multiSourceData.visualization.red_band || !multiSourceData.visualization.green_band || !multiSourceData.visualization.blue_band) {
-            ElMessage.warning('请选择可视化波段')
+            message.warning('请选择可视化波段')
             return
         }
 
@@ -144,7 +144,7 @@ export const useComplexSynthesis = (allScenes: any) => {
         console.log(getNoCloudParam, '发起请求')
         let startCalcRes = await getNoCloud(getNoCloudParam)
         if (startCalcRes.message !== 'success') {
-            ElMessage.error('无云一版图计算失败')
+            message.error('无云一版图计算失败')
             console.error(startCalcRes)
             return
         }
@@ -171,9 +171,9 @@ export const useComplexSynthesis = (allScenes: any) => {
             // 清空选择
             multiTemporalData.date1 = null
             multiTemporalData.date2 = null
-            ElMessage.success('时相添加成功')
+            message.success('时相添加成功')
         } else {
-            ElMessage.warning('请选择两个时相日期')
+            message.warning('请选择两个时相日期')
         }
     }
 

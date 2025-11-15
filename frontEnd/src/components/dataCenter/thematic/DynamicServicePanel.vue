@@ -94,7 +94,6 @@
 
 <script setup lang="ts">
 import { computed, reactive, watch, ref } from 'vue'
-import { ElMessage } from 'element-plus'
 import { CommandIcon } from 'lucide-vue-next'
 import * as MapOperation from '@/util/map/operation'
 import { getMosaicJsonUrl, getNoCloudUrl4MosaicJson } from '@/api/http/satellite-data/visualize.api'
@@ -103,6 +102,7 @@ import type {
     DynamicToolMeta,
     DynamicToolParamSchema,
 } from '@/store/toolRegistry'
+import { message } from 'ant-design-vue'
 
 const props = defineProps<{
     thematicConfig: Record<string, any>
@@ -186,7 +186,7 @@ const validateRequired = () => {
         .filter((param) => isEmptyValue(formModel[param.key], param.type))
 
     if (missing.length > 0) {
-        ElMessage.warning(`请完善必填项：${missing.map((item) => item.label).join('、')}`)
+        message.warning(`请完善必填项：${missing.map((item) => item.label).join('、')}`)
         return false
     }
     return true
@@ -296,7 +296,7 @@ const runTilerExpression = (context: Record<string, any>) => {
         } else {
             // 非必填且未提供时，使用兜底默认表达式，与“指数分析”一致
             expression = '2*b2-b1-b3'
-            ElMessage.info('未填写表达式，已使用默认表达式 2*b2-b1-b3')
+            message.info('未填写表达式，已使用默认表达式 2*b2-b1-b3')
         }
     }
 
@@ -346,7 +346,7 @@ const runTool = async () => {
     if (!validateRequired()) return
     const mosaic = mosaicUrl.value
     if (!mosaic) {
-        ElMessage.warning('未获取到影像数据，请先选择“前序数据”')
+        message.warning('未获取到影像数据，请先选择“前序数据”')
         return
     }
     const context = {
@@ -359,7 +359,7 @@ const runTool = async () => {
         switch (props.toolMeta.invoke.type) {
             case 'tiler-expression':
                 runTilerExpression(context)
-                ElMessage.success('工具运行成功，已叠加分析图层')
+                message.success('工具运行成功，已叠加分析图层')
                 break
             case 'http+tile': {
                 const response = await callHttpService(context)
@@ -377,7 +377,7 @@ const runTool = async () => {
                     throw new Error('服务返回结果缺少 tileTemplate 字段')
                 }
                 applyTileLayer(tileTemplate)
-                ElMessage.success('工具运行成功，已叠加分析图层')
+                message.success('工具运行成功，已叠加分析图层')
                 break
             }
             case 'http+mosaic': {
@@ -398,7 +398,7 @@ const runTool = async () => {
                     throw new Error('服务返回结果缺少 bucket 或 object_path 信息')
                 }
                 applyMosaicLayer(bucket, objectPath)
-                ElMessage.success('工具运行成功，已叠加分析图层')
+                message.success('工具运行成功，已叠加分析图层')
                 break
             }
             case 'http+geojson': {
@@ -418,7 +418,7 @@ const runTool = async () => {
                     throw new Error('服务返回结果缺少 GeoJSON 数据')
                 }
                 addGeoJsonLayer(featureCollection)
-                ElMessage.success('工具运行成功，已加载矢量结果')
+                message.success('工具运行成功，已加载矢量结果')
                 break
             }
             default:
@@ -426,7 +426,7 @@ const runTool = async () => {
         }
     } catch (error: any) {
         console.error('运行动态工具失败:', error)
-        ElMessage.error(error?.message ?? '工具运行失败')
+        message.error(error?.message ?? '工具运行失败')
     } finally {
         loading.value = false
     }

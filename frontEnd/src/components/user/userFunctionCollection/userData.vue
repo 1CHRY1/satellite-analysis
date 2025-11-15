@@ -356,7 +356,6 @@ import {
     downloadFile
  } from '@/api/http/user/minio.api.ts'
 import { useUserStore } from '@/store/userStore'
-import { ElMessage } from 'element-plus'
 import {
     Upload,
     FileDown,
@@ -364,6 +363,7 @@ import {
     Trash2,
     CircleChevronLeft
  } from 'lucide-vue-next'
+import { message } from 'ant-design-vue'
 
 const userStore = useUserStore()
 const { t } = useI18n()
@@ -379,7 +379,7 @@ const back = async () => {
     }
     
     if (last_path.length == 0) {
-        ElMessage("已是最上级");
+        message("已是最上级");
         return;
     }
     
@@ -403,10 +403,10 @@ const back = async () => {
             lastModified: "",
         };
         
-        ElMessage.success('返回上一级');
+        message.success('返回上一级');
     } catch (error) {
         console.error('返回上一级失败:', error)
-        ElMessage.error('返回上一级失败，请重试')
+        message.error('返回上一级失败，请重试')
         // 失败把路径放回
         if (previousPath !== undefined) {
             last_path.push(previousPath);
@@ -428,10 +428,10 @@ const refresh = async () => {
             lastModified: "",
         }
         choose_num.value = 0
-        ElMessage.success('刷新成功')
+        message.success('刷新成功')
     } catch (error) {
         console.error('刷新失败:', error)
-        ElMessage.error('刷新失败，请重试')
+        message.error('刷新失败，请重试')
     }
 }
 
@@ -439,7 +439,7 @@ const newFolderVisible = ref(false)
 const newFolderName = ref("")
 const createFolder = () => {
     if (!newFolderName.value) {
-        ElMessage.error('请输入文件夹名称')
+        message.error('请输入文件夹名称')
         return
     }
     
@@ -458,7 +458,7 @@ const createFolder = () => {
     newFolderName.value = ''
     newFolderVisible.value = false
     
-    ElMessage.success(`文件夹 "${newFolder.fileName}" 创建成功`)
+    message.success(`文件夹 "${newFolder.fileName}" 创建成功`)
 }
 
 const uploadFilePath = ref("") 
@@ -472,19 +472,19 @@ const handleFileChange = (file, fileList) => {
 }
 
 const handleExceed = (files: any, fileList: any) => {
-    ElMessage.warning(`最多只能上传1个文件`)
+    message.warning(`最多只能上传1个文件`)
 }
 
 const upload = async () =>{
     // 验证是否选择了文件
     if (!selectedFile.value) {
-        ElMessage.error('请先选择要上传的文件')
+        message.error('请先选择要上传的文件')
         return
     }
     
     // 验证文件路径
     if (!uploadFilePath.value || !uploadFilePath.value.trim()) {
-        ElMessage.error('请输入文件路径')
+        message.error('请输入文件路径')
         return
     }
     
@@ -493,7 +493,7 @@ const upload = async () =>{
     const existingFile = fileList.value.find(file => file.fileName === fileName && !file.isDir)
     
     if (existingFile) {
-        ElMessage.error(`文件 "${fileName}" 已存在，请选择其他文件或重命名后上传`)
+        message.error(`文件 "${fileName}" 已存在，请选择其他文件或重命名后上传`)
         return
     }
     
@@ -511,16 +511,16 @@ const upload = async () =>{
         let res = await uploadFile(formdata)
         if(res.status === 1) {
             await getFileList()
-            ElMessage.success('上传成功')
+            message.success('上传成功')
             uploadVisible.value = false 
             uploadFilePath.value = '' 
             selectedFile.value = null 
         } else {
-            ElMessage.error(res.message || '上传失败')
+            message.error(res.message || '上传失败')
         }
     } catch (error) {
         console.error('上传异常:', error)
-        ElMessage.error('上传过程中发生错误，请重试')
+        message.error('上传过程中发生错误，请重试')
     }
 }
 
@@ -643,12 +643,12 @@ const getFileList = async (filePath: string = "") => {
             console.log('完整文件列表:', allFileList.value)
             console.log('当前显示文件列表:', fileList.value)
         } else {
-            ElMessage.error('数据加载失败')
+            message.error('数据加载失败')
             throw new Error('数据加载失败')
         }
     } catch (error) {
         console.error('获取文件列表失败:', error)
-        ElMessage.error('获取文件列表失败，请重试')
+        message.error('获取文件列表失败，请重试')
         throw error // 重新抛出异常，让调用者能够捕获
     }
 }
@@ -734,7 +734,7 @@ const newFileName = ref('')
 const beforeUpload = (file) => {
     const isLimit = file.size / 1024 / 1024 < 50
     if (!isLimit) {
-        ElMessage.error('文件大小不能超过50MB！')
+        message.error('文件大小不能超过50MB！')
         return false
     }
     return true
@@ -746,13 +746,13 @@ const uploadedFile = ref(null)
 // 文件上传成功处理
 const handleUploadSuccess = (response, file) => {
     uploadedFile.value = file
-    ElMessage.success(`文件 ${file.name} 上传成功！`)
+    message.success(`文件 ${file.name} 上传成功！`)
     console.log('上传的文件信息:', file)
 }
 
 // 文件上传失败处理
 const handleUploadError = (error, file) => {
-    ElMessage.error(`文件 ${file.name} 上传失败！`)
+    message.error(`文件 ${file.name} 上传失败！`)
     console.error('上传失败:', error)
 }
 
@@ -798,7 +798,7 @@ const showContextMenu = (event: MouseEvent, file: any) => {
 
 const openFolder = async () => {
     if (!show_file.value || show_file.value.fileType !== 'folder') {
-        ElMessage.warning('请选择一个文件夹');
+        message.warning('请选择一个文件夹');
         folderShow.value = false;
         return;
     }
@@ -830,11 +830,11 @@ const openFolder = async () => {
         };
         
         console.log('打开文件夹:', folderName);
-        ElMessage.success(`打开文件夹: ${folderName}`);
+        message.success(`打开文件夹: ${folderName}`);
     } catch (error) {
         last_path.pop();
         console.error('打开文件夹失败:', error);
-        ElMessage.error('打开文件夹失败，请重试');
+        message.error('打开文件夹失败，请重试');
     } finally {
         folderShow.value = false;
     }
@@ -843,7 +843,7 @@ const openFolder = async () => {
 const handleFileOperation = () => {
     if (show_file.value) {
         console.log('操作文件:', show_file.value.fileName)
-        ElMessage.info(`操作文件: ${show_file.value.fileName}`)
+        message.info(`操作文件: ${show_file.value.fileName}`)
     }
     folderShow.value = false
 }
@@ -858,12 +858,12 @@ const rename = () => {
 
 const confirmRename = async () => {
     if (!show_file.value || !newFileName.value.trim()) {
-        ElMessage.error('请输入有效的文件名')
+        message.error('请输入有效的文件名')
         return
     }
     
     if (newFileName.value === show_file.value.fileName) {
-        ElMessage.info('文件名未发生变化')
+        message.info('文件名未发生变化')
         renameVisible.value = false
         return
     }
@@ -877,16 +877,16 @@ const confirmRename = async () => {
         const result = await updateFile(renameData)
         
         if (result.status === 1) {
-            ElMessage.success(`文件重命名成功: ${newFileName.value}`)
+            message.success(`文件重命名成功: ${newFileName.value}`)
             renameVisible.value = false
             // 刷新文件列表
             await refresh()
         } else {
-            ElMessage.error('重命名失败，请重试')
+            message.error('重命名失败，请重试')
         }
     } catch (error) {
         console.error('重命名文件失败:', error)
-        ElMessage.error('重命名失败，请重试')
+        message.error('重命名失败，请重试')
     }
 }
 
@@ -900,16 +900,16 @@ const moveFile = async(folder) => {
         const result = await updateFile(newFolder)
         
         if (result.status === 1) {
-            ElMessage.success(`文件移动成功: ${show_file.value.fileName}`)
+            message.success(`文件移动成功: ${show_file.value.fileName}`)
             movePanelShow.value = false
             // 刷新文件列表
             await refresh()
         } else {
-            ElMessage.error('移动文件失败，请重试')
+            message.error('移动文件失败，请重试')
         }
     } catch (error) {
         console.error('移动文件失败:', error)
-        ElMessage.error('移动文件失败，请重试')
+        message.error('移动文件失败，请重试')
     }
 }
 
@@ -922,12 +922,12 @@ const deleteFolder = async() => {
                 let delate = await deleteFile(fullpath)
                 if(delate.status === 1) {
                     console.log('删除文件:', show_file.value.fileName)
-                    ElMessage.success(`已删除: ${show_file.value.fileName}`)
+                    message.success(`已删除: ${show_file.value.fileName}`)
                 }
                 refresh()
             }catch (error) {
                 console.error('删除文件失败:', error)
-                ElMessage.error('删除文件失败，请重试')
+                message.error('删除文件失败，请重试')
             }
             
         }
@@ -946,7 +946,7 @@ const download = async() =>{
             console.log(fullpath)
 
             if (file.fileType == "folder") {
-                ElMessage.error("请选择文件而非文件夹");
+                message.error("请选择文件而非文件夹");
             } else {
                 let  res = await downloadFile(fullpath)
                 const blob = new Blob([res], { type: 'application/octet-stream' })
@@ -956,13 +956,13 @@ const download = async() =>{
                 link.click()
                 URL.revokeObjectURL(link.href)
 
-                ElMessage.success(`文件 ${file.fileName} 下载成功！`)
+                message.success(`文件 ${file.fileName} 下载成功！`)
                 // clearInterval(downLoadInterval);
             }
         // }, 1000);
     } catch (error) {
         console.error('下载文件失败:', error)
-        ElMessage.error('下载文件失败，请重试')
+        message.error('下载文件失败，请重试')
     }
 }
 

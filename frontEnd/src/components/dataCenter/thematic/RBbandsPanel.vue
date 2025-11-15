@@ -73,9 +73,9 @@ import { onMounted, ref, type Ref } from 'vue';
 import { getRGBTileLayerParamFromSceneObject } from '@/util/visualizeHelper'
 import * as MapOperation from '@/util/map/operation'
 import { formatTime } from '@/util/common';
-import { ElMessage } from 'element-plus';
 
 import { useI18n } from 'vue-i18n'
+import { message } from 'ant-design-vue';
 const { t } = useI18n()
 
 /**
@@ -94,7 +94,7 @@ const props = defineProps<{
 }>()
 
 const showTif = async (image) => {
-    ElMessage.success(t('datapage.optional_thematic.RG.load'))
+    message.success(t('datapage.optional_thematic.RG.load'))
     let sceneId = image.sceneId
     let res = await getDescriptionBySceneId(sceneId)
     console.log(res, '红绿立体');

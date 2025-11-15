@@ -1,10 +1,10 @@
 import { ref, type Ref } from "vue"
 import { gridData } from "./shared"
-import { ElMessage } from "element-plus"
 import { getCaseStatus, getCaseBandsResult } from "@/api/http/satellite-data"
 import bus from "@/store/bus"
 import { GetSuperResolution } from '@/api/http/satellite-data/visualize.api'
 import { visualLoad, selectedSensor, selectedRBand, selectedGBand, selectedBBand } from "./useGridScene"
+import { message } from "ant-design-vue"
 
 export const useSuperResolution = () => {
 
@@ -57,7 +57,7 @@ export const useSuperResolution = () => {
                     B:''
                 }
                 if (!currentScene) {
-                    ElMessage.error('未找到对应的数据');
+                    message.error('未找到对应的数据');
                     return;
                 }
 
@@ -110,7 +110,7 @@ export const useSuperResolution = () => {
                 
                 try {
                     console.log("开始")
-                    ElMessage.info('超分处理中，请等候')
+                    message.info('超分处理中，请等候')
                     await pollStatus(calTask.value.taskId)
                     // ✅ 成功后设置状态
                     calTask.value.calState = 'success'
@@ -137,13 +137,13 @@ export const useSuperResolution = () => {
                     console.error('有问题');
                     console.error('问题double')
                 }
-                ElMessage.success('超分处理成功')
+                message.success('超分处理成功')
                     
             }catch{
-                ElMessage.error('超分处理失败');
+                message.error('超分处理失败');
             }
         } else{
-            ElMessage.error('请先完成立方体可视化')
+            message.error('请先完成立方体可视化')
         }
     }
 

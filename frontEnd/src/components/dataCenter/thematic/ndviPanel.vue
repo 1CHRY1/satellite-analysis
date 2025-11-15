@@ -188,7 +188,6 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch, type ComponentPublicInstance, type ComputedRef, type Ref } from 'vue'
 import * as MapOperation from '@/util/map/operation'
 import { getBoundaryBySceneId, getCaseResult, getCaseStatus, getNdviPoint, getRasterScenesDes } from '@/api/http/satellite-data'
-import { ElMessage } from 'element-plus'
 import bus from '@/store/bus'
 import mapboxgl from 'mapbox-gl'
 import * as echarts from 'echarts'
@@ -221,6 +220,7 @@ import { useGridStore } from '@/store'
 import { mapManager } from '@/util/map/mapManager'
 
 import { useI18n } from 'vue-i18n'
+import { message } from 'ant-design-vue'
 const { t } = useI18n()
 
 const isExpand = ref<boolean[]>([])
@@ -351,10 +351,10 @@ const toggleMode = (mode: 'point' | 'line' | 'false') => {
     activeMode.value = mode
     if (mode === 'point') {
         MapOperation.draw_pointMode()
-        ElMessage.info(t('datapage.optional_thematic.NDVI.message.info_point'))
+        message.info(t('datapage.optional_thematic.NDVI.message.info_point'))
     } else if (mode === 'line') {
         MapOperation.draw_lineMode()
-        ElMessage.info(t('datapage.optional_thematic.NDVI.message.info_line'))
+        message.info(t('datapage.optional_thematic.NDVI.message.info_line'))
     }
 }
 /**
@@ -368,18 +368,18 @@ const analysisData = ref<any>([])
 
 const analysisNDVI = async () => {
     if (!pickedPoint.value[0] || !pickedPoint.value[1]) {
-        ElMessage.warning(t('datapage.optional_thematic.NDVI.message.info_choose'))
+        message.warning(t('datapage.optional_thematic.NDVI.message.info_choose'))
         return
     }
     let getNdviPointParam = {
         sceneIds: allNdviRateImages.value.map(image => image.sceneId),
         point: [pickedPoint.value[1], pickedPoint.value[0]]
     }
-    ElMessage.success(t('datapage.optional_thematic.NDVI.message.info_start'))
+    message.success(t('datapage.optional_thematic.NDVI.message.info_start'))
 
     let getNdviRes = await getNdviPoint(getNdviPointParam)
     if (getNdviRes.message !== 'success') {
-        ElMessage.error(t('datapage.optional_thematic.NDVI.message.calerror'))
+        message.error(t('datapage.optional_thematic.NDVI.message.calerror'))
         console.error(getNdviRes)
         return
     }
@@ -437,10 +437,10 @@ const analysisNDVI = async () => {
         isExpand.value.push(false)
         console.log(analysisData.value, '结果');
 
-        ElMessage.success('NDVI计算完成')
+        message.success('NDVI计算完成')
     } catch (error) {
         calTask.value.calState = 'failed'
-        ElMessage.error('NDVI计算失败，请重试')
+        message.error('NDVI计算失败，请重试')
         console.error(error);
     }
 
@@ -545,10 +545,10 @@ const showImageBBox = async () => {
             fillColor: '#a4ffff',
             fillOpacity: 0.2,
         })
-        ElMessage.success('已加影像边界，请在影像与行政区的交集内选点。')
+        message.success('已加影像边界，请在影像与行政区的交集内选点。')
     } catch (e) {
         console.error("有错误找后端", e)
-        ElMessage.error('加载影像边界失败。')
+        message.error('加载影像边界失败。')
     }
 }
 watch(() => props.thematicConfig.regionId, initNdviRatePanel)

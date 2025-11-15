@@ -1,4 +1,3 @@
-import { ElMessage } from 'element-plus'
 import type { RegionValues } from 'v-region'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -18,6 +17,7 @@ import {
 } from '@/api/http/satellite-data'
 import { platformDataFile, selectedResult, thematicConfig } from '../shared'
 import { bbox } from '@turf/turf'
+import { message } from 'ant-design-vue'
 
 export const useSettings = () => {
     const { t } = useI18n()
@@ -53,7 +53,7 @@ export const useSettings = () => {
 
     const getOriginImages = async (newRegion: number | '未选择') => {
         if (newRegion === '未选择') {
-            ElMessage.warning(t('datapage.analysis.message.region'))
+            message.warning(t('datapage.analysis.message.region'))
             return
         }
         let filterData = {

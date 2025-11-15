@@ -50,10 +50,11 @@
 import { ref, computed } from 'vue';
 import { Satellite, User, Mail, Clock3, CircleX } from 'lucide-vue-next'
 import { formatTime } from '@/util/common.ts'
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { ElMessageBox } from 'element-plus';
 import { projectOperating } from "@/api/http/analysis"
 import { useUserStore } from '@/store';
 import { updateRecord } from '@/api/http/user';
+import { message } from 'ant-design-vue';
 
 const userStore = useUserStore()
 
@@ -90,7 +91,7 @@ const uploadRecord = async(typeParam = action) =>{
 
 const deleteConfirm = async () => {
     if (props.project.createUser !== userId) {
-        ElMessage.error('只有创建者才能删除项目');
+        message.error('只有创建者才能删除项目');
         return;
     }
     ElMessageBox.confirm(
@@ -110,7 +111,7 @@ const deleteConfirm = async () => {
                 action: "delete"
             }
             await projectOperating(params);
-            ElMessage.success('项目删除成功');
+            message.success('项目删除成功');
             emit('deleteProject'); // 触发删除事件
             try{
                 action.value = '删除'
@@ -121,7 +122,7 @@ const deleteConfirm = async () => {
         })
         .catch(() => {
             // 用户点击了“取消”
-            ElMessage.info('已取消删除');
+            message.info('已取消删除');
         });
 };
 

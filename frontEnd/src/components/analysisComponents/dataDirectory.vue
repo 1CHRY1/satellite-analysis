@@ -119,10 +119,9 @@ import { ref, onMounted, computed } from 'vue'
 import type { dockerData } from '@/type/analysis'
 import { getFiles, getMiniIoFiles, getTileFromMiniIo, uploadGeoJson, getJsonFileContent } from '@/api/http/analysis'
 import { sizeConversion, formatTime } from '@/util/common'
-import { ElMessage } from 'element-plus'
 import { addRasterLayerFromUrl, removeRasterLayer, map_fitView } from '@/util/map/operation'
 import { RefreshCcw, CircleSlash, Upload, Eye, EyeOff, ChartColumn, View } from 'lucide-vue-next'
-import type { SelectProps } from 'ant-design-vue'
+import { message, type SelectProps } from 'ant-design-vue'
 import { getImgStatistics } from '@/api/http/satellite-data/visualize.api'
 
 const props = defineProps({
@@ -249,7 +248,7 @@ const itemInMinIo = ref<any>()
 const handleConfirm = async() => {
     
     if (activeDataBase.value === "data") {
-        ElMessage.info("目前仅支持输出数据预览")
+        message.info("目前仅支持输出数据预览")
         return
     }
 
@@ -273,7 +272,7 @@ const handleConfirm = async() => {
     console.log(wholeTileUrl, 'wholeTileUrl')
     if (!tileUrlObj.value.object) {
         console.info(wholeTileUrl, '没有拿到瓦片服务的URL呢,拼接的路径参数是空的')
-        ElMessage.error('瓦片服务错误')
+        message.error('瓦片服务错误')
         return
     }
 
@@ -331,7 +330,7 @@ const handlePreview = async(item: dockerData) => {
                     console.info(
                         targetItem.fileName + '没有dataId，检查miniIo上是否存在这个数据实体',
                     )
-                    ElMessage.info('该数据正在上传，请稍后再预览')
+                    message.info('该数据正在上传，请稍后再预览')
                     return
                 }
 
@@ -345,7 +344,7 @@ const handlePreview = async(item: dockerData) => {
             }
         }
     } else {
-        ElMessage.warning('暂不支持预览')
+        message.warning('暂不支持预览')
     }
 }
 
@@ -354,7 +353,7 @@ const handleTifPreview = async (item: dockerData) => {
      * 校验是否能预览
      */
     if (activeDataBase.value === "data") {
-        ElMessage.info("目前仅支持输出数据预览")
+        message.info("目前仅支持输出数据预览")
         return
     }
     emit('showMap')
@@ -377,7 +376,7 @@ const handleTifPreview = async (item: dockerData) => {
             console.info(
                 targetItem.fileName + '没有dataId，检查miniIo上是否存在这个数据实体',
             )
-            ElMessage.info('该数据正在切片，请稍后再预览')
+            message.info('该数据正在切片，请稍后再预览')
             return
         }
     }
@@ -409,11 +408,11 @@ const refreshTableData = async () => {
     if (activeDataBase.value === 'data') {
         await getInputData()
         tableData.value = inputData.value
-        ElMessage.success('数据更新成功')
+        message.success('数据更新成功')
     } else if (activeDataBase.value === 'output') {
         await getOutputData()
         tableData.value = outputData.value
-        ElMessage.success('数据更新成功')
+        message.success('数据更新成功')
     }
 }
 
@@ -434,7 +433,7 @@ const uploadFile = async (event: Event) => {
 
     const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
     if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(`.${fileExtension}`)) {
-        ElMessage.warning('只支持 .geojson, .json 或 .txt 文件')
+        message.warning('只支持 .geojson, .json 或 .txt 文件')
         return
     }
 
@@ -456,12 +455,12 @@ const uploadFile = async (event: Event) => {
 
             if (res.status === 1) {
                 await handleClick(activeDataBase.value)
-                ElMessage.success('上传成功')
+                message.success('上传成功')
             } else {
-                ElMessage.error('上传失败')
+                message.error('上传失败')
             }
         } catch (err) {
-            ElMessage.error('文件内容不是有效的 JSON 格式')
+            message.error('文件内容不是有效的 JSON 格式')
         }
     }
 

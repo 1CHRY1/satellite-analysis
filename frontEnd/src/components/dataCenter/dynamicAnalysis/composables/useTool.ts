@@ -1,10 +1,11 @@
 import { useToolRegistryStore, useUserStore } from '@/store'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import {  ElMessageBox } from 'element-plus'
 import { computed, defineAsyncComponent, nextTick, ref, watch } from 'vue'
 const toolRegistry = useToolRegistryStore()
 import { useI18n } from 'vue-i18n'
 import DynamicServicePanel from '../../thematic/DynamicServicePanel.vue'
 import { selectedResult, thematicConfig } from '../shared'
+import { message } from 'ant-design-vue'
 
 export const useTool = () => {
     const { t } = useI18n()
@@ -269,7 +270,7 @@ export const useTool = () => {
                 selectedTask.value = fallbackTaskValue.value
             })
         }
-        ElMessage.success('已取消发布工具')
+        message.success('已取消发布工具')
     }
 
     return {
