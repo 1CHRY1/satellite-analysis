@@ -28,7 +28,9 @@ import { StyleMap } from '@/util/map/tianMapStyle'
 import CubeTimeline from './cubeTimeline.vue'
 import bus from '@/store/bus'
 import { useI18n } from 'vue-i18n'
+import type { Map as MapboxMap } from 'mapbox-gl'
 import { ezStore } from '@/store'
+import { useMapStore } from '@/store/mapStore'
 const { t } = useI18n()
 
 const props = defineProps({
@@ -126,10 +128,33 @@ const handleDestroyDEMLayer = () => {
     })
 }
 
-onMounted(() => {
-    console.log(props, 1111)
+const store = useMapStore()
+onMounted(async () => {
+    // --------------------- NEW(USING PINIA) --------------------- //
+    const container = document.getElementById('mapContainer')
 
-    MapOperation.map_initiliaze('mapContainer', props.style, props.proj)
+    if (!store.isInitialized && container) {
+        console.log("MapComp: 第一次加载，创建新的 Mapbox 实例。")
+        const mapInstance = await MapOperation.map_initiliaze(
+            'mapContainer', 
+            props.style, 
+            props.proj
+        )
+        store.setMapInstance(mapInstance)
+    } else if (store.mapInstance && container) {
+        console.log("MapComp: 实例已存在，重新附加 DOM。")
+        // 1. 获取地图实例的原 DOM 容器
+        const mapCanvas = store.mapInstance.getContainer()
+        // 2. 将地图 DOM 容器移动到当前组件的挂载点
+        if (mapCanvas && mapCanvas.parentElement !== container) {
+            container.appendChild(mapCanvas)
+        }
+        // 3. 通知地图库 DOM 尺寸已变更（Mapbox 常用操作）
+        store.mapInstance.resize()
+    }
+
+    // -------------------- OLD ---------------- //
+    // MapOperation.map_initiliaze('mapContainer', props.style, props.proj)
 
     bus.on('openTimeline', () => {
         cubeTimelineShow.value = true
@@ -174,7 +199,20 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-    MapOperation.map_destroy()
+    // 在路由切换时，我们不销毁地图，只将地图 DOM 容器移出当前视图
+    if (store.mapInstance) {
+        const container = document.getElementById('mapContainer')
+        console.log(store.mapInstance)
+        const mapCanvas = store.mapInstance.getContainer()
+        
+        if (mapCanvas && mapCanvas.parentElement === container) {
+            // 将地图 DOM 从 mapContainer 中移出，但不要销毁它
+            // 移出后，它仍然存在于内存中，只是不再依附于任何组件的 DOM 树
+            mapCanvas.remove() 
+            console.log("MapComp: 路由离开，地图 DOM 容器被分离。")
+        }
+    }
+    MapOperation.map_destroy_observers()
 })
 </script>
 
