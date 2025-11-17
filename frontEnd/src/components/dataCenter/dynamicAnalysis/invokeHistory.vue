@@ -111,11 +111,8 @@
                     <Image :size="16" class="config-icon" />
                     <span>{{ `${item.method?.name}` }}</span>
                     <div class="absolute right-0 cursor-pointer">
-                        <a-tooltip>
-                            <template #title>{{ t('datapage.history.preview') }}</template>
-                            <Eye v-if="previewList[index]" @click="unPreview" :size="16" class="cursor-pointer" />
-                            <EyeOff v-else :size="16" @click="showResult(item.caseId)" class="cursor-pointer" />
-                        </a-tooltip>
+                        <Eye v-if="previewList[index]" @click="unPreview" :size="16" class="cursor-pointer" />
+                        <EyeOff v-else :size="16" @click="handleShowModal(item)" class="cursor-pointer" />
                     </div>
                 </div>
                 <div class="config-control flex-col !items-start">
@@ -147,6 +144,69 @@
                     </div>
                 </div>
             </div>
+            <a-modal v-model:open="showModal" title="栅格可视化配置" @cancel="handleModalCancel" @ok="handleConfirm">
+                <a-form :model="formState" :rules="formRules" ref="visFormRef" layout="vertical">
+                    <a-form-item label="选择可视化色带" name="colormapName">
+                        <a-select v-model:value="formState.colormapName" style="width: 100%" placeholder="请选择可视化色带">
+                            <a-select-option v-for="item in colormapOptions" :key="item.value" :value="item.value">
+                                <div class="color-option">
+                                    <span>{{ item.label }}</span>
+                                    <div class="color-strip" :style="{ background: item.gradient }"></div>
+                                </div>
+                            </a-select-option>
+                        </a-select>
+                    </a-form-item>
+
+                    <a-form-item label="选择输出文件(*.tif)" name="selectedTif">
+                        <a-select v-model:value="formState.selectedTif" style="width: 100%" placeholder="请选择要可视化的输出栅格文件"
+                            @change="handleTifChange">
+                            <a-select-option v-for="(file, index) in tifOptions" :key="file.value" :value="index">
+                                {{ file.label }}
+                            </a-select-option>
+                        </a-select>
+                    </a-form-item>
+
+                    <a-form-item label="选择可视化波段" name="selectedBidx">
+                        <a-select v-model:value="formState.selectedBidx" style="width: 100%" placeholder="请选择可视化波段"
+                            @change="handleBidxChange">
+                            <a-select-option v-for="bidx in bidxOptions" :key="bidx" :value="bidx">
+                                {{ bidx }}
+                            </a-select-option>
+                        </a-select>
+                    </a-form-item>
+
+                    <a-row :gutter="16" v-if="selectedBandInfo">
+                        <a-col :span="24">
+                            <a-divider orientation="left">波段详细信息</a-divider>
+                            <a-descriptions bordered size="small" :column="2">
+                                <a-descriptions-item label="统计 Min">{{ selectedBandInfo.min }}</a-descriptions-item>
+                                <a-descriptions-item label="统计 Max">{{ selectedBandInfo.max }}</a-descriptions-item>
+                                <a-descriptions-item label="平均值">{{ selectedBandInfo.mean }}</a-descriptions-item>
+                                <a-descriptions-item label="标准差">{{ selectedBandInfo.std }}</a-descriptions-item>
+                            </a-descriptions>
+                        </a-col>
+                    </a-row>
+
+                    <a-form-item label="自定义可视化范围 (Min/Max)" :name="['range', 'min']" style="margin-top: 16px;">
+                        <a-row :gutter="8">
+                            <a-col :span="12">
+                                <a-input-number v-model:value="formState.range.min"
+                                    :min="selectedBandInfo ? selectedBandInfo.min : null" :max="formState.range.max"
+                                    style="width: 100%" placeholder="最小值 (Min)" />
+                            </a-col>
+                            <a-col :span="12">
+                                <a-input-number v-model:value="formState.range.max" :min="formState.range.min"
+                                    :max="selectedBandInfo ? selectedBandInfo.max : null" style="width: 100%"
+                                    placeholder="最大值 (Max)" />
+                            </a-col>
+                        </a-row>
+                        <template #extra>
+                            建议范围: {{ selectedBandInfo ? `${selectedBandInfo.min} ~ ${selectedBandInfo.max}` : '请先选择波段'
+                            }}
+                        </template>
+                    </a-form-item>
+                </a-form>
+            </a-modal>
             <a-empty v-if="total === 0" />
         </div>
 
@@ -183,8 +243,18 @@ import { MehTwoTone } from '@ant-design/icons-vue';
 const { t } = useI18n()
 
 const { methLibCaseList, currentPage, sectionHeader, pageSize, total, historyClassTabs, activeTab, handleSelectTab,
-    selectedTimeIndex, timeOptionList, getMethLibCaseList, isExpand, reset, previewList, showResult, unPreview,
-    getInputFileNames } = useViewHistoryModule()
+    selectedTimeIndex, timeOptionList, getMethLibCaseList, isExpand, reset, previewList, handleShowModal, unPreview,
+    getInputFileNames, showModal, handleModalCancel,
+    handleConfirm,
+    colormapName,
+    colormapOptions, formRules,
+    formState,
+    handleTifChange,
+    tifOptions,
+    handleBidxChange,
+    selectedBandInfo,
+    bidxOptions, visFormRef
+} = useViewHistoryModule()
 const { pendingTaskList, startPolling, stopPolling } = useTaskPollModule()
 const taskStore = useTaskStore()
 // 检测由noCloud跳转至history面板时（setCurrentPanel），前端是否还在初始化任务（calNoCloud处理请求参数）
@@ -222,7 +292,7 @@ onUnmounted(() => {
 })
 </script>
 
-<style scoped src="../tabStyle.css">
+<style scoped src="../tabStyle.css" lang="scss">
 :deep(.border-box-content) {
     padding: 1.5rem;
 }
@@ -235,5 +305,27 @@ onUnmounted(() => {
 .a-button {
     display: inline-flex;
     align-items: center;
+}
+
+.color-option {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.color-strip {
+    width: 100%;
+    height: 20px;
+    margin-top: 4px;
+    border-radius: 2px;
+}
+
+/* 调整下拉框选项宽度 */
+:deep(.ant-select-dropdown) {
+    min-width: 200px !important;
+}
+
+:deep(.ant-select-item) {
+    padding: 8px 12px;
 }
 </style>

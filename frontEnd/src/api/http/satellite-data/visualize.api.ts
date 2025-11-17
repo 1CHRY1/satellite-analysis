@@ -60,6 +60,19 @@ export async function getImgStatistics(tifFullPath: string): Promise<any> {
     return json
 }
 
+export async function getImgStatisticsWithUrl(tifFullUrl: string): Promise<any> {
+    let url = `${titilerEndPoint}/statistics`
+
+    const requestParams = new URLSearchParams()
+    requestParams.append('url', tifFullUrl)
+    url += '?' + requestParams.toString()
+
+    const response = await fetch(url)
+    const json = await response.json()
+
+    return json
+}
+
 export async function getImgBounds(tifFullPath: string): Promise<any> {
     let url = `${titilerEndPoint}/info`
 
@@ -71,6 +84,19 @@ export async function getImgBounds(tifFullPath: string): Promise<any> {
     const json = await response.json()
 
     return json.bounds
+}
+
+export async function getImgBoundsFromInfoGeoJson(tifFullUrl: string): Promise<any> {
+    let url = `${titilerEndPoint}/info.geojson`
+
+    const requestParams = new URLSearchParams()
+    requestParams.append('url', tifFullUrl)
+    url += '?' + requestParams.toString()
+
+    const response = await fetch(url)
+    const json = await response.json()
+
+    return json.bbox
 }
 
 // 获取一张tif的统计信息
