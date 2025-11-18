@@ -1,4 +1,4 @@
-import http from "~/apis/clients/client";
+import {clientV1 as http} from "~/apis/clients/client";
 import type { Region } from "./region.type";
 
 // 获取指定 level 的行政区（省/市/区）

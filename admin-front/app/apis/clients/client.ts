@@ -112,5 +112,5 @@ class HttpClient {
         return await this.instance.delete(url, config)
     }
 }
-
-export default new HttpClient('/api')
+export const clientV1 = new HttpClient('/api')
+export const clientV3 = new HttpClient('/api3')

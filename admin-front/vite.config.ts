@@ -12,6 +12,12 @@ const currentEnv =
 // 代理配置生成器
 const createProxyConfig = () => {
 	return {
+		// API v3
+		"/api3": {
+			target: `${currentEnv.api}/api/v3`,
+			changeOrigin: true,
+			rewrite: (path: string) => path.replace(/^\/api3/, ""),
+		},
 		// API v1
 		"/api": {
 			target: `${currentEnv.api}/api/v1`,
