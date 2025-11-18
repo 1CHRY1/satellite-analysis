@@ -1,5 +1,8 @@
 <template>
   <div :class="cardClass" :title="displayName" @click="$emit('click')">
+    <div class="absolute top-4 right-4 z-20" @click.stop="deleteConfirm">
+      <CircleX />
+    </div>
     <div v-if="isOnline" class="service-ribbon">已发布服务</div>
     <div v-if="isOnline" class="service-accent"></div>
 
@@ -26,7 +29,10 @@
     <!-- 元信息 -->
     <div class="card-section flex flex-col space-y-1">
       <div class="subtitle my-2 text-[16px]">创建者</div>
-      <div class="flex meta-row"><User class="mr-1.5" />{{ tool.userId || '-' }}</div>
+      <div class="flex meta-row"><User class="mr-1.5" />{{ ownerDisplay }}</div>
+      <div class="flex meta-row" v-if="ownerEmail">
+        <Mail class="mr-1.5" />{{ ownerEmail }}
+      </div>
       <div class="flex meta-row" v-if="tool.updateTime || tool.createTime">
         <Clock3 class="mr-1.5" />{{ tool.updateTime || tool.createTime }}
       </div>
@@ -36,13 +42,16 @@
 
   <script setup lang="ts">
   import { computed } from 'vue'
-  import { Package, User, Clock3 } from 'lucide-vue-next'
+  import { Package, User, Clock3, CircleX, Mail } from 'lucide-vue-next'
+  import { ElMessage, ElMessageBox } from 'element-plus'
+  import { deleteTool } from '@/api/http/tool/tool.api'
 
-  defineEmits(['click'])
-  const props = defineProps<{ tool: any }>()
+  const emit = defineEmits(['click','deleted'])
+  const props = defineProps<{ tool: any; ownerName?: string; ownerEmail?: string }>()
 
   const displayName = computed(() => props.tool?.toolName || props.tool?.name || '未命名工具')
   const isOnline = computed(() => Number((props.tool as any)?.is_publish ?? 0) === 1)
+  const ownerDisplay = computed(() => props.ownerName || props.tool?.createUserName || props.tool?.userName || props.tool?.userId || '-')
 
   const cardClass = computed(() => [
     'card box-border flex h-90 relative w-70 cursor-pointer flex-col justify-between rounded-lg',
@@ -50,6 +59,34 @@
     'bg-black px-6 py-1 opacity-80 overflow-hidden transition-all duration-200',
     { 'service-card': isOnline.value, 'offline-dim': !isOnline.value },
   ])
+
+  const deleteConfirm = async () => {
+    const currentUserId = (localStorage.getItem('userId') || '').toString()
+    const owner = (props.tool?.userId || '').toString()
+    if (!props.tool?.toolId) {
+      ElMessage.error('工具ID缺失，无法删除')
+      return
+    }
+    if (owner !== currentUserId) {
+      ElMessage.error('只有创建者才能删除工具')
+      return
+    }
+    try {
+      await ElMessageBox.confirm('确定要删除该工具吗？', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      })
+      await deleteTool(props.tool.toolId)
+      ElMessage.success('工具删除成功')
+      emit('deleted')
+    } catch (e) {
+      // 取消或失败
+      if (e !== 'cancel') {
+        ElMessage.info('已取消删除')
+      }
+    }
+  }
   </script>
 
   <style scoped>

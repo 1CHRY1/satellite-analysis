@@ -1,5 +1,21 @@
 @import 'tailwindcss';
 
+@font-face {
+    font-family: 'LongCang';
+    src: url('./assets/fonts/LongCang-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+.page-heading-script {
+    font-family: 'LongCang', 'STXingkai', 'KaiTi', 'STKaiti', 'FangSong', cursive;
+    font-size: 56px;
+    fill: #ffffff;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+}
+
 .ndviSelect{
     background-color: #040f17 !important;
 }

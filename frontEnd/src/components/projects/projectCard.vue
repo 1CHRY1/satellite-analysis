@@ -1,8 +1,6 @@
 <template>
     <div
         :class="cardClass">
-        <div v-if="isService" class="service-ribbon">已发布服务</div>
-        <div v-if="isService" class="service-accent"></div>
 
         <!-- 头部 -->
         <div class="card-section my-2 flex flex-col items-center justify-center">
@@ -11,7 +9,6 @@
                 <span class="title-text">
                     {{ project.projectName }}
                 </span>
-                <span v-if="isService" class="service-badge">Service</span>
             </div>
         </div>
         <div class="absolute top-4 right-4 z-20" @click.stop="deleteConfirm">
@@ -63,10 +60,10 @@ const props = defineProps({
         type: Object,
         default: () => ({}),
     },
-    isService: {
-        type: Boolean,
-        default: false,
-    },
+    // isService: {
+    //     type: Boolean,
+    //     default: false,
+    // },
 })
 const emit = defineEmits(['deleteProject'])
 
@@ -126,11 +123,8 @@ const deleteConfirm = async () => {
         });
 };
 
-const isService = computed(() => props.isService)
-
 const cardClass = computed(() => [
     'card box-border flex h-90 relative w-70 cursor-pointer flex-col justify-between rounded-lg border-t border-l border-solid border-t-[rgba(255,255,255,.5)] border-l-[rgba(255,255,255,.5)] bg-black px-6 py-1 opacity-80 overflow-hidden',
-    { 'service-card': isService.value },
 ])
 </script>
 
@@ -188,67 +182,5 @@ div {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-
-.service-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2px 8px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #0f172a;
-    background: linear-gradient(135deg, rgba(96, 165, 250, 0.95), rgba(37, 99, 235, 0.95));
-    border-radius: 9999px;
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
-    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.35);
-}
-
-.service-card {
-    border: 1px solid rgba(20, 121, 215, 0.75);
-    box-shadow: 0 0 18px rgba(59, 130, 246, 0.28);
-}
-
-.service-card:hover {
-    box-shadow: 0 0 24px rgba(59, 130, 246, 0.42);
-}
-
-.service-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(14, 165, 233, 0.05));
-    pointer-events: none;
-    z-index: 0;
-}
-
-.service-ribbon {
-    position: absolute;
-    top: 16px;
-    right: -38px;
-    width: 140px;
-    line-height: 1.6;
-    text-align: center;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #0f172a;
-    background: linear-gradient(135deg, rgba(96, 165, 250, 0.9), rgba(59, 130, 246, 0.9));
-    transform: rotate(45deg);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
-    pointer-events: none;
-    z-index: 15;
-}
-
-.service-accent {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 6px;
-    height: 100%;
-    background: linear-gradient(180deg, rgba(59, 130, 246, 0.95), rgba(14, 165, 233, 0.75));
-    pointer-events: none;
-    z-index: 12;
-    border-radius: 0 6px 6px 0;
 }
 </style>
