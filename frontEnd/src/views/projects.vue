@@ -5,7 +5,11 @@
         </projectsBg>
         <div class="relative z-10 flex flex-col items-center justify-center">
             <div class="my-10 flex w-[50vw] flex-col items-center justify-center">
-                <img src="@/assets/image/toolsEstablish.png" class="h-12 w-fit" alt="" />
+                <svg class="h-12 w-fit" viewBox="0 0 420 96" xmlns="http://www.w3.org/2000/svg">
+                    <text class="page-heading-script" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" style="font-size: 80px;">
+                        在线编程
+                    </text>
+                </svg>
                 <div class="searchContainer mt-6 w-[100%]">
                     <div class="model_research">
                          <input type="text" autocomplete="false" :placeholder="t('projectpage.searchbar')"
