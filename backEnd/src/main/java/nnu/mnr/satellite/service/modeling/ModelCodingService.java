@@ -185,40 +185,17 @@ public class ModelCodingService {
                 .build();
         dockerService.initEnv(serverDir);
 
-        // Overwrite remote main.py with template based on isTool flag
+        // Overwrite remote main.py strictly from backend classpath templates
         try {
-            String baseLocal = dockerServerProperties.getLocalPath();
-            if (baseLocal != null && !baseLocal.isEmpty()) {
-                String devCliDir = baseLocal.endsWith("/") ? (baseLocal + "devCli/") : (baseLocal + "/devCli/");
-                String chosenLocal = createProjectDTO.isTool() ? (devCliDir + "main_tool.py") : (devCliDir + "main_nontool.py");
-                String fallbackLocal = devCliDir + "main.py";
-
-                java.io.InputStream in = null;
-                try {
-                    in = new java.io.FileInputStream(chosenLocal);
-                } catch (java.io.FileNotFoundException e) {
-                    try {
-                        in = new java.io.FileInputStream(fallbackLocal);
-                    } catch (java.io.FileNotFoundException ignored) {
-                        in = null; // keep as-is if neither exists
-                    }
-                }
-                if (in != null) {
-                    try (java.io.InputStream autoClose = in) {
-                        sftpDataService.uploadFileFromStream(autoClose, serverPyPath);
-                    }
-                } else {
-                    // fallback to classpath resources if local files not found
-                    String resName = createProjectDTO.isTool() ? "/modelDockerVolume/devCli/main_tool.py" : "/modelDockerVolume/devCli/main_nontool.py";
-                    java.io.InputStream res = ModelCodingService.class.getResourceAsStream(resName);
-                    if (res == null) {
-                        res = ModelCodingService.class.getResourceAsStream("/modelDockerVolume/devCli/main.py");
-                    }
-                    if (res != null) {
-                        try (java.io.InputStream autoClose = res) {
-                            sftpDataService.uploadFileFromStream(autoClose, serverPyPath);
-                        }
-                    }
+            String resName = createProjectDTO.isTool() ? "/modelDockerVolume/devCli/main_tool.py" : "/modelDockerVolume/devCli/main_nontool.py";
+            java.io.InputStream res = ModelCodingService.class.getResourceAsStream(resName);
+            if (res == null) {
+                // fallback to default template if specific one missing
+                res = ModelCodingService.class.getResourceAsStream("/modelDockerVolume/devCli/main.py");
+            }
+            if (res != null) {
+                try (java.io.InputStream autoClose = res) {
+                    sftpDataService.uploadFileFromStream(autoClose, serverPyPath);
                 }
             }
         } catch (Exception e) {
