@@ -211,7 +211,7 @@ const TaskTable: React.FC = () => {
 			hideInSearch: true,
 		},
 		{
-			title: "生成时间",
+			title: "创建时间",
 			dataIndex: "createTime",
 			valueType: "dateRange",
 			hideInTable: true,
