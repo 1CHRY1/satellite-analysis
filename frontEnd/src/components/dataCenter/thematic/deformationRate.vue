@@ -140,9 +140,9 @@ import {
     MapIcon,
     SquareDashedMousePointer
 } from 'lucide-vue-next'
-import { ElMessage } from 'element-plus';
 
 import { useI18n } from 'vue-i18n'
+import { message } from 'ant-design-vue';
 const { t } = useI18n()
 
 
@@ -200,15 +200,15 @@ const toggleMode = (mode: 'point' | 'line' | 'false') => {
     activeMode.value = mode
     if (mode === 'point') {
         MapOperation.draw_pointMode()
-        ElMessage.info(t('datapage.optional_thematic.rate.message.info_point'))
+        message.info(t('datapage.optional_thematic.rate.message.info_point'))
     } else if (mode === 'line') {
         MapOperation.draw_lineMode()
-        ElMessage.info(t('datapage.optional_thematic.rate.message.info_line'))
+        message.info(t('datapage.optional_thematic.rate.message.info_line'))
     }
 }
 
 const showTif = async (image) => {
-    ElMessage.success(t('datapage.optional_thematic.rate.message.load'))
+    message.success(t('datapage.optional_thematic.rate.message.load'))
     let sceneId = image.sceneId
     let res = await getDescriptionBySceneId(sceneId)
     console.log(res, sceneId, 7575);
@@ -241,7 +241,7 @@ const analysisDeforRate = async () => {
     if (!verifyAnalysis()) {
         return
     }
-    ElMessage.success(t('datapage.optional_thematic.rate.message.info_start'))
+    message.success(t('datapage.optional_thematic.rate.message.info_start'))
     if (activeMode.value === 'point') {
         let pointParam = {
             point: [pickedPoint.value[1], pickedPoint.value[0]],
@@ -249,7 +249,7 @@ const analysisDeforRate = async () => {
         }
         let res = await getRasterPoints(pointParam)
         if (res?.message != 'success') {
-            ElMessage.warning(t('datapage.optional_thematic.rate.message.calerror'))
+            message.warning(t('datapage.optional_thematic.rate.message.calerror'))
         }
         calTask.value.taskId = res.data
         const pollStatus = async (taskId: string) => {
@@ -293,10 +293,10 @@ const analysisDeforRate = async () => {
                 value: deforRateValue,
                 point: [...pickedPoint.value]
             })
-            ElMessage.success(t('datapage.optional_thematic.rate.message.success'))
+            message.success(t('datapage.optional_thematic.rate.message.success'))
         } catch (error) {
             calTask.value.calState = 'failed'
-            ElMessage.error(t('datapage.optional_thematic.rate.message.info_retry'))
+            message.error(t('datapage.optional_thematic.rate.message.info_retry'))
             console.error(error);
         }
     } else if (activeMode.value === 'line') {
@@ -308,7 +308,7 @@ const analysisDeforRate = async () => {
         let lineRes = await getRasterLine(lineParam)
 
         if (lineRes?.message != 'success') {
-            ElMessage.warning(t('datapage.optional_thematic.rate.message.calerror'))
+            message.warning(t('datapage.optional_thematic.rate.message.calerror'))
         }
         calTask.value.taskId = lineRes.data
         const pollStatus = async (taskId: string) => {
@@ -353,10 +353,10 @@ const analysisDeforRate = async () => {
                 analysis: "空间采点形变速率变化趋势",
                 line: pickedLine.value
             })
-            ElMessage.success(t('datapage.optional_thematic.rate.message.success'))
+            message.success(t('datapage.optional_thematic.rate.message.success'))
         } catch (error) {
             calTask.value.calState = 'failed'
-            ElMessage.error(t('datapage.optional_thematic.rate.message.info_retry'))
+            message.error(t('datapage.optional_thematic.rate.message.info_retry'))
             console.error(error);
         }
     }
@@ -364,11 +364,11 @@ const analysisDeforRate = async () => {
 // 卫语句
 const verifyAnalysis = () => {
     if (activeMode.value != 'point' && activeMode.value != 'line') {
-        ElMessage.warning(t('datapage.optional_thematic.rate.message.info_space'))
+        message.warning(t('datapage.optional_thematic.rate.message.info_space'))
         return false
     }
     if (allDeforRateImages.value.length === 0) {
-        ElMessage.warning(t('datapage.optional_thematic.rate.message.info_noima'))
+        message.warning(t('datapage.optional_thematic.rate.message.info_noima'))
         return false
     }
 

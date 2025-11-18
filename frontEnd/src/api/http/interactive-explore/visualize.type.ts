@@ -1,10 +1,11 @@
-import type { SpatialFilterMethod } from "@/type/interactive-explore/filter"
+import type { SpatialFilterMethod } from '@/type/interactive-explore/filter'
+import type { BandMapper } from './filter.type'
 
 export type VectorUrlParam = {
     landId: string
     source_layer: string
-    spatialFilterMethod: SpatialFilterMethod,
-    resolution?: number,
+    spatialFilterMethod: SpatialFilterMethod
+    resolution?: number
     type?: number[]
 }
 
@@ -20,22 +21,35 @@ export type RGBCompositeParams = {
     b_max: number
     stretch_method?: 'linear' | 'standard' | 'gamma' | ''
     normalize_level?: number
-    nodata?: number,
+    nodata?: number
     std_config?: string
 }
 
 export type OneBandColorLayerParam = {
-    fullTifPath: string,
-    min?: number,
-    max?: number,
-    gridsBoundary?: any,
-    nodata?: number,
+    fullTifPath: string
+    min?: number
+    max?: number
+    gridsBoundary?: any
+    nodata?: number
     normalize_level?: number
 }
 
 export type LargeScaleSceneParam = {
-    startTime: string,
-    endTime: string,
-    sensorName: string,
+    startTime: string
+    endTime: string
+    sensorName: string
     regionId: string
+}
+
+interface ScenePath {
+    [key: string]: string // band_1, band_2, ...
+}
+export type ScenesInfo = {
+    bandMapper: BandMapper
+    scenesConfig: {
+        sceneId: string
+        sensorName: string
+        bucket: string
+        path: ScenePath
+    }[]
 }

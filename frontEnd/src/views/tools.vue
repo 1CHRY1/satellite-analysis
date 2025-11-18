@@ -113,6 +113,7 @@
 import { ref, onMounted, onUnmounted, type Ref, computed } from 'vue'
 import projectsBg from '@/components/projects/projectsBg.vue'
 import { Search } from 'lucide-vue-next'
+<<<<<<< HEAD
 import { getProjects, createProject } from '@/api/http/analysis'
 import projectCard from '@/components/projects/projectCard.vue'
 import { ElMessage } from 'element-plus'
@@ -121,6 +122,14 @@ import { useUserStore } from '@/store'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { Loading } from '@element-plus/icons-vue'
+=======
+import { getAllTools } from '@/api/http/tool/tool.api'
+import ToolCard from '@/components/tools/ToolCard.vue'
+import { useUserStore } from '@/store'
+import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
+import { message } from 'ant-design-vue'
+>>>>>>> 9e1307a2073f2c5fb081e0b47a138178a53a07f1
 
 const { t } = useI18n()
 const router = useRouter()
@@ -185,9 +194,17 @@ const enterProject = (item: any) => {
   const uid = (userId.value || '').toString()
   const owner = (item?.createUser || '').toString()
   if (owner === uid) {
+<<<<<<< HEAD
     router.push(`/project/${item.projectId}`)
+=======
+    if (tool?.projectId) {
+      router.push(`/project/${tool.projectId}`)
+    } else {
+      message.error('该工具缺少关联工程，无法打开')
+    }
+>>>>>>> 9e1307a2073f2c5fb081e0b47a138178a53a07f1
   } else {
-    ElMessage.error(t('toolpage.message.error.entererr'))
+    message.error(t('toolpage.message.error.entererr'))
   }
 }
 
@@ -260,7 +277,7 @@ const fetchToolProjects = async () => {
       .filter((p: any) => isToolFlag(p) === 1)
       .sort((a: any, b: any) => String(b.createTime || '').localeCompare(String(a.createTime || '')))
   } catch (e) {
-    ElMessage.error('获取工具列表失败')
+    message.error('获取工具列表失败')
   }
 }
 

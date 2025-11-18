@@ -1,3 +1,5 @@
+import type { ModelStatus } from "../satellite-data"
+
 export namespace Common {
     export interface CommonResult<T> {
         status: number
@@ -46,8 +48,41 @@ export namespace MethLib {
         createTime: string,
     }
 
+    export interface Tag {
+        id: number,
+        name: string,
+        createTime: string,
+    }
+
     export interface MethLibResponse extends Common.CommonResult<Method> { }
 
     export interface MethLibPageResponse extends Common.PageResponse<Method> {
+    }
+}
+
+/**
+ * MethLibCase API
+ */
+export namespace MethLibCase {
+    export interface CasePageRequest extends Common.PageRequest {
+        startTime: string | null,
+        endTime: string | null,
+        status: ModelStatus
+    }
+
+    export interface Case {
+        methodId: number,
+        caseId: string,
+        status: ModelStatus,
+        params: any,
+        result: any,
+        userId: string,
+        createTime: string,
+        method?: MethLib.Method
+    }
+
+    export interface CaseResponse extends Common.CommonResult<Case> { }
+
+    export interface CasePageResponse extends Common.PageResponse<Case> {
     }
 }

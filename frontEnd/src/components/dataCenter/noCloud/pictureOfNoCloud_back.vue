@@ -720,7 +720,6 @@ import { formatTime } from '@/util/common'
 import { getSceneGrids, getNoCloud, getCaseStatus, getCaseResult, pollStatus } from '@/api/http/satellite-data'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import * as MapOperation from '@/util/map/operation'
-import { ElMessage } from 'element-plus'
 import ezStore from '@/store/ezStore'
 import { useTaskStore } from '@/store'
 import {
@@ -987,13 +986,13 @@ const assignDefaultBands = () => {
 const handleMultiSourceData = async () => {
     // 检查是否选择了波段
     if (multiSourceData.selectedBands.length === 0) {
-        ElMessage.warning('请选择至少一个波段')
+        message.warning('请选择至少一个波段')
         return
     }
 
     // 检查是否选择了可视化波段
     if (!multiSourceData.visualization.red_band || !multiSourceData.visualization.green_band || !multiSourceData.visualization.blue_band) {
-        ElMessage.warning('请选择可视化波段')
+        message.warning('请选择可视化波段')
         return
     }
 
@@ -1037,7 +1036,7 @@ const handleMultiSourceData = async () => {
     console.log(getNoCloudParam, '发起请求')
     let startCalcRes = await getNoCloud(getNoCloudParam)
     if (startCalcRes.message !== 'success') {
-        ElMessage.error(t('datapage.nocloud.message.calerror'))
+        message.error(t('datapage.nocloud.message.calerror'))
         console.error(startCalcRes)
         return
     }
@@ -1062,7 +1061,7 @@ const handleMultiSourceData = async () => {
     //     // const result =                   // ###############记得添加返回值###############
     // } catch (error) {
     //     console.error("合成失败：", error)
-    //     ElMessage.error("合成失败，请重试")
+    //     message.error("合成失败，请重试")
     // }
     
 };
@@ -1101,9 +1100,9 @@ const addTimePhase = () => {
         // 清空选择
         multiTemporalData.date1 = null
         multiTemporalData.date2 = null
-        ElMessage.success('时相添加成功')
+        message.success('时相添加成功')
     } else {
-        ElMessage.warning('请选择两个时相日期')
+        message.warning('请选择两个时相日期')
     }
 }
 
@@ -1127,7 +1126,7 @@ const controlComplexProgress = (index: number) => {
 // const handleComplexSynthesis = async () => {
 //     // 检查是否选择了任何合成类型
 //     // if (!multiSourceData.enabled && !multiTemporalData.enabled) {
-//     //     ElMessage.warning('请至少选择一种合成类型')
+//     //     message.warning('请至少选择一种合成类型')
 //     //     return
 //     // }
 
@@ -1172,7 +1171,7 @@ const controlComplexProgress = (index: number) => {
 //         complexSynthesisLoading.value = false
 //         showComplexProgress.value[3] = false
         
-//         ElMessage.success('复杂合成任务完成')
+//         message.success('复杂合成任务完成')
         
 //         // 跳转到历史记录页面
 //         setCurrentPanel('history')
@@ -1181,7 +1180,7 @@ const controlComplexProgress = (index: number) => {
 //         console.error('复杂合成失败：', error)
 //         complexSynthesisLoading.value = false
 //         showComplexProgress.value[3] = false
-//         ElMessage.error('复杂合成失败，请重试')
+//         message.error('复杂合成失败，请重试')
 //     }
 // }
 
@@ -1494,7 +1493,7 @@ const calNoClouds = async () => {
     console.log(getNoCloudParam, '发起请求')
     let startCalcRes = await getNoCloud(getNoCloudParam)
     if (startCalcRes.message !== 'success') {
-        ElMessage.error(t('datapage.nocloud.message.calerror'))
+        message.error(t('datapage.nocloud.message.calerror'))
         console.error(startCalcRes)
         return
     }
@@ -1546,13 +1545,13 @@ const calNoClouds = async () => {
         calImage.value.push(calResult)
         noCloudLoading.value = false
         stopLoading()
-        ElMessage.success('无云一版图计算完成')
+        message.success('无云一版图计算完成')
     } catch (error) {
         console.log(error)
         calTask.value.calState = 'failed'
         noCloudLoading.value = false
         stopLoading()
-        ElMessage.error('无云一版图计算失败，请重试')
+        message.error('无云一版图计算失败，请重试')
     } */
 }
 
@@ -1775,7 +1774,7 @@ onMounted(async () => {
     // MapOperation.map_destroyImagePreviewLayer()
     // MapOperation.map_destroyGridLayer()
     if (!exploreData.load){
-        ElMessage.error(t('nav.disabled_message'))
+        message.error(t('nav.disabled_message'))
 
         router.push('/')
     }
@@ -1855,7 +1854,7 @@ onMounted(async () => {
     // MapOperation.map_addGridLayer(gridFeature)
     // MapOperation.draw_deleteAll()
 
-    // ElMessage.success(t('datapage.nocloud.message.guochanload'))
+    // message.success(t('datapage.nocloud.message.guochanload'))
     
     await mapManager.waitForInit();
 

@@ -1,5 +1,4 @@
 import { ref, reactive } from 'vue'
-import { ElMessage } from 'element-plus'
 import { message } from 'ant-design-vue'
 import { getNoCloud } from '@/api/http/satellite-data'
 import { getNoCloudUrl4MosaicJson } from '@/api/http/satellite-data/visualize.api'
@@ -133,7 +132,7 @@ export const useNoCloudCalculation = (allScenes: any) => {
         console.log(getNoCloudParam, '发起请求')
         let startCalcRes = await getNoCloud(getNoCloudParam)
         if (startCalcRes.message !== 'success') {
-            ElMessage.error('无云一版图计算失败')
+            message.error('无云一版图计算失败')
             console.error(startCalcRes)
             return
         }

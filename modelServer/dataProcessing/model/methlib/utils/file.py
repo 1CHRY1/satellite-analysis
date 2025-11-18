@@ -5,12 +5,17 @@ from typing import Dict, Any, List, Optional, Union
 from pathlib import Path
 from datetime import datetime
 from abc import ABC, abstractmethod
+import rasterio
 import requests # 引入 requests 库用于 HTTP 请求
 from urllib.parse import urlparse, unquote # 引入用于 URL 解析和解码的库
 import re
 from dataProcessing.config import current_config as CONFIG
-
-from dataProcessing.Utils.osUtils import uploadLocalFile # 引入正则表达式库
+import io
+import rasterio
+from rasterio.io import MemoryFile
+from rio_cogeo.cogeo import cog_translate
+from rio_cogeo.profiles import cog_profiles
+from dataProcessing.Utils.osUtils import getMinioClient, uploadLocalFile # 引入正则表达式库
 
 # ----------------------------------------------------
 # 模拟文件操作工具类 (替换 Java FileUtils)
@@ -184,16 +189,31 @@ class FileUtils:
 
     @staticmethod
     def delete_files_from_directory(files: List[Path]):
-        """删除指定路径列表中的文件。"""
-        print(f"[FileUtils] 正在删除临时输入文件: {[f.name for f in files]}")
-        for file in files:
+        """删除指定路径列表中的文件（兼容 str / Path / 文件对象）"""
+        from pathlib import Path
+        import os
+
+        # 统一转换为 Path 对象
+        normalized = []
+        for f in files:
+            if isinstance(f, Path):
+                normalized.append(f)
+            elif hasattr(f, "name") and isinstance(f.name, str):
+                normalized.append(Path(f.name))
+            elif isinstance(f, str):
+                normalized.append(Path(f))
+            else:
+                continue  # 不可识别的类型，跳过
+
+        print(f"[FileUtils] 正在删除临时输入文件: {[p.as_posix() for p in normalized]}")
+
+        for file in normalized:
             try:
-                # 确保只删除文件
-                if file.is_file():
+                if file.exists() and file.is_file():
                     os.unlink(file)
             except OSError as e:
-                # 仅打印错误，不中断执行
                 print(f"[ERROR] 无法删除文件 {file}: {e}")
+
 
     @staticmethod
     def get_all_files_from_directory(directory_path: Path) -> List[Path]:
@@ -209,7 +229,54 @@ class FileUtils:
         return file_list
 
     @staticmethod
-    def upload_file_to_server(file_path, wd) -> str:
-        object_name = f"{wd}/{Path(file_path).name}"
-        uploadLocalFile(file_path, CONFIG.MINIO_TEMP_FILES_BUCKET, object_name)
-        return f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}/{CONFIG.MINIO_TEMP_FILES_BUCKET}/{object_name}"
+    def upload_file_to_server(file_path, bucket, object_path) -> str:
+        uploadLocalFile(file_path, bucket, object_path)
+        return f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}/{CONFIG.MINIO_TEMP_FILES_BUCKET}/{object_path}"
+
+    @staticmethod
+    def convert_to_cog_and_upload(file_path, bucket, object_path) -> str:
+        """
+        将普通GeoTIFF转换为COG格式并上传到MinIO，返回MinIO URL
+        """
+        client = getMinioClient()
+
+        # 打开输入文件
+        with rasterio.open(file_path) as src:
+            profile = cog_profiles.get("deflate")  # 可选: deflate/lzw/zstd等压缩方式
+            profile.update({
+                "BIGTIFF": "YES",
+                "NUM_THREADS": "ALL_CPUS",
+                "BLOCKSIZE": 256,
+                "COMPRESS": "LZW",
+                "OVERVIEWS": "AUTO",
+                "OVERVIEW_RESAMPLING": "NEAREST",
+            })
+            # 使用内存文件作为输出
+            with MemoryFile() as memfile:
+                cog_translate(
+                    src,
+                    memfile.name,  # 内存文件临时名称
+                    profile,
+                    in_memory=True,  # 关键参数: 直接输出到内存
+                    quiet=True,
+                )
+
+                # 获取生成的 COG 数据
+                cog_bytes = memfile.read()
+
+        # 上传到 MinIO
+        cog_name = object_path
+        cog_bytesio = io.BytesIO(cog_bytes)
+        cog_bytesio.seek(0)
+
+        client.put_object(
+            bucket_name=bucket,
+            object_name=cog_name,
+            data=cog_bytesio,
+            length=len(cog_bytes),
+            content_type="image/tiff",
+        )
+
+        # 构造 URL
+        url = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}/{bucket}/{cog_name}"
+        return url

@@ -195,7 +195,7 @@ import {
     BanIcon,
     MapIcon,
 } from 'lucide-vue-next'
-import { ElMessage } from 'element-plus'
+import { message } from 'ant-design-vue'
 
 const props = defineProps({
     regionConfig: {
@@ -275,10 +275,10 @@ const showImageBBox = async () => {
             fillColor: '#a4ffff',
             fillOpacity: 0.2,
         })
-        ElMessage.success('已加影像边界，请在影像与行政区的交集内选点。')
+        message.success('已加影像边界，请在影像与行政区的交集内选点。')
     } catch (e) {
         console.error("有错误找后端", e)
-        ElMessage.error('加载影像边界失败。')
+        message.error('加载影像边界失败。')
     }
 }
 
@@ -286,11 +286,11 @@ const selectedSceneId = ref('')
 
 const calSpectrum = async () => {
     if (pickedPoint.value.length === 0) {
-        ElMessage.warning('请先选择您要计算的区域')
+        message.warning('请先选择您要计算的区域')
         return
     }
     if (selectedSceneId.value === '') {
-        ElMessage.warning('请先选择您要计算的影像')
+        message.warning('请先选择您要计算的影像')
         return
     }
     let spectrumParam = {
@@ -299,7 +299,7 @@ const calSpectrum = async () => {
     }
     let getSpectrumRes = await getSpectrum(spectrumParam)
     if (getSpectrumRes.message !== 'success') {
-        ElMessage.error('计算失败，请重试')
+        message.error('计算失败，请重试')
         console.error(getSpectrumRes)
         return
     }
@@ -361,10 +361,10 @@ const calSpectrum = async () => {
             imageName: selectedImage.sceneName,
             point: [...pickedPoint.value]
         })
-        ElMessage.success('光谱分析计算完成')
+        message.success('光谱分析计算完成')
     } catch (error) {
         calTask.value.calState = 'failed'
-        ElMessage.error('光谱分析计算失败，请重试')
+        message.error('光谱分析计算失败，请重试')
         console.error(error);
     }
 }
@@ -373,7 +373,7 @@ const calSpectrum = async () => {
 const calNDVI = async () => {
 
     if (pickedPoint.value.length === 0) {
-        ElMessage.warning('请先选择您要计算的区域')
+        message.warning('请先选择您要计算的区域')
         return
     }
     let getNdviPointParam = {
@@ -384,7 +384,7 @@ const calNDVI = async () => {
 
     let getNdviRes = await getNdviPoint(getNdviPointParam)
     if (getNdviRes.message !== 'success') {
-        ElMessage.error('计算失败，请重试')
+        message.error('计算失败，请重试')
         console.error(getNdviRes)
         return
     }
@@ -439,10 +439,10 @@ const calNDVI = async () => {
             analysis: "定点NDVI时序计算",
             point: [...pickedPoint.value]
         })
-        ElMessage.success('NDVI计算完成')
+        message.success('NDVI计算完成')
     } catch (error) {
         calTask.value.calState = 'failed'
-        ElMessage.error('NDVI计算失败，请重试')
+        message.error('NDVI计算失败，请重试')
         console.error(error);
     }
 

@@ -2,7 +2,6 @@ import { computed, ref } from "vue";
 import * as MapOperation from '@/util/map/operation'
 import * as InteractiveExploreMapOps from '@/util/map/operation/interactive-explore'
 import { getRealtimeNoCloudUrl } from "@/api/http/satellite-data/visualize.api"
-import { ElMessage } from 'element-plus'
 import { useI18n } from "vue-i18n";
 import { ezStore } from "@/store"
 import { getDEMUrl, getNDVIOrSVRUrl, getSceneUrl, getVectorUrl, get3DUrl, getLargeSceneMosaicUrl, getLargeSceneUrl } from "@/api/http/interactive-explore/visualize.api";
@@ -326,7 +325,7 @@ export const useVisualize = () => {
 
     const showVectorResult = async (tableName: string, index: number) => {
         if (tableName === '') {
-            ElMessage.warning(t('datapage.explore.message.filtererror_choose'))
+            message.warning(t('datapage.explore.message.filtererror_choose'))
             return
         }
         const stopLoading = message.loading('正在加载，请稍后...', 0)

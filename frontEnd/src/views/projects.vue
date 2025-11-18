@@ -153,11 +153,11 @@ import { getAllTools, getToolStatus } from '@/api/http/tool'
 import projectCard from '@/components/projects/projectCard.vue'
 import { Loading } from "@element-plus/icons-vue"
 import type { project, newProject } from '@/type/analysis'
-import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store'
 import { useI18n } from 'vue-i18n'
 import { updateRecord } from '@/api/http/user'
+import { message } from 'ant-design-vue'
 
 const { t } = useI18n()
 const userStore = useUserStore()
@@ -232,21 +232,21 @@ const enterProject = (item: project) => {
     if (item.createUser === userId) {
         router.push(`/project/${item.projectId}`)
     } else {
-        ElMessage.error(t("projectpage.message.error.entererr"))
+        message.error(t("projectpage.message.error.entererr"))
     }
 }
 
 const create = async () => {
     if (!newProject.value.projectName) {
-        ElMessage.error(t("projectpage.message.error.create_name_empty"))
+        message.error(t("projectpage.message.error.create_name_empty"))
         return
     } else if (!newProject.value.description) {
-        ElMessage.error(t("projectpage.message.error.create_description_empty"))
+        message.error(t("projectpage.message.error.create_description_empty"))
         return
     } else if (
         projectList.value.some((item: project) => item.projectName === newProject.value.projectName)
     ) {
-        ElMessage.error(t("projectpage.message.error.create_name_exist"))
+        message.error(t("projectpage.message.error.create_name_exist"))
         return
     }
     createLoading.value = true
@@ -256,7 +256,7 @@ const create = async () => {
     }
     let createRes = await createProject(createBody)
     router.push(`/project/${createRes.projectId}`)
-    ElMessage.success(t("projectpage.message.success"))
+    message.success(t("projectpage.message.success"))
     try{
     action.value = '创建'
     uploadRecord(action)}
