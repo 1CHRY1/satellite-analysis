@@ -5,7 +5,16 @@ import type {
 	RequestData,
 } from "@ant-design/pro-components";
 import { ProTable } from "@ant-design/pro-components";
-import { Button, Cascader, message, Popconfirm, Space, Spin, Tag } from "antd";
+import {
+	Button,
+	Cascader,
+	message,
+	Popconfirm,
+	Popover,
+	Space,
+	Spin,
+	Tag,
+} from "antd";
 import { Table } from "antd";
 import type { SortOrder } from "antd/es/table/interface";
 import dayjs from "dayjs";
@@ -15,7 +24,7 @@ import RegionSelector from "~/components/region/region-selector";
 import type { Task } from "~/types/task";
 import { useUser } from "./hooks/useUser";
 import { Link } from "react-router";
-
+import { EyeOutlined } from "@ant-design/icons";
 const colors = ["magenta", "orange", "green", "geekblue", "purple"];
 
 const getAllTask = async (
@@ -35,8 +44,12 @@ const getAllTask = async (
 		pageSize: params.pageSize as number,
 		resolution: params.resolution,
 		// regionId: params.regionId
-		startTime: params.createTime?.[0] ? dayjs(params.createTime?.[0]).format('YYYY-MM-DD HH:mm:ss') : undefined,
-		endTime: params.createTime?.[1] ? dayjs(params.createTime?.[1]).format('YYYY-MM-DD HH:mm:ss') : undefined,
+		startTime: params.createTime?.[0]
+			? dayjs(params.createTime?.[0]).format("YYYY-MM-DD HH:mm:ss")
+			: undefined,
+		endTime: params.createTime?.[1]
+			? dayjs(params.createTime?.[1]).format("YYYY-MM-DD HH:mm:ss")
+			: undefined,
 	});
 	console.log(params);
 	return {
@@ -54,6 +67,25 @@ const delTask = async (caseIds: string[]) => {
 	} else message.warning(res.message);
 	return false;
 };
+
+const PopoverJson = ({ title, params }: { title: string; params: any }) => (
+	<Popover
+		placement="leftTop"
+		title={title}
+		content={
+			<div style={{ maxHeight: 300, overflowY: "auto", maxWidth: 400 }}>
+				<pre style={{ margin: 0, fontSize: "12px" }}>
+					{JSON.stringify(params, null, 2)}
+				</pre>
+			</div>
+		}
+		trigger="click"
+	>
+		<Button size="small" type="link" icon={<EyeOutlined></EyeOutlined>}>
+			查看
+		</Button>
+	</Popover>
+);
 
 /**
  * 用户
@@ -92,11 +124,9 @@ const TaskTable: React.FC = () => {
 			dataIndex: "userId",
 			ellipsis: true,
 			hideInSearch: true,
-            render: (_, task) => {
-                return (
-                    <UserName id={task.userId}></UserName>
-                )
-            }
+			render: (_, task) => {
+				return <UserName id={task.userId}></UserName>;
+			},
 		},
 		{
 			title: "行政区",
@@ -158,6 +188,20 @@ const TaskTable: React.FC = () => {
 				PENDING: { text: "排队中", status: "Warning" },
 				NONE: { text: "未开始", status: "Default" },
 				ERROR: { text: "失败", status: "Error" },
+			},
+		},
+		{
+			title: "运行结果",
+			dataIndex: "result",
+			valueType: "text",
+			hideInSearch: true,
+			render: (_, task) => {
+				return (
+					<PopoverJson
+						title="输出结果"
+						params={task.result}
+					></PopoverJson>
+				);
 			},
 		},
 		{
