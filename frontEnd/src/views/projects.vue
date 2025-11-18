@@ -6,7 +6,7 @@
         <div class="relative z-10 flex flex-col items-center justify-center">
             <div class="my-10 flex w-[50vw] flex-col items-center justify-center">
                 <svg class="h-12 w-fit" viewBox="0 0 420 96" xmlns="http://www.w3.org/2000/svg">
-                    <text class="page-heading-script" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" style="font-size: 80px;">
+                    <text class="page-heading-script" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" style="font-size: 86px;">
                         在线编程
                     </text>
                 </svg>
