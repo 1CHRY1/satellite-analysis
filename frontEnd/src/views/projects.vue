@@ -56,7 +56,7 @@
                         ? searchedProjects
                         : (myProjectsVisible
                             ? myProjectList
-                            : projectList.filter((i:any)=> Number((i as any).isTool ?? 0) !== 1)))"
+                            : projectList.filter((i:any)=> !isToolItem(i))))"
                         :key="item.projectId" :project="item" :is-service="isService(item)"
                         @click="enterProject(item)" @deleteProject=afterDeleteProject>
                     </projectCard>
@@ -174,7 +174,13 @@ const searchedProjects: Ref<project[]> = ref([])
 const searchProjectsVisible = ref(false)
 
 // 支持搜索工具名称、创建人和工具描述
-const isToolItem = (item: project) => Number((item as any).isTool ?? 0) === 1
+const isToolItem = (item: project) => {
+    const v: any = (item as any)?.isTool
+    if (typeof v === 'number') return v === 1
+    if (typeof v === 'boolean') return v === true
+    if (typeof v === 'string') return v === '1' || v.toLowerCase() === 'true'
+    return false
+}
 
 const researchProjects = () => {
     if (searchInput.value.length > 0) {
@@ -329,7 +335,7 @@ onUnmounted(() => {
 
 // 计算是否为服务卡：后台标志优先，其次兜底检测
 const isService = (item: project) => {
-    return Number((item as any).isTool ?? 0) === 1 || serviceMap.value[item.projectId] === true
+    return isToolItem(item) || serviceMap.value[item.projectId] === true
 }
 
 const ensureServiceFlags = async () => {
@@ -348,7 +354,7 @@ const ensureServiceFlags = async () => {
         const promises: Promise<void>[] = []
         for (const item of projectList.value) {
             // 已标服务的卡片不重复探测
-            if (Number((item as any).isTool ?? 0) === 1) continue
+            if (isToolItem(item)) continue
             if (serviceMap.value[item.projectId] === true) continue
             if (!toolIdMap.value[item.projectId]) continue
             promises.push(checkAndSetService(item.projectId, userIdLocal))

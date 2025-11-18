@@ -241,11 +241,23 @@ const reloadTools = async () => {
   await fetchToolProjects()
 }
 
+const isToolFlag = (p: any): number => {
+  const v = (p as any)?.isTool
+  if (typeof v === 'number') return v
+  if (typeof v === 'boolean') return v ? 1 : 0
+  if (typeof v === 'string') {
+    const s = v.toLowerCase()
+    if (s === '1' || s === 'true') return 1
+    return 0
+  }
+  return 0
+}
+
 const fetchToolProjects = async () => {
   try {
     const all = await getProjects()
     toolList.value = (all || [])
-      .filter((p: any) => Number((p as any).isTool ?? 0) === 1)
+      .filter((p: any) => isToolFlag(p) === 1)
       .sort((a: any, b: any) => String(b.createTime || '').localeCompare(String(a.createTime || '')))
   } catch (e) {
     ElMessage.error('获取工具列表失败')
