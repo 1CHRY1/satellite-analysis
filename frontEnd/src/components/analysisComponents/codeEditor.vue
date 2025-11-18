@@ -180,8 +180,8 @@
                     </el-form>
                 </div>
                 <template #footer>
-                    <el-button @click="toolWizardVisible = false" :disabled="toolWizardSubmitting">取消</el-button>
-                    <el-button type="primary" @click="publishDynamicTool" :loading="toolWizardSubmitting">
+                    <el-button @click="toolWizardVisible = false" :disabled="servicePublishLoading">取消</el-button>
+                    <el-button type="primary" @click="startServiceForWizard" :loading="servicePublishLoading">
                         发布
                     </el-button>
                 </template>
@@ -703,22 +703,55 @@ const applyExpressionTemplate = async () => {
 }
 
 const applyFlaskTemplate = async () => {
-    // 预置为“Flask（HTTP 瓦片）”路径
+    // 预置为“Flask（HTTP 瓦片）”路径（内置渲染版，无 Titiler 依赖）
     const template = `"""
-Flask-based dynamic tile tool with CORS enabled.
+Flask-based dynamic tile tool (no Titiler).
 
-Expose a /run endpoint that takes a Titiler mosaicUrl plus optional
-expression/colormap parameters, and returns a tileTemplate that the
-Dynamic Analysis page can overlay.
+It renders analysis tiles directly from a MosaicJSON using rio-tiler.
+
+Endpoints:
+- POST /run -> returns {"tileTemplate": "<this-service>/tile/{z}/{x}/{y}.png?..."}
+- GET  /tile/{z}/{x}/{y}.png -> serves PNG tiles
+
+Required pip packages (install via 依赖管理):
+- rasterio, numpy, mercantile, requests
+- rio-tiler>=5, rio-tiler-mosaic, cogeo-mosaic
 """
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, Response as FlaskResponse
 from flask_cors import CORS
 from urllib.parse import quote_plus
 import json
+import requests
+import numpy as np
+
+import mercantile
+from rio_tiler.io import COGReader
+from rio_tiler_mosaic.mosaic import mosaic_tiler
+from rio_tiler_mosaic.methods import defaults
+from rio_tiler.colormap import cmap
+from rio_tiler.utils import render
+from rio_tiler.profiles import img_profiles
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
+
+
+def tiler(src_path: str, *args, nodata=None, **kwargs):
+    with COGReader(src_path, options={"nodata": nodata}) as cog:
+        return cog.tile(*args, **kwargs)
+
+
+def normalize(arr, min_val=-1.0, max_val=1.0):
+    arr = np.nan_to_num(arr)
+    arr = np.clip((arr - min_val) / (max_val - min_val), 0, 1)
+    return (arr * 255).astype("uint8")
+
+
+def fetch_mosaic_definition(mosaic_url: str):
+    resp = requests.get(mosaic_url, timeout=10)
+    resp.raise_for_status()
+    return resp.json()
 
 
 @app.route("/run", methods=["POST"])
@@ -743,14 +776,68 @@ def run():
     color = params.get("color") or "rdylgn"
     pixel_method = params.get("pixel_method") or "first"
 
+    # 生成绝对 URL，确保前端能直接请求此服务自身的瓦片接口
+    base = request.url_root.rstrip("/")
     tile_template = (
-        "/tiler/mosaic/analysis/{z}/{x}/{y}.png?"
+        f"{base}/tile/{{z}}/{{x}}/{{y}}.png?"
         f"mosaic_url={quote_plus(mosaic_url)}"
         f"&expression={quote_plus(expression)}"
         f"&pixel_method={quote_plus(pixel_method)}"
         f"&color={quote_plus(color)}"
     )
     return jsonify({"tileTemplate": tile_template})
+
+
+@app.get("/tile/<int:z>/<int:x>/<int:y>.png")
+def tile(z: int, x: int, y: int):
+    try:
+        mosaic_url = request.args.get("mosaic_url")
+        expression = request.args.get("expression", type=str)
+        pixel_method = request.args.get("pixel_method", default="first", type=str)
+        color = request.args.get("color", default="rdylgn", type=str)
+
+        if not mosaic_url or not expression:
+            return FlaskResponse("Missing required params", status=400)
+
+        # Step 1: Load MosaicJSON
+        mosaic_def = fetch_mosaic_definition(mosaic_url)
+
+        # Step 2: Resolve assets for this tile using minzoom quadkey
+        quadkey_zoom = mosaic_def.get("minzoom")
+        if quadkey_zoom is None:
+            return FlaskResponse("Invalid mosaic: missing minzoom", status=400)
+
+        merc_tile = mercantile.Tile(x=x, y=y, z=z)
+        if merc_tile.z > quadkey_zoom:
+            depth = merc_tile.z - quadkey_zoom
+            for _ in range(depth):
+                merc_tile = mercantile.parent(merc_tile)
+
+        quadkey = mercantile.quadkey(*merc_tile)
+        assets = mosaic_def.get("tiles", {}).get(quadkey)
+        if not assets:
+            return FlaskResponse(status=204)
+
+        # Step 3: Pixel selection
+        method = (pixel_method or "first").lower()
+        if method == "highest":
+            sel = defaults.HighestMethod()
+        elif method == "lowest":
+            sel = defaults.LowestMethod()
+        else:
+            sel = defaults.FirstMethod()
+
+        # Step 4: Fetch tile with expression
+        img, mask = mosaic_tiler(assets, x, y, z, tiler, pixel_selection=sel, expression=expression, nodata=0)
+        if img is None:
+            return FlaskResponse(status=204)
+
+        # Step 5: Render single-band expression with colormap
+        img_uint8 = normalize(img[0], -1, 1)
+        content = render(img_uint8, mask, img_format="png", colormap=cmap.get(color), **img_profiles.get("png"))
+        return FlaskResponse(content, mimetype="image/png")
+    except Exception as e:
+        return FlaskResponse(str(e), status=500, mimetype="text/plain")
 
 
 if __name__ == "__main__":
