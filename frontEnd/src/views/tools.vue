@@ -48,13 +48,11 @@
                 <!-- 计算合适的宽度 -->
                 <div v-if="!createToolView" class="grid gap-12 overflow-y-auto p-3"
                      :style="{ gridTemplateColumns: `repeat(${columns}, ${cardWidth}px)` }">
-                  <ToolCard v-for="tool in (searchVisible ? searchedTools : (myOnly ? toolList.filter(isMyTool) : toolList))"
-                            :key="tool.toolId || tool.projectId || tool.name"
-                            :tool="tool"
-                            :owner-name="userNameMap[(tool.userId||'').toString()] || tool.createUserName || tool.userName || ''"
-                            :owner-email="userEmailMap[(tool.userId||'').toString()] || tool.createUserEmail || ''"
-                            @click="enterTool(tool)"
-                            @deleted="reloadTools" />
+                  <projectCard v-for="item in (searchVisible ? searchedTools : (myOnly ? toolList.filter(isMyTool) : toolList))"
+                               :key="item.projectId"
+                               :project="item"
+                               @click="enterProject(item)"
+                               @deleteProject="reloadTools" />
                 </div>
 
                 <!-- 创建工具的卡片（与 projects.vue 一致样式） -->
@@ -115,16 +113,14 @@
 import { ref, onMounted, onUnmounted, type Ref, computed } from 'vue'
 import projectsBg from '@/components/projects/projectsBg.vue'
 import { Search } from 'lucide-vue-next'
-import { getAllTools } from '@/api/http/tool/tool.api'
-import { getProjects } from '@/api/http/analysis'
-import ToolCard from '@/components/tools/ToolCard.vue'
+import { getProjects, createProject } from '@/api/http/analysis'
+import projectCard from '@/components/projects/projectCard.vue'
 import { ElMessage } from 'element-plus'
-import { getUsers, updateRecord } from '@/api/http/user'
+import { updateRecord } from '@/api/http/user'
 import { useUserStore } from '@/store'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { Loading } from '@element-plus/icons-vue'
-import { createProject } from '@/api/http/analysis'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -144,9 +140,8 @@ const researchTools = () => {
   const q = searchInput.value?.trim()
   if (q && q.length > 0) {
     searchedTools.value = toolList.value.filter((item: any) =>
-      // 兼容项目表字段：projectName -> name
-      (item.toolName || item.name || item.projectName || '').includes(q) ||
-      String(item.userId ?? item.createUser ?? '').includes(q) ||
+      (item.projectName || '').includes(q) ||
+      String(item.createUser ?? '').includes(q) ||
       (item.description || '').includes(q)
     )
     searchVisible.value = true
@@ -164,8 +159,6 @@ const toggleMyOnly = () => {
  * 工具列表模块
  */
 const toolList: Ref<any[]> = ref([])
-const userNameMap = ref<Record<string, string>>({})
-const userEmailMap = ref<Record<string, string>>({})
 const cardWidth = 300
 const gap = 48
 const columns = ref(1)
@@ -184,19 +177,15 @@ const updateColumns = () => {
 
 // 判定是否为当前用户的工具（统一转字符串避免类型不一致导致的筛选失败）
 const isMyTool = (t: any) => {
-  return String(t?.userId ?? t?.createUser ?? '') === String(userId.value ?? '')
+  return String(t?.createUser ?? '') === String(userId.value ?? '')
 }
 
 // 进入编辑器（与在线编程行为一致）
-const enterTool = (tool: any) => {
+const enterProject = (item: any) => {
   const uid = (userId.value || '').toString()
-  const owner = (tool?.userId || '').toString()
+  const owner = (item?.createUser || '').toString()
   if (owner === uid) {
-    if (tool?.projectId) {
-      router.push(`/project/${tool.projectId}`)
-    } else {
-      ElMessage.error('该工具缺少关联工程，无法打开')
-    }
+    router.push(`/project/${item.projectId}`)
   } else {
     ElMessage.error(t('toolpage.message.error.entererr'))
   }
@@ -249,42 +238,18 @@ const create = async () => {
 }
 
 const reloadTools = async () => {
-  await fetchTools()
+  await fetchToolProjects()
 }
 
-const fetchTools = async () => {
+const fetchToolProjects = async () => {
   try {
-    const res = await getAllTools({ current: 1, size: 200, userId: userId.value })
-    const records = res?.data?.records || []
-    toolList.value = records
-    await ensureUserNames()
+    const all = await getProjects()
+    toolList.value = (all || [])
+      .filter((p: any) => Number((p as any).isTool ?? 0) === 1)
+      .sort((a: any, b: any) => String(b.createTime || '').localeCompare(String(a.createTime || '')))
   } catch (e) {
     ElMessage.error('获取工具列表失败')
   }
-}
-
-// 为工具作者补全昵称/邮箱映射
-const ensureUserNames = async () => {
-  const ids = Array.from(new Set((toolList.value || [])
-    .map((t: any) => (t?.userId || '').toString())
-    .filter(Boolean)))
-  const pending: Promise<void>[] = []
-  for (const id of ids) {
-    if (!userNameMap.value[id]) {
-      pending.push(
-        getUsers(id)
-          .then((u: any) => {
-            userNameMap.value[id] = u?.userName || u?.name || u?.email || id
-            if (u?.email) userEmailMap.value[id] = u.email
-          })
-          .catch(() => {
-            userNameMap.value[id] = id
-            if (!userEmailMap.value[id]) userEmailMap.value[id] = ''
-          })
-      )
-    }
-  }
-  if (pending.length) await Promise.all(pending)
 }
 
 // not used in tools page
@@ -294,7 +259,7 @@ const ensureUserNames = async () => {
 // no action log for listing
 
 onMounted(async () => {
-  await fetchTools()
+  await fetchToolProjects()
   updateColumns()
   window.addEventListener('resize', updateColumns)  
 })

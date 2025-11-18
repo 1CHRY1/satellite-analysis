@@ -48,11 +48,12 @@
                 <!-- 计算合适的宽度 -->
                 <div v-if="!createProjectView" class="grid gap-12 overflow-y-auto p-3"
                     :style="{ gridTemplateColumns: `repeat(${columns}, ${cardWidth}px)` }">
-                    <projectCard v-for="item in searchProjectsVisible
+                    <projectCard v-for="item in (searchProjectsVisible
                         ? searchedProjects
-                        : myProjectsVisible
+                        : (myProjectsVisible
                             ? myProjectList
-                            : projectList" :key="item.projectId" :project="item" :is-service="isService(item)"
+                            : projectList.filter((i:any)=> Number((i as any).isTool ?? 0) !== 1)))"
+                        :key="item.projectId" :project="item" :is-service="isService(item)"
                         @click="enterProject(item)" @deleteProject=afterDeleteProject>
                     </projectCard>
                 </div>
@@ -169,13 +170,16 @@ const searchedProjects: Ref<project[]> = ref([])
 const searchProjectsVisible = ref(false)
 
 // 支持搜索工具名称、创建人和工具描述
+const isToolItem = (item: project) => Number((item as any).isTool ?? 0) === 1
+
 const researchProjects = () => {
     if (searchInput.value.length > 0) {
         searchedProjects.value = projectList.value.filter(
             (item: project) =>
-                item.projectName.includes(searchInput.value) ||
+                (item.projectName.includes(searchInput.value) ||
                 item.createUserName.includes(searchInput.value) ||
-                item.description.includes(searchInput.value),
+                item.description.includes(searchInput.value)) &&
+                !isToolItem(item),
         )
         searchProjectsVisible.value = true
         console.log(searchedProjects.value, 1115)
@@ -187,7 +191,7 @@ const researchProjects = () => {
 // 查看我的工具
 const viewMyProjects = () => {
     myProjectsVisible.value = !myProjectsVisible.value
-    myProjectList.value = projectList.value.filter((item: project) => item.createUser === userId)
+    myProjectList.value = projectList.value.filter((item: project) => item.createUser === userId && !isToolItem(item))
 }
 
 /**
