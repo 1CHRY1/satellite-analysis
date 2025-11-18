@@ -146,54 +146,6 @@ public class ModelCodingService {
                 .build();
         dockerService.initEnv(serverDir);
 
-        // Overwrite remote main.py with template based on desired type (tool vs non-tool)
-        try {
-            String baseLocal = dockerServerProperties.getLocalPath();
-            if (baseLocal != null && !baseLocal.isEmpty()) {
-                String devCliDir = baseLocal.endsWith("/") ? (baseLocal + "devCli/") : (baseLocal + "/devCli/");
-                // CreateProjectDTO in micro may not have isTool field; attempt reflectively or default to non-tool
-                boolean isTool = false;
-                try {
-                    java.lang.reflect.Method m = createProjectDTO.getClass().getMethod("isTool");
-                    Object val = m.invoke(createProjectDTO);
-                    if (val instanceof Boolean) isTool = (Boolean) val;
-                } catch (Exception ignored) {}
-
-                String chosenLocal = isTool ? (devCliDir + "main_tool.py") : (devCliDir + "main_nontool.py");
-                String fallbackLocal = devCliDir + "main.py";
-
-                java.io.InputStream in = null;
-                try {
-                    in = new java.io.FileInputStream(chosenLocal);
-                } catch (java.io.FileNotFoundException e) {
-                    try {
-                        in = new java.io.FileInputStream(fallbackLocal);
-                    } catch (java.io.FileNotFoundException ignored) {
-                        in = null;
-                    }
-                }
-                if (in != null) {
-                    try (java.io.InputStream autoClose = in) {
-                        sftpDataService.uploadFileFromStream(autoClose, serverPyPath);
-                    }
-                } else {
-                    // fallback to classpath resources if local files not found
-                    String resName = isTool ? "/modelDockerVolume/devCli/main_tool.py" : "/modelDockerVolume/devCli/main_nontool.py";
-                    java.io.InputStream res = ModelCodingService.class.getResourceAsStream(resName);
-                    if (res == null) {
-                        res = ModelCodingService.class.getResourceAsStream("/modelDockerVolume/devCli/main.py");
-                    }
-                    if (res != null) {
-                        try (java.io.InputStream autoClose = res) {
-                            sftpDataService.uploadFileFromStream(autoClose, serverPyPath);
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            // best-effort override; ignore failure
-        }
-
         // Load Config
         String configPath = serverDir + "config.json";
         sftpDataService.writeRemoteFile(configPath, getRemoteConfig(project));
