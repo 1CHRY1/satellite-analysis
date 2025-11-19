@@ -100,13 +100,14 @@ public class ModelExampleService {
     @Autowired
     SRModelServerProperties SRModelServerProperties;
 
-    private CommonResultVO runModelServerModel(String url, JSONObject param, long expirationTime) {
+    public CommonResultVO runModelServerModel(String url, JSONObject param, long expirationTime) {
         try {
             JSONObject modelCaseResponse = JSONObject.parseObject(ProcessUtil.runModelCase(url, param));
             String caseId = modelCaseResponse.getJSONObject("data").getString("taskId");
-            quartzSchedulerManager.startModelRunningStatusJob(caseId, modelServerProperties);
             JSONObject modelCase = JSONObject.of("status", "RUNNING", "start", LocalDateTime.now());
             redisUtil.addJsonDataWithExpiration(caseId, modelCase, expirationTime);
+            // 这里我也调个位置
+            quartzSchedulerManager.startModelRunningStatusJob(caseId, modelServerProperties);
             return CommonResultVO.builder().status(1).message("success").data(caseId).build();
         } catch (Exception e) {
             return CommonResultVO.builder().status(-1).message("Wrong Because of " + e.getMessage()).build();
@@ -141,9 +142,9 @@ public class ModelExampleService {
             JSONObject modelCaseResponse = JSONObject.parseObject(ProcessUtil.runModelCase(url, param));
 //            String caseId = modelCaseResponse.getJSONObject("data").getString("taskId");
             String caseId = modelCaseResponse.getString("taskId");
-            quartzSchedulerManager.startModelRunningStatusJob(caseId, modelServerProperties);
             JSONObject modelCase = JSONObject.of("status", "RUNNING", "start", LocalDateTime.now());
             redisUtil.addJsonDataWithExpiration(caseId, modelCase, expirationTime);
+            quartzSchedulerManager.startModelRunningStatusJob(caseId, modelServerProperties);
             return CommonResultVO.builder().status(1).message("success").data(caseId).build();
         } catch (Exception e) {
             return CommonResultVO.builder().status(-1).message("Wrong Because of " + e.getMessage()).build();

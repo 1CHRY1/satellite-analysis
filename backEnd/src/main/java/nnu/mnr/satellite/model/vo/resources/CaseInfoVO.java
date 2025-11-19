@@ -20,4 +20,5 @@ public class CaseInfoVO {
     private LocalDateTime createTime;
     private Integer regionId;
     private String bandList;
+    private String userId;
 }

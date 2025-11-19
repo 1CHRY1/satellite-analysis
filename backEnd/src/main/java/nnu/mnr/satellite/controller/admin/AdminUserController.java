@@ -23,6 +23,11 @@ public class AdminUserController {
         return ResponseEntity.ok(adminUserService.getUserInfoPage(userPageDTO));
     }
 
+    @GetMapping("/{userId}")
+    public ResponseEntity<CommonResultVO> getUserInfoById(@PathVariable String userId) throws Exception {
+        return ResponseEntity.ok(adminUserService.getUserInfoById(userId));
+    }
+
     @PutMapping("/insert")
     public ResponseEntity<CommonResultVO> insertUser(@RequestBody UserInsertDTO userInsertDTO) throws Exception {
         return ResponseEntity.ok(adminUserService.insertUser(userInsertDTO));
