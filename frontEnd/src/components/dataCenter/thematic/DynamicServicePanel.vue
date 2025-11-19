@@ -408,11 +408,19 @@ const runTool = async () => {
                 }
                 const data = await response.json()
                 const payload = pickResponseData(data) ?? data
-                const featureCollection =
-                    payload?.featureCollection ??
-                    payload?.features ??
-                    payload?.geojson ??
-                    payload
+                let featureCollection: any = null
+                // 优先直接使用标准 FeatureCollection
+                if (payload && payload.type === 'FeatureCollection' && Array.isArray(payload.features)) {
+                    featureCollection = payload
+                } else if (payload?.featureCollection) {
+                    featureCollection = payload.featureCollection
+                } else if (payload?.geojson) {
+                    featureCollection = payload.geojson
+                } else if (Array.isArray(payload?.features)) {
+                    featureCollection = { type: 'FeatureCollection', features: payload.features }
+                } else if (payload) {
+                    featureCollection = payload
+                }
 
                 if (!featureCollection) {
                     throw new Error('服务返回结果缺少 GeoJSON 数据')
