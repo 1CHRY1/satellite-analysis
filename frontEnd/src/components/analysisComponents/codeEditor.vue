@@ -127,7 +127,7 @@
                                         <el-input v-model="toolWizardForm.servicePort" placeholder="指定端口 (可选)"
                                             class="w-32" />
                                         <el-button type="primary" size="small" :loading="servicePublishLoading"
-                                            @click="startServiceForWizard">
+                                            @click="startServiceOnlyForWizard">
                                             启动服务
                                         </el-button>
                                         <el-button type="danger" size="small" :loading="servicePublishLoading"
@@ -181,7 +181,7 @@
                 </div>
                 <template #footer>
                     <el-button @click="toolWizardVisible = false" :disabled="servicePublishLoading">取消</el-button>
-                    <el-button type="primary" @click="startServiceForWizard" :loading="servicePublishLoading">
+                    <el-button type="primary" @click="startServiceAndRegister" :loading="servicePublishLoading">
                         发布
                     </el-button>
                 </template>
@@ -451,10 +451,10 @@ const defaultPayloadTemplate = JSON.stringify(
 const toolWizardForm = reactive({
     toolName: '',
     description: '',
-    category: builtinToolCategoryOptions[0],
+    category: '自定义工具集',
     tags: [] as string[],
-    invokeType: 'tiler-expression' as DynamicToolInvokeType,
-    resultType: 'tile' as DynamicToolResultType,
+    invokeType: 'http+geojson' as DynamicToolInvokeType,
+    resultType: 'geojson' as DynamicToolResultType,
     expressionTemplate: '',
     colorMap: 'rdylgn',
     pixelMethod: 'first',
@@ -535,12 +535,12 @@ const removeWizardParam = (index: number) => {
 }
 
 const resetToolWizard = () => {
-    toolWizardForm.toolName = ''
-    toolWizardForm.description = ''
-    toolWizardForm.category = builtinToolCategoryOptions[0]
-    toolWizardForm.tags = []
-    toolWizardForm.invokeType = 'tiler-expression'
-    toolWizardForm.resultType = 'tile'
+    toolWizardForm.toolName = '自定义GeoJSON工具'
+    toolWizardForm.description = '最小示例工具（返回 GeoJSON 矢量结果）'
+    toolWizardForm.category = '自定义工具集'
+    toolWizardForm.tags = ['geojson']
+    toolWizardForm.invokeType = 'http+geojson'
+    toolWizardForm.resultType = 'geojson'
     toolWizardForm.expressionTemplate = ''
     toolWizardForm.colorMap = 'rdylgn'
     toolWizardForm.pixelMethod = 'first'
@@ -550,6 +550,11 @@ const resetToolWizard = () => {
     toolWizardForm.payloadTemplate = defaultPayloadTemplate
     toolWizardForm.responsePath = ''
     toolWizardForm.params.splice(0, toolWizardForm.params.length)
+    toolWizardForm.params.push(
+        { label: '模式', key: 'mode', type: 'select', required: false, placeholder: 'bbox / inset / grid', source: '', optionsText: '外包框:bbox, 内缩:inset, 网格中心:grid' },
+        { label: '缩放系数', key: 'scale', type: 'number', required: false, placeholder: '0~1，默认 0.8', source: '', optionsText: '' },
+        { label: '网格数', key: 'grid', type: 'number', required: false, placeholder: '默认 3（3x3）', source: '', optionsText: '' },
+    )
 }
 
 const openToolWizard = async () => {
@@ -1093,10 +1098,28 @@ const unpublishServiceFunction = async () => {
     }
 }
 
-const startServiceForWizard = async () => {
+const startServiceOnlyForWizard = async () => {
     const port = parseInt(toolWizardForm.servicePort, 10)
     const preferredPort = Number.isNaN(port) ? undefined : port
     await publishServiceFunction(preferredPort)
+}
+
+const ensureEndpointFromService = () => {
+    if (!toolWizardForm.serviceEndpoint.trim()) {
+        const base = (serviceStatus.value.url || '').replace(/\/$/, '')
+        if (base) {
+            toolWizardForm.serviceEndpoint = `${base}/run`
+        }
+    }
+}
+
+const startServiceAndRegister = async () => {
+    const port = parseInt(toolWizardForm.servicePort, 10)
+    const preferredPort = Number.isNaN(port) ? undefined : port
+    await publishServiceFunction(preferredPort)
+    ensureEndpointFromService()
+    await publishDynamicTool()
+    toolWizardVisible.value = false
 }
 
 const stopServiceForWizard = async () => {

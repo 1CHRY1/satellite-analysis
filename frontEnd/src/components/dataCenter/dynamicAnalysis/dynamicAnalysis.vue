@@ -227,9 +227,9 @@
                                         </div>
                                         <div class="stats-content" v-show="isToolsExpand">
                                             <div class="config-control relative">
-                                                <!-- 分类工具列表 -->
+                                                <!-- 分类工具列表（内置 + 自定义合并） -->
                                                 <div class="mt-4 w-full mr-4">
-                                                    <div v-for="category in builtinToolCategories" :key="category.name"
+                                                    <div v-for="category in allToolCategories" :key="category.name"
                                                         class="mb-4">
                                                         <div class="flex items-center cursor-pointer px-2 py-1 hover:bg-gray-800 rounded"
                                                             @click="toggleCategory(category.name)">
@@ -524,7 +524,7 @@ const { isSettingExpand,
  * 工具Section
  */
 // 自定义工具
-const { builtinToolCategories, expandedCategories, allToolCategories, selectedTask, isToolsExpand, currentTaskComponent,
+const { builtinToolCategories, dynamicToolCategories, expandedCategories, allToolCategories, selectedTask, isToolsExpand, currentTaskComponent,
     currentTaskProps,
     handleResultLoaded,
     handleRemoveDynamicTool,
