@@ -30,6 +30,12 @@ export default [
 			route("websession", "pages/sql/session.tsx"),
 		]),
 		route("log", "pages/log/index.tsx"),
-		route("task", "pages/task/index.tsx"),
+		// ✅ 任务管理模块
+		route("task", "layouts/task-layout.tsx", [
+			index("pages/task/index.tsx"), // 默认进入无云一版图任务
+			route("cloudfree", "pages/task/cloudfree.tsx"),
+			route("methlib", "pages/task/methlib.tsx"),
+		]),
+		// route("task", "pages/task/index.tsx"),
 	]),
 ] satisfies RouteConfig;

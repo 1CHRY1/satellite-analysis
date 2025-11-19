@@ -28,7 +28,7 @@
                         <div class="section-icon absolute right-12 cursor-pointer" @click="clearImages">
                             <a-tooltip>
                                 <template #title>{{ t('datapage.analysis.section2.clear')
-                                }}</template>
+                                    }}</template>
                                 <Trash2Icon :size="20" />
                             </a-tooltip>
                         </div>
@@ -45,82 +45,13 @@
                     <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]">
                         <!--主容器-->
                         <div class="main-container">
-                            <a-alert v-if="exploreData.grids.length === 0 && currentPanel !== 'history'" description="请先完成交互探索" type="warning"
-                                show-icon class="status-alert">
+                            <a-alert v-if="exploreData.grids.length === 0 && currentPanel !== 'history'"
+                                description="请先完成交互探索" type="warning" show-icon class="status-alert">
                                 <template #action>
                                     <a-button size="small" @click="router.push('/explore')">前往</a-button>
                                 </template>
                             </a-alert>
                             <br v-if="exploreData.grids.length === 0 && currentPanel !== 'history'" />
-                            <!-- 设置部分 -->
-                            <section class="panel-section" v-if="currentPanel !== 'history'">
-                                <!--设置标题-->
-                                <a-space class="section-header" ref="ref1">
-                                    <div class="section-icon">
-                                        <Settings :size="18" />
-                                    </div>
-                                    <h2 class="section-title">设置</h2>
-                                    <div class="absolute right-2 cursor-pointer">
-                                        <ChevronDown v-if="isSettingExpand" :size="22"
-                                            @click="isSettingExpand = false" />
-                                        <ChevronUp v-else @click="isSettingExpand = true" :size="22" />
-                                    </div>
-                                </a-space>
-
-                                <!--设置内容区域-->
-                                <div v-show="isSettingExpand" class="section-content">
-                                    <div class="config-container">
-                                        <!-- 空间位置配置 -->
-                                        <div class="config-item"
-                                            style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
-                                            <div class="config-label relative">
-                                                <MapIcon :size="16" class="config-icon" />
-                                                <span>数据筛选与配置</span>
-                                            </div>
-                                            <a-row :gutter="[16, 8]" align="middle">
-                                                <a-col :span="8">
-                                                    <a-form-item label="当前格网分辨率" :label-col="{ span: 24 }"
-                                                        :wrapper-col="{ span: 24 }" style="margin-bottom: 0;">
-                                                        <a-statistic :value="exploreData.gridResolution" suffix="km"
-                                                            :value-style="{ color: '#40a9ff', fontSize: '16px', fontWeight: 'bold' }"
-                                                            :title-style="{ fontSize: '12px', color: '#a0a0a0' }" />
-                                                    </a-form-item>
-                                                </a-col>
-
-                                                <a-col :span="16">
-                                                    <a-form-item label="当前时间范围" :label-col="{ span: 24 }"
-                                                        :wrapper-col="{ span: 24 }" style="margin-bottom: 0;">
-                                                        <span style="font-size: 14px; color: #ffffff;">
-                                                            {{ dayjs(exploreData.dataRange[0]).format("YYYY-MM-DD") }}
-                                                            <a-divider type="vertical" style="border-color: #6a6a6a;" />
-                                                            {{ dayjs(exploreData.dataRange[1]).format("YYYY-MM-DD") }}
-                                                        </span>
-                                                    </a-form-item>
-                                                </a-col>
-                                            </a-row>
-                                            <a-row>
-                                                <a-col :span="24">
-                                                    <a-form-item label="传感器选择" name="sensors" :label-col="{ span: 24 }"
-                                                        :wrapper-col="{ span: 24 }">
-                                                        <a-select v-model:value="selectedSensorName"
-                                                            placeholder="请选择传感器..." :options="exploreData.sensors.map(sensor => ({
-                                                                label: sensor.platformName,
-                                                                value: sensor.sensorName
-                                                            }))" allow-clear
-                                                            @change="(value: string) => getPlatformDataFile(value)"
-                                                            style="width: 100%;" :style="{
-                                                                backgroundColor: '#383838',
-                                                                borderColor: '#4d4d4d',
-                                                                color: '#ffffff'
-                                                            }">
-                                                        </a-select>
-                                                    </a-form-item>
-                                                </a-col>
-                                            </a-row>
-                                        </div>
-                                    </div>
-                                </div>
-                            </section>
 
                             <!-- 工具目录部分 -->
                             <section class="panel-section" v-if="currentPanel !== 'history'">
@@ -131,11 +62,12 @@
                                     </div>
                                     <h2 class="section-title">景级分析</h2>
                                     <div class="absolute right-2 cursor-pointer">
-                                        <ChevronDown v-if="isToolsExpand" :size="22" @click="isToolsExpand = false" />
-                                        <ChevronUp v-else @click="isToolsExpand = true" :size="22" />
+                                        <ChevronDown v-if="isSceneAnalysisExpand" :size="22"
+                                            @click="isSceneAnalysisExpand = false" />
+                                        <ChevronUp v-else @click="isSceneAnalysisExpand = true" :size="22" />
                                     </div>
                                 </a-space>
-                                <div class="section-content">
+                                <div class="section-content" v-show="isSceneAnalysisExpand" style="padding-bottom: 0%;">
                                     <div class="stats"
                                         style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
                                         <div class="stats-header">
@@ -147,6 +79,58 @@
                                                 <ChevronDown v-if="isMethLibExpand" :size="22"
                                                     @click="isMethLibExpand = false" />
                                                 <ChevronUp v-else @click="isMethLibExpand = true" :size="22" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-content" v-if="isMethLibExpand">
+                                            <!-- 空间位置配置 -->
+                                            <div class="config-item-no-hover">
+                                                <div class="config-label relative">
+                                                    <MapIcon :size="16" class="config-icon" />
+                                                    <span>数据筛选与配置</span>
+                                                </div>
+                                                <a-row :gutter="[16, 8]" align="middle">
+                                                    <a-col :span="8">
+                                                        <a-form-item label="当前格网分辨率" :label-col="{ span: 24 }"
+                                                            :wrapper-col="{ span: 24 }" style="margin-bottom: 0;">
+                                                            <a-statistic :value="exploreData.gridResolution" suffix="km"
+                                                                :value-style="{ color: '#40a9ff', fontSize: '16px', fontWeight: 'bold' }"
+                                                                :title-style="{ fontSize: '12px', color: '#a0a0a0' }" />
+                                                        </a-form-item>
+                                                    </a-col>
+
+                                                    <a-col :span="16">
+                                                        <a-form-item label="当前时间范围" :label-col="{ span: 24 }"
+                                                            :wrapper-col="{ span: 24 }" style="margin-bottom: 0;">
+                                                            <span style="font-size: 14px; color: #ffffff;">
+                                                                {{ dayjs(exploreData.dataRange[0]).format("YYYY-MM-DD")
+                                                                }}
+                                                                <a-divider type="vertical"
+                                                                    style="border-color: #6a6a6a;" />
+                                                                {{ dayjs(exploreData.dataRange[1]).format("YYYY-MM-DD")
+                                                                }}
+                                                            </span>
+                                                        </a-form-item>
+                                                    </a-col>
+                                                </a-row>
+                                                <a-row>
+                                                    <a-col :span="24">
+                                                        <a-form-item label="传感器选择" name="sensors"
+                                                            :label-col="{ span: 24 }" :wrapper-col="{ span: 24 }">
+                                                            <a-select v-model:value="selectedSensorName"
+                                                                placeholder="请选择传感器..." :options="exploreData.sensors.map(sensor => ({
+                                                                    label: sensor.platformName,
+                                                                    value: sensor.sensorName
+                                                                }))" allow-clear
+                                                                @change="(value: string) => getPlatformDataFile(value)"
+                                                                style="width: 100%;" :style="{
+                                                                    backgroundColor: '#383838',
+                                                                    borderColor: '#4d4d4d',
+                                                                    color: '#ffffff'
+                                                                }">
+                                                            </a-select>
+                                                        </a-form-item>
+                                                    </a-col>
+                                                </a-row>
                                             </div>
                                         </div>
                                         <div class="stats-content" v-show="isMethLibExpand">
@@ -211,13 +195,13 @@
                                     </div>
                                 </div>
 
-                                <div class="section-content">
+                                <div class="section-content" v-show="isSceneAnalysisExpand">
                                     <div class="stats"
-                                        style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
+                                        style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%); margin-top: 0%;">
                                         <div class="stats-header">
                                             <div class="config-label relative">
                                                 <BoltIcon :size="16" class="config-icon" />
-                                                <span class="text-sm">自定义分析工具</span>
+                                                <span class="text-sm">UDF分析工具</span>
                                             </div>
                                             <div class="absolute right-2 cursor-pointer">
                                                 <ChevronDown v-if="isToolsExpand" :size="22"
@@ -227,47 +211,55 @@
                                         </div>
                                         <div class="stats-content" v-show="isToolsExpand">
                                             <div class="config-control relative">
-                                                <!-- 分类工具列表（内置 + 自定义合并） -->
-                                                <div class="mt-4 w-full mr-4">
-                                                    <div v-for="category in allToolCategories" :key="category.name"
-                                                        class="mb-4">
-                                                        <div class="flex items-center cursor-pointer px-2 py-1 hover:bg-gray-800 rounded"
-                                                            @click="toggleCategory(category.name)">
-                                                            <ChevronRightIcon :size="16"
-                                                                class="mr-2 transition-transform duration-200"
-                                                                :class="{ 'transform rotate-90': expandedCategories.includes(category.name) }" />
-                                                            <span class="text-gray-300 font-medium">{{ category.name
-                                                            }}</span>
+
+                                                <!-- 数据集配置 -->
+                                                <div class="config-container w-full">
+                                                    <div class="config-item"
+                                                        style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
+                                                        <div class="config-label relative">
+                                                            <ChartColumn :size="16" class="config-icon" />
+                                                            <span>数据集</span>
                                                         </div>
+                                                        <div class="config-control">
+                                                            <button @click="showHistory = !showHistory"
+                                                                class="bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-4 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6] truncate">
+                                                                前序数据
+                                                            </button>
+                                                            <el-dialog v-model="showHistory"
+                                                                class="max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-[60vw]"
+                                                                style="background-color: #111827; color: white;">
+                                                                <div class="mb-6 text-gray-100">前序数据集</div>
 
-                                                        <div v-show="expandedCategories.includes(category.name) || searchQuery"
-                                                            class="ml-6 mt-2 grid grid-cols-2 gap-2">
-                                                            <div v-for="tool in category.tools" :key="tool.value"
-                                                                @click="selectedTask = tool.value" :class="{
-                                                                    'bg-[#1e3a8a] text-white': selectedTask === tool.value,
-                                                                    'bg-[#0d1526] text-gray-300 hover:bg-[#1e293b]': selectedTask !== tool.value && !tool.disabled,
-                                                                    'opacity-50 cursor-not-allowed': tool.disabled,
-                                                                    'cursor-pointer': !tool.disabled
-                                                                }"
-                                                                class="px-3 py-1 rounded-lg transition-colors w-full text-left flex items-center justify-between"
-                                                                :disabled="tool.disabled">
-
-                                                                <a-tooltip :title="tool.label"
-                                                                    class="flex-grow min-w-0">
-                                                                    <span class="truncate block text-sm">{{
-                                                                        tool.label
-                                                                    }}</span>
-                                                                </a-tooltip>
-
-                                                                <CircleX v-if="tool.value.startsWith('dynamic:')"
-                                                                    :size="16"
-                                                                    class="text-gray-400 hover:text-gray-300 flex-shrink-0 ml-1"
-                                                                    @click.stop="handleRemoveDynamicTool(tool.value)" />
-                                                            </div>
+                                                                <div v-if="completedCases.length > 0"
+                                                                    class="max-h-[500px] overflow-y-auto">
+                                                                    <div v-for="item in completedCases"
+                                                                        :key="item.caseId" class="p-4 mb-3 border border-gray-200 rounded-md
+                                                            cursor-pointer transition-all duration-300
+                                                            hover:bg-gray-50 hover:shadow-md"
+                                                                        @click="showResult(item.caseId, item.regionId)">
+                                                                        <h3 class="mt-0 text-blue-500">{{ item.address
+                                                                            }}无云一版图</h3>
+                                                                        <p class="my-1 text-blue-300">分辨率: {{
+                                                                            item.resolution }}km
+                                                                        </p>
+                                                                        <p class="my-1 text-blue-300">创建时间: {{
+                                                                            formatTimeToText(item.createTime) }}</p>
+                                                                        <p class="my-1 text-blue-300">数据集: {{
+                                                                            item.dataSet
+                                                                            }}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <div v-else>
+                                                                    <p class="item-center text-center text-gray-100">
+                                                                        暂无数据
+                                                                    </p>
+                                                                </div>
+                                                            </el-dialog>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
+                                            <span>TODO: UDF景级分析工具列表与调用</span>
                                         </div>
                                     </div>
                                 </div>
@@ -280,54 +272,17 @@
                                     <div class="section-icon">
                                         <Settings :size="18" />
                                     </div>
-                                    <h2 class="section-title">前序数据分析</h2>
+                                    <h2 class="section-title">Cube 级分析</h2>
                                     <div class="absolute right-2 cursor-pointer">
-                                        <ChevronDown v-if="isPrevExpand" :size="22" @click="isPrevExpand = false" />
-                                        <ChevronUp v-else @click="isPrevExpand = true" :size="22" />
+                                        <ChevronDown v-if="isCubeExpand" :size="22" @click="isCubeExpand = false" />
+                                        <ChevronUp v-else @click="isCubeExpand = true" :size="22" />
                                     </div>
                                 </div>
 
                                 <!--内容区域-->
-                                <div v-show="isPrevExpand" class="section-content">
+                                <div v-show="isCubeExpand" class="section-content">
                                     <div class="config-container">
-                                        <!-- 数据集配置 -->
-                                        <div class="config-item"
-                                            style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
-                                            <div class="config-label relative">
-                                                <ChartColumn :size="16" class="config-icon" />
-                                                <span>数据集</span>
-                                            </div>
-                                            <div class="config-control">
-                                                <button @click="showHistory = !showHistory"
-                                                    class="bg-[#0d1526] text-[#38bdf8] border border-[#2c3e50] rounded-lg px-4 py-1 appearance-none hover:border-[#2bb2ff] focus:outline-none focus:border-[#3b82f6] truncate">
-                                                    前序数据
-                                                </button>
-                                                <el-dialog v-model="showHistory"
-                                                    class="max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-[60vw]"
-                                                    style="background-color: #111827; color: white;">
-                                                    <div class="mb-6 text-gray-100">前序数据集</div>
 
-                                                    <div v-if="completedCases.length > 0"
-                                                        class="max-h-[500px] overflow-y-auto">
-                                                        <div v-for="item in completedCases" :key="item.caseId" class="p-4 mb-3 border border-gray-200 rounded-md
-                                                            cursor-pointer transition-all duration-300
-                                                            hover:bg-gray-50 hover:shadow-md"
-                                                            @click="showResult(item.caseId, item.regionId)">
-                                                            <h3 class="mt-0 text-blue-500">{{ item.address }}无云一版图</h3>
-                                                            <p class="my-1 text-blue-300">分辨率: {{ item.resolution }}km
-                                                            </p>
-                                                            <p class="my-1 text-blue-300">创建时间: {{
-                                                                formatTimeToText(item.createTime) }}</p>
-                                                            <p class="my-1 text-blue-300">数据集: {{ item.dataSet }}</p>
-                                                        </div>
-                                                    </div>
-                                                    <div v-else>
-                                                        <p class="item-center text-center text-gray-100">暂无数据</p>
-                                                    </div>
-                                                </el-dialog>
-
-                                            </div>
-                                        </div>
 
                                         <!-- 立方体配置 -->
                                         <div class="config-item"
@@ -402,6 +357,44 @@
                                                         </a-list-item>
                                                     </template>
                                                 </a-list>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                            <section>即将废弃的部分：
+                                分类工具列表
+                                <div class="mt-4 w-full mr-4">
+                                    <div v-for="category in builtinToolCategories" :key="category.name" class="mb-4">
+                                        <div class="flex items-center cursor-pointer px-2 py-1 hover:bg-gray-800 rounded"
+                                            @click="toggleCategory(category.name)">
+                                            <ChevronRightIcon :size="16" class="mr-2 transition-transform duration-200"
+                                                :class="{ 'transform rotate-90': expandedCategories.includes(category.name) }" />
+                                            <span class="text-gray-300 font-medium">{{ category.name
+                                                }}</span>
+                                        </div>
+
+                                        <div v-show="expandedCategories.includes(category.name) || searchQuery"
+                                            class="ml-6 mt-2 grid grid-cols-2 gap-2">
+                                            <div v-for="tool in category.tools" :key="tool.value"
+                                                @click="selectedTask = tool.value" :class="{
+                                                    'bg-[#1e3a8a] text-white': selectedTask === tool.value,
+                                                    'bg-[#0d1526] text-gray-300 hover:bg-[#1e293b]': selectedTask !== tool.value && !tool.disabled,
+                                                    'opacity-50 cursor-not-allowed': tool.disabled,
+                                                    'cursor-pointer': !tool.disabled
+                                                }"
+                                                class="px-3 py-1 rounded-lg transition-colors w-full text-left flex items-center justify-between"
+                                                :disabled="tool.disabled">
+
+                                                <a-tooltip :title="tool.label" class="flex-grow min-w-0">
+                                                    <span class="truncate block text-sm">{{
+                                                        tool.label
+                                                        }}</span>
+                                                </a-tooltip>
+
+                                                <CircleX v-if="tool.value.startsWith('dynamic:')" :size="16"
+                                                    class="text-gray-400 hover:text-gray-300 flex-shrink-0 ml-1"
+                                                    @click.stop="handleRemoveDynamicTool(tool.value)" />
                                             </div>
                                         </div>
                                     </div>
@@ -501,45 +494,33 @@ const { t } = useI18n()
 const isPicking = ref(false)
 
 /**
- * 左模块显示
+ * 显示与折叠控制
  */
-const showPanel = ref(false)
+const showPanel = ref(false) // 左模块
 const isToolbarOpen = ref(true)
+const isSceneAnalysisExpand = ref(true) // 控制景级分析折叠
 
 /**
- * 设置section
+ * 景级分析 - 通用分析工具（方法库）钩子
  */
-const { isSettingExpand,
-    region,
-    thematicConfig,
-    originImages,
-    exploreData,
-    selectedResult,
-    displayLabel,
-    getOriginImages,
-    getPlatformDataFile,
-    selectedSensorName } = useSettings()
-
-/**
- * 工具Section
- */
-// 自定义工具
-const { builtinToolCategories, dynamicToolCategories, expandedCategories, allToolCategories, selectedTask, isToolsExpand, currentTaskComponent,
-    currentTaskProps,
-    handleResultLoaded,
-    handleRemoveDynamicTool,
-    toggleCategory } = useTool()
-// 方法库工具
-const { searchQuery, isMethLibExpand, getMethLibList, currentPage: currentMethLibPage, pageSize: methLibPageSize, total: methLibTotal, methLibList,
-    tagList, getTagList, selectTags, handleInvoke, showModal, selectedItem, openModal,
+const {
+    // ------------------- 显示相关 -----------------------
+    isMethLibExpand, showModal, openModal, selectedItem,
+    // ------------------- 检索相关 -----------------------
+    searchQuery, getMethLibList,
+    // ------------------- 标签相关 -----------------------
+    tagList, getTagList, selectTags,
+    // ------------------- 列表相关 -----------------------
+    currentPage: currentMethLibPage, pageSize: methLibPageSize, total: methLibTotal, methLibList,
+    // ------------------- 调用相关 -----------------------
+    handleInvoke,
     // ------------------- Tour 相关 -----------------------
     ref1, ref2, ref3, current, steps, handleOpenTour, openTour
 } = useMethLib()
 
 /**
- * 前序数据Section
+ * 景级分析 - UDF分析工具 - 前序无云一版图数据
  */
-const isPrevExpand = ref(false)
 // 前序无云一版图数据
 const historyComponent = ref(null)
 const showHistory = ref(false)
@@ -560,8 +541,44 @@ const loadCompletedCases = async () => {
     await getCaseList();
     completedCases.value = caseList.value;
 };
-// 前序时序立方体数据
-const { cubeObj, cubeList, inputCacheKey, handleSelectCube, updateGridLayer, currentCacheKey, getCubeObj } = useCube()
+
+/**
+ * Cube数据分析 - 获取数据与可视化钩子
+ */
+const isCubeExpand = ref(true)
+const {
+    // ------------------- 可视化相关 -----------------------
+    updateGridLayer,
+    // ------------------- 列表相关 -----------------------
+    cubeObj, cubeList,
+    // ------------------- 操作相关 -----------------------
+    inputCacheKey, handleSelectCube, currentCacheKey, getCubeObj
+} = useCube()
+
+/**
+ * 设置section
+ */
+const {
+    isSettingExpand,
+    region,
+    thematicConfig,
+    originImages,
+    exploreData,
+    selectedResult,
+    displayLabel,
+    getOriginImages,
+    getPlatformDataFile,
+    selectedSensorName } = useSettings()
+
+/**
+ * 原来的指数分析等工具（DEPRECATED）
+ */
+// 自定义工具
+const { builtinToolCategories, expandedCategories, allToolCategories, selectedTask, isToolsExpand, currentTaskComponent,
+    currentTaskProps,
+    handleResultLoaded,
+    handleRemoveDynamicTool,
+    toggleCategory } = useTool()
 
 /**
  * 通用方法
@@ -610,11 +627,8 @@ watch(displayLabel, getOriginImages, { immediate: true })
 //     })
 // }
 
-
-// 数据集
-
 onMounted(async () => {
-    // 设置结果选择的回调
+    // 前序无云一版图数据加载
     onResultSelected.value = (result) => {
         selectedResult.value = result
         // 立即更新 thematicConfig
@@ -626,13 +640,19 @@ onMounted(async () => {
         showHistory.value = false
         message.success('已选择数据集')
     }
-
     loadCompletedCases();
-    // addLocalInternalLayer()
+
+    // Cube前序数据加载
     await getCubeObj()
+
+    // 渲染立方体所有格网（未勾选的状态）
     updateGridLayer(cubeList.value)
+
+    // 方法库数据加载
     await getTagList()
     await getMethLibList()
+
+    // 未知？
     await getPlatformDataFile(exploreData.sensors?.[0].sensorName)
 })
 
