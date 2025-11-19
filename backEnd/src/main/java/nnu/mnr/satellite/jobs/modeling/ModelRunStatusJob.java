@@ -6,11 +6,13 @@ import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.jobs.QuartzSchedulerManager;
 import nnu.mnr.satellite.model.pojo.modeling.BaseModelServerProperties;
 import nnu.mnr.satellite.model.pojo.modeling.ModelServerProperties;
+import nnu.mnr.satellite.service.modeling.MethlibService;
 import nnu.mnr.satellite.service.resources.CaseDataService;
 import nnu.mnr.satellite.utils.common.BeanUtil;
 import nnu.mnr.satellite.utils.common.ProcessUtil;
 import nnu.mnr.satellite.utils.dt.RedisUtil;
 import org.quartz.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
 
@@ -31,6 +33,8 @@ public class ModelRunStatusJob implements Job {
 
     @Resource
     private CaseDataService caseDataService;
+    @Resource
+    private MethlibService methlibService;
 
     public ModelRunStatusJob() {
         redisUtil = BeanUtil.getBean(RedisUtil.class);
@@ -55,23 +59,17 @@ public class ModelRunStatusJob implements Job {
             log.error("获取模型状态失败，等待下次定时任务重试", e);
             return; // 直接退出，不做任何处理
         }
-//        JSONObject statusResponse = JSONObject.parseObject(ProcessUtil.getModelCaseStatus(statusUrl, caseId));
-//        String status = statusResponse.getJSONObject("data").getString("status");
         // 堆一点屎
-
         String status;
         if (statusData == null) {
             status = statusResponse.getString("status");
         } else {
             status = statusResponse.getJSONObject("data").getString("status");
         }
-//        String status = statusResponse.getJSONObject("data").getString("status");
-//        if(status == null){
-//            status = statusResponse.getString("status");
-//        }
         if (status.equals("COMPLETE")) {
             redisUtil.updateJsonField(caseId, "status", status);
             caseDataService.updateCaseStatusById(caseId, status);
+            methlibService.updateCaseStatusById(caseId, status);
             log.info("model case " + caseId + " has finished!");
             try {
                 quartzSchedulerManager.deleteJob(jobName, jobGroup);
@@ -97,6 +95,7 @@ public class ModelRunStatusJob implements Job {
                 redisUtil.updateJsonField(caseId, "result", resObj);
                 redisUtil.updateJsonField(caseId, "end", LocalDateTime.now());
                 caseDataService.updateCaseResultById(caseId, resObj);
+                methlibService.updateCaseResultById(caseId, resObj.getJSONObject("output"));
             } catch (SchedulerException e) {
                 log.info(e.toString());
             }
@@ -110,6 +109,7 @@ public class ModelRunStatusJob implements Job {
             redisUtil.updateJsonField(caseId, "end", LocalDateTime.now());
             // caseDataService.removeCaseById(caseId);
             caseDataService.updateCaseStatusById(caseId, status);
+            methlibService.updateCaseStatusById(caseId, status);
         }
         // TODO: Add Other Conditions
 
