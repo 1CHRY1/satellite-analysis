@@ -11,6 +11,10 @@ export const useCube = () => {
     const inputCacheKey = ref<string>('')
     const cubeList = ref<CubeDisplayItem[]>([])
     const currentCacheKey = ref<string>()
+
+    /**
+     * 获取用于放在列表展示的cube列表
+     */
     const getCubeObj = async () => {
         const cubeObjRes = await getCube()
         cubeObj.value = cubeObjRes.data
@@ -22,13 +26,18 @@ export const useCube = () => {
                 return {
                     ...value,
                     cacheKey: key,
-                    isSelect: false,
-                    isShow: false,
-                    gridGeoJson: gridGeoJsonRes.boundary
+                    isSelect: false, // 控制用户是否勾选
+                    isShow: false, // 控制是否显示（Eye图标）
+                    gridGeoJson: gridGeoJsonRes.boundary // 空间属性
                 }
             })
         )
     }
+
+    /**
+     * 勾选cube时，自动fitview到视图范围并高亮格网
+     * @param cacheKey cube的key
+     */
     const handleSelectCube = (cacheKey: string) => {
         cubeList.value.map(async (item) => {
             if (item.cacheKey === cacheKey) {
@@ -59,7 +68,10 @@ export const useCube = () => {
         }
     }
 
-    // 点击格网后更新图层
+    /**
+     * 点击格网后更新图层
+     * @param allGrids 所有格网
+     */
     const updateGridLayer = (allGrids: any) => {
         console.log(allGrids)
         let gridFeature: FeatureCollection = {
