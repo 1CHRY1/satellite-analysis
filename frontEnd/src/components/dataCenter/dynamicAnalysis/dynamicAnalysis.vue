@@ -559,6 +559,8 @@ const {
  * 设置section
  */
 const {
+    isSettingExpand,
+    region,
     thematicConfig,
     originImages,
     exploreData,
