@@ -75,7 +75,10 @@ class HttpClient {
                             return this.instance(error.config)
                         }
                     } catch (err) {
+                        const userStore = useUserStore()
+                        userStore.logout()
                         console.error('刷新 Token 失败', err)
+                        message.warning("请重新登录")
                         router.push('/home')
                         return Promise.reject(err)
                     }

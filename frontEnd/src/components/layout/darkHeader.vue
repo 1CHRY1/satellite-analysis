@@ -37,10 +37,10 @@
                     </div>
 
                     <!-- 下拉菜单 -->
-                    <transition name="fade">
+                    <transition name="menu-fade">
                     <ul
                         v-show="activeSubMenu === index"
-                        class="absolute left-0 mt-1 w-48 bg-gray-800 rounded-md shadow-lg z-50 py-1"
+                        class="submenu absolute left-0 mt-2 w-56 bg-slate-900/90 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl ring-1 ring-black/5 z-50 p-2 space-y-1"
                         @mouseenter="openSubMenu(index)"
                         @mouseleave="closeSubMenu"
                     >
@@ -48,14 +48,14 @@
                         <router-link
                             v-if="child.path && !child.disabled"
                             :to="child.path"
-                            class="block px-4 py-2 text-white hover:bg-gray-700"
+                            class="block px-3 py-2 rounded-lg text-slate-100/90 hover:text-white hover:bg-white/10 transition-colors duration-200"
                             @click="closeSubMenu"
                         >
                             {{ child.name }}
                         </router-link>
                         <span
                             v-else
-                            class="block px-4 py-2 text-gray-500 cursor-not-allowed"
+                            class="block px-3 py-2 rounded-lg text-slate-400/70 cursor-not-allowed bg-white/5"
                             @click="showDisabledMessage"
                         >
                             {{ child.name }}
@@ -132,13 +132,13 @@ import menuList from '@/components/user/menuList.vue'
 // import logo from '@/assets/image/logo2.png'
 import avator from '@/assets/image/avator.png'
 import { Satellite } from 'lucide-vue-next'
-import { ElMessage } from 'element-plus';
 
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
 import { useExploreStore } from '@/store';
 import type { AnyPaint } from 'mapbox-gl';
+import { message } from 'ant-design-vue';
 const exploreData = useExploreStore()
 const load = exploreData.load 
 
@@ -190,7 +190,12 @@ const navItems: ComputedRef<NavItem[]> = computed(() =>[
         {name: t('datapage.title_analysis'), path: '/analysis'}
     ] 
     },
-    { external: false, name: t('nav.tools'), path: '/projects' },
+    { external: false, name: t('nav.tools'), path: '/projects',
+      children: [
+        { name: '在线编程', path: '/projects' },
+        { name: '工具发布', path: '/tools' }
+      ]
+    },
     { external: true, name: t('nav.about'), path: 'http://opengmsteam.com/' },
     ]
 )
@@ -200,7 +205,7 @@ const navItems: ComputedRef<NavItem[]> = computed(() =>[
 //     window.open(OGMS_URL, '_blank')
 // }
 const showDisabledMessage = () => {
-    ElMessage.warning(t('nav.disabled_message')) // 使用国际化消息
+    message.warning(t('nav.disabled_message')) // 使用国际化消息
 }
 /////// User //////////////////////////////////
 const userStore = useUserStore()
@@ -241,5 +246,41 @@ header {
     .nav-link {
         @apply text-sm;
     }
+}
+
+/* Dropdown animation */
+.menu-fade-enter-active,
+.menu-fade-leave-active {
+  transition: opacity 180ms ease, transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.menu-fade-enter-from,
+.menu-fade-leave-to {
+  opacity: 0;
+  transform: translateY(6px) scale(0.98);
+}
+
+/* Dropdown pointer */
+.submenu::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 18px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid rgba(15, 23, 42, 0.9); /* matches bg-slate-900/90 */
+}
+.submenu::after {
+  content: '';
+  position: absolute;
+  top: -9px;
+  left: 18px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid rgba(255,255,255,0.1); /* subtle border */
+  filter: blur(0.2px);
 }
 </style>

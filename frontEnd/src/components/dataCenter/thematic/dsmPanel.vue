@@ -156,12 +156,12 @@ import {
     BanIcon,
     MapIcon,
 } from 'lucide-vue-next'
-import { ElMessage } from 'element-plus';
 import bus from '@/store/bus'
 import mapboxgl from 'mapbox-gl'
 import { mapManager } from '@/util/map/mapManager';
 
 import { useI18n } from 'vue-i18n'
+import { message } from 'ant-design-vue';
 const { t } = useI18n()
 
 
@@ -214,15 +214,15 @@ const toggleMode = (mode: 'point' | 'line' | 'false') => {
     activeMode.value = mode
     if (mode === 'point') {
         MapOperation.draw_pointMode()
-        ElMessage.info(t('datapage.optional_thematic.DSM.message.info_point'))
+        message.info(t('datapage.optional_thematic.DSM.message.info_point'))
     } else if (mode === 'line') {
         MapOperation.draw_lineMode()
-        ElMessage.info(t('datapage.optional_thematic.DSM.message.info_line'))
+        message.info(t('datapage.optional_thematic.DSM.message.info_line'))
     }
 }
 
 const showTif = async (image) => {
-    ElMessage.success(t('datapage.optional_thematic.DSM.message.load'))
+    message.success(t('datapage.optional_thematic.DSM.message.load'))
     let sceneId = image.sceneId
     let res = await getDescriptionBySceneId(sceneId)
     let url = res.images[0].bucket + '/' + res.images[0].tifPath
@@ -264,7 +264,7 @@ const analysisDsm = async () => {
     if (!verifyAnalysis()) {
         return
     }
-    ElMessage.success(t('datapage.optional_thematic.DSM.message.info_start'))
+    message.success(t('datapage.optional_thematic.DSM.message.info_start'))
     if (activeMode.value === 'point') {
         let pointParam = {
             point: [pickedPoint.value[1], pickedPoint.value[0]],
@@ -272,7 +272,7 @@ const analysisDsm = async () => {
         }
         let res = await getRasterPoints(pointParam)
         if (res?.message != 'success') {
-            ElMessage.warning(t('datapage.optional_thematic.DSM.message.calerror'))
+            message.warning(t('datapage.optional_thematic.DSM.message.calerror'))
         }
         calTask.value.taskId = res.data
         const pollStatus = async (taskId: string) => {
@@ -316,10 +316,10 @@ const analysisDsm = async () => {
                 value: dsmValue,
                 point: [...pickedPoint.value]
             })
-            ElMessage.success(t('datapage.optional_thematic.DSM.message.success'))
+            message.success(t('datapage.optional_thematic.DSM.message.success'))
         } catch (error) {
             calTask.value.calState = 'failed'
-            ElMessage.error(t('datapage.optional_thematic.DSM.message.info_retry'))
+            message.error(t('datapage.optional_thematic.DSM.message.info_retry'))
             console.error(error);
         }
     } else if (activeMode.value === 'line') {
@@ -331,7 +331,7 @@ const analysisDsm = async () => {
         let lineRes = await getRasterLine(lineParam)
 
         if (lineRes?.message != 'success') {
-            ElMessage.warning(t('datapage.optional_thematic.DSM.message.calerror'))
+            message.warning(t('datapage.optional_thematic.DSM.message.calerror'))
         }
         calTask.value.taskId = lineRes.data
         const pollStatus = async (taskId: string) => {
@@ -376,10 +376,10 @@ const analysisDsm = async () => {
                 analysis: "空间采点DSM变化趋势",
                 line: pickedLine.value
             })
-            ElMessage.success(t('datapage.optional_thematic.DSM.message.success'))
+            message.success(t('datapage.optional_thematic.DSM.message.success'))
         } catch (error) {
             calTask.value.calState = 'failed'
-            ElMessage.error(t('datapage.optional_thematic.DSM.message.info_retry'))
+            message.error(t('datapage.optional_thematic.DSM.message.info_retry'))
             console.error(error);
         }
     }
@@ -387,11 +387,11 @@ const analysisDsm = async () => {
 // 卫语句
 const verifyAnalysis = () => {
     if (activeMode.value != 'point' && activeMode.value != 'line') {
-        ElMessage.warning(t('datapage.optional_thematic.DSM.message.info_space'))
+        message.warning(t('datapage.optional_thematic.DSM.message.info_space'))
         return false
     }
     if (allDsmImages.value.length === 0) {
-        ElMessage.warning(t('datapage.optional_thematic.DSM.message.info_noima'))
+        message.warning(t('datapage.optional_thematic.DSM.message.info_noima'))
         return false
     }
 

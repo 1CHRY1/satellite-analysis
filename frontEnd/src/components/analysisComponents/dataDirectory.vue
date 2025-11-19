@@ -1,7 +1,7 @@
 <template>
     <div>
-        <div class="flex h-[44px] w-full justify-between">
-            <div class="mx-2.5 my-1.5 flex w-fit items-center rounded bg-[#eaeaea] px-2 text-[14px] shadow-md">
+        <div class="flex h-[44px] w-full justify-between bg-[#161b22]">
+            <div class="mx-2.5 my-1.5 flex w-fit items-center rounded bg-[#181d25] px-2 text-[14px] shadow-md">
                 <div @click="handleClick('data')"
                     class="mr-2 cursor-pointer border-r-1 border-dashed border-gray-500 pr-2"
                     :class="activeDataBase === 'data' ? 'text-[#1479d7]' : 'text-[#818999]'">
@@ -15,12 +15,12 @@
 
             <div class="flex">
                 <div @click="refreshTableData"
-                    class="mr-2.5 my-1.5 flex w-fit cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-[14px] text-[#818999] shadow-md"
+                    class="mr-2.5 my-1.5 flex w-fit cursor-pointer items-center rounded bg-[#1f3d88] text-[#c9d1d9] px-2 text-[14px] shadow-md"
                     title="刷新数据">
                     <RefreshCcw :size="16" class="text-primary" />
                 </div>
                 <div @click="triggerFileSelect"
-                    class="mr-2.5 my-1.5 flex w-fit cursor-pointer items-center rounded bg-[#eaeaea] px-2 text-[14px] text-[#818999] shadow-md"
+                    class="mr-2.5 my-1.5 flex w-fit cursor-pointer items-center rounded bg-[#1f3d88] text-[#c9d1d9] px-2 text-[14px] shadow-md"
                     title="上传geojson">
                     <Upload :size="16" class="text-primary" />
                 </div>
@@ -35,10 +35,10 @@
             </div>
 
         </div>
-        <div class="h-[calc(100%-44px)] max-w-full overflow-x-auto">
+        <div class="h-[calc(100%-44px)] max-w-full overflow-x-auto bg-[#161b22]">
             <table class="w-full table-auto border-collapse">
                 <thead>
-                    <tr class="sticky top-0 bg-gray-200 text-[#818999]">
+                    <tr class="sticky top-0 bg-[#06162a] text-[#c9d1d9] border-[#262b32]">
                         <th class="w-auto min-w-[100px] px-4 py-2 text-left">文件名</th>
                         <th class="w-[100px] px-4 py-2 text-left">更新时间</th>
                         <th class="w-[60px] px-4 py-2 text-left">文件大小</th>
@@ -103,7 +103,7 @@
                         </a-select-option>
                     </a-select>
                     <a-select v-model:value="selectedBidx" style="width: 100%" placeholder="请选择可视化波段"
-                        :dropdownStyle="{backgroundColor: '#ffffff',borderRadius: '4px',}">
+                        :dropdownStyle="{backgroundColor: 'black',borderRadius: '4px',}">
                         <a-select-option v-for="item in bidxOptions" :key="item" :value="item">
                             <span>{{ item }}</span>
                         </a-select-option>
@@ -119,10 +119,9 @@ import { ref, onMounted, computed } from 'vue'
 import type { dockerData } from '@/type/analysis'
 import { getFiles, getMiniIoFiles, getTileFromMiniIo, uploadGeoJson, getJsonFileContent } from '@/api/http/analysis'
 import { sizeConversion, formatTime } from '@/util/common'
-import { ElMessage } from 'element-plus'
 import { addRasterLayerFromUrl, removeRasterLayer, map_fitView } from '@/util/map/operation'
 import { RefreshCcw, CircleSlash, Upload, Eye, EyeOff, ChartColumn, View } from 'lucide-vue-next'
-import type { SelectProps } from 'ant-design-vue'
+import { message, type SelectProps } from 'ant-design-vue'
 import { getImgStatistics } from '@/api/http/satellite-data/visualize.api'
 
 const props = defineProps({
@@ -249,7 +248,7 @@ const itemInMinIo = ref<any>()
 const handleConfirm = async() => {
     
     if (activeDataBase.value === "data") {
-        ElMessage.info("目前仅支持输出数据预览")
+        message.info("目前仅支持输出数据预览")
         return
     }
 
@@ -273,7 +272,7 @@ const handleConfirm = async() => {
     console.log(wholeTileUrl, 'wholeTileUrl')
     if (!tileUrlObj.value.object) {
         console.info(wholeTileUrl, '没有拿到瓦片服务的URL呢,拼接的路径参数是空的')
-        ElMessage.error('瓦片服务错误')
+        message.error('瓦片服务错误')
         return
     }
 
@@ -331,7 +330,7 @@ const handlePreview = async(item: dockerData) => {
                     console.info(
                         targetItem.fileName + '没有dataId，检查miniIo上是否存在这个数据实体',
                     )
-                    ElMessage.info('该数据正在上传，请稍后再预览')
+                    message.info('该数据正在上传，请稍后再预览')
                     return
                 }
 
@@ -345,7 +344,7 @@ const handlePreview = async(item: dockerData) => {
             }
         }
     } else {
-        ElMessage.warning('暂不支持预览')
+        message.warning('暂不支持预览')
     }
 }
 
@@ -354,7 +353,7 @@ const handleTifPreview = async (item: dockerData) => {
      * 校验是否能预览
      */
     if (activeDataBase.value === "data") {
-        ElMessage.info("目前仅支持输出数据预览")
+        message.info("目前仅支持输出数据预览")
         return
     }
     emit('showMap')
@@ -377,7 +376,7 @@ const handleTifPreview = async (item: dockerData) => {
             console.info(
                 targetItem.fileName + '没有dataId，检查miniIo上是否存在这个数据实体',
             )
-            ElMessage.info('该数据正在切片，请稍后再预览')
+            message.info('该数据正在切片，请稍后再预览')
             return
         }
     }
@@ -409,11 +408,11 @@ const refreshTableData = async () => {
     if (activeDataBase.value === 'data') {
         await getInputData()
         tableData.value = inputData.value
-        ElMessage.success('数据更新成功')
+        message.success('数据更新成功')
     } else if (activeDataBase.value === 'output') {
         await getOutputData()
         tableData.value = outputData.value
-        ElMessage.success('数据更新成功')
+        message.success('数据更新成功')
     }
 }
 
@@ -434,7 +433,7 @@ const uploadFile = async (event: Event) => {
 
     const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
     if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(`.${fileExtension}`)) {
-        ElMessage.warning('只支持 .geojson, .json 或 .txt 文件')
+        message.warning('只支持 .geojson, .json 或 .txt 文件')
         return
     }
 
@@ -456,12 +455,12 @@ const uploadFile = async (event: Event) => {
 
             if (res.status === 1) {
                 await handleClick(activeDataBase.value)
-                ElMessage.success('上传成功')
+                message.success('上传成功')
             } else {
-                ElMessage.error('上传失败')
+                message.error('上传失败')
             }
         } catch (err) {
-            ElMessage.error('文件内容不是有效的 JSON 格式')
+            message.error('文件内容不是有效的 JSON 格式')
         }
     }
 
@@ -549,7 +548,7 @@ td {
 }
 
 thead {
-    background-color: #f3f4f6;
+    background-color: #293f6b;
 }
 
 th {

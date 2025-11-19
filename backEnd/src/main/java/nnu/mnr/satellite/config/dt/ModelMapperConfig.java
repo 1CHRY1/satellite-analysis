@@ -4,6 +4,8 @@ import com.alibaba.fastjson2.JSONObject;
 import lombok.SneakyThrows;
 import nnu.mnr.satellite.model.po.modeling.ProjectResult;
 import nnu.mnr.satellite.model.vo.modeling.ProjectResultVO;
+import nnu.mnr.satellite.model.po.modeling.Project;
+import nnu.mnr.satellite.model.vo.modeling.ProjectVO;
 import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
 import nnu.mnr.satellite.model.po.resources.Scene;
 import nnu.mnr.satellite.utils.geom.EPSGUtil;
@@ -84,6 +86,17 @@ public class ModelMapperConfig {
                 .addMappings(mapper -> {
                     mapper.using(geometryConverter).map(ProjectResult::getBbox, ProjectResultVO::setBbox);
                 });
+
+        // Ensure boolean isTool in Project maps to 1/0 integer in ProjectVO
+        Converter<Boolean, Integer> booleanToInteger = new Converter<Boolean, Integer>() {
+            @Override
+            public Integer convert(MappingContext<Boolean, Integer> context) {
+                Boolean src = context.getSource();
+                return (src != null && src) ? 1 : 0;
+            }
+        };
+        modelMapper.typeMap(Project.class, ProjectVO.class)
+                .addMappings(mapper -> mapper.using(booleanToInteger).map(Project::isTool, ProjectVO::setIsTool));
 
         return modelMapper;
     }

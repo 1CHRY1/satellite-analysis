@@ -63,6 +63,13 @@ export const routes = [
         },
     },
     {
+        path: '/tools',
+        component: () => import('@/views/tools.vue'),
+        meta: {
+            requiresAuth: true,
+        },
+    },
+    {
         path: '/analysis',
         component: () => import('@/views/Analysis.vue'),
         meta: {

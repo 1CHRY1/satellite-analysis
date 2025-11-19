@@ -50,7 +50,8 @@
       </header>
   
       <main class="p-4">
-        <router-view />
+        <!-- <router-view /> -->
+        <router-view :key="route.fullPath" />
       </main>
     </div>
   </template>

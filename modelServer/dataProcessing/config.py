@@ -32,6 +32,9 @@ class BaseConfig:
     API_MOSAIC_RESULT                               =       API_VERSION + '/mosaic/result'
     API_MOSAIC_LIST                                 =       API_VERSION + '/mosaic/list'
 
+    # API for MethLib (新增)
+    API_METHLIB                                     =       API_VERSION + '/methlib'
+
     # Status Flag
     STATUS_UNLOCK                                   =       0b1
     STATUS_LOCK                                     =       0b10
@@ -69,6 +72,8 @@ class DevK8SConfig(BaseConfig):
     MINIO_GRID_BUCKET                               =       "test-tiles"
     MINIO_SR_BUCKET                                 =       "temp-files/temp-superResolution"  # Super resolution
     MINIO_TEMP_FILES_BUCKET                         =       "temp-files"
+    MINIO_USER_BUCKET                               =       "user"
+    MINIO_USER_BASE_PATH                            =       "user-files"
 
     # MySQL Config
     MYSQL_HOST                                      =       "223.2.34.8"
@@ -97,6 +102,10 @@ class DevK8SConfig(BaseConfig):
     RAY_SYSTEM_RESERVED_CPU                         =       0.5
     RAY_SYSTEM_RESERVED_MEMORY                      =       2 * 1024**3
 
+    # MethLib Config
+    METHOD_WD                                       =       r"/usr/resource/method_library/method_wd"
+    METHOD_PD                                       =       r"/usr/resource/method_library/method_pd"
+
 class VmodConfig(BaseConfig):
     # MinIO Config
     MINIO_PORT                                      =       9000
@@ -109,6 +118,8 @@ class VmodConfig(BaseConfig):
     MINIO_GRID_BUCKET                               =       "tiles"
     MINIO_SR_BUCKET                                 =       "temp-files/temp-superResolution"  # Super resolution
     MINIO_TEMP_FILES_BUCKET                         =       "temp-files"
+    MINIO_USER_BUCKET                               =       "user"
+    MINIO_USER_BASE_PATH                            =       "user-files"
 
     # MySQL Config
     MYSQL_HOST                                      =       "172.31.13.21"
@@ -137,6 +148,10 @@ class VmodConfig(BaseConfig):
     RAY_SYSTEM_RESERVED_CPU                         =       0.5
     RAY_SYSTEM_RESERVED_MEMORY                      =       2 * 1024**3
 
+    # MethLib Config
+    METHOD_WD                                       =       r"/usr/resource/method_library/method_wd"
+    METHOD_PD                                       =       r"/usr/resource/method_library/method_pd"
+
 class hxfConfig(BaseConfig):
     # MinIO Config
     MINIO_PORT                                      =       30900
@@ -148,6 +163,8 @@ class hxfConfig(BaseConfig):
     MINIO_TILES_BUCKET                              =       "test-tiles"
     MINIO_GRID_BUCKET                               =       "test-tiles"
     MINIO_TEMP_FILES_BUCKET                         =       "temp-files"
+    MINIO_USER_BUCKET                               =       "user"
+    MINIO_USER_BASE_PATH                            =       "user-files"
 
     # MySQL Config
     MYSQL_HOST                                      =       "223.2.43.238"
@@ -176,6 +193,10 @@ class hxfConfig(BaseConfig):
     RAY_SYSTEM_RESERVED_CPU                         =       0.5
     RAY_SYSTEM_RESERVED_MEMORY                      =       2 * 1024**3
 
+    # MethLib Config
+    METHOD_WD                                       =       r"/Users/paxton/Documents/4_tools/method_wd"
+    METHOD_PD                                       =       r"/Users/paxton/Documents/4_tools/method_pd"
+
 
 class zzwConfig(BaseConfig):
     # MinIO Config
@@ -188,6 +209,8 @@ class zzwConfig(BaseConfig):
     MINIO_TILES_BUCKET                              =       "test-tiles"
     MINIO_GRID_BUCKET                               =       "test-tiles"
     MINIO_TEMP_FILES_BUCKET                         =       "temp-files"
+    MINIO_USER_BUCKET                               =       "user"
+    MINIO_USER_BASE_PATH                            =       "user-files"
 
     # MySQL Config
     MYSQL_HOST                                      =       "223.2.34.8"
@@ -216,6 +239,10 @@ class zzwConfig(BaseConfig):
     RAY_SYSTEM_RESERVED_CPU                         =       0.5
     RAY_SYSTEM_RESERVED_MEMORY                      =       2 * 1024**3
 
+    # MethLib Config
+    METHOD_WD                                       =       r"/Users/paxton/Documents/4_tools/method_wd"
+    METHOD_PD                                       =       r"/Users/paxton/Documents/4_tools/method_pd"
+
 
 class slkConfig(BaseConfig):
     # MinIO Config
@@ -228,6 +255,8 @@ class slkConfig(BaseConfig):
     MINIO_TILES_BUCKET                              =       "test-tiles"
     MINIO_GRID_BUCKET                               =       "test-tiles"
     MINIO_TEMP_FILES_BUCKET                         =       "temp-files"
+    MINIO_USER_BUCKET                               =       "user"
+    MINIO_USER_BASE_PATH                            =       "user-files"
 
     # MySQL Config
     MYSQL_HOST                                      =       "223.2.34.8"
@@ -256,6 +285,10 @@ class slkConfig(BaseConfig):
     RAY_SYSTEM_RESERVED_CPU                         =       0.5
     RAY_SYSTEM_RESERVED_MEMORY                      =       2 * 1024**3
 
+    # MethLib Config
+    METHOD_WD                                       =       r"/Users/paxton/Documents/4_tools/method_wd"
+    METHOD_PD                                       =       r"/Users/paxton/Documents/4_tools/method_pd"
+
 # --------------- class ProdConfig(BaseConfig): ---------------
 
 # 配置映射字典 - 类似Spring Boot的profile机制
@@ -281,7 +314,7 @@ def get_current_config():
     """获取当前环境的配置类"""
     return get_config(CURRENT_PROFILE)
 
-os.environ['APP_PROFILE'] = 'hxf'
+os.environ['APP_PROFILE'] = 'slk'
 # 获取当前环境配置 - 类似Spring Boot的 spring.profiles.active
 CURRENT_PROFILE = os.getenv('APP_PROFILE', 'k8s')  # 默认使用k8s
 

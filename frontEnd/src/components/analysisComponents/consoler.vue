@@ -1,10 +1,10 @@
 <template>
-    <div class="h-full w-full overflow-auto bg-gray-50">
+    <div class="h-full w-full overflow-auto bg-[#161b22]">
         <!-- 顶部栏 -->
         <div
-            class="flex h-12 w-full items-center justify-between border-b border-gray-200 bg-white px-6"
+            class="flex h-12 w-full items-center justify-between border-b border-[#262b32] bg-[#161b22] px-6"
         >
-            <div class="font-sans text-lg font-bold tracking-wide text-gray-800 uppercase">
+            <div class="font-sans text-lg font-bold tracking-wide text-[#c9d1d9]-800 uppercase">
                 控制台
             </div>
             <a-button
@@ -12,7 +12,7 @@
                 type="primary"
                 danger
                 class="flex items-center justify-center"
-                style="display: flex; align-items: center; justify-content: center"
+                style="display: flex; align-items: center; justify-content: center; background-color: darkred;"
             >
                 <ClearOutlined class="my-1" />
                 清空
@@ -20,11 +20,11 @@
         </div>
 
         <!-- 信息显示区域 -->
-        <div class="h-[calc(100%-3rem)] w-full overflow-y-auto bg-gray-50 p-4" ref="consoleContent">
+        <div class="h-[calc(100%-3rem)] w-full overflow-y-auto bg-[#161b22] p-4" ref="consoleContent">
             <div
                 v-for="(message, index) in messages"
                 :key="index"
-                class="mb-2 text-sm break-words whitespace-pre-wrap text-gray-700"
+                class="mb-2 text-sm break-words whitespace-pre-wrap text-[#c9d1d9]-700"
             >
                 {{ message }}
             </div>

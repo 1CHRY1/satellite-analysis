@@ -5,7 +5,11 @@
         </projectsBg>
         <div class="relative z-10 flex flex-col items-center justify-center">
             <div class="my-10 flex w-[50vw] flex-col items-center justify-center">
-                <img src="@/assets/image/toolsEstablish.png" class="h-12 w-fit" alt="" />
+                <svg class="h-12 w-fit" viewBox="0 0 420 96" xmlns="http://www.w3.org/2000/svg">
+                    <text class="page-heading-script" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" style="font-size: 86px;">
+                        在线编程
+                    </text>
+                </svg>
                 <div class="searchContainer mt-6 w-[100%]">
                     <div class="model_research">
                          <input type="text" autocomplete="false" :placeholder="t('projectpage.searchbar')"
@@ -48,11 +52,12 @@
                 <!-- 计算合适的宽度 -->
                 <div v-if="!createProjectView" class="grid gap-12 overflow-y-auto p-3"
                     :style="{ gridTemplateColumns: `repeat(${columns}, ${cardWidth}px)` }">
-                    <projectCard v-for="item in searchProjectsVisible
+                    <projectCard v-for="item in (searchProjectsVisible
                         ? searchedProjects
-                        : myProjectsVisible
+                        : (myProjectsVisible
                             ? myProjectList
-                            : projectList" :key="item.projectId" :project="item" :is-service="isService(item)"
+                            : projectList.filter((i:any)=> !isToolItem(i))))"
+                        :key="item.projectId" :project="item" :is-service="isService(item)"
                         @click="enterProject(item)" @deleteProject=afterDeleteProject>
                     </projectCard>
                 </div>
@@ -143,15 +148,16 @@
 import { ref, onMounted, onUnmounted, onActivated, type Ref } from 'vue'
 import projectsBg from '@/components/projects/projectsBg.vue'
 import { Search } from 'lucide-vue-next'
-import { getProjects, createProject, getServiceStatus } from '@/api/http/analysis'
+import { getProjects, createProject } from '@/api/http/analysis'
+import { getAllTools, getToolStatus } from '@/api/http/tool'
 import projectCard from '@/components/projects/projectCard.vue'
 import { Loading } from "@element-plus/icons-vue"
 import type { project, newProject } from '@/type/analysis'
-import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store'
 import { useI18n } from 'vue-i18n'
 import { updateRecord } from '@/api/http/user'
+import { message } from 'ant-design-vue'
 
 const { t } = useI18n()
 const userStore = useUserStore()
@@ -168,13 +174,22 @@ const searchedProjects: Ref<project[]> = ref([])
 const searchProjectsVisible = ref(false)
 
 // 支持搜索工具名称、创建人和工具描述
+const isToolItem = (item: project) => {
+    const v: any = (item as any)?.isTool
+    if (typeof v === 'number') return v === 1
+    if (typeof v === 'boolean') return v === true
+    if (typeof v === 'string') return v === '1' || v.toLowerCase() === 'true'
+    return false
+}
+
 const researchProjects = () => {
     if (searchInput.value.length > 0) {
         searchedProjects.value = projectList.value.filter(
             (item: project) =>
-                item.projectName.includes(searchInput.value) ||
+                (item.projectName.includes(searchInput.value) ||
                 item.createUserName.includes(searchInput.value) ||
-                item.description.includes(searchInput.value),
+                item.description.includes(searchInput.value)) &&
+                !isToolItem(item),
         )
         searchProjectsVisible.value = true
         console.log(searchedProjects.value, 1115)
@@ -186,7 +201,7 @@ const researchProjects = () => {
 // 查看我的工具
 const viewMyProjects = () => {
     myProjectsVisible.value = !myProjectsVisible.value
-    myProjectList.value = projectList.value.filter((item: project) => item.createUser === userId)
+    myProjectList.value = projectList.value.filter((item: project) => item.createUser === userId && !isToolItem(item))
 }
 
 /**
@@ -194,6 +209,7 @@ const viewMyProjects = () => {
  */
 const projectList: Ref<project[]> = ref([])
 const serviceMap = ref<Record<string, boolean>>({})
+const toolIdMap = ref<Record<string, string>>({})
 const createProjectView = ref(false)
 const createLoading = ref(false)
 const newProject = ref({
@@ -216,21 +232,21 @@ const enterProject = (item: project) => {
     if (item.createUser === userId) {
         router.push(`/project/${item.projectId}`)
     } else {
-        ElMessage.error(t("projectpage.message.error.entererr"))
+        message.error(t("projectpage.message.error.entererr"))
     }
 }
 
 const create = async () => {
     if (!newProject.value.projectName) {
-        ElMessage.error(t("projectpage.message.error.create_name_empty"))
+        message.error(t("projectpage.message.error.create_name_empty"))
         return
     } else if (!newProject.value.description) {
-        ElMessage.error(t("projectpage.message.error.create_description_empty"))
+        message.error(t("projectpage.message.error.create_description_empty"))
         return
     } else if (
         projectList.value.some((item: project) => item.projectName === newProject.value.projectName)
     ) {
-        ElMessage.error(t("projectpage.message.error.create_name_exist"))
+        message.error(t("projectpage.message.error.create_name_exist"))
         return
     }
     createLoading.value = true
@@ -240,7 +256,7 @@ const create = async () => {
     }
     let createRes = await createProject(createBody)
     router.push(`/project/${createRes.projectId}`)
-    ElMessage.success(t("projectpage.message.success"))
+    message.success(t("projectpage.message.success"))
     try{
     action.value = '创建'
     uploadRecord(action)}
@@ -319,18 +335,28 @@ onUnmounted(() => {
 
 // 计算是否为服务卡：后台标志优先，其次兜底检测
 const isService = (item: project) => {
-    return Number((item as any).isTool ?? 0) === 1 || serviceMap.value[item.projectId] === true
+    return isToolItem(item) || serviceMap.value[item.projectId] === true
 }
 
 const ensureServiceFlags = async () => {
     try {
         const userIdLocal = userId || localStorage.getItem('userId')
         if (!userIdLocal) return
+        // 构建 projectId -> toolId 映射
+        toolIdMap.value = {}
+        try {
+            const toolsRes = await getAllTools({ current: 1, size: 200, userId: userIdLocal })
+            const records = toolsRes?.data?.records || []
+            for (const rec of records) {
+                if (rec?.projectId && rec?.toolId) toolIdMap.value[rec.projectId] = rec.toolId
+            }
+        } catch {}
         const promises: Promise<void>[] = []
         for (const item of projectList.value) {
             // 已标服务的卡片不重复探测
-            if (Number((item as any).isTool ?? 0) === 1) continue
+            if (isToolItem(item)) continue
             if (serviceMap.value[item.projectId] === true) continue
+            if (!toolIdMap.value[item.projectId]) continue
             promises.push(checkAndSetService(item.projectId, userIdLocal))
         }
         // 控制并发（简单分批）
@@ -345,8 +371,10 @@ const ensureServiceFlags = async () => {
 
 const checkAndSetService = async (pid: string, uid: string | null) => {
     try {
-        const res = await getServiceStatus({ projectId: pid, userId: uid })
-        if (res && (res.isPublished === true || res.running === true)) {
+        const toolId = uid ? toolIdMap.value[pid] : undefined
+        if (!toolId) return
+        const res = await getToolStatus({ userId: uid as string, toolId })
+        if (res?.status === 1 && res.data?.status === 'running') {
             serviceMap.value[pid] = true
         }
     } catch (e) {

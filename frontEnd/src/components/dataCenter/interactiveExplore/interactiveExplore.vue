@@ -1,5 +1,6 @@
 <template>
     <div class="relative flex flex-1 flex-row bg-black">
+        <a-tour v-model:current="current" :open="openTour" :steps="steps" @close="handleOpenTour(false)" />
         <subtitle class="z-10 absolute" style="margin-top: 60px; " />
         <div class=" absolute left-18 h-[calc(100vh-100px)] p-4 text-gray-200 mb-0 gap-0 z-10"
             :class="showPanel ? 'w-[545px]' : 'w-16 transition-all duration-300'">
@@ -16,6 +17,12 @@
                             🔍
                         </div>
                         <span class="page-title">交互式探索</span>
+                        <div class="ml-2 cursor-pointer" @click="handleOpenTour(true)">
+                            <a-tooltip>
+                                <template #title>点击查看帮助</template>
+                                <QuestionCircleOutlined :size="20" />
+                            </a-tooltip>
+                        </div>
                         <div class="section-icon absolute right-0 cursor-pointer" @click="toNoCloud">
                             <a-tooltip>
                                 <template #title>无云一版图</template>
@@ -97,7 +104,7 @@
                                                             {{ option }}km
                                                         </option>
                                                     </select>
-                                                    <a-button class="a-button" type="primary" @click="getAllGrid">
+                                                    <a-button ref="ref1" class="a-button" type="primary" @click="getAllGrid">
                                                         {{ t('datapage.explore.data.button') }}
                                                     </a-button>
                                                 </div>
@@ -105,7 +112,7 @@
                                                     <div class="text-red-500">*</div>
                                                     <span class="text-xs text-gray-400">{{
                                                         t('datapage.explore.data.advice')
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -138,7 +145,7 @@
                                             </div>
                                             <div class="config-control">
                                                 <div class="control-info-container">
-                                                    <div class="control-info-item" @click="applyFilter" :class="{
+                                                    <a-space ref="ref2" class="control-info-item" @click="applyFilter" :class="{
                                                         'cursor-not-allowed': filterLoading,
                                                         'cursor-pointer': !filterLoading,
                                                     }">
@@ -151,8 +158,8 @@
                                                                 <Loader v-if="filterLoading" class="ml-2" />
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                    <div class="control-info-item" @click="toNoCloud" :class="{
+                                                    </a-space>
+                                                    <a-space ref="ref3" class="control-info-item" @click="toNoCloud" :class="{
                                                         'cursor-not-allowed': !isFilterDone,
                                                         'cursor-pointer': isFilterDone,
                                                     }">
@@ -164,7 +171,20 @@
                                                                 <span style="font-size: 1rem;">数据准备</span>
                                                             </div>
                                                         </div>
-                                                    </div>
+                                                    </a-space>
+                                                    <a-space ref="ref4" class="control-info-item" @click="toAnalysis" :class="{
+                                                        'cursor-not-allowed': !isFilterDone,
+                                                        'cursor-pointer': isFilterDone,
+                                                    }">
+                                                        <div class="result-info-icon">
+                                                            📈
+                                                        </div>
+                                                        <div class="result-info-content">
+                                                            <div class="result-info-value">
+                                                                <span style="font-size: 1rem;">展示分析</span>
+                                                            </div>
+                                                        </div>
+                                                    </a-space>
                                                 </div>
                                             </div>
                                         </div>
@@ -173,17 +193,17 @@
                             </section>
                             <!-- 交互探索 -->
                             <section class="panel-section">
-                                <div class="section-header">
+                                <div class="section-header flex-row">
                                     <div class="section-icon">
                                         <DatabaseIcon :size="18" />
                                     </div>
                                     <h2 class="section-title">{{ t('datapage.explore.section_interactive.sectiontitle')
-                                        }}</h2>
+                                    }}</h2>
                                     <div class="section-icon absolute right-0 cursor-pointer"
                                         @click="destroyExploreLayers">
                                         <a-tooltip>
                                             <template #title>{{ t('datapage.explore.section_interactive.clear')
-                                                }}</template>
+                                            }}</template>
                                             <Trash2Icon :size="18" />
                                         </a-tooltip>
                                     </div>
@@ -296,7 +316,7 @@
                                                             @click="isRSItemExpand[index] = false" />
                                                         <span class="text-xs text-[#7a899f]">{{
                                                             sceneStats?.dataset?.[category]?.total
-                                                            }} 景</span>
+                                                        }} 景</span>
                                                     </div>
                                                     <div class="flex flex-row gap-2 items-center">
                                                         <ChartColumnBig :size="12" class="text-[#7a899f]"
@@ -318,7 +338,7 @@
                                                                     t('datapage.explore.include') }}</div>
                                                                 <div class="result-info-value">
                                                                     {{ sceneStats?.dataset?.[category]?.total }}{{
-                                                                    t('datapage.explore.scene') }}
+                                                                        t('datapage.explore.scene') }}
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -367,7 +387,7 @@
                                                             <a-tooltip>
                                                                 <template #title>{{
                                                                     t('datapage.explore.section_interactive.clear')
-                                                                    }}</template>
+                                                                }}</template>
                                                                 <Trash2Icon :size="18"
                                                                     class="mt-4! ml-4! cursor-pointer"
                                                                     @click="destroyScene" />
@@ -376,8 +396,8 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            <a-empty v-if="sceneStats.total === 0" class="mt-2" />
                                         </div>
-                                        <a-empty v-if="sceneStats.total === 0" />
                                     </div>
                                     <div class="stats"
                                         style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
@@ -408,10 +428,11 @@
                                                         :size="22" class="config-icon cursor-pointer" />
                                                     <span>{{ item.vectorName }}</span>
                                                 </div>
-                                                <div v-if="isVectorItemExpand[index]" class="space-y-3 p-4 rounded-md text-white w-full">
-                                                    <div v-if="vectorSymbology[item.tableName].attrs.length" class="flex items-center justify-between gap-2">
-                                                        <el-checkbox
-                                                            v-model="vectorSymbology[item.tableName].checkAll"
+                                                <div v-if="isVectorItemExpand[index]"
+                                                    class="space-y-3 p-4 rounded-md text-white w-full">
+                                                    <div v-if="vectorSymbology[item.tableName].attrs.length"
+                                                        class="flex items-center justify-between gap-2">
+                                                        <el-checkbox v-model="vectorSymbology[item.tableName].checkAll"
                                                             :indeterminate="vectorSymbology[item.tableName].isIndeterminate"
                                                             @change="(val: boolean) => handleCheckAllChange(item.tableName, val)">
                                                             <template #default>
@@ -419,8 +440,8 @@
                                                             </template>
                                                         </el-checkbox>
                                                         <a-tooltip>
-                                                            <template
-                                                                #title>{{ t('datapage.history.preview') }}</template>
+                                                            <template #title>{{ t('datapage.history.preview')
+                                                                }}</template>
                                                             <Eye v-if="previewVectorList[index]"
                                                                 @click="destroyVector(index)" :size="16"
                                                                 class="cursor-pointer" />
@@ -430,17 +451,21 @@
                                                         </a-tooltip>
                                                     </div>
                                                     <div class="w-full max-h-[248px] overflow-y-auto">
-                                                        <el-checkbox-group v-model="vectorSymbology[item.tableName].checkedAttrs"
-                                                            @change="(val: string[]) => handleCheckedAttrsChange(item.tableName, val)" >
-                                                            <template v-if="vectorSymbology[item.tableName].attrs.length">
+                                                        <el-checkbox-group
+                                                            v-model="vectorSymbology[item.tableName].checkedAttrs"
+                                                            @change="(val: string[]) => handleCheckedAttrsChange(item.tableName, val)">
+                                                            <template
+                                                                v-if="vectorSymbology[item.tableName].attrs.length">
                                                                 <div v-for="(attr, attrIndex) in vectorSymbology[item.tableName].attrs"
                                                                     :key="attrIndex"
                                                                     class="flex items-center justify-between bg-[#01314e] px-3 mb-1.5 py-2 rounded">
                                                                     <div class="flex items-center gap-2">
-                                                                        <el-checkbox class="config-label mt-1" :key="attr.type" :label="attr.label" >
+                                                                        <el-checkbox class="config-label mt-1"
+                                                                            :key="attr.type" :label="attr.label">
                                                                             <template default></template>
                                                                         </el-checkbox>
-                                                                        <span class="config-label mt-1">{{ attr.label }}</span>
+                                                                        <span class="config-label mt-1">{{ attr.label
+                                                                            }}</span>
                                                                     </div>
                                                                     <el-color-picker v-model="attr.color" size="small"
                                                                         show-alpha :predefine="predefineColors" />
@@ -448,7 +473,8 @@
                                                             </template>
                                                         </el-checkbox-group>
                                                     </div>
-                                                    <div v-if="vectorSymbology[item.tableName].attrs.length === 0" class="flex justify-center items-center">
+                                                    <div v-if="vectorSymbology[item.tableName].attrs.length === 0"
+                                                        class="flex justify-center items-center">
                                                         <a-space>
                                                             <a-spin size="large" />
                                                         </a-space>
@@ -492,7 +518,7 @@
                                                             @click="isProductsItemExpand[index] = false" />
                                                         <span class="text-xs text-[#7a899f]">{{
                                                             themeStats?.dataset?.[category]?.total
-                                                            }} 幅</span>
+                                                        }} 幅</span>
                                                     </div>
                                                 </div>
 
@@ -504,8 +530,8 @@
                                                             <span>{{ themeName }}</span>
                                                             <div class="absolute right-0 cursor-pointer">
                                                                 <a-tooltip>
-                                                                    <template
-                                                                        #title>{{ t('datapage.history.preview') }}</template>
+                                                                    <template #title>{{ t('datapage.history.preview')
+                                                                        }}</template>
                                                                     <Eye v-if="shouldShowEyeOff(category, idx)"
                                                                         @click="toggleEye(category, idx, themeName)"
                                                                         :size="16" class="cursor-pointer" />
@@ -518,8 +544,8 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            <a-empty v-if="themeStats.total === 0" />
                                         </div>
-                                        <a-empty v-if="themeStats.total === 0" />
                                     </div>
                                 </div>
                             </section>
@@ -590,7 +616,7 @@ const { t } = useI18n()
 
 import { useFilter } from './useFilter'
 import { useVisualize } from './useVisualize'
-import { message } from 'ant-design-vue';
+import { message, type TourProps } from 'ant-design-vue';
 const selectedVectorTableName = ref('')
 const {
     // ------------------------ 数据检索 1.遥感影像可视化 -------------------------- //
@@ -615,6 +641,7 @@ import {
     sceneStats, vectorStats, themeStats
 } from './shared'
 import { tableProps } from 'ant-design-vue/es/table';
+import { QuestionCircleOutlined } from '@ant-design/icons-vue';
 
 const {
     // ------------------------ 数据检索 1.空间位置 -------------------------- //
@@ -627,6 +654,40 @@ const {
     doFilter: applyFilter, filterLoading, isFilterDone,
 } = useFilter()
 
+/**
+ * Tour Guide
+ */
+const ref1 = ref(null)
+const ref2 = ref(null)
+const ref3 = ref(null)
+const ref4 = ref(null)
+const current = ref(0)
+const openTour = ref<boolean>(false)
+const steps: TourProps['steps'] = [
+    {
+        title: '获取格网',
+        description: '在这里获取您选取区域的格网',
+        target: () => ref1.value && (ref1.value as any).$el,
+    },
+    {
+        title: '数据检索',
+        description: '基于获取到的格网，您可以点击这里检索平台数据。数据检索后，您可以进行下方导航栏的交互探索步骤',
+        target: () => ref2.value && (ref2.value as any).$el,
+    },
+    {
+        title: '数据准备',
+        description: '您也可以进入数据准备页面，生成无云一版图和时序立方体',
+        target: () => ref3.value && (ref3.value as any).$el,
+    },
+    {
+        title: '展示分析',
+        description: '或者进入展示分析页面，调用平台工具进行在线分析',
+        target: () => ref4.value && (ref4.value as any).$el,
+    },
+]
+const handleOpenTour = (val: boolean): void => {
+    openTour.value = val
+}
 //显示左panel
 const showPanel = ref(true)
 
@@ -654,6 +715,14 @@ const toNoCloud = () => {
     if (router.currentRoute.value.path !== '/nocloud') {
         // TODO 跳转有Bug
         router.push('/nocloud')
+    }
+}
+
+const toAnalysis = () => {
+    if (!isFilterDone.value) return message.warning('请先进行数据检索')
+    if (router.currentRoute.value.path !== '/analysis') {
+        // TODO 跳转有Bug
+        router.push('/analysis')
     }
 }
 
@@ -695,7 +764,7 @@ onMounted(async () => {
         try {
             document.documentElement.style.overflow = v ? 'hidden' : ''
             document.body.style.overflow = v ? 'hidden' : ''
-        } catch {}
+        } catch { }
     })
 
     await mapManager.waitForInit();
@@ -722,8 +791,8 @@ onMounted(async () => {
 onUnmounted(() => {
     destroyExploreLayers()
     bus.off('gridPopup:visible', handleGridPopupVisible)
-    try { document.documentElement.style.overflow = '' } catch {}
-    try { document.body.style.overflow = '' } catch {}
+    try { document.documentElement.style.overflow = '' } catch { }
+    try { document.body.style.overflow = '' } catch { }
 })
 
 </script>
@@ -759,7 +828,8 @@ onUnmounted(() => {
 :deep(.grid-popup-panel .vdr) {
     pointer-events: auto;
 }
-::deep(.grid-popup-panel .vdr * ) {
+
+::deep(.grid-popup-panel .vdr *) {
     pointer-events: auto;
 }
 
@@ -768,12 +838,15 @@ onUnmounted(() => {
     inset: 0;
     z-index: 2200;
     pointer-events: none;
-    overflow: hidden; /* NEW: prevent body scrolling */
+    overflow: hidden;
+    /* NEW: prevent body scrolling */
 }
+
 .grid-popup-panel {
     position: absolute;
     inset: 0;
     pointer-events: none;
-    overflow: hidden; /* NEW: clip inner overflow */
+    overflow: hidden;
+    /* NEW: clip inner overflow */
 }
 </style>

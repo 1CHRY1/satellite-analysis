@@ -202,7 +202,6 @@
 <script setup lang="ts">
 
 import { ezStore, useGridStore } from '@/store';
-import { ElMessage } from 'element-plus';
 import {
     ChartColumn,
     Earth,
@@ -232,6 +231,7 @@ import mapboxgl from 'mapbox-gl'
 import { mapManager } from '@/util/map/mapManager';
 
 import { useI18n } from 'vue-i18n'
+import { message } from 'ant-design-vue';
 const { t } = useI18n()
 
 type ThematicConfig = {
@@ -252,7 +252,7 @@ const hyperspectralImages = computed(() => {
     })
     if (filteredImages.length === 0) {
         // '该区域暂无高光谱影像'
-        ElMessage.warning(t('datapage.optional_thematic.spectrum.message.info_noima'))
+        message.warning(t('datapage.optional_thematic.spectrum.message.info_noima'))
     }
 
     return filteredImages
@@ -278,10 +278,10 @@ const toggleMode = (mode: 'point' | 'line' | 'false') => {
     activeMode.value = mode
     if (mode === 'point') {
         MapOperation.draw_pointMode()
-        ElMessage.info(t('datapage.optional_thematic.spectrum.message.info_point'))
+        message.info(t('datapage.optional_thematic.spectrum.message.info_point'))
     } else if (mode === 'line') {
         MapOperation.draw_lineMode()
-        ElMessage.info(t('datapage.optional_thematic.spectrum.message.info_line'))
+        message.info(t('datapage.optional_thematic.spectrum.message.info_line'))
     }
 }
 
@@ -299,10 +299,10 @@ const showImageBBox = async () => {
             fillColor: '#a4ffff',
             fillOpacity: 0.2,
         })
-        ElMessage.success(t('datapage.optional_thematic.spectrum.message.success_poin'))
+        message.success(t('datapage.optional_thematic.spectrum.message.success_poin'))
     } catch (e) {
         console.error("有错误找后端", e)
-        ElMessage.error(t('datapage.optional_thematic.spectrum.message.info_fail'))
+        message.error(t('datapage.optional_thematic.spectrum.message.info_fail'))
     }
 }
 
@@ -320,21 +320,21 @@ const analysisData = ref<any>([])
 const analysisSpectrum = async () => {
 
     if (!pickedPoint.value[0] || !pickedPoint.value[1]) {
-        ElMessage.warning(t('datapage.optional_thematic.spectrum.message.info_reg'))
+        message.warning(t('datapage.optional_thematic.spectrum.message.info_reg'))
         return
     }
     if (selectedSceneId.value === '') {
-        ElMessage.warning(t('datapage.optional_thematic.spectrum.message.info_ima'))
+        message.warning(t('datapage.optional_thematic.spectrum.message.info_ima'))
         return
     }
-    ElMessage.success(t('datapage.optional_thematic.spectrum.message.info_start'))
+    message.success(t('datapage.optional_thematic.spectrum.message.info_start'))
     let spectrumParam = {
         sceneId: selectedSceneId.value,
         point: [pickedPoint.value[1], pickedPoint.value[0]]
     }
     let getSpectrumRes = await getSpectrum(spectrumParam)
     if (getSpectrumRes.message !== 'success') {
-        ElMessage.error(t('datapage.optional_thematic.spectrum.message.calerror'))
+        message.error(t('datapage.optional_thematic.spectrum.message.calerror'))
         console.error(getSpectrumRes)
         return
     }
@@ -396,10 +396,10 @@ const analysisSpectrum = async () => {
             imageName: selectedImage.sceneName,
             point: [...pickedPoint.value]
         })
-        ElMessage.success(t('datapage.optional_thematic.spectrum.message.success'))
+        message.success(t('datapage.optional_thematic.spectrum.message.success'))
     } catch (error) {
         calTask.value.calState = 'failed'
-        ElMessage.error(t('datapage.optional_thematic.spectrum.message.info_retry'))
+        message.error(t('datapage.optional_thematic.spectrum.message.info_retry'))
         console.error(error);
     }
 }

@@ -175,10 +175,10 @@ import userAvatar from "@/assets/image/avator.png";
 import { ref, reactive , onMounted,watch } from "vue";
 import userFunction from "@/components/user/userFunction.vue";
 import { useRouter } from "vue-router";
-import { ElMessage } from "element-plus";
 import { userUpdate, getUsers , changePassword} from '@/api/http/user';
 import { RegionSelects } from 'v-region'
 import { avaterUpdate, getAvatar } from '@/api/http/user'
+import { message } from 'ant-design-vue';
 
 const router = useRouter();
 const userStore = useUserStore()
@@ -229,11 +229,11 @@ function beforeUploadAvatar(file: File) {
   const isLt1M = file.size / 1024 / 1024 < 1;
 
   if (!isJPG) {
-    ElMessage.error('上传头像图片只能是 JPG/PNG 格式!');
+    message.error('上传头像图片只能是 JPG/PNG 格式!');
     return false;
   }
   if (!isLt1M) {
-    ElMessage.error('上传头像图片大小不能超过 1MB!');
+    message.error('上传头像图片大小不能超过 1MB!');
     return false;
   }
   return true;
@@ -249,7 +249,7 @@ const uploadAvatar = async (option: any) => {
   try {
     const res = await avaterUpdate(formData);
     if (res.status === 1) {
-      ElMessage.success("头像上传成功");
+      message.success("头像上传成功");
 
       // 更新头像展示路径
       data.avatar = "http://223.2.34.8:30900/" + res.data.avatarPath;
@@ -260,11 +260,11 @@ const uploadAvatar = async (option: any) => {
         avatar: res.data.avatarPath,
       });
     } else {
-      ElMessage.error(res.message || "上传失败");
+      message.error(res.message || "上传失败");
     }
   } catch (err) {
     console.error(err);
-    ElMessage.error("上传异常");
+    message.error("上传异常");
   }
 };
 
@@ -316,11 +316,11 @@ const updatePassword =  async() => {
   }
   let passwordRes = await changePassword(userStore.user.id,passwordData )
     if (passwordRes.status == 1) {
-      ElMessage.success("更新成功");
+      message.success("更新成功");
       let newData = await getUsers(userStore.user.id)
       resetVisible.value = false;
     } else {
-      ElMessage.error(passwordRes.message);
+      message.error(passwordRes.message);
       resetVisible.value = false;
     }
   ;
@@ -328,7 +328,7 @@ const updatePassword =  async() => {
 
 // 退出登录
 function logout() {
-  ElMessage.success("已退出登录");
+  message.success("已退出登录");
   userStore.logout()
   router.push('/home');
 }
@@ -371,7 +371,7 @@ const updateUserInfo = async() => {
   console.log(userInfo);
   let res = await userUpdate(userStore.user.id,updateForm)
     if (res.status == 1) {
-      ElMessage.success("更新成功");
+      message.success("更新成功");
       let newData = await getUsers(userStore.user.id)
       userStore.updateUser({
             id: userStore.user.id,
@@ -386,7 +386,7 @@ const updateUserInfo = async() => {
         } as any)
       dialogFormVisible.value = false;
     } else {
-      ElMessage.error(res.message);
+      message.error(res.message);
       dialogFormVisible.value = false;
     }
   ;

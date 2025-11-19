@@ -155,11 +155,12 @@ import projectsBg from '@/components/projects/projectsBg.vue'
 import { FilePlus2, Mail, Package } from 'lucide-vue-next'
 import type { modelsOrMethods } from '@/type/modelCentral'
 import { getAllTools,type ToolData, updateTool, deleteTool, getToolById, type ToolParameter, type PaginatedToolResponse} from '@/api/http/tool'
-import { ElMessage,ElMessageBox } from 'element-plus'
+import { ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/store'
 import { updateRecord } from '@/api/http/user'
 import { useI18n } from 'vue-i18n'
 import router from '@/router'
+import { message } from 'ant-design-vue'
 const { t } = useI18n()
 
 const showTools = ref(true) 
@@ -259,7 +260,7 @@ const fetchAllTools = async () => {
     
     return response.value; 
   } catch (error) {
-    ElMessage.error("获取工具列表失败");
+    message.error("获取工具列表失败");
     return [];
   }
 };
@@ -313,7 +314,7 @@ const submitToolForm = async () => {
         };
 
         if (!toolForm.value.name) {
-            ElMessage.error("工具名称不能为空")
+            message.error("工具名称不能为空")
             return
         }
 
@@ -321,7 +322,7 @@ const submitToolForm = async () => {
             // 更新工具
             await updateTool(
                toolForm.value.toolId, toolData)
-            ElMessage.success("更新成功")
+            message.success("更新成功")
             try{
                 action.value = '更新'
                 uploadRecord(action)
@@ -334,7 +335,7 @@ const submitToolForm = async () => {
         await fetchMyTools() // 刷新我的工具列表
         await fetchAllTools()
     } catch (error) {
-        ElMessage.error("更新失败")
+        message.error("更新失败")
     }
 }
 

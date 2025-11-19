@@ -1,6 +1,16 @@
 import datetime
+from typing import Any
 from flask import jsonify
 
+# 任务单元建议采用TaskResult统一返回结果，便于精准捕捉异常
+class TaskResult:
+    """
+    """
+    def ok(info: Any):
+        return {"status": 'SUCCESS', "data": info}
+    
+    def error(msg: str):
+        return {"status": 'ERROR', "data": msg}
 
 def api_response(code=200, message="success", data=None):
     """

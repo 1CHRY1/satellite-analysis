@@ -1,14 +1,21 @@
 /**
  * Visualize API: 获取可视化服务URL
  */
-import { ezStore } from "@/store"
-import type { LargeScaleSceneParam, OneBandColorLayerParam, RGBCompositeParams, VectorUrlParam } from "./visualize.type"
-import { getThemeByThemeName } from "./filter.api"
-import http from "@/api/axiosClient/tilerHttp"
-import { message } from "ant-design-vue"
-import type { GridData } from "@/type/interactive-explore/grid"
-import { grid2bbox } from "@/util/map/gridMaker"
+import { ezStore } from '@/store'
+import type {
+    LargeScaleSceneParam,
+    OneBandColorLayerParam,
+    RGBCompositeParams,
+    ScenesInfo,
+    VectorUrlParam,
+} from './visualize.type'
+import { getThemeByThemeName } from './filter.api'
+import http from '@/api/axiosClient/tilerHttp'
+import { message } from 'ant-design-vue'
+import type { GridData } from '@/type/interactive-explore/grid'
+import { grid2bbox } from '@/util/map/gridMaker'
 import httpV3 from '../../axiosClient/clientHttp3'
+import type { CommonResponse } from '../common.type'
 
 const titilerProxyEndPoint = ezStore.get('conf')['titiler']
 const minioEndPoint = ezStore.get('conf')['minioIpAndPort']
@@ -47,7 +54,7 @@ export const getSceneUrl = (sensorName: string) => {
     const requestParams = new URLSearchParams()
     requestParams.append('sensorName', sensorName)
     const fullUrl = baseUrl + '?' + requestParams.toString()
-    console.log("Scene URL: ", fullUrl)
+    console.log('Scene URL: ', fullUrl)
     return fullUrl
 }
 export const getLargeSceneUrl = (mosaicUrl: string) => {
@@ -57,8 +64,17 @@ export const getLargeSceneUrl = (mosaicUrl: string) => {
     const fullUrl = baseUrl + '?' + requestParams.toString()
     return fullUrl
 }
-export async function getLargeSceneMosaicUrl (param: LargeScaleSceneParam): Promise<any> {
+export async function getLargeSceneMosaicUrl(param: LargeScaleSceneParam): Promise<any> {
     return httpV3.post<any>(`modeling/example/scenes/visualization/lowLevel`, param)
+}
+export async function getScenesInfo(
+    sensorName: string,
+    points: number[],
+): Promise<CommonResponse<ScenesInfo>> {
+    return httpV3.post<CommonResponse<ScenesInfo>>('modeling/example/scenes/visualization', {
+        sensorName,
+        points,
+    })
 }
 
 /**
@@ -88,7 +104,7 @@ export const getVectorUrl = (vectorUrlParam: VectorUrlParam) => {
             break
     }
     const fullUrl = baseUrl
-    console.log("Vector URL: ", fullUrl)
+    console.log('Vector URL: ', fullUrl)
     return fullUrl
 }
 
@@ -104,7 +120,7 @@ export const getDEMUrl = async (themeName: string, gridsBoundary: any) => {
     requestParams.append('grids_boundary', JSON.stringify(gridsBoundary))
     requestParams.append('scale_factor', '0.5')
     const fullUrl = baseUrl + '?' + requestParams.toString()
-    console.log("DEM URL: ", fullUrl)
+    console.log('DEM URL: ', fullUrl)
     return fullUrl
 }
 
@@ -120,7 +136,7 @@ export const getNDVIOrSVRUrl = async (themeName: string, gridsBoundary: any) => 
     requestParams.append('grids_boundary', JSON.stringify(gridsBoundary))
     requestParams.append('nodata', themeRes.data.noData.toString())
     const fullUrl = baseUrl + '?' + requestParams.toString()
-    console.log("NDVI or SVR URL: ", fullUrl)
+    console.log('NDVI or SVR URL: ', fullUrl)
     return fullUrl
 }
 
@@ -135,9 +151,15 @@ export const get3DUrl = async (themeName: string, gridsBoundary: any) => {
     let baseUrl = `${titilerProxyEndPoint}/rgb/tiles/{z}/{x}/{y}.png`
     const requestParams = new URLSearchParams()
     const themeRes = await getThemeByThemeName(themeName)
-    const image_r = themeRes.data.images.find((item: any) => item.band === themeRes.data.bandMapper.Red)
-    const image_g = themeRes.data.images.find((item: any) => item.band === themeRes.data.bandMapper.Green)
-    const image_b = themeRes.data.images.find((item: any) => item.band === themeRes.data.bandMapper.Blue)
+    const image_r = themeRes.data.images.find(
+        (item: any) => item.band === themeRes.data.bandMapper.Red,
+    )
+    const image_g = themeRes.data.images.find(
+        (item: any) => item.band === themeRes.data.bandMapper.Green,
+    )
+    const image_b = themeRes.data.images.find(
+        (item: any) => item.band === themeRes.data.bandMapper.Blue,
+    )
     const url_r = `${minioEndPoint}/${image_r?.bucket}/${image_r?.tifPath}`
     const url_g = `${minioEndPoint}/${image_g?.bucket}/${image_g?.tifPath}`
     const url_b = `${minioEndPoint}/${image_b?.bucket}/${image_b?.tifPath}`
@@ -157,7 +179,6 @@ export const get3DUrl = async (themeName: string, gridsBoundary: any) => {
     const fullUrl = baseUrl + '?' + requestParams.toString()
     return fullUrl
 }
-
 
 /**
  * 2. 格网探查 - 格网可视化Url
@@ -196,7 +217,7 @@ export const getGridDEMUrl = (grid: GridData, bandPath: string) => {
     requestParams.append('url', getMinIOUrl(bandPath))
     requestParams.append('scale_factor', '0.5')
     const fullUrl = baseUrl + '?' + requestParams.toString()
-    console.log("DEM URL: ", fullUrl)
+    console.log('DEM URL: ', fullUrl)
     return fullUrl
 }
 
@@ -219,8 +240,10 @@ export function getGrid3DUrl(grid: GridData, param: RGBCompositeParams) {
     requestParams.append('max_g', param.g_max.toString())
     requestParams.append('min_b', param.b_min.toString())
     requestParams.append('max_b', param.b_max.toString())
-    if (param.normalize_level) requestParams.append('normalize_level', param.normalize_level.toString())
-    if (param.stretch_method) requestParams.append('stretch_method', param.stretch_method.toString())
+    if (param.normalize_level)
+        requestParams.append('normalize_level', param.normalize_level.toString())
+    if (param.stretch_method)
+        requestParams.append('stretch_method', param.stretch_method.toString())
     if (param.nodata) requestParams.append('nodata', param.nodata.toString())
     if (param.std_config) requestParams.append('std_config', param.std_config.toString())
     // if (grid.opacity) requestParams.append('normalize_level', grid.opacity.toString())
@@ -243,7 +266,8 @@ export function getGridNDVIOrSVRUrl(grid: GridData, param: OneBandColorLayerPara
     if (param.nodata !== undefined && param.nodata !== null) {
         requestParams.append('nodata', param.nodata.toString())
     }
-    if (grid.normalize_level) requestParams.append('normalize_level', grid.normalize_level.toString())
+    if (grid.normalize_level)
+        requestParams.append('normalize_level', grid.normalize_level.toString())
 
     return baseUrl + '?' + requestParams.toString()
 }

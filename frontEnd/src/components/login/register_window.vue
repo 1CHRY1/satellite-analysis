@@ -89,7 +89,6 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
 import { createUser } from '@/api/http/user'
 
 import { useI18n } from 'vue-i18n'
@@ -107,7 +106,7 @@ const organization = ref('')
 
 const handleRegister = async () => {
     if (password.value !== confirmPassword.value) {
-        ElMessage.error(t('signup.message.error.unmatch'))
+        message.error(t('signup.message.error.unmatch'))
         return
     }
     let result = await createUser({
@@ -119,9 +118,9 @@ const handleRegister = async () => {
     })
     if (result?.status === 1) {
         router.push('/home')
-        ElMessage.success(t('signup.message.success'))
+        message.success(t('signup.message.success'))
     } else {
-         ElMessage.error(t('signup.message.error.fail'))
+         message.error(t('signup.message.error.fail'))
     }
 }
 </script>

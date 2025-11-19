@@ -185,6 +185,23 @@ public class ModelCodingService {
                 .build();
         dockerService.initEnv(serverDir);
 
+        // Overwrite remote main.py strictly from backend classpath templates
+        try {
+            String resName = createProjectDTO.isTool() ? "/modelDockerVolume/devCli/main_tool.py" : "/modelDockerVolume/devCli/main_nontool.py";
+            java.io.InputStream res = ModelCodingService.class.getResourceAsStream(resName);
+            if (res == null) {
+                // fallback to default template if specific one missing
+                res = ModelCodingService.class.getResourceAsStream("/modelDockerVolume/devCli/main.py");
+            }
+            if (res != null) {
+                try (java.io.InputStream autoClose = res) {
+                    sftpDataService.uploadFileFromStream(autoClose, serverPyPath);
+                }
+            }
+        } catch (Exception e) {
+            // best-effort override; ignore failure and keep default main.py
+        }
+
         // Load Config
         String configPath = serverDir + "config.json";
         sftpDataService.writeRemoteFile(configPath, getRemoteConfig(project));
