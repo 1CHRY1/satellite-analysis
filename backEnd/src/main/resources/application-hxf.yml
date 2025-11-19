@@ -185,8 +185,8 @@ docker:
   workDir: /usr/local/coding/
 
 modelServer:
-  address: http://223.2.43.238:5000
-  #  address: http://223.2.43.228:30500
+#  address: http://223.2.43.238:5000
+  address: http://223.2.34.174:5001
   apis:
     status: /v0/task/status
     result: /v0/task/result
@@ -199,6 +199,7 @@ modelServer:
     rasterLine: /v0/tif/calc_raster_line
     ndvi: /v0/tif/calc_NDVI
     createLowLevelMosaic: /v0/mosaic/create_low_level_mosaic
+    methlib: /v0/methlib
   interval:
     status: 2
 

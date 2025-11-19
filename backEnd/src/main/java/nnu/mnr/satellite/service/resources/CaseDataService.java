@@ -146,7 +146,9 @@ public class CaseDataService {
             }
         }
         // 按用户筛选
-        lambdaQueryWrapper.eq(Case::getUserId, userId);
+        if (userId !=null){
+            lambdaQueryWrapper.eq(Case::getUserId, userId);
+        }
         // 添加时间范围筛选条件
         if (startTime != null && endTime != null) {
             lambdaQueryWrapper.between(Case::getCreateTime, startTime, endTime);

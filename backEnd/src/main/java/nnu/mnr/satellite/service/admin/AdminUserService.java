@@ -4,6 +4,7 @@ import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import io.minio.admin.UserInfo;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.constants.UserConstants;
 import nnu.mnr.satellite.mapper.user.IUserRepo;
@@ -14,14 +15,17 @@ import nnu.mnr.satellite.model.dto.admin.user.UserUpdateDTO;
 import nnu.mnr.satellite.model.dto.user.AvatarUploadDTO;
 import nnu.mnr.satellite.model.po.user.User;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
+import nnu.mnr.satellite.model.vo.user.UserVO;
 import nnu.mnr.satellite.service.user.UserService;
 import nnu.mnr.satellite.utils.common.IdUtil;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -106,11 +110,30 @@ public class AdminUserService {
         }
         // 查询，lambdaQueryWrapper没有显式指定selecet，默认select *
         IPage<User> userPage = userRepo.selectPage(page, lambdaQueryWrapper);
+        // 映射，匿掉password字段
+        IPage<UserVO> userVOPage = new Page<>(userPage.getCurrent(), userPage.getSize(), userPage.getTotal());
+        List<UserVO> userVOList = userPage.getRecords().stream().map(user -> {
+            UserVO userVO = new UserVO();
+            BeanUtils.copyProperties(user, userVO);
+            return userVO;
+        }).collect(Collectors.toList());
+        userVOPage.setRecords(userVOList);
 
         return CommonResultVO.builder()
                 .status(1)
                 .message("用户信息获取成功")
-                .data(userPage)
+                .data(userVOPage)
+                .build();
+    }
+
+    public CommonResultVO getUserInfoById(String userId){
+        User user = userRepo.selectById(userId);
+        UserVO userVO = new UserVO();
+        BeanUtils.copyProperties(user, userVO);
+        return CommonResultVO.builder()
+                .status(1)
+                .message("用户信息获取成功")
+                .data(userVO)
                 .build();
     }
 

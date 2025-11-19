@@ -21,7 +21,7 @@
                     size="small" :icon="h(SaveOutlined)" @click="saveCode">
                     保存
                 </a-button>
-                <el-dropdown @command="handleTemplateCommand">
+                <el-dropdown v-if="isToolProject" @command="handleTemplateCommand">
                     <a-button class="toolItem btHover"
                         style="display: flex; align-items: center; justify-content: center" :icon="h(DownOutlined)"
                         size="small">
@@ -35,7 +35,7 @@
                     </template>
                 </el-dropdown>
 
-                <a-button class="toolItem btHover" style="display: flex; align-items: center; justify-content: center"
+                <a-button v-if="isToolProject" class="toolItem btHover" style="display: flex; align-items: center; justify-content: center"
                     size="small" :icon="h(ToolOutlined)" @click="openToolWizard">
                     发布为工具
                 </a-button>
@@ -363,6 +363,7 @@ import type {
     DynamicToolMeta,
 } from '@/store/toolRegistry'
 import { message } from 'ant-design-vue';
+import { getProjects } from '@/api/http/analysis'
 
 // import type { analysisResponse } from "@/type/analysis";
 // import { oneDarkTheme } from "@codemirror/theme-one-dark";
@@ -383,6 +384,29 @@ const emit = defineEmits(['addMessage', 'servicePublished', 'serviceUnpublished'
 
 const currentUserId = computed(() => userStore.user?.id ?? '')
 
+// 是否工具工程：用于控制“模板/发布为工具”按钮的显示
+const isToolProject = ref(false)
+const parseIsTool = (v: any): number => {
+    if (typeof v === 'number') return v
+    if (typeof v === 'boolean') return v ? 1 : 0
+    if (typeof v === 'string') {
+        const s = v.toLowerCase()
+        if (s === '1' || s === 'true') return 1
+        return 0
+    }
+    return 0
+}
+const refreshIsToolFlag = async () => {
+    try {
+        const list = await getProjects()
+        const p = (list || []).find((it: any) => String(it?.projectId || '') === String(props.projectId))
+        const raw = (p as any)?.isTool ?? (p as any)?.is_tool
+        isToolProject.value = !!p && parseIsTool(raw) === 1
+    } catch {
+        isToolProject.value = false
+    }
+}
+
 watch(
     currentUserId,
     (id) => {
@@ -391,6 +415,13 @@ watch(
         }
     },
     { immediate: true }
+)
+
+watch(
+    () => props.projectId,
+    async () => {
+        await refreshIsToolFlag()
+    }
 )
 
 type WizardParamForm = {
@@ -1244,6 +1275,7 @@ const publishDynamicTool = async () => {
 }
 
 onMounted(async () => {
+    await refreshIsToolFlag()
     try {
         const script = await getScript({
             projectId: props.projectId,
