@@ -164,7 +164,7 @@ public class MethlibService {
         }
         if (userId != null) {
             lambdaQueryWrapper.eq(MethlibCase::getUserId, userId);
-        }，
+        }
         // 添加时间范围筛选条件
         LocalDateTime startTime = methlibCasePageDTO.getStartTime();
         LocalDateTime endTime = methlibCasePageDTO.getEndTime();
