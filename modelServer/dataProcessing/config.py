@@ -109,7 +109,7 @@ class DevK8SConfig(BaseConfig):
 class VmodConfig(BaseConfig):
     # MinIO Config
     MINIO_PORT                                      =       9000
-    MINIO_IP                                        =       "172.31.13.21"
+    MINIO_IP                                        =       "172.31.13.42"
     MINIO_ACCESS_KEY                                =       "OGMS"
     MINIO_SECRET_KEY                                =       "ogms250410"
     MINIO_SECURE                                    =       False
@@ -122,7 +122,7 @@ class VmodConfig(BaseConfig):
     MINIO_USER_BASE_PATH                            =       "user-files"
 
     # MySQL Config
-    MYSQL_HOST                                      =       "172.31.13.21"
+    MYSQL_HOST                                      =       "172.31.13.43"
     MYSQL_TILE_PORT                                 =       3306
     MYSQL_TILE_DB                                   =       "tile"
     MYSQL_RESOURCE_PORT                             =       3306
