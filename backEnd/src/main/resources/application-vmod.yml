@@ -25,49 +25,107 @@ spring:
       primary: mysql-ard-satellite
       strict: false
       datasource:
-#        mysql_satellite:
-#          url: jdbc:mysql://${mysql.host}:${mysql.port}/satellite?useSSL=false&allowPublicKeyRetrieval=true
-#          username: ${mysql.username}
-#          password: ${mysql.password}
-#          driver-class-name: com.mysql.cj.jdbc.Driver
-#          hikari:
-#            connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
         mysql-ard-satellite:
           url: jdbc:mysql://${mysql.host}:${mysql.port}/ard_satellite?useSSL=false&allowPublicKeyRetrieval=true
           username: ${mysql.username}
           password: ${mysql.password}
           driver-class-name: com.mysql.cj.jdbc.Driver
-          hikari:
-            connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
+          type: com.alibaba.druid.pool.DruidDataSource
+          druid:
+            initial-size: 5
+            max-active: 20
+            min-idle: 5
+            max-wait: 60000
+            validation-query: SELECT 1
+            init-connection-sqls: SET SESSION group_concat_max_len = 18446744073709551615
+            filters: stat,wall
+            wall:
+              table-check: true
+              drop-table-allow: false
+              alter-table-allow: false
+            stat:
+              slow-sql-millis: 1000
+              log-slow-sql: true
+              merge-sql: true
         mysql-ard-iam:
           url: jdbc:mysql://${mysql.host}:${mysql.port}/ard_iam?useSSL=false&allowPublicKeyRetrieval=true
           username: ${mysql.username}
           password: ${mysql.password}
           driver-class-name: com.mysql.cj.jdbc.Driver
-          hikari:
-            connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
+          type: com.alibaba.druid.pool.DruidDataSource
+          druid:
+            initial-size: 5
+            max-active: 20
+            min-idle: 5
+            max-wait: 60000
+            validation-query: SELECT 1
+            init-connection-sqls: SET SESSION group_concat_max_len = 18446744073709551615
+            filters: stat,wall
+            wall:
+              table-check: true
+              drop-table-allow: false
+              alter-table-allow: false
+            stat:
+              slow-sql-millis: 200
+              log-slow-sql: true
+              merge-sql: true
         mysql-ard-dev:
           url: jdbc:mysql://${mysql.host}:${mysql.port}/ard_dev?useSSL=false&allowPublicKeyRetrieval=true
           username: ${mysql.username}
           password: ${mysql.password}
           driver-class-name: com.mysql.cj.jdbc.Driver
-          hikari:
-            connection-init-sql: SET SESSION group_concat_max_len = 18446744073709551615
-#        mysql_tile:
-#          url: jdbc:mysql://${mysql.host}:${mysql.port}/tile?useSSL=false&allowPublicKeyRetrieval=true
-#          username: ${mysql.username}
-#          password: ${mysql.password}
-#          driver-class-name: com.mysql.cj.jdbc.Driver
-        pg_space:
-          url: jdbc:postgresql://${pg.host}:${pg.port}/gis_db
-          username: ${pg.username}
-          password: ${pg.password}
-          driver-class-name: org.postgresql.Driver
+          type: com.alibaba.druid.pool.DruidDataSource
+          druid:
+            initial-size: 5
+            max-active: 20
+            min-idle: 5
+            max-wait: 60000
+            validation-query: SELECT 1
+            init-connection-sqls: SET SESSION group_concat_max_len = 18446744073709551615
+            filters: stat,wall
+            wall:
+              table-check: true
+              drop-table-allow: false
+              alter-table-allow: false
+            stat:
+              slow-sql-millis: 200
+              log-slow-sql: true
+              merge-sql: true
         pg-satellite:
           url: jdbc:postgresql://${pg.host}:${pg.port}/satellite
           username: ${pg.username}
           password: ${pg.password}
           driver-class-name: org.postgresql.Driver
+          type: com.alibaba.druid.pool.DruidDataSource
+          druid:
+            initial-size: 5
+            max-active: 20
+            min-idle: 5
+            max-wait: 60000
+            validation-query: SELECT 1
+            filters: stat,wall
+            wall:
+              table-check: true
+              drop-table-allow: false
+              alter-table-allow: false
+            stat:
+              slow-sql-millis: 1000
+              log-slow-sql: true
+              merge-sql: true
+    # 全局 Druid 监控配置（对所有数据源生效）
+    druid:
+      stat-view-servlet:
+        enabled: true
+        url-pattern: /druid/*
+        reset-enable: true
+        allow: ""
+        deny: ""
+      web-stat-filter:
+        enabled: true
+        url-pattern: /*
+        exclusions: "*.js,*.css,*.png,*.jpg,*.ico,/druid/*"
+        session-stat-enable: true  # 启用 Session 监控
+
   servlet:
     multipart:
       max-file-size: 1GB
@@ -135,6 +193,7 @@ modelServer:
     rasterLine: /v0/tif/calc_raster_line
     ndvi: /v0/tif/calc_NDVI
     createLowLevelMosaic: /v0/mosaic/create_low_level_mosaic
+    methlib: /v0/methlib
   interval:
     status: 2
 

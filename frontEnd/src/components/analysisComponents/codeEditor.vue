@@ -432,6 +432,7 @@ type WizardParamForm = {
     placeholder: string
     source: '' | 'bands'
     optionsText: string
+    default?: string
 }
 
 const builtinToolCategoryOptions = ['图像', '影像集合', '要素集合'] as const
