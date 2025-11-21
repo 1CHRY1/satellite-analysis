@@ -1,4 +1,4 @@
 spring:
   profiles:
-    active: k8s
+    active: vmod
 
