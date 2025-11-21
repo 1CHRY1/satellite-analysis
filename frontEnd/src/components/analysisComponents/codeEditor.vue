@@ -29,8 +29,10 @@
                     </a-button>
                     <template #dropdown>
                         <el-dropdown-menu>
-                            <el-dropdown-item command="expr">表达式（无需服务）</el-dropdown-item>
-                            <el-dropdown-item command="flask">Flask（HTTP 瓦片）</el-dropdown-item>
+                            <el-dropdown-item command="scene_udf">景级 UDF（推荐）</el-dropdown-item>
+                            <el-dropdown-item command="cube_placeholder">Cube级占位（即将支持）</el-dropdown-item>
+                            <!-- <el-dropdown-item divided command="expr">表达式（无需服务）</el-dropdown-item>
+                            <el-dropdown-item command="flask">Flask（HTTP 瓦片）</el-dropdown-item> -->
                         </el-dropdown-menu>
                     </template>
                 </el-dropdown>
@@ -71,8 +73,8 @@
                             <el-radio-group v-model="toolWizardForm.invokeType">
                                 <el-radio-button label="tiler-expression">表达式</el-radio-button>
                                 <el-radio-button label="http+tile">HTTP 瓦片</el-radio-button>
-                                <el-radio-button label="http+mosaic">HTTP Mosaic</el-radio-button>
-                                <el-radio-button label="http+geojson">HTTP 矢量</el-radio-button>
+                                <!-- <el-radio-button label="http+mosaic">HTTP Mosaic</el-radio-button>
+                                <el-radio-button label="http+geojson">HTTP 矢量</el-radio-button> -->
                             </el-radio-group>
                         </el-form-item>
 
@@ -362,6 +364,7 @@ import type {
     DynamicToolResultType,
     DynamicToolParamSchema,
     DynamicToolMeta,
+    ToolLevel,
 } from '@/store/toolRegistry'
 import { message } from 'ant-design-vue';
 
@@ -386,6 +389,12 @@ const currentUserId = computed(() => userStore.user?.id ?? '')
 
 // 是否工具工程：用于控制“模板/发布为工具”按钮的显示
 const isToolProject = ref(false)
+const projectLevel = ref<ToolLevel>('scene')
+const normalizeProjectLevel = (value: any): ToolLevel => {
+    const normalized = String(value || '').toLowerCase()
+    return normalized === 'cube' ? 'cube' : 'scene'
+}
+const isCubeProject = computed(() => projectLevel.value === 'cube')
 const parseIsTool = (v: any): number => {
     if (typeof v === 'number') return v
     if (typeof v === 'boolean') return v ? 1 : 0
@@ -402,8 +411,11 @@ const refreshIsToolFlag = async () => {
         const p = (list || []).find((it: any) => String(it?.projectId || '') === String(props.projectId))
         const raw = (p as any)?.isTool ?? (p as any)?.is_tool
         isToolProject.value = !!p && parseIsTool(raw) === 1
+        const levelRaw = (p as any)?.level ?? 'scene'
+        projectLevel.value = normalizeProjectLevel(levelRaw)
     } catch {
         isToolProject.value = false
+        projectLevel.value = 'scene'
     }
 }
 
@@ -467,6 +479,24 @@ const toolWizardForm = reactive({
 })
 
 const wizardStorageKey = computed(() => `tool_wizard_last:${currentUserId.value || 'anonymous'}:${props.projectId}`)
+const templateBootstrapKey = computed(() => `tool_template_bootstrap:${props.projectId}`)
+const CODE_LOAD_ERROR_MESSAGE = '代码读取失败，请检查容器运行情况或联系管理员'
+
+const getTemplateBootstrapFlag = () => {
+    try {
+        return localStorage.getItem(templateBootstrapKey.value) === 'done'
+    } catch (error) {
+        return false
+    }
+}
+
+const setTemplateBootstrapFlag = () => {
+    try {
+        localStorage.setItem(templateBootstrapKey.value, 'done')
+    } catch (error) {
+        // ignore storage errors
+    }
+}
 
 const saveWizardDraft = () => {
     try {
@@ -558,6 +588,10 @@ const resetToolWizard = () => {
 }
 
 const openToolWizard = async () => {
+    if (isCubeProject.value) {
+        message.info('Cube级分析工具发布尚未开放，请先发布景级工具')
+        return
+    }
     // 优先尝试加载草稿，其次使用默认值
     const loaded = loadWizardDraft()
     if (!loaded) {
@@ -688,9 +722,154 @@ const saveCode = async () => {
     }
 }
 
+type TemplateApplyOptions = {
+    force?: boolean
+    silent?: boolean
+}
+
+const sceneToolTemplateCode = `from flask import Flask, jsonify, request
+from flask_cors import CORS
+from urllib.parse import quote_plus
+import json
+
+app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})
+
+
+@app.route("/run", methods=["POST"])
+def run():
+    body = request.get_json(force=True, silent=True) or {}
+    mosaic_url = body.get("mosaicUrl")
+    params = body.get("params") or {}
+
+    if isinstance(params, str):
+        try:
+            params = json.loads(params)
+        except json.JSONDecodeError:
+            params = {}
+
+    if not isinstance(params, dict):
+        params = {}
+
+    if not mosaic_url:
+        return jsonify({"error": "mosaicUrl is required"}), 400
+
+    expression = params.get("expression") or "(b3-b5)/(b3+b5)"
+    color = params.get("color") or "rdylgn"
+    pixel_method = params.get("pixel_method") or "first"
+
+    tile_template = (
+        "/tiler/mosaic/analysis/{z}/{x}/{y}.png?"
+        f"mosaic_url={quote_plus(mosaic_url)}"
+        f"&expression={quote_plus(expression)}"
+        f"&pixel_method={quote_plus(pixel_method)}"
+        f"&color={quote_plus(color)}"
+    )
+    return jsonify({"tileTemplate": tile_template})
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=20080, debug=False)
+`
+
+const cubePlaceholderTemplateCode = `# Cube级分析工具模板（占位）
+# ---------------------------------
+# Cube 级工具将与立方体合成页面联动，
+# 当前仅提供占位代码，后续会补充实际模板。
+
+
+def main():
+    print("Cube 级分析工具模板占位 - 即将支持")
+
+
+if __name__ == "__main__":
+    main()
+`
+
+const replaceEditorWithTemplate = async (template: string, options: TemplateApplyOptions = {}) => {
+    const trimmed = (code.value || '').trim()
+    const requireConfirm = !options.force && trimmed && trimmed !== CODE_LOAD_ERROR_MESSAGE && trimmed !== template.trim()
+    if (requireConfirm) {
+        try {
+            await ElMessageBox.confirm('将覆盖当前代码，是否继续？', '提示', {
+                confirmButtonText: '覆盖',
+                cancelButtonText: '取消',
+                type: 'warning',
+            })
+        } catch (error) {
+            return false
+        }
+    }
+    code.value = template
+    return true
+}
+
+const applySceneToolTemplate = async (options: TemplateApplyOptions = {}) => {
+    const applied = await replaceEditorWithTemplate(sceneToolTemplateCode, options)
+    if (!applied) return false
+
+    toolWizardForm.toolName = toolWizardForm.toolName || '景级 UDF 分析模板'
+    toolWizardForm.description = toolWizardForm.description || '基于景级前序数据的 Flask 服务，返回分析瓦片'
+    toolWizardForm.category = toolWizardForm.category || '图像'
+    if (!Array.isArray(toolWizardForm.tags) || toolWizardForm.tags.length === 0) {
+        toolWizardForm.tags = ['scene', 'tile']
+    }
+    toolWizardForm.invokeType = 'http+tile'
+    toolWizardForm.resultType = 'tile'
+    toolWizardForm.serviceMethod = 'POST'
+    toolWizardForm.payloadTemplate = defaultPayloadTemplate
+    toolWizardForm.responsePath = ''
+    toolWizardForm.params.splice(0, toolWizardForm.params.length)
+    toolWizardForm.params.push(
+        { label: '表达式', key: 'expression', type: 'string', required: true, placeholder: '例如 (b3-b5)/(b3+b5)', source: '', optionsText: '', default: '(b3-b5)/(b3+b5)' },
+        { label: '色带', key: 'color', type: 'string', required: false, placeholder: '默认 rdylgn', source: '', optionsText: '', default: 'rdylgn' },
+        { label: '像元方法', key: 'pixel_method', type: 'string', required: false, placeholder: '默认 first', source: '', optionsText: '', default: 'first' },
+    )
+    if (!options.silent) {
+        message.success('已填充景级 UDF 模板，可直接保存或发布')
+    }
+    saveWizardDraft()
+    setTemplateBootstrapFlag()
+    return true
+}
+
+const applyCubePlaceholderTemplate = async (options: TemplateApplyOptions = {}) => {
+    const applied = await replaceEditorWithTemplate(cubePlaceholderTemplateCode, options)
+    if (!applied) return false
+    if (!options.silent) {
+        message.info('Cube级工具模板仍在建设中，当前仅提供占位注释')
+    }
+    setTemplateBootstrapFlag()
+    return true
+}
+
+const applyDefaultTemplateIfNeeded = async () => {
+    if (!isToolProject.value || getTemplateBootstrapFlag()) {
+        return
+    }
+    const trimmed = (code.value || '').trim()
+    if (trimmed && trimmed !== CODE_LOAD_ERROR_MESSAGE) {
+        setTemplateBootstrapFlag()
+        return
+    }
+    let applied = false
+    if (projectLevel.value === 'cube') {
+        applied = await applyCubePlaceholderTemplate({ force: true, silent: true })
+    } else {
+        applied = await applySceneToolTemplate({ force: true, silent: true })
+    }
+    if (applied) {
+        setTemplateBootstrapFlag()
+    }
+}
+
 // 一键填充工具发布模板（无参函数模板）
 const handleTemplateCommand = async (cmd: string) => {
-    if (cmd === 'expr') {
+    if (cmd === 'scene_udf') {
+        await applySceneToolTemplate()
+    } else if (cmd === 'cube_placeholder') {
+        await applyCubePlaceholderTemplate()
+    } else if (cmd === 'expr') {
         await applyExpressionTemplate()
     } else if (cmd === 'flask') {
         await applyFlaskTemplate()
@@ -720,7 +899,7 @@ const applyExpressionTemplate = async () => {
     // 可选：在编辑器中放入说明性注释，提示该模板无需后端代码
     const stub = `# 表达式工具模板（无需服务）\n# 说明：此工具直接在发布向导中配置表达式，\n# 前端会拼接 Titiler 的分析瓦片 URL 并叠加地图，\n# 无需在此处编写后端代码。\n#\n# 快速开始：点击“发布为工具”→ 选择“表达式（无需服务）”，\n# 按需修改表达式/色带/像元方法并发布即可。\n`
     const current = (code.value || '').trim()
-    if (!current || current === '代码读取失败，请检查容器运行情况或联系管理员') {
+    if (!current || current === CODE_LOAD_ERROR_MESSAGE) {
         code.value = stub
     } else {
         try {
@@ -881,7 +1060,7 @@ if __name__ == "__main__":
 `
     // 如果已有代码，提示是否覆盖
     const current = (code.value || '').trim()
-    if (current && current !== '代码读取失败，请检查容器运行情况或联系管理员') {
+    if (current && current !== CODE_LOAD_ERROR_MESSAGE) {
         try {
             await ElMessageBox.confirm('将覆盖当前代码，是否继续？', '提示', {
                 confirmButtonText: '覆盖',
@@ -938,7 +1117,7 @@ const keyboardSaveCode = (event: KeyboardEvent) => {
 
 // 定义代码内容
 
-const code = ref(`代码读取失败，请检查容器运行情况或联系管理员`)
+const code = ref<string>(CODE_LOAD_ERROR_MESSAGE)
 
 // CodeMirror 配置项
 const extensions = [python()] // 使用正确的 light 主题
@@ -1191,6 +1370,10 @@ const logToolPublish = async (toolName: string, description: string) => {
 
 const publishDynamicTool = async () => {
     if (toolWizardSubmitting.value) return
+    if (isCubeProject.value) {
+        message.info('Cube级分析工具发布功能即将上线，当前仅支持景级工具')
+        return
+    }
     const activeUserId = currentUserId.value || props.userId
     if (!activeUserId) {
         message.error('未获取到用户信息，无法发布工具')
@@ -1277,6 +1460,7 @@ const publishDynamicTool = async () => {
         paramsSchema,
         invoke: invokeConfig,
         resultType: toolWizardForm.resultType,
+        level: projectLevel.value,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
     }
@@ -1313,6 +1497,8 @@ onMounted(async () => {
         console.error('加载代码失败:', error)
         message.error('加载代码失败，请检查后端服务是否运行')
     }
+
+    await applyDefaultTemplateIfNeeded()
 
     try {
         const result = await projectOperating({

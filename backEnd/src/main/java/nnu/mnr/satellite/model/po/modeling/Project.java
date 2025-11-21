@@ -55,4 +55,6 @@ public class Project {
 
     private String description;
     private boolean isTool;
+    @TableField("level")
+    private String level;
 }

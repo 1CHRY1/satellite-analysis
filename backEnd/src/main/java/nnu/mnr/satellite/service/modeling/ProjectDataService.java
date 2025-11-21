@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import nnu.mnr.satellite.model.po.modeling.Project;
 import nnu.mnr.satellite.model.vo.modeling.ProjectVO;
 import nnu.mnr.satellite.mapper.modeling.IProjectRepo;
+import nnu.mnr.satellite.utils.common.ProjectLevelUtil;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,14 +50,18 @@ public class ProjectDataService {
         QueryWrapper<Project> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("create_user", userId);
         List<Project> projects = projectRepo.selectList(queryWrapper);
-        return projectModelMapper.map(projects, new TypeToken<List<ProjectVO>>() {}.getType());
+        List<ProjectVO> projectVOS = projectModelMapper.map(projects, new TypeToken<List<ProjectVO>>() {}.getType());
+        normalizeProjectLevels(projectVOS);
+        return projectVOS;
     }
 
     public List<ProjectVO> getAllProjects() {
         QueryWrapper<Project> queryWrapper = new QueryWrapper<>();
         queryWrapper.orderBy(true, false, "create_time");
         List<Project> projects = projectRepo.selectList(queryWrapper);
-        return projectModelMapper.map(projects, new TypeToken<List<ProjectVO>>() {}.getType());
+        List<ProjectVO> projectVOS = projectModelMapper.map(projects, new TypeToken<List<ProjectVO>>() {}.getType());
+        normalizeProjectLevels(projectVOS);
+        return projectVOS;
     }
 
     public boolean VerifyUserProject(String userId, String projectId) {
@@ -68,6 +73,15 @@ public class ProjectDataService {
             return false;
         }
         return project.getJoinedUsers().contains(userId) || project.getCreateUser().equals(userId);
+    }
+
+    private void normalizeProjectLevels(List<ProjectVO> projectVOS) {
+        if (projectVOS == null) {
+            return;
+        }
+        for (ProjectVO projectVO : projectVOS) {
+            projectVO.setLevel(ProjectLevelUtil.normalize(projectVO.getLevel()));
+        }
     }
 
 }

@@ -471,7 +471,7 @@
                                     </div>
                                 </div>
                             </section>
-                            <section>即将废弃的部分：
+                            <!-- <section>即将废弃的部分：
                                 分类工具列表
                                 <div class="mt-4 w-full mr-4">
                                     <div v-for="category in builtinToolCategories" :key="category.name" class="mb-4">
@@ -508,7 +508,7 @@
                                         </div>
                                     </div>
                                 </div>
-                            </section>
+                            </section> -->
                             <!--历史记录-->
                             <section class="panel-section" v-if="currentPanel === 'history'" key="history">
                                 <InvokeHistory @toggle="setCurrentPanel" />
@@ -599,6 +599,7 @@ import InvokeHistory from './invokeHistory.vue'
 import { currentPanel, setCurrentPanel } from './shared'
 import { message } from 'ant-design-vue'
 import { useToolRegistryStore } from '@/store'
+import type { DynamicToolMeta } from '@/store/toolRegistry'
 
 const { t } = useI18n()
 const isPicking = ref(false)
@@ -692,12 +693,15 @@ const { builtinToolCategories, expandedCategories, allToolCategories, selectedTa
     dynamicToolCategories } = useTool()
 
 const toolRegistryStore = useToolRegistryStore()
+const isSceneToolMeta = (tool: DynamicToolMeta) => (tool?.level ?? 'scene') === 'scene'
 const publishedTools = computed(() => {
-    return [...toolRegistryStore.tools].sort((a, b) => {
-        const aTime = new Date(a.updatedAt ?? a.createdAt ?? 0).getTime()
-        const bTime = new Date(b.updatedAt ?? b.createdAt ?? 0).getTime()
-        return bTime - aTime
-    })
+    return [...toolRegistryStore.tools]
+        .filter(isSceneToolMeta)
+        .sort((a, b) => {
+            const aTime = new Date(a.updatedAt ?? a.createdAt ?? 0).getTime()
+            const bTime = new Date(b.updatedAt ?? b.createdAt ?? 0).getTime()
+            return bTime - aTime
+        })
 })
 
 const handleInvokePublishedTool = (toolId: string) => {

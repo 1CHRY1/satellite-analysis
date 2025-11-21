@@ -1,11 +1,14 @@
 import { useToolRegistryStore, useUserStore } from '@/store'
-import {  ElMessageBox } from 'element-plus'
+import { ElMessageBox } from 'element-plus'
 import { computed, defineAsyncComponent, nextTick, ref, watch } from 'vue'
-const toolRegistry = useToolRegistryStore()
 import { useI18n } from 'vue-i18n'
 import DynamicServicePanel from '../../thematic/DynamicServicePanel.vue'
 import { selectedResult, thematicConfig } from '../shared'
 import { message } from 'ant-design-vue'
+import type { DynamicToolMeta } from '@/store/toolRegistry'
+
+const toolRegistry = useToolRegistryStore()
+const isSceneToolMeta = (tool: DynamicToolMeta) => (tool?.level ?? 'scene') === 'scene'
 
 export const useTool = () => {
     const { t } = useI18n()
@@ -112,6 +115,7 @@ export const useTool = () => {
             { name: string; tools: Array<{ value: string; label: string; disabled: boolean }> }
         >()
         toolRegistry.tools.forEach((tool) => {
+            if (!isSceneToolMeta(tool)) return
             const categoryName = tool.category || '自定义'
             if (!categoryMap.has(categoryName)) {
                 categoryMap.set(categoryName, {
@@ -220,7 +224,11 @@ export const useTool = () => {
     const dynamicSelectedTool = computed(() => {
         if (!selectedTask.value.startsWith('dynamic:')) return null
         const toolId = selectedTask.value.replace('dynamic:', '')
-        return toolRegistry.getToolById(toolId) ?? null
+        const tool = toolRegistry.getToolById(toolId) ?? null
+        if (tool && !isSceneToolMeta(tool)) {
+            return null
+        }
+        return tool
     })
 
     const currentTaskComponent = computed(() => {
