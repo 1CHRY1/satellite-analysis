@@ -101,7 +101,7 @@ import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/store';
 import { User, ChevronDown, ChevronRight, Settings, LogOut } from 'lucide-vue-next';
-import * as MapOperation from '@/util/map/operation'
+// import * as MapOperation from '@/util/map/operation'
 
 const userStore = useUserStore()
 const { t } = useI18n()
