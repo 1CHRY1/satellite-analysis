@@ -257,9 +257,67 @@
                                                             </el-dialog>
                                                         </div>
                                                     </div>
+
+                                                    <div class="config-item mt-4"
+                                                        style="background: radial-gradient(50% 337.6% at 50% 50%, #05375d 0%, #07243a 97%);">
+                                                        <div class="config-label relative pr-16">
+                                                            <CommandIcon :size="16" class="config-icon" />
+                                                            <span>发布的工具</span>
+                                                            <span
+                                                                class="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-400">{{
+                                                                    publishedTools.length }} 个可用
+                                                            </span>
+                                                        </div>
+                                                        <div class="config-control flex-col !items-start w-full">
+                                                            <div v-if="publishedTools.length"
+                                                                class="flex w-full flex-col gap-3">
+                                                                <div v-for="tool in publishedTools" :key="tool.id"
+                                                                    class="w-full rounded-xl border border-[#1c2a3f] bg-[#0b1221]/80 px-4 py-3 shadow-inner transition-colors duration-200 hover:border-[#38bdf8] cursor-pointer"
+                                                                    @click="handleInvokePublishedTool(tool.id)">
+                                                                    <div class="flex items-start justify-between gap-3">
+                                                                        <div class="min-w-0">
+                                                                            <p
+                                                                                class="m-0 text-sm font-medium text-gray-100 truncate">
+                                                                                {{ tool.name }}</p>
+                                                                            <span
+                                                                                class="text-xs text-gray-400">{{ tool.category
+                                                                                    ||
+                                                                                    '未分类' }}</span>
+                                                                        </div>
+                                                                        <a-button size="small" type="primary" ghost
+                                                                            @click.stop="handleInvokePublishedTool(tool.id)">
+                                                                            调用
+                                                                        </a-button>
+                                                                    </div>
+                                                                    <p class="mt-2 text-xs text-gray-300 leading-relaxed min-h-[32px]">
+                                                                        {{ tool.description || '暂无描述，点击调用以查看工具详情。'
+                                                                        }}
+                                                                    </p>
+                                                                    <div
+                                                                        class="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-gray-400">
+                                                                        <template v-if="tool.tags && tool.tags.length">
+                                                                            <span v-for="tag in tool.tags" :key="tag"
+                                                                                class="rounded-full border border-[#1e2d44] bg-[#0f172a] px-2 py-0.5 text-[#38bdf8]">
+                                                                                {{ tag }}
+                                                                            </span>
+                                                                        </template>
+                                                                        <span class="ml-auto text-[10px] text-gray-500"
+                                                                            v-if="tool.updatedAt || tool.createdAt">
+                                                                            更新 {{ formatTimeToText(tool.updatedAt ||
+                                                                            tool.createdAt) }}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div v-else
+                                                                class="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[#1f2e44] bg-[#0b1221]/40 px-6 py-8 text-gray-400">
+                                                                <p class="m-0 text-sm font-medium">暂无发布的工具</p>
+                                                                <p class="m-0 text-xs text-gray-500">在在线编程中发布后即可在此调用。</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <span>TODO: UDF景级分析工具列表与调用</span>
                                         </div>
                                     </div>
                                 </div>
@@ -357,6 +415,57 @@
                                                         </a-list-item>
                                                     </template>
                                                 </a-list>
+                                            </div>
+                                        </div>
+                                        <!-- 发布的工具（与上方样式一致） -->
+                                        <div class="config-item mt-4"
+                                            style="background: radial-gradient(50% 337.6% at 50% 50%, #05375d 0%, #07243a 97%);">
+                                            <div class="config-label relative pr-16">
+                                                <CommandIcon :size="16" class="config-icon" />
+                                                <span>发布的工具</span>
+                                                <span
+                                                    class="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-400">{{
+                                                        publishedTools.length }} 个可用
+                                                </span>
+                                            </div>
+                                            <div class="config-control flex-col !items-start w-full">
+                                                <div v-if="publishedTools.length" class="flex w-full flex-col gap-3">
+                                                    <div v-for="tool in publishedTools" :key="tool.id"
+                                                        class="w-full rounded-xl border border-[#1c2a3f] bg-[#0b1221]/80 px-4 py-3 shadow-inner transition-colors duration-200 hover:border-[#38bdf8] cursor-pointer"
+                                                        @click="handleInvokePublishedTool(tool.id)">
+                                                        <div class="flex items-start justify-between gap-3">
+                                                            <div class="min-w-0">
+                                                                <p class="m-0 text-sm font-medium text-gray-100 truncate">
+                                                                    {{ tool.name }}</p>
+                                                                <span class="text-xs text-gray-400">{{ tool.category || '未分类'
+                                                                    }}</span>
+                                                            </div>
+                                                            <a-button size="small" type="primary" ghost
+                                                                @click.stop="handleInvokePublishedTool(tool.id)">调用</a-button>
+                                                        </div>
+                                                        <p class="mt-2 text-xs text-gray-300 leading-relaxed min-h-[32px]">
+                                                            {{ tool.description || '暂无描述，点击调用以查看工具详情。' }}
+                                                        </p>
+                                                        <div
+                                                            class="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-gray-400">
+                                                            <template v-if="tool.tags && tool.tags.length">
+                                                                <span v-for="tag in tool.tags" :key="tag"
+                                                                    class="rounded-full border border-[#1e2d44] bg-[#0f172a] px-2 py-0.5 text-[#38bdf8]">
+                                                                    {{ tag }}
+                                                                </span>
+                                                            </template>
+                                                            <span class="ml-auto text-[10px] text-gray-500"
+                                                                v-if="tool.updatedAt || tool.createdAt">
+                                                                更新 {{ formatTimeToText(tool.updatedAt || tool.createdAt) }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div v-else
+                                                    class="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[#1f2e44] bg-[#0b1221]/40 px-6 py-8 text-gray-400">
+                                                    <p class="m-0 text-sm font-medium">暂无发布的工具</p>
+                                                    <p class="m-0 text-xs text-gray-500">在在线编程中发布后即可在此调用。</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -489,6 +598,7 @@ import { QuestionCircleOutlined } from '@ant-design/icons-vue'
 import InvokeHistory from './invokeHistory.vue'
 import { currentPanel, setCurrentPanel } from './shared'
 import { message } from 'ant-design-vue'
+import { useToolRegistryStore } from '@/store'
 
 const { t } = useI18n()
 const isPicking = ref(false)
@@ -578,7 +688,23 @@ const { builtinToolCategories, expandedCategories, allToolCategories, selectedTa
     currentTaskProps,
     handleResultLoaded,
     handleRemoveDynamicTool,
-    toggleCategory } = useTool()
+    toggleCategory,
+    dynamicToolCategories } = useTool()
+
+const toolRegistryStore = useToolRegistryStore()
+const publishedTools = computed(() => {
+    return [...toolRegistryStore.tools].sort((a, b) => {
+        const aTime = new Date(a.updatedAt ?? a.createdAt ?? 0).getTime()
+        const bTime = new Date(b.updatedAt ?? b.createdAt ?? 0).getTime()
+        return bTime - aTime
+    })
+})
+
+const handleInvokePublishedTool = (toolId: string) => {
+    if (!toolId) return
+    selectedTask.value = `dynamic:${toolId}`
+    showPanel.value = true
+}
 
 /**
  * 通用方法
