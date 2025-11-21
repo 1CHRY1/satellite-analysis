@@ -379,7 +379,7 @@ const back = async () => {
     }
     
     if (last_path.length == 0) {
-        message("已是最上级");
+        message.info("已是最上级");
         return;
     }
     

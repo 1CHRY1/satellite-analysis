@@ -157,6 +157,7 @@ modelServer:
     rasterLine: /v0/tif/calc_raster_line
     ndvi: /v0/tif/calc_NDVI
     createLowLevelMosaic: /v0/mosaic/create_low_level_mosaic
+    methlib: /v0/methlib
   interval:
     status: 2
 

@@ -1,4 +1,4 @@
 spring:
   profiles:
-    active: zzw
+    active: k8s
 
