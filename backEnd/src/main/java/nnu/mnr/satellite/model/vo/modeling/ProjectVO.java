@@ -26,5 +26,6 @@ public class ProjectVO {
     private HashSet<String> joinedUsers;
     private String description;
     private Integer isTool;
+    private String level;
 
 }

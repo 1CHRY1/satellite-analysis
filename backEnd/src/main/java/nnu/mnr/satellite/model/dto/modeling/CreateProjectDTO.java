@@ -18,5 +18,6 @@ public class CreateProjectDTO {
     private String userId;
     private String description;
     private boolean tool;
+    private String level;
 
 }

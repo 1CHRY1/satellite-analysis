@@ -35,6 +35,7 @@ import nnu.mnr.satellite.service.optimization.ExecutionPlan;
 */
 import nnu.mnr.satellite.utils.common.FileUtil;
 import nnu.mnr.satellite.utils.common.IdUtil;
+import nnu.mnr.satellite.utils.common.ProjectLevelUtil;
 import nnu.mnr.satellite.utils.dt.MinioUtil;
 import nnu.mnr.satellite.utils.docker.DockerFileUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -174,6 +175,8 @@ public class ModelCodingService {
             return CodingProjectVO.builder().status(-1).info(responseInfo).build();
         }
 
+        String normalizedLevel = ProjectLevelUtil.normalize(createProjectDTO.getLevel());
+
         Project project = Project.builder()
                 .projectId(projectId).projectName(projectName)
                 .environment(env).createTime(LocalDateTime.now()).dataBucket(projectDataBucket)
@@ -182,12 +185,24 @@ public class ModelCodingService {
                 .pyPath(pyPath).serverPyPath(serverPyPath)
                 .watchPath(watchPath).outputPath(outputPath).dataPath(dataPath)
                 .isTool(createProjectDTO.isTool())
+                .level(normalizedLevel)
                 .build();
         dockerService.initEnv(serverDir);
 
         // Overwrite remote main.py strictly from backend classpath templates
         try {
-            String resName = createProjectDTO.isTool() ? "/modelDockerVolume/devCli/main_tool.py" : "/modelDockerVolume/devCli/main_nontool.py";
+            String templateDir = "/modelDockerVolume/devCli/";
+            String resName;
+            if (createProjectDTO.isTool()) {
+                if (ProjectLevelUtil.LEVEL_SCENE.equals(normalizedLevel)) {
+                    resName = templateDir + "main_tool_scene.py";
+                } else {
+                    // Cube 级暂时共用默认模板
+                    resName = templateDir + "main_tool.py";
+                }
+            } else {
+                resName = templateDir + "main_nontool.py";
+            }
             java.io.InputStream res = ModelCodingService.class.getResourceAsStream(resName);
             if (res == null) {
                 // fallback to default template if specific one missing

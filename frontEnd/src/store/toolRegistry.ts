@@ -31,6 +31,13 @@ export interface DynamicToolParamSchema {
     source?: 'bands'
 }
 
+export type ToolLevel = 'scene' | 'cube'
+
+const normalizeLevel = (value?: string | null): ToolLevel => {
+    const normalized = String(value || '').toLowerCase()
+    return normalized === 'cube' ? 'cube' : 'scene'
+}
+
 export interface DynamicToolInvokeConfig {
     type: DynamicToolInvokeType
     /**
@@ -60,6 +67,7 @@ export interface DynamicToolMeta {
     resultType: DynamicToolResultType
     createdAt: string
     updatedAt: string
+    level?: ToolLevel
 }
 
 interface ToolRegistryState {
@@ -128,7 +136,10 @@ export const useToolRegistryStore = defineStore('toolRegistry', {
             if (!userId) return
             if (this.isInitialized && this.currentUserId === userId) return
             this.currentUserId = userId
-            this.tools = readFromStorage(userId)
+            this.tools = readFromStorage(userId).map((tool) => ({
+                ...tool,
+                level: normalizeLevel(tool.level),
+            }))
             this.isInitialized = true
         },
         registerTool(userId: string, tool: DynamicToolMeta): void {
@@ -140,6 +151,7 @@ export const useToolRegistryStore = defineStore('toolRegistry', {
                 ...tool,
                 createdAt: tool.createdAt ?? timestamp,
                 updatedAt: timestamp,
+                level: normalizeLevel(tool.level),
             }
             if (existingIndex >= 0) {
                 this.tools.splice(existingIndex, 1, {
