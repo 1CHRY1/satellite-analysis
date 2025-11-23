@@ -25,7 +25,8 @@ def run():
     if not mosaic_url:
         return jsonify({"error": "mosaicUrl is required"}), 400
 
-    expression = params.get("expression") or "(b3-b5)/(b3+b5)"
+    # 与“指数分析”一致的默认表达式
+    expression = params.get("expression") or "2*b2-b1-b3"
     color = params.get("color") or "rdylgn"
     pixel_method = params.get("pixel_method") or "first"
 

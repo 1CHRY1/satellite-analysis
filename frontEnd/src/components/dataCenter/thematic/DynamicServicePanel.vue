@@ -131,11 +131,7 @@ const defaultPayloadTemplate = computed(() => ({
 }))
 
 const mosaicUrl = computed(() => {
-    if (analysisStore.mosaicBucket && analysisStore.mosaicPath) {
-        return getMosaicJsonUrl({
-            mosaicJsonPath: `${analysisStore.mosaicBucket}/${analysisStore.mosaicPath}`,
-        })
-    }
+    // 优先使用当前页面选择的前序数据（避免使用其它页面遗留的全局状态）
     const dataset = props.thematicConfig?.dataset
     if (dataset?.result?.bucket && dataset.result.object_path) {
         return getMosaicJsonUrl({
@@ -145,6 +141,12 @@ const mosaicUrl = computed(() => {
     if (dataset?.bucket && dataset?.object_path) {
         return getMosaicJsonUrl({
             mosaicJsonPath: `${dataset.bucket}/${dataset.object_path}`,
+        })
+    }
+    // 兜底：再尝试全局 store（可能是其它入口设置的）
+    if (analysisStore.mosaicBucket && analysisStore.mosaicPath) {
+        return getMosaicJsonUrl({
+            mosaicJsonPath: `${analysisStore.mosaicBucket}/${analysisStore.mosaicPath}`,
         })
     }
     return ''

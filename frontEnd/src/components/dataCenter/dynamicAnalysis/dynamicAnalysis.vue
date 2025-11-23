@@ -471,7 +471,7 @@
                                     </div>
                                 </div>
                             </section>
-                            <!-- <section>即将废弃的部分：
+                            <section>即将废弃的部分：
                                 分类工具列表
                                 <div class="mt-4 w-full mr-4">
                                     <div v-for="category in builtinToolCategories" :key="category.name" class="mb-4">
@@ -508,7 +508,7 @@
                                         </div>
                                     </div>
                                 </div>
-                            </section> -->
+                            </section>
                             <!--历史记录-->
                             <section class="panel-section" v-if="currentPanel === 'history'" key="history">
                                 <InvokeHistory @toggle="setCurrentPanel" />

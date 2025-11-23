@@ -252,7 +252,11 @@ const create = async () => {
         actionType: '创建',
       })
     } catch {}
-    router.push(`/project/${createRes.projectId}`)
+    // 带上引导参数，进入编辑器后自动套用“景级UDF”模板（与指数分析一致）
+    router.push({
+      path: `/project/${createRes.projectId}`,
+      query: { bootstrap: 'scene_udf' }
+    })
     ElMessage.success(t('toolpage.message.success'))
     createToolView.value = false
   } catch (e) {

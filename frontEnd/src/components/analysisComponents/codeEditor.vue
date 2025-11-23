@@ -354,6 +354,7 @@ import {
 import { publishTool, getToolStatus, unpublishTool, getAllTools } from '@/api/http/tool'
 import { getProjects } from '@/api/http/analysis'
 import { ref, reactive, onMounted, onBeforeUnmount, watch, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { Codemirror } from 'vue-codemirror'
 import { python } from '@codemirror/lang-python'
 import { ElMessageBox } from 'element-plus'
@@ -386,6 +387,7 @@ const toolRegistry = useToolRegistryStore()
 const emit = defineEmits(['addMessage', 'servicePublished', 'serviceUnpublished'])
 
 const currentUserId = computed(() => userStore.user?.id ?? '')
+const route = useRoute()
 
 // 是否工具工程：用于控制“模板/发布为工具”按钮的显示
 const isToolProject = ref(false)
@@ -444,10 +446,61 @@ type WizardParamForm = {
     placeholder: string
     source: '' | 'bands'
     optionsText: string
-    default?: string
+    default?: string | number | boolean
 }
 
 const builtinToolCategoryOptions = ['图像', '影像集合', '要素集合'] as const
+
+const createDefaultExpressionParams = (): WizardParamForm[] => [
+    {
+        label: '表达式',
+        key: 'expression',
+        type: 'string',
+        required: true,
+        // 与“指数分析”一致
+        placeholder: '例如 2*b2-b1-b3',
+        source: '',
+        optionsText: '',
+        default: '2*b2-b1-b3',
+    },
+    {
+        label: '色带',
+        key: 'color',
+        type: 'string',
+        required: false,
+        placeholder: '默认 rdylgn',
+        source: '',
+        optionsText: '',
+        default: 'rdylgn',
+    },
+    {
+        label: '像元方法',
+        key: 'pixel_method',
+        type: 'string',
+        required: false,
+        placeholder: '默认 first',
+        source: '',
+        optionsText: '',
+        default: 'first',
+    },
+]
+
+const ensureExpressionWizardDefaults = () => {
+    if (toolWizardForm.invokeType !== 'tiler-expression') {
+        return
+    }
+    if (!toolWizardForm.expressionTemplate || !toolWizardForm.expressionTemplate.trim()) {
+        toolWizardForm.expressionTemplate = '{{expression}}'
+    }
+    toolWizardForm.colorMap = toolWizardForm.colorMap || 'rdylgn'
+    toolWizardForm.pixelMethod = toolWizardForm.pixelMethod || 'first'
+    const keys = new Set(toolWizardForm.params.map((param) => param.key))
+    const requiredKeys: Array<'expression' | 'color' | 'pixel_method'> = ['expression', 'color', 'pixel_method']
+    const hasAll = requiredKeys.every((key) => keys.has(key))
+    if (!hasAll || toolWizardForm.params.length === 0) {
+        toolWizardForm.params.splice(0, toolWizardForm.params.length, ...createDefaultExpressionParams())
+    }
+}
 
 const toolWizardVisible = ref(false)
 const toolWizardSubmitting = ref(false)
@@ -464,11 +517,11 @@ const defaultPayloadTemplate = JSON.stringify(
 const toolWizardForm = reactive({
     toolName: '',
     description: '',
-    category: '自定义工具集',
+    category: '图像',
     tags: [] as string[],
-    invokeType: 'http+geojson' as DynamicToolInvokeType,
-    resultType: 'geojson' as DynamicToolResultType,
-    expressionTemplate: '',
+    invokeType: 'tiler-expression' as DynamicToolInvokeType,
+    resultType: 'tile' as DynamicToolResultType,
+    expressionTemplate: '{{expression}}',
     colorMap: 'rdylgn',
     pixelMethod: 'first',
     serviceEndpoint: '',
@@ -476,7 +529,7 @@ const toolWizardForm = reactive({
     servicePort: '',
     payloadTemplate: defaultPayloadTemplate,
     responsePath: '',
-    params: [] as WizardParamForm[],
+    params: createDefaultExpressionParams(),
 })
 
 const wizardStorageKey = computed(() => `tool_wizard_last:${currentUserId.value || 'anonymous'}:${props.projectId}`)
@@ -566,13 +619,13 @@ const removeWizardParam = (index: number) => {
 }
 
 const resetToolWizard = () => {
-    toolWizardForm.toolName = '自定义GeoJSON工具'
-    toolWizardForm.description = '最小示例工具（返回 GeoJSON 矢量结果）'
-    toolWizardForm.category = '自定义工具集'
-    toolWizardForm.tags = ['geojson']
-    toolWizardForm.invokeType = 'http+geojson'
-    toolWizardForm.resultType = 'geojson'
-    toolWizardForm.expressionTemplate = ''
+    toolWizardForm.toolName = '表达式工具'
+    toolWizardForm.description = '基于表达式的分析瓦片（与指数分析相同逻辑）'
+    toolWizardForm.category = '图像'
+    toolWizardForm.tags = ['expression', 'tile']
+    toolWizardForm.invokeType = 'tiler-expression'
+    toolWizardForm.resultType = 'tile'
+    toolWizardForm.expressionTemplate = '{{expression}}'
     toolWizardForm.colorMap = 'rdylgn'
     toolWizardForm.pixelMethod = 'first'
     toolWizardForm.serviceEndpoint = ''
@@ -580,12 +633,7 @@ const resetToolWizard = () => {
     toolWizardForm.servicePort = ''
     toolWizardForm.payloadTemplate = defaultPayloadTemplate
     toolWizardForm.responsePath = ''
-    toolWizardForm.params.splice(0, toolWizardForm.params.length)
-    toolWizardForm.params.push(
-        { label: '模式', key: 'mode', type: 'select', required: false, placeholder: 'bbox / inset / grid', source: '', optionsText: '外包框:bbox, 内缩:inset, 网格中心:grid' },
-        { label: '缩放系数', key: 'scale', type: 'number', required: false, placeholder: '0~1，默认 0.8', source: '', optionsText: '' },
-        { label: '网格数', key: 'grid', type: 'number', required: false, placeholder: '默认 3（3x3）', source: '', optionsText: '' },
-    )
+    toolWizardForm.params.splice(0, toolWizardForm.params.length, ...createDefaultExpressionParams())
 }
 
 const openToolWizard = async () => {
@@ -597,6 +645,8 @@ const openToolWizard = async () => {
     const loaded = loadWizardDraft()
     if (!loaded) {
         resetToolWizard()
+    } else {
+        ensureExpressionWizardDefaults()
     }
     toolWizardVisible.value = true
     await checkServiceStatus()
@@ -755,7 +805,8 @@ def run():
     if not mosaic_url:
         return jsonify({"error": "mosaicUrl is required"}), 400
 
-    expression = params.get("expression") or "(b3-b5)/(b3+b5)"
+    # 与“指数分析”一致的默认表达式
+    expression = params.get("expression") or "2*b2-b1-b3"
     color = params.get("color") or "rdylgn"
     pixel_method = params.get("pixel_method") or "first"
 
@@ -815,14 +866,16 @@ const applySceneToolTemplate = async (options: TemplateApplyOptions = {}) => {
     if (!Array.isArray(toolWizardForm.tags) || toolWizardForm.tags.length === 0) {
         toolWizardForm.tags = ['scene', 'tile']
     }
-    toolWizardForm.invokeType = 'http+tile'
+    // 与“指数分析”一致，直接在前端拼接表达式瓦片
+    toolWizardForm.invokeType = 'tiler-expression'
     toolWizardForm.resultType = 'tile'
     toolWizardForm.serviceMethod = 'POST'
     toolWizardForm.payloadTemplate = defaultPayloadTemplate
     toolWizardForm.responsePath = ''
     toolWizardForm.params.splice(0, toolWizardForm.params.length)
     toolWizardForm.params.push(
-        { label: '表达式', key: 'expression', type: 'string', required: true, placeholder: '例如 (b3-b5)/(b3+b5)', source: '', optionsText: '', default: '(b3-b5)/(b3+b5)' },
+        // 与“指数分析”一致的默认表达式
+        { label: '表达式', key: 'expression', type: 'string', required: true, placeholder: '例如 2*b2-b1-b3', source: '', optionsText: '', default: '2*b2-b1-b3' },
         { label: '色带', key: 'color', type: 'string', required: false, placeholder: '默认 rdylgn', source: '', optionsText: '', default: 'rdylgn' },
         { label: '像元方法', key: 'pixel_method', type: 'string', required: false, placeholder: '默认 first', source: '', optionsText: '', default: 'first' },
     )
@@ -1363,6 +1416,15 @@ const buildParamsSchema = (): DynamicToolParamSchema[] => {
             if (param.source) {
                 schema.source = param.source
             }
+            if (param.default !== undefined && param.default !== null) {
+                if (typeof param.default === 'string') {
+                    if (param.default.trim()) {
+                        schema.default = param.default
+                    }
+                } else {
+                    schema.default = param.default
+                }
+            }
             if (param.type === 'select' && !param.source) {
                 const options = parseSelectOptions(param.optionsText)
                 schema.options = options
@@ -1517,6 +1579,19 @@ onMounted(async () => {
         console.error('加载代码失败:', error)
         message.error('加载代码失败，请检查后端服务是否运行')
     }
+
+    // 如果从 tools.vue 的“创建工具”入口进入，带有 bootstrap=scene_udf，则强制填充景级UDF模板（仅首次）
+    try {
+        const bootstrap = String(route.query?.bootstrap || '')
+        if (isToolProject.value && !getTemplateBootstrapFlag() && bootstrap === 'scene_udf') {
+            if (projectLevel.value === 'cube') {
+                await applyCubePlaceholderTemplate({ force: true, silent: true })
+            } else {
+                await applySceneToolTemplate({ force: true, silent: true })
+            }
+            setTemplateBootstrapFlag()
+        }
+    } catch {}
 
     await applyDefaultTemplateIfNeeded()
 
