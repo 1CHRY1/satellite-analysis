@@ -151,7 +151,8 @@ def mosaictile(
     mosaic_url: str = Query(..., description="Mosaic JSON URL"),
     min: float = Query(0, description="Normalization minimum value"),
     max: float = Query(255, description="Normalization maximum value"),
-    pixel_selection: str = Query("first", description="Pixel selection method : first/highest/lowest")
+    pixel_selection: str = Query("first", description="Pixel selection method : first/highest/lowest"),
+    bands_index: str = Query("0,1,2", description="Comma-separated list of band indices for RGB visualization")
 ):
     try:
         # Step 1: Fetch mosaic definition 
@@ -211,6 +212,15 @@ def mosaictile(
         # max_val = [np.max(arr, axis=(0, 1)) for arr in img]  # 各个波段 max
         # img_uint8 = normalize(img, min_val, max_val)
         bands, height, width = img.shape
+
+        # Parse the bands_index parameter and convert it into a list of integers
+        selected_bands = list(map(int, bands_index.split(',')))
+
+        # Validate the selected bands indices
+        if any(b < 0 or b >= bands for b in selected_bands):
+            raise ValueError(f"Invalid band indices. Valid indices are between 0 and {bands - 1}.")
+        # Adjust the image according to the selected bands
+        img = img[selected_bands]
 
         if bands == 1:
             # 单波段 → 伪RGB（重复3次）

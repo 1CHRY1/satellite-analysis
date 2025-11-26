@@ -1,13 +1,19 @@
-import { getAddress, getCasePage, getRegionPosition, getResultByCaseId,getCaseById } from '@/api/http/satellite-data/satellite.api';
-import { ref, computed, nextTick } from 'vue';
-import type { Case } from '@/api/http/satellite-data/satellite.type';
+import {
+    getAddress,
+    getCasePage,
+    getRegionPosition,
+    getResultByCaseId,
+    getCaseById,
+} from '@/api/http/satellite-data/satellite.api'
+import { ref, computed, nextTick } from 'vue'
+import type { Case } from '@/api/http/satellite-data/satellite.type'
 import type { RegionValues } from 'v-region'
-import { formatTime } from '@/util/common';
-import { getNoCloudUrl4MosaicJson } from '@/api/http/satellite-data/visualize.api';
-import { message } from 'ant-design-vue';
+import { formatTime } from '@/util/common'
+import { getNoCloudUrl4MosaicJson } from '@/api/http/satellite-data/visualize.api'
+import { message } from 'ant-design-vue'
 import * as MapOperation from '@/util/map/operation'
 import { defineEmits } from 'vue'
-import { useAnalysisStore } from '@/store';
+import { useAnalysisStore } from '@/store'
 
 const dbValue = useAnalysisStore()
 type HistoryValueTab = 'RUNNING' | 'COMPLETE'
@@ -16,27 +22,26 @@ type HistoryTab = {
     value: HistoryValueTab
 }
 type TimeRange = {
-    startTime: string,
+    startTime: string
     endTime: string
 }
 interface TimeOption {
     label: string
     value: {
-      startTime: string
-      endTime: string
+        startTime: string
+        endTime: string
     } | null
 }
 
 export function useViewHistoryModule() {
     /**
-    * 列表相关变量
-    */
+     * 列表相关变量
+     */
     const caseList = ref<Case.Case[]>([])
     const currentPage = ref<number>(1)
     const pageSize = ref<number>(3)
     const total = ref<number>(0)
-    
-    
+
     const getCaseList = async () => {
         const regionId = getRegionId()
         const res = await getCasePage({
@@ -48,7 +53,8 @@ export function useViewHistoryModule() {
             regionId: regionId ? Number(regionId) : null,
             startTime: selectedTime.value.value?.startTime as string,
             endTime: selectedTime.value.value?.endTime as string,
-            resolution: selectedResolution.value === EMPTY_RESOLUTION ? null : selectedResolution.value,
+            resolution:
+                selectedResolution.value === EMPTY_RESOLUTION ? null : selectedResolution.value,
         })
         caseList.value = res.data.records
         total.value = res.data.total
@@ -58,30 +64,30 @@ export function useViewHistoryModule() {
     }
 
     /**
-    * backToTop相关变量
-    */
+     * backToTop相关变量
+     */
     const sectionHeader = ref<HTMLDivElement | null>(null)
     const scrollToTop = () => {
         if (sectionHeader.value) {
             sectionHeader.value.scrollIntoView({
                 behavior: 'smooth',
-                block: 'start'
+                block: 'start',
             })
         }
     }
 
     /**
-    * Tab相关变量
-    */
+     * Tab相关变量
+     */
     const historyClassTabs = ref<Array<HistoryTab>>([
         {
             label: '运行中',
-            value: 'RUNNING'
+            value: 'RUNNING',
         },
         {
             label: '已完成',
-            value: 'COMPLETE'
-        }
+            value: 'COMPLETE',
+        },
     ])
     const activeTab = ref<HistoryValueTab>('RUNNING')
     const handleSelectTab = (value: HistoryValueTab) => {
@@ -93,8 +99,8 @@ export function useViewHistoryModule() {
     }
 
     /**
-    * 筛选条件相关变量
-    */
+     * 筛选条件相关变量
+     */
     const selectedRegion = ref<RegionValues>({
         province: '',
         city: '',
@@ -130,82 +136,97 @@ export function useViewHistoryModule() {
         const now = new Date()
         let startTime: Date
         let endTime: Date = new Date(now) // 当前时间作为结束时间
-        
+
         switch (type) {
-        case 'all':
-            startTime = new Date("1900-01-01 00:00:00")
-            break
-        case '1h':
-            startTime = new Date(now.getTime() - 60 * 60 * 1000) // 1小时前
-            break
-        case 'today':
-            startTime = getTodayStart()
-            endTime = getTodayEnd()
-            break
-        case '7d':
-            startTime = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000) // 7天前
-            break
-        case '30d':
-            startTime = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000) // 30天前
-            break
-        case '3m':
-            startTime = new Date(now)
-            startTime.setMonth(startTime.getMonth() - 3) // 3个月前
-            break
-        case 'earlier':
-            startTime = new Date("1900-01-01 00:00:00")
-            endTime.setMonth(new Date(now).getMonth() - 3)
-            break
-        default:
-            startTime = now
+            case 'all':
+                startTime = new Date('1900-01-01 00:00:00')
+                break
+            case '1h':
+                startTime = new Date(now.getTime() - 60 * 60 * 1000) // 1小时前
+                break
+            case 'today':
+                startTime = getTodayStart()
+                endTime = getTodayEnd()
+                break
+            case '7d':
+                startTime = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000) // 7天前
+                break
+            case '30d':
+                startTime = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000) // 30天前
+                break
+            case '3m':
+                startTime = new Date(now)
+                startTime.setMonth(startTime.getMonth() - 3) // 3个月前
+                break
+            case 'earlier':
+                startTime = new Date('1900-01-01 00:00:00')
+                endTime.setMonth(new Date(now).getMonth() - 3)
+                break
+            default:
+                startTime = now
         }
-        
+
         return {
             startTime: formatTime(startTime, 'seconds', 0, true),
-            endTime: formatTime(endTime, 'seconds', 0, true)
+            endTime: formatTime(endTime, 'seconds', 0, true),
         }
     }
     const timeOptionList = computed<TimeOption[]>(() => [
         {
-          label: '请选择',
-          value: calculateTimeRange('all')
+            label: '请选择',
+            value: calculateTimeRange('all'),
         },
         {
-          label: '最近1小时',
-          value: calculateTimeRange('1h')
+            label: '最近1小时',
+            value: calculateTimeRange('1h'),
         },
         {
-          label: '今天',
-          value: calculateTimeRange('today')
+            label: '今天',
+            value: calculateTimeRange('today'),
         },
         {
-          label: '最近7天',
-          value: calculateTimeRange('7d')
+            label: '最近7天',
+            value: calculateTimeRange('7d'),
         },
         {
-          label: '最近30天',
-          value: calculateTimeRange('30d')
+            label: '最近30天',
+            value: calculateTimeRange('30d'),
         },
         {
-          label: '最近3个月',
-          value: calculateTimeRange('3m')
+            label: '最近3个月',
+            value: calculateTimeRange('3m'),
         },
         {
-          label: '更早之前',
-          value: calculateTimeRange('earlier')
-        }
+            label: '更早之前',
+            value: calculateTimeRange('earlier'),
+        },
     ])
     const selectedTimeIndex = ref<number>(0)
     const selectedTime = computed<TimeOption>(() => timeOptionList.value[selectedTimeIndex.value])
     const EMPTY_RESOLUTION = 0 // 预设请选择分辨率选项
     const selectedResolution = ref<number>(EMPTY_RESOLUTION)
-    const resolutionList = ref<number[]>([EMPTY_RESOLUTION, 1, 2, 5, 10, 15, 20, 25, 30, 40, 50, 80, 100, 150])
+    const resolutionList = ref<number[]>([
+        EMPTY_RESOLUTION,
+        1,
+        2,
+        5,
+        10,
+        15,
+        20,
+        25,
+        30,
+        40,
+        50,
+        80,
+        100,
+        150,
+    ])
     const isExpand = ref<boolean>(true)
     const reset = () => {
         selectedRegion.value = {
             province: '',
             city: '',
-            area: ''
+            area: '',
         }
         selectedTimeIndex.value = 0
         selectedResolution.value = EMPTY_RESOLUTION
@@ -213,8 +234,8 @@ export function useViewHistoryModule() {
     }
 
     /**
-    * 预览无云一版图
-    */
+     * 预览无云一版图
+     */
     const previewList = computed<boolean[]>(() => {
         const list = Array(total.value).fill(false)
         if (previewIndex.value !== null) {
@@ -223,22 +244,61 @@ export function useViewHistoryModule() {
         return list
     })
     const previewIndex = ref<number | null>(null)
+    const currentCase = ref<Case.Case>({
+        caseId: '',
+        bandList: '',
+        address: '',
+        regionId: 0,
+        resolution: '',
+        sceneList: [],
+        dataSet: '',
+        status: '',
+        result: {
+            bucket: '',
+            object_path: '',
+        },
+        createTime: '',
+    })
+    const isModalVisible = ref<boolean>(false)
+    const bandForm = ref<{ band1: number; band2: number; band3: number }>({
+        band1: 0,
+        band2: 1,
+        band3: 2,
+    })
+    const currentBandList = computed(() => {
+        if (!currentCase.value) return []
+        try {
+            // 修复 currentCase.bandList 为合法的 JSON 格式
+            const fixedBandList = currentCase.value?.bandList.replace(/([a-zA-Z]+)/g, '"$1"') // 修复为 ["Red", "Green", "Blue"]
+
+            // 解析为数组
+            return JSON.parse(fixedBandList)
+        } catch (error) {
+            console.error('Error parsing band list:', error)
+            return []
+        }
+    })
+
     const previewNoCloud = async (data: any) => {
+        let bandsIndex = [bandForm.value.band1, bandForm.value.band2, bandForm.value.band3].join(
+            ',',
+        )
         const stopLoading = message.loading('正在加载无云一版图，请稍后...', 0)
         // 清除旧图层
         MapOperation.map_removeNocloudGridPreviewLayer()
         MapOperation.map_destroyNoCloudLayer()
-    
+
         // -------- 新版无云一版图（MosaicJson）展示逻辑 --------------------------
         const mosaicJsonPath = data.result.bucket + '/' + data.result.object_path
         const url4MosaicJson = getNoCloudUrl4MosaicJson({
-            mosaicJsonPath: mosaicJsonPath
+            mosaicJsonPath: mosaicJsonPath,
+            bands_index: bandsIndex,
         })
         MapOperation.map_addNoCloudLayer(url4MosaicJson)
-    
+
         setTimeout(() => {
             stopLoading()
-        }, 5000);
+        }, 5000)
         // console.log('一下加几十个图层，等着吃好果子')
     }
     const fitView = async (regionId: number) => {
@@ -248,14 +308,47 @@ export function useViewHistoryModule() {
             [window.bounds[2], window.bounds[3]],
         ])
     }
-    const emit = defineEmits(['response']);
+    const emit = defineEmits(['response'])
 
     const onResultSelected = ref<((result: any) => void) | null>(null)
 
-    const showResult = async (caseId: string, regionId: number) => {
-        previewIndex.value = caseList.value.findIndex(item => item.caseId === caseId)
+    const showModal = async (caseId: string, regionId: number) => {
+        bandForm.value = {
+            band1: 0,
+            band2: 1,
+            band3: 2,
+        }
+        isModalVisible.value = true
+        currentCase.value = caseList.value.filter((item) => item.caseId === caseId)?.[0]
+        console.log(currentBandList.value)
+        if (caseId == undefined || regionId == undefined) {
+            return message.info('找不到当前历史记录')
+        }
+
+        previewIndex.value = caseList.value.findIndex((item) => item.caseId === caseId)
+        currentCase.value = currentCase.value
+
+        if (onResultSelected.value) {
+            onResultSelected.value({ code: 0, data: currentCase.value, message: '' })
+        }
+
+        dbValue.updateFields({
+            mosaicBucket: currentCase.value.result.bucket,
+            mosaicPath: currentCase.value.result.object_path,
+            bandList: currentCase.value.bandList,
+        })
+    }
+
+    /**
+     * 供展示分析页面使用
+     * @param caseId
+     * @param regionId 
+     */
+    const getAndShowResult = async (caseId: string, regionId: number) => {
+        previewIndex.value = caseList.value.findIndex((item) => item.caseId === caseId)
         fitView(regionId)
         let res = await getCaseById(caseId)
+        currentCase.value = res.data
         console.log(res, '结果')
 
         if (onResultSelected.value) {
@@ -265,23 +358,66 @@ export function useViewHistoryModule() {
         dbValue.updateFields({
             mosaicBucket: res.data.result.bucket,
             mosaicPath: res.data.result.object_path,
-            bandList: res.data.bandList
+            bandList: res.data.bandList,
         })
 
         // 预览无云一版图影像
         let data = res.data
         const getData = async (taskId: string) => {
-            let res:any
+            let res: any
             while (!(res = await getCaseById(taskId)).data) {
                 console.log('Retrying...')
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                await new Promise((resolve) => setTimeout(resolve, 1000))
             }
-            return res.data;
+            return res.data
         }
-        if(!data)
-            data = await getData(caseId)
-        
+        if (!data) data = await getData(caseId)
         previewNoCloud(data)
+
+    }
+
+    /**
+     * 供数据准备页面使用
+     */
+    const showResult = async () => {
+        // console.log(currentBandList.value)
+        // let caseId = currentCase.value?.caseId
+        // let regionId = currentCase.value?.regionId
+        // if (caseId == undefined || regionId == undefined) {
+        //     return message.info("当前波段选择")
+        // }
+
+        // previewIndex.value = caseList.value.findIndex((item) => item.caseId === caseId)
+        // fitView(regionId)
+        // let res = await getCaseById(caseId)
+        // currentCase.value = res.data
+        // console.log(res, '结果')
+
+        // if (onResultSelected.value) {
+        //     onResultSelected.value(res)
+        // }
+
+        // dbValue.updateFields({
+        //     mosaicBucket: res.data.result.bucket,
+        //     mosaicPath: res.data.result.object_path,
+        //     bandList: res.data.bandList,
+        // })
+
+        // // 预览无云一版图影像
+        // let data = res.data
+        // const getData = async (taskId: string) => {
+        //     let res: any
+        //     while (!(res = await getCaseById(taskId)).data) {
+        //         console.log('Retrying...')
+        //         await new Promise((resolve) => setTimeout(resolve, 1000))
+        //     }
+        //     return res.data
+        // }
+        // if (!data) data = await getData(caseId)
+        fitView(currentCase.value.regionId)
+        let data = currentCase.value
+        previewNoCloud(data)
+        isModalVisible.value = false
     }
     const unPreview = () => {
         previewIndex.value = null
@@ -312,6 +448,12 @@ export function useViewHistoryModule() {
         previewIndex,
         showResult,
         unPreview,
-        onResultSelected
+        onResultSelected,
+        bandForm,
+        currentCase,
+        isModalVisible,
+        currentBandList,
+        showModal,
+        getAndShowResult
     }
 }

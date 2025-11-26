@@ -1205,7 +1205,7 @@ const checkServiceStatus = async () => {
     }
 }
 
-const publishServiceFunction = async (preferredPort?: number) => {
+const publishServiceFunction = async (preferredPort?: number): Promise<boolean> => {
     servicePublishLoading.value = true
     try {
         // 适配 /tools/publish（CommonResultVO 包装）
@@ -1250,8 +1250,10 @@ const publishServiceFunction = async (preferredPort?: number) => {
         message.success(url ? `服务发布成功！访问地址: ${url}` : '服务发布成功！')
         emit('addMessage', url ? `Service running at: ${url}` : 'Service running')
         emit('servicePublished')
+        return true
     } catch (error) {
         message.error('服务发布失败: ' + (error as Error).message)
+        return false
     } finally {
         servicePublishLoading.value = false
     }
@@ -1279,6 +1281,12 @@ const unpublishServiceFunction = async () => {
 }
 
 const startServiceOnlyForWizard = async () => {
+    // 若检测到已运行，则不重复发布，避免 400 错误弹窗
+    if (serviceStatus.value.running) {
+        message.info('服务已运行')
+        ensureEndpointFromService()
+        return
+    }
     const port = parseInt(toolWizardForm.servicePort, 10)
     const preferredPort = Number.isNaN(port) ? undefined : port
     await publishServiceFunction(preferredPort)
@@ -1296,8 +1304,19 @@ const ensureEndpointFromService = () => {
 const startServiceAndRegister = async () => {
     const port = parseInt(toolWizardForm.servicePort, 10)
     const preferredPort = Number.isNaN(port) ? undefined : port
-    await publishServiceFunction(preferredPort)
-    ensureEndpointFromService()
+
+    // 仅当需要 HTTP 服务时才尝试启动服务；若已在运行则跳过发布
+    if (toolWizardForm.invokeType !== 'tiler-expression') {
+        if (!serviceStatus.value.running) {
+            const ok = await publishServiceFunction(preferredPort)
+            if (!ok) {
+                // 服务发布失败则中止注册，避免“失败 + 成功”双提示
+                return
+            }
+        }
+        ensureEndpointFromService()
+    }
+
     await publishDynamicTool()
     toolWizardVisible.value = false
 }
