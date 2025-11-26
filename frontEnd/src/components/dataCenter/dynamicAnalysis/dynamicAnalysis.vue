@@ -265,15 +265,15 @@
                                                             <span>发布的工具</span>
                                                             <span
                                                                 class="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-400">{{
-                                                                    publishedTools.length }} 个可用
+                                                                    publishedSceneTools.length }} 个可用
                                                             </span>
                                                         </div>
                                                         <div class="config-control flex-col !items-start w-full">
-                                                            <div v-if="publishedTools.length"
+                                                            <div v-if="publishedSceneTools.length"
                                                                 class="flex w-full flex-col gap-3">
-                                                                <div v-for="tool in publishedTools" :key="tool.id"
+                                                                <div v-for="tool in publishedSceneTools" :key="tool.id"
                                                                     class="w-full rounded-xl border border-[#1c2a3f] bg-[#0b1221]/80 px-4 py-3 shadow-inner transition-colors duration-200 hover:border-[#38bdf8] cursor-pointer"
-                                                                    @click="handleInvokePublishedTool(tool.id)">
+                                                                    @click="handleInvokeSceneTool(tool.id)">
                                                                     <div class="flex items-start justify-between gap-3">
                                                                         <div class="min-w-0">
                                                                             <p
@@ -285,7 +285,7 @@
                                                                                     '未分类' }}</span>
                                                                         </div>
                                                                         <a-button size="small" type="primary" ghost
-                                                                            @click.stop="handleInvokePublishedTool(tool.id)">
+                                                                            @click.stop="handleInvokeSceneTool(tool.id)">
                                                                             调用
                                                                         </a-button>
                                                                     </div>
@@ -425,14 +425,18 @@
                                                 <span>发布的工具</span>
                                                 <span
                                                     class="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-400">{{
-                                                        publishedTools.length }} 个可用
+                                                        publishedCubeTools.length }} 个可用
                                                 </span>
                                             </div>
                                             <div class="config-control flex-col !items-start w-full">
-                                                <div v-if="publishedTools.length" class="flex w-full flex-col gap-3">
-                                                    <div v-for="tool in publishedTools" :key="tool.id"
-                                                        class="w-full rounded-xl border border-[#1c2a3f] bg-[#0b1221]/80 px-4 py-3 shadow-inner transition-colors duration-200 hover:border-[#38bdf8] cursor-pointer"
-                                                        @click="handleInvokePublishedTool(tool.id)">
+                                                <div v-if="publishedCubeTools.length"
+                                                    class="flex w-full flex-col gap-3">
+                                                    <div v-for="tool in publishedCubeTools" :key="tool.id"
+                                                        :class="[
+                                                            'w-full rounded-xl border border-[#1c2a3f] bg-[#0b1221]/80 px-4 py-3 shadow-inner transition-colors duration-200 hover:border-[#38bdf8] cursor-pointer',
+                                                            { 'border-[#38bdf8] bg-[#14243f]': activeCubeToolId === tool.id }
+                                                        ]"
+                                                        @click="handleInvokeCubeTool(tool.id)">
                                                         <div class="flex items-start justify-between gap-3">
                                                             <div class="min-w-0">
                                                                 <p class="m-0 text-sm font-medium text-gray-100 truncate">
@@ -441,7 +445,7 @@
                                                                     }}</span>
                                                             </div>
                                                             <a-button size="small" type="primary" ghost
-                                                                @click.stop="handleInvokePublishedTool(tool.id)">调用</a-button>
+                                                                @click.stop="handleInvokeCubeTool(tool.id)">调用</a-button>
                                                         </div>
                                                         <p class="mt-2 text-xs text-gray-300 leading-relaxed min-h-[32px]">
                                                             {{ tool.description || '暂无描述，点击调用以查看工具详情。' }}
@@ -463,15 +467,15 @@
                                                 </div>
                                                 <div v-else
                                                     class="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[#1f2e44] bg-[#0b1221]/40 px-6 py-8 text-gray-400">
-                                                    <p class="m-0 text-sm font-medium">暂无发布的工具</p>
-                                                    <p class="m-0 text-xs text-gray-500">在在线编程中发布后即可在此调用。</p>
+                                                    <p class="m-0 text-sm font-medium">暂无发布的 Cube 工具</p>
+                                                    <p class="m-0 text-xs text-gray-500">发布 Cube 级分析工具后即可在此调用。</p>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </section>
-                            <section>即将废弃的部分：
+                            <!-- <section>即将废弃的部分：
                                 分类工具列表
                                 <div class="mt-4 w-full mr-4">
                                     <div v-for="category in builtinToolCategories" :key="category.name" class="mb-4">
@@ -508,7 +512,7 @@
                                         </div>
                                     </div>
                                 </div>
-                            </section>
+                            </section> -->
                             <!--历史记录-->
                             <section class="panel-section" v-if="currentPanel === 'history'" key="history">
                                 <InvokeHistory @toggle="setCurrentPanel" />
@@ -541,7 +545,10 @@
                     <!-- <dv-border-box12 class=" !h-full"> -->
                     <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]"
                         style="width:426px; background-color: rgba(20, 20, 21, 0.6); border-radius: 3%;">
-                        <component v-if="currentTaskComponent" :is="currentTaskComponent" v-bind="currentTaskProps" />
+                        <DynamicCubeServicePanel v-if="activeCubeToolMeta" :tool-meta="activeCubeToolMeta"
+                            :selected-cubes="selectedCubeItems" />
+                        <component v-else-if="currentTaskComponent" :is="currentTaskComponent"
+                            v-bind="currentTaskProps" />
                         <ResultComponent @response="handleResultLoaded" />
                     </dv-border-box12>
                 </div>
@@ -591,7 +598,7 @@ import { useSettings } from './composables/useSettings'
 import { useI18n } from 'vue-i18n'
 import { useTool } from './composables/useTool'
 import MapComp from '@/components/feature/map/mapComp.vue'
-import { getCube } from '@/api/http/analytics-display'
+import DynamicCubeServicePanel from '../thematic/DynamicCubeServicePanel.vue'
 import { useCube } from './composables/useCube'
 import { useMethLib } from './composables/useMethLib'
 import { QuestionCircleOutlined } from '@ant-design/icons-vue'
@@ -665,6 +672,7 @@ const {
     // ------------------- 操作相关 -----------------------
     inputCacheKey, handleSelectCube, currentCacheKey, getCubeObj
 } = useCube()
+const selectedCubeItems = computed(() => cubeList.value.filter((item) => item.isSelect))
 
 /**
  * 设置section
@@ -694,21 +702,59 @@ const { builtinToolCategories, expandedCategories, allToolCategories, selectedTa
 
 const toolRegistryStore = useToolRegistryStore()
 const isSceneToolMeta = (tool: DynamicToolMeta) => (tool?.level ?? 'scene') === 'scene'
-const publishedTools = computed(() => {
-    return [...toolRegistryStore.tools]
-        .filter(isSceneToolMeta)
-        .sort((a, b) => {
-            const aTime = new Date(a.updatedAt ?? a.createdAt ?? 0).getTime()
-            const bTime = new Date(b.updatedAt ?? b.createdAt ?? 0).getTime()
-            return bTime - aTime
-        })
+const sortPublishedTools = (tools: DynamicToolMeta[]) => {
+    return [...tools].sort((a, b) => {
+        const aTime = new Date(a.updatedAt ?? a.createdAt ?? 0).getTime()
+        const bTime = new Date(b.updatedAt ?? b.createdAt ?? 0).getTime()
+        return bTime - aTime
+    })
+}
+const publishedSceneTools = computed(() => {
+    const sceneTools = toolRegistryStore.tools.filter((tool) => isSceneToolMeta(tool))
+    return sortPublishedTools(sceneTools)
+})
+const publishedCubeTools = computed(() => {
+    const cubeTools = toolRegistryStore.tools.filter((tool) => !isSceneToolMeta(tool))
+    return sortPublishedTools(cubeTools)
+})
+const activeCubeToolId = ref<string | null>(null)
+const activeCubeToolMeta = computed(() => {
+    if (!activeCubeToolId.value) return null
+    const meta = toolRegistryStore.getToolById(activeCubeToolId.value)
+    if (!meta || isSceneToolMeta(meta)) return null
+    return meta
 })
 
-const handleInvokePublishedTool = (toolId: string) => {
+const handleInvokeSceneTool = (toolId: string) => {
     if (!toolId) return
     selectedTask.value = `dynamic:${toolId}`
     showPanel.value = true
+    activeCubeToolId.value = null
 }
+
+const handleInvokeCubeTool = (toolId: string) => {
+    if (!toolId) return
+    const toolMeta = toolRegistryStore.getToolById(toolId)
+    if (!toolMeta) {
+        message.error('未找到该 Cube 工具，请刷新列表')
+        return
+    }
+    if (isSceneToolMeta(toolMeta)) {
+        message.warning('该工具为景级工具，请从景级分析区域调用')
+        return
+    }
+    activeCubeToolId.value = toolId
+    showPanel.value = true
+}
+
+watch(
+    () => toolRegistryStore.tools.map((tool) => tool.id),
+    () => {
+        if (activeCubeToolId.value && !toolRegistryStore.getToolById(activeCubeToolId.value)) {
+            activeCubeToolId.value = null
+        }
+    },
+)
 
 /**
  * 通用方法

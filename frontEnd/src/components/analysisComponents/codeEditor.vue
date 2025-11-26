@@ -30,7 +30,8 @@
                     <template #dropdown>
                         <el-dropdown-menu>
                             <el-dropdown-item command="scene_udf">景级 UDF（推荐）</el-dropdown-item>
-                            <el-dropdown-item command="cube_placeholder">Cube级占位（即将支持）</el-dropdown-item>
+                            <el-dropdown-item command="cube_udf">Cube级 UDF（推荐）</el-dropdown-item>
+                            <el-dropdown-item command="cube_placeholder">Cube级占位模板</el-dropdown-item>
                             <!-- <el-dropdown-item divided command="expr">表达式（无需服务）</el-dropdown-item>
                             <el-dropdown-item command="flask">Flask（HTTP 瓦片）</el-dropdown-item> -->
                         </el-dropdown-menu>
@@ -514,6 +515,15 @@ const defaultPayloadTemplate = JSON.stringify(
     2
 )
 
+const cubePayloadTemplate = JSON.stringify(
+    {
+        cube: '{{cube}}',
+        params: '{{params}}',
+    },
+    null,
+    2
+)
+
 const toolWizardForm = reactive({
     toolName: '',
     description: '',
@@ -637,10 +647,6 @@ const resetToolWizard = () => {
 }
 
 const openToolWizard = async () => {
-    if (isCubeProject.value) {
-        message.info('Cube级分析工具发布尚未开放，请先发布景级工具')
-        return
-    }
     // 优先尝试加载草稿，其次使用默认值
     const loaded = loadWizardDraft()
     if (!loaded) {
@@ -824,14 +830,128 @@ if __name__ == "__main__":
     app.run(host="0.0.0.0", port=20080, debug=False)
 `
 
-const cubePlaceholderTemplateCode = `# Cube级分析工具模板（占位）
-# ---------------------------------
-# Cube 级工具将与立方体合成页面联动，
-# 当前仅提供占位代码，后续会补充实际模板。
+const cubeToolTemplateCode = `"""
+Cube 级 UDF 模板（Flask + HTTP 瓦片）
+-------------------------------------
+该模板演示如何读取 Cube JSON、聚合场景信息并返回 tileTemplate。
+
+请求示例：
+{
+    "cube": {
+        "cubeId": "row-col-res",
+        "cacheKey": "cube-cache-key",
+        "dimensionScenes": [{"scenes": ["scene-a", "scene-b"]}],
+        "dimensionSensors": ["sentinel-2"],
+        "dimensionDates": ["2023-07-01", "2023-07-15"]
+    },
+    "params": {
+        "expression": "2*b5-b4-b3",
+        "color": "rdylgn",
+        "pixel_method": "first"
+    }
+}
+"""
+
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+from urllib.parse import quote_plus
+from typing import Any, Dict, List
+import json
+
+app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})
+
+
+def ensure_dict(value: Any) -> Dict[str, Any]:
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+            if isinstance(parsed, dict):
+                return parsed
+        except json.JSONDecodeError:
+            return {}
+    return value if isinstance(value, dict) else {}
+
+
+def ensure_list(value: Any) -> List[Any]:
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+            if isinstance(parsed, list):
+                return parsed
+        except json.JSONDecodeError:
+            return []
+    return value if isinstance(value, list) else []
+
+
+def summarize_cube(cube: Dict[str, Any]) -> Dict[str, Any]:
+    scenes = ensure_list(cube.get("dimensionScenes"))
+    sensors = ensure_list(cube.get("dimensionSensors"))
+    dates = ensure_list(cube.get("dimensionDates"))
+
+    total_scenes = 0
+    for bucket in scenes:
+        if isinstance(bucket, dict):
+            total_scenes += len(ensure_list(bucket.get("scenes")))
+
+    summary = {
+        "cubeId": cube.get("cubeId"),
+        "cacheKey": cube.get("cacheKey"),
+        "sceneCount": total_scenes,
+        "sensorTypes": sensors,
+    }
+    if dates:
+        summary["timeRange"] = dates[0] if len(dates) == 1 else f"{dates[0]} ~ {dates[-1]}"
+    return summary
+
+
+@app.route("/run", methods=["POST"])
+def run():
+    body = request.get_json(force=True, silent=True) or {}
+    cube = ensure_dict(body.get("cube"))
+    params = ensure_dict(body.get("params"))
+
+    if not cube:
+        return jsonify({"error": "cube context is required"}), 400
+
+    cache_key = cube.get("cacheKey") or cube.get("cubeId") or "cube"
+
+    expression = params.get("expression") or "2*b5-b4-b3"
+    color = params.get("color") or "rdylgn"
+    pixel_method = params.get("pixel_method") or "first"
+
+    tile_template = (
+        "/cube/analysis/{z}/{x}/{y}.png?"
+        f"cacheKey={quote_plus(cache_key)}"
+        f"&expression={quote_plus(expression)}"
+        f"&pixel_method={quote_plus(pixel_method)}"
+        f"&color={quote_plus(color)}"
+    )
+
+    return jsonify(
+        {
+            "tileTemplate": tile_template,
+            "summary": summarize_cube(cube),
+            "echoParams": params,
+        }
+    )
 
 
 def main():
-    print("Cube 级分析工具模板占位 - 即将支持")
+    app.run(host="0.0.0.0", port=20080, debug=False)
+
+
+if __name__ == "__main__":
+    main()
+`
+
+const cubePlaceholderTemplateCode = `# Cube级分析工具模板（占位保留）
+# ---------------------------------
+# 若暂不需要 UDF 模板，可保留此占位文件。
+
+
+def main():
+    print("Cube 级分析工具模板占位 - 待实现")
 
 
 if __name__ == "__main__":
@@ -887,11 +1007,42 @@ const applySceneToolTemplate = async (options: TemplateApplyOptions = {}) => {
     return true
 }
 
+const applyCubeUdfTemplate = async (options: TemplateApplyOptions = {}) => {
+    const applied = await replaceEditorWithTemplate(cubeToolTemplateCode, options)
+    if (!applied) return false
+
+    toolWizardForm.toolName = toolWizardForm.toolName || 'Cube 级 UDF 模板'
+    toolWizardForm.description =
+        toolWizardForm.description ||
+        'Cube 上下文 + Flask 示例：解析立方体并返回 HTTP 瓦片'
+    toolWizardForm.category = toolWizardForm.category || 'Cube分析'
+    if (!Array.isArray(toolWizardForm.tags) || toolWizardForm.tags.length === 0) {
+        toolWizardForm.tags = ['cube', 'tile']
+    }
+    toolWizardForm.invokeType = 'http+tile'
+    toolWizardForm.resultType = 'tile'
+    toolWizardForm.serviceMethod = 'POST'
+    toolWizardForm.payloadTemplate = cubePayloadTemplate
+    toolWizardForm.responsePath = ''
+    toolWizardForm.params.splice(0, toolWizardForm.params.length)
+    toolWizardForm.params.push(
+        { label: '表达式', key: 'expression', type: 'string', required: true, placeholder: '例如 2*b5-b4-b3', source: '', optionsText: '', default: '2*b5-b4-b3' },
+        { label: '色带', key: 'color', type: 'string', required: false, placeholder: '默认 rdylgn', source: '', optionsText: '', default: 'rdylgn' },
+        { label: '像元方法', key: 'pixel_method', type: 'string', required: false, placeholder: '默认 first', source: '', optionsText: '', default: 'first' },
+    )
+    if (!options.silent) {
+        message.success('已填充 Cube 级 UDF 模板，可保存或发布')
+    }
+    saveWizardDraft()
+    setTemplateBootstrapFlag()
+    return true
+}
+
 const applyCubePlaceholderTemplate = async (options: TemplateApplyOptions = {}) => {
     const applied = await replaceEditorWithTemplate(cubePlaceholderTemplateCode, options)
     if (!applied) return false
     if (!options.silent) {
-        message.info('Cube级工具模板仍在建设中，当前仅提供占位注释')
+        message.info('Cube级占位模板仅做兼容，推荐选择 Cube 级 UDF 模板')
     }
     setTemplateBootstrapFlag()
     return true
@@ -908,7 +1059,7 @@ const applyDefaultTemplateIfNeeded = async () => {
     }
     let applied = false
     if (projectLevel.value === 'cube') {
-        applied = await applyCubePlaceholderTemplate({ force: true, silent: true })
+        applied = await applyCubeUdfTemplate({ force: true, silent: true })
     } else {
         applied = await applySceneToolTemplate({ force: true, silent: true })
     }
@@ -921,6 +1072,8 @@ const applyDefaultTemplateIfNeeded = async () => {
 const handleTemplateCommand = async (cmd: string) => {
     if (cmd === 'scene_udf') {
         await applySceneToolTemplate()
+    } else if (cmd === 'cube_udf') {
+        await applyCubeUdfTemplate()
     } else if (cmd === 'cube_placeholder') {
         await applyCubePlaceholderTemplate()
     } else if (cmd === 'expr') {
@@ -1452,10 +1605,6 @@ const logToolPublish = async (toolName: string, description: string) => {
 
 const publishDynamicTool = async () => {
     if (toolWizardSubmitting.value) return
-    if (isCubeProject.value) {
-        message.info('Cube级分析工具发布功能即将上线，当前仅支持景级工具')
-        return
-    }
     const activeUserId = currentUserId.value || props.userId
     if (!activeUserId) {
         message.error('未获取到用户信息，无法发布工具')
@@ -1580,16 +1729,21 @@ onMounted(async () => {
         message.error('加载代码失败，请检查后端服务是否运行')
     }
 
-    // 如果从 tools.vue 的“创建工具”入口进入，带有 bootstrap=scene_udf，则强制填充景级UDF模板（仅首次）
+    // 如果从 tools.vue 的“创建工具”入口进入，带有 bootstrap 参数，则按需填充模板（仅首次）
     try {
         const bootstrap = String(route.query?.bootstrap || '')
-        if (isToolProject.value && !getTemplateBootstrapFlag() && bootstrap === 'scene_udf') {
-            if (projectLevel.value === 'cube') {
-                await applyCubePlaceholderTemplate({ force: true, silent: true })
-            } else {
-                await applySceneToolTemplate({ force: true, silent: true })
+        if (isToolProject.value && !getTemplateBootstrapFlag() && bootstrap) {
+            let bootstrapped = false
+            if (bootstrap === 'scene_udf') {
+                bootstrapped = await applySceneToolTemplate({ force: true, silent: true })
+            } else if (bootstrap === 'cube_udf') {
+                bootstrapped = await applyCubeUdfTemplate({ force: true, silent: true })
+            } else if (bootstrap === 'cube_placeholder') {
+                bootstrapped = await applyCubePlaceholderTemplate({ force: true, silent: true })
             }
-            setTemplateBootstrapFlag()
+            if (bootstrapped) {
+                setTemplateBootstrapFlag()
+            }
         }
     } catch {}
 
