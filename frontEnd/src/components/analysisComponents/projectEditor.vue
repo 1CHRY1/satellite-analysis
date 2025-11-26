@@ -432,10 +432,60 @@ type WizardParamForm = {
     placeholder: string
     source: '' | 'bands'
     optionsText: string
-    default?:string
+    default?: string | number | boolean
 }
 
 const builtinToolCategoryOptions = ['图像', '影像集合', '要素集合'] as const
+
+const createDefaultExpressionParams = (): WizardParamForm[] => [
+    {
+        label: '表达式',
+        key: 'expression',
+        type: 'string',
+        required: true,
+        placeholder: '例如 (b3-b5)/(b3+b5)',
+        source: '',
+        optionsText: '',
+        default: '(b3-b5)/(b3+b5)',
+    },
+    {
+        label: '色带',
+        key: 'color',
+        type: 'string',
+        required: false,
+        placeholder: '默认 rdylgn',
+        source: '',
+        optionsText: '',
+        default: 'rdylgn',
+    },
+    {
+        label: '像元方法',
+        key: 'pixel_method',
+        type: 'string',
+        required: false,
+        placeholder: '默认 first',
+        source: '',
+        optionsText: '',
+        default: 'first',
+    },
+]
+
+const ensureExpressionWizardDefaults = () => {
+    if (toolWizardForm.invokeType !== 'tiler-expression') {
+        return
+    }
+    if (!toolWizardForm.expressionTemplate || !toolWizardForm.expressionTemplate.trim()) {
+        toolWizardForm.expressionTemplate = '{{expression}}'
+    }
+    toolWizardForm.colorMap = toolWizardForm.colorMap || 'rdylgn'
+    toolWizardForm.pixelMethod = toolWizardForm.pixelMethod || 'first'
+    const keys = new Set(toolWizardForm.params.map((param) => param.key))
+    const requiredKeys: Array<'expression' | 'color' | 'pixel_method'> = ['expression', 'color', 'pixel_method']
+    const hasAll = requiredKeys.every((key) => keys.has(key))
+    if (!hasAll || toolWizardForm.params.length === 0) {
+        toolWizardForm.params.splice(0, toolWizardForm.params.length, ...createDefaultExpressionParams())
+    }
+}
 
 const toolWizardVisible = ref(false)
 const toolWizardSubmitting = ref(false)
@@ -453,10 +503,10 @@ const toolWizardForm = reactive({
     toolName: '',
     description: '',
     category: builtinToolCategoryOptions[0],
-    tags: [] as string[],
+    tags: ['expression', 'tile'] as string[],
     invokeType: 'tiler-expression' as DynamicToolInvokeType,
     resultType: 'tile' as DynamicToolResultType,
-    expressionTemplate: '',
+    expressionTemplate: '{{expression}}',
     colorMap: 'rdylgn',
     pixelMethod: 'first',
     serviceEndpoint: '',
@@ -464,7 +514,7 @@ const toolWizardForm = reactive({
     servicePort: '',
     payloadTemplate: defaultPayloadTemplate,
     responsePath: '',
-    params: [] as WizardParamForm[],
+    params: createDefaultExpressionParams(),
 })
 
 const wizardStorageKey = computed(() => `tool_wizard_last:${currentUserId.value || 'anonymous'}:${props.projectId}`)
@@ -536,13 +586,13 @@ const removeWizardParam = (index: number) => {
 }
 
 const resetToolWizard = () => {
-    toolWizardForm.toolName = ''
-    toolWizardForm.description = ''
+    toolWizardForm.toolName = '表达式工具'
+    toolWizardForm.description = '基于表达式的分析瓦片（与指数分析相同逻辑）'
     toolWizardForm.category = builtinToolCategoryOptions[0]
-    toolWizardForm.tags = []
+    toolWizardForm.tags = ['expression', 'tile']
     toolWizardForm.invokeType = 'tiler-expression'
     toolWizardForm.resultType = 'tile'
-    toolWizardForm.expressionTemplate = ''
+    toolWizardForm.expressionTemplate = '{{expression}}'
     toolWizardForm.colorMap = 'rdylgn'
     toolWizardForm.pixelMethod = 'first'
     toolWizardForm.serviceEndpoint = ''
@@ -550,7 +600,7 @@ const resetToolWizard = () => {
     toolWizardForm.servicePort = ''
     toolWizardForm.payloadTemplate = defaultPayloadTemplate
     toolWizardForm.responsePath = ''
-    toolWizardForm.params.splice(0, toolWizardForm.params.length)
+    toolWizardForm.params.splice(0, toolWizardForm.params.length, ...createDefaultExpressionParams())
 }
 
 const openToolWizard = async () => {
@@ -558,6 +608,8 @@ const openToolWizard = async () => {
     const loaded = loadWizardDraft()
     if (!loaded) {
         resetToolWizard()
+    } else {
+        ensureExpressionWizardDefaults()
     }
     toolWizardVisible.value = true
     await checkServiceStatus()
@@ -1141,6 +1193,15 @@ const buildParamsSchema = (): DynamicToolParamSchema[] => {
             }
             if (param.source) {
                 schema.source = param.source
+            }
+            if (param.default !== undefined && param.default !== null) {
+                if (typeof param.default === 'string') {
+                    if (param.default.trim()) {
+                        schema.default = param.default
+                    }
+                } else {
+                    schema.default = param.default
+                }
             }
             if (param.type === 'select' && !param.source) {
                 const options = parseSelectOptions(param.optionsText)

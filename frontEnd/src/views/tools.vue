@@ -94,10 +94,10 @@
                             <label class="flex cursor-pointer items-center gap-2">
                                 <input v-model="newProject.level" type="radio" value="cube"
                                     class="text-green-500 focus:ring-green-400" />
-                                <span>Cube级分析工具（即将支持）</span>
+                                <span>Cube级分析工具（联动立方体）</span>
                             </label>
                             <p class="m-0 text-xs text-gray-300">
-                                Cube级工具将与时序立方体联动，目前仅保留占位，推荐选择景级工具。
+                                Cube级工具与 Cube 面板/时序立方体联动，发布后可在动态分析 Cube 分区调用。
                             </p>
                         </div>
 
@@ -252,7 +252,12 @@ const create = async () => {
         actionType: '创建',
       })
     } catch {}
-    router.push(`/project/${createRes.projectId}`)
+    // 带上引导参数，进入编辑器后自动套用“景级UDF”模板（与指数分析一致）
+    const bootstrap = newProject.value.level === 'cube' ? 'cube_udf' : 'scene_udf'
+    router.push({
+      path: `/project/${createRes.projectId}`,
+      query: { bootstrap }
+    })
     ElMessage.success(t('toolpage.message.success'))
     createToolView.value = false
   } catch (e) {
