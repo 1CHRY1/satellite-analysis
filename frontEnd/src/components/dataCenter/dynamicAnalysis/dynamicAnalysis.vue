@@ -236,7 +236,7 @@
                                                                         :key="item.caseId" class="p-4 mb-3 border border-gray-200 rounded-md
                                                             cursor-pointer transition-all duration-300
                                                             hover:bg-gray-50 hover:shadow-md"
-                                                                        @click="showResult(item.caseId, item.regionId)">
+                                                                        @click="getAndShowResult(item.caseId, item.regionId)">
                                                                         <h3 class="mt-0 text-blue-500">{{ item.address
                                                                             }}无云一版图</h3>
                                                                         <p class="my-1 text-blue-300">分辨率: {{
@@ -650,7 +650,7 @@ const {
     getCaseList,
     activeTab,
     handleSelectTab,
-    showResult,
+    getAndShowResult,
     onResultSelected
 } = useViewHistoryModule();
 const completedCases = ref<any[]>([]); // 仅存储已完成的任务

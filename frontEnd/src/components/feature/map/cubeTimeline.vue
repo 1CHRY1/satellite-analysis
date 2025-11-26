@@ -71,7 +71,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch, reactive, type ComputedRef } from 'vue'
+import { ref, onMounted, computed, watch, reactive, type ComputedRef, nextTick } from 'vue'
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-vue-next'
 import { getGrid3DUrl, getGridDEMUrl, getGridNDVIOrSVRUrl, getGridSceneUrl, getImgStats, getMinIOUrl } from '@/api/http/interactive-explore/visualize.api'
 import bus from '@/store/bus'
@@ -108,6 +108,28 @@ const grid = ref<GridData>({ rowId: 0, columnId: 0, resolution: 0, opacity: 0, n
 const activeIndex = ref(-1)
 const visualMode = ref<'rgb' | 'product'>('rgb')
 const timelineTrack = ref<HTMLElement | null>(null)
+
+const scrollToCenter = (index: number) => {
+    if (!timelineTrack.value) return
+    
+    const track = timelineTrack.value
+    const items = track.children
+    
+    if (index < 0 || index >= items.length) return
+    
+    const item = items[index] as HTMLElement
+    const trackWidth = track.offsetWidth
+    const itemLeft = item.offsetLeft
+    const itemWidth = item.offsetWidth
+    
+    // 计算需要滚动的位置，使项目居中
+    const scrollPosition = itemLeft - (trackWidth / 2) + (itemWidth / 2)
+    
+    track.scrollTo({
+        left: scrollPosition,
+        behavior: 'smooth'
+    })
+}
 
 const showingImageStrech = reactive({
     r_min: 0,
@@ -168,6 +190,8 @@ const applyDateFilter = () => {
         if (activeIndex.value >= 0) {
             handleClick(activeIndex.value)
         }
+    } else if (activeIndex.value >= 0) {
+        scrollToCenter(activeIndex.value)
     }
 }
 
@@ -259,7 +283,13 @@ const timeFormat = (timeString: string) => {
 
     return `${year}-${month}-${day}`
 }
-
+watch(activeIndex, (newIndex) => {
+    if (newIndex >= 0) {
+        nextTick(() => {
+            scrollToCenter(newIndex)
+        })
+    }
+})
 
 /**
  * 影像可视化
@@ -272,6 +302,9 @@ const handleClick = async (index: number) => {
 
     activeIndex.value = index
 
+    // 【新增】滚动到居中位置
+    scrollToCenter(index)
+    
     const currentImage = filteredImages.value[index]
 
     if (visualMode.value === 'rgb') {
