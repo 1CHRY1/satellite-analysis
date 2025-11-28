@@ -67,6 +67,9 @@ export function map_addPolygonLayer(options: {
             id: fillId,
             type: 'fill',
             source: sourceId,
+            metadata: {
+                'user-label': id + '填充图层', 
+            },
             paint: {
                 'fill-color': fillColor,
                 'fill-opacity': fillOpacity,
@@ -78,6 +81,9 @@ export function map_addPolygonLayer(options: {
             id: lineId,
             type: 'line',
             source: sourceId,
+            metadata: {
+                'user-label': id + '线图层', 
+            },
             paint: {
                 'line-color': lineColor,
                 'line-width': 4,
@@ -182,6 +188,9 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
             id: lineId,
             type: 'line',
             source: srcId,
+            metadata: {
+                'user-label': '格网边界图层', 
+            },
             paint: {
                 'line-color': '#F00000',
                 'line-width': 1,
@@ -193,6 +202,9 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
             id: fillId,
             type: 'fill',
             source: srcId,
+            metadata: {
+                'user-label': '格网填充图层', 
+            },
             paint: {
                 'fill-color': '#00FFFF',
                 'fill-opacity': ['coalesce', ['to-number', ['get', 'opacity']], 0.01],
@@ -205,6 +217,9 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
             id: highlightId,
             type: 'fill',
             source: srcId,
+            metadata: {
+                'user-label': '格网高亮图层', 
+            },
             paint: {
                 // 'fill-color': '#FF9900',
                 'fill-color': '#0000FF',
@@ -284,6 +299,9 @@ export function map_addLargeSceneLayer(url: string) {
             id,
             type: 'raster',
             source: srcId,
+            metadata: {
+                'user-label': '大范围可视化图层', 
+            },
             paint: {},
             maxzoom: 8, // 图层最大 8 级，>8 就不渲染
         })
@@ -317,6 +335,9 @@ export function map_addSceneLayer(url: string) {
         m.addLayer({
             id,
             type: 'raster',
+            metadata: {
+                'user-label': 'Onthefly实时可视化图层', 
+            },
             source: srcId,
             paint: {},
         })
@@ -458,6 +479,9 @@ export function map_addMVTLayer(
             id: `${baseId}-fill`,
             type: 'fill',
             source: srcId,
+            metadata: {
+                'user-label': `${source_layer}` + '矢量图层', 
+            },
             'source-layer': source_layer,
             filter: ['==', '$type', 'Polygon'], // 只显示面要素
             paint: {
@@ -473,6 +497,9 @@ export function map_addMVTLayer(
             id: `${baseId}-line`,
             type: 'line',
             source: srcId,
+            metadata: {
+                'user-label': `${source_layer}` + '矢量图层', 
+            },
             'source-layer': source_layer,
             filter: ['==', '$type', 'LineString'], // 只显示线要素
             paint: {
@@ -487,6 +514,9 @@ export function map_addMVTLayer(
             id: `${baseId}-point`,
             type: 'circle',
             source: srcId,
+            metadata: {
+                'user-label': `${source_layer}` + '矢量图层', 
+            },
             'source-layer': source_layer,
             filter: ['==', '$type', 'Point'], // 只显示点要素
             paint: {
@@ -651,6 +681,9 @@ export function map_addNDVIOrSVRLayer(url: string) {
         m.addLayer({
             id,
             type: 'raster',
+            metadata: {
+                'user-label': 'DEM图层', 
+            },
             source: srcId,
             paint: {},
         })
@@ -680,6 +713,9 @@ export function map_add3DLayer(url: string) {
         m.addLayer({
             id,
             type: 'raster',
+            metadata: {
+                'user-label': id + '图层', 
+            },
             source: srcId,
             paint: {},
         })

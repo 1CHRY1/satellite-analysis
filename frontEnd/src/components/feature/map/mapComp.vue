@@ -1,6 +1,9 @@
 <template>
     <div class="relative">
         <div class="relative h-full w-full" id="mapContainer"></div>
+        <div class="absolute top-2 left-2 z-10"> 
+             
+        </div>
         <div class="absolute top-2 right-2 flex gap-2">
             <button @click="handleFitView" class="map-button">🌏</button>
             <button @click="handleZoomIn" class="map-button">➕</button>
@@ -11,6 +14,7 @@
             <!-- <button @click="handle3DTiles" class="map-button !text-gray-900">{{ is3DMode ? '3D' : '2D' }}</button>-->
             <button @click="localTian" class="map-button text-gray-900!">{{ t('datapage.mapcomp.vector') }}</button>
             <button @click="localImg" class="map-button text-gray-900!">{{ t('datapage.mapcomp.imagery') }}</button>
+            <LayerManagerComp />
         </div>
         <CubeTimeline
             class="absolute right-1/2 bottom-10 flex translate-x-1/2 gap-2"
@@ -31,6 +35,9 @@ import { useI18n } from 'vue-i18n'
 import type { Map as MapboxMap } from 'mapbox-gl'
 import { ezStore } from '@/store'
 import { useMapStore } from '@/store/mapStore'
+import LayerManagerComp from './layerManagerComp.vue';
+import { layerManager } from '@/util/map/layerManager';
+
 const { t } = useI18n()
 
 const props = defineProps({
@@ -141,6 +148,7 @@ onMounted(async () => {
             props.proj
         )
         store.setMapInstance(mapInstance)
+        layerManager.initializeObserver()
     } else if (store.mapInstance && container) {
         console.log("MapComp: 实例已存在，重新附加 DOM。")
         // 1. 获取地图实例的原 DOM 容器
@@ -151,6 +159,7 @@ onMounted(async () => {
         }
         // 3. 通知地图库 DOM 尺寸已变更（Mapbox 常用操作）
         store.mapInstance.resize()
+        layerManager.initializeObserver()
     }
 
     // -------------------- OLD ---------------- //

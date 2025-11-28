@@ -288,6 +288,9 @@ export function map_addPolygonLayer(options: {
             id: fillId,
             type: 'fill',
             source: sourceId,
+            metadata: {
+                'user-label': id + '填充图层', 
+            },
             paint: {
                 'fill-color': fillColor,
                 'fill-opacity': fillOpacity,
@@ -299,6 +302,9 @@ export function map_addPolygonLayer(options: {
             id: lineId,
             type: 'line',
             source: sourceId,
+            metadata: {
+                'user-label': id + '线图层', 
+            },
             paint: {
                 'line-color': lineColor,
                 'line-width': 4,
@@ -403,6 +409,9 @@ export function addPOIPoint(map: mapboxgl.Map, lng: number, lat: number) {
                 id: 'uniquePOI',
                 type: 'symbol',
                 source: 'poi-source',
+                metadata: {
+                    'user-label': 'POI图层', 
+                },
                 layout: {
                     'icon-image': iconId,
                     'icon-size': 1,
@@ -436,6 +445,9 @@ export function addRasterLayerFromUrl(url: string, layerId: string = 'raster-lay
             id: layerId,
             type: 'raster',
             source: layerId,
+            metadata: {
+                'user-label': layerId + '图层', 
+            },
             paint: {}, // 可以在这里自定义渲染样式
         })
 
@@ -467,6 +479,9 @@ export function map_showImagePolygon(geoFeature: polygonGeometry): void {
                 id: id,
                 type: 'fill',
                 source: srcId,
+                metadata: {
+                    'user-label': id + '填充图层', 
+                },
                 paint: {
                     'fill-color': '#FFFF00',
                     'fill-opacity': 0.3,
@@ -512,6 +527,9 @@ export function map_addImagePreviewLayer(props: ImageLayerProp): void {
             id: id,
             type: 'raster',
             source: srcId,
+            metadata: {
+                'user-label': id + '图层', 
+            },
             paint: {
                 'raster-opacity': 0.9,
             },
@@ -568,6 +586,9 @@ export function map_addRGBImageTileLayer(param: RGBTileLayerParams, cb?: () => v
         m.addLayer({
             id: id,
             type: 'raster',
+            metadata: {
+                'user-label': id + '图层', 
+            },
             source: srcId,
         })
 
@@ -616,6 +637,9 @@ export function map_addMultiRGBImageTileLayer(params: RGBTileLayerParams[], cb?:
             m.addLayer({
                 id: id,
                 type: 'raster',
+                metadata: {
+                    'user-label': id + '图层', 
+                },
                 source: srcId,
             })
         }
@@ -676,6 +700,9 @@ export function map_addGridRGBImageTileLayer(
             id: id,
             type: 'raster',
             source: srcId,
+            metadata: {
+                'user-label': id + '图层', 
+            },
             paint: {
                 'raster-opacity': (100 - (gridInfo.opacity || 0))*0.01   // 设置透明度，值范围 0-1
             }
@@ -749,6 +776,9 @@ export function map_addGridOneBandColorTileLayer(
             id: id,
             type: 'raster',
             source: srcId,
+            metadata: {
+                'user-label': id + '图层', 
+            },
             paint: {
                 'raster-opacity': (100 - (gridInfo.opacity || 0))*0.01   // 设置透明度，值范围 0-1
             }
@@ -813,6 +843,9 @@ export function map_addGridPreviewLayer(img: string, coords: number[][], prefix:
             id: gridPreviewID,
             type: 'raster',
             source: gridPreviewSourceID,
+            metadata: {
+                'user-label': gridPreviewID + '图层', 
+            },
             paint: {
                 'raster-opacity': 0.9,
             },
@@ -915,6 +948,9 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection, dataTyp
             id: lineId,
             type: 'line',
             source: srcId,
+            metadata: {
+                'user-label': id + '线图层', 
+            },
             paint: {
                 'line-color': '#F00000',
                 'line-width': 1,
@@ -937,6 +973,9 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection, dataTyp
             id: fillId,
             type: 'fill',
             source: srcId,
+            metadata: {
+                'user-label': id + '填充图层', 
+            },
             paint: {
                 'fill-color': [
                     'match',
@@ -961,6 +1000,9 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection, dataTyp
         m.addLayer({
             id: highlightId,
             type: 'fill',
+            metadata: {
+                'user-label': id + '高亮图层', 
+            },
             source: srcId,
             paint: {
                 // 'fill-color': '#FF9900',
@@ -1028,6 +1070,9 @@ export function map_addGridLayer_coverOpacity(gridGeoJson: GeoJSON.FeatureCollec
             id: lineId,
             type: 'line',
             source: srcId,
+            metadata: {
+                'user-label': id + '线图层', 
+            },
             paint: {
                 'line-color': '#F00000',
                 'line-width': 1,
@@ -1038,6 +1083,9 @@ export function map_addGridLayer_coverOpacity(gridGeoJson: GeoJSON.FeatureCollec
         m.addLayer({
             id: fillId,
             type: 'fill',
+            metadata: {
+                'user-label': id + '填充图层', 
+            },
             source: srcId,
             paint: {
                 'fill-color': '#00FFFF',
@@ -1051,6 +1099,9 @@ export function map_addGridLayer_coverOpacity(gridGeoJson: GeoJSON.FeatureCollec
             id: highlightId,
             type: 'fill',
             source: srcId,
+            metadata: {
+                'user-label': id + '高亮图层', 
+            },
             paint: {
                 // 'fill-color': '#FF9900',
                 'fill-color': '#0000FF',
@@ -1088,6 +1139,9 @@ export function map_addSceneBoxLayer(sceneBoxGeojson): void {
             id: id,
             type: 'line',
             source: source,
+            metadata: {
+                'user-label': id + '线图层', 
+            },
             paint: {
                 'line-color': '#ff6506',
                 'line-width': 3,
@@ -1140,6 +1194,9 @@ export function map_addNoCloudLayer(jsonUrl: string) {
         m.addLayer({
             id,
             type: 'raster',
+            metadata: {
+                'user-label': id + '图层', 
+            },
             source: source,
             paint: {},
         })
@@ -1198,6 +1255,9 @@ export function map_addMultiNoCloudLayer(gridsInfo: OneNoCloudGrid[], sparam: Al
             m.addLayer({
                 id,
                 type: 'raster',
+                metadata: {
+                    'user-label': id + '图层', 
+                },
                 source: source,
                 paint: {},
             })
@@ -1375,6 +1435,9 @@ export function map_addMultiOneBandColorLayer(params: OneBandColorLayerParam[], 
             m.addLayer({
                 id: id,
                 type: 'raster',
+                metadata: {
+                    'user-label': id + '图层', 
+                },
                 source: srcId,
             })
         }
@@ -1431,6 +1494,9 @@ export function map_addMVTLayer(source_layer: string, landId: string, cb?: () =>
             type: 'fill',
             source: srcId,
             'source-layer': source_layer,
+            metadata: {
+                'user-label': id + '填充图层', 
+            },
             paint: {
                 'fill-color': '#0066cc',
                 'fill-opacity': 0.5,
@@ -1486,6 +1552,9 @@ export function map_addGridMVTLayer(source_layer: string, columnId: number, rowI
             type: 'fill',
             source: srcId,
             'source-layer': source_layer,
+            metadata: {
+                'user-label': id + '填充图层', 
+            },
             paint: {
                 'fill-color': '#0066cc',
                 'fill-opacity': 0.5,
@@ -1537,6 +1606,9 @@ export function map_addOneBandColorLayer(param: OneBandColorLayerParam): void {
         map.addLayer({
             id: onlyId,
             type: 'raster',
+            metadata: {
+                'user-label': onlyId + '图层', 
+            },
             source: onlySrcId,
         })
     })
@@ -1752,6 +1824,9 @@ export const map_addRealtimeTileLayer = async (params: { url: string, sessionId:
         map.addLayer({
             id: layerId,
             type: 'raster',
+            metadata: {
+                'user-label': layerId + '图层', 
+            },
             source: sourceId,
             paint: {
                 'raster-opacity': 0.9
@@ -1782,6 +1857,9 @@ export const map_addRealtimeTileLayer = async (params: { url: string, sessionId:
             map.addLayer({
                 id: layerId,
                 type: 'raster',
+                metadata: {
+                    'user-label': layerId + '图层', 
+                },
                 source: sourceId,
                 paint: {
                     'raster-opacity': 0.9
