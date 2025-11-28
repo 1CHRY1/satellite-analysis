@@ -39,7 +39,7 @@ public interface ISceneRepo extends BaseMapper<Scene> {
             "LEFT JOIN product_table pd ON sc.product_id = pd.product_id " +
             "WHERE sc.scene_time BETWEEN #{startTime} AND #{endTime} " +
             "AND sc.cloud < #{cloud} " +
-            "AND ss.data_type in (${dataType}) " +
+            "AND ss.data_type in (#{dataType}) " +
             "AND (ST_Intersects(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), sc.bounding_box)) " +
 //            "AND ( ST_Intersects(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), sc.bounding_box) OR " +
 //            "ST_Contains(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), sc.bounding_box) OR " +
