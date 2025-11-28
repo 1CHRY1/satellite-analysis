@@ -61,6 +61,7 @@ export const useSettings = () => {
             endTime,
             cloud: 100,
             regionId: newRegion,
+            resolution: "15",
         }
         originImages.value = await getSceneByConfig(filterData)
 

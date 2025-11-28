@@ -5,24 +5,24 @@ netty:
   websocket:
     port: 9888
 
-## localhost
-#mysql:
-#  host: 192.168.1.123
-#  port: 3306
-#  username: root
-#  password: root
-pg:
-  host: 192.168.1.123
-  port: 5432
-  username: postgres
-  password: 123456
-
-# k8s
+# localhost
 mysql:
   host: 223.2.34.8
   port: 31036
   username: root
   password: 123456
+pg:
+  host: 223.2.34.8
+  port: 31543
+  username: postgres
+  password: 123456
+
+## k8s
+#mysql:
+#  host: 223.2.34.8
+#  port: 31036
+#  username: root
+#  password: 123456
 #pg:
 #  host: 223.2.34.8
 #  port: 31543
@@ -91,7 +91,7 @@ spring:
       max-request-size: 1GB
   data:
     redis:
-      host: 114.55.142.175
+      host: 223.2.34.8
       port: 30379
       database: 0
     mongodb:
@@ -104,16 +104,20 @@ mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: nnu.mnr.satellite.model.po
   type-handlers-package: nnu.mnr.satellite.utils.typeHandler
-#  configuration:
-#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 #ca:
 #  dir: D:/1tools/OpenSSL/ca
 
 minio:
+  #  access-key: jTbgNHEqQafOpUxVg7Ol
+  #  secret-key: 7UxtrqhSOyN1KUeumbqTRMv1zeluLO69OwJnCC0M
+  #  #  url: http://223.2.34.7:9000
+  #  url: http://172.16.92.82:30900
+  #  url: http://223.2.43.238:30900
   access-key: minioadmin
   secret-key: minioadmin
-#  url: http://192.168.1.100:30900
   url: http://223.2.34.8:30900
 
 docker:
@@ -127,13 +131,20 @@ docker:
     host: "223.2.35.153"
     username: "root"
     password: "dky.njnu.edu.cn"
-  localPath: /Users/paxton/Documents/Code/modelDockerVolume
+  localPath: /Users/paxton/Documents/1_projects/2025-03_satellite/satellite-analysis/backEnd/src/main/resources/modelDockerVolume
   serverDir: /home/satellite/
   workDir: /usr/local/coding/
+  servicePortRange:
+    start: 20080
+    end: 20180
+  serviceDefaults:
+    internalPort: 20080
+  faas:
+    workDirSubdir: service
 
 modelServer:
-  address: http://127.0.0.1:5001
-#  address: http://223.2.43.228:30500
+  address: http://223.2.34.8:30500
+  #  address: http://223.2.43.228:30500
   apis:
     status: /v0/task/status
     result: /v0/task/result
@@ -146,6 +157,7 @@ modelServer:
     rasterLine: /v0/tif/calc_raster_line
     ndvi: /v0/tif/calc_NDVI
     createLowLevelMosaic: /v0/mosaic/create_low_level_mosaic
+    methlib: /v0/methlib
   interval:
     status: 2
 
@@ -159,7 +171,9 @@ srmodelServer:
     status: 2
 
 tiler:
-  end-point: http://127.0.0.1:8000
-#  end-point: http://223.2.34.8:31800
+  end-point: http://223.2.34.8:31800/
+
 satelliteConfig:
   path: /Users/paxton/Documents/1_projects/2025-03_satellite/satellite-analysis/backEnd/src/main/resources/config/band_config.json
+#  path: F:/satellite-analysis/backEnd/src/main/resources/config/band_config.json
+
