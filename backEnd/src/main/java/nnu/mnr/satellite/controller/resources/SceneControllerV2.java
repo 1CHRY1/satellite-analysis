@@ -12,7 +12,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created with IntelliJ IDEA.
@@ -45,6 +47,12 @@ public class SceneControllerV2 {
 
     @PostMapping("/raster/time/region")
     public ResponseEntity<List<SceneDesVO>> getRasterScenesDesByRegionAndDataType(@RequestBody RastersFetchDTO rastersFetchDTO) throws IOException {
+        String formattedDataType = Arrays.stream(rastersFetchDTO.getDataType().split(","))
+                .map(String::trim) // 移除每个数据类型周围的空格
+                .filter(s -> !s.isEmpty()) // 避免空字符串
+                .map(s -> "'" + s + "'") // **关键步骤：为每个数据类型添加单引号**
+                .collect(Collectors.joining(",")); // 重新用逗号连接
+        rastersFetchDTO.setDataType(formattedDataType);
         return ResponseEntity.ok(sceneDataService.getRasterScenesDesByRegionAndDataType(rastersFetchDTO));
     }
 
