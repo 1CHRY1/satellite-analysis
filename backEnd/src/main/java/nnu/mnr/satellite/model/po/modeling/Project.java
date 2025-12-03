@@ -55,4 +55,5 @@ public class Project {
 
     private String description;
     private boolean isTool;
+    private String level;
 }
