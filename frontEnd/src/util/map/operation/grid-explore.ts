@@ -120,6 +120,9 @@ export function map_addGrid3DLayer(
             id: id,
             type: 'raster',
             source: srcId,
+            metadata: {
+                'user-label': id + '图层', 
+            },
             paint: {
                 'raster-opacity': (100 - (gridInfo.opacity || 0))*0.01   // 设置透明度，值范围 0-1
             }
@@ -191,6 +194,9 @@ export function map_addGridNDVIOrSVRLayer(
         m.addLayer({
             id: id,
             type: 'raster',
+            metadata: {
+                'user-label': id + '图层', 
+            },
             source: srcId,
             paint: {
                 'raster-opacity': (100 - (gridInfo.opacity || 0))*0.01   // 设置透明度，值范围 0-1
@@ -274,6 +280,9 @@ export function map_addGridMVTLayer(source_layer: string, url: string, attrList:
             id: `${id}-fill`,
             type: 'fill',
             source: srcId,
+            metadata: {
+                'user-label': id + '矢量图层', 
+            },
             'source-layer': source_layer,
             filter: ['==', '$type', 'Polygon'], // 只显示面要素
             paint: {
@@ -289,6 +298,9 @@ export function map_addGridMVTLayer(source_layer: string, url: string, attrList:
             id: `${id}-line`,
             type: 'line',
             source: srcId,
+            metadata: {
+                'user-label': id + '矢量图层', 
+            },
             'source-layer': source_layer,
             filter: ['==', '$type', 'LineString'], // 只显示线要素
             paint: {
@@ -303,6 +315,9 @@ export function map_addGridMVTLayer(source_layer: string, url: string, attrList:
             id: `${id}-point`,
             type: 'circle',
             source: srcId,
+            metadata: {
+                'user-label': id + '矢量图层', 
+            },
             'source-layer': source_layer,
             filter: ['==', '$type', 'Point'], // 只显示点要素
             paint: {

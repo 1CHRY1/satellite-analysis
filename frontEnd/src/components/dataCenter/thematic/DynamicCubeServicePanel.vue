@@ -8,16 +8,33 @@
                 </h2>
             </div>
         </div>
-
         <div class="section-content text-gray-200">
             <p class="mb-4 text-sm leading-6 text-gray-300" v-if="toolMeta.description">
                 {{ toolMeta.description }}
             </p>
-            <el-form
-                label-position="top"
-                :model="formModel"
-                class="config-container"
+
+            <el-alert
+                v-if="!hasCubeContext"
+                type="warning"
+                show-icon
+                class="mb-4"
+                title="请先在 Cube 面板中选择或合成立方体"
+            />
+            <div
+                v-else
+                class="mb-4 rounded border border-[#247699] bg-[#021525] p-3 text-xs text-gray-300"
             >
+                <p class="m-0">
+                    当前使用立方体：
+                    <strong>{{ selectedCube?.cubeId }}</strong>
+                </p>
+                <p class="m-0 mt-1 text-[11px] text-gray-400">
+                    CacheKey: {{ selectedCube?.cacheKey }} · 影像 {{ selectedCube?.dimensionScenes.length }} 景 · 传感器
+                    {{ selectedCube?.dimensionSensors.length }}
+                </p>
+            </div>
+            
+            <el-form label-position="top" :model="formModel" class="config-container">
                 <div
                     v-for="param in toolMeta.paramsSchema"
                     :key="param.key"
@@ -67,19 +84,11 @@
                 </div>
             </el-form>
 
-            <el-alert
-                v-if="!hasMosaicContext"
-                type="warning"
-                show-icon
-                class="mb-4"
-                title="请先从前序数据选择影像结果"
-            />
-
             <div class="flex gap-3 mt-6">
                 <el-button
                     type="primary"
                     :loading="loading"
-                    :disabled="!hasMosaicContext"
+                    :disabled="!hasCubeContext"
                     @click="runTool"
                 >
                     {{ loading ? '运行中...' : '开始运行' }}
@@ -93,64 +102,33 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, watch, ref } from 'vue'
+import { withDefaults, defineProps, reactive, watch, ref, computed } from 'vue'
 import { CommandIcon } from 'lucide-vue-next'
 import * as MapOperation from '@/util/map/operation'
-import { getMosaicJsonUrl, getNoCloudUrl4MosaicJson } from '@/api/http/satellite-data/visualize.api'
-import { useAnalysisStore } from '@/store'
-import type {
-    DynamicToolMeta,
-    DynamicToolParamSchema,
-} from '@/store/toolRegistry'
+import type { DynamicToolMeta, DynamicToolParamSchema } from '@/store/toolRegistry'
+import type { CubeDisplayItem } from '@/api/http/analytics-display/cube.type'
 import { message } from 'ant-design-vue'
 
-const props = defineProps<{
-    thematicConfig: Record<string, any>
-    toolMeta: DynamicToolMeta
-}>()
+const props = withDefaults(
+    defineProps<{
+        toolMeta: DynamicToolMeta
+        selectedCubes?: CubeDisplayItem[]
+    }>(),
+    {
+        selectedCubes: () => [],
+    },
+)
 
-const analysisStore = useAnalysisStore()
+const selectedCube = computed(() => props.selectedCubes.find((cube) => cube.isSelect) ?? props.selectedCubes[0] ?? null)
+const hasCubeContext = computed(() => !!selectedCube.value)
 const loading = ref(false)
 const formModel = reactive<Record<string, any>>({})
 
-const bandOptions = computed(() => {
-    const raw = analysisStore.bandList
-    if (!raw) return []
-    return raw
-        .replace(/[\[\]\s]/g, '')
-        .split(',')
-        .filter(Boolean)
-        .map((band) => ({ label: band, value: band }))
-})
-
-const hasMosaicContext = computed(() => !!mosaicUrl.value)
-
 const defaultPayloadTemplate = computed(() => ({
-    mosaicUrl: '{{mosaicUrl}}',
+    cube: '{{cube}}',
+    cubeKey: '{{cubeKey}}',
     params: '{{params}}',
 }))
-
-const mosaicUrl = computed(() => {
-    // 优先使用当前页面选择的前序数据（避免使用其它页面遗留的全局状态）
-    const dataset = props.thematicConfig?.dataset
-    if (dataset?.result?.bucket && dataset.result.object_path) {
-        return getMosaicJsonUrl({
-            mosaicJsonPath: `${dataset.result.bucket}/${dataset.result.object_path}`,
-        })
-    }
-    if (dataset?.bucket && dataset?.object_path) {
-        return getMosaicJsonUrl({
-            mosaicJsonPath: `${dataset.bucket}/${dataset.object_path}`,
-        })
-    }
-    // 兜底：再尝试全局 store（可能是其它入口设置的）
-    if (analysisStore.mosaicBucket && analysisStore.mosaicPath) {
-        return getMosaicJsonUrl({
-            mosaicJsonPath: `${analysisStore.mosaicBucket}/${analysisStore.mosaicPath}`,
-        })
-    }
-    return ''
-})
 
 const resetForm = () => {
     Object.keys(formModel).forEach((key) => {
@@ -172,13 +150,10 @@ watch(
     () => {
         resetForm()
     },
-    { immediate: true }
+    { immediate: true },
 )
 
 const getOptionsForParam = (param: DynamicToolParamSchema) => {
-    if (param.source === 'bands') {
-        return bandOptions.value
-    }
     return param.options ?? []
 }
 
@@ -250,7 +225,7 @@ const ensureRasterLayerCleared = () => {
 }
 
 const addGeoJsonLayer = (featureCollection: any) => {
-    const layerId = `Dynamic-Tool-${props.toolMeta.id}`
+    const layerId = `Dynamic-Cube-Tool-${props.toolMeta.id}`
     MapOperation.map_addPolygonLayer({
         geoJson: featureCollection,
         id: layerId,
@@ -265,67 +240,12 @@ const applyTileLayer = (tileTemplate: string) => {
     MapOperation.map_addNoCloudLayer(tileTemplate)
 }
 
-const applyMosaicLayer = (bucket: string, objectPath: string) => {
-    const tileTemplate = getNoCloudUrl4MosaicJson({
-        mosaicJsonPath: `${bucket}/${objectPath}`,
-    })
-    applyTileLayer(tileTemplate)
-}
-
-const runTilerExpression = (context: Record<string, any>) => {
-    const { expressionTemplate, colorMap, pixelMethod } = props.toolMeta.invoke
-
-    // 优先使用表单中的表达式/色带/像元方法
-    const formExpr = (formModel['expression'] !== undefined && String(formModel['expression']).trim()) || ''
-    const formColor = (formModel['color'] !== undefined && String(formModel['color']).trim()) || ''
-    const formPixel = (formModel['pixel_method'] !== undefined && String(formModel['pixel_method']).trim()) || ''
-
-    // 从 schema 中获取 required 与 default
-    const exprSchema = props.toolMeta.paramsSchema.find(p => p.key === 'expression')
-    const exprDefault = exprSchema && (exprSchema as any).default ? String((exprSchema as any).default) : ''
-    const colorSchema = props.toolMeta.paramsSchema.find(p => p.key === 'color')
-    const colorDefault = colorSchema && (colorSchema as any).default ? String((colorSchema as any).default) : ''
-    const pixelSchema = props.toolMeta.paramsSchema.find(p => p.key === 'pixel_method')
-    const pixelDefault = pixelSchema && (pixelSchema as any).default ? String((pixelSchema as any).default) : ''
-
-    // 表达式优先级：表单 > schema.default > 模板占位/固定 > 若必填则报错，否则跳过
-    let expression = formExpr
-    if (!expression) {
-        expression = exprDefault
-    }
-    if (!expression) {
-        const resolved = resolveTemplate(expressionTemplate ?? '', context)
-        expression = (resolved && String(resolved).trim()) || ''
-    }
-    if (!expression) {
-        if (exprSchema?.required) {
-            throw new Error('表达式为空，请在表单中填写或在模板中提供')
-        } else {
-            // 非必填且未提供时，使用兜底默认表达式，与“指数分析”一致
-            expression = '2*b2-b1-b3'
-            message.info('未填写表达式，已使用默认表达式 2*b2-b1-b3')
-        }
-    }
-
-    const color = formColor || colorDefault || (resolveTemplate(colorMap ?? 'rdylgn', context) as string)
-    const pixel = formPixel || pixelDefault || ((pixelMethod ?? 'first').toString())
-    const url = `/tiler/mosaic/analysis/{z}/{x}/{y}.png?mosaic_url=${encodeURIComponent(
-        context.mosaicUrl
-    )}&expression=${encodeURIComponent(expression)}&pixel_method=${pixel}&color=${encodeURIComponent(
-        color
-    )}`
-    applyTileLayer(url)
-}
-
 const callHttpService = async (context: Record<string, any>) => {
     const { endpoint, method = 'POST', headers = {}, payloadTemplate } = props.toolMeta.invoke
     if (!endpoint) {
         throw new Error('工具未配置服务端点')
     }
-    const payload = resolveTemplate(
-        payloadTemplate ?? defaultPayloadTemplate.value,
-        context
-    )
+    const payload = resolveTemplate(payloadTemplate ?? defaultPayloadTemplate.value, context)
 
     const fetchInit: RequestInit = {
         method,
@@ -340,7 +260,7 @@ const callHttpService = async (context: Record<string, any>) => {
             Object.entries(payload ?? {}).reduce<Record<string, string>>((acc, [key, value]) => {
                 acc[key] = typeof value === 'object' ? JSON.stringify(value) : String(value ?? '')
                 return acc
-            }, {})
+            }, {}),
         )
         return fetch(`${endpoint}?${query.toString()}`, fetchInit)
     }
@@ -351,23 +271,21 @@ const callHttpService = async (context: Record<string, any>) => {
 
 const runTool = async () => {
     if (!validateRequired()) return
-    const mosaic = mosaicUrl.value
-    if (!mosaic) {
-        message.warning('未获取到影像数据，请先选择“前序数据”')
+    const cube = selectedCube.value
+    if (!cube) {
+        message.warning('请先在左侧选择一个 Cube')
         return
     }
     const context = {
         ...formModel,
-        mosaicUrl: mosaic,
+        cube,
+        cubeKey: cube.cacheKey,
+        cubeList: props.selectedCubes,
         params: { ...formModel },
     }
     loading.value = true
     try {
         switch (props.toolMeta.invoke.type) {
-            case 'tiler-expression':
-                runTilerExpression(context)
-                message.success('工具运行成功，已叠加分析图层')
-                break
             case 'http+tile': {
                 const response = await callHttpService(context)
                 if (!response.ok) {
@@ -387,27 +305,6 @@ const runTool = async () => {
                 message.success('工具运行成功，已叠加分析图层')
                 break
             }
-            case 'http+mosaic': {
-                const response = await callHttpService(context)
-                if (!response.ok) {
-                    throw new Error(`服务请求失败：${response.status}`)
-                }
-                const data = await response.json()
-                const payload = pickResponseData(data) ?? data
-                const bucket =
-                    payload?.bucket ?? payload?.result?.bucket ?? payload?.data?.bucket
-                const objectPath =
-                    payload?.object_path ??
-                    payload?.objectPath ??
-                    payload?.result?.object_path ??
-                    payload?.data?.object_path
-                if (!bucket || !objectPath) {
-                    throw new Error('服务返回结果缺少 bucket 或 object_path 信息')
-                }
-                applyMosaicLayer(bucket, objectPath)
-                message.success('工具运行成功，已叠加分析图层')
-                break
-            }
             case 'http+geojson': {
                 const response = await callHttpService(context)
                 if (!response.ok) {
@@ -416,7 +313,6 @@ const runTool = async () => {
                 const data = await response.json()
                 const payload = pickResponseData(data) ?? data
                 let featureCollection: any = null
-                // 优先直接使用标准 FeatureCollection
                 if (payload && payload.type === 'FeatureCollection' && Array.isArray(payload.features)) {
                     featureCollection = payload
                 } else if (payload?.featureCollection) {
@@ -428,7 +324,6 @@ const runTool = async () => {
                 } else if (payload) {
                     featureCollection = payload
                 }
-
                 if (!featureCollection) {
                     throw new Error('服务返回结果缺少 GeoJSON 数据')
                 }
@@ -440,13 +335,10 @@ const runTool = async () => {
                 throw new Error(`暂不支持的工具类型：${props.toolMeta.invoke.type}`)
         }
     } catch (error: any) {
-        console.error('运行动态工具失败:', error)
+        console.error('运行 Cube 动态工具失败:', error)
         message.error(error?.message ?? '工具运行失败')
     } finally {
         loading.value = false
     }
 }
 </script>
-
-<style scoped>
-</style>

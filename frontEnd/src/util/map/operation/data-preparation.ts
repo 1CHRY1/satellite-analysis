@@ -29,6 +29,9 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
             id: lineId,
             type: 'line',
             source: srcId,
+            metadata: {
+                'user-label': '格网边界图层', 
+            },
             paint: {
                 'line-color': '#F00000',
                 'line-width': 1,
@@ -40,6 +43,9 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
             id: fillId,
             type: 'fill',
             source: srcId,
+            metadata: {
+                'user-label': '格网填充图层', 
+            },
             paint: {
                 'fill-color': '#00FFFF',
                 'fill-opacity': ['coalesce', ['to-number', ['get', 'opacity']], 0.01],
@@ -52,6 +58,9 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
             id: highlightId,
             type: 'fill',
             source: srcId,
+            metadata: {
+                'user-label': '格网高亮图层', 
+            },
             paint: {
                 // 'fill-color': '#FF9900',
                 'fill-color': '#0000FF',
@@ -132,6 +141,9 @@ export function map_add3DBoxLayer(gridGeoJson, cubeSceneListByDate, boxJson): vo
                 id: `${id}-date-${i}`,
                 type: 'fill-extrusion',
                 source: levelSrcId,
+                metadata: {
+                    'user-label': `${date}` + '-3D图层', 
+                },
                 paint: {
                     'fill-extrusion-color': preset_colors[i % preset_colors.length],
                     'fill-extrusion-base': (i + 1) * 500, // 每层往上堆
@@ -167,6 +179,9 @@ export function map_add3DBoxLayer(gridGeoJson, cubeSceneListByDate, boxJson): vo
                 id: `${id}-label-${i}`,
                 type: 'symbol',
                 source: labelSrcId,
+                metadata: {
+                    'user-label': `${date}` + '-符号图层', 
+                },
                 layout: {
                     'text-field': ['get', 'date'],
                     'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],

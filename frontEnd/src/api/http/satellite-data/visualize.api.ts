@@ -370,7 +370,8 @@ export function getRealtimeNoCloudUrl(param: RealTimeNoCloudParam) {
 }
 
 type MosaicTileParam = {
-    mosaicJsonPath: string
+    mosaicJsonPath: string,
+    bands_index?: string
 }
 
 export function getMosaicJsonUrl(param: MosaicTileParam) {
@@ -385,6 +386,7 @@ export function getNoCloudUrl4MosaicJson(param: MosaicTileParam) {
     const mosaicUrl = minioEndPoint + '/' + param.mosaicJsonPath
     console.log(mosaicUrl)
     requestParams.append('mosaic_url', mosaicUrl)
+    requestParams.append('bands_index', param.bands_index || '0,1,2')
     const fullUrl = baseUrl + '?' + requestParams.toString()
     console.log(fullUrl)
     return fullUrl

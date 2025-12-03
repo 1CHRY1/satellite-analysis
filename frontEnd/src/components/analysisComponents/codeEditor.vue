@@ -29,8 +29,11 @@
                     </a-button>
                     <template #dropdown>
                         <el-dropdown-menu>
-                            <el-dropdown-item command="expr">表达式（无需服务）</el-dropdown-item>
-                            <el-dropdown-item command="flask">Flask（HTTP 瓦片）</el-dropdown-item>
+                            <el-dropdown-item command="scene_udf">景级 UDF（推荐）</el-dropdown-item>
+                            <el-dropdown-item command="cube_udf">Cube级 UDF（推荐）</el-dropdown-item>
+                            <el-dropdown-item command="cube_placeholder">Cube级占位模板</el-dropdown-item>
+                            <!-- <el-dropdown-item divided command="expr">表达式（无需服务）</el-dropdown-item>
+                            <el-dropdown-item command="flask">Flask（HTTP 瓦片）</el-dropdown-item> -->
                         </el-dropdown-menu>
                     </template>
                 </el-dropdown>
@@ -71,8 +74,8 @@
                             <el-radio-group v-model="toolWizardForm.invokeType">
                                 <el-radio-button label="tiler-expression">表达式</el-radio-button>
                                 <el-radio-button label="http+tile">HTTP 瓦片</el-radio-button>
-                                <el-radio-button label="http+mosaic">HTTP Mosaic</el-radio-button>
-                                <el-radio-button label="http+geojson">HTTP 矢量</el-radio-button>
+                                <!-- <el-radio-button label="http+mosaic">HTTP Mosaic</el-radio-button>
+                                <el-radio-button label="http+geojson">HTTP 矢量</el-radio-button> -->
                             </el-radio-group>
                         </el-form-item>
 
@@ -352,6 +355,7 @@ import {
 import { publishTool, getToolStatus, unpublishTool, getAllTools } from '@/api/http/tool'
 import { getProjects } from '@/api/http/analysis'
 import { ref, reactive, onMounted, onBeforeUnmount, watch, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { Codemirror } from 'vue-codemirror'
 import { python } from '@codemirror/lang-python'
 import { ElMessageBox } from 'element-plus'
@@ -362,6 +366,7 @@ import type {
     DynamicToolResultType,
     DynamicToolParamSchema,
     DynamicToolMeta,
+    ToolLevel,
 } from '@/store/toolRegistry'
 import { message } from 'ant-design-vue';
 
@@ -383,9 +388,16 @@ const toolRegistry = useToolRegistryStore()
 const emit = defineEmits(['addMessage', 'servicePublished', 'serviceUnpublished'])
 
 const currentUserId = computed(() => userStore.user?.id ?? '')
+const route = useRoute()
 
 // 是否工具工程：用于控制“模板/发布为工具”按钮的显示
 const isToolProject = ref(false)
+const projectLevel = ref<ToolLevel>('scene')
+const normalizeProjectLevel = (value: any): ToolLevel => {
+    const normalized = String(value || '').toLowerCase()
+    return normalized === 'cube' ? 'cube' : 'scene'
+}
+const isCubeProject = computed(() => projectLevel.value === 'cube')
 const parseIsTool = (v: any): number => {
     if (typeof v === 'number') return v
     if (typeof v === 'boolean') return v ? 1 : 0
@@ -402,8 +414,11 @@ const refreshIsToolFlag = async () => {
         const p = (list || []).find((it: any) => String(it?.projectId || '') === String(props.projectId))
         const raw = (p as any)?.isTool ?? (p as any)?.is_tool
         isToolProject.value = !!p && parseIsTool(raw) === 1
+        const levelRaw = (p as any)?.level ?? 'scene'
+        projectLevel.value = normalizeProjectLevel(levelRaw)
     } catch {
         isToolProject.value = false
+        projectLevel.value = 'scene'
     }
 }
 
@@ -432,9 +447,61 @@ type WizardParamForm = {
     placeholder: string
     source: '' | 'bands'
     optionsText: string
+    default?: string | number | boolean
 }
 
 const builtinToolCategoryOptions = ['图像', '影像集合', '要素集合'] as const
+
+const createDefaultExpressionParams = (): WizardParamForm[] => [
+    {
+        label: '表达式',
+        key: 'expression',
+        type: 'string',
+        required: true,
+        // 与“指数分析”一致
+        placeholder: '例如 2*b2-b1-b3',
+        source: '',
+        optionsText: '',
+        default: '2*b2-b1-b3',
+    },
+    {
+        label: '色带',
+        key: 'color',
+        type: 'string',
+        required: false,
+        placeholder: '默认 rdylgn',
+        source: '',
+        optionsText: '',
+        default: 'rdylgn',
+    },
+    {
+        label: '像元方法',
+        key: 'pixel_method',
+        type: 'string',
+        required: false,
+        placeholder: '默认 first',
+        source: '',
+        optionsText: '',
+        default: 'first',
+    },
+]
+
+const ensureExpressionWizardDefaults = () => {
+    if (toolWizardForm.invokeType !== 'tiler-expression') {
+        return
+    }
+    if (!toolWizardForm.expressionTemplate || !toolWizardForm.expressionTemplate.trim()) {
+        toolWizardForm.expressionTemplate = '{{expression}}'
+    }
+    toolWizardForm.colorMap = toolWizardForm.colorMap || 'rdylgn'
+    toolWizardForm.pixelMethod = toolWizardForm.pixelMethod || 'first'
+    const keys = new Set(toolWizardForm.params.map((param) => param.key))
+    const requiredKeys: Array<'expression' | 'color' | 'pixel_method'> = ['expression', 'color', 'pixel_method']
+    const hasAll = requiredKeys.every((key) => keys.has(key))
+    if (!hasAll || toolWizardForm.params.length === 0) {
+        toolWizardForm.params.splice(0, toolWizardForm.params.length, ...createDefaultExpressionParams())
+    }
+}
 
 const toolWizardVisible = ref(false)
 const toolWizardSubmitting = ref(false)
@@ -448,14 +515,23 @@ const defaultPayloadTemplate = JSON.stringify(
     2
 )
 
+const cubePayloadTemplate = JSON.stringify(
+    {
+        cube: '{{cube}}',
+        params: '{{params}}',
+    },
+    null,
+    2
+)
+
 const toolWizardForm = reactive({
     toolName: '',
     description: '',
-    category: '自定义工具集',
+    category: '图像',
     tags: [] as string[],
-    invokeType: 'http+geojson' as DynamicToolInvokeType,
-    resultType: 'geojson' as DynamicToolResultType,
-    expressionTemplate: '',
+    invokeType: 'tiler-expression' as DynamicToolInvokeType,
+    resultType: 'tile' as DynamicToolResultType,
+    expressionTemplate: '{{expression}}',
     colorMap: 'rdylgn',
     pixelMethod: 'first',
     serviceEndpoint: '',
@@ -463,10 +539,28 @@ const toolWizardForm = reactive({
     servicePort: '',
     payloadTemplate: defaultPayloadTemplate,
     responsePath: '',
-    params: [] as WizardParamForm[],
+    params: createDefaultExpressionParams(),
 })
 
 const wizardStorageKey = computed(() => `tool_wizard_last:${currentUserId.value || 'anonymous'}:${props.projectId}`)
+const templateBootstrapKey = computed(() => `tool_template_bootstrap:${props.projectId}`)
+const CODE_LOAD_ERROR_MESSAGE = '代码读取失败，请检查容器运行情况或联系管理员'
+
+const getTemplateBootstrapFlag = () => {
+    try {
+        return localStorage.getItem(templateBootstrapKey.value) === 'done'
+    } catch (error) {
+        return false
+    }
+}
+
+const setTemplateBootstrapFlag = () => {
+    try {
+        localStorage.setItem(templateBootstrapKey.value, 'done')
+    } catch (error) {
+        // ignore storage errors
+    }
+}
 
 const saveWizardDraft = () => {
     try {
@@ -535,13 +629,13 @@ const removeWizardParam = (index: number) => {
 }
 
 const resetToolWizard = () => {
-    toolWizardForm.toolName = '自定义GeoJSON工具'
-    toolWizardForm.description = '最小示例工具（返回 GeoJSON 矢量结果）'
-    toolWizardForm.category = '自定义工具集'
-    toolWizardForm.tags = ['geojson']
-    toolWizardForm.invokeType = 'http+geojson'
-    toolWizardForm.resultType = 'geojson'
-    toolWizardForm.expressionTemplate = ''
+    toolWizardForm.toolName = '表达式工具'
+    toolWizardForm.description = '基于表达式的分析瓦片（与指数分析相同逻辑）'
+    toolWizardForm.category = '图像'
+    toolWizardForm.tags = ['expression', 'tile']
+    toolWizardForm.invokeType = 'tiler-expression'
+    toolWizardForm.resultType = 'tile'
+    toolWizardForm.expressionTemplate = '{{expression}}'
     toolWizardForm.colorMap = 'rdylgn'
     toolWizardForm.pixelMethod = 'first'
     toolWizardForm.serviceEndpoint = ''
@@ -549,12 +643,7 @@ const resetToolWizard = () => {
     toolWizardForm.servicePort = ''
     toolWizardForm.payloadTemplate = defaultPayloadTemplate
     toolWizardForm.responsePath = ''
-    toolWizardForm.params.splice(0, toolWizardForm.params.length)
-    toolWizardForm.params.push(
-        { label: '模式', key: 'mode', type: 'select', required: false, placeholder: 'bbox / inset / grid', source: '', optionsText: '外包框:bbox, 内缩:inset, 网格中心:grid' },
-        { label: '缩放系数', key: 'scale', type: 'number', required: false, placeholder: '0~1，默认 0.8', source: '', optionsText: '' },
-        { label: '网格数', key: 'grid', type: 'number', required: false, placeholder: '默认 3（3x3）', source: '', optionsText: '' },
-    )
+    toolWizardForm.params.splice(0, toolWizardForm.params.length, ...createDefaultExpressionParams())
 }
 
 const openToolWizard = async () => {
@@ -562,6 +651,8 @@ const openToolWizard = async () => {
     const loaded = loadWizardDraft()
     if (!loaded) {
         resetToolWizard()
+    } else {
+        ensureExpressionWizardDefaults()
     }
     toolWizardVisible.value = true
     await checkServiceStatus()
@@ -688,9 +779,304 @@ const saveCode = async () => {
     }
 }
 
+type TemplateApplyOptions = {
+    force?: boolean
+    silent?: boolean
+}
+
+const sceneToolTemplateCode = `from flask import Flask, jsonify, request
+from flask_cors import CORS
+from urllib.parse import quote_plus
+import json
+
+app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})
+
+
+@app.route("/run", methods=["POST"])
+def run():
+    body = request.get_json(force=True, silent=True) or {}
+    mosaic_url = body.get("mosaicUrl")
+    params = body.get("params") or {}
+
+    if isinstance(params, str):
+        try:
+            params = json.loads(params)
+        except json.JSONDecodeError:
+            params = {}
+
+    if not isinstance(params, dict):
+        params = {}
+
+    if not mosaic_url:
+        return jsonify({"error": "mosaicUrl is required"}), 400
+
+    # 与“指数分析”一致的默认表达式
+    expression = params.get("expression") or "2*b2-b1-b3"
+    color = params.get("color") or "rdylgn"
+    pixel_method = params.get("pixel_method") or "first"
+
+    tile_template = (
+        "/tiler/mosaic/analysis/{z}/{x}/{y}.png?"
+        f"mosaic_url={quote_plus(mosaic_url)}"
+        f"&expression={quote_plus(expression)}"
+        f"&pixel_method={quote_plus(pixel_method)}"
+        f"&color={quote_plus(color)}"
+    )
+    return jsonify({"tileTemplate": tile_template})
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=20080, debug=False)
+`
+
+const cubeToolTemplateCode = `"""
+Cube 级 UDF 模板（Flask + HTTP 瓦片）
+-------------------------------------
+该模板演示如何读取 Cube JSON、聚合场景信息并返回 tileTemplate。
+
+请求示例：
+{
+    "cube": {
+        "cubeId": "row-col-res",
+        "cacheKey": "cube-cache-key",
+        "dimensionScenes": [{"scenes": ["scene-a", "scene-b"]}],
+        "dimensionSensors": ["sentinel-2"],
+        "dimensionDates": ["2023-07-01", "2023-07-15"]
+    },
+    "params": {
+        "expression": "2*b5-b4-b3",
+        "color": "rdylgn",
+        "pixel_method": "first"
+    }
+}
+"""
+
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+from urllib.parse import quote_plus
+from typing import Any, Dict, List
+import json
+
+app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})
+
+
+def ensure_dict(value: Any) -> Dict[str, Any]:
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+            if isinstance(parsed, dict):
+                return parsed
+        except json.JSONDecodeError:
+            return {}
+    return value if isinstance(value, dict) else {}
+
+
+def ensure_list(value: Any) -> List[Any]:
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+            if isinstance(parsed, list):
+                return parsed
+        except json.JSONDecodeError:
+            return []
+    return value if isinstance(value, list) else []
+
+
+def summarize_cube(cube: Dict[str, Any]) -> Dict[str, Any]:
+    scenes = ensure_list(cube.get("dimensionScenes"))
+    sensors = ensure_list(cube.get("dimensionSensors"))
+    dates = ensure_list(cube.get("dimensionDates"))
+
+    total_scenes = 0
+    for bucket in scenes:
+        if isinstance(bucket, dict):
+            total_scenes += len(ensure_list(bucket.get("scenes")))
+
+    summary = {
+        "cubeId": cube.get("cubeId"),
+        "cacheKey": cube.get("cacheKey"),
+        "sceneCount": total_scenes,
+        "sensorTypes": sensors,
+    }
+    if dates:
+        summary["timeRange"] = dates[0] if len(dates) == 1 else f"{dates[0]} ~ {dates[-1]}"
+    return summary
+
+
+@app.route("/run", methods=["POST"])
+def run():
+    body = request.get_json(force=True, silent=True) or {}
+    cube = ensure_dict(body.get("cube"))
+    params = ensure_dict(body.get("params"))
+
+    if not cube:
+        return jsonify({"error": "cube context is required"}), 400
+
+    cache_key = cube.get("cacheKey") or cube.get("cubeId") or "cube"
+
+    expression = params.get("expression") or "2*b5-b4-b3"
+    color = params.get("color") or "rdylgn"
+    pixel_method = params.get("pixel_method") or "first"
+
+    tile_template = (
+        "/cube/analysis/{z}/{x}/{y}.png?"
+        f"cacheKey={quote_plus(cache_key)}"
+        f"&expression={quote_plus(expression)}"
+        f"&pixel_method={quote_plus(pixel_method)}"
+        f"&color={quote_plus(color)}"
+    )
+
+    return jsonify(
+        {
+            "tileTemplate": tile_template,
+            "summary": summarize_cube(cube),
+            "echoParams": params,
+        }
+    )
+
+
+def main():
+    app.run(host="0.0.0.0", port=20080, debug=False)
+
+
+if __name__ == "__main__":
+    main()
+`
+
+const cubePlaceholderTemplateCode = `# Cube级分析工具模板（占位保留）
+# ---------------------------------
+# 若暂不需要 UDF 模板，可保留此占位文件。
+
+
+def main():
+    print("Cube 级分析工具模板占位 - 待实现")
+
+
+if __name__ == "__main__":
+    main()
+`
+
+const replaceEditorWithTemplate = async (template: string, options: TemplateApplyOptions = {}) => {
+    const trimmed = (code.value || '').trim()
+    const requireConfirm = !options.force && trimmed && trimmed !== CODE_LOAD_ERROR_MESSAGE && trimmed !== template.trim()
+    if (requireConfirm) {
+        try {
+            await ElMessageBox.confirm('将覆盖当前代码，是否继续？', '提示', {
+                confirmButtonText: '覆盖',
+                cancelButtonText: '取消',
+                type: 'warning',
+            })
+        } catch (error) {
+            return false
+        }
+    }
+    code.value = template
+    return true
+}
+
+const applySceneToolTemplate = async (options: TemplateApplyOptions = {}) => {
+    const applied = await replaceEditorWithTemplate(sceneToolTemplateCode, options)
+    if (!applied) return false
+
+    toolWizardForm.toolName = toolWizardForm.toolName || '景级 UDF 分析模板'
+    toolWizardForm.description = toolWizardForm.description || '基于景级前序数据的 Flask 服务，返回分析瓦片'
+    toolWizardForm.category = toolWizardForm.category || '图像'
+    if (!Array.isArray(toolWizardForm.tags) || toolWizardForm.tags.length === 0) {
+        toolWizardForm.tags = ['scene', 'tile']
+    }
+    // 与“指数分析”一致，直接在前端拼接表达式瓦片
+    toolWizardForm.invokeType = 'tiler-expression'
+    toolWizardForm.resultType = 'tile'
+    toolWizardForm.serviceMethod = 'POST'
+    toolWizardForm.payloadTemplate = defaultPayloadTemplate
+    toolWizardForm.responsePath = ''
+    toolWizardForm.params.splice(0, toolWizardForm.params.length)
+    toolWizardForm.params.push(
+        // 与“指数分析”一致的默认表达式
+        { label: '表达式', key: 'expression', type: 'string', required: true, placeholder: '例如 2*b2-b1-b3', source: '', optionsText: '', default: '2*b2-b1-b3' },
+        { label: '色带', key: 'color', type: 'string', required: false, placeholder: '默认 rdylgn', source: '', optionsText: '', default: 'rdylgn' },
+        { label: '像元方法', key: 'pixel_method', type: 'string', required: false, placeholder: '默认 first', source: '', optionsText: '', default: 'first' },
+    )
+    if (!options.silent) {
+        message.success('已填充景级 UDF 模板，可直接保存或发布')
+    }
+    saveWizardDraft()
+    setTemplateBootstrapFlag()
+    return true
+}
+
+const applyCubeUdfTemplate = async (options: TemplateApplyOptions = {}) => {
+    const applied = await replaceEditorWithTemplate(cubeToolTemplateCode, options)
+    if (!applied) return false
+
+    toolWizardForm.toolName = toolWizardForm.toolName || 'Cube 级 UDF 模板'
+    toolWizardForm.description =
+        toolWizardForm.description ||
+        'Cube 上下文 + Flask 示例：解析立方体并返回 HTTP 瓦片'
+    toolWizardForm.category = toolWizardForm.category || 'Cube分析'
+    if (!Array.isArray(toolWizardForm.tags) || toolWizardForm.tags.length === 0) {
+        toolWizardForm.tags = ['cube', 'tile']
+    }
+    toolWizardForm.invokeType = 'http+tile'
+    toolWizardForm.resultType = 'tile'
+    toolWizardForm.serviceMethod = 'POST'
+    toolWizardForm.payloadTemplate = cubePayloadTemplate
+    toolWizardForm.responsePath = ''
+    toolWizardForm.params.splice(0, toolWizardForm.params.length)
+    toolWizardForm.params.push(
+        { label: '表达式', key: 'expression', type: 'string', required: true, placeholder: '例如 2*b5-b4-b3', source: '', optionsText: '', default: '2*b5-b4-b3' },
+        { label: '色带', key: 'color', type: 'string', required: false, placeholder: '默认 rdylgn', source: '', optionsText: '', default: 'rdylgn' },
+        { label: '像元方法', key: 'pixel_method', type: 'string', required: false, placeholder: '默认 first', source: '', optionsText: '', default: 'first' },
+    )
+    if (!options.silent) {
+        message.success('已填充 Cube 级 UDF 模板，可保存或发布')
+    }
+    saveWizardDraft()
+    setTemplateBootstrapFlag()
+    return true
+}
+
+const applyCubePlaceholderTemplate = async (options: TemplateApplyOptions = {}) => {
+    const applied = await replaceEditorWithTemplate(cubePlaceholderTemplateCode, options)
+    if (!applied) return false
+    if (!options.silent) {
+        message.info('Cube级占位模板仅做兼容，推荐选择 Cube 级 UDF 模板')
+    }
+    setTemplateBootstrapFlag()
+    return true
+}
+
+const applyDefaultTemplateIfNeeded = async () => {
+    if (!isToolProject.value || getTemplateBootstrapFlag()) {
+        return
+    }
+    const trimmed = (code.value || '').trim()
+    if (trimmed && trimmed !== CODE_LOAD_ERROR_MESSAGE) {
+        setTemplateBootstrapFlag()
+        return
+    }
+    let applied = false
+    if (projectLevel.value === 'cube') {
+        applied = await applyCubeUdfTemplate({ force: true, silent: true })
+    } else {
+        applied = await applySceneToolTemplate({ force: true, silent: true })
+    }
+    if (applied) {
+        setTemplateBootstrapFlag()
+    }
+}
+
 // 一键填充工具发布模板（无参函数模板）
 const handleTemplateCommand = async (cmd: string) => {
-    if (cmd === 'expr') {
+    if (cmd === 'scene_udf') {
+        await applySceneToolTemplate()
+    } else if (cmd === 'cube_udf') {
+        await applyCubeUdfTemplate()
+    } else if (cmd === 'cube_placeholder') {
+        await applyCubePlaceholderTemplate()
+    } else if (cmd === 'expr') {
         await applyExpressionTemplate()
     } else if (cmd === 'flask') {
         await applyFlaskTemplate()
@@ -720,7 +1106,7 @@ const applyExpressionTemplate = async () => {
     // 可选：在编辑器中放入说明性注释，提示该模板无需后端代码
     const stub = `# 表达式工具模板（无需服务）\n# 说明：此工具直接在发布向导中配置表达式，\n# 前端会拼接 Titiler 的分析瓦片 URL 并叠加地图，\n# 无需在此处编写后端代码。\n#\n# 快速开始：点击“发布为工具”→ 选择“表达式（无需服务）”，\n# 按需修改表达式/色带/像元方法并发布即可。\n`
     const current = (code.value || '').trim()
-    if (!current || current === '代码读取失败，请检查容器运行情况或联系管理员') {
+    if (!current || current === CODE_LOAD_ERROR_MESSAGE) {
         code.value = stub
     } else {
         try {
@@ -881,7 +1267,7 @@ if __name__ == "__main__":
 `
     // 如果已有代码，提示是否覆盖
     const current = (code.value || '').trim()
-    if (current && current !== '代码读取失败，请检查容器运行情况或联系管理员') {
+    if (current && current !== CODE_LOAD_ERROR_MESSAGE) {
         try {
             await ElMessageBox.confirm('将覆盖当前代码，是否继续？', '提示', {
                 confirmButtonText: '覆盖',
@@ -938,7 +1324,7 @@ const keyboardSaveCode = (event: KeyboardEvent) => {
 
 // 定义代码内容
 
-const code = ref(`代码读取失败，请检查容器运行情况或联系管理员`)
+const code = ref<string>(CODE_LOAD_ERROR_MESSAGE)
 
 // CodeMirror 配置项
 const extensions = [python()] // 使用正确的 light 主题
@@ -1025,7 +1411,7 @@ const checkServiceStatus = async () => {
     }
 }
 
-const publishServiceFunction = async (preferredPort?: number) => {
+const publishServiceFunction = async (preferredPort?: number): Promise<boolean> => {
     servicePublishLoading.value = true
     try {
         // 适配 /tools/publish（CommonResultVO 包装）
@@ -1070,8 +1456,10 @@ const publishServiceFunction = async (preferredPort?: number) => {
         message.success(url ? `服务发布成功！访问地址: ${url}` : '服务发布成功！')
         emit('addMessage', url ? `Service running at: ${url}` : 'Service running')
         emit('servicePublished')
+        return true
     } catch (error) {
         message.error('服务发布失败: ' + (error as Error).message)
+        return false
     } finally {
         servicePublishLoading.value = false
     }
@@ -1099,6 +1487,12 @@ const unpublishServiceFunction = async () => {
 }
 
 const startServiceOnlyForWizard = async () => {
+    // 若检测到已运行，则不重复发布，避免 400 错误弹窗
+    if (serviceStatus.value.running) {
+        message.info('服务已运行')
+        ensureEndpointFromService()
+        return
+    }
     const port = parseInt(toolWizardForm.servicePort, 10)
     const preferredPort = Number.isNaN(port) ? undefined : port
     await publishServiceFunction(preferredPort)
@@ -1116,8 +1510,19 @@ const ensureEndpointFromService = () => {
 const startServiceAndRegister = async () => {
     const port = parseInt(toolWizardForm.servicePort, 10)
     const preferredPort = Number.isNaN(port) ? undefined : port
-    await publishServiceFunction(preferredPort)
-    ensureEndpointFromService()
+
+    // 仅当需要 HTTP 服务时才尝试启动服务；若已在运行则跳过发布
+    if (toolWizardForm.invokeType !== 'tiler-expression') {
+        if (!serviceStatus.value.running) {
+            const ok = await publishServiceFunction(preferredPort)
+            if (!ok) {
+                // 服务发布失败则中止注册，避免“失败 + 成功”双提示
+                return
+            }
+        }
+        ensureEndpointFromService()
+    }
+
     await publishDynamicTool()
     toolWizardVisible.value = false
 }
@@ -1163,6 +1568,15 @@ const buildParamsSchema = (): DynamicToolParamSchema[] => {
             }
             if (param.source) {
                 schema.source = param.source
+            }
+            if (param.default !== undefined && param.default !== null) {
+                if (typeof param.default === 'string') {
+                    if (param.default.trim()) {
+                        schema.default = param.default
+                    }
+                } else {
+                    schema.default = param.default
+                }
             }
             if (param.type === 'select' && !param.source) {
                 const options = parseSelectOptions(param.optionsText)
@@ -1277,6 +1691,7 @@ const publishDynamicTool = async () => {
         paramsSchema,
         invoke: invokeConfig,
         resultType: toolWizardForm.resultType,
+        level: projectLevel.value,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
     }
@@ -1313,6 +1728,26 @@ onMounted(async () => {
         console.error('加载代码失败:', error)
         message.error('加载代码失败，请检查后端服务是否运行')
     }
+
+    // 如果从 tools.vue 的“创建工具”入口进入，带有 bootstrap 参数，则按需填充模板（仅首次）
+    try {
+        const bootstrap = String(route.query?.bootstrap || '')
+        if (isToolProject.value && !getTemplateBootstrapFlag() && bootstrap) {
+            let bootstrapped = false
+            if (bootstrap === 'scene_udf') {
+                bootstrapped = await applySceneToolTemplate({ force: true, silent: true })
+            } else if (bootstrap === 'cube_udf') {
+                bootstrapped = await applyCubeUdfTemplate({ force: true, silent: true })
+            } else if (bootstrap === 'cube_placeholder') {
+                bootstrapped = await applyCubePlaceholderTemplate({ force: true, silent: true })
+            }
+            if (bootstrapped) {
+                setTemplateBootstrapFlag()
+            }
+        }
+    } catch {}
+
+    await applyDefaultTemplateIfNeeded()
 
     try {
         const result = await projectOperating({

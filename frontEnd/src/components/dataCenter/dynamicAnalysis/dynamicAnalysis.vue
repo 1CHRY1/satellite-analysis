@@ -28,7 +28,7 @@
                         <div class="section-icon absolute right-12 cursor-pointer" @click="clearImages">
                             <a-tooltip>
                                 <template #title>{{ t('datapage.analysis.section2.clear')
-                                    }}</template>
+                                }}</template>
                                 <Trash2Icon :size="20" />
                             </a-tooltip>
                         </div>
@@ -197,7 +197,7 @@
 
                                 <div class="section-content" v-show="isSceneAnalysisExpand">
                                     <div class="stats"
-                                        style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%); margin-top: 0%;">
+                                        style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%); margin-top: -2%;">
                                         <div class="stats-header">
                                             <div class="config-label relative">
                                                 <BoltIcon :size="16" class="config-icon" />
@@ -236,9 +236,9 @@
                                                                         :key="item.caseId" class="p-4 mb-3 border border-gray-200 rounded-md
                                                             cursor-pointer transition-all duration-300
                                                             hover:bg-gray-50 hover:shadow-md"
-                                                                        @click="showResult(item.caseId, item.regionId)">
+                                                                        @click="getAndShowResult(item.caseId, item.regionId)">
                                                                         <h3 class="mt-0 text-blue-500">{{ item.address
-                                                                            }}无云一版图</h3>
+                                                                        }}无云一版图</h3>
                                                                         <p class="my-1 text-blue-300">分辨率: {{
                                                                             item.resolution }}km
                                                                         </p>
@@ -246,7 +246,7 @@
                                                                             formatTimeToText(item.createTime) }}</p>
                                                                         <p class="my-1 text-blue-300">数据集: {{
                                                                             item.dataSet
-                                                                            }}</p>
+                                                                        }}</p>
                                                                     </div>
                                                                 </div>
                                                                 <div v-else>
@@ -257,9 +257,143 @@
                                                             </el-dialog>
                                                         </div>
                                                     </div>
+
+                                                    <div class="config-item mt-4"
+                                                        style="background: radial-gradient(50% 337.6% at 50% 50%, #05375d 0%, #07243a 97%);">
+                                                        <div class="config-label relative pr-16">
+                                                            <CommandIcon :size="16" class="config-icon" />
+                                                            <span>发布的工具</span>
+                                                            <span
+                                                                class="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-400">{{
+                                                                    publishedSceneTools.length }} 个可用
+                                                            </span>
+                                                        </div>
+                                                        <div class="config-control flex-col !items-start w-full">
+                                                            <div v-if="publishedSceneTools.length"
+                                                                class="flex w-full flex-col gap-3">
+                                                                <div v-for="tool in publishedSceneTools" :key="tool.id"
+                                                                    class="w-full rounded-xl border border-[#1c2a3f] bg-[#0b1221]/80 px-4 py-3 shadow-inner transition-colors duration-200 hover:border-[#38bdf8] cursor-pointer"
+                                                                    @click="handleInvokeSceneTool(tool.id)">
+                                                                    <div class="flex items-start justify-between gap-3">
+                                                                        <div class="min-w-0">
+                                                                            <p
+                                                                                class="m-0 text-sm font-medium text-gray-100 truncate">
+                                                                                {{ tool.name }}</p>
+                                                                            <span class="text-xs text-gray-400">{{
+                                                                                tool.category
+                                                                                ||
+                                                                                '未分类' }}</span>
+                                                                        </div>
+                                                                        <a-button size="small" type="primary" ghost
+                                                                            @click.stop="handleInvokeSceneTool(tool.id)">
+                                                                            调用
+                                                                        </a-button>
+                                                                    </div>
+                                                                    <p
+                                                                        class="mt-2 text-xs text-gray-300 leading-relaxed min-h-[32px]">
+                                                                        {{ tool.description || '暂无描述，点击调用以查看工具详情。'
+                                                                        }}
+                                                                    </p>
+                                                                    <div
+                                                                        class="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-gray-400">
+                                                                        <template v-if="tool.tags && tool.tags.length">
+                                                                            <span v-for="tag in tool.tags" :key="tag"
+                                                                                class="rounded-full border border-[#1e2d44] bg-[#0f172a] px-2 py-0.5 text-[#38bdf8]">
+                                                                                {{ tag }}
+                                                                            </span>
+                                                                        </template>
+                                                                        <span class="ml-auto text-[10px] text-gray-500"
+                                                                            v-if="tool.updatedAt || tool.createdAt">
+                                                                            更新 {{ formatTimeToText(tool.updatedAt ||
+                                                                                tool.createdAt) }}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div v-else
+                                                                class="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[#1f2e44] bg-[#0b1221]/40 px-6 py-8 text-gray-400">
+                                                                <p class="m-0 text-sm font-medium">暂无发布的工具</p>
+                                                                <p class="m-0 text-xs text-gray-500">在在线编程中发布后即可在此调用。
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <span>TODO: UDF景级分析工具列表与调用</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="section-content" v-show="isSceneAnalysisExpand">
+                                    <div class="stats"
+                                        style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%); margin-top: -5%;">
+                                        <div class="stats-header">
+                                            <div class="config-label relative">
+                                                <BoltIcon :size="16" class="config-icon" />
+                                                <span class="text-sm">平台内置分析工具</span>
+                                            </div>
+                                            <div class="absolute right-2 cursor-pointer">
+                                                <ChevronDown v-if="isDefaultToolsExpand" :size="22"
+                                                    @click="isDefaultToolsExpand = false" />
+                                                <ChevronUp v-else @click="isDefaultToolsExpand = true" :size="22" />
+                                            </div>
+                                        </div>
+
+                                        <div class="stats-content" v-show="isDefaultToolsExpand">
+                                            <div class="config-control relative">
+                                                <section>
+                                                    <!-- 空间位置配置 -->
+                                                    <div class="config-item"
+                                                        style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
+                                                        <div class="config-label relative">
+                                                            <MapIcon :size="16" class="config-icon" />
+                                                            <span>{{ t('datapage.analysis.section1.area') }}</span>
+                                                        </div>
+                                                        <div class="config-control justify-center">
+                                                            <RegionSelects v-model="region" class="flex gap-2"
+                                                                select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
+                                                        </div>
+                                                    </div>
+                                                    <div class="mt-4 w-full mr-4">
+                                                        <div v-for="category in builtinToolCategories"
+                                                            :key="category.name" class="mb-4">
+                                                            <div class="flex items-center cursor-pointer px-2 py-1 hover:bg-gray-800 rounded"
+                                                                @click="toggleCategory(category.name)">
+                                                                <ChevronRightIcon :size="16"
+                                                                    class="mr-2 transition-transform duration-200"
+                                                                    :class="{ 'transform rotate-90': expandedCategories.includes(category.name) }" />
+                                                                <span class="text-gray-300 font-medium">{{ category.name
+                                                                    }}</span>
+                                                            </div>
+
+                                                            <div v-show="expandedCategories.includes(category.name) || searchQuery"
+                                                                class="ml-6 mt-2 grid grid-cols-2 gap-2">
+                                                                <div v-for="tool in category.tools" :key="tool.value"
+                                                                    @click="selectedTask = tool.value" :class="{
+                                                                        'bg-[#1e3a8a] text-white': selectedTask === tool.value,
+                                                                        'bg-[#0d1526] text-gray-300 hover:bg-[#1e293b]': selectedTask !== tool.value && !tool.disabled,
+                                                                        'opacity-50 cursor-not-allowed': tool.disabled,
+                                                                        'cursor-pointer': !tool.disabled
+                                                                    }"
+                                                                    class="px-3 py-1 rounded-lg transition-colors w-full text-left flex items-center justify-between"
+                                                                    :disabled="tool.disabled">
+
+                                                                    <a-tooltip :title="tool.label"
+                                                                        class="flex-grow min-w-0">
+                                                                        <span class="truncate block text-sm">{{
+                                                                            tool.label
+                                                                            }}</span>
+                                                                    </a-tooltip>
+
+                                                                    <CircleX v-if="tool.value.startsWith('dynamic:')"
+                                                                        :size="16"
+                                                                        class="text-gray-400 hover:text-gray-300 flex-shrink-0 ml-1"
+                                                                        @click.stop="handleRemoveDynamicTool(tool.value)" />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </section>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -359,10 +493,67 @@
                                                 </a-list>
                                             </div>
                                         </div>
+                                        <!-- 发布的工具（与上方样式一致） -->
+                                        <div class="config-item mt-4"
+                                            style="background: radial-gradient(50% 337.6% at 50% 50%, #05375d 0%, #07243a 97%);">
+                                            <div class="config-label relative pr-16">
+                                                <CommandIcon :size="16" class="config-icon" />
+                                                <span>发布的工具</span>
+                                                <span
+                                                    class="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-400">{{
+                                                        publishedCubeTools.length }} 个可用
+                                                </span>
+                                            </div>
+                                            <div class="config-control flex-col !items-start w-full">
+                                                <div v-if="publishedCubeTools.length"
+                                                    class="flex w-full flex-col gap-3">
+                                                    <div v-for="tool in publishedCubeTools" :key="tool.id" :class="[
+                                                        'w-full rounded-xl border border-[#1c2a3f] bg-[#0b1221]/80 px-4 py-3 shadow-inner transition-colors duration-200 hover:border-[#38bdf8] cursor-pointer',
+                                                        { 'border-[#38bdf8] bg-[#14243f]': activeCubeToolId === tool.id }
+                                                    ]" @click="handleInvokeCubeTool(tool.id)">
+                                                        <div class="flex items-start justify-between gap-3">
+                                                            <div class="min-w-0">
+                                                                <p
+                                                                    class="m-0 text-sm font-medium text-gray-100 truncate">
+                                                                    {{ tool.name }}</p>
+                                                                <span class="text-xs text-gray-400">{{ tool.category ||
+                                                                    '未分类'
+                                                                    }}</span>
+                                                            </div>
+                                                            <a-button size="small" type="primary" ghost
+                                                                @click.stop="handleInvokeCubeTool(tool.id)">调用</a-button>
+                                                        </div>
+                                                        <p
+                                                            class="mt-2 text-xs text-gray-300 leading-relaxed min-h-[32px]">
+                                                            {{ tool.description || '暂无描述，点击调用以查看工具详情。' }}
+                                                        </p>
+                                                        <div
+                                                            class="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-gray-400">
+                                                            <template v-if="tool.tags && tool.tags.length">
+                                                                <span v-for="tag in tool.tags" :key="tag"
+                                                                    class="rounded-full border border-[#1e2d44] bg-[#0f172a] px-2 py-0.5 text-[#38bdf8]">
+                                                                    {{ tag }}
+                                                                </span>
+                                                            </template>
+                                                            <span class="ml-auto text-[10px] text-gray-500"
+                                                                v-if="tool.updatedAt || tool.createdAt">
+                                                                更新 {{ formatTimeToText(tool.updatedAt || tool.createdAt)
+                                                                }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div v-else
+                                                    class="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[#1f2e44] bg-[#0b1221]/40 px-6 py-8 text-gray-400">
+                                                    <p class="m-0 text-sm font-medium">暂无发布的 Cube 工具</p>
+                                                    <p class="m-0 text-xs text-gray-500">发布 Cube 级分析工具后即可在此调用。</p>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </section>
-                            <section>即将废弃的部分：
+                            <!-- <section>即将废弃的部分：
                                 分类工具列表
                                 <div class="mt-4 w-full mr-4">
                                     <div v-for="category in builtinToolCategories" :key="category.name" class="mb-4">
@@ -399,7 +590,7 @@
                                         </div>
                                     </div>
                                 </div>
-                            </section>
+                            </section> -->
                             <!--历史记录-->
                             <section class="panel-section" v-if="currentPanel === 'history'" key="history">
                                 <InvokeHistory @toggle="setCurrentPanel" />
@@ -432,7 +623,10 @@
                     <!-- <dv-border-box12 class=" !h-full"> -->
                     <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]"
                         style="width:426px; background-color: rgba(20, 20, 21, 0.6); border-radius: 3%;">
-                        <component v-if="currentTaskComponent" :is="currentTaskComponent" v-bind="currentTaskProps" />
+                        <DynamicCubeServicePanel v-if="activeCubeToolMeta" :tool-meta="activeCubeToolMeta"
+                            :selected-cubes="selectedCubeItems" />
+                        <component v-else-if="currentTaskComponent" :is="currentTaskComponent"
+                            v-bind="currentTaskProps" />
                         <ResultComponent @response="handleResultLoaded" />
                     </dv-border-box12>
                 </div>
@@ -482,13 +676,16 @@ import { useSettings } from './composables/useSettings'
 import { useI18n } from 'vue-i18n'
 import { useTool } from './composables/useTool'
 import MapComp from '@/components/feature/map/mapComp.vue'
-import { getCube } from '@/api/http/analytics-display'
+import DynamicCubeServicePanel from '../thematic/DynamicCubeServicePanel.vue'
 import { useCube } from './composables/useCube'
 import { useMethLib } from './composables/useMethLib'
 import { QuestionCircleOutlined } from '@ant-design/icons-vue'
 import InvokeHistory from './invokeHistory.vue'
 import { currentPanel, setCurrentPanel } from './shared'
 import { message } from 'ant-design-vue'
+import { useToolRegistryStore } from '@/store'
+import type { DynamicToolMeta } from '@/store/toolRegistry'
+import { RegionSelects } from 'v-region'
 
 const { t } = useI18n()
 const isPicking = ref(false)
@@ -532,7 +729,7 @@ const {
     getCaseList,
     activeTab,
     handleSelectTab,
-    showResult,
+    getAndShowResult,
     onResultSelected
 } = useViewHistoryModule();
 const completedCases = ref<any[]>([]); // 仅存储已完成的任务
@@ -554,6 +751,7 @@ const {
     // ------------------- 操作相关 -----------------------
     inputCacheKey, handleSelectCube, currentCacheKey, getCubeObj
 } = useCube()
+const selectedCubeItems = computed(() => cubeList.value.filter((item) => item.isSelect))
 
 /**
  * 设置section
@@ -573,12 +771,70 @@ const {
 /**
  * 原来的指数分析等工具（DEPRECATED）
  */
+const isDefaultToolsExpand = ref(false)
 // 自定义工具
 const { builtinToolCategories, expandedCategories, allToolCategories, selectedTask, isToolsExpand, currentTaskComponent,
     currentTaskProps,
     handleResultLoaded,
     handleRemoveDynamicTool,
-    toggleCategory } = useTool()
+    toggleCategory,
+    dynamicToolCategories } = useTool()
+
+const toolRegistryStore = useToolRegistryStore()
+const isSceneToolMeta = (tool: DynamicToolMeta) => (tool?.level ?? 'scene') === 'scene'
+const sortPublishedTools = (tools: DynamicToolMeta[]) => {
+    return [...tools].sort((a, b) => {
+        const aTime = new Date(a.updatedAt ?? a.createdAt ?? 0).getTime()
+        const bTime = new Date(b.updatedAt ?? b.createdAt ?? 0).getTime()
+        return bTime - aTime
+    })
+}
+const publishedSceneTools = computed(() => {
+    const sceneTools = toolRegistryStore.tools.filter((tool) => isSceneToolMeta(tool))
+    return sortPublishedTools(sceneTools)
+})
+const publishedCubeTools = computed(() => {
+    const cubeTools = toolRegistryStore.tools.filter((tool) => !isSceneToolMeta(tool))
+    return sortPublishedTools(cubeTools)
+})
+const activeCubeToolId = ref<string | null>(null)
+const activeCubeToolMeta = computed(() => {
+    if (!activeCubeToolId.value) return null
+    const meta = toolRegistryStore.getToolById(activeCubeToolId.value)
+    if (!meta || isSceneToolMeta(meta)) return null
+    return meta
+})
+
+const handleInvokeSceneTool = (toolId: string) => {
+    if (!toolId) return
+    selectedTask.value = `dynamic:${toolId}`
+    showPanel.value = true
+    activeCubeToolId.value = null
+}
+
+const handleInvokeCubeTool = (toolId: string) => {
+    if (!toolId) return
+    const toolMeta = toolRegistryStore.getToolById(toolId)
+    if (!toolMeta) {
+        message.error('未找到该 Cube 工具，请刷新列表')
+        return
+    }
+    if (isSceneToolMeta(toolMeta)) {
+        message.warning('该工具为景级工具，请从景级分析区域调用')
+        return
+    }
+    activeCubeToolId.value = toolId
+    showPanel.value = true
+}
+
+watch(
+    () => toolRegistryStore.tools.map((tool) => tool.id),
+    () => {
+        if (activeCubeToolId.value && !toolRegistryStore.getToolById(activeCubeToolId.value)) {
+            activeCubeToolId.value = null
+        }
+    },
+)
 
 /**
  * 通用方法

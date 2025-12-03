@@ -80,6 +80,27 @@
                             <option value="Python3_10" disabled>Python 3.10 ( 暂不支持 )</option>
                         </select>
 
+                        <!-- 工具级别 -->
+                        <label class="mt-3 mb-1 flex text-sm">
+                            <div style="color: red; margin-right: 4px">*</div>
+                            工具级别
+                        </label>
+                        <div class="flex flex-col gap-2 rounded bg-gray-800 p-3 text-sm text-gray-100">
+                            <label class="flex cursor-pointer items-center gap-2">
+                                <input v-model="newProject.level" type="radio" value="scene"
+                                    class="text-green-500 focus:ring-green-400" />
+                                <span>景级分析工具（前序数据）</span>
+                            </label>
+                            <label class="flex cursor-pointer items-center gap-2">
+                                <input v-model="newProject.level" type="radio" value="cube"
+                                    class="text-green-500 focus:ring-green-400" />
+                                <span>Cube级分析工具（联动立方体）</span>
+                            </label>
+                            <p class="m-0 text-xs text-gray-300">
+                                Cube级工具与 Cube 面板/时序立方体联动，发布后可在动态分析 Cube 分区调用。
+                            </p>
+                        </div>
+
                         <!-- 描述 -->
                         <label class="mt-3 mb-1 flex text-sm">
                             <div style="color: red; margin-right: 4px">*</div>
@@ -168,6 +189,7 @@ const createLoading = ref(false)
 const newProject = ref({
   projectName: '',
   environment: 'Python3_9',
+  level: 'scene',
   description: '',
 })
 
@@ -215,6 +237,7 @@ const create = async () => {
       ...newProject.value,
       userId: userId.value,
       tool: true,
+      level: newProject.value.level || 'scene',
     }
     const createRes: any = await createProject(createBody)
     // 记录创建行为
@@ -229,7 +252,12 @@ const create = async () => {
         actionType: '创建',
       })
     } catch {}
-    router.push(`/project/${createRes.projectId}`)
+    // 带上引导参数，进入编辑器后自动套用“景级UDF”模板（与指数分析一致）
+    const bootstrap = newProject.value.level === 'cube' ? 'cube_udf' : 'scene_udf'
+    router.push({
+      path: `/project/${createRes.projectId}`,
+      query: { bootstrap }
+    })
     ElMessage.success(t('toolpage.message.success'))
     createToolView.value = false
   } catch (e) {

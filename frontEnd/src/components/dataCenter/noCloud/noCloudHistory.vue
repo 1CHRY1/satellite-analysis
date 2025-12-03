@@ -3,13 +3,13 @@
     <div class="section-header" ref="sectionHeader">
         <div class="section-icon cursor-pointer">
             <a-tooltip>
-                <template #title>{{t('datapage.history.back')}}</template>
-                <ArrowLeft :size="18" @click="$emit('toggle', 'noCloud')"/>
+                <template #title>{{ t('datapage.history.back') }}</template>
+                <ArrowLeft :size="18" @click="$emit('toggle', 'noCloud')" />
             </a-tooltip>
         </div>
-        <h2 class="section-title">{{t('datapage.history.his_noclo')}}</h2>
+        <h2 class="section-title">{{ t('datapage.history.his_noclo') }}</h2>
     </div>
-    
+
     <!-- Content -->
     <div class="section-content">
         <!-- Content-1 Tab -->
@@ -23,15 +23,15 @@
                 <div class="flex items-center justify-between">
                     <div class="config-label relative">
                         <span v-if="pendingTaskList.length > 0 || isPending" class="flex items-center gap-2">
-                            <loadingIcon/>
+                            <loadingIcon />
                             {{ (pendingTaskList.length > 0 || isPending) ? t("datapage.history.wait") : '' }}
                         </span>
                         <span v-else class="flex items-center gap-2">
-                            <loadingIcon v-if="total > 0"/>
+                            <loadingIcon v-if="total > 0" />
                             {{ total > 0 ? `共 ${total} 个任务运行中` : t('datapage.history.no_task') }}
                         </span>
                     </div>
-                    <a-button class="a-button" @click="getCaseList">{{t('datapage.history.refresh')}}</a-button>
+                    <a-button class="a-button" @click="getCaseList">{{ t('datapage.history.refresh') }}</a-button>
                 </div>
             </div>
             <div v-for="item in caseList" class="config-item" :key="item.caseId">
@@ -48,7 +48,7 @@
                                         <Grid3x3 :size="12" />
                                     </div>
                                     <div class="result-info-content">
-                                        <div class="result-info-label">{{t('datapage.history.resolution')}}</div>
+                                        <div class="result-info-label">{{ t('datapage.history.resolution') }}</div>
                                         <div class="result-info-value">
                                             {{ item.resolution }}km
                                         </div>
@@ -59,7 +59,7 @@
                                         <CalendarIcon :size="12" />
                                     </div>
                                     <div class="result-info-content">
-                                        <div class="result-info-label">{{t('datapage.history.sta_time')}}</div>
+                                        <div class="result-info-label">{{ t('datapage.history.sta_time') }}</div>
                                         <div class="result-info-value">
                                             {{ formatTimeToText(item.createTime) }}
                                         </div>
@@ -70,18 +70,18 @@
                                         <DatabaseIcon :size="12" />
                                     </div>
                                     <div class="result-info-content">
-                                        <div class="result-info-label">{{t('datapage.history.data')}}</div>
+                                        <div class="result-info-label">{{ t('datapage.history.data') }}</div>
                                         <div>
                                             {{ item.dataSet }}
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            
+
                         </div>
                     </div>
                 </a-badge-ribbon>
-                
+
             </div>
             <a-empty v-if="total === 0" />
         </div>
@@ -91,7 +91,7 @@
             <div class="config-item">
                 <div class="config-label relative">
                     <ListFilter :size="22" class="config-icon" />
-                    <span>{{t('datapage.history.condition')}}</span>
+                    <span>{{ t('datapage.history.condition') }}</span>
                     <div class="absolute right-0 cursor-pointer">
                         <ChevronDown v-if="isExpand" :size="22" @click="isExpand = false" />
                         <ChevronUp v-else @click="isExpand = true" :size="22" />
@@ -102,12 +102,11 @@
                         <div class="result-info-container">
                             <div class="result-info-item">
                                 <div class="result-info-content">
-                                    <div class="result-info-label">{{t('datapage.history.create_time')}}</div>
+                                    <div class="result-info-label">{{ t('datapage.history.create_time') }}</div>
                                     <div class="result-info-value">
-                                        <select v-model="selectedTimeIndex"
-                                            class="custom-select" style="width: 8rem;">
-                                            <option v-for="(option, index) in timeOptionList" :key="option.label" :value="index"
-                                                class="custom-option">
+                                        <select v-model="selectedTimeIndex" class="custom-select" style="width: 8rem;">
+                                            <option v-for="(option, index) in timeOptionList" :key="option.label"
+                                                :value="index" class="custom-option">
                                                 {{ option.label }}
                                             </option>
                                         </select>
@@ -116,13 +115,14 @@
                             </div>
                             <div class="result-info-item">
                                 <div class="result-info-content">
-                                    <div class="result-info-label">{{t('datapage.history.resolution')}}</div>
+                                    <div class="result-info-label">{{ t('datapage.history.resolution') }}</div>
                                     <div class="result-info-value">
-                                        <select v-model="selectedResolution"
-                                            class="custom-select" style="width: 6rem;">
+                                        <select v-model="selectedResolution" class="custom-select" style="width: 6rem;">
                                             <option v-for="option in resolutionList" :key="option" :value="option"
                                                 class="custom-option">
-                                                {{ `${option === EMPTY_RESOLUTION ? t('datapage.history.choose') : option + 'km'}` }}
+                                                {{ `${option === EMPTY_RESOLUTION ? t('datapage.history.choose') :
+                                                    option +
+                                                    'km'}` }}
                                             </option>
                                         </select>
                                     </div>
@@ -130,10 +130,10 @@
                             </div>
                             <div class="result-info-item">
                                 <div class="result-info-content">
-                                    <div class="result-info-label">{{t('datapage.history.admin')}}</div>
+                                    <div class="result-info-label">{{ t('datapage.history.admin') }}</div>
                                     <div class="result-info-value">
-                                        <RegionSelects v-model="selectedRegion" :placeholder="t('datapage.history.admin_choose')"
-                                            class="flex gap-2"
+                                        <RegionSelects v-model="selectedRegion"
+                                            :placeholder="t('datapage.history.admin_choose')" class="flex gap-2"
                                             select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
                                     </div>
                                 </div>
@@ -145,21 +145,53 @@
                     <div class="flex justify-between gap-3 items-center w-full">
                         <span class="result-info-label">共找到 {{ total }} 条记录</span>
                         <div class="flex gap-3">
-                            <a-button type="primary" class="a-button-dark" @click="reset">{{t('datapage.history.clear')}}</a-button>  
-                            <a-button type="primary" class="a-button" @click="getCaseList">{{t('datapage.history.fliter')}}</a-button>
+                            <a-button type="primary" class="a-button-dark" @click="reset">{{ t('datapage.history.clear')
+                                }}</a-button>
+                            <a-button type="primary" class="a-button" @click="getCaseList">{{
+                                t('datapage.history.fliter')
+                                }}</a-button>
                         </div>
                     </div>
                 </div>
             </div>
+            <a-modal v-model:open="isModalVisible" title="选择可视化波段" @ok="showResult" @cancel="previewIndex = null">
+                <a-form :model="bandForm">
+                    <a-form-item label="R" :rules="[{ required: true, message: '红波段必选' }]">
+                        <a-select v-model:value="bandForm.band1">
+                            <a-select-option v-for="(band, index) in currentBandList" :key="index" :value="index">{{
+                                band
+                                }}</a-select-option>
+                        </a-select>
+                    </a-form-item>
+
+                    <a-form-item label="G" :rules="[{ required: true, message: '绿波段必选' }]">
+                        <a-select v-model:value="bandForm.band2">
+                            <a-select-option v-for="(band, index) in currentBandList" :key="index" :value="index">{{
+                                band
+                                }}</a-select-option>
+                        </a-select>
+                    </a-form-item>
+
+                    <a-form-item label="B" :rules="[{ required: true, message: '蓝波段必选' }]">
+                        <a-select v-model:value="bandForm.band3">
+                            <a-select-option v-for="(band, index) in currentBandList" :key="index" :value="index">{{
+                                band
+                                }}</a-select-option>
+                        </a-select>
+                    </a-form-item>
+                </a-form>
+            </a-modal>
             <div v-for="(item, index) in caseList" class="config-item" :key="item.caseId">
                 <div class="config-label relative">
                     <Image :size="16" class="config-icon" />
                     <span>{{ `${item.address}无云一版图` }}</span>
                     <div class="absolute right-0 cursor-pointer">
                         <a-tooltip>
-                            <template #title>{{t('datapage.history.preview')}}</template>
-                            <Eye v-if="previewList[index]" @click="unPreview" :size="16" class="cursor-pointer"/>
-                            <EyeOff v-else :size="16" @click="showResult(item.caseId, item.regionId)" class="cursor-pointer"/>
+                            <template #title>{{ t('datapage.history.preview') }}</template>
+                            <Eye v-if="previewList[index]" @click="unPreview" :size="16" class="cursor-pointer" />
+                            <EyeOff v-else :size="16"
+                                @click="showModal(item.caseId, item.regionId)"
+                                class="cursor-pointer" />
                         </a-tooltip>
                     </div>
                 </div>
@@ -171,7 +203,7 @@
                                     <Grid3x3 :size="12" />
                                 </div>
                                 <div class="result-info-content">
-                                    <div class="result-info-label">{{t('datapage.history.resolution')}}</div>
+                                    <div class="result-info-label">{{ t('datapage.history.resolution') }}</div>
                                     <div class="result-info-value">
                                         {{ item.resolution }}km
                                     </div>
@@ -182,7 +214,7 @@
                                     <CalendarIcon :size="12" />
                                 </div>
                                 <div class="result-info-content">
-                                    <div class="result-info-label">{{t('datapage.history.create_time')}}</div>
+                                    <div class="result-info-label">{{ t('datapage.history.create_time') }}</div>
                                     <div class="result-info-value">
                                         {{ formatTimeToText(item.createTime) }}
                                     </div>
@@ -193,7 +225,7 @@
                                     <DatabaseIcon :size="12" />
                                 </div>
                                 <div class="result-info-content">
-                                    <div class="result-info-label">{{t('datapage.history.data')}}</div>
+                                    <div class="result-info-label">{{ t('datapage.history.data') }}</div>
                                     <div>
                                         {{ item.dataSet }}
                                     </div>
@@ -218,40 +250,31 @@
         <!-- Content-4 Pagination -->
         <div class="config-container">
             <div class="flex h-[60px] justify-around">
-                <el-pagination v-if="total > 0" background layout="prev, pager, next" v-model:current-page="currentPage" :total="total"
-                    :page-size="pageSize" @current-change="getCaseList" @next-click="" @prev-click="">
+                <el-pagination v-if="total > 0" background layout="prev, pager, next" v-model:current-page="currentPage"
+                    :total="total" :page-size="pageSize" @current-change="getCaseList" @next-click="" @prev-click="">
                 </el-pagination>
             </div>
         </div>
     </div>
 
     <!-- 发布弹窗 -->
-    <a-modal 
-        v-model:visible="publishModalVisible" 
-        title="发布无云一版图"
-        :width="600"
-        @ok="handlePublishConfirm"
-        @cancel="handlePublishCancel"
-    >
+    <a-modal v-model:visible="publishModalVisible" title="发布无云一版图" :width="600" @ok="handlePublishConfirm"
+        @cancel="handlePublishCancel">
         <div class="space-y-4">
             <div class="flex items-center gap-2 p-3 bg-gray-50 rounded">
                 <Info :size="16" class="text-blue-500" />
                 <span>您正在发布: {{ currentItem?.address }}无云一版图</span>
             </div>
-            
+
             <a-form :label-col="{ span: 6 }" :wrapper-col="{ span: 18 }">
                 <a-form-item label="发布名称">
                     <a-input v-model:value="publishForm.name" placeholder="请输入发布名称" />
                 </a-form-item>
-                
+
                 <a-form-item label="发布描述">
-                    <a-textarea 
-                        v-model:value="publishForm.description" 
-                        placeholder="请输入发布描述"
-                        :rows="4"
-                    />
+                    <a-textarea v-model:value="publishForm.description" placeholder="请输入发布描述" :rows="4" />
                 </a-form-item>
-                
+
                 <a-form-item label="发布范围">
                     <a-radio-group v-model:value="publishForm.scope">
                         <a-radio value="public">公开</a-radio>
@@ -259,26 +282,17 @@
                         <a-radio value="private">私有</a-radio>
                     </a-radio-group>
                 </a-form-item>
-                
+
                 <a-form-item label="有效期">
-                    <a-date-picker 
-                        v-model:value="publishForm.expiryDate" 
-                        placeholder="选择有效期"
-                        style="width: 100%"
-                    />
+                    <a-date-picker v-model:value="publishForm.expiryDate" placeholder="选择有效期" style="width: 100%" />
                 </a-form-item>
             </a-form>
         </div>
     </a-modal>
-    
+
     <!-- tif文件下载弹窗 -->
-    <a-modal
-        v-model:visible="tifDownloadModalVisible"
-        title="请选择要下载的TIF文件"
-        :width="700"
-        :footer="null"
-        @cancel="handleTifDownloadCancel"
-    >
+    <a-modal v-model:visible="tifDownloadModalVisible" title="请选择要下载的TIF文件" :width="700" :footer="null"
+        @cancel="handleTifDownloadCancel">
         <div class="space-y-4">
             <div class="flex items-center gap-2 p-3 bg-blue-50 rounded">
                 <FileDown :size="16" class="text-green-500" />
@@ -286,16 +300,10 @@
             </div>
             <div class="max-h-96 overflow-y-auto">
                 <div class="space-y-2">
-                    <div
-                        v-for="(url, index) in tifFileUrls"
-                        :key="index"
-                        class="p-3 border border-gray-200 rounded hover:bg-gray-50"
-                    >
-                        <a
-                            :href="url"
-                            @click.prevent="handleFileDownload(url)"
-                            class="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-xs break-all"
-                        >
+                    <div v-for="(url, index) in tifFileUrls" :key="index"
+                        class="p-3 border border-gray-200 rounded hover:bg-gray-50">
+                        <a :href="url" @click.prevent="handleFileDownload(url)"
+                            class="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-xs break-all">
                             {{ url }}
                         </a>
                     </div>
@@ -307,10 +315,7 @@
             <a-button @click="handleTifDownloadCancel">
                 关闭
             </a-button>
-            <a-button
-                type="primary"
-                @click="() => tifFileUrls.forEach(url => handleFileDownload(url))"
-            >
+            <a-button type="primary" @click="() => tifFileUrls.forEach(url => handleFileDownload(url))">
                 全部下载
             </a-button>
         </div>
@@ -338,8 +343,8 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
 const { caseList, currentPage, sectionHeader, pageSize, total, historyClassTabs, activeTab, handleSelectTab,
-     selectedRegion, selectedTimeIndex, timeOptionList, selectedResolution, resolutionList, EMPTY_RESOLUTION, getCaseList,
-    isExpand, reset, previewList, previewIndex, showResult, unPreview } = useViewHistoryModule()
+    selectedRegion, selectedTimeIndex, timeOptionList, selectedResolution, resolutionList, EMPTY_RESOLUTION, getCaseList,
+    isExpand, reset, previewList, previewIndex, showResult, unPreview, currentCase, bandForm, isModalVisible, currentBandList, showModal } = useViewHistoryModule()
 const { pendingTaskList, startPolling, stopPolling } = useTaskPollModule()
 const taskStore = useTaskStore()
 // 检测由noCloud跳转至history面板时（setCurrentPanel），前端是否还在初始化任务（calNoCloud处理请求参数）
@@ -417,7 +422,7 @@ const handlePublishConfirm = async () => {
 
         // 从titilerEndPoint中提取IP和端口
         let titilerBaseUrl = titilerEndpoint
-        
+
         const publishUrl = `${titilerBaseUrl}/mosaic/mosaictile/{z}/{x}/{y}.png?mosaic_url=${minioEndpoint}/${mosaicJsonPath}`
 
         message.success('发布成功')
@@ -432,7 +437,7 @@ const handlePublishConfirm = async () => {
         }
 
         publishModalVisible.value = false
-        
+
         // 重置表单
         Object.assign(publishForm, {
             name: '',
@@ -455,7 +460,7 @@ const handlePublishCancel = () => {
 const handleDownload = async (item: any) => {
     try {
         currentItem.value = item
-        
+
         // 获取配置
         const conf = ezStore.get('conf')
         const minioEndpoint = conf['minioIpAndPort']
@@ -489,11 +494,11 @@ const handleDownload = async (item: any) => {
             return
         }
         const mosaicJSONData = await response.json()
-        
+
         // 获取MosaicJSON中的tiles
         const tiles = mosaicJSONData.tiles
         const allTifUrls: string[] = []
-        
+
         // 遍历tiles，提取所有tif文件的URL
         Object.keys(tiles).forEach(key => {
             const urlArray = tiles[key]
@@ -531,7 +536,7 @@ const handleFileDownload = (url: string) => {
     document.body.removeChild(link)
 }
 
-onMounted(() => { 
+onMounted(() => {
     bus.on('case-list-refresh', getCaseList)
     console.log('noCloudHistory mounted')
     getCaseList()
@@ -541,19 +546,19 @@ onMounted(() => {
 })
 
 watch(activeTab, (newVal) => {
-  if (newVal === 'RUNNING') {
-    startPolling();
-  } else {
-    stopPolling();
-  }
+    if (newVal === 'RUNNING') {
+        startPolling();
+    } else {
+        stopPolling();
+    }
 });
 
 watch(activeTab, (newVal) => {
-  if (newVal === 'RUNNING') {
-    startPolling();
-  } else {
-    stopPolling();
-  }
+    if (newVal === 'RUNNING') {
+        startPolling();
+    } else {
+        stopPolling();
+    }
 });
 
 onUnmounted(() => {
@@ -569,7 +574,7 @@ onUnmounted(() => {
 }
 
 /* 添加一些自定义样式 */
-.space-y-4 > * + * {
+.space-y-4>*+* {
     margin-top: 1rem;
 }
 
