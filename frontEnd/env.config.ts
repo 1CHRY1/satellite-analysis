@@ -14,7 +14,7 @@ export interface EnvConfig {
 export interface FixedConfig {
     basemap: string
     demtiles: string,
-    mvtbasemap: string
+    mvtbasemap: string,
 }
 
 export const ENV_CONFIG: Record<string, EnvConfig> = {

@@ -73,7 +73,7 @@
                                         <div class="stats-header">
                                             <div class="config-label relative">
                                                 <BoltIcon :size="16" class="config-icon" />
-                                                <span class="text-sm">通用分析工具</span>
+                                                <span class="text-sm">基础分析工具</span>
                                             </div>
                                             <div class="absolute right-2 cursor-pointer">
                                                 <ChevronDown v-if="isMethLibExpand" :size="22"
@@ -202,7 +202,7 @@
                                         <div class="stats-header">
                                             <div class="config-label relative">
                                                 <BoltIcon :size="16" class="config-icon" />
-                                                <span class="text-sm">UDF分析工具</span>
+                                                <span class="text-sm">高级自定义工具</span>
                                             </div>
                                             <div class="absolute right-2 cursor-pointer">
                                                 <ChevronDown v-if="isToolsExpand" :size="22"
@@ -699,7 +699,7 @@ const isToolbarOpen = ref(true)
 const isSceneAnalysisExpand = ref(true) // 控制景级分析折叠
 
 /**
- * 景级分析 - 通用分析工具（方法库）钩子
+ * 景级分析 - 基础分析工具（方法库）钩子
  */
 const {
     // ------------------- 显示相关 -----------------------
@@ -717,7 +717,7 @@ const {
 } = useMethLib()
 
 /**
- * 景级分析 - UDF分析工具 - 前序无云一版图数据
+ * 景级分析 - 高级自定义工具 - 前序无云一版图数据
  */
 // 前序无云一版图数据
 const historyComponent = ref(null)
