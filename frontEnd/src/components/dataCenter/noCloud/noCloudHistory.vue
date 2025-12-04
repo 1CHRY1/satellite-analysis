@@ -189,8 +189,7 @@
                         <a-tooltip>
                             <template #title>{{ t('datapage.history.preview') }}</template>
                             <Eye v-if="previewList[index]" @click="unPreview" :size="16" class="cursor-pointer" />
-                            <EyeOff v-else :size="16"
-                                @click="showModal(item.caseId, item.regionId)"
+                            <EyeOff v-else :size="16" @click="showModal(item.caseId, item.regionId)"
                                 class="cursor-pointer" />
                         </a-tooltip>
                     </div>
@@ -261,10 +260,10 @@
     <a-modal v-model:visible="publishModalVisible" title="发布无云一版图" :width="600" @ok="handlePublishConfirm"
         @cancel="handlePublishCancel">
         <div class="space-y-4">
-            <div class="flex items-center gap-2 p-3 bg-gray-50 rounded">
-                <Info :size="16" class="text-blue-500" />
-                <span>您正在发布: {{ currentItem?.address }}无云一版图</span>
-            </div>
+            
+            <a-alert :message="`您正在发布: ${ currentItem?.address }无云一版图`" type="info" show-icon
+                class="status-alert">
+            </a-alert>
 
             <a-form :label-col="{ span: 6 }" :wrapper-col="{ span: 18 }">
                 <a-form-item label="发布名称">
@@ -294,14 +293,14 @@
     <a-modal v-model:visible="tifDownloadModalVisible" title="请选择要下载的TIF文件" :width="700" :footer="null"
         @cancel="handleTifDownloadCancel">
         <div class="space-y-4">
-            <div class="flex items-center gap-2 p-3 bg-blue-50 rounded">
+            <div class="flex items-center gap-2 p-3 bg-[#111a2c] border border-[#15325b] rounded">
                 <FileDown :size="16" class="text-green-500" />
                 <span>找到{{ tifFileUrls.length }}个TIF文件</span>
             </div>
             <div class="max-h-96 overflow-y-auto">
                 <div class="space-y-2">
                     <div v-for="(url, index) in tifFileUrls" :key="index"
-                        class="p-3 border border-gray-200 rounded hover:bg-gray-50">
+                        class="p-3 border border-[#15325b] rounded">
                         <a :href="url" @click.prevent="handleFileDownload(url)"
                             class="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-xs break-all">
                             {{ url }}
