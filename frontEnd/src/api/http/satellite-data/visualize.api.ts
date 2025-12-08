@@ -283,6 +283,21 @@ export function getTerrainRGBUrl(terrainTifPath: string, gridsBoundary?: any, sc
     return fullUrl
 }
 
+export function get2DTerrainRGBUrl(terrainTifPath: string, gridsBoundary?: any, scale_factor?: number) {
+    // demo: /tiler/terrain/terrainRGB/{z}/{x}/{y}.png
+    let baseUrl = `${titilerEndPoint}/terrain/2dTerrainRGB/{z}/{x}/{y}.png`
+    const requestParams = new URLSearchParams()
+    requestParams.append('url', minioEndPoint + '/' + terrainTifPath)
+    if (gridsBoundary) {
+        requestParams.append('grids_boundary', JSON.stringify(gridsBoundary))
+    }
+    if (scale_factor) {
+        requestParams.append('scale_factor', scale_factor.toString())
+    }
+    const fullUrl = baseUrl + '?' + requestParams.toString()
+    return fullUrl
+}
+
 // 单波段彩色产品
 
 export function getOneBandColorUrl(oneBandColorTifPath: string, gridsBoundary?: any, nodata?: number) {

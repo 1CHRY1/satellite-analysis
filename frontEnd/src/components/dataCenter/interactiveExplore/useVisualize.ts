@@ -4,7 +4,7 @@ import * as InteractiveExploreMapOps from '@/util/map/operation/interactive-expl
 import { getRealtimeNoCloudUrl } from "@/api/http/satellite-data/visualize.api"
 import { useI18n } from "vue-i18n";
 import { ezStore } from "@/store"
-import { getDEMUrl, getNDVIOrSVRUrl, getSceneUrl, getVectorUrl, get3DUrl, getLargeSceneMosaicUrl, getLargeSceneUrl } from "@/api/http/interactive-explore/visualize.api";
+import { getDEMUrl, getNDVIOrSVRUrl, getSceneUrl, getVectorUrl, get3DUrl, getLargeSceneMosaicUrl, getLargeSceneUrl, get2DDEMUrl } from "@/api/http/interactive-explore/visualize.api";
 import type { Marker } from 'mapbox-gl'
 import type { POIInfo, ProductType } from '@/type/interactive-explore/filter'
 import type { AttrSymbology, VectorSymbology } from '@/type/interactive-explore/visualize'
@@ -396,8 +396,10 @@ export const useVisualize = () => {
         }
     }
     const handleShowDEM = async(themeName: string) => {
-        const url = await getDEMUrl(themeName, curGridsBoundary.value)
-        InteractiveExploreMapOps.map_addDEMLayer(url)
+        // const url = await getDEMUrl(themeName, curGridsBoundary.value)
+        // InteractiveExploreMapOps.map_addDEMLayer(url)
+        const url = await get2DDEMUrl(themeName, curGridsBoundary.value)
+        InteractiveExploreMapOps.map_add2DDEMLayer(url)        
     }
     const handleShowNDVIOrSVR = async(themeName: string) => {
         const url = await getNDVIOrSVRUrl(themeName, curGridsBoundary.value)
@@ -409,17 +411,17 @@ export const useVisualize = () => {
     }
     const destroyProduct = (dataType?: ProductType) => {
         if (dataType === undefined) {
-            destroyDEM()
+            destroy2DDEM()
             destroy3D()
             destroyNDVIOrSVR()
             // TODO: 删除其他产品图层
         } else {
             switch (dataType) {
                 case 'dem':
-                    destroyDEM()
+                    destroy2DDEM()
                     break
                 case 'dsm':
-                    destroyDEM()
+                    destroy2DDEM()
                     break
                 case 'ndvi':
                     destroyNDVIOrSVR()
@@ -435,6 +437,9 @@ export const useVisualize = () => {
     }
     const destroyDEM = () => {
         InteractiveExploreMapOps.map_destroyDEMLayer()
+    }
+    const destroy2DDEM = () => {
+        InteractiveExploreMapOps.map_destroy2DDEMLayer()
     }
     const destroyNDVIOrSVR = () => {
         InteractiveExploreMapOps.map_destroyNDVIOrSVRLayer()

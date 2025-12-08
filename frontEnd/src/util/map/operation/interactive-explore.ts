@@ -665,6 +665,38 @@ export function map_destroyDEMLayer() {
         m.getSource(srcId) && m.removeSource(srcId)
     })
 }
+export function map_add2DDEMLayer(url: string) {
+    const id = '2d-dem-layer'
+    const srcId = id + '-source'
+    mapManager.withMap((m) => {
+        m.getLayer(id) && m.removeLayer(id)
+        m.getSource(srcId) && m.removeSource(srcId)
+
+        m.addSource(srcId, {
+            type: 'raster',
+            tiles: [url],
+            tileSize: 256,
+        })
+
+        m.addLayer({
+            id,
+            type: 'raster',
+            metadata: {
+                'user-label': 'DEM图层', 
+            },
+            source: srcId,
+            paint: {},
+        })
+    })
+}
+export function map_destroy2DDEMLayer() {
+    const id = '2d-dem-layer'
+    const srcId = id + '-source'
+    mapManager.withMap((m) => {
+        m.getLayer(id) && m.removeLayer(id)
+        m.getSource(srcId) && m.removeSource(srcId)
+    })
+}
 export function map_addNDVIOrSVRLayer(url: string) {
     const id = 'ndvi-layer'
     const srcId = id + '-source'

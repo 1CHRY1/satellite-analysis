@@ -125,6 +125,22 @@ export const getDEMUrl = async (themeName: string, gridsBoundary: any) => {
 }
 
 /**
+ * 二维地形图Url
+ */
+export const get2DDEMUrl = async (themeName: string, gridsBoundary: any) => {
+    let baseUrl = `${titilerProxyEndPoint}/terrain/2dTerrainRGB/{z}/{x}/{y}.png`
+    const requestParams = new URLSearchParams()
+    const themeRes = await getThemeByThemeName(themeName)
+    const url = `${minioEndPoint}/${themeRes.data.images[0].bucket}/${themeRes.data.images[0].tifPath}`
+    requestParams.append('url', url)
+    requestParams.append('grids_boundary', JSON.stringify(gridsBoundary))
+    requestParams.append('scale_factor', '0.5')
+    const fullUrl = baseUrl + '?' + requestParams.toString()
+    console.log('DEM URL: ', fullUrl)
+    return fullUrl
+}
+
+/**
  * 单波段图Url - NDVI或SVR
  */
 export const getNDVIOrSVRUrl = async (themeName: string, gridsBoundary: any) => {
@@ -211,6 +227,17 @@ export const getGridVectorUrl = (grid: GridData, source_layer: string, type?: nu
  */
 export const getGridDEMUrl = (grid: GridData, bandPath: string) => {
     let baseUrl = `${titilerProxyEndPoint}/terrain/box/{z}/{x}/{y}.png`
+    const bbox = grid2bbox(grid.columnId, grid.rowId, grid.resolution)
+    const requestParams = new URLSearchParams()
+    requestParams.append('bbox', bbox.join(','))
+    requestParams.append('url', getMinIOUrl(bandPath))
+    requestParams.append('scale_factor', '0.5')
+    const fullUrl = baseUrl + '?' + requestParams.toString()
+    console.log('DEM URL: ', fullUrl)
+    return fullUrl
+}
+export const getGrid2DDEMUrl = (grid: GridData, bandPath: string) => {
+    let baseUrl = `${titilerProxyEndPoint}/terrain/2dBox/{z}/{x}/{y}.png`
     const bbox = grid2bbox(grid.columnId, grid.rowId, grid.resolution)
     const requestParams = new URLSearchParams()
     requestParams.append('bbox', bbox.join(','))

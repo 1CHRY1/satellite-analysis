@@ -5,6 +5,7 @@ import bus from "@/store/bus"
 import { GetSuperResolution } from '@/api/http/satellite-data/visualize.api'
 import { visualLoad, selectedSensor, selectedRBand, selectedGBand, selectedBBand } from "./useGridScene"
 import { message } from "ant-design-vue"
+import { currentScene } from '@/components/feature/map/popContent/shared.ts'
 
 export const useSuperResolution = () => {
 
@@ -28,7 +29,8 @@ export const useSuperResolution = () => {
         if (visualLoad.value){
             isSuperRes.value = !isSuperRes.value
 
-            if (!isSuperRes.value) {
+            // if (!isSuperRes.value) {
+            if (!isSuperRes.value || !currentScene.value) {
                 bus.emit('SuperResTimeLine', {
                     data: { R: '', G: '', B: '' },
                     gridInfo: {
@@ -41,37 +43,18 @@ export const useSuperResolution = () => {
             }
 
             try{
-                // handleRemove()
-                let currentScene
-                for (const category of gridData.value.sceneRes.category) {
-                    for (const scene of gridData.value.sceneRes.dataset[category].dataList) {
-                        if (scene.sensorName === selectedSensor.value) {
-                            currentScene = scene
-                        }
-                    }
-                }
-
-                const bands : band_path ={
-                    R:'',
-                    G:'',
-                    B:''
-                }
-                if (!currentScene) {
+                console.log(currentScene.value)
+                if (!currentScene.value) {
                     message.error('未找到对应的数据');
                     return;
                 }
 
-                currentScene.images.forEach((bandImg) => {
-                            if (bandImg.band == Number(selectedRBand.value)) {
-                                bands.R = bandImg.bucket + '/' + bandImg.tifPath
-                            }
-                            if (bandImg.band == Number(selectedGBand.value)) {
-                                bands.G = bandImg.bucket + '/' + bandImg.tifPath
-                            }
-                            if (bandImg.band == Number(selectedBBand.value)) {
-                                bands.B = bandImg.bucket + '/' + bandImg.tifPath
-                            }
-                        })
+                const bands : band_path ={
+                    R: currentScene.value.redPath,
+                    G: currentScene.value.greenPath,
+                    B: currentScene.value.bluePath
+                }
+
                 const result = await GetSuperResolution({
                     columnId: gridData.value.columnId,
                     rowId: gridData.value.rowId,
@@ -127,8 +110,8 @@ export const useSuperResolution = () => {
                             columnId: gridData.value.columnId,
                             resolution: gridData.value.resolution
                         },
-                        sceneId: currentScene.sceneId,
-                        time: currentScene.sceneTime
+                        sceneId: currentScene.value.sceneId,
+                        time: currentScene.value.time
                     }, true)
                     
                 } catch (error) {
