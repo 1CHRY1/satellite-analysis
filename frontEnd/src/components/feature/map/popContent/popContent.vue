@@ -428,7 +428,8 @@ const handleVisualize = () => {
  */
 const handleRemove = () => {
     previewIndex.value = null
-    GridExploreMapOps.map_destroyGridDEMLayer(gridData.value)
+    // GridExploreMapOps.map_destroyGridDEMLayer(gridData.value)
+    GridExploreMapOps.map_destroyGrid2DDEMLayer(gridData.value)
     GridExploreMapOps.map_destroyGridMVTLayerByGrid(gridData.value)
     // 清理矢量图层的事件监听器
     cleanupGridVectorEvents()
