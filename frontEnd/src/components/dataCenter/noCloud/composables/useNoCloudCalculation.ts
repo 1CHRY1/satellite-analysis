@@ -118,7 +118,7 @@ export const useNoCloudCalculation = (allScenes: any) => {
             return { matchedScenes, unmatchedScenes };
         }
 
-        // 根据勾选情况合并影像
+        // 根据勾选情况合并影像，有勾选优先使用的，排在前面
         let { matchedScenes, unmatchedScenes } = splitScenes(selectnation.value?.sceneId || [], demotic1mImages.value)
         let addedImages = [...matchedScenes, ...unmatchedScenes]
         if (dataReconstruction.value[0] === true) {
