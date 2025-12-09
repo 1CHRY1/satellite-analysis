@@ -289,7 +289,7 @@ export function map_addPolygonLayer(options: {
             type: 'fill',
             source: sourceId,
             metadata: {
-                'user-label': id + '填充图层', 
+                'user-label': '行政区' + '填充图层', 
             },
             paint: {
                 'fill-color': fillColor,
@@ -303,7 +303,7 @@ export function map_addPolygonLayer(options: {
             type: 'line',
             source: sourceId,
             metadata: {
-                'user-label': id + '线图层', 
+                'user-label': '行政区' + '线图层', 
             },
             paint: {
                 'line-color': lineColor,
@@ -608,7 +608,7 @@ export function map_destroyRGBImageTileLayer() {
     })
 }
 
-export function map_addMultiRGBImageTileLayer(params: RGBTileLayerParams[], cb?: () => void) {
+export function map_addMultiRGBImageTileLayer(params: RGBTileLayerParams[]) {
     const prefix = 'MultiRGB'
     let layeridStore: any = null
     if (!ezStore.get('MultiRGBLayerIds')) ezStore.set('MultiRGBLayerIds', [])
@@ -644,9 +644,6 @@ export function map_addMultiRGBImageTileLayer(params: RGBTileLayerParams[], cb?:
             })
         }
 
-        setTimeout(() => {
-            cb && cb()
-        }, 3000)
     })
 }
 export function map_destroyMultiRGBImageTileLayer() {

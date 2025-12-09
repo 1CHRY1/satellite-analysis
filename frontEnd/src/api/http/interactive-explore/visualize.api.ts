@@ -160,10 +160,10 @@ export const getNDVIOrSVRUrl = async (themeName: string, gridsBoundary: any) => 
  * 红绿立体影像Url
  */
 export const get3DUrl = async (themeName: string, gridsBoundary: any) => {
-    const stopLoading = message.loading('正在加载，请稍后...', 0)
-    setTimeout(() => {
-        stopLoading()
-    }, 5000)
+    
+    // setTimeout(() => {
+    //     stopLoading()
+    // }, 5000)
     let baseUrl = `${titilerProxyEndPoint}/rgb/tiles/{z}/{x}/{y}.png`
     const requestParams = new URLSearchParams()
     const themeRes = await getThemeByThemeName(themeName)

@@ -328,13 +328,12 @@ export const useVisualize = () => {
             message.warning(t('datapage.explore.message.filtererror_choose'))
             return
         }
-        const stopLoading = message.loading('正在加载，请稍后...', 0)
         destroyVector()
         previewVectorIndex.value = index
         handleShowVector(tableName, finalLandId.value)
-        setTimeout(() => {
-            stopLoading()
-        }, 5000)
+        // setTimeout(() => {
+        //     stopLoading()
+        // }, 5000)
     }
     const handleShowVector = async (source_layer: string, landId: string) => {
         const attrList = vectorSymbology.value[source_layer].checkedAttrs.map(item => {
@@ -369,12 +368,8 @@ export const useVisualize = () => {
      * 5. 交互探索 - 栅格专题可视化
      */
     const showProductResult = async (dataType: ProductType, themeName: string) => {
-        const stopLoading = message.loading('正在加载，请稍后...', 0)
         destroyProduct(dataType)
         handleShowProduct(themeName, dataType)
-        setTimeout(() => {
-            stopLoading()
-        }, 5000)
     }
     const handleShowProduct = (themeName: string, dataType: string) => {
         switch (dataType) {
@@ -412,6 +407,7 @@ export const useVisualize = () => {
     const destroyProduct = (dataType?: ProductType) => {
         if (dataType === undefined) {
             destroy2DDEM()
+
             destroy3D()
             destroyNDVIOrSVR()
             // TODO: 删除其他产品图层

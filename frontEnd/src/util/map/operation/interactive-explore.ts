@@ -4,7 +4,7 @@ import { Popup, GeoJSONSource, MapMouseEvent } from 'mapbox-gl'
 import bus from '@/store/bus'
 import { createApp, type ComponentInstance, ref, type Ref, reactive } from 'vue'
 import PopContent from '@/components/feature/map/popContent/popContent.vue'
-import Antd from 'ant-design-vue'
+import Antd, { message } from 'ant-design-vue'
 import type { Expression } from 'mapbox-gl'
 
 /**
@@ -68,7 +68,7 @@ export function map_addPolygonLayer(options: {
             type: 'fill',
             source: sourceId,
             metadata: {
-                'user-label': id + '填充图层', 
+                'user-label': '行政区' + '填充图层',
             },
             paint: {
                 'fill-color': fillColor,
@@ -82,7 +82,7 @@ export function map_addPolygonLayer(options: {
             type: 'line',
             source: sourceId,
             metadata: {
-                'user-label': id + '线图层', 
+                'user-label': '行政区' + '线图层',
             },
             paint: {
                 'line-color': lineColor,
@@ -189,7 +189,7 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
             type: 'line',
             source: srcId,
             metadata: {
-                'user-label': '格网边界图层', 
+                'user-label': '格网边界图层',
             },
             paint: {
                 'line-color': '#F00000',
@@ -203,7 +203,7 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
             type: 'fill',
             source: srcId,
             metadata: {
-                'user-label': '格网填充图层', 
+                'user-label': '格网填充图层',
             },
             paint: {
                 'fill-color': '#00FFFF',
@@ -218,7 +218,7 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
             type: 'fill',
             source: srcId,
             metadata: {
-                'user-label': '格网高亮图层', 
+                'user-label': '格网高亮图层',
             },
             paint: {
                 // 'fill-color': '#FF9900',
@@ -300,7 +300,7 @@ export function map_addLargeSceneLayer(url: string) {
             type: 'raster',
             source: srcId,
             metadata: {
-                'user-label': '大范围可视化图层', 
+                'user-label': '大范围可视化图层',
             },
             paint: {},
             maxzoom: 8, // 图层最大 8 级，>8 就不渲染
@@ -336,7 +336,7 @@ export function map_addSceneLayer(url: string) {
             id,
             type: 'raster',
             metadata: {
-                'user-label': 'Onthefly实时可视化图层', 
+                'user-label': 'Onthefly实时可视化图层',
             },
             source: srcId,
             paint: {},
@@ -439,7 +439,7 @@ function getOrCreateVectorPopup(): Popup {
 export function map_addMVTLayer(
     source_layer: string,
     url: string,
-    attrList: { color: string; type: number }[],
+    attrList: { color: string; type: number }[]
 ) {
     const baseId = `${source_layer}-mvt-layer`
     const srcId = baseId + '-source'
@@ -480,7 +480,7 @@ export function map_addMVTLayer(
             type: 'fill',
             source: srcId,
             metadata: {
-                'user-label': `${source_layer}` + '矢量图层', 
+                'user-label': `${source_layer}` + '矢量图层',
             },
             'source-layer': source_layer,
             filter: ['==', '$type', 'Polygon'], // 只显示面要素
@@ -498,7 +498,7 @@ export function map_addMVTLayer(
             type: 'line',
             source: srcId,
             metadata: {
-                'user-label': `${source_layer}` + '矢量图层', 
+                'user-label': `${source_layer}` + '矢量图层',
             },
             'source-layer': source_layer,
             filter: ['==', '$type', 'LineString'], // 只显示线要素
@@ -515,7 +515,7 @@ export function map_addMVTLayer(
             type: 'circle',
             source: srcId,
             metadata: {
-                'user-label': `${source_layer}` + '矢量图层', 
+                'user-label': `${source_layer}` + '矢量图层',
             },
             'source-layer': source_layer,
             filter: ['==', '$type', 'Point'], // 只显示点要素
@@ -682,7 +682,7 @@ export function map_add2DDEMLayer(url: string) {
             id,
             type: 'raster',
             metadata: {
-                'user-label': 'DEM图层', 
+                'user-label': 'DEM图层',
             },
             source: srcId,
             paint: {},
@@ -714,7 +714,7 @@ export function map_addNDVIOrSVRLayer(url: string) {
             id,
             type: 'raster',
             metadata: {
-                'user-label': 'DEM图层', 
+                'user-label': 'DEM图层',
             },
             source: srcId,
             paint: {},
@@ -746,7 +746,7 @@ export function map_add3DLayer(url: string) {
             id,
             type: 'raster',
             metadata: {
-                'user-label': id + '图层', 
+                'user-label': id + '图层',
             },
             source: srcId,
             paint: {},

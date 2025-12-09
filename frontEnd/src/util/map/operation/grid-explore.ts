@@ -143,9 +143,8 @@ export function map_destroyGrid2DDEMLayer(gridInfo: GridData) {
 export function map_addGridSceneLayer(
     gridInfo: GridData,
     url: string,
-    cb?: () => void,
 ) {
-    return map_addGrid3DLayer(gridInfo, url, cb)
+    return map_addGrid3DLayer(gridInfo, url)
 }
 
 export function map_destroyGridSceneLayer(gridInfo: GridData) {
@@ -155,7 +154,6 @@ export function map_destroyGridSceneLayer(gridInfo: GridData) {
 export function map_addGrid3DLayer(
     gridInfo: GridData,
     url: string,
-    cb?: () => void,
 ) {
     const prefix = gridInfo.rowId + '_' + gridInfo.columnId
     const id = prefix + uid()
@@ -198,10 +196,6 @@ export function map_addGrid3DLayer(
             id: id,
             source: srcId,
         })
-
-        setTimeout(() => {
-            cb && cb()
-        }, 3000)
     })
 }
 export function map_destroyGrid3DLayer(gridInfo: GridData) {
