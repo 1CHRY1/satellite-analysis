@@ -23,8 +23,6 @@ export const useSensorSelection = () => {
         console.log('对应LandId', exploreData.regionCode)
         console.log(exploreData.searchtab)
 
-        const stopLoading = message.loading('正在加载传感器影像...')
-
         let coverScenes
         if (exploreData.searchtab === 'region') {
             const params = {
@@ -54,7 +52,7 @@ export const useSensorSelection = () => {
 
         console.log('可视化参数们', rgbTileLayerParamList)
 
-        MapOperation.map_addMultiRGBImageTileLayer(rgbTileLayerParamList, stopLoading)
+        MapOperation.map_addMultiRGBImageTileLayer(rgbTileLayerParamList)
     }
 
     // 添加国产1m影像

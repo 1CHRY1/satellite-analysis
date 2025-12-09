@@ -608,7 +608,7 @@ export function map_destroyRGBImageTileLayer() {
     })
 }
 
-export function map_addMultiRGBImageTileLayer(params: RGBTileLayerParams[], cb?: () => void) {
+export function map_addMultiRGBImageTileLayer(params: RGBTileLayerParams[]) {
     const prefix = 'MultiRGB'
     let layeridStore: any = null
     if (!ezStore.get('MultiRGBLayerIds')) ezStore.set('MultiRGBLayerIds', [])
@@ -644,9 +644,6 @@ export function map_addMultiRGBImageTileLayer(params: RGBTileLayerParams[], cb?:
             })
         }
 
-        setTimeout(() => {
-            cb && cb()
-        }, 3000)
     })
 }
 export function map_destroyMultiRGBImageTileLayer() {

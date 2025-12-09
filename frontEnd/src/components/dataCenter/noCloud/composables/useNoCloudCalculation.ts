@@ -170,8 +170,6 @@ export const useNoCloudCalculation = (allScenes: any) => {
 
     // 预览无云一版图
     const previewNoCloud = async (data: any) => {
-        const stopLoading = message.loading('正在加载无云一版图...', 0)
-        
         // 清除旧图层
         MapOperation.map_removeNocloudGridPreviewLayer()
         MapOperation.map_destroyNoCloudLayer()
@@ -182,10 +180,6 @@ export const useNoCloudCalculation = (allScenes: any) => {
             mosaicJsonPath: mosaicJsonPath
         })
         MapOperation.map_addNoCloudLayer(url4MosaicJson)
-
-        setTimeout(() => {
-            stopLoading()
-        }, 5000)
     }
 
     // 创建无云一版图瓦片

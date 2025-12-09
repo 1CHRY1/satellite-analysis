@@ -110,7 +110,6 @@ const showTif = async (image) => {
 
 const RGImages: Ref<any> = ref([])
 onMounted(async () => {
-    // const stopLoading = message.loading('正在加载影像', 0)
     let thematicConfig = props.thematicConfig;
     let rasterParam = {
         startTime: thematicConfig.startTime,

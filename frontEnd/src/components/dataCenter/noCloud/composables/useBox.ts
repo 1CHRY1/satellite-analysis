@@ -124,6 +124,8 @@ export const useBox = () => {
         sensors: [] as string[],
         bands: [] as string[],
         dates: [] as Dayjs[],
+        strategy: "upscale" as string | undefined,
+        period: "month" as string | undefined
     })
 
     watch(selectedGrid, () => {
@@ -152,7 +154,7 @@ export const useBox = () => {
     })
 
     const canSynthesize = computed(() => {
-        return formData.sensors.length > 0 && formData.bands.length > 0 && formData.dates.length > 0
+        return formData.sensors.length > 0 && formData.bands.length > 0 && formData.dates.length > 0 && formData.strategy && formData.period
     })
 
     // 事件处理

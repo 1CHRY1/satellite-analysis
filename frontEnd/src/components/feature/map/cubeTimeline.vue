@@ -299,8 +299,6 @@ const handleClick = async (index: number) => {
     console.log(filteredImages.value, 'filteredImages')
     if (index < 0 || index >= filteredImages.value.length) return
 
-    const stopLoading = message.loading('正在加载，请稍后...')
-
     activeIndex.value = index
 
     // 【新增】滚动到居中位置
@@ -384,7 +382,6 @@ const handleClick = async (index: number) => {
         GridExploreMapOps.map_addGridSceneLayer(
             grid.value,
             url,
-            stopLoading,
         )
     } else if (visualMode.value === 'product') {
         const img = currentImage as MultiImageInfoType

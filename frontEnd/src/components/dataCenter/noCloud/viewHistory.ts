@@ -283,7 +283,6 @@ export function useViewHistoryModule() {
         let bandsIndex = [bandForm.value.band1, bandForm.value.band2, bandForm.value.band3].join(
             ',',
         )
-        const stopLoading = message.loading('正在加载无云一版图，请稍后...', 0)
         // 清除旧图层
         MapOperation.map_removeNocloudGridPreviewLayer()
         MapOperation.map_destroyNoCloudLayer()
@@ -296,9 +295,6 @@ export function useViewHistoryModule() {
         })
         MapOperation.map_addNoCloudLayer(url4MosaicJson)
 
-        setTimeout(() => {
-            stopLoading()
-        }, 5000)
         // console.log('一下加几十个图层，等着吃好果子')
     }
     const fitView = async (regionId: number) => {
