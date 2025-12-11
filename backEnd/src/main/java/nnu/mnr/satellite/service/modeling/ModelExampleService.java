@@ -187,6 +187,7 @@ public class ModelExampleService {
         JSONObject noCloudParam = JSONObject.of("tiles", tileIds, "scenes", modelServerSceneDTOs, "cloud", noCloudFetchDTO.getCloud(), "resolution", resolution, "bandList", bandList);
         JSONObject caseJsonObj = JSONObject.of("boundary", boundary, "address", address, "resolution", resolution, "sceneIds", sceneIds, "dataSet", noCloudFetchDTO.getDataSet());
         caseJsonObj.put("regionId", regionId);
+        caseJsonObj.put("type", "noCloud");
         String noCloudUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("noCloud");
         long expirationTime = 60 * 100;
         return runModelServerModel(noCloudUrl, noCloudParam, expirationTime, caseJsonObj);
@@ -233,6 +234,7 @@ public class ModelExampleService {
         caseJsonObj.put("regionId", regionId);
         caseJsonObj.put("bandList", bandList);
         caseJsonObj.put("userId", userId);
+        caseJsonObj.put("type", "noCloud");
         String noCloudUrl;
         if (bandList.equals(Arrays.asList("Red", "Green", "Blue"))) {
             noCloudUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("noCloud");

@@ -1,5 +1,5 @@
 import { computed, reactive, ref, watch } from 'vue'
-import { exploreData } from './shared'
+import { calTask, exploreData, setCurrentPanel, taskStore } from './shared'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import * as DataPreparationMapOps from '@/util/map/operation/data-preparation'
 import type { MapMouseEvent } from 'mapbox-gl'
@@ -11,7 +11,8 @@ import dayjs from 'dayjs'
 import { addCube, getCube } from '@/api/http/analytics-display/cube.api'
 import type { CubeRequest } from '@/api/http/analytics-display/cube.type'
 import { NumberFormat } from 'vue-i18n'
-
+import { message } from 'ant-design-vue'
+import { getEOCube } from '@/api/http/satellite-data'
 
 type GridInfo = {
     columnId: number
@@ -124,8 +125,8 @@ export const useBox = () => {
         sensors: [] as string[],
         bands: [] as string[],
         dates: [] as Dayjs[],
-        strategy: "upscale" as string | undefined,
-        period: "month" as string | undefined
+        strategy: 'upscale' as string | undefined,
+        period: 'month' as string | undefined,
     })
 
     watch(selectedGrid, () => {
@@ -136,9 +137,9 @@ export const useBox = () => {
 
     // 波段option
     const bandOptions = ref([
-        { value: 'R', label: 'Red', color: '#ff4d4f' },
-        { value: 'G', label: 'Green', color: '#52c41a' },
-        { value: 'B', label: 'Blue', color: '#1890ff' },
+        { value: 'Red', label: 'Red', color: '#ff4d4f' },
+        { value: 'Green', label: 'Green', color: '#52c41a' },
+        { value: 'Blue', label: 'Blue', color: '#1890ff' },
         { value: 'NIR', label: 'NIR', color: '#722ed1' },
     ])
 
@@ -154,7 +155,13 @@ export const useBox = () => {
     })
 
     const canSynthesize = computed(() => {
-        return formData.sensors.length > 0 && formData.bands.length > 0 && formData.dates.length > 0 && formData.strategy && formData.period
+        return (
+            formData.sensors.length > 0 &&
+            formData.bands.length > 0 &&
+            formData.dates.length > 0 &&
+            formData.strategy &&
+            formData.period
+        )
     })
 
     // 事件处理
@@ -172,7 +179,7 @@ export const useBox = () => {
         console.log('时间范围变化:', dates)
     }
 
-    const handleSynthesis = async () => {
+    const handleGenCache = async () => {
         try {
             DataPreparationMapOps.map_destrod3DBoxLayer()
             showCubeContentDialog.value = true
@@ -181,7 +188,11 @@ export const useBox = () => {
             console.log(await getCube())
             let gridGeoJson = {}
             for (const grid of exploreData.grids) {
-                if (selectedGrid.value?.columnId === grid.columnId && selectedGrid.value?.resolution === grid.resolution && selectedGrid.value?.rowId === grid.rowId) {
+                if (
+                    selectedGrid.value?.columnId === grid.columnId &&
+                    selectedGrid.value?.resolution === grid.resolution &&
+                    selectedGrid.value?.rowId === grid.rowId
+                ) {
                     gridGeoJson = grid.boundary
                 }
             }
@@ -189,11 +200,44 @@ export const useBox = () => {
             const id = 'grid-layer'
             const highlightId = id + '-highlight'
             ezStore.get('map').setFilter(highlightId, ['in', 'id', ''])
-            DataPreparationMapOps.map_add3DBoxLayer(gridGeoJson, cubeSceneListByDate.value, cubeContent.value)
+            DataPreparationMapOps.map_add3DBoxLayer(
+                gridGeoJson,
+                cubeSceneListByDate.value,
+                cubeContent.value,
+            )
         } catch (error) {
             console.log(error)
         } finally {
         }
+    }
+
+    const handleSynthesis = async () => {
+        // 因为从后端拿到taskId需要一定时间，所以先向任务store推送一个初始化任务状态
+        taskStore.setIsInitialTaskPending(true)
+        setCurrentPanel('history')
+
+        let getEOCubeParam = {
+            regionId: exploreData.regionCode,
+            cloud: exploreData.cloud,
+            resolution: exploreData.gridResolution,
+            sceneIds: cubeContent.value.dimensionScenes.map((scene) => scene.sceneId),
+            dataSet: { ...cubeContent.value, period: formData.period, resample: formData.strategy },
+            bandList: cubeContent.value.dimensionBands,
+        }
+
+        // 发送请求
+        console.log(getEOCubeParam, '发起请求')
+        let startCalcRes = await getEOCube(getEOCubeParam)
+        if (startCalcRes.message !== 'success') {
+            message.error('时序立方体计算失败')
+            console.error(startCalcRes)
+            return
+        }
+
+        // 更新任务，跳转至历史panel
+        calTask.value.taskId = startCalcRes.data
+        taskStore.setTaskStatus(calTask.value.taskId, 'PENDING')
+        taskStore.setIsInitialTaskPending(false)
     }
 
     const handleReset = () => {
@@ -204,27 +248,38 @@ export const useBox = () => {
 
     const onFinish = (values: any) => {
         console.log('表单提交:', values)
-        handleSynthesis()
+        handleGenCache()
     }
 
     const showCubeContentDialog = ref(false)
 
     const currentCacheKey = ref('')
-    
+
     const cubeContent = computed(() => {
         return {
             cubeId: `${selectedGrid.value?.rowId}-${selectedGrid.value?.columnId}-${selectedGrid.value?.resolution}`,
             dimensionSensors: formData.sensors,
             dimensionDates: formData.dates,
             dimensionBands: formData.bands,
-            dimensionScenes: sceneList.value.filter(item => formData.sensors.includes(item.sensorName) && formData.dates.some(d => dayjs(d).isSame(dayjs(item.sceneTime), 'day')))
+            dimensionScenes: sceneList.value.filter(
+                (item) =>
+                    formData.sensors.includes(item.sensorName) &&
+                    formData.dates.some((d) => dayjs(d).isSame(dayjs(item.sceneTime), 'day')),
+            ),
         }
     })
 
     const cubeSceneListByDate = computed(() => {
-        return Object.fromEntries(cubeContent.value.dimensionDates.map(date => {
-            return [date, sceneList.value.filter(item => dayjs(date).isSame(dayjs(item.sceneTime), 'day'))]
-        }))
+        return Object.fromEntries(
+            cubeContent.value.dimensionDates.map((date) => {
+                return [
+                    date,
+                    sceneList.value.filter((item) =>
+                        dayjs(date).isSame(dayjs(item.sceneTime), 'day'),
+                    ),
+                ]
+            }),
+        )
     })
 
     return {
@@ -238,12 +293,13 @@ export const useBox = () => {
         handleSensorChange,
         handleBandChange,
         handleDateChange,
+        handleGenCache,
         handleSynthesis,
         handleReset,
         onFinish,
         cubeContent,
         cubeSceneListByDate,
         currentCacheKey,
-        showCubeContentDialog
+        showCubeContentDialog,
     }
 }

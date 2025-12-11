@@ -44,6 +44,7 @@ export function useViewHistoryModule() {
 
     const getCaseList = async () => {
         const regionId = getRegionId()
+        refreshTrigger.value++ // 强制更新timeOptionList，防止时间滞后
         const res = await getCasePage({
             page: currentPage.value,
             pageSize: pageSize.value,
@@ -171,36 +172,40 @@ export function useViewHistoryModule() {
             endTime: formatTime(endTime, 'seconds', 0, true),
         }
     }
-    const timeOptionList = computed<TimeOption[]>(() => [
-        {
-            label: '请选择',
-            value: calculateTimeRange('all'),
-        },
-        {
-            label: '最近1小时',
-            value: calculateTimeRange('1h'),
-        },
-        {
-            label: '今天',
-            value: calculateTimeRange('today'),
-        },
-        {
-            label: '最近7天',
-            value: calculateTimeRange('7d'),
-        },
-        {
-            label: '最近30天',
-            value: calculateTimeRange('30d'),
-        },
-        {
-            label: '最近3个月',
-            value: calculateTimeRange('3m'),
-        },
-        {
-            label: '更早之前',
-            value: calculateTimeRange('earlier'),
-        },
-    ])
+    const refreshTrigger = ref(0)
+    const timeOptionList = computed<TimeOption[]>(() => {
+        refreshTrigger.value
+        return [
+            {
+                label: '请选择',
+                value: calculateTimeRange('all'),
+            },
+            {
+                label: '最近1小时',
+                value: calculateTimeRange('1h'),
+            },
+            {
+                label: '今天',
+                value: calculateTimeRange('today'),
+            },
+            {
+                label: '最近7天',
+                value: calculateTimeRange('7d'),
+            },
+            {
+                label: '最近30天',
+                value: calculateTimeRange('30d'),
+            },
+            {
+                label: '最近3个月',
+                value: calculateTimeRange('3m'),
+            },
+            {
+                label: '更早之前',
+                value: calculateTimeRange('earlier'),
+            },
+        ]
+    })
     const selectedTimeIndex = ref<number>(0)
     const selectedTime = computed<TimeOption>(() => timeOptionList.value[selectedTimeIndex.value])
     const EMPTY_RESOLUTION = 0 // 预设请选择分辨率选项
@@ -257,6 +262,7 @@ export function useViewHistoryModule() {
             bucket: '',
             object_path: '',
         },
+        type: 'noCloud',
         createTime: '',
     })
     const isModalVisible = ref<boolean>(false)
