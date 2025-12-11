@@ -3,6 +3,8 @@ package nnu.mnr.satellite.controller.modeling;
 import io.jsonwebtoken.JwtException;
 import nnu.mnr.satellite.cache.EOCubeCache;
 import nnu.mnr.satellite.model.dto.cache.CacheEOCubeDTO;
+import nnu.mnr.satellite.model.dto.modeling.EOCubeCalcDto;
+import nnu.mnr.satellite.model.dto.modeling.EOCubeFetchDto;
 import nnu.mnr.satellite.model.dto.modeling.VisualizationLowLevelTile;
 import nnu.mnr.satellite.model.dto.modeling.VisualizationTileDTO;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
@@ -91,6 +93,18 @@ public class ModelExampleControllerV3 {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
         return ResponseEntity.ok(modelExampleService.cacheEOCube(cacheEOCubeDTO, userId));
+    }
+
+    @PostMapping("/cube/calc")
+    public ResponseEntity<CommonResultVO> calcEOCube(@RequestBody EOCubeFetchDto eoCubeFetchDto,
+                                                     @RequestHeader(value = "Authorization", required = false) String authorizationHeader) throws IOException {
+        String userId;
+        try {
+            userId = IdUtil.parseUserIdFromAuthHeader(authorizationHeader);
+        } catch (JwtException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+        return ResponseEntity.ok(modelExampleService.calcEOCube(eoCubeFetchDto, userId));
     }
 
     @GetMapping("/cube/cache/get/{cacheKey}")

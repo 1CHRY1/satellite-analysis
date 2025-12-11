@@ -58,6 +58,7 @@ public class CaseDataService {
         String dataSet = param.get("dataSet").toString();
         List<String> bandList = (List<String>) param.get("bandList");
         String userId = param.get("userId").toString();
+        String type = param.get("type").toString();
 
         Case caseObj = Case.builder()
                 .caseId(caseId)
@@ -72,6 +73,7 @@ public class CaseDataService {
                 .status("RUNNING")
                 .result(null)
                 .createTime(LocalDateTime.now(ZoneId.of("Asia/Shanghai")))
+                .type(type)
                 .build();
 
         caseRepo.insertCase(caseObj);

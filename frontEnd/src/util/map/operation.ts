@@ -1184,7 +1184,7 @@ export function map_addNoCloudLayer(jsonUrl: string) {
             type: 'raster',
             tiles: [url],
             tileSize: 256,
-            minzoom: 10,
+            minzoom: 1,
             maxzoom: 22,
         })
 

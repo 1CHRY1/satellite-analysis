@@ -47,5 +47,6 @@ public class Case {
     private Integer regionId;
     @TableField(typeHandler = ListTypeHandler.class)
     private List<String> bandList;
+    private String type;
     private String userId;
 }

@@ -182,7 +182,7 @@
                                                 <div class="config-label relative">
                                                     <CalendarIcon :size="16" class="config-icon" />
                                                     <span>{{ t('datapage.nocloud.section_international.subtitle')
-                                                    }}</span>
+                                                        }}</span>
                                                     <el-tooltip content="对于缺失数据的格网，采用国外光学影像进行填补，填补过程中基于AI算法进行超分辨率重建"
                                                         placement="top" effect="dark">
                                                         <CircleHelp :size="14" />
@@ -596,8 +596,8 @@
                                                     <!-- 时间分辨率 -->
                                                     <a-form-item label="时间分辨率" name="period"
                                                         :rules="[{ required: true, message: '请选择时间分辨率' }]">
-                                                        <a-select v-model:value="formData.period"
-                                                            placeholder="请选择时间分辨率" allow-clear>
+                                                        <a-select v-model:value="formData.period" placeholder="请选择时间分辨率"
+                                                            allow-clear>
                                                             <a-select-option
                                                                 v-for="opt in [{ label: '月度', value: 'month' }, { label: '季度', value: 'season' }, { label: '年度', value: 'year' }]"
                                                                 :key="opt.value" :value="opt.value">
@@ -618,6 +618,10 @@
                                                 <a-button size="large" style="margin-right: 1rem;"
                                                     :disabled="!canSynthesize" @click="handleReset">
                                                     重置
+                                                </a-button>
+                                                <a-button type="primary" size="large" :disabled="!canSynthesize"
+                                                    style="margin-right: 1rem;" @click="handleGenCache">
+                                                    计算就绪立方体
                                                 </a-button>
                                                 <a-button type="primary" size="large" :disabled="!canSynthesize"
                                                     @click="handleSynthesis">
@@ -796,7 +800,7 @@ const {
 
 // 时空立方体合成
 const {
-    selectedGrid, updateGridLayer, formData, sensorOptions, bandOptions, dateOptions, canSynthesize, handleSensorChange, handleBandChange, handleDateChange, handleSynthesis, handleReset, onFinish, cubeContent, currentCacheKey, showCubeContentDialog
+    selectedGrid, updateGridLayer, formData, sensorOptions, bandOptions, dateOptions, canSynthesize, handleSensorChange, handleBandChange, handleDateChange, handleGenCache, handleSynthesis, handleReset, onFinish, cubeContent, currentCacheKey, showCubeContentDialog
 } = useBox()
 
 const handleAdd1mDemoticImage = () => add1mDemoticImage(reRenderAllGrids, clearGridRenderingByType)

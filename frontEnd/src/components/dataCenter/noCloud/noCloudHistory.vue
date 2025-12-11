@@ -38,7 +38,7 @@
                 <a-badge-ribbon text="运行中" style="position: absolute; top: -9px; right: -20px;" color="#ffa726">
                     <div class="config-label relative">
                         <Image :size="16" class="config-icon" />
-                        <span>{{ `${item.address}无云一版图` }}</span>
+                        <span>{{ item.type == 'eoCube' ? `${item.address}时序立方体` : `${item.address}无云一版图` }}</span>
                     </div>
                     <div class="config-control flex-col !items-start">
                         <div class="flex w-full flex-col gap-2">
@@ -65,7 +65,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="result-info-item">
+                                <div class="result-info-item" v-if="item.type !== 'eoCube'">
                                     <div class="result-info-icon">
                                         <DatabaseIcon :size="12" />
                                     </div>
@@ -138,6 +138,16 @@
                                     </div>
                                 </div>
                             </div>
+                            <!-- <div class="result-info-item">
+                                <div class="result-info-content">
+                                    <div class="result-info-label">类型</div>
+                                    <div class="result-info-value">
+                                        <RegionSelects v-model="selectedType"
+                                            :placeholder="t('datapage.history.admin_choose')" class="flex gap-2"
+                                            select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
+                                    </div>
+                                </div>
+                            </div> -->
                         </div>
                     </div>
                 </div>
@@ -184,7 +194,7 @@
             <div v-for="(item, index) in caseList" class="config-item" :key="item.caseId">
                 <div class="config-label relative">
                     <Image :size="16" class="config-icon" />
-                    <span>{{ `${item.address}无云一版图` }}</span>
+                    <span>{{ item.type == 'eoCube' ? `${item.address}时序立方体` : `${item.address}无云一版图` }}</span>
                     <div class="absolute right-0 cursor-pointer">
                         <a-tooltip>
                             <template #title>{{ t('datapage.history.preview') }}</template>
@@ -219,7 +229,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="result-info-item">
+                            <div class="result-info-item" v-if="item.type !== 'eoCube'">
                                 <div class="result-info-icon">
                                     <DatabaseIcon :size="12" />
                                 </div>
@@ -227,6 +237,17 @@
                                     <div class="result-info-label">{{ t('datapage.history.data') }}</div>
                                     <div>
                                         {{ item.dataSet }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="result-info-item" v-else>
+                                <div class="result-info-icon">
+                                    <DatabaseIcon :size="12" />
+                                </div>
+                                <div class="result-info-content">
+                                    <div class="result-info-label">时间维度</div>
+                                    <div>
+                                        {{ item.result.dimensions.join('、') }}
                                     </div>
                                 </div>
                             </div>
