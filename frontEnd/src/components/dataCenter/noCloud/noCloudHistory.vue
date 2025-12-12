@@ -7,7 +7,7 @@
                 <ArrowLeft :size="18" @click="$emit('toggle', 'noCloud')" />
             </a-tooltip>
         </div>
-        <h2 class="section-title">{{ t('datapage.history.his_noclo') }}</h2>
+        <h2 class="section-title">历史记录</h2>
     </div>
 
     <!-- Content -->
@@ -254,7 +254,7 @@
                         </div>
                         <!-- 下载按钮和发布按钮 -->
                         <div class="flex gap-2 mt-2">
-                            <a-button type="primary" size="middle" @click="handlePublish(item)">
+                            <a-button v-if="item.type !== 'eoCube'" type="primary" size="middle" @click="handlePublish(item)">
                                 <Upload :size="14" class="mr-1" />
                             </a-button>
                             <a-button size="middle" @click="handleDownload(item)">
@@ -281,9 +281,8 @@
     <a-modal v-model:visible="publishModalVisible" title="发布无云一版图" :width="600" @ok="handlePublishConfirm"
         @cancel="handlePublishCancel">
         <div class="space-y-4">
-            
-            <a-alert :message="`您正在发布: ${ currentItem?.address }无云一版图`" type="info" show-icon
-                class="status-alert">
+
+            <a-alert :message="`您正在发布: ${currentItem?.address}无云一版图`" type="info" show-icon class="status-alert">
             </a-alert>
 
             <a-form :label-col="{ span: 6 }" :wrapper-col="{ span: 18 }">
@@ -320,8 +319,7 @@
             </div>
             <div class="max-h-96 overflow-y-auto">
                 <div class="space-y-2">
-                    <div v-for="(url, index) in tifFileUrls" :key="index"
-                        class="p-3 border border-[#15325b] rounded">
+                    <div v-for="(url, index) in tifFileUrls" :key="index" class="p-3 border border-[#15325b] rounded">
                         <a :href="url" @click.prevent="handleFileDownload(url)"
                             class="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-xs break-all">
                             {{ url }}
@@ -340,9 +338,18 @@
             </a-button>
         </div>
     </a-modal>
+    <!-- 时间线可视化时序立方体 -->
+    <!-- <TimeLine :list="[
+        { label: '08:00', value: 101, data: { status: 'ok', temp: 24 } },
+        { label: '09:00', value: 102, data: { status: 'warning', temp: 26 } },
+        { label: '10:00', value: 103, data: { status: 'ok', temp: 25 } },
+        { label: '11:00', value: 104, data: { status: 'error', temp: 30 } },
+        { label: '12:00', value: 105, data: { status: 'ok', temp: 24 } },
+    ]" class="fixed " @change="" v-model="activeId"/> -->
 </template>
 
 <script setup lang="ts">
+const activeId = ref(103);
 import { ArrowBigDown, ArrowLeft, CalendarIcon, ChevronDown, ChevronDownCircle, ChevronDownIcon, ChevronDownSquare, ChevronUp, DatabaseIcon, ExpandIcon, Eye, EyeOff, Grid3x3, Image, ListFilter, TimerIcon, Upload, Download, Info, FileDown } from 'lucide-vue-next';
 import { useViewHistoryModule } from './viewHistory';
 import { onMounted, onUnmounted, computed, watch, ref, reactive } from 'vue';
@@ -360,6 +367,7 @@ import type { Case } from '@/api/http/satellite-data/satellite.type'
 
 
 import { useI18n } from 'vue-i18n'
+import TimeLine from '@/components/common/time-line.vue';
 const { t } = useI18n()
 
 const { caseList, currentPage, sectionHeader, pageSize, total, historyClassTabs, activeTab, handleSelectTab,
@@ -476,6 +484,24 @@ const handlePublishCancel = () => {
     publishModalVisible.value = false
 }
 
+async function fetchAllInParallel(urls: string[]): Promise<any[]> {
+    // 1. 为每个 URL 创建一个包含 fetch 和 JSON 解析的 Promise
+    const fetchPromises = urls.map(url =>
+        fetch(`${url}?_t=${Date.now()}`).then(res => {
+            if (!res.ok) {
+                message.warning(`HTTP Error: ${res.status}`)
+                throw new Error(`HTTP Error: ${res.status}`)
+            };
+            return res.json();
+        })
+    );
+
+    // 2. 使用 Promise.all() 并行执行所有请求
+    const results = await Promise.all(fetchPromises);
+
+    return results; // 结果数组的顺序与 urls 列表的顺序一致
+}
+
 // 下载处理函数
 const handleDownload = async (item: any) => {
     try {
@@ -494,37 +520,66 @@ const handleDownload = async (item: any) => {
             return
         }
 
-        if (!resultData.bucket) {
-            message.error('无法获取下载数据的bucket，请稍后重试')
-            return
-        }
-
-        if (!resultData.object_path) {
-            message.error('无法获取下载数据的object_path，请稍后重试')
-            return
-        }
-
         // 生成MosaicJSON的URL
-        const mosaicJSON = `${minioEndpoint}/${resultData.bucket}/${resultData.object_path}`
+        // let mosaicJSON = ''
+        let mosaicJSONs: string[] = []
 
-        const response = await fetch(`${mosaicJSON}?_t=${Date.now()}`)
+        switch (item?.type) {
+            case "noCloud": {
+                if (!resultData.bucket) {
+                    message.error('无法获取下载数据的bucket，请稍后重试')
+                    return
+                }
 
-        if (!response.ok) {
-            message.error('无法获取JSON数据，请稍后重试')
-            return
+                if (!resultData.object_path) {
+                    message.error('无法获取下载数据的object_path，请稍后重试')
+                    return
+                }
+                let mosaicJSON = `${minioEndpoint}/${resultData.bucket}/${resultData.object_path}`
+                mosaicJSONs.push(mosaicJSON)
+                break;
+            }
+            case "eoCube": {
+                if (!resultData?.dimensions) {
+                    message.error('时序立方体数据为空')
+                    return
+                }
+                for (let key of resultData.dimensions) {
+                    let mosaicJSON = `${minioEndpoint}/${resultData.data[key].bucket}/${resultData.data[key].object_path}`
+                    mosaicJSONs.push(mosaicJSON)
+                }
+                break;
+            }
+            default: {
+                if (!resultData.bucket) {
+                    message.error('无法获取下载数据的bucket，请稍后重试')
+                    return
+                }
+
+                if (!resultData.object_path) {
+                    message.error('无法获取下载数据的object_path，请稍后重试')
+                    return
+                }
+                let mosaicJSON = `${minioEndpoint}/${resultData.bucket}/${resultData.object_path}`
+                mosaicJSONs.push(mosaicJSON)
+                break;
+            }
         }
-        const mosaicJSONData = await response.json()
 
-        // 获取MosaicJSON中的tiles
-        const tiles = mosaicJSONData.tiles
+        const mosaicJSONDataList = await fetchAllInParallel(mosaicJSONs)
+        console.log(mosaicJSONDataList)
+
         const allTifUrls: string[] = []
 
-        // 遍历tiles，提取所有tif文件的URL
-        Object.keys(tiles).forEach(key => {
-            const urlArray = tiles[key]
-            if (Array.isArray(urlArray)) {
-                allTifUrls.push(...urlArray)
-            }
+        // 提取所有tif文件的URL
+        mosaicJSONDataList.forEach(mosaicJSONData => {
+            const tiles = mosaicJSONData.tiles
+            Object.keys(tiles).forEach(key => {
+                const urlArray = tiles[key]
+                if (Array.isArray(urlArray)) {
+                    allTifUrls.push(...urlArray)
+                }
+            })
         })
 
         // 存储解析出的URL数组

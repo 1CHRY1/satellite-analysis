@@ -24,6 +24,8 @@ from typing import List, Dict, Any, Optional
 # 2. 新增SceneAggregator来按周期划分景
 # 3. 具体使用ray和不使用ray、上传tif、生成mosaicjson，做了改变，但都是外面加了一层周期套一下。
 ##############################################################################
+MINIO_ENDPOINT = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}"
+INFINITY = 999999
 
 class SceneAggregator:
     def __init__(self, scenes: List[Dict[str, str]]):
@@ -152,9 +154,6 @@ class SceneAggregator:
                 result_dict[key].append(scene)
 
         return result_dict
-
-MINIO_ENDPOINT = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}"
-INFINITY = 999999
 
 @ray.remote(num_cpus=CONFIG.RAY_NUM_CPUS, memory=CONFIG.RAY_MEMORY_PER_TASK)
 def process_grid(grid, scenes_by_period_json_file, scene_band_paths_json_file, grid_helper, minio_endpoint, temp_dir_path, band_num, cur_key, resample):
@@ -475,8 +474,8 @@ def process_grid(grid, scenes_by_period_json_file, scene_band_paths_json_file, g
         print(f"ERROR: {e}", flush=True)
         return None
 
-def upload_one(tif_path, grid_x, grid_y, task_id):
-    minio_key = f"{task_id}/{grid_x}_{grid_y}.tif"
+def upload_one(tif_path, cur_key, grid_x, grid_y, task_id):
+    minio_key = f"{task_id}/{cur_key}_{grid_x}_{grid_y}.tif"
     uploadLocalFile(tif_path, CONFIG.MINIO_TEMP_FILES_BUCKET, minio_key)
     return {
         "grid": [grid_x, grid_y],
@@ -622,7 +621,8 @@ class calc_eo_cube(Task):
                     minio_endpoint=MINIO_ENDPOINT,
                     temp_dir_path=temp_dir_path,
                     band_num=band_num,
-                    cur_key=cur_key
+                    cur_key=cur_key,
+                    resample=self.resample
                 )
                 # A. 存入总列表 (给调度器用)
                 all_ray_tasks.append(task_ref)
@@ -644,7 +644,7 @@ class calc_eo_cube(Task):
         #     if len(cur_item) == 0:
         #         continue
         #     for g in grids:
-        #         result = process_grid(g, scenes_by_period_json_file, scene_band_paths_json_file, grid_helper, MINIO_ENDPOINT, temp_dir_path, band_num, cur_key = cur_key)
+        #         result = process_grid(g, scenes_by_period_json_file, scene_band_paths_json_file, grid_helper, MINIO_ENDPOINT, temp_dir_path, band_num, cur_key = cur_key, resample=self.resample)
         #         resultsByPeriod[cur_key].append(result)
 
         ## Step 3 : Results Uploading and Statistic #######################
@@ -656,7 +656,7 @@ class calc_eo_cube(Task):
                     if result is None:
                         continue
                     tif_path, grid_x, grid_y = result 
-                    future = executor.submit(upload_one, tif_path, grid_x, grid_y, self.task_id)
+                    future = executor.submit(upload_one, tif_path, period_key, grid_x, grid_y, self.task_id)
                     future_to_period[future] = period_key 
             for future in as_completed(future_to_period):
                 period = future_to_period[future]

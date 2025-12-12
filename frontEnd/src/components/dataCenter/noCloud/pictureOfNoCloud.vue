@@ -621,7 +621,7 @@
                                                 </a-button>
                                                 <a-button type="primary" size="large" :disabled="!canSynthesize"
                                                     style="margin-right: 1rem;" @click="handleGenCache">
-                                                    计算就绪立方体
+                                                    计算就绪
                                                 </a-button>
                                                 <a-button type="primary" size="large" :disabled="!canSynthesize"
                                                     @click="handleSynthesis">
