@@ -439,16 +439,19 @@ function getOrCreateVectorPopup(): Popup {
 export function map_addMVTLayer(
     source_layer: string,
     url: string,
-    attrList: { color: string; type: number }[]
+    attrList: { color: string; type: number | any }[],
+    field: string = 'type'
 ) {
     const baseId = `${source_layer}-mvt-layer`
     const srcId = baseId + '-source'
     const matchColor: Expression = [
         'match',
-        ['get', 'type'], // MVT属性字段
+        ['to-string', ['get', field]], // MVT属性字段, 强转string比较
         ...attrList.flatMap((tc) => [tc.type, tc.color]),
         'rgba(0,0,0,0)', // 默认颜色
     ]
+    console.log(field)
+    console.log(attrList)
 
     mapManager.withMap((m) => {
         //   // 移除已存在的图层和数据源

@@ -104,7 +104,8 @@
                                                             {{ option }}km
                                                         </option>
                                                     </select>
-                                                    <a-button ref="ref1" class="a-button" type="primary" @click="getAllGrid">
+                                                    <a-button ref="ref1" class="a-button" type="primary"
+                                                        @click="getAllGrid">
                                                         {{ t('datapage.explore.data.button') }}
                                                     </a-button>
                                                 </div>
@@ -112,7 +113,7 @@
                                                     <div class="text-red-500">*</div>
                                                     <span class="text-xs text-gray-400">{{
                                                         t('datapage.explore.data.advice')
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -145,10 +146,11 @@
                                             </div>
                                             <div class="config-control">
                                                 <div class="control-info-container">
-                                                    <a-space ref="ref2" class="control-info-item" @click="applyFilter" :class="{
-                                                        'cursor-not-allowed': filterLoading,
-                                                        'cursor-pointer': !filterLoading,
-                                                    }">
+                                                    <a-space ref="ref2" class="control-info-item" @click="applyFilter"
+                                                        :class="{
+                                                            'cursor-not-allowed': filterLoading,
+                                                            'cursor-pointer': !filterLoading,
+                                                        }">
                                                         <div class="result-info-icon">
                                                             🔍
                                                         </div>
@@ -159,10 +161,11 @@
                                                             </div>
                                                         </div>
                                                     </a-space>
-                                                    <a-space ref="ref3" class="control-info-item" @click="toNoCloud" :class="{
-                                                        'cursor-not-allowed': !isFilterDone,
-                                                        'cursor-pointer': isFilterDone,
-                                                    }">
+                                                    <a-space ref="ref3" class="control-info-item" @click="toNoCloud"
+                                                        :class="{
+                                                            'cursor-not-allowed': !isFilterDone,
+                                                            'cursor-pointer': isFilterDone,
+                                                        }">
                                                         <div class="result-info-icon">
                                                             🗺️
                                                         </div>
@@ -172,10 +175,11 @@
                                                             </div>
                                                         </div>
                                                     </a-space>
-                                                    <a-space ref="ref4" class="control-info-item" @click="toAnalysis" :class="{
-                                                        'cursor-not-allowed': !isFilterDone,
-                                                        'cursor-pointer': isFilterDone,
-                                                    }">
+                                                    <a-space ref="ref4" class="control-info-item" @click="toAnalysis"
+                                                        :class="{
+                                                            'cursor-not-allowed': !isFilterDone,
+                                                            'cursor-pointer': isFilterDone,
+                                                        }">
                                                         <div class="result-info-icon">
                                                             📈
                                                         </div>
@@ -198,12 +202,12 @@
                                         <DatabaseIcon :size="18" />
                                     </div>
                                     <h2 class="section-title">{{ t('datapage.explore.section_interactive.sectiontitle')
-                                    }}</h2>
+                                        }}</h2>
                                     <div class="section-icon absolute right-0 cursor-pointer"
                                         @click="destroyExploreLayers">
                                         <a-tooltip>
                                             <template #title>{{ t('datapage.explore.section_interactive.clear')
-                                            }}</template>
+                                                }}</template>
                                             <Trash2Icon :size="18" />
                                         </a-tooltip>
                                     </div>
@@ -316,7 +320,7 @@
                                                             @click="isRSItemExpand[index] = false" />
                                                         <span class="text-xs text-[#7a899f]">{{
                                                             sceneStats?.dataset?.[category]?.total
-                                                        }} 景</span>
+                                                            }} 景</span>
                                                     </div>
                                                     <div class="flex flex-row gap-2 items-center">
                                                         <ChartColumnBig :size="12" class="text-[#7a899f]"
@@ -387,7 +391,7 @@
                                                             <a-tooltip>
                                                                 <template #title>{{
                                                                     t('datapage.explore.section_interactive.clear')
-                                                                }}</template>
+                                                                    }}</template>
                                                                 <Trash2Icon :size="18"
                                                                     class="mt-4! ml-4! cursor-pointer"
                                                                     @click="destroyScene" />
@@ -417,73 +421,94 @@
                                                 <span class="result-info-label">共找到 {{ vectorStats.length }} 条记录</span>
                                             </div>
                                             <div class="max-h-[432px] overflow-y-auto">
-                                                <div v-for="(item, index) in vectorStats" class="stats-item-tree" :class="{
-                                                'stats-item-rounded-t': index === 0,
-                                                'stats-item-rounded-b': index === vectorStats.length - 1,
-                                            }" :key="item.tableName">
-                                                <div class="config-label relative">
-                                                    <ChevronDown v-if="isVectorItemExpand[index]" :size="22"
-                                                        class="config-icon cursor-pointer"
-                                                        @click="isVectorItemExpand[index] = false" />
-                                                    <ChevronRight v-else @click="isVectorItemExpand[index] = true"
-                                                        :size="22" class="config-icon cursor-pointer" />
-                                                    <span>{{ item.vectorName }}</span>
-                                                </div>
-                                                <div v-if="isVectorItemExpand[index]"
-                                                    class="space-y-3 p-4 rounded-md text-white w-full">
-                                                    <div v-if="vectorSymbology[item.tableName].attrs.length"
-                                                        class="flex items-center justify-between gap-2">
-                                                        <el-checkbox v-model="vectorSymbology[item.tableName].checkAll"
-                                                            :indeterminate="vectorSymbology[item.tableName].isIndeterminate"
-                                                            @change="(val: boolean) => handleCheckAllChange(item.tableName, val)">
-                                                            <template #default>
-                                                                <span class="text-white">全选</span>
-                                                            </template>
-                                                        </el-checkbox>
-                                                        <a-tooltip>
-                                                            <template #title>{{ t('datapage.history.preview')
-                                                                }}</template>
-                                                            <Eye v-if="previewVectorList[index]"
-                                                                @click="destroyVector(index)" :size="16"
-                                                                class="cursor-pointer" />
-                                                            <EyeOff v-else :size="16"
-                                                                @click="showVectorResult(item.tableName, index)"
-                                                                class="cursor-pointer" />
-                                                        </a-tooltip>
+                                                <div v-for="(item, index) in vectorStats" class="stats-item-tree"
+                                                    :class="{
+                                                        'stats-item-rounded-t': index === 0,
+                                                        'stats-item-rounded-b': index === vectorStats.length - 1,
+                                                    }" :key="item.tableName">
+                                                    <div class="config-label relative">
+                                                        <ChevronDown v-if="isVectorItemExpand[index]" :size="22"
+                                                            class="config-icon cursor-pointer"
+                                                            @click="isVectorItemExpand[index] = false" />
+                                                        <ChevronRight v-else @click="isVectorItemExpand[index] = true"
+                                                            :size="22" class="config-icon cursor-pointer" />
+                                                        <span>{{ item.vectorName }}</span>
                                                     </div>
-                                                    <div class="w-full max-h-[248px] overflow-y-auto">
-                                                        <el-checkbox-group
-                                                            v-model="vectorSymbology[item.tableName].checkedAttrs"
-                                                            @change="(val: string[]) => handleCheckedAttrsChange(item.tableName, val)">
-                                                            <template
-                                                                v-if="vectorSymbology[item.tableName].attrs.length">
-                                                                <div v-for="(attr, attrIndex) in vectorSymbology[item.tableName].attrs"
-                                                                    :key="attrIndex"
-                                                                    class="flex items-center justify-between bg-[#01314e] px-3 mb-1.5 py-2 rounded">
-                                                                    <div class="flex items-center gap-2">
-                                                                        <el-checkbox class="config-label mt-1"
-                                                                            :key="attr.type" :label="attr.label">
-                                                                            <template default></template>
-                                                                        </el-checkbox>
-                                                                        <span class="config-label mt-1">{{ attr.label
-                                                                            }}</span>
-                                                                    </div>
-                                                                    <el-color-picker v-model="attr.color" size="small"
-                                                                        show-alpha :predefine="predefineColors" />
-                                                                </div>
-                                                            </template>
-                                                        </el-checkbox-group>
-                                                    </div>
-                                                    <div v-if="vectorSymbology[item.tableName].attrs.length === 0"
-                                                        class="flex justify-center items-center">
-                                                        <a-space>
-                                                            <a-spin size="large" />
-                                                        </a-space>
+                                                    <div v-show="isVectorItemExpand[index]"
+                                                        class="space-y-3 p-4 rounded-md text-white w-full">
+                                                        <div class="flex justify-between">
+                                                            <div>
+                                                                <label class="mr-2 text-white">字段：</label>
+                                                                <select
+                                                                    class="max-h-[600px] w-[120px] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
+                                                                    v-model="vectorSymbology[item.tableName].selectedField">
+                                                                    <option disabled selected value="">{{
+                                                                        t('datapage.explore.section_interactive.choose')
+                                                                    }}
+                                                                    </option>
+                                                                    <!-- <option :value="'all'" class="truncate">全选</option> -->
+                                                                    <option v-for="f in item.fields" :value="f" :key="f"
+                                                                        class="truncate">
+                                                                        {{ f }}
+                                                                    </option>
+                                                                </select>
+                                                            </div>
+                                                            <a-button type="primary"
+                                                                @click="getAttrs4CustomField(item.tableName, vectorSymbology[item.tableName].selectedField)">获取</a-button>
+                                                        </div>
+                                                        <div v-if="vectorSymbology[item.tableName].attrs.length"
+                                                            class="flex items-center justify-between gap-2">
+                                                            <el-checkbox
+                                                                v-model="vectorSymbology[item.tableName].checkAll"
+                                                                :indeterminate="vectorSymbology[item.tableName].isIndeterminate"
+                                                                @change="(val: boolean) => handleCheckAllChange(item.tableName, val)">
+                                                                <template #default>
+                                                                    <span class="text-white">全选</span>
+                                                                </template>
+                                                            </el-checkbox>
+                                                            <a-tooltip>
+                                                                <template #title>{{ t('datapage.history.preview')
+                                                                    }}</template>
+                                                                <Eye v-if="previewVectorList[index]"
+                                                                    @click="destroyVector(index)" :size="16"
+                                                                    class="cursor-pointer" />
+                                                                <EyeOff v-else :size="16"
+                                                                    @click="showVectorResult(item.tableName, index)"
+                                                                    class="cursor-pointer" />
+                                                            </a-tooltip>
+                                                        </div>
+                                                        <a-spin :spinning="vectorSymbology[item.tableName].isRequesting">
+                                                            <div class="w-full max-h-[248px] overflow-y-auto">
+                                                                <el-checkbox-group
+                                                                    v-model="vectorSymbology[item.tableName].checkedAttrs"
+                                                                    @change="(val: string[]) => handleCheckedAttrsChange(item.tableName, val)">
+                                                                    <template
+                                                                        v-if="vectorSymbology[item.tableName].attrs.length">
+                                                                        <div v-for="(attr, attrIndex) in vectorSymbology[item.tableName].attrs"
+                                                                            :key="attrIndex"
+                                                                            class="flex items-center justify-between bg-[#01314e] px-3 mb-1.5 py-2 rounded">
+                                                                            <div class="flex items-center gap-2">
+                                                                                <el-checkbox class="config-label mt-1"
+                                                                                    :key="attr.type"
+                                                                                    :label="attr.label">
+                                                                                    <template default></template>
+                                                                                </el-checkbox>
+                                                                                <span class="config-label mt-1">{{
+                                                                                    attr.label
+                                                                                    }}</span>
+                                                                            </div>
+                                                                            <el-color-picker v-model="attr.color"
+                                                                                size="small" show-alpha
+                                                                                :predefine="predefineColors" />
+                                                                        </div>
+                                                                    </template>
+                                                                </el-checkbox-group>
+                                                            </div>
+                                                        </a-spin>
                                                     </div>
                                                 </div>
                                             </div>
-                                            </div>
-                                            
+
                                             <a-empty v-if="vectorStats.length === 0" />
                                         </div>
                                     </div>
@@ -521,33 +546,34 @@
                                                             @click="isProductsItemExpand[index] = false" />
                                                         <span class="text-xs text-[#7a899f]">{{
                                                             themeStats?.dataset?.[category]?.total
-                                                        }} 幅</span>
+                                                            }} 幅</span>
                                                     </div>
                                                 </div>
 
                                                 <div v-show="isProductsItemExpand[index]">
                                                     <div class="max-h-[432px] overflow-y-auto">
                                                         <div v-for="(themeName, idx) in themeStats?.dataset?.[category]?.dataList"
-                                                        class="config-item mt-1 mb-2" :key="idx">
-                                                        <div class="config-label relative">
-                                                            <Image :size="16" class="config-icon" />
-                                                            <span>{{ themeName }}</span>
-                                                            <div class="absolute right-0 cursor-pointer">
-                                                                <a-tooltip>
-                                                                    <template #title>{{ t('datapage.history.preview')
-                                                                        }}</template>
-                                                                    <Eye v-if="shouldShowEyeOff(category, idx)"
-                                                                        @click="toggleEye(category, idx, themeName)"
-                                                                        :size="16" class="cursor-pointer" />
-                                                                    <EyeOff v-else :size="16"
-                                                                        @click="toggleEye(category, idx, themeName)"
-                                                                        class="cursor-pointer" />
-                                                                </a-tooltip>
+                                                            class="config-item mt-1 mb-2" :key="idx">
+                                                            <div class="config-label relative">
+                                                                <Image :size="16" class="config-icon" />
+                                                                <span>{{ themeName }}</span>
+                                                                <div class="absolute right-0 cursor-pointer">
+                                                                    <a-tooltip>
+                                                                        <template #title>{{
+                                                                            t('datapage.history.preview')
+                                                                            }}</template>
+                                                                        <Eye v-if="shouldShowEyeOff(category, idx)"
+                                                                            @click="toggleEye(category, idx, themeName)"
+                                                                            :size="16" class="cursor-pointer" />
+                                                                        <EyeOff v-else :size="16"
+                                                                            @click="toggleEye(category, idx, themeName)"
+                                                                            class="cursor-pointer" />
+                                                                    </a-tooltip>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    </div>
-                                                    
+
                                                 </div>
                                             </div>
                                             <a-empty v-if="themeStats.total === 0" />
@@ -628,7 +654,7 @@ const {
     // ------------------------ 数据检索 1.遥感影像可视化 -------------------------- //
     showSceneResult, selectedSensorName, destroyScene, destroyExploreLayers,
     // ------------------------ 数据检索 2.矢量可视化 -------------------------- //
-    previewVectorList, showVectorResult, destroyVector,
+    previewVectorList, showVectorResult, destroyVector, getAttrs4CustomField,
     // ------------------------ 数据检索 3.栅格产品可视化 -------------------------- //
     toggleEye, shouldShowEyeOff,
     predefineColors,

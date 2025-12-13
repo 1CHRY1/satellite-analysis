@@ -14,7 +14,7 @@ import { mapManager } from '@/util/map/mapManager'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import { searchedSpatialFilterMethod, finalLandId, curGridsBoundary, vectorStats, selectedGridResolution, vectorSymbology, selectedDateRange } from "./shared"
 import { message } from "ant-design-vue";
-import { cancelCase, getCaseResult, getVectorAttr, pollStatus } from "@/api/http/satellite-data/satellite.api";
+import { cancelCase, getCaseResult, getVectorAttr, getVectorCustomAttr, pollStatus } from "@/api/http/satellite-data/satellite.api";
 import { calTask } from "../noCloud/composables/shared";
 import bus from '@/store/bus'
 // 使用一个对象来存储每个 Product Item 的显示状态
@@ -287,14 +287,17 @@ export const useVisualize = () => {
                     attrs: [],
                     checkAll: false,
                     isIndeterminate: true,
-                    checkedAttrs: []
+                    checkedAttrs: [],
+                    // selectedField: vector.fields.slice(-1)[0],
+                    selectedField: undefined,
+                    isRequesting: false
                 }
-                const result = await getVectorAttr(vector.tableName)
-                vectorSymbology.value[vector.tableName].attrs = result.map((item, index) => ({
-                    ...item,
-                    color: predefineColors.value[index % predefineColors.value.length],
-                }))
-                vectorSymbology.value[vector.tableName].checkedAttrs = result.map(item => item.label)
+                // const result = await getVectorAttr(vector.tableName)
+                // vectorSymbology.value[vector.tableName].attrs = result.map((item, index) => ({
+                //     ...item,
+                //     color: predefineColors.value[index % predefineColors.value.length],
+                // }))
+                // vectorSymbology.value[vector.tableName].checkedAttrs = result.map(item => item.label)
             } catch (e) {
                 console.error(`[${vector.tableName}] 请求失败:`, e)
             }
@@ -302,6 +305,21 @@ export const useVisualize = () => {
         await Promise.all(tasks)
         ezStore.set("vectorSymbology", vectorSymbology.value)
         console.log('vectorSymbology', vectorSymbology.value)
+    }
+    const getAttrs4CustomField = async (tableName: string, field: string | undefined) => {
+        if (!field) {
+            message.warning("请先选择字段")
+            return
+        }
+        vectorSymbology.value[tableName].isRequesting = true
+        const result = await getVectorCustomAttr(tableName, field)
+        vectorSymbology.value[tableName].attrs = result.map((item, index) => ({
+            type: item,
+            label: item,
+            color: predefineColors.value[index % predefineColors.value.length],
+        }))
+        vectorSymbology.value[tableName].checkedAttrs = result
+        vectorSymbology.value[tableName].isRequesting = false
     }
     const handleCheckAllChange = (tableName: string, val: boolean) => {
         console.log('all:', val)
@@ -336,25 +354,28 @@ export const useVisualize = () => {
         // }, 5000)
     }
     const handleShowVector = async (source_layer: string, landId: string) => {
+        const curField = vectorSymbology.value[source_layer].selectedField
         const attrList = vectorSymbology.value[source_layer].checkedAttrs.map(item => {
             const targetAttr = vectorSymbology.value[source_layer].attrs.find(i => i.label === item)
             return targetAttr
         })
+        console.log(attrList)
 
         const types = attrList
             .map(a => a?.type)
-            .filter((v): v is number => typeof v === 'number')
-
+            // .filter((v): v is number => typeof v === 'number')
+        console.log(types)
         const url = getVectorUrl({
             landId,
             source_layer,
+            field: vectorSymbology.value[source_layer].selectedField || 'type',
             spatialFilterMethod: searchedSpatialFilterMethod.value,
             resolution: selectedGridResolution.value,
             type: types
         })
 
         // 添加到地图 - 点击事件处理已经在 map_addMVTLayer 函数中实现
-        InteractiveExploreMapOps.map_addMVTLayer(source_layer, url, attrList as any)
+        InteractiveExploreMapOps.map_addMVTLayer(source_layer, url, attrList as any, curField)
     }
     const destroyVector = (index?: number) => {
         if (index !== undefined) {
@@ -486,6 +507,7 @@ export const useVisualize = () => {
         destroyGridLayer,
         destroyScene,
         destroyVector,
+        getAttrs4CustomField,
         destroyDEM,
         destroyUniqueLayer,
         addPOIMarker,

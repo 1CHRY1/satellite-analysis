@@ -4,9 +4,10 @@ import type { BandMapper } from './filter.type'
 export type VectorUrlParam = {
     landId: string
     source_layer: string
+    field: string
     spatialFilterMethod: SpatialFilterMethod
     resolution?: number
-    type?: number[]
+    type?: any[]
 }
 
 export type RGBCompositeParams = {
