@@ -81,11 +81,12 @@ export async function getScenesInfo(
  * 矢量Url
  */
 export const getVectorUrl = (vectorUrlParam: VectorUrlParam) => {
-    const { landId, source_layer, spatialFilterMethod, resolution, type } = vectorUrlParam
+    const { landId, source_layer, field, spatialFilterMethod, resolution, type } = vectorUrlParam
     const requestParams = new URLSearchParams()
     if (type && type.length) {
         for (const t of type) {
-            requestParams.append('type', t.toString())
+            // requestParams.append('type', t.toString())
+            requestParams.append('value', t.toString())
         }
     }
     const qs = requestParams.toString()
@@ -94,13 +95,13 @@ export const getVectorUrl = (vectorUrlParam: VectorUrlParam) => {
     // types = ''
     switch (spatialFilterMethod) {
         case 'region':
-            baseUrl = `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/region/${landId}/${source_layer}/{z}/{x}/{y}${types}`
+            baseUrl = `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/region/${landId}/${source_layer}/${field}/{z}/{x}/{y}${types}`
             break
         case 'poi':
-            baseUrl = `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/location/${landId}/${resolution}/${source_layer}/{z}/{x}/{y}${types}`
+            baseUrl = `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/location/${landId}/${resolution}/${source_layer}/${field}/{z}/{x}/{y}${types}`
             break
         default:
-            baseUrl = `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/region/${landId}/${source_layer}/{z}/{x}/{y}${types}`
+            baseUrl = `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/region/${landId}/${source_layer}/${field}/{z}/{x}/{y}${types}`
             break
     }
     const fullUrl = baseUrl
@@ -210,16 +211,16 @@ export const getGridSceneUrl = (grid: GridData, param: RGBCompositeParams) => {
 /**
  * 格网矢量Url
  */
-export const getGridVectorUrl = (grid: GridData, source_layer: string, type?: number[]) => {
+export const getGridVectorUrl = (grid: GridData, source_layer: string, field: string = 'type', type?: any[]) => {
     const requestParams = new URLSearchParams()
     if (type && type.length) {
         for (const t of type) {
-            requestParams.append('type', t.toString())
+            requestParams.append('value', t.toString())
         }
     }
     const qs = requestParams.toString()
     const types = qs ? '?' + qs : ''
-    return `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/grid/${grid.columnId}/${grid.rowId}/${grid.resolution}/${source_layer}/{z}/{x}/{y}${types}`
+    return `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/grid/${grid.columnId}/${grid.rowId}/${grid.resolution}/${source_layer}/${field}/{z}/{x}/{y}${types}`
 }
 
 /**

@@ -8,6 +8,8 @@ import { mapManager } from '@/util/map/mapManager'
 import bus from '@/store/bus'
 import { ezStore } from '@/store'
 import { gridData } from "./shared"
+import { message } from "ant-design-vue"
+import { getVectorCustomAttr } from "@/api/http/satellite-data"
 
 /**
  * 2. 矢量Tab
@@ -41,7 +43,8 @@ export const useGridVector = () => {
         gridVectorSymbology.value[tableName] = {
             ...item,
             checkedAttrs: val ? item.attrs.map(attr => attr.label) : [],
-            isIndeterminate: false
+            isIndeterminate: false,
+            isRequesting: false
         };
         console.log(gridVectorSymbology.value[tableName])
     }
@@ -56,7 +59,8 @@ export const useGridVector = () => {
     const selectedVector = ref<VectorStats.Vector>({
         tableName: '',
         vectorName: '',
-        time: ''
+        time: '',
+        fields: []
     })
     const previewIndex = ref<number | null>(null)
     const handleSelectVector = (index: number) => {
@@ -75,10 +79,10 @@ export const useGridVector = () => {
         })
         console.log(attrList)
         let type = attrList.map((attr) => attr?.type) as number[]
-        const url = getGridVectorUrl(gridData.value, tableName, type)
+        const url = getGridVectorUrl(gridData.value, tableName, gridVectorSymbology.value[tableName].selectedField, type)
         console.log(url)
         console.log(tableName)
-        GridExploreMapOps.map_addGridMVTLayer(tableName, url, attrList as any, undefined, gridData.value)
+        GridExploreMapOps.map_addGridMVTLayer(tableName, url, attrList as any, gridVectorSymbology.value[tableName].selectedField, undefined, gridData.value)
 
         // 添加一次性的点击事件监听器
         mapManager.withMap((map) => {
@@ -87,6 +91,22 @@ export const useGridVector = () => {
             
             map.on('click', handleGridVectorClick)
         })
+    }
+
+    const getAttrs4CustomField = async (tableName: string, field: string | undefined) => {
+        if (!field) {
+            message.warning("请先选择字段")
+            return
+        }
+        gridVectorSymbology.value[tableName].isRequesting = true
+        const result = await getVectorCustomAttr(tableName, field)
+        gridVectorSymbology.value[tableName].attrs = result.map((item, index) => ({
+            type: item,
+            label: item,
+            color: predefineColors.value[index % predefineColors.value.length],
+        }))
+        gridVectorSymbology.value[tableName].checkedAttrs = result
+        gridVectorSymbology.value[tableName].isRequesting = false
     }
 
     // 定义点击事件处理函数
@@ -131,6 +151,7 @@ export const useGridVector = () => {
         gridVectorSymbology,
         selectedVector,
         predefineColors,
-        cleanupGridVectorEvents
+        cleanupGridVectorEvents,
+        getAttrs4CustomField
     }
 }
