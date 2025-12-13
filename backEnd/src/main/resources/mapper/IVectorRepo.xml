@@ -6,11 +6,12 @@
         WITH mvt_geom AS (
         SELECT
         ST_AsMVTGeom(
-        ST_Transform(ST_Intersection(
-        original_table.geom,
-        ST_Transform(ST_GeomFromText(#{wkt}, 4326), ST_SRID(original_table.geom))
-        ), 3857),
-        ST_Transform(ST_TileEnvelope(#{z}, #{x}, #{y}), 3857),
+            ST_Transform(
+                ST_Intersection(
+                    original_table.geom,
+                    ST_Transform(ST_GeomFromText(#{wkt}, 4326), ST_SRID(original_table.geom))
+                ), 3857),
+            ST_TileEnvelope(#{z}, #{x}, #{y}),
         extent => 256,
         buffer => 64,
         clip_geom => true
@@ -24,12 +25,16 @@
             original_table.id  <!-- 默认字段 -->
         </if>
         FROM gis_db.${tableName} AS original_table
-        WHERE ST_Intersects(
-        ST_Transform(original_table.geom, 4326),
-        ST_GeomFromText(#{wkt}, 4326)
+        WHERE
+            original_table.geom &amp;&amp; ST_GeomFromText(#{wkt}, 4326)
+        AND (
+            ST_Intersects(
+                original_table.geom,
+                ST_GeomFromText(#{wkt}, 4326)
+            )
         )
         <if test="types != null and types.size() > 0">
-            AND original_table.type IN
+            AND original_table.${field} IN
             <foreach collection='types' item='type' open='(' separator=',' close=')'>
                 #{type}
             </foreach>

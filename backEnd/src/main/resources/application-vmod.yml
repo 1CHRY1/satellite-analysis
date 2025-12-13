@@ -1,6 +1,6 @@
 server:
   tomcat:
-    connection-timeout: 300000
+    connection-timeout: 30000
   port: 8999
 
 netty:
@@ -102,6 +102,7 @@ spring:
             max-active: 20
             min-idle: 5
             max-wait: 60000
+            socket-timeout: 1200000
             validation-query: SELECT 1
             filters: stat,wall
             wall:
