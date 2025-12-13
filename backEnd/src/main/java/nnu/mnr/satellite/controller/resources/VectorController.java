@@ -37,48 +37,74 @@ public class VectorController {
         return ResponseEntity.ok(vectorDataService.getVectorByTimeAndLocation(vectorsLocationFetchDTO));
     }
 
-    @GetMapping("/{tableName}/type")
-    public List<VectorTypeVO> getVectorByLocationAndTableName(@PathVariable String tableName) {
-        return vectorDataService.getVectorTypeByTableName(tableName);
+//    @GetMapping("/{tableName}/type")
+//    public List<VectorTypeVO> getVectorTypeByTableName(@PathVariable String tableName) {
+//        return vectorDataService.getVectorTypeByTableName(tableName);
+//    }
+
+    @GetMapping("/{tableName}/{field}")
+    public List<String> getVectorTypeByTableNameAndField(@PathVariable String tableName, @PathVariable String field) {
+        return vectorDataService.getVectorTypeByTableNameAndField(tableName, field);
     }
 
     // 矢量数据这里传递的参数要改
-    @GetMapping("/region/{regionId}/{tableName}/{z}/{x}/{y}")
+    @GetMapping("/region/{regionId}/{tableName}/{field}/{z}/{x}/{y}")
     public void getVectorByRegionAndTableName(@PathVariable Integer regionId, @PathVariable String tableName,
+                                              @PathVariable String field,
                                               @PathVariable int z, @PathVariable int x,
-                                              @PathVariable int y, @RequestParam(value = "types", required = false) List<Integer> types,
+                                              @PathVariable int y, @RequestParam(value = "types", required = false) List<String> types,
                                               HttpServletResponse response,
                                               @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-                                              @CookieValue(value = "encrypted_request_body", required = false) String encryptedRequestBody) {
+                                              @CookieValue(value = "encrypted_request_body", required = false) String encryptedRequestBody) throws IOException {
+        // 验证 field 是否合法
+        if (isRestrictedField(field)) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST); // 400
+            response.getWriter().write("Invalid field: 'id', 'geom', and 'fid' are restricted.");
+            return;
+        }
         // 拼凑cacheKey
         String userId;
         userId = IdUtil.parseUserIdFromAuthHeader(authorizationHeader);
 
         String cacheKey = userId + "_" + encryptedRequestBody;
-        byte[] tile = vectorDataService.getVectorByRegionAndTableName(tableName, z, x, y, cacheKey, types);
+        byte[] tile = vectorDataService.getVectorByRegionAndTableName(tableName, field, z, x, y, cacheKey, types);
         sendVectorTileResponse(tile, response);
     }
 
-    @GetMapping("/grid/{columnId}/{rowId}/{resolution}/{tableName}/{z}/{x}/{y}")
+    @GetMapping("/grid/{columnId}/{rowId}/{resolution}/{tableName}/{field}/{z}/{x}/{y}")
     public void getVectorByGridResolutionAndTableName(@PathVariable Integer columnId,
                                               @PathVariable Integer rowId,
                                               @PathVariable Integer resolution,
-                                              @PathVariable String tableName,
+                                              @PathVariable String tableName, @PathVariable String field,
                                               @PathVariable int z, @PathVariable int x,
-                                              @PathVariable int y, @RequestParam(value = "types", required = false) List<Integer> types,
-                                                      HttpServletResponse response) {
-        byte[] tile = vectorDataService.getVectorByGridResolutionAndTableName(columnId, rowId, resolution, tableName, z, x, y, types);
+                                              @PathVariable int y, @RequestParam(value = "types", required = false) List<String> types,
+                                                      HttpServletResponse response) throws IOException {
+        // 验证 field 是否合法
+        if (isRestrictedField(field)) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST); // 400
+            response.getWriter().write("Invalid field: 'id', 'geom', and 'fid' are restricted.");
+            return;
+        }
+
+        byte[] tile = vectorDataService.getVectorByGridResolutionAndTableName(columnId, rowId, resolution, tableName, field, z, x, y, types);
         sendVectorTileResponse(tile, response);
     }
 
-    @GetMapping("/location/{locationId}/{resolution}/{tableName}/{z}/{x}/{y}")
+    @GetMapping("/location/{locationId}/{resolution}/{tableName}/{field}/{z}/{x}/{y}")
     public void getVectorByLocationAndTableName(@PathVariable String locationId,
                                               @PathVariable Integer resolution,
-                                              @PathVariable String tableName,
+                                              @PathVariable String tableName, @PathVariable String field,
                                               @PathVariable int z, @PathVariable int x,
-                                              @PathVariable int y, @RequestParam(value = "types", required = false) List<Integer> types,
-                                                HttpServletResponse response) {
-        byte[] tile = vectorDataService.getVectorByLocationAndTableName(locationId, resolution, tableName, z, x, y, types);
+                                              @PathVariable int y, @RequestParam(value = "types", required = false) List<String> types,
+                                                HttpServletResponse response) throws IOException {
+        // 验证 field 是否合法
+        if (isRestrictedField(field)) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST); // 400
+            response.getWriter().write("Invalid field: 'id', 'geom', and 'fid' are restricted.");
+            return;
+        }
+
+        byte[] tile = vectorDataService.getVectorByLocationAndTableName(locationId, resolution, tableName, field, z, x, y, types);
         sendVectorTileResponse(tile, response);
     }
 
@@ -99,5 +125,11 @@ public class VectorController {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private boolean isRestrictedField(String field) {
+        return "id".equalsIgnoreCase(field) ||
+                "geom".equalsIgnoreCase(field) ||
+                "fid".equalsIgnoreCase(field);
     }
 }

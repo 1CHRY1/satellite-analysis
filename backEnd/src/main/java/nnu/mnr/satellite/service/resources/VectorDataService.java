@@ -12,6 +12,7 @@ import org.locationtech.jts.geom.Geometry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -56,25 +57,30 @@ public class VectorDataService {
         return vectorRepo.getVectorTypeByTableName(tableName);
     }
 
-    public byte[] getVectorByRegionAndTableName(String tableName, int z, int x, int y, String cacheKey, List<Integer> types){
+    public List<String> getVectorTypeByTableNameAndField(String tableName, String field){
+        return vectorRepo.getVectorTypeByTableNameAndField(tableName, field);
+    }
+
+    public byte[] getVectorByRegionAndTableName(String tableName, String field, int z, int x, int y, String cacheKey, List<String> types){
         SceneDataCache.UserRegionInfoCache userRegionInfoCache = SceneDataCache.getUserRegionInfoCacheMap(cacheKey);
         Geometry gridBoundary = userRegionInfoCache.gridsBoundary;
         String wkt = gridBoundary.toText();
-        return getMvtTile(tableName, wkt, z, x, y, types);
+        return getMvtTile(tableName, wkt, field, z, x, y, types);
     }
 
-    public byte[] getVectorByLocationAndTableName(String locationId, Integer resolution, String tableName, int z, int x, int y, List<Integer> types){
+    public byte[] getVectorByLocationAndTableName(String locationId, Integer resolution, String tableName, String field, int z, int x, int y, List<String> types){
         String wkt = locationService.getLocationBoundary(resolution, locationId).toText();
-        return getMvtTile(tableName, wkt, z, x, y, types);
+        return getMvtTile(tableName, wkt, field, z, x, y, types);
     }
 
-    public byte[] getVectorByGridResolutionAndTableName(Integer columnId, Integer rowId, Integer resolution, String tableName, int z, int x, int y, List<Integer> types){
+    public byte[] getVectorByGridResolutionAndTableName(Integer columnId, Integer rowId, Integer resolution, String tableName, String field, int z, int x, int y, List<String> types){
         String wkt = getTileGeomByIdsAndResolution(rowId,  columnId, resolution).toString();
-        return getMvtTile(tableName, wkt, z, x, y, types);
+        return getMvtTile(tableName, wkt, field, z, x, y, types);
     }
 
     // 获取矢量数据并发布成瓦片服务
-    public byte[] getMvtTile(String tableName, String wkt, int z, int x, int y, List<Integer> types){
+    @Transactional
+    public byte[] getMvtTile(String tableName, String wkt, String field, int z, int x, int y, List<String> types){
         // 参数校验，防止sql注入
         validateParams(tableName, z, x, y);
         // 查询表的非几何字段列表（排除 'geom' 字段）
@@ -85,7 +91,7 @@ public class VectorDataService {
                 tableName
         );
         // 调用Mapper查询MVT数据
-        Object mvtResult = vectorRepo.getVectorByTableNameAndGeometry(tableName, wkt, z, x, y, columns, types);
+        Object mvtResult = vectorRepo.getVectorByTableNameAndGeometry(tableName, wkt, field, z, x, y, columns, types);
         // 类型转换与返回
         if (mvtResult instanceof byte[]) {
             return (byte[]) mvtResult;
