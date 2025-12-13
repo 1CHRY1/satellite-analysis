@@ -416,7 +416,8 @@
                                             <div class="config-label relative">
                                                 <span class="result-info-label">共找到 {{ vectorStats.length }} 条记录</span>
                                             </div>
-                                            <div v-for="(item, index) in vectorStats" class="stats-item-tree" :class="{
+                                            <div class="max-h-[432px] overflow-y-auto">
+                                                <div v-for="(item, index) in vectorStats" class="stats-item-tree" :class="{
                                                 'stats-item-rounded-t': index === 0,
                                                 'stats-item-rounded-b': index === vectorStats.length - 1,
                                             }" :key="item.tableName">
@@ -481,6 +482,8 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            </div>
+                                            
                                             <a-empty v-if="vectorStats.length === 0" />
                                         </div>
                                     </div>
@@ -523,7 +526,8 @@
                                                 </div>
 
                                                 <div v-show="isProductsItemExpand[index]">
-                                                    <div v-for="(themeName, idx) in themeStats?.dataset?.[category]?.dataList"
+                                                    <div class="max-h-[432px] overflow-y-auto">
+                                                        <div v-for="(themeName, idx) in themeStats?.dataset?.[category]?.dataList"
                                                         class="config-item mt-1 mb-2" :key="idx">
                                                         <div class="config-label relative">
                                                             <Image :size="16" class="config-icon" />
@@ -542,6 +546,8 @@
                                                             </div>
                                                         </div>
                                                     </div>
+                                                    </div>
+                                                    
                                                 </div>
                                             </div>
                                             <a-empty v-if="themeStats.total === 0" />
