@@ -12,9 +12,64 @@ from rasterio.features import geometry_mask
 from rasterio.transform import from_bounds
 from config import minio_config, TRANSPARENT_CONTENT
 
+# --- 配置区域 ---
+
+# 1. 定义高程阈值 (单位: 米)
+# 针对青藏高原优化：细化了 2000-6000 米之间的层级
+ELEVATION_BREAKS = [
+    0,      # 海平面
+    50,     # 滨海低地
+    200,    # 平原
+    500,    # 低丘
+    1000,   # 高丘/低山
+    1500,   # 中山 (二阶梯边缘)
+    2000,   # 中高山
+    2500,   # 高山
+    3000,   # 高原下缘
+    3500,   # 高原面 (青藏主要区域)
+    4000,   # 高原脊
+    4500,   # 极高山下缘
+    5000,   # 雪线附近
+    5500,   # 冰川带
+    6000    # 极高峰 (珠峰等)
+]
+
+# 2. 定义对应的颜色 (R, G, B)
+# 颜色设计逻辑：
+# 海洋(蓝) -> 平原(绿) -> 丘陵(黄) -> 山脉(褐) -> 高原(紫灰/深褐) -> 雪峰(白)
+COLOR_PALETTE = np.array([
+    # --- 水域 ---
+    [27, 64, 131],    # < 0m: 深海蓝
+
+    # --- 植被与平原 (0 - 1000m) ---
+    [54, 160, 54],    # 0-50m: 深绿 (亚马逊/低地)
+    [78, 180, 60],    # 50-200m: 翠绿 (华北平原)
+    [149, 212, 108],  # 200-500m: 浅绿 (丘陵过渡)
+    [243, 230, 120],  # 500-1000m: 米黄 (黄土高原/低缓山地)
+
+    # --- 山地过渡 (1000 - 3000m) ---
+    [219, 175, 90],   # 1000-1500m: 浅棕 (云贵高原)
+    [190, 140, 70],   # 1500-2000m: 中棕
+    [160, 100, 50],   # 2000-2500m: 深棕 (秦岭/太行)
+    [140, 80, 40],    # 2500-3000m: 褐红 (横断山脉河谷)
+
+    # --- 青藏高原与高山 (3000 - 5000m) ---
+    # 这里避免全是红色，转入更显荒凉的岩石色调
+    [120, 70, 40],    # 3000-3500m: 暗褐
+    [100, 60, 40],    # 3500-4000m: 深咖啡 (高原面)
+    [90, 70, 60],     # 4000-4500m: 灰褐 (羌塘无人区)
+    [80, 80, 80],     # 4500-5000m: 深岩灰 (高山碎石带)
+
+    # --- 冰雪圈 (5000m+) ---
+    [130, 130, 130],  # 5000-5500m: 浅灰 (雪线交界)
+    [190, 190, 190],  # 5500-6000m: 银灰 (冰川)
+    [250, 250, 250],  # > 6000m: 纯白 (极高雪峰)
+], dtype=np.uint8)
+
 ####### Helper ########################################################################################
 # Terrain-RGB Reference: https://docs.mapbox.com/data/tilesets/reference/mapbox-terrain-rgb-v1/
 
+# ------------------- 三维 ------------------- #
 def zero_height_rgb_tile(size: int = 256) -> bytes:
     
     # 0m -> Terrain-RGB编码：(0 + 10000) * 10 = 100000
@@ -91,8 +146,50 @@ def _encode_terrain_rgb(dem: np.ndarray, mask: np.ndarray = None, scale_factor: 
 
     return rgb
 
+# ------------------- 二维 ------------------- #
+def _apply_colormap(dem_data: np.ndarray, mask: np.ndarray) -> np.ndarray:
+    """
+    将单通道 DEM 数据转换为 4通道 RGBA 图像
+    """
+    # 1. 处理无效值：将掩膜外的区域设为极小值或其他安全值，防止干扰着色
+    # 注意：rasterio 读取的 dem 可能是 float，含有 nodata
+    # 也可以简单地只对 mask 为 255 的区域进行着色计算
+    
+    # 2. 使用 np.digitize 将高程值映射到索引 (0, 1, 2, 3...)
+    # right=False 表示区间是 [a, b) 左闭右开
+    bin_indices = np.digitize(dem_data, ELEVATION_BREAKS, right=False)
+    
+    # 3. 根据索引从调色板中取色
+    # COLOR_PALETTE[bin_indices] 会生成一个 (H, W, 3) 的 RGB 数组
+    rgb = COLOR_PALETTE[bin_indices]
+    
+    # 4. 组合 Alpha 通道
+    # mask 已经是 uint8 (0 或 255)，直接作为 Alpha 通道
+    # 最终形状 (H, W, 4)
+    rgba = np.dstack((rgb, mask))
+    
+    return rgba
 
+# ------------------- 二维(连续)------------------- #
+# from matplotlib import cm
 
+# def _apply_gradient_colormap(dem, mask, vmin=0, vmax=1000):
+#     # 归一化高程值到 0-1 之间
+#     norm_dem = (dem - vmin) / (vmax - vmin)
+#     norm_dem = np.clip(norm_dem, 0, 1)
+    
+#     # 使用 matplotlib 的色带 (例如 'terrain', 'jet', 'viridis')
+#     # cm.terrain(X) 返回 (H, W, 4) 的 float 数组 (0.0 - 1.0)
+#     rgba_float = cm.terrain(norm_dem) 
+    
+#     # 转换为 0-255 uint8
+#     rgba_uint8 = (rgba_float * 255).astype("uint8")
+    
+#     # 将你的几何掩膜应用到 Alpha 通道
+#     # 只有 mask 有值的地方才保留 alpha，其他地方强制透明
+#     rgba_uint8[..., 3] = np.where(mask == 255, rgba_uint8[..., 3], 0)
+    
+#     return rgba_uint8
 ####### Router ########################################################################################
 
 router = APIRouter()
@@ -208,6 +305,128 @@ def get_tile(
         print("Terrain tile error:", e)
         return Response(content=ZERO_HEIGHT, media_type="image/png")
 
+@router.get("/2dTerrainRGB/{z}/{x}/{y}.png")
+def get_2d_tile(
+    z: int, x: int, y: int,
+    url: str = Query(...),
+    grids_boundary: str = Query(None, description="GeoJSON polygon string (JSON.stringify from frontend)"),
+    scale_factor: float = Query(1.0, description="高程缩放因子，1.0表示不缩放，0.1表示缩小10倍"),
+):
+    try:
+        cog_path = url
+        
+        # Step 1: Get the tile data
+        with COGReader(cog_path) as cog:
+            if(cog.tile_exists(x, y, z)):
+                tile_data = cog.tile(x, y, z)
+                dem = tile_data.data[0]
+                mask = tile_data.mask
+            else :
+                print("tile not exist", z, x, y)
+                return Response(content=ZERO_HEIGHT, media_type="image/png")
+            
+        # Step 2: Process GeoJSON boundary if provided
+        if grids_boundary:
+            try:
+                # Parse the GeoJSON polygon
+                geojson_data = json.loads(grids_boundary)
+                if geojson_data.get("type") == "FeatureCollection":
+                    # 处理 FeatureCollection
+                    polygons = []
+                    for feature in geojson_data["features"]:
+                        if feature["geometry"]["type"] == "Polygon":
+                            coords = feature["geometry"]["coordinates"][0]  # 取外环
+                            polygons.append(Polygon(coords))
+                        elif feature["geometry"]["type"] == "MultiPolygon":
+                            for poly_coords in feature["geometry"]["coordinates"]:
+                                polygons.append(Polygon(poly_coords[0]))  # 取每个多边形的外环
+                    if polygons:
+                        boundary_polygon = unary_union(polygons)
+                    else:
+                        return Response(status_code=400, content=b"No valid polygons found in GeoJSON")
+                elif geojson_data.get("type") == "Feature":
+                    # 处理单个 Feature
+                    if geojson_data["geometry"]["type"] == "Polygon":
+                        coords = geojson_data["geometry"]["coordinates"][0]
+                        boundary_polygon = Polygon(coords)
+                    elif geojson_data["geometry"]["type"] == "MultiPolygon":
+                        polygons = []
+                        for poly_coords in geojson_data["geometry"]["coordinates"]:
+                            polygons.append(Polygon(poly_coords[0]))
+                        boundary_polygon = unary_union(polygons)
+                    else:
+                        return Response(status_code=400, content=b"Unsupported geometry type")
+                elif geojson_data.get("type") == "Polygon":
+                    # 处理单个 Polygon
+                    coords = geojson_data["coordinates"][0]
+                    boundary_polygon = Polygon(coords)
+                else:
+                    return Response(status_code=400, content=b"Unsupported GeoJSON type")
+                
+                # 优化方案：先检查瓦片是否与多边形相交
+                tile_wgs_bounds = tile_bounds(x, y, z)
+                tile_bbox = Polygon([
+                    (tile_wgs_bounds["west"], tile_wgs_bounds["south"]),
+                    (tile_wgs_bounds["east"], tile_wgs_bounds["south"]),
+                    (tile_wgs_bounds["east"], tile_wgs_bounds["north"]),
+                    (tile_wgs_bounds["west"], tile_wgs_bounds["north"]),
+                    (tile_wgs_bounds["west"], tile_wgs_bounds["south"])
+                ])
+                
+                # 如果瓦片与多边形不相交，直接返回透明瓦片
+                if not tile_bbox.intersects(boundary_polygon):
+                    return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
+                
+                H, W = dem.shape
+                transform = from_bounds(
+                    tile_wgs_bounds['west'], tile_wgs_bounds['south'], 
+                    tile_wgs_bounds['east'], tile_wgs_bounds['north'], 
+                    W, H
+                )
+                
+                # 生成多边形掩膜 (True = 多边形内部)
+                polygon_mask = geometry_mask(
+                    [boundary_polygon], 
+                    out_shape=(H, W), 
+                    transform=transform, 
+                    invert=True
+                )
+                
+                # 关键修改：创建最终掩膜
+                # 只保留原始有效数据 AND 在多边形内部的像素
+                final_mask = np.logical_and(mask == 255, polygon_mask)
+                final_mask_uint8 = final_mask.astype("uint8") * 255
+                
+            except Exception as e:
+                return Response(status_code=400, content=f"Invalid GeoJSON format: {str(e)}".encode())
+        else:
+            # No boundary provided, use original mask
+            final_mask_uint8 = mask
+        
+        # 1. 应用缩放 (如果需要)
+        if scale_factor != 1.0:
+            dem = dem * scale_factor
+
+        # 2. 执行伪彩色映射 (替代原来的 _encode_terrain_rgb)
+        # 注意：这里直接生成 RGBA，因为 2D 可视化通常需要透明背景
+        rgba_image = _apply_colormap(dem, final_mask_uint8)
+        # rgba_image shape --> (H, W, 4)
+        # 3. 调整维度以适配 render 函数
+        # render 通常需要 (Bands, Height, Width) -> (4, H, W)
+        # 如果你使用的是 rio-tiler 的 render，它通常直接接受 (C, H, W)
+        content = render(
+            rgba_image.transpose(2, 0, 1), 
+            img_format="png", 
+            **img_profiles.get("png")
+        )
+        return Response(content=content, media_type="image/png")
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"Terrain tile error: {e}")
+        return Response(content=ZERO_HEIGHT, media_type="image/png")
+
 
 @router.get("/box/{z}/{x}/{y}.png")
 def get_box_tile(
@@ -251,3 +470,47 @@ def get_box_tile(
     grids_boundary_json = json.dumps(grids_boundary_geojson)
     
     return get_tile(z, x, y, url, grids_boundary=grids_boundary_json, scale_factor=scale_factor)
+
+@router.get("/2dBox/{z}/{x}/{y}.png")
+def get_box_tile(
+    z: int, x: int, y: int,
+    bbox: str = Query(..., description="Bounding box (WGS84): minx,miny,maxx,maxy"),
+    url: str = Query(...),
+    scale_factor: float = Query(1.0, description="高程缩放因子，1.0表示不缩放，0.1表示缩小10倍"),
+):
+        
+    try:
+        bbox_minx, bbox_miny, bbox_maxx, bbox_maxy = map(float, bbox.split(","))
+    except Exception:
+        return Response(status_code=400, content=b"Invalid bbox format")
+
+    # Step 2: Calculate the intersection of the tile and the bbox
+    tile_wgs_bounds: dict = tile_bounds(x, y, z)
+
+    intersection_minx = max(tile_wgs_bounds["west"], bbox_minx)
+    intersection_miny = max(tile_wgs_bounds["south"], bbox_miny)
+    intersection_maxx = min(tile_wgs_bounds["east"], bbox_maxx)
+    intersection_maxy = min(tile_wgs_bounds["north"], bbox_maxy)
+    
+    if intersection_minx >= intersection_maxx or intersection_miny >= intersection_maxy:
+        return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
+    
+    # Step3: Create a Shapely Polygon for the intersection area
+    polygon = Polygon([
+        (intersection_minx, intersection_miny),
+        (intersection_maxx, intersection_miny),
+        (intersection_maxx, intersection_maxy),
+        (intersection_minx, intersection_maxy),
+        (intersection_minx, intersection_miny)  # Close the polygon
+    ])
+    
+    grids_boundary_geojson = {
+        "type": "Feature",
+        "geometry": mapping(polygon),
+        "properties": {}
+    }
+    
+    grids_boundary_json = json.dumps(grids_boundary_geojson)
+    
+    return get_2d_tile(z, x, y, url, grids_boundary=grids_boundary_json, scale_factor=scale_factor)
+

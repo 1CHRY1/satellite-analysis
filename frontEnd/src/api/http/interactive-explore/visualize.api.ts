@@ -81,11 +81,12 @@ export async function getScenesInfo(
  * 矢量Url
  */
 export const getVectorUrl = (vectorUrlParam: VectorUrlParam) => {
-    const { landId, source_layer, spatialFilterMethod, resolution, type } = vectorUrlParam
+    const { landId, source_layer, field, spatialFilterMethod, resolution, type } = vectorUrlParam
     const requestParams = new URLSearchParams()
     if (type && type.length) {
         for (const t of type) {
-            requestParams.append('type', t.toString())
+            // requestParams.append('type', t.toString())
+            requestParams.append('value', t.toString())
         }
     }
     const qs = requestParams.toString()
@@ -94,13 +95,13 @@ export const getVectorUrl = (vectorUrlParam: VectorUrlParam) => {
     // types = ''
     switch (spatialFilterMethod) {
         case 'region':
-            baseUrl = `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/region/${landId}/${source_layer}/{z}/{x}/{y}${types}`
+            baseUrl = `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/region/${landId}/${source_layer}/${field}/{z}/{x}/{y}${types}`
             break
         case 'poi':
-            baseUrl = `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/location/${landId}/${resolution}/${source_layer}/{z}/{x}/{y}${types}`
+            baseUrl = `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/location/${landId}/${resolution}/${source_layer}/${field}/{z}/{x}/{y}${types}`
             break
         default:
-            baseUrl = `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/region/${landId}/${source_layer}/{z}/{x}/{y}${types}`
+            baseUrl = `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/region/${landId}/${source_layer}/${field}/{z}/{x}/{y}${types}`
             break
     }
     const fullUrl = baseUrl
@@ -113,6 +114,22 @@ export const getVectorUrl = (vectorUrlParam: VectorUrlParam) => {
  */
 export const getDEMUrl = async (themeName: string, gridsBoundary: any) => {
     let baseUrl = `${titilerProxyEndPoint}/terrain/terrainRGB/{z}/{x}/{y}.png`
+    const requestParams = new URLSearchParams()
+    const themeRes = await getThemeByThemeName(themeName)
+    const url = `${minioEndPoint}/${themeRes.data.images[0].bucket}/${themeRes.data.images[0].tifPath}`
+    requestParams.append('url', url)
+    requestParams.append('grids_boundary', JSON.stringify(gridsBoundary))
+    requestParams.append('scale_factor', '0.5')
+    const fullUrl = baseUrl + '?' + requestParams.toString()
+    console.log('DEM URL: ', fullUrl)
+    return fullUrl
+}
+
+/**
+ * 二维地形图Url
+ */
+export const get2DDEMUrl = async (themeName: string, gridsBoundary: any) => {
+    let baseUrl = `${titilerProxyEndPoint}/terrain/2dTerrainRGB/{z}/{x}/{y}.png`
     const requestParams = new URLSearchParams()
     const themeRes = await getThemeByThemeName(themeName)
     const url = `${minioEndPoint}/${themeRes.data.images[0].bucket}/${themeRes.data.images[0].tifPath}`
@@ -144,10 +161,10 @@ export const getNDVIOrSVRUrl = async (themeName: string, gridsBoundary: any) => 
  * 红绿立体影像Url
  */
 export const get3DUrl = async (themeName: string, gridsBoundary: any) => {
-    const stopLoading = message.loading('正在加载，请稍后...', 0)
-    setTimeout(() => {
-        stopLoading()
-    }, 5000)
+    
+    // setTimeout(() => {
+    //     stopLoading()
+    // }, 5000)
     let baseUrl = `${titilerProxyEndPoint}/rgb/tiles/{z}/{x}/{y}.png`
     const requestParams = new URLSearchParams()
     const themeRes = await getThemeByThemeName(themeName)
@@ -194,16 +211,16 @@ export const getGridSceneUrl = (grid: GridData, param: RGBCompositeParams) => {
 /**
  * 格网矢量Url
  */
-export const getGridVectorUrl = (grid: GridData, source_layer: string, type?: number[]) => {
+export const getGridVectorUrl = (grid: GridData, source_layer: string, field: string = 'type', type?: any[]) => {
     const requestParams = new URLSearchParams()
     if (type && type.length) {
         for (const t of type) {
-            requestParams.append('type', t.toString())
+            requestParams.append('value', t.toString())
         }
     }
     const qs = requestParams.toString()
     const types = qs ? '?' + qs : ''
-    return `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/grid/${grid.columnId}/${grid.rowId}/${grid.resolution}/${source_layer}/{z}/{x}/{y}${types}`
+    return `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/grid/${grid.columnId}/${grid.rowId}/${grid.resolution}/${source_layer}/${field}/{z}/{x}/{y}${types}`
 }
 
 /**
@@ -211,6 +228,17 @@ export const getGridVectorUrl = (grid: GridData, source_layer: string, type?: nu
  */
 export const getGridDEMUrl = (grid: GridData, bandPath: string) => {
     let baseUrl = `${titilerProxyEndPoint}/terrain/box/{z}/{x}/{y}.png`
+    const bbox = grid2bbox(grid.columnId, grid.rowId, grid.resolution)
+    const requestParams = new URLSearchParams()
+    requestParams.append('bbox', bbox.join(','))
+    requestParams.append('url', getMinIOUrl(bandPath))
+    requestParams.append('scale_factor', '0.5')
+    const fullUrl = baseUrl + '?' + requestParams.toString()
+    console.log('DEM URL: ', fullUrl)
+    return fullUrl
+}
+export const getGrid2DDEMUrl = (grid: GridData, bandPath: string) => {
+    let baseUrl = `${titilerProxyEndPoint}/terrain/2dBox/{z}/{x}/{y}.png`
     const bbox = grid2bbox(grid.columnId, grid.rowId, grid.resolution)
     const requestParams = new URLSearchParams()
     requestParams.append('bbox', bbox.join(','))
