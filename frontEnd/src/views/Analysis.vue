@@ -5,10 +5,10 @@
                 <Splitpanes class="default-theme">
                     <Pane :size="25" min-size="10" class="dataPaneArea">
                         <dataDirectory :projectId="projectId" :userId="userId" @removeCharts="removeCharts"
-                            @showMap="changeMapState" @addCharts="addCharts" class="h-[100%] w-full rounded" />
+                            @showMap="changeMapState" @addCharts="addCharts" @importData="handleImportData" class="h-[100%] w-full rounded" />
                     </Pane>
                     <Pane :size="50" min-size="20" class="codeEditArea">
-                        <codeEditor :projectId="projectId" :userId="userId" @addMessage="addMessage"
+                        <codeEditor ref="codeEditorRef" :projectId="projectId" :userId="userId" @addMessage="addMessage"
                             @servicePublished="markProjectsStale" @serviceUnpublished="markProjectsStale"
                             class="h-[100%] w-full" />
                     </Pane>
@@ -132,6 +132,18 @@ const removeCharts = () => {
 
 const changeMapState = () => {
     showMap.value = true
+}
+
+// 处理数据导入到代码编辑器
+interface CodeEditorInstance {
+    insertCode: (code: string) => void;
+}
+const codeEditorRef = ref<CodeEditorInstance | null>(null)
+
+const handleImportData = (code: string) => {
+    if (codeEditorRef.value) {
+        codeEditorRef.value.insertCode(code)
+    }
 }
 
 // --- 移除所有手动拖拽相关的逻辑 ---

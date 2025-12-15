@@ -1822,6 +1822,30 @@ onBeforeUnmount(async () => {
     }
     window.removeEventListener('keydown', keyboardSaveCode);
 })
+
+/**
+ * 插入代码到编辑器（在代码开头插入）
+ * 用于从用户数据中导入数据
+ */
+const insertCode = (codeToInsert: string) => {
+    if (!codeToInsert) return
+    
+    // 在代码开头插入，保留原有代码
+    const currentCode = code.value || ''
+    
+    // 如果当前代码为空或者只是错误消息，直接替换
+    if (!currentCode.trim() || currentCode.trim() === CODE_LOAD_ERROR_MESSAGE) {
+        code.value = codeToInsert
+    } else {
+        // 在开头插入，加上分隔符
+        code.value = codeToInsert + '\n' + currentCode
+    }
+}
+
+// 暴露方法给父组件调用
+defineExpose({
+    insertCode
+})
 </script>
 <style scoped>
 @reference 'tailwindcss';
