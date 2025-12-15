@@ -518,6 +518,7 @@ const defaultPayloadTemplate = JSON.stringify(
 const cubePayloadTemplate = JSON.stringify(
     {
         cube: '{{cube}}',
+        scene: '{{scene}}',
         params: '{{params}}',
     },
     null,
@@ -831,38 +832,52 @@ if __name__ == "__main__":
 `
 
 const cubeToolTemplateCode = `"""
-Cube 级 UDF 模板（Flask + HTTP 瓦片）
--------------------------------------
-该模板演示如何读取 Cube JSON、聚合场景信息并返回 tileTemplate。
+Cube 级 UDF 分析工具模板（Flask + HTTP 瓦片）
+============================================
 
-请求示例：
+该模板演示如何读取 Cube JSON、处理多景影像数据并返回 tileTemplate。
+与景级工具一致，使用 http+tile 模式，需要启动 Flask 服务。
+
+请求体示例：
 {
     "cube": {
-        "cubeId": "row-col-res",
+        "cubeId": "296-1654-20",
         "cacheKey": "cube-cache-key",
-        "dimensionScenes": [{"scenes": ["scene-a", "scene-b"]}],
-        "dimensionSensors": ["sentinel-2"],
-        "dimensionDates": ["2023-07-01", "2023-07-15"]
+        "dimensionScenes": [...],
+        "dimensionSensors": ["GF-1_PMS"],
+        "dimensionDates": ["2025-04-14", "2025-04-19"]
+    },
+    "scene": {
+        "sceneId": "SChqayh8kv3",
+        "sceneTime": "2025-04-19T00:00:00",
+        "sensorName": "GF-1_PMS",
+        "images": [...]
     },
     "params": {
-        "expression": "2*b5-b4-b3",
+        "expression": "(b4-b3)/(b4+b3)",
         "color": "rdylgn",
         "pixel_method": "first"
     }
 }
+
+使用步骤：
+1. 保存代码
+2. 点击"运行"启动 Flask 服务
+3. 点击"发布为工具"按钮进行发布
+4. 前往"展示分析"页面的"Cube级分析"区域使用工具
 """
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from urllib.parse import quote_plus
-from typing import Any, Dict, List
 import json
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 
-def ensure_dict(value: Any) -> Dict[str, Any]:
+def ensure_dict(value):
+    """确保值为字典类型"""
     if isinstance(value, str):
         try:
             parsed = json.loads(value)
@@ -873,7 +888,8 @@ def ensure_dict(value: Any) -> Dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
 
-def ensure_list(value: Any) -> List[Any]:
+def ensure_list(value):
+    """确保值为列表类型"""
     if isinstance(value, str):
         try:
             parsed = json.loads(value)
@@ -884,65 +900,89 @@ def ensure_list(value: Any) -> List[Any]:
     return value if isinstance(value, list) else []
 
 
-def summarize_cube(cube: Dict[str, Any]) -> Dict[str, Any]:
-    scenes = ensure_list(cube.get("dimensionScenes"))
-    sensors = ensure_list(cube.get("dimensionSensors"))
-    dates = ensure_list(cube.get("dimensionDates"))
-
-    total_scenes = 0
-    for bucket in scenes:
-        if isinstance(bucket, dict):
-            total_scenes += len(ensure_list(bucket.get("scenes")))
-
-    summary = {
-        "cubeId": cube.get("cubeId"),
-        "cacheKey": cube.get("cacheKey"),
-        "sceneCount": total_scenes,
-        "sensorTypes": sensors,
-    }
-    if dates:
-        summary["timeRange"] = dates[0] if len(dates) == 1 else f"{dates[0]} ~ {dates[-1]}"
-    return summary
+def get_scene_cog_urls(scene):
+    """从场景中提取 COG 文件 URL 列表"""
+    images = ensure_list(scene.get("images") if scene else [])
+    urls = []
+    for img in images:
+        if isinstance(img, dict):
+            bucket = img.get("bucket", "test-images")
+            tif_path = img.get("tifPath", "")
+            if tif_path:
+                urls.append(f"/minio/{bucket}/{tif_path}")
+    return urls
 
 
 @app.route("/run", methods=["POST"])
 def run():
+    """
+    处理 Cube 分析请求
+    
+    接收 cube 上下文和参数，返回 tileTemplate 供前端叠加
+    """
     body = request.get_json(force=True, silent=True) or {}
+    
+    # 获取 Cube 上下文
     cube = ensure_dict(body.get("cube"))
+    # 获取用户选择的单个场景
+    scene = ensure_dict(body.get("scene"))
+    # 获取分析参数
     params = ensure_dict(body.get("params"))
 
     if not cube:
         return jsonify({"error": "cube context is required"}), 400
 
-    cache_key = cube.get("cacheKey") or cube.get("cubeId") or "cube"
+    # 如果没有指定场景，使用第一个场景
+    if not scene:
+        scenes = ensure_list(cube.get("dimensionScenes"))
+        scene = scenes[0] if scenes else {}
 
-    expression = params.get("expression") or "2*b5-b4-b3"
+    if not scene:
+        return jsonify({"error": "no scene available in cube"}), 400
+
+    # 获取分析参数
+    expression = params.get("expression") or "(b4-b3)/(b4+b3)"
     color = params.get("color") or "rdylgn"
     pixel_method = params.get("pixel_method") or "first"
 
+    # 从场景中获取 COG 文件列表
+    cog_urls = get_scene_cog_urls(scene)
+    
+    if not cog_urls:
+        return jsonify({"error": "no image files found in scene"}), 400
+
+    # TODO: 根据实际情况，可先创建 MosaicJSON 再构建瓦片 URL
+    # 这里示例直接返回基于第一个 COG 文件的瓦片模板
+    first_cog = cog_urls[0]
+    
     tile_template = (
-        "/cube/analysis/{z}/{x}/{y}.png?"
-        f"cacheKey={quote_plus(cache_key)}"
+        "/tiler/cog/analysis/{z}/{x}/{y}.png?"
+        f"url={quote_plus(first_cog)}"
         f"&expression={quote_plus(expression)}"
         f"&pixel_method={quote_plus(pixel_method)}"
         f"&color={quote_plus(color)}"
     )
 
-    return jsonify(
-        {
-            "tileTemplate": tile_template,
-            "summary": summarize_cube(cube),
-            "echoParams": params,
-        }
-    )
+    return jsonify({
+        "tileTemplate": tile_template,
+        "sceneInfo": {
+            "sceneId": scene.get("sceneId"),
+            "sensorName": scene.get("sensorName"),
+            "sceneTime": scene.get("sceneTime"),
+            "imageCount": len(cog_urls),
+        },
+        "params": params,
+    })
 
 
-def main():
-    app.run(host="0.0.0.0", port=20080, debug=False)
+@app.route("/health", methods=["GET"])
+def health():
+    """健康检查接口"""
+    return jsonify({"status": "ok"})
 
 
 if __name__ == "__main__":
-    main()
+    app.run(host="0.0.0.0", port=20080, debug=False)
 `
 
 const cubePlaceholderTemplateCode = `# Cube级分析工具模板（占位保留）
@@ -1011,14 +1051,15 @@ const applyCubeUdfTemplate = async (options: TemplateApplyOptions = {}) => {
     const applied = await replaceEditorWithTemplate(cubeToolTemplateCode, options)
     if (!applied) return false
 
-    toolWizardForm.toolName = toolWizardForm.toolName || 'Cube 级 UDF 模板'
+    toolWizardForm.toolName = toolWizardForm.toolName || 'Cube 级 UDF 分析'
     toolWizardForm.description =
         toolWizardForm.description ||
-        'Cube 上下文 + Flask 示例：解析立方体并返回 HTTP 瓦片'
+        'Cube 级分析工具：基于 Flask 服务处理立方体数据并返回分析瓦片'
     toolWizardForm.category = toolWizardForm.category || 'Cube分析'
     if (!Array.isArray(toolWizardForm.tags) || toolWizardForm.tags.length === 0) {
         toolWizardForm.tags = ['cube', 'tile']
     }
+    // 使用 http+tile 类型，与景级工具一致，需要启动后端 Flask 服务
     toolWizardForm.invokeType = 'http+tile'
     toolWizardForm.resultType = 'tile'
     toolWizardForm.serviceMethod = 'POST'
@@ -1026,12 +1067,12 @@ const applyCubeUdfTemplate = async (options: TemplateApplyOptions = {}) => {
     toolWizardForm.responsePath = ''
     toolWizardForm.params.splice(0, toolWizardForm.params.length)
     toolWizardForm.params.push(
-        { label: '表达式', key: 'expression', type: 'string', required: true, placeholder: '例如 2*b5-b4-b3', source: '', optionsText: '', default: '2*b5-b4-b3' },
+        { label: '表达式', key: 'expression', type: 'string', required: false, placeholder: '例如 (b4-b3)/(b4+b3) 计算NDVI', source: '', optionsText: '', default: '(b4-b3)/(b4+b3)' },
         { label: '色带', key: 'color', type: 'string', required: false, placeholder: '默认 rdylgn', source: '', optionsText: '', default: 'rdylgn' },
         { label: '像元方法', key: 'pixel_method', type: 'string', required: false, placeholder: '默认 first', source: '', optionsText: '', default: 'first' },
     )
     if (!options.silent) {
-        message.success('已填充 Cube 级 UDF 模板，可保存或发布')
+        message.success('已填充 Cube 级 UDF 模板，请保存代码后启动服务再发布')
     }
     saveWizardDraft()
     setTemplateBootstrapFlag()

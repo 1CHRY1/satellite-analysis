@@ -627,7 +627,6 @@
                             :selected-cubes="selectedCubeItems" />
                         <component v-else-if="currentTaskComponent" :is="currentTaskComponent"
                             v-bind="currentTaskProps" />
-                        <ResultComponent @response="handleResultLoaded" />
                     </dv-border-box12>
                 </div>
             </div>
