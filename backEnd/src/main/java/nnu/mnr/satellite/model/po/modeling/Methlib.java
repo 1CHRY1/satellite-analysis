@@ -26,12 +26,17 @@ public class Methlib {
     private String name;
     private String description;
     private String longDesc;
+    private String nameZh;
+    private String descriptionZh;
+    private String longDescZh;
     private String copyright;
     private String category;
     private String uuid;
     private String type;
     @TableField(typeHandler = JSONArrayTypeHandler.class)
     private JSONArray params;
+    @TableField(typeHandler = JSONArrayTypeHandler.class)
+    private JSONArray paramsZh;
     private String execution;
     private LocalDateTime createTime;
 }

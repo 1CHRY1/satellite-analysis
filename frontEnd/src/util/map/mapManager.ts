@@ -8,6 +8,8 @@ import { useGridStore } from '@/store/gridStore'
 import type { polygonGeometry } from '../share.type'
 import Bus from '@/store/bus'
 import { CN_Bounds } from './constant'
+import { message } from 'ant-design-vue'
+
 
 class MapManager {
     private static instance: MapManager | null
@@ -17,6 +19,10 @@ class MapManager {
     
     private _isInitialized = false;
     private _isDrawInitialized = false;
+
+    // [新增 1] 全局 Loading 状态管理
+    private _isLayerLoading = false; // 标记：是否正在因为 addLayer 等待
+    private _loadingTimer: any = null; // 防抖定时器
 
     private constructor() {}
 
@@ -99,6 +105,8 @@ class MapManager {
                     }
                 },
             })
+            // [新增 2] 在地图实例创建后，立即注入全局 Loading 监控
+            this.setupGlobalLoadingMonitor();
             const logo = document.querySelector('.mapboxgl-ctrl-logo') as HTMLElement
             logo.style.display = 'none'
             const scale = new mapboxgl.ScaleControl({
@@ -113,7 +121,67 @@ class MapManager {
             })
         })
         return this.initPromise
-    }    
+    }
+
+    // [新增 3] 核心逻辑：劫持 addLayer 并监听 idle
+    private setupGlobalLoadingMonitor() {
+        if (!this.map) return;
+        const map = this.map;
+
+        // 1. 保存原始的 addLayer 方法
+        // 这里必须 bind(map)，否则 this 指向会丢失
+        const originalAddLayer = map.addLayer.bind(map);
+
+        // 2. 重写/劫持 addLayer
+        // @ts-ignore: 忽略 TS 对覆盖原有方法的警告，或者扩展类型定义
+        map.addLayer = (layer: mapboxgl.AnyLayer, beforeId?: string) => {
+            // A. 只要调用了 addLayer，就开启 Loading
+            this.handleStartLoading();
+
+            // B. 执行原始逻辑，保证功能正常
+            return originalAddLayer(layer, beforeId);
+        };
+
+        // 3. 监听全局 idle 事件
+        map.on('idle', () => {
+            // 只有当是因为“加图层”引起的 Loading，才允许由 idle 关闭
+            // 这样就过滤掉了普通平移引起的 idle
+            if (this._isLayerLoading) {
+                this.handleStopLoading();
+            }
+        });
+    }
+
+    // [新增 4] 开始 Loading (带防抖，体验优化)
+    private handleStartLoading() {
+        this._isLayerLoading = true;
+        
+        // 如果已经在倒计时显示 loading，清除它，重新计时
+        if (this._loadingTimer) clearTimeout(this._loadingTimer);
+
+        // 延迟 100ms 显示。如果数据加载极快(比如缓存)，用户甚至不需要看到 loading 圈，体验更好
+        this._loadingTimer = setTimeout(() => {
+            // 注意：这里使用 message.loading 且 duration: 0 表示一直显示直到手动销毁
+            // key: 'global_map_loader' 保证全局只有一个 loading 实例，不会重复弹出
+            message.loading({ content: '正在加载，请稍后...', key: 'global_map_loader', duration: 0 });
+        }, 100);
+    }
+
+    // [新增 5] 停止 Loading
+    private handleStopLoading() {
+        if (!this._isLayerLoading) return;
+
+        this._isLayerLoading = false;
+        
+        if (this._loadingTimer) {
+            clearTimeout(this._loadingTimer);
+            this._loadingTimer = null;
+        }
+
+        message.destroy('global_map_loader');
+    }
+
+    
 
     public registerDrawCallback(): void {}
 
@@ -187,6 +255,14 @@ class MapManager {
 
     public async destroy(): Promise<void> {
         await this.initPromise
+
+        // 销毁时清理定时器，防止内存泄漏
+        if (this._loadingTimer) {
+            clearTimeout(this._loadingTimer);
+            this._loadingTimer = null;
+            // 强制关闭可能残留的 message
+            message.destroy('global_map_loader');
+        }
 
         if (this.draw) {
             this.map?.removeControl(this.draw)

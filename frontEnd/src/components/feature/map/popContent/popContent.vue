@@ -1,22 +1,7 @@
 <template>
-    <Vue3DraggableResizable
-        :draggable="true"
-        :resizable="true"
-        :parent="false"
-        v-model:x="popX"
-        v-model:y="popY"
-        v-model:w="popW"
-        v-model:h="popH"
-        :minW="260"
-        :minH="364"
-        :initW="popW"
-        :initH="popH"
-        :lockAspectRatio="true"
-        :handles="['br']"
-        classNameHandle="custom-handle"
-        classNameDraggable="draggable-popup"
-        classNameActive=""
-    >
+    <Vue3DraggableResizable :draggable="true" :resizable="true" :parent="false" v-model:x="popX" v-model:y="popY"
+        v-model:w="popW" v-model:h="popH" :minW="260" :minH="364" :initW="popW" :initH="popH" :lockAspectRatio="true"
+        :handles="['br']" classNameHandle="custom-handle" classNameDraggable="draggable-popup" classNameActive="">
         <div class="popup-content" :style="popupContentStyle">
             <button class="popup-cancel-btn" @click="() => bus.emit('gridPopup:closeByUser')">
                 <CircleOff :size="16" />
@@ -26,25 +11,13 @@
             </div>
 
             <div class="tabs">
-                <button
-                    class="tab-btn"
-                    :class="{ active: activeTab === 'scene' }"
-                    @click="activeTab = 'scene'"
-                >
+                <button class="tab-btn" :class="{ active: activeTab === 'scene' }" @click="activeTab = 'scene'">
                     遥感影像
                 </button>
-                <button
-                    class="tab-btn"
-                    :class="{ active: activeTab === 'vector' }"
-                    @click="activeTab = 'vector'"
-                >
+                <button class="tab-btn" :class="{ active: activeTab === 'vector' }" @click="activeTab = 'vector'">
                     矢量专题
                 </button>
-                <button
-                    class="tab-btn"
-                    :class="{ active: activeTab === 'theme' }"
-                    @click="activeTab = 'theme'"
-                >
+                <button class="tab-btn" :class="{ active: activeTab === 'theme' }" @click="activeTab = 'theme'">
                     栅格专题
                 </button>
             </div>
@@ -61,7 +34,7 @@
                         </option>
                     </select>
                 </div>
-                
+
                 <!-- 传感器选择 -->
                 <div class="band-selection">
                     <label for="sensor-select">传感器:</label>
@@ -76,18 +49,11 @@
 
                 <!-- 增强方法Tab -->
                 <div class="tabs" v-show="showBandSelector">
-                    <button
-                        class="tab-btn"
-                        :class="{ active: activeMethod === 'rgb' }"
-                        @click="activeMethod = 'rgb'"
-                    >
+                    <button class="tab-btn" :class="{ active: activeMethod === 'rgb' }" @click="activeMethod = 'rgb'">
                         波段增强
                     </button>
-                    <button
-                        class="tab-btn"
-                        :class="{ active: activeMethod === 'superresolution' }"
-                        @click="activeMethod = 'superresolution'"
-                    >
+                    <button class="tab-btn" :class="{ active: activeMethod === 'superresolution' }"
+                        @click="activeMethod = 'superresolution'">
                         信息增强
                     </button>
                 </div>
@@ -125,8 +91,7 @@
 
                 <!-- 超分增强Tab -->
                 <div class="btns flex justify-center" v-show="showBandSelector && activeMethod === 'superresolution'">
-                    <button class="visualize-btn" 
-                        @click="handleSuperResolution">
+                    <button class="visualize-btn" @click="handleSuperResolution">
                         <span class="btn-icon">
                             <GalleryHorizontalIcon :size="18" />
                         </span>
@@ -165,12 +130,15 @@
                     </div>
                     <div class="mr-1 grid grid-cols-[2fr_3fr]">
                         <span class="sp text-white">拉伸增强:</span>
-                        <a-slider v-if="selectedStretchMethod === 'linear'" :tip-formatter="(value) => `${value}级`" v-model:value="scaleRate" :min="0" :max="10"
-                            :step="1" @afterChange="onAfterScaleRateChange" />
-                        <a-slider v-if="selectedStretchMethod === 'gamma'" :tip-formatter="scaleRateFormatter" v-model:value="scaleRate" :min="0.10" :max="10"
-                            :step="0.01" @afterChange="onAfterScaleRateChange" />
-                        <a-slider v-if="selectedStretchMethod === 'standard'" :tip-formatter="(value) => `${value}σ`" v-model:value="scaleRate" :min="0" :max="3"
-                            :step="1" @afterChange="onAfterScaleRateChange" />
+                        <a-slider v-if="selectedStretchMethod === 'linear'" :tip-formatter="(value) => `${value}级`"
+                            v-model:value="scaleRate" :min="0" :max="10" :step="1"
+                            @afterChange="onAfterScaleRateChange" />
+                        <a-slider v-if="selectedStretchMethod === 'gamma'" :tip-formatter="scaleRateFormatter"
+                            v-model:value="scaleRate" :min="0.10" :max="10" :step="0.01"
+                            @afterChange="onAfterScaleRateChange" />
+                        <a-slider v-if="selectedStretchMethod === 'standard'" :tip-formatter="(value) => `${value}σ`"
+                            v-model:value="scaleRate" :min="0" :max="3" :step="1"
+                            @afterChange="onAfterScaleRateChange" />
                     </div>
                 </div>
 
@@ -202,6 +170,24 @@
                     </select>
                 </div>
                 <div class="config-container" v-if="gridVectorSymbology[selectedVector.tableName]">
+                    <div class="flex justify-between">
+                        <div>
+                            <label class="mr-2 text-white">字段：</label>
+                            <select
+                                class="max-h-[600px] w-[120px] appearance-none truncate rounded-lg border border-[#2c3e50] bg-[#0d1526] px-3 py-1 text-[#38bdf8] hover:border-[#2bb2ff] focus:border-[#3b82f6] focus:outline-none"
+                                v-model="gridVectorSymbology[selectedVector.tableName].selectedField">
+                                <option disabled selected value="">
+                                    请选择
+                                </option>
+                                <!-- <option :value="'all'" class="truncate">全选</option> -->
+                                <option v-for="f in selectedVector.fields" :value="f" :key="f" class="truncate">
+                                    {{ f }}
+                                </option>
+                            </select>
+                        </div>
+                        <a-button type="primary"
+                            @click="getAttrs4CustomField(selectedVector.tableName, gridVectorSymbology[selectedVector.tableName].selectedField)">获取</a-button>
+                    </div>
                     <div class="flex items-center justify-between gap-2">
                         <el-checkbox v-model="gridVectorSymbology[selectedVector.tableName].checkAll"
                             :indeterminate="gridVectorSymbology[selectedVector.tableName].isIndeterminate"
@@ -393,7 +379,7 @@ function measureAndReset() {
             )
             popH.value = desiredH
         }
-    } catch {}
+    } catch { }
     resetToBottomRightFullyVisible()
 }
 
@@ -428,7 +414,8 @@ const handleVisualize = () => {
  */
 const handleRemove = () => {
     previewIndex.value = null
-    GridExploreMapOps.map_destroyGridDEMLayer(gridData.value)
+    // GridExploreMapOps.map_destroyGridDEMLayer(gridData.value)
+    GridExploreMapOps.map_destroyGrid2DDEMLayer(gridData.value)
     GridExploreMapOps.map_destroyGridMVTLayerByGrid(gridData.value)
     // 清理矢量图层的事件监听器
     cleanupGridVectorEvents()
@@ -447,36 +434,36 @@ const handleRemove = () => {
 // 请求锁
 let themeResLoading = false
 const handleInitGrid = async (info) => {
-  if (themeResLoading) return
-  themeResLoading = true
-  try {
-    gridData.value = {
-        ...info,  // 拷贝原有属性
-        vectors: ezStore.get('vectorStats'),
-        themeRes: await getThemesInGrid(info),
-        sceneRes: await getScenesInGrid(info)
-    }
-    let timer = setInterval(() => {
-        const data = ezStore.get("vectorSymbology");
-        if (data) {
-            gridVectorSymbology.value = JSON.parse(JSON.stringify(data)); // 深拷贝
-            console.log("✅ vectorSymbology 初始化成功");
-            clearInterval(timer); // 成功后停止重试
-        } else {
-            console.log("⏳ vectorSymbology 未准备好，继续重试...");
+    if (themeResLoading) return
+    themeResLoading = true
+    try {
+        gridData.value = {
+            ...info,  // 拷贝原有属性
+            vectors: ezStore.get('vectorStats'),
+            themeRes: await getThemesInGrid(info),
+            sceneRes: await getScenesInGrid(info)
         }
-    }, 500);
-    // gridVectorSymbology.value = JSON.parse(JSON.stringify(ezStore.get("vectorSymbology"))) // 深拷贝
-    console.log(gridData.value, 'gridData')
-    // after console.log(gridData.value, 'gridData') and before themeResLoading=false:
-    requestAnimationFrame(() => {
+        let timer = setInterval(() => {
+            const data = ezStore.get("vectorSymbology");
+            if (data) {
+                gridVectorSymbology.value = JSON.parse(JSON.stringify(data)); // 深拷贝
+                console.log("✅ vectorSymbology 初始化成功");
+                clearInterval(timer); // 成功后停止重试
+            } else {
+                console.log("⏳ vectorSymbology 未准备好，继续重试...");
+            }
+        }, 500);
+        // gridVectorSymbology.value = JSON.parse(JSON.stringify(ezStore.get("vectorSymbology"))) // 深拷贝
+        console.log(gridData.value, 'gridData')
+        // after console.log(gridData.value, 'gridData') and before themeResLoading=false:
         requestAnimationFrame(() => {
-            measureAndReset()
+            requestAnimationFrame(() => {
+                measureAndReset()
+            })
         })
-    })
-  } finally {
-    themeResLoading = false
-  }
+    } finally {
+        themeResLoading = false
+    }
 }
 bus.on('update:gridPopupData', handleInitGrid)
 
@@ -548,7 +535,7 @@ const { // ------------------------------ 1. 矢量符号化 -------------------
     // ------------------------------ 2. 矢量选择 -------------------------------//
     previewIndex, selectedVector,
     // ------------------------------ 3. 立方体可视化 ------------------------------//
-    handleVectorVisualize, cleanupGridVectorEvents } = useGridVector()
+    handleVectorVisualize, cleanupGridVectorEvents, getAttrs4CustomField } = useGridVector()
 
 /**
  * 4. 栅格专题Tab
@@ -826,13 +813,16 @@ const { handleSuperResolution, isSuperRes } = useSuperResolution()
 
 <style>
 /* Global styles for Vue3DraggableResizable */
-.vdr, .draggable-popup {
+.vdr,
+.draggable-popup {
     border: none !important;
     outline: none !important;
 }
 
-.vdr:before, .vdr:after,
-.draggable-popup:before, .draggable-popup:after {
+.vdr:before,
+.vdr:after,
+.draggable-popup:before,
+.draggable-popup:after {
     display: none !important;
 }
 
@@ -867,7 +857,8 @@ const { handleSuperResolution, isSuperRes } = useSuperResolution()
 }
 
 /* Remove all selection borders and outlines */
-.vdr.active, .vdr.active:before {
+.vdr.active,
+.vdr.active:before {
     border: none !important;
     outline: none !important;
 }

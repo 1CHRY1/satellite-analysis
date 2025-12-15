@@ -12,7 +12,8 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.*;
 
-import static nnu.mnr.satellite.service.cache.CacheCleanerService.DEFAULT_CACHE_EXPIRY_MS;
+import static nnu.mnr.satellite.service.cache.CacheCleanerService.DEFAULT_SCENE_CACHE_EXPIRY_MS;
+import static nnu.mnr.satellite.service.cache.CacheCleanerService.DEFAULT_CUBE_CACHE_EXPIRY_MS;
 
 @Slf4j
 @Service
@@ -33,7 +34,7 @@ public class AdminCacheService {
             Map<String, Object> extractedData = new HashMap<>();
 
             extractedData.put("cacheTime", userSceneCache.getCacheTime());
-            extractedData.put("cacheExpiry", userSceneCache.getCacheTime() + DEFAULT_CACHE_EXPIRY_MS);
+            extractedData.put("cacheExpiry", userSceneCache.getCacheTime() + DEFAULT_SCENE_CACHE_EXPIRY_MS);
 
             // 将临时 Map 放入主 Map
             sceneCaches.put(cacheKey, extractedData);
@@ -47,7 +48,7 @@ public class AdminCacheService {
             Map<String, Object> extractedData = new HashMap<>();
 
             extractedData.put("cacheTime", userThemeCache.getCacheTime());
-            extractedData.put("cacheExpiry", userThemeCache.getCacheTime() + DEFAULT_CACHE_EXPIRY_MS);
+            extractedData.put("cacheExpiry", userThemeCache.getCacheTime() + DEFAULT_SCENE_CACHE_EXPIRY_MS);
 
             // 将临时 Map 放入主 Map
             themeCaches.put(cacheKey, extractedData);
@@ -61,7 +62,7 @@ public class AdminCacheService {
             Map<String, Object> extractedData = new HashMap<>();
 
             extractedData.put("cacheTime", userRegionInfoCache.getCacheTime());
-            extractedData.put("cacheExpiry", userRegionInfoCache.getCacheTime() + DEFAULT_CACHE_EXPIRY_MS);
+            extractedData.put("cacheExpiry", userRegionInfoCache.getCacheTime() + DEFAULT_SCENE_CACHE_EXPIRY_MS);
 
             // 将临时 Map 放入主 Map
             regionInfoCaches.put(cacheKey, extractedData);
@@ -74,7 +75,7 @@ public class AdminCacheService {
             // 创建一个临时 Map 存储需要的字段
             Map<String, Object> extractedData = new HashMap<>();
             extractedData.put("cacheTime", eOCubeCache.getCacheTime());
-            extractedData.put("cacheExpiry", eOCubeCache.getCacheTime() + DEFAULT_CACHE_EXPIRY_MS);
+            extractedData.put("cacheExpiry", eOCubeCache.getCacheTime() + DEFAULT_CUBE_CACHE_EXPIRY_MS);
             processedEOCubeCaches.put(cacheKey, extractedData);
         });
 
@@ -137,8 +138,8 @@ public class AdminCacheService {
     }
 
     public CommonResultVO deleteExpireCache(){
-        SceneDataCache.cleanupExpiredCache(DEFAULT_CACHE_EXPIRY_MS);
-        EOCubeCache.cleanupExpiredCache(DEFAULT_CACHE_EXPIRY_MS);
+        SceneDataCache.cleanupExpiredCache(DEFAULT_SCENE_CACHE_EXPIRY_MS);
+        EOCubeCache.cleanupExpiredCache(DEFAULT_CUBE_CACHE_EXPIRY_MS);
         System.out.println("Cache cleaned at: " + LocalDateTime.now());
         return CommonResultVO.builder()
                 .status(1)

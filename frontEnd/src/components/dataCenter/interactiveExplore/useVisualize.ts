@@ -4,7 +4,7 @@ import * as InteractiveExploreMapOps from '@/util/map/operation/interactive-expl
 import { getRealtimeNoCloudUrl } from "@/api/http/satellite-data/visualize.api"
 import { useI18n } from "vue-i18n";
 import { ezStore } from "@/store"
-import { getDEMUrl, getNDVIOrSVRUrl, getSceneUrl, getVectorUrl, get3DUrl, getLargeSceneMosaicUrl, getLargeSceneUrl } from "@/api/http/interactive-explore/visualize.api";
+import { getDEMUrl, getNDVIOrSVRUrl, getSceneUrl, getVectorUrl, get3DUrl, getLargeSceneMosaicUrl, getLargeSceneUrl, get2DDEMUrl } from "@/api/http/interactive-explore/visualize.api";
 import type { Marker } from 'mapbox-gl'
 import type { POIInfo, ProductType } from '@/type/interactive-explore/filter'
 import type { AttrSymbology, VectorSymbology } from '@/type/interactive-explore/visualize'
@@ -14,7 +14,7 @@ import { mapManager } from '@/util/map/mapManager'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import { searchedSpatialFilterMethod, finalLandId, curGridsBoundary, vectorStats, selectedGridResolution, vectorSymbology, selectedDateRange } from "./shared"
 import { message } from "ant-design-vue";
-import { cancelCase, getCaseResult, getVectorAttr, pollStatus } from "@/api/http/satellite-data/satellite.api";
+import { cancelCase, getCaseResult, getVectorAttr, getVectorCustomAttr, pollStatus } from "@/api/http/satellite-data/satellite.api";
 import { calTask } from "../noCloud/composables/shared";
 import bus from '@/store/bus'
 // 使用一个对象来存储每个 Product Item 的显示状态
@@ -287,14 +287,17 @@ export const useVisualize = () => {
                     attrs: [],
                     checkAll: false,
                     isIndeterminate: true,
-                    checkedAttrs: []
+                    checkedAttrs: [],
+                    // selectedField: vector.fields.slice(-1)[0],
+                    selectedField: undefined,
+                    isRequesting: false
                 }
-                const result = await getVectorAttr(vector.tableName)
-                vectorSymbology.value[vector.tableName].attrs = result.map((item, index) => ({
-                    ...item,
-                    color: predefineColors.value[index % predefineColors.value.length],
-                }))
-                vectorSymbology.value[vector.tableName].checkedAttrs = result.map(item => item.label)
+                // const result = await getVectorAttr(vector.tableName)
+                // vectorSymbology.value[vector.tableName].attrs = result.map((item, index) => ({
+                //     ...item,
+                //     color: predefineColors.value[index % predefineColors.value.length],
+                // }))
+                // vectorSymbology.value[vector.tableName].checkedAttrs = result.map(item => item.label)
             } catch (e) {
                 console.error(`[${vector.tableName}] 请求失败:`, e)
             }
@@ -302,6 +305,21 @@ export const useVisualize = () => {
         await Promise.all(tasks)
         ezStore.set("vectorSymbology", vectorSymbology.value)
         console.log('vectorSymbology', vectorSymbology.value)
+    }
+    const getAttrs4CustomField = async (tableName: string, field: string | undefined) => {
+        if (!field) {
+            message.warning("请先选择字段")
+            return
+        }
+        vectorSymbology.value[tableName].isRequesting = true
+        const result = await getVectorCustomAttr(tableName, field)
+        vectorSymbology.value[tableName].attrs = result.map((item, index) => ({
+            type: item,
+            label: item,
+            color: predefineColors.value[index % predefineColors.value.length],
+        }))
+        vectorSymbology.value[tableName].checkedAttrs = result
+        vectorSymbology.value[tableName].isRequesting = false
     }
     const handleCheckAllChange = (tableName: string, val: boolean) => {
         console.log('all:', val)
@@ -328,34 +346,36 @@ export const useVisualize = () => {
             message.warning(t('datapage.explore.message.filtererror_choose'))
             return
         }
-        const stopLoading = message.loading('正在加载，请稍后...', 0)
         destroyVector()
         previewVectorIndex.value = index
         handleShowVector(tableName, finalLandId.value)
-        setTimeout(() => {
-            stopLoading()
-        }, 5000)
+        // setTimeout(() => {
+        //     stopLoading()
+        // }, 5000)
     }
     const handleShowVector = async (source_layer: string, landId: string) => {
+        const curField = vectorSymbology.value[source_layer].selectedField
         const attrList = vectorSymbology.value[source_layer].checkedAttrs.map(item => {
             const targetAttr = vectorSymbology.value[source_layer].attrs.find(i => i.label === item)
             return targetAttr
         })
+        console.log(attrList)
 
         const types = attrList
             .map(a => a?.type)
-            .filter((v): v is number => typeof v === 'number')
-
+            // .filter((v): v is number => typeof v === 'number')
+        console.log(types)
         const url = getVectorUrl({
             landId,
             source_layer,
+            field: vectorSymbology.value[source_layer].selectedField || 'type',
             spatialFilterMethod: searchedSpatialFilterMethod.value,
             resolution: selectedGridResolution.value,
             type: types
         })
 
         // 添加到地图 - 点击事件处理已经在 map_addMVTLayer 函数中实现
-        InteractiveExploreMapOps.map_addMVTLayer(source_layer, url, attrList as any)
+        InteractiveExploreMapOps.map_addMVTLayer(source_layer, url, attrList as any, curField)
     }
     const destroyVector = (index?: number) => {
         if (index !== undefined) {
@@ -369,12 +389,8 @@ export const useVisualize = () => {
      * 5. 交互探索 - 栅格专题可视化
      */
     const showProductResult = async (dataType: ProductType, themeName: string) => {
-        const stopLoading = message.loading('正在加载，请稍后...', 0)
         destroyProduct(dataType)
         handleShowProduct(themeName, dataType)
-        setTimeout(() => {
-            stopLoading()
-        }, 5000)
     }
     const handleShowProduct = (themeName: string, dataType: string) => {
         switch (dataType) {
@@ -396,8 +412,10 @@ export const useVisualize = () => {
         }
     }
     const handleShowDEM = async(themeName: string) => {
-        const url = await getDEMUrl(themeName, curGridsBoundary.value)
-        InteractiveExploreMapOps.map_addDEMLayer(url)
+        // const url = await getDEMUrl(themeName, curGridsBoundary.value)
+        // InteractiveExploreMapOps.map_addDEMLayer(url)
+        const url = await get2DDEMUrl(themeName, curGridsBoundary.value)
+        InteractiveExploreMapOps.map_add2DDEMLayer(url)        
     }
     const handleShowNDVIOrSVR = async(themeName: string) => {
         const url = await getNDVIOrSVRUrl(themeName, curGridsBoundary.value)
@@ -409,17 +427,18 @@ export const useVisualize = () => {
     }
     const destroyProduct = (dataType?: ProductType) => {
         if (dataType === undefined) {
-            destroyDEM()
+            destroy2DDEM()
+
             destroy3D()
             destroyNDVIOrSVR()
             // TODO: 删除其他产品图层
         } else {
             switch (dataType) {
                 case 'dem':
-                    destroyDEM()
+                    destroy2DDEM()
                     break
                 case 'dsm':
-                    destroyDEM()
+                    destroy2DDEM()
                     break
                 case 'ndvi':
                     destroyNDVIOrSVR()
@@ -435,6 +454,9 @@ export const useVisualize = () => {
     }
     const destroyDEM = () => {
         InteractiveExploreMapOps.map_destroyDEMLayer()
+    }
+    const destroy2DDEM = () => {
+        InteractiveExploreMapOps.map_destroy2DDEMLayer()
     }
     const destroyNDVIOrSVR = () => {
         InteractiveExploreMapOps.map_destroyNDVIOrSVRLayer()
@@ -485,6 +507,7 @@ export const useVisualize = () => {
         destroyGridLayer,
         destroyScene,
         destroyVector,
+        getAttrs4CustomField,
         destroyDEM,
         destroyUniqueLayer,
         addPOIMarker,

@@ -1,5 +1,5 @@
 <template>
-    <a-modal v-model:open="innerVisible" :title="`🛠️ ${methodItem?.name}`" @cancel="close" @ok="handleOk"
+    <a-modal v-model:open="innerVisible" :title="'🛠️ '+ `${methodItem?.nameZh}` + '(' + `${methodItem?.name}` + ')'" @cancel="close" @ok="handleOk"
         :confirm-loading="isExecuting" :width="1200" wrapClassName="wide-modal">
 
         <a-spin :spinning="!isReady" tip="正在加载方法参数...">
@@ -9,12 +9,10 @@
                     <a-divider orientation="left">参数配置</a-divider>
                     <a-form ref="formRef" :model="formData" :rules="formRules" layout="vertical" class="param-form">
                         <a-form-item class="form-item" :name="'val' + index"
-                            v-for="(param, index) in methodItem?.params" :key="index">
+                            v-for="(param, index) in methodItem?.paramsZh" :key="index">
                             <template #label>
                                 <div class="label-content">
-                                    <a-tooltip :title="param.Description">
-                                        <span style="font-weight: 600;">{{ param.Description }}</span>
-                                    </a-tooltip>
+                                    <span style="font-weight: 600;">{{ param.Description }}({{ methodItem?.params[index].Description }})</span>
                                     <a-tag :color="getTypeTagColor(param.parameter_type)" style="margin-left: 8px;">
                                         {{ formatJson(param.parameter_type) }}
                                     </a-tag>
@@ -137,10 +135,13 @@
 
                 <a-col :span="9">
                     <a-divider orientation="left">方法详细信息</a-divider>
-                    <a-card :title="methodItem?.name" size="small" style="min-height: 500px;"
-                        :headStyle="{ borderBottom: '1px solid #f0f0f0' }"
+                    <a-card :title="`${methodItem?.nameZh}` + '(' + `${methodItem?.name}` + ')'" size="small"
+                        style="min-height: 500px;" :headStyle="{ borderBottom: '1px solid #f0f0f0' }"
                         :bodyStyle="{ padding: '12px', maxHeight: '450px', overflowY: 'auto' }">
-                        <p v-if="methodItem?.longDesc" style="white-space: pre-wrap; margin: 0;">
+                        <p v-if="methodItem?.longDescZh" style="white-space: pre-wrap; margin: 0;">
+                            {{ methodItem.longDescZh }}
+                        </p><br><br>
+                        <p v-if="methodItem?.longDescZh" style="white-space: pre-wrap; margin: 0;">
                             {{ methodItem.longDesc }}
                         </p>
                         <a-empty v-else description="暂无详细描述信息" :image="simpleImage" />
@@ -242,11 +243,11 @@ function close() {
 function getTypeTagColor(type) {
     const typeStr = formatJson(type);
     switch (typeStr) {
-        case 'ExistingFile':
-        case 'FileList':
+        case '输入':
+        case '输入（多）':
             return 'green';
-        case 'NewFile':
-        case 'Directory':
+        case '输出':
+        case '目录':
             return 'blue';
         case 'Float':
         case 'Integer':
@@ -264,13 +265,13 @@ function getTypeTagColor(type) {
 * 根据 methodItem.params 的 Optional 字段动态生成 Antdv 表单校验规则。
 */
 async function generateFormRules() {
-    if (!props.methodItem?.params) {
+    if (!props.methodItem?.paramsZh) {
         Object.assign(formRules, {});
         return;
     }
 
     // 使用 reduce 动态生成规则对象
-    const rules = props.methodItem.params.reduce((acc, param, index) => {
+    const rules = props.methodItem.paramsZh.reduce((acc, param, index) => {
         // 如果 Optional 为 false 或未定义（默认必填）
         if (!param.Optional) {
             const key = 'val' + index;
@@ -295,7 +296,7 @@ async function generateFormRules() {
  * 初始化表单数据 (formData) 并调用规则生成。
  */
 function initFormData() {
-    if (!props.methodItem?.params) {
+    if (!props.methodItem?.paramsZh) {
         // ... 重置逻辑
         isReady.value = true;
         return;
@@ -304,7 +305,7 @@ function initFormData() {
     const initialData = {};
     const initialSwitchStates = {};
 
-    props.methodItem.params.forEach((param, index) => {
+    props.methodItem.paramsZh.forEach((param, index) => {
         const key = 'val' + index;
         let defaultValue = param.default_value !== null ? param.default_value : null;
 
@@ -377,6 +378,15 @@ function updateIsChangedList(index) {
 
 function formatJson(type) {
     if (typeof type === 'object' && type !== null) {
+        if (Object.keys(type)[0] === 'ExistingFile') {
+            return '输入'
+        } else if (Object.keys(type)[0] === 'ExistingFileOrFloat') {
+            return '输入'
+        } else if (Object.keys(type)[0] === 'FileList') {
+            return '输入（多）'
+        } else if (Object.keys(type)[0] === 'NewFile') {
+            return '输出'
+        }
         return Object.keys(type)[0] || 'Unknown';
     }
     return type;

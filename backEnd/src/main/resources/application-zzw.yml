@@ -153,6 +153,7 @@ modelServer:
     spectrum: /v0/tif/get_spectral_profile
     noCloud: /v0/tif/calc_no_cloud
     noCloud_complex: /v0/tif/calc_no_cloud_complex
+    eoCube: /v0/tif/calc_eo_cube
     rasterPoint: /v0/tif/calc_raster_point
     rasterLine: /v0/tif/calc_raster_line
     ndvi: /v0/tif/calc_NDVI

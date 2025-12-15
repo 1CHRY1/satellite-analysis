@@ -7,7 +7,8 @@ import { ENV_CONFIG, FIXED_CONFIG } from './env.config'
 // 环境配置
 // const ENV = process.env.NODE_ENV || 'development'
 
-const ENV_TARGET = 'zzw' // 一键切换配置环境，使用集群则改为cluster，使用本地则改为local
+
+const ENV_TARGET = 'hxf' // 一键切换配置环境，使用集群则改为cluster，使用本地则改为local
 
 // 获取当前环境配置
 const currentEnv = ENV_CONFIG[ENV_TARGET as keyof typeof ENV_CONFIG] || ENV_CONFIG.zzw
@@ -16,6 +17,7 @@ const currentEnv = ENV_CONFIG[ENV_TARGET as keyof typeof ENV_CONFIG] || ENV_CONF
 const createProxyConfig = () => {
     return {
         // API v3
+        // 过程：把/api3/user重写成/user拼接到target后，changeOrigin让浏览器发出的请求头 Host 变成 target 的 host。
         '/api3': {
             target: `${currentEnv.api}/api/v3`,
             changeOrigin: true,

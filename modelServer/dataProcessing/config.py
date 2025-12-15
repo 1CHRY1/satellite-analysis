@@ -14,6 +14,7 @@ class BaseConfig:
     API_TIF_calc_no_cloud                           =       API_VERSION + '/tif/calc_no_cloud'
     API_TIF_calc_no_cloud_grid                      =       API_VERSION + '/tif/calc_no_cloud_grid'
     API_TIF_calc_no_cloud_complex                   =       API_VERSION + '/tif/calc_no_cloud_complex'
+    API_TIF_calc_eo_cube                            =       API_VERSION + '/tif/calc_eo_cube'
     API_TIF_calc_NDVI                               =       API_VERSION + '/tif/calc_NDVI'
     API_TIF_get_spectral_profile                    =       API_VERSION + '/tif/get_spectral_profile'
     API_TIF_calc_raster_point                       =       API_VERSION + '/tif/calc_raster_point'

@@ -232,7 +232,7 @@ export const useFilter = () => {
         themeStats.value = themeStatsRes
 
         // ------------------- Step4: 用户反馈操作 -------------------- //
-        if (sceneStats.value.total === 0) {
+        if (sceneStats.value.total === 0 && vectorStats.value.length == 0 && themeStats.value.total == 0) {
             message.warning('未检索到数据')
         } else {
             message.success('数据检索成功')

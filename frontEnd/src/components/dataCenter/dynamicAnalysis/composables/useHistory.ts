@@ -134,7 +134,7 @@ export function useViewHistoryModule() {
                 startTime = new Date('1900-01-01 00:00:00')
                 break
             case '1h':
-                startTime = new Date(now.getTime() - 60 * 60 * 1000) // 1小时前
+                startTime = new Date(now.getTime() - 60 * 60 * 1000)
                 break
             case 'today':
                 startTime = getTodayStart()
