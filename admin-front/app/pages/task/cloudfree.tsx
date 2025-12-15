@@ -176,6 +176,7 @@ const TaskTable: React.FC = () => {
 			title: "数据源",
 			dataIndex: "dataSet",
 			valueType: "text",
+			ellipsis: true,
 			hideInSearch: true,
 		},
 		{
