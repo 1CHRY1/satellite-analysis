@@ -29,8 +29,34 @@
                     <strong>{{ selectedCube?.cubeId }}</strong>
                 </p>
                 <p class="m-0 mt-1 text-[11px] text-gray-400">
-                    CacheKey: {{ selectedCube?.cacheKey }} · 影像 {{ selectedCube?.dimensionScenes.length }} 景 · 传感器
-                    {{ selectedCube?.dimensionSensors.length }}
+                    CacheKey: {{ selectedCube?.cacheKey }} · 影像 {{ selectedCube?.dimensionScenes?.length ?? 0 }} 景 · 传感器
+                    {{ selectedCube?.dimensionSensors?.length ?? 0 }}
+                </p>
+            </div>
+
+            <!-- 场景选择（Cube 特有） -->
+            <div v-if="hasCubeContext && sceneOptions.length > 0" class="config-item mb-4 border border-[#247699] rounded p-3"
+                style="background: radial-gradient(50% 337.6% at 50% 50%, #065e96 0%, #0a456a94 97%);">
+                <label class="block mb-2 text-sm font-medium text-gray-100">
+                    选择场景
+                    <span class="text-gray-400 text-xs ml-2">(共 {{ sceneOptions.length }} 景)</span>
+                </label>
+                <el-select
+                    v-model="selectedSceneId"
+                    class="w-full"
+                    filterable
+                    clearable
+                    placeholder="选择要分析的场景（默认使用第一景）"
+                >
+                    <el-option
+                        v-for="scene in sceneOptions"
+                        :key="scene.value"
+                        :label="scene.label"
+                        :value="scene.value"
+                    />
+                </el-select>
+                <p class="mt-2 text-xs text-gray-400" v-if="currentScene">
+                    已选: {{ currentScene.sensorName }} - {{ currentScene.sceneTime?.split('T')[0] }}
                 </p>
             </div>
             
@@ -123,10 +149,45 @@ const selectedCube = computed(() => props.selectedCubes.find((cube) => cube.isSe
 const hasCubeContext = computed(() => !!selectedCube.value)
 const loading = ref(false)
 const formModel = reactive<Record<string, any>>({})
+const selectedSceneId = ref<string>('')
+
+// 场景选项列表
+const sceneOptions = computed(() => {
+    const cube = selectedCube.value
+    if (!cube || !cube.dimensionScenes) return []
+    return cube.dimensionScenes.map((scene: any, index: number) => ({
+        value: scene.sceneId || `scene-${index}`,
+        label: `${scene.sensorName || '未知传感器'} - ${scene.sceneTime?.split('T')[0] || '未知日期'} (${index + 1}/${cube.dimensionScenes.length})`,
+        scene,
+    }))
+})
+
+// 当前选中的场景
+const currentScene = computed(() => {
+    if (!selectedSceneId.value) {
+        // 默认使用第一个场景
+        return selectedCube.value?.dimensionScenes?.[0] ?? null
+    }
+    const found = sceneOptions.value.find(opt => opt.value === selectedSceneId.value)
+    return found?.scene ?? null
+})
+
+// 从场景中获取 MosaicJSON 需要的 COG 文件列表
+const getSceneCogUrls = (scene: any): string[] => {
+    if (!scene || !scene.images) return []
+    return scene.images.map((img: any) => {
+        // 构建 MinIO COG 访问 URL
+        const bucket = img.bucket || 'test-images'
+        const tifPath = img.tifPath || ''
+        // 假设 MinIO 端点可通过环境配置获取
+        return `/minio/${bucket}/${tifPath}`
+    })
+}
 
 const defaultPayloadTemplate = computed(() => ({
     cube: '{{cube}}',
     cubeKey: '{{cubeKey}}',
+    scene: '{{scene}}',
     params: '{{params}}',
 }))
 
@@ -143,6 +204,7 @@ const resetForm = () => {
                 ? false
                 : '')
     })
+    selectedSceneId.value = ''
 }
 
 watch(
@@ -151,6 +213,14 @@ watch(
         resetForm()
     },
     { immediate: true },
+)
+
+// 当选中的 Cube 变化时，重置场景选择
+watch(
+    () => selectedCube.value?.cacheKey,
+    () => {
+        selectedSceneId.value = ''
+    },
 )
 
 const getOptionsForParam = (param: DynamicToolParamSchema) => {
@@ -240,6 +310,81 @@ const applyTileLayer = (tileTemplate: string) => {
     MapOperation.map_addNoCloudLayer(tileTemplate)
 }
 
+/**
+ * Cube 级 tiler-expression 模式：
+ * 需要先从 Cube 的场景中生成 MosaicJSON，然后调用分析瓦片接口
+ */
+const runCubeTilerExpression = async (context: Record<string, any>) => {
+    const { expressionTemplate, colorMap, pixelMethod } = props.toolMeta.invoke
+    const scene = currentScene.value
+
+    if (!scene) {
+        throw new Error('未选择有效场景')
+    }
+
+    // 获取表达式参数
+    const formExpr = (formModel['expression'] !== undefined && String(formModel['expression']).trim()) || ''
+    const formColor = (formModel['color'] !== undefined && String(formModel['color']).trim()) || ''
+    const formPixel = (formModel['pixel_method'] !== undefined && String(formModel['pixel_method']).trim()) || ''
+
+    const exprSchema = props.toolMeta.paramsSchema.find(p => p.key === 'expression')
+    const exprDefault = exprSchema && (exprSchema as any).default ? String((exprSchema as any).default) : ''
+    const colorSchema = props.toolMeta.paramsSchema.find(p => p.key === 'color')
+    const colorDefault = colorSchema && (colorSchema as any).default ? String((colorSchema as any).default) : ''
+    const pixelSchema = props.toolMeta.paramsSchema.find(p => p.key === 'pixel_method')
+    const pixelDefault = pixelSchema && (pixelSchema as any).default ? String((pixelSchema as any).default) : ''
+
+    let expression = formExpr || exprDefault
+    if (!expression) {
+        const resolved = resolveTemplate(expressionTemplate ?? '', context)
+        expression = (resolved && String(resolved).trim()) || ''
+    }
+    if (!expression) {
+        if (exprSchema?.required) {
+            throw new Error('表达式为空，请在表单中填写')
+        }
+        expression = '2*b2-b1-b3'
+        message.info('未填写表达式，已使用默认表达式 2*b2-b1-b3')
+    }
+
+    const color = formColor || colorDefault || (resolveTemplate(colorMap ?? 'rdylgn', context) as string)
+    const pixel = formPixel || pixelDefault || ((pixelMethod ?? 'first').toString())
+
+    // 从场景中提取 COG 文件列表
+    const cogFiles = getSceneCogUrls(scene)
+    if (cogFiles.length === 0) {
+        throw new Error('场景中没有可用的影像文件')
+    }
+
+    // 先创建 MosaicJSON
+    message.info('正在为场景创建 MosaicJSON...')
+    const createMosaicResponse = await fetch('/tiler/mosaic/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            files: cogFiles,
+            minzoom: 4,
+            maxzoom: 20,
+        }),
+    })
+
+    if (!createMosaicResponse.ok) {
+        throw new Error(`创建 MosaicJSON 失败: ${createMosaicResponse.status}`)
+    }
+
+    const mosaicResult = await createMosaicResponse.json()
+    const mosaicJsonPath = `${mosaicResult.bucket}/${mosaicResult.object_path}`
+    // 构建 MosaicJSON 完整 URL
+    const mosaicUrl = `/minio/${mosaicJsonPath}`
+
+    // 构建分析瓦片 URL
+    const url = `/tiler/mosaic/analysis/{z}/{x}/{y}.png?mosaic_url=${encodeURIComponent(
+        mosaicUrl
+    )}&expression=${encodeURIComponent(expression)}&pixel_method=${pixel}&color=${encodeURIComponent(color)}`
+
+    applyTileLayer(url)
+}
+
 const callHttpService = async (context: Record<string, any>) => {
     const { endpoint, method = 'POST', headers = {}, payloadTemplate } = props.toolMeta.invoke
     if (!endpoint) {
@@ -276,16 +421,24 @@ const runTool = async () => {
         message.warning('请先在左侧选择一个 Cube')
         return
     }
+    const scene = currentScene.value
     const context = {
         ...formModel,
         cube,
         cubeKey: cube.cacheKey,
         cubeList: props.selectedCubes,
+        scene,
+        sceneId: scene?.sceneId,
         params: { ...formModel },
     }
     loading.value = true
     try {
         switch (props.toolMeta.invoke.type) {
+            case 'tiler-expression': {
+                await runCubeTilerExpression(context)
+                message.success('工具运行成功，已叠加分析图层')
+                break
+            }
             case 'http+tile': {
                 const response = await callHttpService(context)
                 if (!response.ok) {
