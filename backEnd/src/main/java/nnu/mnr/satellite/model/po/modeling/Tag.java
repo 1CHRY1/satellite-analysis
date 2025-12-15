@@ -16,5 +16,6 @@ public class Tag {
     @TableId
     private Integer id;
     private String name;
+    private String nameZh;
     private String createTime;
 }

@@ -1,28 +1,26 @@
 package nnu.mnr.satellite.service.modeling;
 
+import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.cache.EOCubeCache;
 import nnu.mnr.satellite.cache.SceneDataCache;
 import nnu.mnr.satellite.jobs.QuartzSchedulerManager;
 import nnu.mnr.satellite.model.dto.cache.CacheEOCubeDTO;
-import nnu.mnr.satellite.model.dto.modeling.ModelServerImageDTO;
-import nnu.mnr.satellite.model.dto.modeling.ModelServerSceneDTO;
-import nnu.mnr.satellite.model.dto.modeling.VisualizationLowLevelTile;
-import nnu.mnr.satellite.model.dto.modeling.VisualizationTileDTO;
+import nnu.mnr.satellite.model.dto.modeling.*;
+import nnu.mnr.satellite.model.po.resources.SceneSP;
 import nnu.mnr.satellite.model.pojo.modeling.ModelServerProperties;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.model.vo.modeling.NoCloudConfigVO;
 import nnu.mnr.satellite.model.vo.resources.GridsAndGridsBoundary;
 import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
 import nnu.mnr.satellite.service.common.BandMapperGenerator;
-import nnu.mnr.satellite.service.resources.ImageDataService;
-import nnu.mnr.satellite.service.resources.RegionDataService;
-import nnu.mnr.satellite.service.resources.SceneDataServiceV3;
+import nnu.mnr.satellite.service.resources.*;
 import nnu.mnr.satellite.utils.common.IdUtil;
 import nnu.mnr.satellite.utils.common.ProcessUtil;
 import nnu.mnr.satellite.utils.dt.RedisUtil;
 import nnu.mnr.satellite.utils.geom.GeometryUtil;
+import nnu.mnr.satellite.utils.geom.TileCalculateUtil;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Polygon;
@@ -34,6 +32,8 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+
+import static nnu.mnr.satellite.utils.geom.GeometryUtil.getGridsBoundaryByTilesAndResolution;
 
 @Slf4j
 @Service("ModelExampleServiceV3")
@@ -55,6 +55,10 @@ public class ModelExampleServiceV3 {
     ModelServerProperties modelServerProperties;
     @Autowired
     RedisUtil redisUtil;
+    @Autowired
+    SceneDataServiceV2 sceneDataServiceV2;
+    @Autowired
+    CaseDataService caseDataService;
 
     public CommonResultVO createScenesVisualizationConfig(VisualizationTileDTO visualizationTileDTO, String cacheKey) {
         SceneDataCache.UserSceneCache userSceneCache = SceneDataCache.getUserSceneCacheMap(cacheKey);
@@ -190,6 +194,77 @@ public class ModelExampleServiceV3 {
         return runModelServerModel(visualizationUrl, visualizationParam, expirationTime, headers, cookies);
     }
 
+    // 时序立方体计算
+    public CommonResultVO calcEOCube(EOCubeFetchDto eoCubeFetchDto, String userId) throws IOException {
+        Integer regionId = eoCubeFetchDto.getRegionId();
+        Integer resolution = eoCubeFetchDto.getResolution();
+        List<String> sceneIds = eoCubeFetchDto.getSceneIds();
+        List<String> bandList = eoCubeFetchDto.getBandList();
+        if (bandList == null || bandList.isEmpty()) {
+            bandList = Arrays.asList("Red", "Green", "Blue");
+        }
+        // 构成影像景参数信息
+        List<ModelServerSceneDTO> modelServerSceneDTOs = new ArrayList<>();
+
+        // 构成影像景参数信息
+        for (String sceneId : sceneIds) {
+            SceneSP scene = sceneDataServiceV2.getSceneByIdWithProductAndSensor(sceneId);
+            List<ModelServerImageDTO> imageDTO = imageDataService.getModelServerImageDTOBySceneId(sceneId);
+            ModelServerSceneDTO modelServerSceneDTO = ModelServerSceneDTO.builder()
+                    .sceneId(sceneId).images(imageDTO).sceneTime(scene.getSceneTime()).resolution(scene.getResolution())
+                    .bbox(GeometryUtil.geometry2Geojson(scene.getBbox())).noData(scene.getNoData())
+                    .sensorName(scene.getSensorName()).productName(scene.getProductName()).cloud(scene.getCloud())
+                    .bandMapper(bandMapperGenerator.getSatelliteConfigBySensorName(scene.getSensorName()))
+                    .cloudPath(scene.getCloudPath()).bucket(scene.getBucket()).build();
+            modelServerSceneDTOs.add(modelServerSceneDTO);
+        }
+
+        // 构成网格行列号信息
+        String[] parts = eoCubeFetchDto.getDataSet().getCubeId().split("-");
+        int rowId = Integer.parseInt(parts[0].trim());
+        int columnId = Integer.parseInt(parts[1].trim());
+        Integer[] tileId = new Integer[]{columnId, rowId};
+        List<Integer[]> tileIds = new ArrayList<>();
+        tileIds.add(tileId);
+
+        // 构建行政区地址信息
+        String address = regionDataService.getAddressById(regionId);
+        switch (eoCubeFetchDto.getDataSet().getPeriod()) {
+            case "month": {
+                address += "(月度)";
+                break;
+            }
+            case "season": {
+                address += "(季度)";
+                break;
+            }
+            case "year": {
+                address += "(年度)";
+                break;
+            }
+        }
+
+        // 构建边界信息
+        Geometry boundary = getGridsBoundaryByTilesAndResolution(tileIds, resolution);
+
+        // 请求modelServer
+        JSONObject calcEOCubeParam = JSONObject.of("tiles", tileIds, "scenes", modelServerSceneDTOs, "cloud", 0, "resolution", resolution, "bandList", bandList);
+        calcEOCubeParam.put("resample", eoCubeFetchDto.getDataSet().getResample());
+        calcEOCubeParam.put("period", eoCubeFetchDto.getDataSet().getPeriod());
+        JSONObject caseJsonObj = JSONObject.of("boundary", boundary, "address", address, "resolution", resolution, "sceneIds", sceneIds, "dataSet", JSON.toJSONString(eoCubeFetchDto.getDataSet()));
+        caseJsonObj.put("regionId", regionId);
+        caseJsonObj.put("bandList", bandList);
+        caseJsonObj.put("userId", userId);
+        caseJsonObj.put("type", "eoCube");
+
+        String calcEOCubeUrl;
+        calcEOCubeUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("eoCube");
+        System.out.println(calcEOCubeUrl);
+
+        long expirationTime = 60 * 100;
+        return runModelServerModel(calcEOCubeUrl, calcEOCubeParam, expirationTime, caseJsonObj);
+    }
+
     public CommonResultVO cacheEOCube(CacheEOCubeDTO cacheEOCubeDTO, String userId){
         String cacheKey = IdUtil.generateEOCubeCacheKey(userId);
         String cubeId = cacheEOCubeDTO.getCubeId();
@@ -222,6 +297,28 @@ public class ModelExampleServiceV3 {
                 .message("获取用户EO立方体缓存成功")
                 .data(userCaches)
                 .build();
+    }
+
+    // 函数重载，时序立方体专用
+    private CommonResultVO runModelServerModel(String url, JSONObject param, long expirationTime, JSONObject caseJsonObj) {
+        try {
+            String rawResponse = ProcessUtil.runModelCase(url, param);
+            System.out.println("Raw Response: " + rawResponse); // 打印原始返回内容
+            JSONObject modelCaseResponse = JSONObject.parseObject(rawResponse); // 确认是否抛出异常
+
+            String caseId = modelCaseResponse.getJSONObject("data").getString("taskId");
+            // 在没有相应历史记录的情况下, 持久化记录
+            if (caseDataService.selectById(caseId) == null) {
+                caseDataService.addCaseFromParamAndCaseId(caseId, caseJsonObj);
+            }
+            JSONObject modelCase = JSONObject.of("status", "RUNNING", "start", LocalDateTime.now());
+            redisUtil.addJsonDataWithExpiration(caseId, modelCase, expirationTime);
+            // 注意最后再启动任务！！！不然会出现updateJsonField找不到对应键值的情况
+            quartzSchedulerManager.startModelRunningStatusJob(caseId, modelServerProperties);
+            return CommonResultVO.builder().status(1).message("success").data(caseId).build();
+        } catch (Exception e) {
+            return CommonResultVO.builder().status(-1).message("Wrong Because of " + e.getMessage()).build();
+        }
     }
 
     // 携带headers和cookies执行modelServer任务

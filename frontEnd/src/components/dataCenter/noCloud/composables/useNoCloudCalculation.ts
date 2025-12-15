@@ -3,7 +3,7 @@ import { message } from 'ant-design-vue'
 import { getNoCloud } from '@/api/http/satellite-data'
 import { getNoCloudUrl4MosaicJson } from '@/api/http/satellite-data/visualize.api'
 import * as MapOperation from '@/util/map/operation'
-import { exploreData, taskStore, setCurrentPanel, noCloudLoading, calTask, additionalData, dataReconstruction, progress, showProgress } from './shared'
+import { exploreData, taskStore, setCurrentPanel, noCloudLoading, calTask, additionalData, dataReconstruction, progress, showProgress, selectnation, selectinternation, selectsar } from './shared'
 import {demotic1mImages,demotic2mImages,internationalImages,radarImages} from './useDataPreparation'
 import { bandList } from './useComplexSynthesis'
 
@@ -100,16 +100,41 @@ export const useNoCloudCalculation = (allScenes: any) => {
         taskStore.setIsInitialTaskPending(true)
         setCurrentPanel('history')
 
-        // 根据勾选情况合并影像
-        let addedImages = [...demotic1mImages.value]
+        // 分割数组为两个，优先级高的放在第一个
+        function splitScenes(preferredSceneIds: string[], scenes: any[]) {
+            const preferredSet = new Set(preferredSceneIds); // O(1) 查找
+        
+            const matchedScenes: any[] = [];
+            const unmatchedScenes: any[] = [];
+        
+            for (const scene of scenes) {
+                if (preferredSet.has(scene.sceneId)) {
+                    matchedScenes.push(scene);
+                } else {
+                    unmatchedScenes.push(scene);
+                }
+            }
+        
+            return { matchedScenes, unmatchedScenes };
+        }
+
+        // 根据勾选情况合并影像，有勾选优先使用的，排在前面
+        let { matchedScenes, unmatchedScenes } = splitScenes(selectnation.value?.sceneId || [], demotic1mImages.value)
+        let addedImages = [...matchedScenes, ...unmatchedScenes]
         if (dataReconstruction.value[0] === true) {
-            addedImages = addedImages.concat(demotic2mImages.value)
+            let { matchedScenes, unmatchedScenes } = splitScenes(selectnation.value?.sceneId || [], demotic2mImages.value)
+            addedImages = addedImages.concat(matchedScenes)
+            addedImages = addedImages.concat(unmatchedScenes)
         }
         if (dataReconstruction.value[1] === true) {
-            addedImages = addedImages.concat(internationalImages.value)
+            let { matchedScenes, unmatchedScenes } = splitScenes(selectinternation.value?.sceneId || [], internationalImages.value)
+            addedImages = addedImages.concat(matchedScenes)
+            addedImages = addedImages.concat(unmatchedScenes)
         }
         if (dataReconstruction.value[2] === true) {
-            addedImages = addedImages.concat(radarImages.value)
+            let { matchedScenes, unmatchedScenes } = splitScenes(selectsar.value?.sceneId || [], radarImages.value)
+            addedImages = addedImages.concat(matchedScenes)
+            addedImages = addedImages.concat(unmatchedScenes)
         }
         
         let dataSet = [
@@ -145,8 +170,6 @@ export const useNoCloudCalculation = (allScenes: any) => {
 
     // 预览无云一版图
     const previewNoCloud = async (data: any) => {
-        const stopLoading = message.loading('正在加载无云一版图...', 0)
-        
         // 清除旧图层
         MapOperation.map_removeNocloudGridPreviewLayer()
         MapOperation.map_destroyNoCloudLayer()
@@ -157,10 +180,6 @@ export const useNoCloudCalculation = (allScenes: any) => {
             mosaicJsonPath: mosaicJsonPath
         })
         MapOperation.map_addNoCloudLayer(url4MosaicJson)
-
-        setTimeout(() => {
-            stopLoading()
-        }, 5000)
     }
 
     // 创建无云一版图瓦片

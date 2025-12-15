@@ -32,14 +32,13 @@
                     <dv-border-box12 class="!h-[calc(100vh-56px-48px-32px-8px)]">
                         <!--无云数据合成和时空立方体合成-->
                         <div class="main-container">
-                            <a-alert v-if="exploreData.grids.length===0 && currentPanel === 'noCloud'"
-                                description="请先完成交互探索"
-                                type="warning" show-icon class="status-alert">
+                            <a-alert v-if="exploreData.grids.length === 0 && currentPanel === 'noCloud'"
+                                description="请先完成交互探索" type="warning" show-icon class="status-alert">
                                 <template #action>
                                     <a-button size="small" @click="router.push('/explore')">前往</a-button>
                                 </template>
                             </a-alert>
-                            <br v-if="exploreData.grids.length===0  && currentPanel === 'noCloud'"/>
+                            <br v-if="exploreData.grids.length === 0 && currentPanel === 'noCloud'" />
                             <!--无云数据合成-->
                             <section class="panel-section" v-show="currentPanel === 'noCloud'" key="complex">
                                 <!--无云数据合成标题-->
@@ -370,26 +369,31 @@
                                                 <div class="flex w-full flex-col gap-2">
                                                     <!-- 波段选择，写成循环格式 -->
                                                     <div class="ml-4 flex flex-col">
-                                                        <div class="text-lg text-gray-400 mb-2">合成波段选择：</div>
+                                                        <div class="text-gray-400 mb-2">合成波段选择：</div>
                                                         <div class="grid grid-cols-3 gap-4">
-                                                            <label
-                                                                v-for="band in ['Red', 'Green', 'Blue', 'NIR', 'NDVI', 'EVI']"
-                                                                :key="band" class="flex items-center gap-2">
-                                                                <input type="checkbox" :value="band"
+                                                            <label v-for='band in [
+                                                                { label: "红", value: "Red" },
+                                                                { label: "绿", value: "Green" },
+                                                                { label: "蓝", value: "Blue" },
+                                                                { label: "近红外", value: "NIR" },
+                                                                { label: "归一化植被指数", value: "NDVI" },
+                                                                { label: "增强型植被指数", value: "EVI" }]' :key="band.value"
+                                                                class="flex items-center gap-2">
+                                                                <input type="checkbox" :value="band.value"
                                                                     v-model="multiSourceData.selectedBands"
                                                                     class="size-5 rounded" />
-                                                                <span class="text-base">{{ band }}</span>
+                                                                <span class="text-base">{{ band.label }}</span>
                                                             </label>
                                                         </div>
                                                     </div>
 
                                                     <!-- 可视化波段选择部分 -->
                                                     <div class="ml-4 mt-2 flex flex-row items-center gap-1">
-                                                        <div class="text-lg text-gray-400">可视化波段：</div>
+                                                        <div class="text-gray-400">可视化波段：</div>
 
                                                         <!-- R通道（只读文本） -->
                                                         <div class="flex items-center gap-2">
-                                                            <span class="text-sm text-red-400">R:</span>
+                                                            <span class="text-sm text-red-400">红:</span>
                                                             <div class="w-17 rounded border border-[#2c3e50] bg-[#0d1526] text-[#38bdf8] 
                                                         flex items-center justify-center overflow-hidden">
                                                                 {{ multiSourceData.visualization.red_band || "未分配" }}
@@ -398,7 +402,7 @@
 
                                                         <!-- G通道 -->
                                                         <div class="flex items-center gap-2">
-                                                            <span class="text-sm text-green-400">G:</span>
+                                                            <span class="text-sm text-green-400">绿:</span>
                                                             <div class="w-17 rounded border border-[#2c3e50] bg-[#0d1526] text-[#38bdf8] 
                                                         flex items-center justify-center overflow-hidden">
                                                                 {{ multiSourceData.visualization.green_band || "未分配" }}
@@ -407,7 +411,7 @@
 
                                                         <!-- B通道 -->
                                                         <div class="flex items-center gap-2">
-                                                            <span class="text-sm text-blue-400">B:</span>
+                                                            <span class="text-sm text-blue-400">蓝:</span>
                                                             <div class="w-17 rounded border border-[#2c3e50] bg-[#0d1526] text-[#38bdf8] 
                                                         flex items-center justify-center overflow-hidden">
                                                                 {{ multiSourceData.visualization.blue_band || "未分配" }}
@@ -572,14 +576,52 @@
                                                         </div>
                                                     </a-form-item>
 
+                                                    <!-- 重采样 -->
+                                                    <a-form-item label="重采样策略" name="strategy"
+                                                        :rules="[{ required: true, message: '请选择分辨率重采样策略' }]">
+                                                        <a-select v-model:value="formData.strategy"
+                                                            placeholder="请选择分辨率重采样策略" allow-clear>
+                                                            <a-select-option
+                                                                v-for="opt in [{ label: '上采样', value: 'upscale' }, { label: '下采样', value: 'downscale' }]"
+                                                                :key="opt.value" :value="opt.value">
+                                                                <span :style="{ fontSize: 'bold' }">
+                                                                    {{ opt.label }}</span>
+                                                            </a-select-option>
+                                                        </a-select>
+                                                        <div>
+                                                            输出分辨率重采样策略
+                                                        </div>
+                                                    </a-form-item>
+
+                                                    <!-- 时间分辨率 -->
+                                                    <a-form-item label="时间分辨率" name="period"
+                                                        :rules="[{ required: true, message: '请选择时间分辨率' }]">
+                                                        <a-select v-model:value="formData.period" placeholder="请选择时间分辨率"
+                                                            allow-clear>
+                                                            <a-select-option
+                                                                v-for="opt in [{ label: '月度', value: 'month' }, { label: '季度', value: 'season' }, { label: '年度', value: 'year' }]"
+                                                                :key="opt.value" :value="opt.value">
+                                                                <span :style="{ fontSize: 'bold' }">
+                                                                    {{ opt.label }}</span>
+                                                            </a-select-option>
+                                                        </a-select>
+                                                        <div>
+                                                            时间聚合方式或生成周期
+                                                        </div>
+                                                    </a-form-item>
+
                                                 </a-form>
                                             </div>
 
                                             <!-- 操作按钮区域 -->
                                             <div class="config-control justify-end" :bordered="false">
-                                                <a-button size="large" style="margin-right: 1rem;" :disabled="!canSynthesize"
-                                                    @click="handleReset">
+                                                <a-button size="large" style="margin-right: 1rem;"
+                                                    :disabled="!canSynthesize" @click="handleReset">
                                                     重置
+                                                </a-button>
+                                                <a-button type="primary" size="large" :disabled="!canSynthesize"
+                                                    style="margin-right: 1rem;" @click="handleGenCache">
+                                                    计算就绪
                                                 </a-button>
                                                 <a-button type="primary" size="large" :disabled="!canSynthesize"
                                                     @click="handleSynthesis">
@@ -587,19 +629,18 @@
                                                 </a-button>
 
                                             </div>
-                                            <a-modal v-model:open="showCubeContentDialog" title="时序立方体" @ok="() => showCubeContentDialog = false">
+                                            <a-modal v-model:open="showCubeContentDialog" title="时序立方体"
+                                                @ok="() => showCubeContentDialog = false">
                                                 <a-card style="max-height: 400px; overflow: auto; position: relative;">
-                                                    <a-alert
-                                                        :description="`请牢记时序立方体CacheKey: ${currentCacheKey}`"
+                                                    <a-alert :description="`请牢记时序立方体CacheKey: ${currentCacheKey}`"
                                                         type="warning" show-icon class="status-alert" />
                                                     <pre
-                                                        style="white-space: pre-wrap; word-break: break-word; user-select: text;"
-                                                        >
-                                                        {{ cubeContent }}
-                                                    </pre>
+                                                        style="white-space: pre-wrap; word-break: break-word; user-select: text;">
+                                        {{ cubeContent }}
+                                    </pre>
                                                 </a-card>
                                             </a-modal>
-                                            
+
                                         </div>
                                     </div>
                                 </div>
@@ -759,7 +800,7 @@ const {
 
 // 时空立方体合成
 const {
-    selectedGrid, updateGridLayer, formData, sensorOptions, bandOptions, dateOptions, canSynthesize, handleSensorChange, handleBandChange, handleDateChange, handleSynthesis, handleReset, onFinish, cubeContent, currentCacheKey, showCubeContentDialog
+    selectedGrid, updateGridLayer, formData, sensorOptions, bandOptions, dateOptions, canSynthesize, handleSensorChange, handleBandChange, handleDateChange, handleGenCache, handleSynthesis, handleReset, onFinish, cubeContent, currentCacheKey, showCubeContentDialog
 } = useBox()
 
 const handleAdd1mDemoticImage = () => add1mDemoticImage(reRenderAllGrids, clearGridRenderingByType)
@@ -798,7 +839,7 @@ onMounted(async () => {
             })
             // 格网底色铺设
             updateGridLayer(exploreData.grids)
-            
+
         }
     }, 2)
     // 缩放至研究区
@@ -809,7 +850,7 @@ onMounted(async () => {
             [boundsArray[2], boundsArray[3]]
         ]
         CommonMapOps.map_fitView(bounds)
-    },1500)
+    }, 1500)
 })
 </script>
 

@@ -5,11 +5,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import nnu.mnr.satellite.model.po.resources.Vector;
 import nnu.mnr.satellite.model.vo.resources.VectorInfoVO;
 import nnu.mnr.satellite.model.vo.resources.VectorTypeVO;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Result;
-import org.apache.ibatis.annotations.Results;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.*;
 import org.locationtech.jts.geom.Geometry;
 
 import java.util.List;
@@ -24,6 +20,8 @@ public interface IVectorRepo  extends BaseMapper<Vector> {
             @Result(property = "vectorName", column = "vector_name"),
             @Result(property = "tableName", column = "table_name"),
             @Result(property = "time", column = "time"),
+            @Result(property = "fields", column = "table_name",
+                    many = @Many(select = "nnu.mnr.satellite.mapper.resources.IVectorRepo.getTableFields"))
     })
     List<VectorInfoVO> getVectorsDesByTimeAndGeometry(
             @Param("startTime") String startTime,
@@ -31,34 +29,15 @@ public interface IVectorRepo  extends BaseMapper<Vector> {
             @Param("wkt") String wkt
     );
 
-//    @Select(
-//            "WITH mvt_geom AS (" +
-//                    "   SELECT " +
-//                    "       ST_AsMVTGeom(" +
-//                    "           ST_Transform(original_table.geom, 3857), " + // 先转换到 Web Mercator
-//                    "           ST_Transform(ST_TileEnvelope(#{z}, #{x}, #{y}), 3857), " + // tile 边界也转换到 3857
-//                    "           extent => 256, " + // 典型 MVT 范围
-//                    "           buffer => 64, " + // 调整缓冲区
-//                    "           clip_geom => true " + // 确保裁剪
-//                    "       ) AS geom " +
-//                    "   FROM gis_db.${tableName} AS original_table " +
-//                    "   WHERE ST_Intersects(" +
-//                    "       ST_Transform(original_table.geom, 4326), " + // 保持过滤条件在 4326
-//                    "       ST_GeomFromText(#{wkt}, 4326)" +
-//                    "   )" +
-//                    ")" +
-//                    "SELECT ST_AsMVT(t, '${tableName}', 256, 'geom') AS mvt " +
-//                    "FROM mvt_geom AS t " +
-//                    "WHERE geom IS NOT NULL" // 过滤掉可能被裁剪掉的空几何
-//    )
     Object getVectorByTableNameAndGeometry(
             @Param("tableName") String tableName,
             @Param("wkt") String wkt,
+            @Param("field") String field,
             @Param("z") int z,
             @Param("x") int x,
             @Param("y") int y,
             @Param("columns") List<String> columns,
-            @Param("types") List<Integer> types
+            @Param("types") List<String> types
     );
 
     @Select({
@@ -83,4 +62,17 @@ public interface IVectorRepo  extends BaseMapper<Vector> {
             "SELECT DISTINCT type, label FROM gis_db.${tableName}"
     })
     List<VectorTypeVO> getVectorTypeByTableName(@Param("tableName") String tableName);
+
+    @Select({
+            "SELECT DISTINCT ${field} FROM gis_db.${tableName}"
+    })
+    List<String> getVectorTypeByTableNameAndField(@Param("tableName") String tableName, @Param("field") String field);
+
+    // 查询指定表的字段名（排除 id、fid、geom）
+    @Select("SELECT column_name " +
+            "FROM information_schema.columns " +
+            "WHERE table_schema = 'gis_db' " +  // 替换为你的数据库 schema 名
+            "AND table_name = #{tableName} " +
+            "AND column_name NOT IN ('id', 'fid', 'geom')")
+    List<String> getTableFields(@Param("tableName") String tableName);
 }

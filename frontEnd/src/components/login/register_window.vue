@@ -1,85 +1,132 @@
-<template>  
+<template>
     <teleport to="body">
-        <div class=" fixed inset-0 bg-black/40 flex items-center justify-center z-50 pointer-events-none">
-            <div class="bg-black w-[20%] h-[50%] p-6 rounded-lg overflow-auto pointer-events-auto ">
-                <div class="m-10 relative">
-                    <div class="flex justify-between items-center mb-6">
-                        <div class="text-xl">
-                          注册
-                        </div >
-                        <span class="text-2xl text-white cursor-pointer" @click="$emit('close')">&times;</span>
-                    </div>
-                    <div class="text-sm">{{$t('signup.descript')}}</div>
-                    <hr class="my-4 border-t border-gray-300" />
-                        <!-- <svg viewBox="0 0 320 300">
-                            <defs>
-                                <linearGradient
-                                    id="linearGradient"
-                                    x1="13"
-                                    y1="193.5"
-                                    x2="307"
-                                    y2="193.5"
-                                    gradientUnits="userSpaceOnUse"
-                                >
-                                    <stop style="stop-color: #ff00ff" offset="0" />
-                                    <stop style="stop-color: #ff0000" offset="1" />
-                                </linearGradient>
-                            </defs>
-                            <path
-                                d="m 40,120 h 240 c 0,0 25,1 25,35s-25,35-25,35h-240c 0,0-25,4-25,38s25,38 25,38h215c 0,0 20-1 20-25s-20-25-20-25h-190c 0,0-20,2-20,25s20,25 20,25h168.57"
-                            />
-                        </svg> -->
-                        <div class="form">
-                            <label for="email">{{$t('signup.email')}}</label>
-                            <input type="email" :placeholder="t('signup.intext_email')" id="email" v-model="email" />
-                            <label for="password">{{$t('signup.password')}}</label>
-                            <input
-                                type="password"
+        <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div class="register-container bg-[#1a1a1a] w-full max-w-md rounded-lg shadow-2xl border border-gray-800 overflow-hidden">
+                <!-- 头部 -->
+                <div class="flex justify-between items-center p-6 border-b border-gray-800">
+                    <h2 class="text-2xl font-semibold text-white">注册</h2>
+                    <a-button 
+                        type="text" 
+                        class="text-gray-400 hover:text-white"
+                        @click="$emit('close')"
+                    >
+                        <template #icon>
+                            <CloseOutlined class="text-xl" />
+                        </template>
+                    </a-button>
+                </div>
+
+                <!-- 内容区 -->
+                <div class="p-6">
+                    <p class="text-sm text-gray-400 mb-6">
+                        {{ $t('signup.descript') }}
+                    </p>
+
+                    <a-form layout="vertical" class="register-form">
+                        <!-- 邮箱 -->
+                        <a-form-item :label="$t('signup.email')">
+                            <a-input
+                                v-model:value="email"
+                                size="large"
+                                type="email"
+                                :placeholder="t('signup.intext_email')"
+                            >
+                                <template #prefix>
+                                    <MailOutlined class="text-gray-500" />
+                                </template>
+                            </a-input>
+                        </a-form-item>
+
+                        <!-- 密码 -->
+                        <a-form-item :label="$t('signup.password')">
+                            <a-input-password
+                                v-model:value="password"
+                                size="large"
                                 :placeholder="t('signup.intext_password')"
-                                id="password"
-                                v-model="password"
-                            />
-                            <label for="confirm-password">{{$t('signup.repassword')}}</label>
-                            <input
-                                type="password"
+                            >
+                                <template #prefix>
+                                    <LockOutlined class="text-gray-500" />
+                                </template>
+                            </a-input-password>
+                        </a-form-item>
+
+                        <!-- 确认密码 -->
+                        <a-form-item :label="$t('signup.repassword')">
+                            <a-input-password
+                                v-model:value="confirmPassword"
+                                size="large"
                                 :placeholder="t('signup.intext_repassword')"
-                                id="confirm-password"
-                                v-model="confirmPassword"
-                            />
-                            <label for="name">{{$t('signup.username')}}</label>
-                            <input type="text" :placeholder="t('signup.intext_name')"  id="name" v-model="name" />
-                            <label for="title">{{$t('signup.title')}}</label>
-                            <!-- <input type="text" placeholder="请输入您的头衔" id="title" v-model="title" /> -->
-                            <el-select v-model="title" class="!p-0" :placeholder="t('signup.intext_title')">
-                                <el-option label="Professor" value="Professor"></el-option>
-                                <el-option label="Dr" value="Dr"></el-option>
-                                <el-option label="Mr" value="Mr"></el-option>
-                                <el-option label="Mrs" value="Mrs"></el-option>
-                                <el-option label="Miss" value="Miss"></el-option>
-                                <el-option label="Ms" value="Ms"></el-option>
-                                <el-option label="Mx" value="Mx"></el-option>
-                            </el-select>
-                            <label for="organization">{{$t('signup.organization')}}</label>
-                            <input
-                                type="text"
+                            >
+                                <template #prefix>
+                                    <LockOutlined class="text-gray-500" />
+                                </template>
+                            </a-input-password>
+                        </a-form-item>
+
+                        <!-- 用户名 -->
+                        <a-form-item :label="$t('signup.username')">
+                            <a-input
+                                v-model:value="name"
+                                size="large"
+                                :placeholder="t('signup.intext_name')"
+                            >
+                                <template #prefix>
+                                    <UserOutlined class="text-gray-500" />
+                                </template>
+                            </a-input>
+                        </a-form-item>
+
+                        <!-- 头衔 -->
+                        <a-form-item :label="$t('signup.title')">
+                            <a-select
+                                v-model:value="title"
+                                size="large"
+                                :placeholder="t('signup.intext_title')"
+                            >
+                                <a-select-option value="Professor">Professor</a-select-option>
+                                <a-select-option value="Dr">Dr</a-select-option>
+                                <a-select-option value="Mr">Mr</a-select-option>
+                                <a-select-option value="Mrs">Mrs</a-select-option>
+                                <a-select-option value="Miss">Miss</a-select-option>
+                                <a-select-option value="Ms">Ms</a-select-option>
+                                <a-select-option value="Mx">Mx</a-select-option>
+                            </a-select>
+                        </a-form-item>
+
+                        <!-- 组织 -->
+                        <a-form-item :label="$t('signup.organization')">
+                            <a-input
+                                v-model:value="organization"
+                                size="large"
                                 :placeholder="t('signup.intext_organization')"
-                                id="organization"
-                                v-model="organization"
-                            />
-                            <div class="flex h-[80px] w-[245px] flex-row items-center justify-center">
-                                <button type="button" class="submit cursor-pointer" @click="handleRegister">
-                                    {{$t('signup.button.register')}}
-                                </button>
-                                <button
-                                    type="button"
-                                    class="submit cursor-pointer"
-                                    @click="$emit('switch')"
-                                >
-                                    {{$t('signup.button.back')}}
-                                </button>
-                            </div>
+                            >
+                                <template #prefix>
+                                    <BankOutlined class="text-gray-500" />
+                                </template>
+                            </a-input>
+                        </a-form-item>
+
+                        <!-- 按钮组 -->
+                        <div class="flex gap-3 mt-6">
+                            <a-button
+                                type="primary"
+                                size="large"
+                                block
+                                @click="handleRegister"
+                                class="register-btn"
+                            >
+                                {{ $t('signup.button.register') }}
+                            </a-button>
+                            <a-button
+                                size="large"
+                                block
+                                @click="$emit('switch')"
+                                class="back-btn"
+                            >
+                                {{ $t('signup.button.back') }}
+                            </a-button>
                         </div>
-                    
+                    </a-form>
                 </div>
             </div>
         </div>
@@ -90,10 +137,19 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { createUser } from '@/api/http/user'
-
 import { useI18n } from 'vue-i18n'
+import { message } from 'ant-design-vue'
+import { 
+    UserOutlined, 
+    LockOutlined, 
+    CloseOutlined, 
+    MailOutlined,
+    BankOutlined
+} from '@ant-design/icons-vue'
+
 const { t } = useI18n()
 
+const emit = defineEmits(['close', 'switch'])
 
 const router = useRouter()
 
@@ -120,209 +176,154 @@ const handleRegister = async () => {
         router.push('/home')
         message.success(t('signup.message.success'))
     } else {
-         message.error(t('signup.message.error.fail'))
+        message.error(t('signup.message.error.fail'))
     }
 }
 </script>
-                           
+
 <style scoped lang="scss">
-:deep(.el-select__wrapper) {
-    background-color: #474a59;
+.register-container {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+// Ant Design Vue 暗黑主题定制
+:deep(.ant-form-item-label > label) {
+    color: #d1d5db;
+    font-size: 14px;
+}
+
+:deep(.ant-input) {
+    background-color: #0f0f0f;
+    border-color: #374151;
+    color: #ffffff;
+    
+    &:hover {
+        border-color: #4b5563;
+    }
+    
+    &:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    }
+}
+
+:deep(.ant-input-password) {
+    background-color: #0f0f0f;
+    border-color: #374151;
+    
+    &:hover {
+        border-color: #4b5563;
+    }
+    
+    input {
+        background-color: transparent;
+        color: #ffffff;
+    }
+}
+
+:deep(.ant-input-affix-wrapper-focused) {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+:deep(.ant-select) {
+    .ant-select-selector {
+        background-color: #0f0f0f !important;
+        border-color: #374151 !important;
+        color: #ffffff;
+        
+        &:hover {
+            border-color: #4b5563 !important;
+        }
+    }
+    
+    &.ant-select-focused .ant-select-selector {
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
+    }
+    
+    .ant-select-selection-placeholder {
+        color: #9ca3af;
+    }
+}
+
+:deep(.anticon) {
+    color: #9ca3af;
+}
+
+.register-btn {
+    height: 44px;
+    font-size: 16px;
+    font-weight: 500;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
     border: none;
-    padding-left: 0;
-    box-shadow: none;
-    color: white;
+    
+    &:hover {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    }
 }
 
-:deep(.el-select__wrapper.is-hovering:not(.is-focused)) {
-    box-shadow: none;
+.back-btn {
+    height: 44px;
+    font-size: 16px;
+    font-weight: 500;
+    background-color: #374151;
+    border-color: #4b5563;
+    color: #ffffff;
+    
+    &:hover {
+        background-color: #4b5563;
+        border-color: #6b7280;
+        color: #ffffff;
+    }
 }
 
-:deep(.el-select__placeholder.is-transparent) {
-    color: #a8abb2;
-}
-
-:deep(.el-select__placeholder) {
-    color: white;
-}
-
+// 自动填充样式
 input:-webkit-autofill {
-    box-shadow: 0 0 0px 1000px #474a59 inset !important;
-    /* 强制覆盖背景 */
+    box-shadow: 0 0 0px 1000px #0f0f0f inset !important;
     -webkit-text-fill-color: white !important;
 }
 
+// 选中文本样式
 ::selection {
-    background: #2d2f36;
+    background: #374151;
 }
 
 ::-webkit-selection {
-    background: #2d2f36;
+    background: #374151;
 }
 
 ::-moz-selection {
-    background: #2d2f36;
+    background: #374151;
 }
 
-body {
-    background: white;
-    font-family: 'Inter UI', sans-serif;
-    margin: 0;
-    padding: 20px;
-}
-
-.main {
-    height: calc(100% - 56px);
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    top: 56px;
-    /* // height: calc(100% - 40px); */
-    position: absolute;
-    place-content: center;
-    /* // width: calc(100% - 40px); */
-}
-
-@media (max-width: 767px) {
-    .main {
-        height: auto;
-        margin-bottom: 20px;
-        padding-bottom: 20px;
+// 响应式优化
+@media (max-width: 640px) {
+    .register-container {
+        margin: 1rem;
     }
-}
-
-.container {
-    display: flex;
-    height: 520px;
-    margin: 0 auto;
-    width: 640px;
-}
-
-@media (max-width: 767px) {
-    .container {
+    
+    .flex.gap-3 {
         flex-direction: column;
-        height: 630px;
-        width: 320px;
     }
 }
 
-.left {
-    background: white;
-    height: calc(100% - 240px);
-    top: 120px;
-    position: relative;
-    width: 50%;
+// 滚动条样式
+.register-container::-webkit-scrollbar {
+    width: 6px;
 }
 
-@media (max-width: 767px) {
-    .left {
-        height: 100%;
-        left: 20px;
-        width: calc(100% - 40px);
-        max-height: 270px;
+.register-container::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+
+.register-container::-webkit-scrollbar-thumb {
+    background: #374151;
+    border-radius: 3px;
+    
+    &:hover {
+        background: #4b5563;
     }
-}
-
-.login {
-    color: black;
-    font-size: 38px;
-    font-weight: 600;
-    margin: 50px 40px 40px;
-}
-
-.eula {
-    color: #999;
-    font-size: 14px;
-    line-height: 1.5;
-    margin: 40px;
-}
-
-.right {
-    background: #474a59;
-    box-shadow: 0px 0px 40px 16px rgba(0, 0, 0, 0.22);
-    color: #f1f1f2;
-    position: relative;
-    width: 50%;
-    height: 520px;
-}
-
-@media (max-width: 767px) {
-    .right {
-        flex-shrink: 0;
-        height: 100%;
-        width: 100%;
-        max-height: 350px;
-    }
-}
-
-svg {
-    position: absolute;
-    width: 320px;
-}
-
-path {
-    fill: none;
-    stroke: url(#linearGradient);
-    stroke-width: 4;
-    stroke-dasharray: 240 1386;
-}
-
-.form {
-    // margin: 40px;
-    width: 100%;
-    position: absolute;
-}
-
-label {
-    color: #c2c2c5;
-    display: block;
-    font-size: 14px;
-    height: 16px;
-    margin-top: 10px;
-    margin-bottom: 5px;
-}
-
-input {
-    background: transparent;
-    border: 0;
-    color: #f2f2f2;
-    font-size: 13px;
-    height: 30px;
-    line-height: 30px;
-    outline: none !important;
-    width: 100%;
-}
-
-button {
-    background: transparent;
-    border: 0;
-    color: #f2f2f2;
-    font-size: 24px;
-    height: 30px;
-    line-height: 30px;
-    outline: none !important;
-    width: 100%;
-}
-
-input::-moz-focus-inner {
-    border: 0;
-}
-
-.submit {
-    color: #707075;
-    margin-top: 40px;
-    transition: color 300ms;
-}
-
-.submit:hover {
-    color: #fff;
-}
-
-.submit:focus {
-    color: #f2f2f2;
-}
-
-.submit:active {
-    color: #d0d0d2;
 }
 </style>

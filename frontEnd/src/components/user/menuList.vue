@@ -1,12 +1,11 @@
 <template>
     <div class="relative" ref="menuContainer">
         <!-- User Button with Avatar and Dropdown Indicator -->
-        <button
-            @click="toggleMenu"
-            class="group relative flex cursor-pointer items-center gap-3 rounded-full bg-gradient-to-r from-gray-800 to-gray-900 px-4 py-2.5 transition-all duration-300 hover:from-gray-700 hover:to-gray-800 hover:shadow-lg"
-        >
+        <button @click="toggleMenu"
+            class="group relative flex cursor-pointer items-center gap-3 rounded-full bg-gradient-to-r from-gray-800 to-gray-900 px-4 py-2.5 transition-all duration-300 hover:from-gray-700 hover:to-gray-800 hover:shadow-lg">
             <!-- User Avatar -->
-            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white text-sm font-semibold">
+            <div
+                class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white text-sm font-semibold">
                 <User :size="18" />
             </div>
 
@@ -16,44 +15,31 @@
             </span>
 
             <!-- Dropdown Indicator -->
-            <ChevronDown
-                :size="16"
-                class="text-gray-400 transition-transform duration-200 group-hover:text-gray-300"
-                :class="{ 'rotate-180': showMenu }"
-            />
+            <ChevronDown :size="16" class="text-gray-400 transition-transform duration-200 group-hover:text-gray-300"
+                :class="{ 'rotate-180': showMenu }" />
         </button>
 
         <!-- Dropdown Menu with Animation -->
-        <Transition
-            enter-active-class="transition ease-out duration-200"
+        <Transition enter-active-class="transition ease-out duration-200"
             enter-from-class="transform opacity-0 scale-95 translate-y-1"
             enter-to-class="transform opacity-100 scale-100 translate-y-0"
             leave-active-class="transition ease-in duration-150"
             leave-from-class="transform opacity-100 scale-100 translate-y-0"
-            leave-to-class="transform opacity-0 scale-95 translate-y-1"
-        >
-            <div
-                v-show="showMenu"
-                class="absolute right-0 mt-3 min-w-64 rounded-xl bg-gray-900/95 backdrop-blur-sm shadow-xl border border-gray-700/50 z-50 overflow-hidden"
-            >
+            leave-to-class="transform opacity-0 scale-95 translate-y-1">
+            <div v-show="showMenu"
+                class="absolute right-0 mt-3 min-w-64 rounded-xl bg-gray-900/95 backdrop-blur-sm shadow-xl border border-gray-700/50 z-50 overflow-hidden">
                 <!-- Menu Items -->
                 <div class="py-2">
-                    <div
-                        v-for="(item, index) in menuOption"
-                        :key="item.path || index"
-                    >
+                    <div v-for="(item, index) in menuOption" :key="item.path || index">
                         <!-- Items with children -->
                         <div v-if="item.children" class="px-2">
                             <div class="px-3 py-2 text-sm font-semibold text-gray-300 border-b border-gray-700">
                                 {{ item.name }}
                             </div>
-                            <button
-                                v-for="option in item.children"
-                                :key="option.name"
-                                @click="handleMenuClick(option)"
-                                class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-300 transition-all duration-200 hover:bg-gray-700 hover:text-white"
-                            >
-                                <div class="flex h-6 w-6 items-center justify-center rounded-md bg-gray-700 group-hover:bg-gray-600">
+                            <button v-for="option in item.children" :key="option.name" @click="handleMenuClick(option)"
+                                class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-300 transition-all duration-200 hover:bg-gray-700 hover:text-white">
+                                <div
+                                    class="flex h-6 w-6 items-center justify-center rounded-md bg-gray-700 group-hover:bg-gray-600">
                                     <ChevronRight :size="14" class="text-gray-400 group-hover:text-gray-200" />
                                 </div>
                                 {{ option.name }}
@@ -62,11 +48,10 @@
 
                         <!-- Regular menu items -->
                         <div v-else class="px-2">
-                            <button
-                                @click="handleMenuClick(item)"
-                                class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-300 transition-all duration-200 hover:bg-gray-700 hover:text-white"
-                            >
-                                <div class="flex h-6 w-6 items-center justify-center rounded-md bg-gray-700 group-hover:bg-gray-600 transition-colors duration-200">
+                            <button @click="handleMenuClick(item)"
+                                class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-300 transition-all duration-200 hover:bg-gray-700 hover:text-white">
+                                <div
+                                    class="flex h-6 w-6 items-center justify-center rounded-md bg-gray-700 group-hover:bg-gray-600 transition-colors duration-200">
                                     <Settings :size="14" class="text-gray-400 group-hover:text-gray-200" />
                                 </div>
                                 {{ item.name }}
@@ -79,11 +64,22 @@
 
                     <!-- Logout Button -->
                     <div class="border-t border-gray-700 mt-2 pt-2 px-2">
-                        <button
-                            @click="handleLogout"
-                            class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-400 transition-all duration-200 hover:bg-red-900/30 hover:text-red-300"
-                        >
-                            <div class="flex h-6 w-6 items-center justify-center rounded-md bg-red-900/40 group-hover:bg-red-800/50 transition-colors duration-200">
+                        <button @click="handleAudit"
+                            class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-300 transition-all duration-200 hover:bg-gray-700 hover:text-white">
+                            <div
+                                class="flex h-6 w-6 items-center justify-center rounded-md bg-gray-700 group-hover:bg-gray-600 transition-colors duration-200">
+                                <AuditOutlined :size="14" class="text-gray-400 group-hover:text-gray-200" />
+                            </div>
+                            管理中台
+                        </button>
+                    </div>
+
+                    <!-- Logout Button -->
+                    <div class="border-t border-gray-700 mt-2 pt-2 px-2">
+                        <button @click="handleLogout"
+                            class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-400 transition-all duration-200 hover:bg-red-900/30 hover:text-red-300">
+                            <div
+                                class="flex h-6 w-6 items-center justify-center rounded-md bg-red-900/40 group-hover:bg-red-800/50 transition-colors duration-200">
                                 <LogOut :size="14" class="text-red-400 group-hover:text-red-300" />
                             </div>
                             {{ t('nav.button.logout') }}
@@ -100,12 +96,14 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/store';
-import { User, ChevronDown, ChevronRight, Settings, LogOut } from 'lucide-vue-next';
+import { User, ChevronDown, ChevronRight, Settings, LogOut, AudioLines } from 'lucide-vue-next';
+import { AuditOutlined } from '@ant-design/icons-vue';
+import ezStore from '@/store/ezStore'
 // import * as MapOperation from '@/util/map/operation'
 
 const userStore = useUserStore()
 const { t } = useI18n()
-const showMenu = ref(false )
+const showMenu = ref(false)
 
 
 const menuContainer = ref<HTMLElement | null>(null)
@@ -116,14 +114,14 @@ interface optionChild {
 }
 
 interface menuItem {
-    name: string, 
+    name: string,
     path?: string
     // action?:() => void
     children?: optionChild[]
 }
 
 const menuOption = ref<menuItem[]>([
-    {name: '个人中心', path:'/user',},
+    { name: '个人中心', path: '/user', },
     // {name: '安全设置', path:'',},
     // {name : '个性化', path:'',
     // children:[
@@ -133,7 +131,7 @@ const menuOption = ref<menuItem[]>([
     // ]
     // },
     // {name: '设置', path:''},
-    
+
 ])
 
 const toggleMenu = () => {
@@ -143,7 +141,7 @@ const toggleMenu = () => {
 const handleMenuClick = (item: menuItem) => {
     if (item.path) {
         router.push(item.path);
-    } 
+    }
     // else if (item.action) {
     //     item.action();
     // }
@@ -155,6 +153,9 @@ const handleLogout = () => {
     userStore.logout()
     // MapOperation.map_destroy_full();
     router.push('/home')
+}
+const handleAudit = () => {
+    window.location.href = ezStore.get('conf')['audit_url']
 }
 
 const handleClickOutside = (event: MouseEvent) => {
@@ -196,8 +197,13 @@ onUnmounted(() => {
 }
 
 @keyframes gradient-shift {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 100% 50%; }
+    0% {
+        background-position: 0% 50%;
+    }
+
+    100% {
+        background-position: 100% 50%;
+    }
 }
 
 /* Ripple effect on button press */

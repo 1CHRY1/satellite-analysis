@@ -228,10 +228,8 @@ export namespace Case {
         sceneList: Array<string>,
         dataSet: string,
         status: string,
-        result: {
-            bucket: string,
-            object_path: string
-        },
+        result: any,
+        type: string,
         createTime: string
     }
 

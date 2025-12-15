@@ -60,3 +60,19 @@ export const canVisualize = computed(() => {
 
 // 当前遥感影像可视化方法
 export const activeMethod = ref<SceneMethod>('rgb')
+
+/**
+ * 当前timeline点击可视化的景
+ */
+type VisualScene = {
+    sceneId: string
+    time: string
+    sensorName: string
+    productName: string
+    redPath: string
+    greenPath: string
+    bluePath: string
+    dataType: string
+    nodata: number
+}
+export const currentScene = ref<VisualScene | null>(null)

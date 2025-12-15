@@ -28,7 +28,7 @@
                         <div class="section-icon absolute right-12 cursor-pointer" @click="clearImages">
                             <a-tooltip>
                                 <template #title>{{ t('datapage.analysis.section2.clear')
-                                }}</template>
+                                    }}</template>
                                 <Trash2Icon :size="20" />
                             </a-tooltip>
                         </div>
@@ -73,7 +73,7 @@
                                         <div class="stats-header">
                                             <div class="config-label relative">
                                                 <BoltIcon :size="16" class="config-icon" />
-                                                <span class="text-sm">通用分析工具</span>
+                                                <span class="text-sm">基础分析工具</span>
                                             </div>
                                             <div class="absolute right-2 cursor-pointer">
                                                 <ChevronDown v-if="isMethLibExpand" :size="22"
@@ -142,7 +142,7 @@
                                                 <div class="grid grid-cols-2 gap-3">
                                                     <a-checkable-tag v-for="(tag, index) in tagList" :key="tag.id"
                                                         v-model:checked="selectTags[index]">
-                                                        {{ tag.name }}
+                                                        {{ tag.nameZh }}
                                                     </a-checkable-tag>
                                                 </div>
                                                 <div class="config-control">
@@ -158,7 +158,8 @@
                                                     :key="item.id">
                                                     <div class="config-label relative">
                                                         <Image :size="16" class="config-icon" />
-                                                        <span>🛠️ {{ `${item.name}` }}</span>
+                                                        <span>🛠️ {{ `${item.nameZh}` + '(' + `${item.name}` + ')'
+                                                            }}</span>
                                                         <div class="absolute right-0 cursor-pointer">
                                                             <a-tooltip>
                                                                 <template #title>调用</template>
@@ -171,7 +172,7 @@
                                                         <div class="flex w-full flex-col gap-2">
                                                             <div class="result-info-container">
                                                                 <div class="result-info-value">
-                                                                    <span class="text-sm">{{ item.description }}</span>
+                                                                    <span class="text-sm">{{ item.descriptionZh }}</span>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -201,7 +202,7 @@
                                         <div class="stats-header">
                                             <div class="config-label relative">
                                                 <BoltIcon :size="16" class="config-icon" />
-                                                <span class="text-sm">UDF分析工具</span>
+                                                <span class="text-sm">高级自定义工具</span>
                                             </div>
                                             <div class="absolute right-2 cursor-pointer">
                                                 <ChevronDown v-if="isToolsExpand" :size="22"
@@ -238,7 +239,7 @@
                                                             hover:bg-gray-50 hover:shadow-md"
                                                                         @click="getAndShowResult(item.caseId, item.regionId)">
                                                                         <h3 class="mt-0 text-blue-500">{{ item.address
-                                                                        }}无云一版图</h3>
+                                                                            }}无云一版图</h3>
                                                                         <p class="my-1 text-blue-300">分辨率: {{
                                                                             item.resolution }}km
                                                                         </p>
@@ -246,7 +247,7 @@
                                                                             formatTimeToText(item.createTime) }}</p>
                                                                         <p class="my-1 text-blue-300">数据集: {{
                                                                             item.dataSet
-                                                                        }}</p>
+                                                                            }}</p>
                                                                     </div>
                                                                 </div>
                                                                 <div v-else>
@@ -362,7 +363,7 @@
                                                                     class="mr-2 transition-transform duration-200"
                                                                     :class="{ 'transform rotate-90': expandedCategories.includes(category.name) }" />
                                                                 <span class="text-gray-300 font-medium">{{ category.name
-                                                                    }}</span>
+                                                                }}</span>
                                                             </div>
 
                                                             <div v-show="expandedCategories.includes(category.name) || searchQuery"
@@ -381,7 +382,7 @@
                                                                         class="flex-grow min-w-0">
                                                                         <span class="truncate block text-sm">{{
                                                                             tool.label
-                                                                            }}</span>
+                                                                        }}</span>
                                                                     </a-tooltip>
 
                                                                     <CircleX v-if="tool.value.startsWith('dynamic:')"
@@ -518,7 +519,7 @@
                                                                     {{ tool.name }}</p>
                                                                 <span class="text-xs text-gray-400">{{ tool.category ||
                                                                     '未分类'
-                                                                    }}</span>
+                                                                }}</span>
                                                             </div>
                                                             <a-button size="small" type="primary" ghost
                                                                 @click.stop="handleInvokeCubeTool(tool.id)">调用</a-button>
@@ -697,7 +698,7 @@ const isToolbarOpen = ref(true)
 const isSceneAnalysisExpand = ref(true) // 控制景级分析折叠
 
 /**
- * 景级分析 - 通用分析工具（方法库）钩子
+ * 景级分析 - 基础分析工具（方法库）钩子
  */
 const {
     // ------------------- 显示相关 -----------------------
@@ -715,7 +716,7 @@ const {
 } = useMethLib()
 
 /**
- * 景级分析 - UDF分析工具 - 前序无云一版图数据
+ * 景级分析 - 高级自定义工具 - 前序无云一版图数据
  */
 // 前序无云一版图数据
 const historyComponent = ref(null)

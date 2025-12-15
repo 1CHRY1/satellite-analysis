@@ -140,6 +140,13 @@ def calc_no_cloud_complex():
     task_id = scheduler.start_task('calc_no_cloud_complex', data)
     return api_response(data={'taskId': task_id})
 
+@bp.route(CONFIG.API_TIF_calc_eo_cube, methods=['POST'])
+def calc_eo_cube():
+    scheduler = init_scheduler()
+    data = request.json
+    task_id = scheduler.start_task('calc_eo_cube', data)
+    return api_response(data={'taskId': task_id})
+
 @bp.route(CONFIG.API_TIF_create_low_level_mosaic, methods=['POST'])
 def create_low_level_mosaic():
     # 提取 Headers和Cookies（转为普通字典）

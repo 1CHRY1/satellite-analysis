@@ -39,11 +39,15 @@ export namespace MethLib {
         name: string,
         description: string,
         longDesc: string,
+        nameZh?: string,
+        descriptionZh?: string,
+        longDescZh?: string,
         copyright: string,
         category: string,
         uuid: string,
         type: string,
         params: any[],
+        paramsZh?: any[],
         execution: string,
         createTime: string,
     }
@@ -51,6 +55,7 @@ export namespace MethLib {
     export interface Tag {
         id: number,
         name: string,
+        nameZh?: string,
         createTime: string,
     }
 

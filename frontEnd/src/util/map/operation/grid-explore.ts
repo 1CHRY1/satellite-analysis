@@ -73,13 +73,78 @@ export function map_destroyGridDEMLayer(gridInfo: GridData) {
         }
     })
 }
-
-export function map_addGridSceneLayer(
+export function map_addGrid2DDEMLayer(
     gridInfo: GridData,
     url: string,
     cb?: () => void,
 ) {
-    return map_addGrid3DLayer(gridInfo, url, cb)
+    const prefix = gridInfo.rowId + '_' + gridInfo.columnId
+    const id = prefix + uid()
+    const srcId = id + '-source'
+
+    if (!ezStore.get('grid-2dDem-layer-map')) {
+        ezStore.set('grid-2dDem-layer-map', new window.Map())
+    }
+
+    mapManager.withMap((m) => {
+        const gridImageLayerMap = ezStore.get('grid-2dDem-layer-map')
+        for (let key of gridImageLayerMap.keys()) {
+            if (key.includes(prefix)) {
+                const oldId = key
+                const oldSrcId = oldId + '-source'
+                if (m.getLayer(oldId) && m.getSource(oldSrcId)) {
+                    m.removeLayer(oldId)
+                    m.removeSource(oldSrcId)
+                }
+            }
+        }
+
+        m.addSource(srcId, {
+            type: 'raster',
+            tiles: [url],
+        })
+        m.addLayer({
+            id: id,
+            type: 'raster',
+            source: srcId,
+            metadata: {
+                'user-label': id + '图层', 
+            }
+        })
+
+        gridImageLayerMap.set(id, {
+            id: id,
+            source: srcId,
+        })
+
+        setTimeout(() => {
+            cb && cb()
+        }, 3000)
+    })
+}
+export function map_destroyGrid2DDEMLayer(gridInfo: GridData) {
+    const prefix = gridInfo.rowId + '_' + gridInfo.columnId
+    const gridImageLayerMap = ezStore.get('grid-2dDem-layer-map')
+
+    mapManager.withMap((m) => {
+        for (let key of gridImageLayerMap.keys()) {
+            if (key.startsWith(prefix)) {
+                const oldId = key
+                const oldSrcId = oldId + '-source'
+                if (m.getLayer(oldId) && m.getSource(oldSrcId)) {
+                    m.removeLayer(oldId)
+                    m.removeSource(oldSrcId)
+                }
+            }
+        }
+    })
+}
+
+export function map_addGridSceneLayer(
+    gridInfo: GridData,
+    url: string,
+) {
+    return map_addGrid3DLayer(gridInfo, url)
 }
 
 export function map_destroyGridSceneLayer(gridInfo: GridData) {
@@ -89,7 +154,6 @@ export function map_destroyGridSceneLayer(gridInfo: GridData) {
 export function map_addGrid3DLayer(
     gridInfo: GridData,
     url: string,
-    cb?: () => void,
 ) {
     const prefix = gridInfo.rowId + '_' + gridInfo.columnId
     const id = prefix + uid()
@@ -132,10 +196,6 @@ export function map_addGrid3DLayer(
             id: id,
             source: srcId,
         })
-
-        setTimeout(() => {
-            cb && cb()
-        }, 3000)
     })
 }
 export function map_destroyGrid3DLayer(gridInfo: GridData) {
@@ -231,11 +291,11 @@ export function map_destroyGridNDVIOrSVRLayer(gridInfo: GridData) {
     })
 }
 
-export function map_addGridMVTLayer(source_layer: string, url: string, attrList: {color: string, type: number}[], cb?: () => void, gridInfo?: GridData) {
+export function map_addGridMVTLayer(source_layer: string, url: string, attrList: {color: string, type: number}[], field: string = 'type', cb?: () => void, gridInfo?: GridData) {
     const prefix = `GridMVT`
     const matchColor: Expression = [
         'match',
-        ['get', 'type'], // MVT属性字段
+        ['to-string', ['get', field]], // MVT属性字段, 强转string比较
         ...attrList.flatMap(tc => [tc.type, tc.color]),
         'rgba(0,0,0,0)' // 默认颜色
     ]

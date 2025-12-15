@@ -102,6 +102,7 @@ spring:
             max-active: 20
             min-idle: 5
             max-wait: 60000
+            socket-timeout: 1200000
             validation-query: SELECT 1
             filters: stat,wall
             wall:
@@ -190,6 +191,7 @@ modelServer:
     spectrum: /v0/tif/get_spectral_profile
     noCloud: /v0/tif/calc_no_cloud
     noCloud_complex: /v0/tif/calc_no_cloud_complex
+    eoCube: /v0/tif/calc_eo_cube
     rasterPoint: /v0/tif/calc_raster_point
     rasterLine: /v0/tif/calc_raster_line
     ndvi: /v0/tif/calc_NDVI

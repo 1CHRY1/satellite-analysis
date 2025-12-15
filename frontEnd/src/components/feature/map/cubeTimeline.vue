@@ -73,12 +73,13 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch, reactive, type ComputedRef, nextTick } from 'vue'
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-vue-next'
-import { getGrid3DUrl, getGridDEMUrl, getGridNDVIOrSVRUrl, getGridSceneUrl, getImgStats, getMinIOUrl } from '@/api/http/interactive-explore/visualize.api'
+import { getGrid2DDEMUrl, getGrid3DUrl, getGridDEMUrl, getGridNDVIOrSVRUrl, getGridSceneUrl, getImgStats, getMinIOUrl } from '@/api/http/interactive-explore/visualize.api'
 import bus from '@/store/bus'
 import { ezStore } from '@/store'
 import * as GridExploreMapOps from '@/util/map/operation/grid-explore'
 import { message } from 'ant-design-vue'
 import type { GridData } from '@/type/interactive-explore/grid'
+import { currentScene } from '@/components/feature/map/popContent/shared.ts'
 
 type ImageInfoType = {
     sceneId: string
@@ -298,14 +299,14 @@ const handleClick = async (index: number) => {
     console.log(filteredImages.value, 'filteredImages')
     if (index < 0 || index >= filteredImages.value.length) return
 
-    const stopLoading = message.loading('正在加载，请稍后...')
-
     activeIndex.value = index
 
     // 【新增】滚动到居中位置
     scrollToCenter(index)
     
     const currentImage = filteredImages.value[index]
+    currentScene.value = currentImage
+    // console.log(currentImage)
 
     if (visualMode.value === 'rgb') {
         const img = currentImage as MultiImageInfoType
@@ -381,7 +382,6 @@ const handleClick = async (index: number) => {
         GridExploreMapOps.map_addGridSceneLayer(
             grid.value,
             url,
-            stopLoading,
         )
     } else if (visualMode.value === 'product') {
         const img = currentImage as MultiImageInfoType
@@ -424,9 +424,15 @@ const handleClick = async (index: number) => {
         console.log(min_r, max_r, min_g, max_g, min_b, max_b)
 
         
-        if (img.dataType === 'dem') {
-            const url = getGridDEMUrl(grid.value, redPath)
-            GridExploreMapOps.map_addGridDEMLayer(
+        if (img.dataType === 'dem' || img.dataType === 'dsm') {
+            // const url = getGridDEMUrl(grid.value, redPath)
+            // GridExploreMapOps.map_addGridDEMLayer(
+            //     grid.value,
+            //     url,
+            //     stopLoading,
+            // )
+            const url = getGrid2DDEMUrl(grid.value, redPath)
+            GridExploreMapOps.map_addGrid2DDEMLayer(
                 grid.value,
                 url,
                 stopLoading,

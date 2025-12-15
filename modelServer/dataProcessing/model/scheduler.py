@@ -18,6 +18,7 @@ from dataProcessing.model.common.calc_raster_line import calc_raster_line
 from dataProcessing.model.cloud.calc_no_cloud import calc_no_cloud
 from dataProcessing.model.cloud.calc_no_cloud_grid import calc_no_cloud_grid
 from dataProcessing.model.cloud.calc_no_cloud_complex import calc_no_cloud_complex
+from dataProcessing.model.cube.calc_eo_cube import calc_eo_cube
 from dataProcessing.model.vis.create_low_level_mosaic import create_low_level_mosaic
 from dataProcessing.model.vis.create_low_level_mosaic_threads import create_low_level_mosaic_threads
 from dataProcessing.model.methlib.model import MethLib
@@ -113,6 +114,7 @@ class TaskScheduler:
             'calc_raster_point': calc_raster_point,
             'calc_raster_line': calc_raster_line,
             'calc_no_cloud_complex': calc_no_cloud_complex,
+            'calc_eo_cube': calc_eo_cube,
             'create_low_level_mosaic': create_low_level_mosaic,
             'create_low_level_mosaic_threads': create_low_level_mosaic_threads,
             'methlib': MethLib,

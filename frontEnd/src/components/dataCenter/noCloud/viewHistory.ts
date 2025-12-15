@@ -44,6 +44,7 @@ export function useViewHistoryModule() {
 
     const getCaseList = async () => {
         const regionId = getRegionId()
+        refreshTrigger.value++ // 强制更新timeOptionList，防止时间滞后
         const res = await getCasePage({
             page: currentPage.value,
             pageSize: pageSize.value,
@@ -171,36 +172,40 @@ export function useViewHistoryModule() {
             endTime: formatTime(endTime, 'seconds', 0, true),
         }
     }
-    const timeOptionList = computed<TimeOption[]>(() => [
-        {
-            label: '请选择',
-            value: calculateTimeRange('all'),
-        },
-        {
-            label: '最近1小时',
-            value: calculateTimeRange('1h'),
-        },
-        {
-            label: '今天',
-            value: calculateTimeRange('today'),
-        },
-        {
-            label: '最近7天',
-            value: calculateTimeRange('7d'),
-        },
-        {
-            label: '最近30天',
-            value: calculateTimeRange('30d'),
-        },
-        {
-            label: '最近3个月',
-            value: calculateTimeRange('3m'),
-        },
-        {
-            label: '更早之前',
-            value: calculateTimeRange('earlier'),
-        },
-    ])
+    const refreshTrigger = ref(0)
+    const timeOptionList = computed<TimeOption[]>(() => {
+        refreshTrigger.value
+        return [
+            {
+                label: '请选择',
+                value: calculateTimeRange('all'),
+            },
+            {
+                label: '最近1小时',
+                value: calculateTimeRange('1h'),
+            },
+            {
+                label: '今天',
+                value: calculateTimeRange('today'),
+            },
+            {
+                label: '最近7天',
+                value: calculateTimeRange('7d'),
+            },
+            {
+                label: '最近30天',
+                value: calculateTimeRange('30d'),
+            },
+            {
+                label: '最近3个月',
+                value: calculateTimeRange('3m'),
+            },
+            {
+                label: '更早之前',
+                value: calculateTimeRange('earlier'),
+            },
+        ]
+    })
     const selectedTimeIndex = ref<number>(0)
     const selectedTime = computed<TimeOption>(() => timeOptionList.value[selectedTimeIndex.value])
     const EMPTY_RESOLUTION = 0 // 预设请选择分辨率选项
@@ -257,6 +262,7 @@ export function useViewHistoryModule() {
             bucket: '',
             object_path: '',
         },
+        type: 'noCloud',
         createTime: '',
     })
     const isModalVisible = ref<boolean>(false)
@@ -283,7 +289,6 @@ export function useViewHistoryModule() {
         let bandsIndex = [bandForm.value.band1, bandForm.value.band2, bandForm.value.band3].join(
             ',',
         )
-        const stopLoading = message.loading('正在加载无云一版图，请稍后...', 0)
         // 清除旧图层
         MapOperation.map_removeNocloudGridPreviewLayer()
         MapOperation.map_destroyNoCloudLayer()
@@ -296,9 +301,6 @@ export function useViewHistoryModule() {
         })
         MapOperation.map_addNoCloudLayer(url4MosaicJson)
 
-        setTimeout(() => {
-            stopLoading()
-        }, 5000)
         // console.log('一下加几十个图层，等着吃好果子')
     }
     const fitView = async (regionId: number) => {
