@@ -1,4 +1,7 @@
 server:
+  tomcat:
+    connection-timeout: 60000
+    keep-alive-timeout: 60000
   port: 8999
 
 netty:
@@ -110,7 +113,7 @@ spring:
               drop-table-allow: false
               alter-table-allow: false
             stat:
-              slow-sql-millis: 1000
+              slow-sql-millis: 300000
               log-slow-sql: true
               merge-sql: true
     # 全局 Druid 监控配置（对所有数据源生效）
