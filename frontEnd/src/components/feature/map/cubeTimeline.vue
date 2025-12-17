@@ -311,7 +311,7 @@ const handleClick = async (index: number) => {
     if (visualMode.value === 'rgb') {
         const img = currentImage as MultiImageInfoType
 
-        let redPath,greenPath,bluePath
+        let redPath, greenPath, bluePath
 
         const currentGridKey = `${grid.value.rowId}-${grid.value.columnId}-${grid.value.resolution}`
         const gridSuperRes = superResOverride.value.get(currentGridKey)
