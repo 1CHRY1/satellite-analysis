@@ -10,6 +10,8 @@ import { ezStore } from '@/store'
 import { gridData } from "./shared"
 import { message } from "ant-design-vue"
 import { getVectorCustomAttr } from "@/api/http/satellite-data"
+import { selectedGrid } from "@/components/dataCenter/noCloud/composables/useBox"
+import type { GridData } from "@/type/interactive-explore/grid"
 
 /**
  * 2. 矢量Tab
@@ -47,6 +49,11 @@ export const useGridVector = () => {
             isRequesting: false
         };
         console.log(gridVectorSymbology.value[tableName])
+        const attrList = gridVectorSymbology.value[tableName].checkedAttrs.map(item => {
+            const targetAttr = gridVectorSymbology.value[tableName].attrs.find(i => i.label === item)
+            return targetAttr
+        })
+        GridExploreMapOps.map_updateGridMVTLayerStyle(attrList as any, gridVectorSymbology.value[tableName].selectedField, selectedGrid.value as GridData)
     }
     const handleCheckedAttrsChange = (tableName: string, value: string[]) => {
         console.log(value)
@@ -55,6 +62,11 @@ export const useGridVector = () => {
         gridVectorSymbology.value[tableName].checkAll = checkedCount === attrs.length
         gridVectorSymbology.value[tableName].isIndeterminate = checkedCount > 0 && checkedCount < attrs.length
         console.log(gridVectorSymbology.value[tableName])
+        const attrList = gridVectorSymbology.value[tableName].checkedAttrs.map(item => {
+            const targetAttr = gridVectorSymbology.value[tableName].attrs.find(i => i.label === item)
+            return targetAttr
+        })
+        GridExploreMapOps.map_updateGridMVTLayerStyle(attrList as any, gridVectorSymbology.value[tableName].selectedField, selectedGrid.value as GridData)
     }
     const selectedVector = ref<VectorStats.Vector>({
         tableName: '',
