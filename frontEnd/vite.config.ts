@@ -8,7 +8,7 @@ import { ENV_CONFIG, FIXED_CONFIG } from './env.config'
 // const ENV = process.env.NODE_ENV || 'development'
 
 
-const ENV_TARGET = 'cluster' // 一键切换配置环境，使用集群则改为cluster，使用本地则改为local
+const ENV_TARGET = 'hxf' // 一键切换配置环境，使用集群则改为cluster，使用本地则改为local
 
 // 获取当前环境配置
 const currentEnv = ENV_CONFIG[ENV_TARGET as keyof typeof ENV_CONFIG] || ENV_CONFIG.zzw

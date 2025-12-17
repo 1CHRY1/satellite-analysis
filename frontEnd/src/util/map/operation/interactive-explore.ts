@@ -589,6 +589,56 @@ export function map_addMVTLayer(
 }
 
 /**
+ * 更新矢量图层
+ */
+export function map_updateMVTLayerStyle(
+    source_layer: string,
+    attrList: { color: string; type: number | any }[],
+    field: string = 'type'
+) {
+    const baseId = `${source_layer}-mvt-layer`;
+    
+    // 1. 安全检查：如果列表为空，直接设为透明或默认颜色
+    let newMatchColor: any;
+    
+    if (!attrList || attrList.length === 0) {
+        // 没有任何分类时，设为完全透明
+        newMatchColor = 'rgba(0,0,0,0)';
+    } else {
+        // 只有在有数据时才构建 match 表达式
+        newMatchColor = [
+            'match',
+            ['to-string', ['get', field]],
+            ...attrList.flatMap((tc) => [String(tc.type), tc.color]),
+            'rgba(0,0,0,0)', // 默认颜色
+        ];
+    }
+
+    mapManager.withMap((m) => {
+        const fillId = `${baseId}-fill`;
+        const lineId = `${baseId}-line`;
+        const pointId = `${baseId}-point`;
+
+        // 2. 批量更新并增加存在性检查
+        const layers = [
+            { id: fillId, prop: 'fill-color' },
+            { id: lineId, prop: 'line-color' },
+            { id: pointId, prop: 'circle-color' }
+        ];
+
+        layers.forEach(({ id, prop }) => {
+            if (m.getLayer(id)) {
+                try {
+                    m.setPaintProperty(id, prop as any, newMatchColor);
+                } catch (e) {
+                    console.error(`更新图层样式失败 [${id}]:`, e);
+                }
+            }
+        });
+    });
+}
+
+/**
  * 删除矢量图层
  */
 export function map_destroyMVTLayer() {

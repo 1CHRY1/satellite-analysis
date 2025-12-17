@@ -394,6 +394,67 @@ export function map_addGridMVTLayer(source_layer: string, url: string, attrList:
         }, 3000)
     })
 }
+
+export function map_updateGridMVTLayerStyle(
+    attrList: { color: string; type: number | any }[],
+    field: string = 'type',
+    gridInfo?: GridData
+) {
+    // 1. 表达式安全构建：防止空数组导致 Mapbox 报错
+    let newMatchColor: any;
+    
+    if (!attrList || attrList.length === 0) {
+        newMatchColor = 'rgba(0,0,0,0)'; // 无数据时透明
+    } else {
+        newMatchColor = [
+            'match',
+            ['to-string', ['get', field]], // 保持和 add 函数一致的类型转换
+            ...attrList.flatMap((tc) => [String(tc.type), tc.color]),
+            'rgba(0,0,0,0)', // 默认 fallback 颜色
+        ];
+    }
+
+    mapManager.withMap((m) => {
+        // 获取映射表
+        const gridMVTLayerMap = ezStore.get('grid-mvt-layer-map');
+        if (!gridMVTLayerMap) return;
+
+        let targetLayerIds: string[] = [];
+
+        // 2. 确定要更新哪些图层 ID
+        if (gridInfo) {
+            // A. 只更新特定格网 (局部更新)
+            const gridKey = `${gridInfo.rowId}_${gridInfo.columnId}`;
+            if (gridMVTLayerMap.has(gridKey)) {
+                targetLayerIds = gridMVTLayerMap.get(gridKey);
+            }
+        } else {
+            // B. 更新所有格网 (全局更新 - 例如修改了图例颜色)
+            // 遍历 Map 中所有的 value (每个 value 都是一个 ID 数组)
+            gridMVTLayerMap.forEach((ids: string[]) => {
+                targetLayerIds.push(...ids);
+            });
+        }
+
+        // 3. 执行样式更新
+        targetLayerIds.forEach((layerId) => {
+            const layer = m.getLayer(layerId);
+            if (layer) {
+                // 根据图层类型自动匹配属性
+                if (layer.type === 'fill') {
+                    m.setPaintProperty(layerId, 'fill-color', newMatchColor);
+                } else if (layer.type === 'line') {
+                    m.setPaintProperty(layerId, 'line-color', newMatchColor);
+                } else if (layer.type === 'circle') {
+                    m.setPaintProperty(layerId, 'circle-color', newMatchColor);
+                }
+            }
+        });
+        
+        console.log(`已更新格网图层样式，涉及图层数量: ${targetLayerIds.length}`);
+    });
+}
+
 export function map_destroyGridMVTLayer() {
     if (!ezStore.get('GridMVTLayerIds')) return
 

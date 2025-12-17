@@ -331,6 +331,11 @@ export const useVisualize = () => {
             isIndeterminate: false
         };
         console.log(vectorSymbology.value[tableName])
+        const attrList = vectorSymbology.value[tableName].checkedAttrs.map(item => {
+            const targetAttr = vectorSymbology.value[tableName].attrs.find(i => i.label === item)
+            return targetAttr
+        })
+        InteractiveExploreMapOps.map_updateMVTLayerStyle(tableName, attrList as any, vectorSymbology.value[tableName].selectedField)
     }
     const handleCheckedAttrsChange = (tableName: string, value: string[]) => {
         console.log(value)
@@ -339,6 +344,11 @@ export const useVisualize = () => {
         vectorSymbology.value[tableName].checkAll = checkedCount === attrs.length
         vectorSymbology.value[tableName].isIndeterminate = checkedCount > 0 && checkedCount < attrs.length
         console.log(vectorSymbology.value[tableName])
+        const attrList = vectorSymbology.value[tableName].checkedAttrs.map(item => {
+            const targetAttr = vectorSymbology.value[tableName].attrs.find(i => i.label === item)
+            return targetAttr
+        })
+        InteractiveExploreMapOps.map_updateMVTLayerStyle(tableName, attrList as any, vectorSymbology.value[tableName].selectedField)
     }
 
     const showVectorResult = async (tableName: string, index: number) => {

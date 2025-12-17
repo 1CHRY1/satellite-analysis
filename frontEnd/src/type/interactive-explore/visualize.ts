@@ -6,10 +6,6 @@ export type AttrSymbology = {
 
 export type VectorSymbology = {
     [key: string]: {
-        fields: {
-            continuous: string[],
-            discrete: string[]
-        }
         selectedField: string | undefined,
         attrs: Array<AttrSymbology>,
         checkedAttrs: Array<string>,

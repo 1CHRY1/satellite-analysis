@@ -613,7 +613,7 @@
                                                 </a-form>
                                                 <div class="config-control justify-end" :bordered="false">
                                                     <a-button size="large" style="margin-right: 1rem;"
-                                                        :disabled="!canSynthesize" @click="handleReset">
+                                                        @click="handleReset">
                                                         重置
                                                     </a-button>
                                                     <a-button type="primary" size="large" :disabled="!canSynthesize"
@@ -674,7 +674,11 @@
                                                     </a-form-item>
                                                 </a-form>
                                                 <div class="config-control justify-end" :bordered="false">
-                                                    <a-button type="primary" size="large" :disabled="!canVisualize"
+                                                    <a-button size="small" style="margin-right: 1rem;"
+                                                        @click="handleReset">
+                                                        重置
+                                                    </a-button>
+                                                    <a-button type="primary" size="small" :disabled="!canVisualize"
                                                         @click="handleVisualize">
                                                         可视化预览
                                                     </a-button>

@@ -256,6 +256,7 @@ export const useBox = () => {
 
     const handleReset = () => {
         DataPreparationMapOps.map_destrod3DBoxLayer()
+        GridExploreMapOps.map_destroyGridSceneLayer(selectedGrid.value as any)
         selectedGrid.value = undefined
         sensorOptions.value = []
     }
