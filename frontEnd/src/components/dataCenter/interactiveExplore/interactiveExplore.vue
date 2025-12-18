@@ -447,7 +447,7 @@
                                                                     }}
                                                                     </option>
                                                                     <!-- <option :value="'all'" class="truncate">全选</option> -->
-                                                                    <option v-for="f in item.fields" :value="f" :key="f"
+                                                                    <option v-for="f in item.fields.continuous.concat(item.fields.discrete)" :value="f" :key="f"
                                                                         class="truncate">
                                                                         {{ f }}
                                                                     </option>
@@ -494,7 +494,7 @@
                                                                                     <template default></template>
                                                                                 </el-checkbox>
                                                                                 <span class="config-label mt-1">{{
-                                                                                    attr.label
+                                                                                    simplifyRangeLabel(attr.label)
                                                                                     }}</span>
                                                                             </div>
                                                                             <el-color-picker v-model="attr.color"
@@ -609,7 +609,7 @@ import segmented from '@/components/common/segmented.vue';
 import { ref, computed, type Ref, watch, reactive, onMounted, provide, inject, onUnmounted, nextTick } from 'vue'
 import { RegionSelects } from 'v-region'
 import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'
-import { formatTime } from '@/util/common'
+import { formatTime, simplifyRangeLabel } from '@/util/common'
 import * as InteractiveExploreMapOps from '@/util/map/operation/interactive-explore'
 import { mapManager } from '@/util/map/mapManager'
 import subtitle from '../subtitle.vue';

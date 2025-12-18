@@ -1,10 +1,19 @@
-import { computed, ref } from "vue";
+import { computed, ref } from 'vue'
 import * as MapOperation from '@/util/map/operation'
 import * as InteractiveExploreMapOps from '@/util/map/operation/interactive-explore'
-import { getRealtimeNoCloudUrl } from "@/api/http/satellite-data/visualize.api"
-import { useI18n } from "vue-i18n";
-import { ezStore } from "@/store"
-import { getDEMUrl, getNDVIOrSVRUrl, getSceneUrl, getVectorUrl, get3DUrl, getLargeSceneMosaicUrl, getLargeSceneUrl, get2DDEMUrl } from "@/api/http/interactive-explore/visualize.api";
+import { getRealtimeNoCloudUrl } from '@/api/http/satellite-data/visualize.api'
+import { useI18n } from 'vue-i18n'
+import { ezStore } from '@/store'
+import {
+    getDEMUrl,
+    getNDVIOrSVRUrl,
+    getSceneUrl,
+    getVectorUrl,
+    get3DUrl,
+    getLargeSceneMosaicUrl,
+    getLargeSceneUrl,
+    get2DDEMUrl,
+} from '@/api/http/interactive-explore/visualize.api'
 import type { Marker } from 'mapbox-gl'
 import type { POIInfo, ProductType } from '@/type/interactive-explore/filter'
 import type { AttrSymbology, VectorSymbology } from '@/type/interactive-explore/visualize'
@@ -12,13 +21,28 @@ import * as CommonMapOps from '@/util/map/operation/common'
 import mapboxgl from 'mapbox-gl'
 import { mapManager } from '@/util/map/mapManager'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
-import { searchedSpatialFilterMethod, finalLandId, curGridsBoundary, vectorStats, selectedGridResolution, vectorSymbology, selectedDateRange } from "./shared"
-import { message } from "ant-design-vue";
-import { cancelCase, getCaseResult, getVectorAttr, getVectorCustomAttr, pollStatus } from "@/api/http/satellite-data/satellite.api";
-import { calTask } from "../noCloud/composables/shared";
+import {
+    searchedSpatialFilterMethod,
+    finalLandId,
+    curGridsBoundary,
+    vectorStats,
+    selectedGridResolution,
+    vectorSymbology,
+    selectedDateRange,
+} from './shared'
+import { message } from 'ant-design-vue'
+import {
+    cancelCase,
+    getCaseResult,
+    getVectorAttr,
+    getVectorContinuousAttr,
+    getVectorDiscreteAttr,
+    pollStatus,
+} from '@/api/http/satellite-data/satellite.api'
+import { calTask } from '../noCloud/composables/shared'
 import bus from '@/store/bus'
 // 使用一个对象来存储每个 Product Item 的显示状态
-const eyeStates = ref({});
+const eyeStates = ref({})
 
 export const useVisualize = () => {
     /**
@@ -27,25 +51,25 @@ export const useVisualize = () => {
     const marker = ref<Marker>()
 
     const createGeoJSONFromBounds = (bounds: number[][]) => {
-        const [minLon, minLat, maxLon, maxLat] = bounds;
-    
+        const [minLon, minLat, maxLon, maxLat] = bounds
+
         const polygon = [
             [
                 [minLon, minLat],
                 [maxLon, minLat],
                 [maxLon, maxLat],
                 [minLon, maxLat],
-                [minLon, minLat] // 闭合
-            ]
-        ];
-    
+                [minLon, minLat], // 闭合
+            ],
+        ]
+
         return {
-            type: "Feature",
+            type: 'Feature',
             geometry: {
-                type: "MultiPolygon",
-                coordinates: [polygon]
-            }
-        };
+                type: 'MultiPolygon',
+                coordinates: [polygon],
+            },
+        }
     }
 
     const { t } = useI18n()
@@ -79,7 +103,7 @@ export const useVisualize = () => {
         mapManager.withMap((m) => {
             marker.value = new mapboxgl.Marker()
                 .setLngLat([Number(selectedPOI?.gcj02Lon), Number(selectedPOI?.gcj02Lat)])
-                .addTo(m);
+                .addTo(m)
         })
     }
 
@@ -103,7 +127,7 @@ export const useVisualize = () => {
                 }
             }),
         }
-    
+
         InteractiveExploreMapOps.map_addGridLayer(gridFeature)
         InteractiveExploreMapOps.draw_deleteAll()
         // fly to
@@ -151,7 +175,6 @@ export const useVisualize = () => {
         InteractiveExploreMapOps.map_destroyGridLayer()
     }
 
-
     /**
      * 3. 交互探索 - 影像可视化
      */
@@ -167,7 +190,7 @@ export const useVisualize = () => {
             endTime: selectedDateRange.value[1].format('YYYY-MM-DD'),
             sensorName,
             // TODO: regionId(POI等待兼容！！！！)
-            regionId: finalLandId.value
+            regionId: finalLandId.value,
         })
         setTimeout(() => {
             handleShowScene(sensorName)
@@ -175,45 +198,43 @@ export const useVisualize = () => {
         let taskId = taskRes.data
         if (!taskId) {
             stopLoading()
-            message.warning("任务创建失败")
+            message.warning('任务创建失败')
             return
         }
         curTaskId.value = taskId
-        
+
         try {
             await pollStatus(taskId)
             console.log('成功，开始拿结果')
-    
+
             let res = await getCaseResult(taskId)
             console.log(res, '结果')
-    
+
             // 1、先预览无云一版图影像
             let data = res.data
             const getData = async (taskId: string) => {
-                let res:any
+                let res: any
                 while (!(res = await getCaseResult(taskId)).data) {
                     console.log('Retrying...')
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    await new Promise((resolve) => setTimeout(resolve, 1000))
                 }
-                return res.data;
+                return res.data
             }
-            if(!data)
-                data = await getData(taskId)
+            if (!data) data = await getData(taskId)
             if (!data.mosaicjson_url) {
                 stopLoading()
-                message.warning("计算失败，请重试")
+                message.warning('计算失败，请重试')
                 curTaskId.value = ''
                 return
             }
             handleShowLargeScene(data.mosaicjson_url)
             stopLoading()
-            message.success("计算完成")
+            message.success('计算完成')
             curTaskId.value = ''
         } catch (error) {
             console.log(error)
             stopLoading()
-            if (curTaskId.value !== '')
-                message.warning("计算失败，请重试")
+            if (curTaskId.value !== '') message.warning('计算失败，请重试')
             curTaskId.value = ''
         }
         setTimeout(() => {
@@ -234,7 +255,7 @@ export const useVisualize = () => {
                 await cancelCase(taskId)
                 curTaskId.value = ''
             } catch (error) {
-                console.error("任务取消失败")
+                console.error('任务取消失败')
             }
         }
     }
@@ -263,21 +284,21 @@ export const useVisualize = () => {
     const previewVectorIndex = ref<number | null>(null)
 
     const predefineColors = ref([
-        "rgb(255, 69, 0)",             // #ff4500
-        "rgb(255, 140, 0)",            // #ff8c00
-        "rgb(255, 215, 0)",            // #ffd700
-        "rgb(144, 238, 144)",          // #90ee90
-        "rgb(0, 206, 209)",            // #00ced1
-        "rgb(30, 144, 255)",           // #1e90ff
-        "rgb(199, 21, 133)",           // #c71585
-        "rgba(255, 69, 0, 0.68)",      // 已经是 rgba
-        "rgb(255, 120, 0)",            // 已经是 rgb
-        "rgb(249, 250, 0)",            // hsv(51, 100, 98)
-        "rgba(71, 240, 71, 0.5)",      // hsva(120, 40, 94, 0.5)
-        "rgb(0, 189, 189)",            // hsl(181, 100%, 37%)
-        "rgba(0, 115, 255, 0.73)",     // hsla(209, 100%, 56%, 0.73)
-        "rgba(199, 21, 133, 0.47)"     // #c7158577
-        ])
+        'rgb(255, 69, 0)', // #ff4500
+        'rgb(255, 140, 0)', // #ff8c00
+        'rgb(255, 215, 0)', // #ffd700
+        'rgb(144, 238, 144)', // #90ee90
+        'rgb(0, 206, 209)', // #00ced1
+        'rgb(30, 144, 255)', // #1e90ff
+        'rgb(199, 21, 133)', // #c71585
+        'rgba(255, 69, 0, 0.68)', // 已经是 rgba
+        'rgb(255, 120, 0)', // 已经是 rgb
+        'rgb(249, 250, 0)', // hsv(51, 100, 98)
+        'rgba(71, 240, 71, 0.5)', // hsva(120, 40, 94, 0.5)
+        'rgb(0, 189, 189)', // hsl(181, 100%, 37%)
+        'rgba(0, 115, 255, 0.73)', // hsla(209, 100%, 56%, 0.73)
+        'rgba(199, 21, 133, 0.47)', // #c7158577
+    ])
 
     const getVectorSymbology = async () => {
         const tasks = vectorStats.value.map(async (vector) => {
@@ -290,7 +311,12 @@ export const useVisualize = () => {
                     checkedAttrs: [],
                     // selectedField: vector.fields.slice(-1)[0],
                     selectedField: undefined,
-                    isRequesting: false
+                    selectedFieldType: "discrete",
+                    isRequesting: false,
+                    fields: {
+                        continuous: [],
+                        discrete: [],
+                    },
                 }
                 // const result = await getVectorAttr(vector.tableName)
                 // vectorSymbology.value[vector.tableName].attrs = result.map((item, index) => ({
@@ -303,52 +329,79 @@ export const useVisualize = () => {
             }
         })
         await Promise.all(tasks)
-        ezStore.set("vectorSymbology", vectorSymbology.value)
+        ezStore.set('vectorSymbology', vectorSymbology.value)
         console.log('vectorSymbology', vectorSymbology.value)
     }
     const getAttrs4CustomField = async (tableName: string, field: string | undefined) => {
         if (!field) {
-            message.warning("请先选择字段")
+            message.warning('请先选择字段')
             return
         }
+
         vectorSymbology.value[tableName].isRequesting = true
-        const result = await getVectorCustomAttr(tableName, field)
-        vectorSymbology.value[tableName].attrs = result.map((item, index) => ({
-            type: item,
-            label: item,
-            color: predefineColors.value[index % predefineColors.value.length],
-        }))
-        vectorSymbology.value[tableName].checkedAttrs = result
+
+        let fields = vectorStats.value.filter((vector) => vector.tableName == tableName)[0].fields
+        if (fields.continuous.includes(field)) {
+            const result = await getVectorContinuousAttr(tableName, field, 10)
+            vectorSymbology.value[tableName].attrs = result.map((item, index) => ({
+                type: `${item?.low}-${item?.up}`,
+                label: `${item?.low}-${item?.up}`,
+                color: predefineColors.value[index % predefineColors.value.length],
+            }))
+            vectorSymbology.value[tableName].checkedAttrs = result.map(r => `${r?.low}-${r?.up}`)
+            vectorSymbology.value[tableName].selectedFieldType = 'continuous'
+        } else if (fields.discrete.includes(field)) {
+            const result = await getVectorDiscreteAttr(tableName, field)
+            vectorSymbology.value[tableName].attrs = result.map((item, index) => ({
+                type: item,
+                label: item,
+                color: predefineColors.value[index % predefineColors.value.length],
+            }))
+            vectorSymbology.value[tableName].checkedAttrs = result
+            vectorSymbology.value[tableName].selectedFieldType = 'discrete'
+        }
+
         vectorSymbology.value[tableName].isRequesting = false
     }
     const handleCheckAllChange = (tableName: string, val: boolean) => {
         console.log('all:', val)
-        const item = vectorSymbology.value[tableName];
+        const item = vectorSymbology.value[tableName]
         // 使用解构赋值或 Vue.set 确保响应性
         vectorSymbology.value[tableName] = {
             ...item,
-            checkedAttrs: val ? item.attrs.map(attr => attr.label) : [],
-            isIndeterminate: false
-        };
+            checkedAttrs: val ? item.attrs.map((attr) => attr.label) : [],
+            isIndeterminate: false,
+        }
         console.log(vectorSymbology.value[tableName])
-        const attrList = vectorSymbology.value[tableName].checkedAttrs.map(item => {
-            const targetAttr = vectorSymbology.value[tableName].attrs.find(i => i.label === item)
+        const attrList = vectorSymbology.value[tableName].checkedAttrs.map((item) => {
+            const targetAttr = vectorSymbology.value[tableName].attrs.find((i) => i.label === item)
             return targetAttr
         })
-        InteractiveExploreMapOps.map_updateMVTLayerStyle(tableName, attrList as any, vectorSymbology.value[tableName].selectedField)
+        InteractiveExploreMapOps.map_updateMVTLayerStyle(
+            tableName,
+            attrList as any,
+            vectorSymbology.value[tableName].selectedField,
+            vectorSymbology.value[tableName].selectedFieldType
+        )
     }
     const handleCheckedAttrsChange = (tableName: string, value: string[]) => {
         console.log(value)
         const checkedCount = value.length
         const attrs = vectorSymbology.value[tableName].attrs
         vectorSymbology.value[tableName].checkAll = checkedCount === attrs.length
-        vectorSymbology.value[tableName].isIndeterminate = checkedCount > 0 && checkedCount < attrs.length
+        vectorSymbology.value[tableName].isIndeterminate =
+            checkedCount > 0 && checkedCount < attrs.length
         console.log(vectorSymbology.value[tableName])
-        const attrList = vectorSymbology.value[tableName].checkedAttrs.map(item => {
-            const targetAttr = vectorSymbology.value[tableName].attrs.find(i => i.label === item)
+        const attrList = vectorSymbology.value[tableName].checkedAttrs.map((item) => {
+            const targetAttr = vectorSymbology.value[tableName].attrs.find((i) => i.label === item)
             return targetAttr
         })
-        InteractiveExploreMapOps.map_updateMVTLayerStyle(tableName, attrList as any, vectorSymbology.value[tableName].selectedField)
+        InteractiveExploreMapOps.map_updateMVTLayerStyle(
+            tableName,
+            attrList as any,
+            vectorSymbology.value[tableName].selectedField,
+            vectorSymbology.value[tableName].selectedFieldType
+        )
     }
 
     const showVectorResult = async (tableName: string, index: number) => {
@@ -365,15 +418,16 @@ export const useVisualize = () => {
     }
     const handleShowVector = async (source_layer: string, landId: string) => {
         const curField = vectorSymbology.value[source_layer].selectedField
-        const attrList = vectorSymbology.value[source_layer].checkedAttrs.map(item => {
-            const targetAttr = vectorSymbology.value[source_layer].attrs.find(i => i.label === item)
+        const attrList = vectorSymbology.value[source_layer].checkedAttrs.map((item) => {
+            const targetAttr = vectorSymbology.value[source_layer].attrs.find(
+                (i) => i.label === item,
+            )
             return targetAttr
         })
         console.log(attrList)
 
-        const types = attrList
-            .map(a => a?.type)
-            // .filter((v): v is number => typeof v === 'number')
+        const types = attrList.map((a) => a?.type)
+        // .filter((v): v is number => typeof v === 'number')
         console.log(types)
         const url = getVectorUrl({
             landId,
@@ -381,11 +435,12 @@ export const useVisualize = () => {
             field: vectorSymbology.value[source_layer].selectedField || 'type',
             spatialFilterMethod: searchedSpatialFilterMethod.value,
             resolution: selectedGridResolution.value,
-            type: types
+            // type: types
         })
 
         // 添加到地图 - 点击事件处理已经在 map_addMVTLayer 函数中实现
-        InteractiveExploreMapOps.map_addMVTLayer(source_layer, url, attrList as any, curField)
+        InteractiveExploreMapOps.map_addMVTLayer(source_layer, url, attrList as any, curField,
+            vectorSymbology.value[source_layer].selectedFieldType)
     }
     const destroyVector = (index?: number) => {
         if (index !== undefined) {
@@ -393,7 +448,6 @@ export const useVisualize = () => {
         }
         InteractiveExploreMapOps.map_destroyMVTLayer()
     }
-    
 
     /**
      * 5. 交互探索 - 栅格专题可视化
@@ -421,17 +475,17 @@ export const useVisualize = () => {
                 break
         }
     }
-    const handleShowDEM = async(themeName: string) => {
+    const handleShowDEM = async (themeName: string) => {
         // const url = await getDEMUrl(themeName, curGridsBoundary.value)
         // InteractiveExploreMapOps.map_addDEMLayer(url)
         const url = await get2DDEMUrl(themeName, curGridsBoundary.value)
-        InteractiveExploreMapOps.map_add2DDEMLayer(url)        
+        InteractiveExploreMapOps.map_add2DDEMLayer(url)
     }
-    const handleShowNDVIOrSVR = async(themeName: string) => {
+    const handleShowNDVIOrSVR = async (themeName: string) => {
         const url = await getNDVIOrSVRUrl(themeName, curGridsBoundary.value)
         InteractiveExploreMapOps.map_addNDVIOrSVRLayer(url)
     }
-    const handleShow3D = async(themeName: string) => {
+    const handleShow3D = async (themeName: string) => {
         const url = await get3DUrl(themeName, curGridsBoundary.value)
         InteractiveExploreMapOps.map_add3DLayer(url)
     }
@@ -456,7 +510,7 @@ export const useVisualize = () => {
                 case '3d':
                     destroy3D()
                     break
-                case 'svr': 
+                case 'svr':
                     destroyNDVIOrSVR()
                     break
             }
@@ -483,11 +537,11 @@ export const useVisualize = () => {
      */
     const toggleEye = (category: string, index: number, themeName: string) => {
         const label = category
-        const key = `${label}_${index}`;
-        let isShow = eyeStates.value[key];
-        eyeStates.value[key] = !isShow;
+        const key = `${label}_${index}`
+        let isShow = eyeStates.value[key]
+        eyeStates.value[key] = !isShow
         if (eyeStates.value[key]) {
-            Object.keys(eyeStates.value).forEach(item => {
+            Object.keys(eyeStates.value).forEach((item) => {
                 if (item !== key) {
                     eyeStates.value[item] = false
                 }
@@ -496,13 +550,12 @@ export const useVisualize = () => {
         } else {
             destroyProduct(category as ProductType)
         }
-    };
+    }
     // 判断当前应该显示 Eye 还是 EyeOff
     const shouldShowEyeOff = (label: string, index: number) => {
-        const key = `${label}_${index}`;
-        return eyeStates.value[key];
-    };
-
+        const key = `${label}_${index}`
+        return eyeStates.value[key]
+    }
 
     return {
         eyeStates,
@@ -531,6 +584,6 @@ export const useVisualize = () => {
         getVectorSymbology,
         vectorSymbology,
         handleCheckAllChange,
-        handleCheckedAttrsChange
+        handleCheckedAttrsChange,
     }
 }

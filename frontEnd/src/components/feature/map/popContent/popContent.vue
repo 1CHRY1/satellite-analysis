@@ -180,7 +180,7 @@
                                     请选择
                                 </option>
                                 <!-- <option :value="'all'" class="truncate">全选</option> -->
-                                <option v-for="f in selectedVector.fields" :value="f" :key="f" class="truncate">
+                                <option v-for="f in selectedVector.fields.continuous.concat(selectedVector.fields.discrete)" :value="f" :key="f" class="truncate">
                                     {{ f }}
                                 </option>
                             </select>
@@ -208,7 +208,7 @@
                                         <el-checkbox class="config-label mt-1" :key="attr.type" :label="attr.label">
                                             <template default></template>
                                         </el-checkbox>
-                                        <span class="config-label mt-1">{{ attr.label }}</span>
+                                        <span class="config-label mt-1">{{ simplifyRangeLabel(attr.label) }}</span>
                                     </div>
                                     <el-color-picker v-model="attr.color" size="small" show-alpha
                                         :predefine="predefineColors" />
@@ -316,6 +316,7 @@ import { useGridScene } from './useGridScene'
 import { useGridVector } from './useGridVector'
 import { useGridTheme } from './useGridTheme'
 import { useSuperResolution } from './useSuperResolution'
+import { simplifyRangeLabel } from '@/util/common'
 
 // Popup position and size state
 const popX = ref(0)
