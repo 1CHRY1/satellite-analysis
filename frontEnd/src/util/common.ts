@@ -11,7 +11,12 @@ export const sizeConversion = (size: number) => {
 }
 
 // 时间格式化
-export const formatTime = (time: string | any, model: string = 'minutes', timeLag: number = 0, isHyphen: boolean = false) => {
+export const formatTime = (
+    time: string | any,
+    model: string = 'minutes',
+    timeLag: number = 0,
+    isHyphen: boolean = false,
+) => {
     // 将时间戳解析为 Date 对象
     const utcDate = new Date(time)
 
@@ -58,35 +63,90 @@ export function polygonGeometryToBoxCoordinates(polygonGeometry: polygonGeometry
 }
 
 // 支持更人性化的时间显示和国际化
-export const formatTimeToText = (time: string | number | Date, lang: 'zh' | 'en' = 'zh'): string => {
-    const targetDate = new Date(time);
-    const now = new Date();
-    const diffMs = now.getTime() - targetDate.getTime();
-    const diffSec = Math.floor(diffMs / 1000);
-    const diffMin = Math.floor(diffSec / 60);
-    const diffHour = Math.floor(diffMin / 60);
-    const diffDay = Math.floor(diffHour / 24);
-    
+export const formatTimeToText = (
+    time: string | number | Date,
+    lang: 'zh' | 'en' = 'zh',
+): string => {
+    const targetDate = new Date(time)
+    const now = new Date()
+    const diffMs = now.getTime() - targetDate.getTime()
+    const diffSec = Math.floor(diffMs / 1000)
+    const diffMin = Math.floor(diffSec / 60)
+    const diffHour = Math.floor(diffMin / 60)
+    const diffDay = Math.floor(diffHour / 24)
+
     // 精确到分钟
     if (diffSec < 300) {
-      return lang === 'zh' ? '刚刚' : 'Just now';
+        return lang === 'zh' ? '刚刚' : 'Just now'
     } else if (diffMin < 30) {
-      return lang === 'zh' ? `${diffMin}分钟前` : `${diffMin} minutes ago`;
+        return lang === 'zh' ? `${diffMin}分钟前` : `${diffMin} minutes ago`
     } else if (diffMin < 40) {
-      return lang === 'zh' ? '半小时前' : 'Half an hour ago';
+        return lang === 'zh' ? '半小时前' : 'Half an hour ago'
     } else if (diffMin < 60) {
-      return lang === 'zh' ? `${diffMin}分钟前` : `${diffMin} minutes ago`;
+        return lang === 'zh' ? `${diffMin}分钟前` : `${diffMin} minutes ago`
     } else if (diffHour < 24) {
-      return lang === 'zh' ? `${diffHour}小时前` : `${diffHour} hours ago`;
+        return lang === 'zh' ? `${diffHour}小时前` : `${diffHour} hours ago`
     } else if (diffDay === 1) {
-      return lang === 'zh' ? '昨天' : 'Yesterday';
+        return lang === 'zh' ? '昨天' : 'Yesterday'
     } else if (diffDay === 2) {
-      return lang === 'zh' ? '前天' : 'Day before yesterday';
+        return lang === 'zh' ? '前天' : 'Day before yesterday'
     } else if (diffDay < 7) {
-      return lang === 'zh' ? `${diffDay}天前` : `${diffDay} days ago`;
+        return lang === 'zh' ? `${diffDay}天前` : `${diffDay} days ago`
     } else if (diffDay < 30) {
-      return lang === 'zh' ? `${Math.floor(diffDay / 7)}周前` : `${Math.floor(diffDay / 7)} weeks ago`;
+        return lang === 'zh'
+            ? `${Math.floor(diffDay / 7)}周前`
+            : `${Math.floor(diffDay / 7)} weeks ago`
     } else {
-      return targetDate.toLocaleDateString(lang === 'zh' ? 'zh-CN' : 'en-US');
+        return targetDate.toLocaleDateString(lang === 'zh' ? 'zh-CN' : 'en-US')
     }
+}
+
+/**
+ * 统一科学计数法格式化：解决大数、小数过长问题
+ */
+export const formatSmartNumber = (numStr: any): string => {
+    const num = parseFloat(numStr);
+    if (isNaN(num)) return numStr;
+    if (num === 0) return '0';
+
+    const absNum = Math.abs(num);
+
+    // 1. 大数字 (大于等于 10000) 或 极小数字 (小于 0.001) 使用科学计数法
+    // 例如: 1,240,000 -> 1.24e6
+    // 例如: 0.00000124 -> 1.24e-6
+    if (absNum >= 10000 || absNum < 0.001) {
+        // toExponential(2) 保留两位小数，如 1.24e+6
+        // .replace(/\+/g, '') 移除正号(e+6 -> e6)进一步缩短长度
+        return num.toExponential(2).replace(/\+/g, '');
+    }
+
+    // 2. 中间常规数字 (0.001 ~ 9999) 保持原样或限制小数
+    // Number(...).toString() 自动去除末尾多余的 0
+    return Number(num.toFixed(4)).toString();
+};
+
+/**
+ * 简化区间 Label
+ */
+export const simplifyRangeLabel = (label: string): string => {
+  if (!label || typeof label !== 'string') return label;
+
+  /**
+   * 正则解析逻辑：
+   * ^(-?\d+\.?\d*(?:e[+-]?\d+)?) : 匹配开头的数字（支持负号、小数、科学计数法）
+   * \s*-\s* : 匹配中间作为分隔符的横杠（允许左右有空格）
+   * (-?\d+\.?\d*(?:e[+-]?\d+)?)$ : 匹配结尾的数字
+   */
+  const rangeRegex = /^(-?\d+\.?\d*(?:e[+-]?\d+)?)\s*-\s*(-?\d+\.?\d*(?:e[+-]?\d+)?)$/i;
+  const match = label.trim().match(rangeRegex);
+
+  if (match) {
+      const low = match[1];
+      const up = match[2];
+      // 使用 "~" 分隔符，清晰区分两个数字，特别是当数字带负号或 e-7 时
+      return `${formatSmartNumber(low)}~${formatSmartNumber(up)}`;
+  }
+
+  // 如果正则匹配失败，说明不是标准的 "数字-数字" 格式，回退到原字符串
+  return label;
 };

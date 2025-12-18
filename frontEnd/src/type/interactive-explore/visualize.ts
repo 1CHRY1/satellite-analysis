@@ -11,6 +11,7 @@ export type VectorSymbology = {
             discrete: string[]
         }
         selectedField: string | undefined,
+        selectedFieldType: "discrete" | "continuous",
         attrs: Array<AttrSymbology>,
         checkedAttrs: Array<string>,
         checkAll: boolean,

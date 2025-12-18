@@ -49,62 +49,68 @@ def get_url(bucket, object_name):
         print(f"[Warn] Generate url failed: {e}")
         return None
 
+def simplify_to_quad(geom):
+    """
+    将任意多边形简化为近似的四边形（4个点）
+    原理：使用 Douglas-Peucker 算法不断增大容差，直到点数 <= 5 (4个角+闭合点)
+    """
+    # 如果本身就是三角形或四边形，直接返回
+    if len(geom.exterior.coords) <= 5:
+        return geom
+    
+    # 获取几何的尺寸，用于计算动态容差
+    minx, miny, maxx, maxy = geom.bounds
+    max_dim = max(maxx - minx, maxy - miny)
+    
+    # 动态尝试简化，容差从 0.1% 到 20% 递增
+    for factor in [0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2]:
+        tolerance = max_dim * factor
+        simplified = geom.simplify(tolerance, preserve_topology=True)
+        # 如果简化后是四边形（5个坐标点）或三角形（4个坐标点），就停止
+        if len(simplified.exterior.coords) <= 5:
+            return simplified
+    
+    # 如果实在简化不下来（极少见），退化回凸包或强制使用 OBB
+    return geom.convex_hull
+
 def calculate_valid_polygon(tif_url, metadata_nodata=None, default_nodata=0):
     """
-    读取COG的顶层金字塔，计算有效值的几何范围 (OBB)
-    包含：CRS检查、数据量熔断机制
+    读取COG，计算严格贴合有效数据的四边形（非矩形）
     """
-
     try:
         with rasterio.open(tif_url) as src:
-            # --- [检查 CRS] ---
             if not src.crs:
-                print(f"[Warn] No CRS found for {tif_url}. Skipping.")
+                print(f"[Warn] No CRS found. Skipping.")
                 return None
 
-            # --- [核心新增：数据量预判与熔断] ---
+            # --- 数据量熔断 ---
             overviews = src.overviews(1)
-            
-            # 预计算即将读取的目标宽和高
             if overviews:
-                # 场景 A: 存在金字塔
-                decimation_factor = overviews[-1] # 取最顶层（最小的图）
+                decimation_factor = overviews[-1]
                 target_w = int(src.width / decimation_factor)
                 target_h = int(src.height / decimation_factor)
-                log_msg = f"Top level size: {target_w}x{target_h}"
             else:
-                # 场景 B: 没有金字塔，必须读原图
                 decimation_factor = 1
                 target_w = src.width
                 target_h = src.height
-                log_msg = f"No overviews. Full size: {target_w}x{target_h}"
+                
+            if (target_w * target_h) > MAX_PIXELS_THRESHOLD:
+                print(f"\033[91m[Skip] Image too huge ({target_w}x{target_h})!\033[0m")
+                return None
 
-            # 计算像素总数
-            total_pixels = target_w * target_h
-
-            # 判断是否超过阈值
-            if total_pixels > MAX_PIXELS_THRESHOLD:
-                print(f"\033[91m[Skip] Image too huge to process! {log_msg} (Threshold: {MAX_PIXELS_THRESHOLD})\033[0m")
-                return None # 直接熔断，保护内存和网络
-            # ----------------------------------------
-
-            # 2. 确定 Nodata
+            # 确定 Nodata
             nodata = src.nodata
             if nodata is None:
                 nodata = metadata_nodata if metadata_nodata is not None else default_nodata
 
-            # 3. 安全读取数据 (Safe Read)
-            # 即使有 overview，我们显式指定 out_shape 也是个好习惯，双重保险
+            # 读取数据
             data = src.read(1, out_shape=(target_h, target_w))
-            
-            # 计算变换矩阵
-            # 注意：如果 decimation_factor 为 1，scale 就是 1，相当于原 transform
             transform = src.transform * src.transform.scale(
                 src.width / data.shape[1], 
                 src.height / data.shape[0]
             )
 
-            # 4. 创建 Mask
+            # 创建 Mask
             if np.isnan(nodata):
                 mask = ~np.isnan(data)
             else:
@@ -113,7 +119,7 @@ def calculate_valid_polygon(tif_url, metadata_nodata=None, default_nodata=0):
             if not np.any(mask):
                 return None
 
-            # 5. 提取几何并计算 OBB (4点)
+            # 提取几何
             geoms = []
             for geom, val in shapes(mask.astype('uint8'), mask=mask, transform=transform):
                 geoms.append(shape(geom))
@@ -122,9 +128,17 @@ def calculate_valid_polygon(tif_url, metadata_nodata=None, default_nodata=0):
                 return None
 
             merged_geom = unary_union(geoms)
-            final_geom = merged_geom.convex_hull.minimum_rotated_rectangle
+            
+            # --- [核心修改] ---
+            # 1. 先计算凸包 (Convex Hull) -> 此时紧贴边缘，但有锯齿，可能有几十个点
+            raw_hull = merged_geom.convex_hull
+            
+            # 2. 简化为四边形 -> 去除锯齿，强制逼近为4个角点
+            # 这样既保留了非90度角的特征（梯形/平行四边形），又只有4个点
+            final_geom = simplify_to_quad(raw_hull)
+            # ----------------
 
-            # 6. 坐标系转换与安全检查
+            # 坐标系转换
             result_geom = final_geom
             src_crs_code = src.crs.to_string().upper() if src.crs else ""
             
@@ -137,9 +151,9 @@ def calculate_valid_polygon(tif_url, metadata_nodata=None, default_nodata=0):
                     print(f"[Error] Reprojection failed: {e}")
                     return None
             
+            # 范围检查
             bounds = result_geom.bounds
-            if not (-180 <= bounds[0] <= 180 and -90 <= bounds[1] <= 90 and
-                    -180 <= bounds[2] <= 180 and -90 <= bounds[3] <= 90):
+            if not (-180 <= bounds[0] <= 180 and -90 <= bounds[1] <= 90):
                 print(f"[Warn] Bounds out of range: {bounds}")
                 return None
 

@@ -311,6 +311,7 @@ export const useVisualize = () => {
                     checkedAttrs: [],
                     // selectedField: vector.fields.slice(-1)[0],
                     selectedField: undefined,
+                    selectedFieldType: "discrete",
                     isRequesting: false,
                     fields: {
                         continuous: [],
@@ -348,6 +349,7 @@ export const useVisualize = () => {
                 color: predefineColors.value[index % predefineColors.value.length],
             }))
             vectorSymbology.value[tableName].checkedAttrs = result.map(r => `${r?.low}-${r?.up}`)
+            vectorSymbology.value[tableName].selectedFieldType = 'continuous'
         } else if (fields.discrete.includes(field)) {
             const result = await getVectorDiscreteAttr(tableName, field)
             vectorSymbology.value[tableName].attrs = result.map((item, index) => ({
@@ -356,6 +358,7 @@ export const useVisualize = () => {
                 color: predefineColors.value[index % predefineColors.value.length],
             }))
             vectorSymbology.value[tableName].checkedAttrs = result
+            vectorSymbology.value[tableName].selectedFieldType = 'discrete'
         }
 
         vectorSymbology.value[tableName].isRequesting = false
@@ -378,6 +381,7 @@ export const useVisualize = () => {
             tableName,
             attrList as any,
             vectorSymbology.value[tableName].selectedField,
+            vectorSymbology.value[tableName].selectedFieldType
         )
     }
     const handleCheckedAttrsChange = (tableName: string, value: string[]) => {
@@ -396,6 +400,7 @@ export const useVisualize = () => {
             tableName,
             attrList as any,
             vectorSymbology.value[tableName].selectedField,
+            vectorSymbology.value[tableName].selectedFieldType
         )
     }
 
@@ -434,7 +439,8 @@ export const useVisualize = () => {
         })
 
         // 添加到地图 - 点击事件处理已经在 map_addMVTLayer 函数中实现
-        InteractiveExploreMapOps.map_addMVTLayer(source_layer, url, attrList as any, curField)
+        InteractiveExploreMapOps.map_addMVTLayer(source_layer, url, attrList as any, curField,
+            vectorSymbology.value[source_layer].selectedFieldType)
     }
     const destroyVector = (index?: number) => {
         if (index !== undefined) {
