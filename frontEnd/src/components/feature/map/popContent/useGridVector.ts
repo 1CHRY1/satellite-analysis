@@ -9,9 +9,10 @@ import bus from '@/store/bus'
 import { ezStore } from '@/store'
 import { gridData } from "./shared"
 import { message } from "ant-design-vue"
-import { getVectorCustomAttr } from "@/api/http/satellite-data"
+// import { getVectorCustomAttr } from "@/api/http/satellite-data"
 import { selectedGrid } from "@/components/dataCenter/noCloud/composables/useBox"
 import type { GridData } from "@/type/interactive-explore/grid"
+import { getVectorDiscreteAttr } from "@/api/http/satellite-data"
 
 /**
  * 2. 矢量Tab
@@ -72,7 +73,10 @@ export const useGridVector = () => {
         tableName: '',
         vectorName: '',
         time: '',
-        fields: []
+        fields: {
+            continuous: [],
+            discrete: []
+        }
     })
     const previewIndex = ref<number | null>(null)
     const handleSelectVector = (index: number) => {
@@ -111,7 +115,7 @@ export const useGridVector = () => {
             return
         }
         gridVectorSymbology.value[tableName].isRequesting = true
-        const result = await getVectorCustomAttr(tableName, field)
+        const result = await getVectorDiscreteAttr(tableName, field)
         gridVectorSymbology.value[tableName].attrs = result.map((item, index) => ({
             type: item,
             label: item,

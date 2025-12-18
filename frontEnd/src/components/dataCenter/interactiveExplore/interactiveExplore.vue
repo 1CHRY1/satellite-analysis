@@ -447,7 +447,7 @@
                                                                     }}
                                                                     </option>
                                                                     <!-- <option :value="'all'" class="truncate">全选</option> -->
-                                                                    <option v-for="f in item.fields" :value="f" :key="f"
+                                                                    <option v-for="f in item.fields.continuous.concat(item.fields.discrete)" :value="f" :key="f"
                                                                         class="truncate">
                                                                         {{ f }}
                                                                     </option>

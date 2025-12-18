@@ -71,7 +71,7 @@ def get_all_scenes():
     
     try:
         while True:
-            select_query = f"SELECT scene_id, scene_name FROM scene_table LIMIT {batch_size} OFFSET {offset}"
+            select_query = f"SELECT *, ST_AsText(bounding_box, 'axis-order=long-lat') as bounding_box_wkt FROM scene_table LIMIT {batch_size} OFFSET {offset}"
             cursor.execute(select_query)
             results = cursor.fetchall()
             
@@ -97,6 +97,21 @@ def delete_scene_by_id(scene_id):
     cursor.close()
     connection.close()
 
+def update_scene_by_id(scene_id, new_wkt):
+    global DB_CONFIG
+    connection, cursor = connect_mysql(DB_CONFIG["MYSQL_HOST"], DB_CONFIG["MYSQL_RESOURCE_PORT"],
+                                       DB_CONFIG["MYSQL_RESOURCE_DB"], DB_CONFIG["MYSQL_USER"],
+                                       DB_CONFIG["MYSQL_PWD"])
+    sql = """
+        UPDATE scene_table
+        SET bounding_box = ST_GeomFromText(%s, 4326, 'axis-order=long-lat')
+        WHERE scene_id = %s
+    """
+    cursor.execute(sql, (new_wkt, scene_id))
+    connection.commit()
+    cursor.close()
+    connection.close()
+
 def delete_image_by_id(image_id):
     global DB_CONFIG
     connection, cursor = connect_mysql(DB_CONFIG["MYSQL_HOST"], DB_CONFIG["MYSQL_RESOURCE_PORT"],
@@ -113,7 +128,7 @@ def get_images_by_scene_id(scene_id):
     connection, cursor = connect_mysql(DB_CONFIG["MYSQL_HOST"], DB_CONFIG["MYSQL_RESOURCE_PORT"],
                                        DB_CONFIG["MYSQL_RESOURCE_DB"], DB_CONFIG["MYSQL_USER"],
                                        DB_CONFIG["MYSQL_PWD"])
-    select_query = "SELECT image_id, tif_path FROM image_table WHERE scene_id = %s"
+    select_query = "SELECT image_id, bucket, tif_path FROM image_table WHERE scene_id = %s"
     cursor.execute(select_query, (scene_id,))
     result = cursor.fetchall()
     cursor.close()

@@ -265,6 +265,14 @@ export async function getVectorsByPOIFilter(param: any): Promise<any> {
 export async function getVectorAttr(source_layer: string): Promise<Array<AttrSymbology>> {
     return http.get<Array<AttrSymbology>>(`data/vector/${source_layer}/type`)
 }
-export async function getVectorCustomAttr(source_layer: string, field: string): Promise<Array<string>> {
-    return http.get<Array<string>>(`data/vector/${source_layer}/${field}`)
+// export async function getVectorCustomAttr(source_layer: string, field: string): Promise<Array<string>> {
+//     return http.get<Array<string>>(`data/vector/${source_layer}/${field}`)
+// }
+
+export async function getVectorContinuousAttr(source_layer: string, field: string, count: number): Promise<Array<any>> {
+    return http.get<Array<string>>(`data/vector/${source_layer}/continuous/${field}?count=${count}`)
+}
+
+export async function getVectorDiscreteAttr(source_layer: string, field: string): Promise<Array<string>> {
+    return http.get<Array<string>>(`data/vector/${source_layer}/discrete/${field}`)
 }
