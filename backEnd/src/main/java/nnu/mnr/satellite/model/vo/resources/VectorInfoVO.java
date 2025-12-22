@@ -10,5 +10,11 @@ public class VectorInfoVO {
     private String vectorName;
     private String tableName;
     private LocalDateTime time;
-    private List<String> fields;
+    private Fields fields;
+
+    @Data
+    public static class Fields {
+        private List<String> continuous;
+        private List<String> discrete;
+    }
 }

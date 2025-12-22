@@ -1,5 +1,7 @@
 package nnu.mnr.satellite.controller.resources;
 
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletResponse;
@@ -42,9 +44,27 @@ public class VectorController {
 //        return vectorDataService.getVectorTypeByTableName(tableName);
 //    }
 
-    @GetMapping("/{tableName}/{field}")
-    public List<String> getVectorTypeByTableNameAndField(@PathVariable String tableName, @PathVariable String field) {
-        return vectorDataService.getVectorTypeByTableNameAndField(tableName, field);
+    @GetMapping("/{tableName}/discrete/{field}")
+    public List<String> getVectorTypeByTableNameAndField(@PathVariable String tableName, @PathVariable String field,
+                                                         @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+                                                         @CookieValue(value = "encrypted_request_body", required = false) String encryptedRequestBody) {
+        // 拼凑cacheKey
+        String userId;
+        userId = IdUtil.parseUserIdFromAuthHeader(authorizationHeader);
+        String cacheKey = userId + "_" + encryptedRequestBody;
+        return vectorDataService.getVectorTypeByTableNameAndField(tableName, field, cacheKey);
+    }
+
+    @GetMapping("/{tableName}/continuous/{field}")
+    public List<JSONObject> getVectorTypeByTableNameAndFieldAndCount(@PathVariable String tableName, @PathVariable String field,
+                                                                     @RequestParam Integer count,
+                                                                     @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+                                                                     @CookieValue(value = "encrypted_request_body", required = false) String encryptedRequestBody) {
+        // 拼凑cacheKey
+        String userId;
+        userId = IdUtil.parseUserIdFromAuthHeader(authorizationHeader);
+        String cacheKey = userId + "_" + encryptedRequestBody;
+        return vectorDataService.getVectorTypeByTableNameAndFieldAndCount(tableName, field, count,cacheKey);
     }
 
     // 矢量数据这里传递的参数要改
@@ -59,7 +79,7 @@ public class VectorController {
         // 验证 field 是否合法
         if (isRestrictedField(field)) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST); // 400
-            response.getWriter().write("Invalid field: 'id', 'geom', and 'fid' are restricted.");
+            response.getWriter().write("Invalid field: 'id' and 'geom' are restricted.");
             return;
         }
         // 拼凑cacheKey
@@ -82,7 +102,7 @@ public class VectorController {
         // 验证 field 是否合法
         if (isRestrictedField(field)) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST); // 400
-            response.getWriter().write("Invalid field: 'id', 'geom', and 'fid' are restricted.");
+            response.getWriter().write("Invalid field: 'id' and 'geom' are restricted.");
             return;
         }
 
@@ -100,7 +120,7 @@ public class VectorController {
         // 验证 field 是否合法
         if (isRestrictedField(field)) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST); // 400
-            response.getWriter().write("Invalid field: 'id', 'geom', and 'fid' are restricted.");
+            response.getWriter().write("Invalid field: 'id' and 'geom' are restricted.");
             return;
         }
 
@@ -128,8 +148,6 @@ public class VectorController {
     }
 
     private boolean isRestrictedField(String field) {
-        return "id".equalsIgnoreCase(field) ||
-                "geom".equalsIgnoreCase(field) ||
-                "fid".equalsIgnoreCase(field);
+        return field != null && (field.toLowerCase().contains("id") || "geom".equalsIgnoreCase(field));
     }
 }

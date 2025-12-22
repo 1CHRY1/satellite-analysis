@@ -1,8 +1,11 @@
 package nnu.mnr.satellite.service.resources;
 
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.dynamic.datasource.annotation.DS;
 import nnu.mnr.satellite.cache.SceneDataCache;
 import nnu.mnr.satellite.mapper.resources.IVectorRepo;
+import nnu.mnr.satellite.model.dto.resources.MinMaxResult;
 import nnu.mnr.satellite.model.dto.resources.VectorsFetchDTO;
 import nnu.mnr.satellite.model.dto.resources.VectorsLocationFetchDTO;
 import nnu.mnr.satellite.model.po.resources.Region;
@@ -14,6 +17,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -57,8 +62,45 @@ public class VectorDataService {
         return vectorRepo.getVectorTypeByTableName(tableName);
     }
 
-    public List<String> getVectorTypeByTableNameAndField(String tableName, String field){
-        return vectorRepo.getVectorTypeByTableNameAndField(tableName, field);
+    public List<String> getVectorTypeByTableNameAndField(String tableName, String field, String cacheKey){
+        SceneDataCache.UserRegionInfoCache userRegionInfoCache = SceneDataCache.getUserRegionInfoCacheMap(cacheKey);
+        Geometry gridBoundary = userRegionInfoCache.gridsBoundary;
+        String wkt = gridBoundary.toText();
+        return vectorRepo.getVectorTypeByTableNameAndField(tableName, field, wkt);
+    }
+
+    public List<JSONObject> getVectorTypeByTableNameAndFieldAndCount(String tableName, String field, Integer count, String cacheKey){
+        SceneDataCache.UserRegionInfoCache userRegionInfoCache = SceneDataCache.getUserRegionInfoCacheMap(cacheKey);
+        Geometry gridBoundary = userRegionInfoCache.gridsBoundary;
+        String wkt = gridBoundary.toText();
+        MinMaxResult MinMaxList = vectorRepo.getMinMaxByTableNameAndFieldAndCount(tableName, field, wkt);
+        float min = MinMaxList.getMin();
+        float max = MinMaxList.getMax();
+        // 3. 处理特殊情况
+        if (count == null || count <= 0) count = 1;
+        if (Math.abs(max - min) < 1e-10) {
+            JSONObject segment = new JSONObject();
+            segment.put("up", max);
+            segment.put("low", min);
+            return Collections.singletonList(segment);
+        }
+
+        // 4. 计算分段
+        double range = max - min;
+        double segmentSize = range / count;
+        List<JSONObject> segments = new ArrayList<>();
+
+        for (int i = 0; i < count; i++) {
+            double low = max - (i + 1) * segmentSize;
+            double up = max - i * segmentSize;
+            if (i == count - 1) low = min;
+
+            JSONObject segment = new JSONObject();
+            segment.put("up", up);
+            segment.put("low", low);
+            segments.add(segment);
+        }
+        return segments;
     }
 
     public byte[] getVectorByRegionAndTableName(String tableName, String field, int z, int x, int y, String cacheKey, List<String> types){
