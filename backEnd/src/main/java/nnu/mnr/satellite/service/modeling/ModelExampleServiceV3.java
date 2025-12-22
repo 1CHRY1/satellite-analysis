@@ -118,8 +118,8 @@ public class ModelExampleServiceV3 {
             AbstractMap.SimpleEntry<Double, Geometry> coverageInfo = sceneDataService.calculateCoveragePercentage(scene.getBoundingBox(), tileBoundingBox);
             double coverage = coverageInfo.getKey();
             Geometry coverageGeometry = coverageInfo.getValue();
-            // 已覆盖区域覆盖了新覆盖区域90%以上，跳过这一个新景
-            if (coverage > 0.0 && sceneDataService.calculateCoveragePercentage(unionCoverage, coverageGeometry).getKey() <= 1) {
+            // 已覆盖区域覆盖了新覆盖区域80%以上，跳过这一个新景
+            if (coverage > 0.0 && sceneDataService.calculateCoveragePercentage(unionCoverage, coverageGeometry).getKey() < 0.8) {
                 unionCoverage = unionCoverage.union(coverageGeometry);
                 NoCloudConfigVO noCloudConfigVO = new NoCloudConfigVO();
                 noCloudConfigVO.setSensorName(sensorName);
