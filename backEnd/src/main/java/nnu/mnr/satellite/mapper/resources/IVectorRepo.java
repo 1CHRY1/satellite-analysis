@@ -2,6 +2,7 @@ package nnu.mnr.satellite.mapper.resources;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import nnu.mnr.satellite.model.dto.resources.MinMaxResult;
 import nnu.mnr.satellite.model.po.resources.Vector;
 import nnu.mnr.satellite.model.vo.resources.VectorInfoVO;
 import nnu.mnr.satellite.model.vo.resources.VectorTypeVO;
@@ -20,8 +21,10 @@ public interface IVectorRepo  extends BaseMapper<Vector> {
             @Result(property = "vectorName", column = "vector_name"),
             @Result(property = "tableName", column = "table_name"),
             @Result(property = "time", column = "time"),
-            @Result(property = "fields", column = "table_name",
-                    many = @Many(select = "nnu.mnr.satellite.mapper.resources.IVectorRepo.getTableFields"))
+            @Result(property = "fields.discrete", column = "table_name",
+                    many = @Many(select = "nnu.mnr.satellite.mapper.resources.IVectorRepo.getDiscreteFields")),
+            @Result(property = "fields.continuous", column = "table_name",
+                    many = @Many(select = "nnu.mnr.satellite.mapper.resources.IVectorRepo.getContinuousFields"))
     })
     List<VectorInfoVO> getVectorsDesByTimeAndGeometry(
             @Param("startTime") String startTime,
@@ -64,15 +67,50 @@ public interface IVectorRepo  extends BaseMapper<Vector> {
     List<VectorTypeVO> getVectorTypeByTableName(@Param("tableName") String tableName);
 
     @Select({
-            "SELECT DISTINCT ${field} FROM gis_db.${tableName}"
+            "SELECT DISTINCT ${field} ",
+            "FROM gis_db.${tableName} ",
+            "WHERE ST_Intersects(geom, ST_GeomFromText(#{wkt}, 4326))"  // 假设 WKT 是 WGS84 坐标系 (SRID=4326)
     })
-    List<String> getVectorTypeByTableNameAndField(@Param("tableName") String tableName, @Param("field") String field);
+    List<String> getVectorTypeByTableNameAndField(@Param("tableName") String tableName, @Param("field") String field, @Param("wkt") String wkt);
+
+    @Select({
+            "SELECT MIN(${field}) as min_val, MAX(${field}) as max_val ",
+            "FROM gis_db.${tableName} ",
+            "WHERE ST_Intersects(geom, ST_GeomFromText(#{wkt}, 4326))"
+    })
+    @Results({
+            @Result(property = "min", column = "min_val"),
+            @Result(property = "max", column = "max_val")
+    })
+    MinMaxResult getMinMaxByTableNameAndFieldAndCount(@Param("tableName") String tableName, @Param("field") String field, @Param("wkt") String wkt);
 
     // 查询指定表的字段名（排除 id、fid、geom）
     @Select("SELECT column_name " +
             "FROM information_schema.columns " +
-            "WHERE table_schema = 'gis_db' " +  // 替换为你的数据库 schema 名
+            "WHERE table_schema = 'gis_db' " +
             "AND table_name = #{tableName} " +
-            "AND column_name NOT IN ('id', 'fid', 'geom')")
+            "AND column_name NOT LIKE '%id%' " +
+            "AND column_name != 'geom' "
+            )
     List<String> getTableFields(@Param("tableName") String tableName);
+
+    @Select("SELECT column_name " +
+            "FROM information_schema.columns " +
+            "WHERE table_schema = 'gis_db' " +
+            "AND table_name = #{tableName} " +
+            "AND column_name NOT LIKE '%id%' " +
+            "AND column_name != 'geom' " +
+            "AND data_type NOT IN ('float', 'double precision', 'real', 'numeric', 'decimal') "
+            )
+    List<String> getDiscreteFields(@Param("tableName") String tableName, @Param("columnName") String columnName);
+
+    @Select("SELECT column_name " +
+            "FROM information_schema.columns " +
+            "WHERE table_schema = 'gis_db' " +
+            "AND table_name = #{tableName} " +
+            "AND column_name NOT LIKE '%id%' " +
+            "AND column_name != 'geom' " +
+            "AND data_type IN ('float', 'double precision', 'real', 'numeric', 'decimal') "
+    )
+    List<String> getContinuousFields(@Param("tableName") String tableName, @Param("columnName") String columnName);
 }
