@@ -291,49 +291,107 @@ export function map_destroyGridNDVIOrSVRLayer(gridInfo: GridData) {
     })
 }
 
-export function map_addGridMVTLayer(source_layer: string, url: string, attrList: {color: string, type: number}[], field: string = 'type', cb?: () => void, gridInfo?: GridData) {
-    const prefix = `GridMVT`
-    const matchColor: Expression = [
-        'match',
-        ['to-string', ['get', field]], // MVT属性字段, 强转string比较
-        ...attrList.flatMap(tc => [tc.type, tc.color]),
-        'rgba(0,0,0,0)' // 默认颜色
-    ]
-    let layeridStore: any = null
-    if (!ezStore.get('GridMVTLayerIds')) ezStore.set('GridMVTLayerIds', [])
+function getPaintColorExpression(
+    mode: 'discrete' | 'continuous',
+    field: string,
+    attrList: { color: string; type: number | string | any }[]
+): Expression {
+    const defaultColor = 'rgba(0,0,0,0)'; // 默认透明
+
+    if (!attrList || attrList.length === 0) {
+        return defaultColor as any;
+    }
+
+    if (mode === 'continuous') {
+        // --- 连续模式 (Continuous) ---
+        // 解析 "low-up" 字符串 (如 "10-20") 并构建 case 表达式
+        const expression: any[] = ['case'];
+
+        attrList.forEach((item) => {
+            const rangeStr = String(item.type);
+            const parts = rangeStr.split('-');
+            
+            if (parts.length === 2) {
+                const min = parseFloat(parts[0]);
+                const max = parseFloat(parts[1]);
+
+                if (!isNaN(min) && !isNaN(max)) {
+                    // 构建判断条件: min <= value < max
+                    const condition = [
+                        'all',
+                        ['>=', ['to-number', ['get', field]], min],
+                        ['<', ['to-number', ['get', field]], max]
+                    ];
+                    expression.push(condition, item.color);
+                }
+            }
+        });
+
+        expression.push(defaultColor);
+        return expression as Expression;
+    } else {
+        // --- 离散模式 (Discrete) ---
+        return [
+            'match',
+            ['to-string', ['get', field]], // 强转 string 比较
+            ...attrList.flatMap((tc) => [String(tc.type), tc.color]),
+            defaultColor,
+        ] as Expression;
+    }
+}
+
+/**
+ * 添加格网 MVT 图层
+ */
+export function map_addGridMVTLayer(
+    source_layer: string,
+    url: string,
+    attrList: { color: string; type: number | string | any }[], // 更新类型定义
+    field: string = 'type',
+    cb?: () => void,
+    gridInfo?: GridData,
+    mode: 'discrete' | 'continuous' = 'discrete' // 新增参数
+) {
+    const prefix = `GridMVT`;
+    
+    // 使用辅助函数生成颜色表达式
+    const matchColor = getPaintColorExpression(mode, field, attrList);
+
+    let layeridStore: any = null;
+    if (!ezStore.get('GridMVTLayerIds')) ezStore.set('GridMVTLayerIds', []);
     
     // 创建格网MVT图层映射表
     if (!ezStore.get('grid-mvt-layer-map')) {
-        ezStore.set('grid-mvt-layer-map', new window.Map())
+        ezStore.set('grid-mvt-layer-map', new window.Map());
     }
 
-    layeridStore = ezStore.get('GridMVTLayerIds')
-    const gridMVTLayerMap = ezStore.get('grid-mvt-layer-map')
+    layeridStore = ezStore.get('GridMVTLayerIds');
+    const gridMVTLayerMap = ezStore.get('grid-mvt-layer-map');
 
     mapManager.withMap((m) => {
         // 如果有格网信息，使用格网信息生成可识别的ID
-        const gridPrefix = gridInfo ? `${gridInfo.rowId}_${gridInfo.columnId}_` : ''
-        const id = prefix + gridPrefix + uid()
-        const srcId = id + '-source'
+        const gridPrefix = gridInfo ? `${gridInfo.rowId}_${gridInfo.columnId}_` : '';
+        const id = prefix + gridPrefix + uid();
+        const srcId = id + '-source';
 
-        layeridStore.push(`${id}-fill`)
-        layeridStore.push(`${id}-line`)
-        layeridStore.push(`${id}-point`)
+        layeridStore.push(`${id}-fill`);
+        layeridStore.push(`${id}-line`);
+        layeridStore.push(`${id}-point`);
         
         // 如果有格网信息，将图层ID存储到映射表中
         if (gridInfo) {
-            const gridKey = `${gridInfo.rowId}_${gridInfo.columnId}`
+            const gridKey = `${gridInfo.rowId}_${gridInfo.columnId}`;
             if (!gridMVTLayerMap.has(gridKey)) {
-                gridMVTLayerMap.set(gridKey, [])
+                gridMVTLayerMap.set(gridKey, []);
             }
-            const gridLayers = gridMVTLayerMap.get(gridKey)
-            gridLayers.push(`${id}-fill`, `${id}-line`, `${id}-point`)
+            const gridLayers = gridMVTLayerMap.get(gridKey);
+            gridLayers.push(`${id}-fill`, `${id}-line`, `${id}-point`);
         }
 
         m.addSource(srcId, {
             type: 'vector',
             tiles: [url],
-        })
+        });
 
         // 添加面图层
         m.addLayer({
@@ -346,12 +404,10 @@ export function map_addGridMVTLayer(source_layer: string, url: string, attrList:
             'source-layer': source_layer,
             filter: ['==', '$type', 'Polygon'], // 只显示面要素
             paint: {
-            //   'fill-color': '#0066cc',
-            'fill-color': matchColor,
-            //   'fill-opacity': 0.5,
-            'fill-outline-color': '#004499'
+                'fill-color': matchColor,
+                'fill-outline-color': '#004499'
             }
-        })
+        });
         
         // 添加线图层
         m.addLayer({
@@ -364,11 +420,11 @@ export function map_addGridMVTLayer(source_layer: string, url: string, attrList:
             'source-layer': source_layer,
             filter: ['==', '$type', 'LineString'], // 只显示线要素
             paint: {
-            'line-color': matchColor,
-            'line-width': 2,
-            'line-opacity': 0.8
+                'line-color': matchColor,
+                'line-width': 2,
+                'line-opacity': 0.8
             }
-        })
+        });
         
         // 添加点图层
         m.addLayer({
@@ -381,19 +437,77 @@ export function map_addGridMVTLayer(source_layer: string, url: string, attrList:
             'source-layer': source_layer,
             filter: ['==', '$type', 'Point'], // 只显示点要素
             paint: {
-            'circle-color': matchColor,
-            'circle-radius': 6,
-            'circle-opacity': 0.8,
-            'circle-stroke-color': '#ffffff',
-            'circle-stroke-width': 2
+                'circle-color': matchColor,
+                'circle-radius': 6,
+                'circle-opacity': 0.8,
+                'circle-stroke-color': '#ffffff',
+                'circle-stroke-width': 2
             }
-        })
+        });
 
         setTimeout(() => {
-            cb && cb()
-        }, 3000)
-    })
+            cb && cb();
+        }, 3000);
+    });
 }
+
+/**
+ * 更新格网 MVT 图层样式
+ */
+export function map_updateGridMVTLayerStyle(
+    attrList: { color: string; type: number | string | any }[],
+    field: string = 'type',
+    gridInfo?: GridData,
+    mode: 'discrete' | 'continuous' = 'discrete' // 新增参数
+) {
+    // 1. 使用辅助函数生成新的颜色表达式
+    const newMatchColor = getPaintColorExpression(mode, field, attrList);
+
+    mapManager.withMap((m) => {
+        // 获取映射表
+        const gridMVTLayerMap = ezStore.get('grid-mvt-layer-map');
+        if (!gridMVTLayerMap) return;
+
+        let targetLayerIds: string[] = [];
+
+        // 2. 确定要更新哪些图层 ID
+        if (gridInfo) {
+            // A. 只更新特定格网 (局部更新)
+            const gridKey = `${gridInfo.rowId}_${gridInfo.columnId}`;
+            if (gridMVTLayerMap.has(gridKey)) {
+                targetLayerIds = gridMVTLayerMap.get(gridKey);
+            }
+        } else {
+            // B. 更新所有格网 (全局更新 - 例如修改了图例颜色)
+            gridMVTLayerMap.forEach((ids: string[]) => {
+                targetLayerIds.push(...ids);
+            });
+        }
+
+        // 3. 执行样式更新
+        targetLayerIds.forEach((layerId) => {
+            // 先检查图层是否存在，避免报错
+            const layer = m.getLayer(layerId);
+            if (layer) {
+                try {
+                    // 根据图层类型自动匹配属性
+                    if (layer.type === 'fill') {
+                        m.setPaintProperty(layerId, 'fill-color', newMatchColor);
+                    } else if (layer.type === 'line') {
+                        m.setPaintProperty(layerId, 'line-color', newMatchColor);
+                    } else if (layer.type === 'circle') {
+                        m.setPaintProperty(layerId, 'circle-color', newMatchColor);
+                    }
+                } catch (e) {
+                    console.warn(`更新图层样式失败: ${layerId}`, e);
+                }
+            }
+        });
+        
+        console.log(`已更新格网图层样式 (mode: ${mode})，涉及图层数量: ${targetLayerIds.length}`);
+    });
+}
+
 export function map_destroyGridMVTLayer() {
     if (!ezStore.get('GridMVTLayerIds')) return
 

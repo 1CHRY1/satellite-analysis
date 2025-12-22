@@ -311,7 +311,7 @@ const handleClick = async (index: number) => {
     if (visualMode.value === 'rgb') {
         const img = currentImage as MultiImageInfoType
 
-        let redPath,greenPath,bluePath
+        let redPath, greenPath, bluePath
 
         const currentGridKey = `${grid.value.rowId}-${grid.value.columnId}-${grid.value.resolution}`
         const gridSuperRes = superResOverride.value.get(currentGridKey)
@@ -435,7 +435,6 @@ const handleClick = async (index: number) => {
             GridExploreMapOps.map_addGrid2DDEMLayer(
                 grid.value,
                 url,
-                stopLoading,
             )
 
         } else if (img.dataType === '3d') {
@@ -455,7 +454,6 @@ const handleClick = async (index: number) => {
             GridExploreMapOps.map_addGrid3DLayer(
                 grid.value,
                 url,
-                stopLoading,
             )
         } else if (img.dataType === 'svr' || img.dataType === 'ndvi') {
             const url = getGridNDVIOrSVRUrl(grid.value, {
@@ -470,7 +468,6 @@ const handleClick = async (index: number) => {
             GridExploreMapOps.map_addGridNDVIOrSVRLayer(
                 grid.value,
                 url,
-                stopLoading,
             )
             console.log('nodata',img.nodata,img)
         }

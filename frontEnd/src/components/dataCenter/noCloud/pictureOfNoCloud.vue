@@ -611,24 +611,80 @@
                                                     </a-form-item>
 
                                                 </a-form>
+                                                <div class="config-control justify-end" :bordered="false">
+                                                    <a-button size="large" style="margin-right: 1rem;"
+                                                        @click="handleReset">
+                                                        重置
+                                                    </a-button>
+                                                    <a-button type="primary" size="large" :disabled="!canSynthesize"
+                                                        style="margin-right: 1rem;" @click="handleGenCache">
+                                                        计算就绪
+                                                    </a-button>
+                                                    <a-button type="primary" size="large" :disabled="!canSynthesize"
+                                                        @click="handleSynthesis">
+                                                        合成立方体
+                                                    </a-button>
+                                                </div>
                                             </div>
 
                                             <!-- 操作按钮区域 -->
-                                            <div class="config-control justify-end" :bordered="false">
-                                                <a-button size="large" style="margin-right: 1rem;"
-                                                    :disabled="!canSynthesize" @click="handleReset">
-                                                    重置
-                                                </a-button>
-                                                <a-button type="primary" size="large" :disabled="!canSynthesize"
-                                                    style="margin-right: 1rem;" @click="handleGenCache">
-                                                    计算就绪
-                                                </a-button>
-                                                <a-button type="primary" size="large" :disabled="!canSynthesize"
-                                                    @click="handleSynthesis">
-                                                    合成立方体
-                                                </a-button>
 
+                                            <div class="config-label relative">
+                                                <BoltIcon :size="16" class="config-icon" />
+                                                <span>可视化预览</span>
                                             </div>
+                                            <div class="config-item">
+                                                <a-form :label-col="{ span: 6 }" :model="visFormData"
+                                                    :wrapper-col="{ span: 18 }" @finish="onFinish">
+                                                    <a-form-item label="R通道" name="R"
+                                                        :rules="[{ required: true, message: '请选择R通道' }]">
+                                                        <a-select v-model:value="visFormData.R" placeholder="请选择R通道"
+                                                            allow-clear>
+                                                            <a-select-option v-for="(opt, index) in cubeRedImages"
+                                                                :key="index"
+                                                                :value="opt.value.bucket + '/' + opt.value.tifPath">
+                                                                <span :style="{ fontSize: 'bold' }">
+                                                                    {{ opt.label }}</span>
+                                                            </a-select-option>
+                                                        </a-select>
+                                                    </a-form-item>
+                                                    <a-form-item label="G通道" name="G"
+                                                        :rules="[{ required: true, message: '请选择G通道' }]">
+                                                        <a-select v-model:value="visFormData.G" placeholder="请选择G通道"
+                                                            allow-clear>
+                                                            <a-select-option v-for="(opt, index) in cubeGreenImages"
+                                                                :key="index"
+                                                                :value="opt.value.bucket + '/' + opt.value.tifPath">
+                                                                <span :style="{ fontSize: 'bold' }">
+                                                                    {{ opt.label }}</span>
+                                                            </a-select-option>
+                                                        </a-select>
+                                                    </a-form-item>
+                                                    <a-form-item label="B通道" name="B"
+                                                        :rules="[{ required: true, message: '请选择B通道' }]">
+                                                        <a-select v-model:value="visFormData.B" placeholder="请选择B通道"
+                                                            allow-clear>
+                                                            <a-select-option v-for="(opt, index) in cubeBlueImages"
+                                                                :key="index"
+                                                                :value="opt.value.bucket + '/' + opt.value.tifPath">
+                                                                <span :style="{ fontSize: 'bold' }">
+                                                                    {{ opt.label }}</span>
+                                                            </a-select-option>
+                                                        </a-select>
+                                                    </a-form-item>
+                                                </a-form>
+                                                <div class="config-control justify-end" :bordered="false">
+                                                    <a-button size="small" style="margin-right: 1rem;"
+                                                        @click="handleReset">
+                                                        重置
+                                                    </a-button>
+                                                    <a-button type="primary" size="small" :disabled="!canVisualize"
+                                                        @click="handleVisualize">
+                                                        可视化预览
+                                                    </a-button>
+                                                </div>
+                                            </div>
+
                                             <a-modal v-model:open="showCubeContentDialog" title="时序立方体"
                                                 @ok="() => showCubeContentDialog = false">
                                                 <a-card style="max-height: 400px; overflow: auto; position: relative;">
@@ -800,7 +856,7 @@ const {
 
 // 时空立方体合成
 const {
-    selectedGrid, updateGridLayer, formData, sensorOptions, bandOptions, dateOptions, canSynthesize, handleSensorChange, handleBandChange, handleDateChange, handleGenCache, handleSynthesis, handleReset, onFinish, cubeContent, currentCacheKey, showCubeContentDialog
+    selectedGrid, updateGridLayer, formData, sensorOptions, bandOptions, dateOptions, canSynthesize, handleSensorChange, handleBandChange, handleDateChange, handleGenCache, handleSynthesis, handleReset, onFinish, cubeContent, currentCacheKey, showCubeContentDialog, cubeRedImages, cubeGreenImages, cubeBlueImages, visFormData, canVisualize, handleVisualize
 } = useBox()
 
 const handleAdd1mDemoticImage = () => add1mDemoticImage(reRenderAllGrids, clearGridRenderingByType)

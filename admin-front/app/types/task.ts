@@ -9,5 +9,6 @@ export interface Task {
 	createTime: string; // 或 Date
 	regionId: number;
 	userId: string;
+	type: string,
 	bandList: string; // 因为原本是字符串，可以提前 JSON.parse
 }

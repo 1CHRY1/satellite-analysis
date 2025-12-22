@@ -79,6 +79,7 @@ class SceneFetcher:
         
         if response.status_code == 200:
             # 解析数据并将每个场景数据转换为 Scene 对象
+            print(response.json()['data'], flush = True)
             scenes_data = response.json()['data']['scenesConfig']
             band_mapper = response.json()['data']['bandMapper']
             scene_objects = []

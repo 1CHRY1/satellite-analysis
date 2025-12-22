@@ -1368,7 +1368,7 @@ const handleShowSensorImage = async (selectedSensor: platformType | null)  => {
 
     console.log('可视化参数们', rgbTileLayerParamList)
 
-    MapOperation.map_addMultiRGBImageTileLayer(rgbTileLayerParamList, stopLoading)
+    MapOperation.map_addMultiRGBImageTileLayer(rgbTileLayerParamList)
 }
 
 

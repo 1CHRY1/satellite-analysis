@@ -429,163 +429,222 @@ function getOrCreateVectorPopup(): Popup {
 
     return popup
 }
+/**
+ * 辅助函数：根据模式生成 Mapbox 样式表达式
+ */
+function getPaintColorExpression(
+    mode: 'discrete' | 'continuous',
+    field: string,
+    attrList: { color: string; type: number | string | any }[]
+): Expression {
+    const defaultColor = 'rgba(0,0,0,0)'; // 默认透明
+
+    if (!attrList || attrList.length === 0) {
+        return defaultColor as any;
+    }
+
+    if (mode === 'continuous') {
+        // --- 连续模式 (Continuous) ---
+        // 使用 'case' 表达式处理区间判断
+        // 格式要求 type 为 "min-max" (例如 "0-10")
+        
+        const expression: any[] = ['case'];
+
+        attrList.forEach((item) => {
+            const rangeStr = String(item.type);
+            // 解析 "low-up" 字符串
+            const parts = rangeStr.split('-');
+            
+            if (parts.length === 2) {
+                const min = parseFloat(parts[0]);
+                const max = parseFloat(parts[1]);
+
+                if (!isNaN(min) && !isNaN(max)) {
+                    // 构建判断条件: min <= value < max
+                    // 注意：必须确保字段转为数字进行比较 ['to-number', ['get', field]]
+                    const condition = [
+                        'all',
+                        ['>=', ['to-number', ['get', field]], min],
+                        ['<', ['to-number', ['get', field]], max]
+                    ];
+                    
+                    expression.push(condition, item.color);
+                }
+            }
+        });
+
+        // 添加默认颜色作为兜底
+        expression.push(defaultColor);
+        return expression as Expression;
+
+    } else {
+        // --- 离散模式 (Discrete) ---
+        // 使用 'match' 表达式进行精确匹配
+        
+        return [
+            'match',
+            ['to-string', ['get', field]], // 强转 string 比较，兼容性更好
+            ...attrList.flatMap((tc) => [String(tc.type), tc.color]),
+            defaultColor,
+        ] as Expression;
+    }
+}
 
 /**
- * 添加矢量图层
- * @param source_layer 矢量图层名称
- * @param landId 行政区id
- * @param cb 回调函数
+ * 添加 MVT 图层
+ * @param mode 'discrete' (离散/分类) | 'continuous' (连续/区间)
  */
 export function map_addMVTLayer(
     source_layer: string,
     url: string,
-    attrList: { color: string; type: number | any }[],
-    field: string = 'type'
+    attrList: { color: string; type: number | string | any }[],
+    field: string = 'type',
+    mode: 'discrete' | 'continuous' = 'discrete' // 新增参数，默认为离散
 ) {
-    const baseId = `${source_layer}-mvt-layer`
-    const srcId = baseId + '-source'
-    const matchColor: Expression = [
-        'match',
-        ['to-string', ['get', field]], // MVT属性字段, 强转string比较
-        ...attrList.flatMap((tc) => [tc.type, tc.color]),
-        'rgba(0,0,0,0)', // 默认颜色
-    ]
-    console.log(field)
-    console.log(attrList)
+    const baseId = `${source_layer}-mvt-layer`;
+    const srcId = baseId + '-source';
+
+    // 获取颜色表达式
+    const matchColor = getPaintColorExpression(mode, field, attrList);
+
+    console.log(`Layer Mode: ${mode}, Field: ${field}`);
+    console.log(attrList);
 
     mapManager.withMap((m) => {
-        //   // 移除已存在的图层和数据源
-        //   const layerIds = [
-        //     `${baseId}-fill`,
-        //     `${baseId}-line`,
-        //     `${baseId}-point`
-        //   ]
-
-        //   layerIds.forEach(layerId => {
-        //     if (m.getLayer(layerId)) {
-        //       m.removeLayer(layerId)
-        //     }
-        //   })
-
-        //   if (m.getSource(srcId)) {
-        //     m.removeSource(srcId)
-        //   }
+        // 移除旧图层逻辑(可选，视你业务逻辑是否需要保留)
+        // ... 
 
         // 添加数据源
-        m.addSource(srcId, {
-            type: 'vector',
-            tiles: [url],
-        })
+        if (!m.getSource(srcId)) {
+             m.addSource(srcId, {
+                type: 'vector',
+                tiles: [url],
+            });
+        }
 
         // 添加面图层
-        m.addLayer({
-            id: `${baseId}-fill`,
-            type: 'fill',
-            source: srcId,
-            metadata: {
-                'user-label': `${source_layer}` + '矢量图层',
-            },
-            'source-layer': source_layer,
-            filter: ['==', '$type', 'Polygon'], // 只显示面要素
-            paint: {
-                //   'fill-color': '#0066cc',
-                'fill-color': matchColor,
-                //   'fill-opacity': 0.5,
-                'fill-outline-color': '#004499',
-            },
-        })
+        if (!m.getLayer(`${baseId}-fill`)) {
+            m.addLayer({
+                id: `${baseId}-fill`,
+                type: 'fill',
+                source: srcId,
+                metadata: {
+                    'user-label': `${source_layer}` + '矢量图层',
+                },
+                'source-layer': source_layer,
+                filter: ['==', '$type', 'Polygon'],
+                paint: {
+                    'fill-color': matchColor,
+                    'fill-outline-color': '#004499',
+                },
+            });
+        }
 
         // 添加线图层
-        m.addLayer({
-            id: `${baseId}-line`,
-            type: 'line',
-            source: srcId,
-            metadata: {
-                'user-label': `${source_layer}` + '矢量图层',
-            },
-            'source-layer': source_layer,
-            filter: ['==', '$type', 'LineString'], // 只显示线要素
-            paint: {
-                'line-color': matchColor,
-                'line-width': 2,
-                'line-opacity': 0.8,
-            },
-        })
+        if (!m.getLayer(`${baseId}-line`)) {
+            m.addLayer({
+                id: `${baseId}-line`,
+                type: 'line',
+                source: srcId,
+                metadata: {
+                    'user-label': `${source_layer}` + '矢量图层',
+                },
+                'source-layer': source_layer,
+                filter: ['==', '$type', 'LineString'],
+                paint: {
+                    'line-color': matchColor, // 线也会应用此颜色逻辑
+                    'line-width': 2,
+                    'line-opacity': 0.8,
+                },
+            });
+        }
 
         // 添加点图层
-        m.addLayer({
-            id: `${baseId}-point`,
-            type: 'circle',
-            source: srcId,
-            metadata: {
-                'user-label': `${source_layer}` + '矢量图层',
-            },
-            'source-layer': source_layer,
-            filter: ['==', '$type', 'Point'], // 只显示点要素
-            paint: {
-                'circle-color': matchColor,
-                'circle-radius': 6,
-                'circle-opacity': 0.8,
-                'circle-stroke-color': '#ffffff',
-                'circle-stroke-width': 2,
-            },
-        })
+        if (!m.getLayer(`${baseId}-point`)) {
+             m.addLayer({
+                id: `${baseId}-point`,
+                type: 'circle',
+                source: srcId,
+                metadata: {
+                    'user-label': `${source_layer}` + '矢量图层',
+                },
+                'source-layer': source_layer,
+                filter: ['==', '$type', 'Point'],
+                paint: {
+                    'circle-color': matchColor, // 点也会应用此颜色逻辑
+                    'circle-radius': 6,
+                    'circle-opacity': 0.8,
+                    'circle-stroke-color': '#ffffff',
+                    'circle-stroke-width': 2,
+                },
+            });
+        }
 
-        // 为所有图层添加点击事件处理器
-        const layerIds = [`${baseId}-fill`, `${baseId}-line`, `${baseId}-point`]
-
+        // --- 事件处理逻辑保持不变 ---
+        const layerIds = [`${baseId}-fill`, `${baseId}-line`, `${baseId}-point`];
+        
         layerIds.forEach((layerId) => {
-            // 移除已存在的点击事件监听器（如果有）
-            m.off('click', layerId as any)
+            if (!m.getLayer(layerId)) return;
 
-            // 添加新的点击事件监听器
+            m.off('click', layerId as any);
             m.on('click', layerId, (e) => {
-                const features = m.queryRenderedFeatures(e.point, {
-                    layers: [layerId],
-                })
-
+                const features = m.queryRenderedFeatures(e.point, { layers: [layerId] });
                 if (features.length > 0) {
-                    const feature = features[0]
-                    const properties = feature.properties || {}
-
-                    // 获取或创建弹窗实例
-                    const popup = getOrCreateVectorPopup()
-
-                    // 创建弹窗内容
-                    const content = createVectorPopupContent(properties)
-
-                    // 显示弹窗
-                    popup.setLngLat(e.lngLat).setHTML(content).addTo(m)
-
-                    // 保留控制台输出用于调试
-                    console.log('Clicked on layer:', layerId)
-                    console.log('MVT Source Layer:', feature.sourceLayer)
-                    console.log('Feature properties:', properties)
+                    const feature = features[0];
+                    const properties = feature.properties || {};
+                    const popup = getOrCreateVectorPopup();
+                    const content = createVectorPopupContent(properties);
+                    popup.setLngLat(e.lngLat).setHTML(content).addTo(m);
                 }
-            })
+            });
 
-            // 鼠标悬停时显示手型光标
-            m.on('mouseenter', layerId, () => {
-                m.getCanvas().style.cursor = 'pointer'
-            })
-
-            m.on('mouseleave', layerId, () => {
-                m.getCanvas().style.cursor = ''
-            })
-
-            // 添加右键点击事件处理器 - 关闭左键弹窗
+            m.on('mouseenter', layerId, () => { m.getCanvas().style.cursor = 'pointer'; });
+            m.on('mouseleave', layerId, () => { m.getCanvas().style.cursor = ''; });
             m.on('contextmenu', layerId, (e) => {
-                // 阻止浏览器默认右键菜单
-                e.preventDefault()
+                e.preventDefault();
+                const existingPopup = ezStore.get('vectorPopup') as any;
+                if (existingPopup) existingPopup.remove();
+            });
+        });
+    });
+}
 
-                // 关闭现有的矢量弹窗
-                const existingPopup = ezStore.get('vectorPopup') as Popup
-                if (existingPopup) {
-                    existingPopup.remove()
+/**
+ * 更新矢量图层样式
+ * @param mode 'discrete' (离散) | 'continuous' (连续)
+ */
+export function map_updateMVTLayerStyle(
+    source_layer: string,
+    attrList: { color: string; type: number | string | any }[],
+    field: string = 'type',
+    mode: 'discrete' | 'continuous' = 'discrete' // 新增参数
+) {
+    const baseId = `${source_layer}-mvt-layer`;
+    
+    // 使用统一的辅助函数生成颜色表达式
+    const newPaintColor = getPaintColorExpression(mode, field, attrList);
+
+    mapManager.withMap((m) => {
+        const fillId = `${baseId}-fill`;
+        const lineId = `${baseId}-line`;
+        const pointId = `${baseId}-point`;
+
+        const layers = [
+            { id: fillId, prop: 'fill-color' },
+            { id: lineId, prop: 'line-color' },
+            { id: pointId, prop: 'circle-color' }
+        ];
+
+        layers.forEach(({ id, prop }) => {
+            if (m.getLayer(id)) {
+                try {
+                    m.setPaintProperty(id, prop as any, newPaintColor);
+                } catch (e) {
+                    console.error(`更新图层样式失败 [${id}]:`, e);
                 }
-            })
-        })
-    })
+            }
+        });
+    });
 }
 
 /**
