@@ -67,8 +67,7 @@ class SceneFetcher:
             if y > y_max:
                 y_max = y
 
-        scenes_url = self.url_prefix + CONFIG.
-        
+        scenes_url = self.url_prefix + CONFIG.LOW_LEVEL_IMAGE_VISUALIZATION
         headers = self.headers
         cookies = self.cookies
         scenes_payload = {
