@@ -1,3 +1,4 @@
+import time
 import sys, os
 from pathlib import Path
 import ssl
@@ -196,6 +197,9 @@ def is_bbox_match(db_wkt, calc_polygon, iou_threshold=0.85):
 def process_scenes():
     append_to_log(args.output_log, f"Start checking scenes...\r\n")
     scenes = get_all_scenes() # 假设这是你的 Utils 获取所有场景的方法
+
+    # ---------------------- 分批请打开以下注释 ---------------------------
+    # scenes = get_scenes_by_range(1, 10000)
     
     total = len(scenes)
     for idx, scene in enumerate(scenes):
@@ -213,12 +217,35 @@ def process_scenes():
         tif_path = ""
         object_name = ""
         try:
-            object_name = images[0]["tif_path"]
+            if images:
+                object_name = images[0].get("tif_path", "")
         except:
             pass
         for image in images:
+            # === [核心修复] 增加重试机制 ===
+            max_retries = 10
+            check_success = False
+            exists = False
             tif_path = image["tif_path"]
-            if not file_exists(DB_CONFIG["MINIO_IMAGES_BUCKET"], tif_path):
+
+            for attempt in range(max_retries):
+                try:
+                    # 尝试调用 minio 检查文件
+                    if file_exists(DB_CONFIG["MINIO_IMAGES_BUCKET"], tif_path):
+                        exists = True
+                    else:
+                        exists = False
+                    check_success = True
+                    break # 成功执行检查，跳出重试循环
+                except Exception as e:
+                    print(f"  [Warn] MinIO connect failed ({attempt+1}/{max_retries}): {e}")
+                    time.sleep(2) # 报错后等待2秒再试
+            if not check_success:
+                print(f"  [Error] Failed to check file after retries: {tif_path}")
+                # 如果重试多次都连不上，为了防止程序崩溃，可以选择跳过当前文件或标记为丢失
+                # 这里选择跳过当前 Scene，避免误删
+                continue
+            if not exists:
                 missing_flag = True
                 break
         

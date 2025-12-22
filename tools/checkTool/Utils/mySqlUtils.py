@@ -71,7 +71,7 @@ def get_all_scenes():
     
     try:
         while True:
-            select_query = f"SELECT *, ST_AsText(bounding_box, 'axis-order=long-lat') as bounding_box_wkt FROM scene_table LIMIT {batch_size} OFFSET {offset}"
+            select_query = f"SELECT *, ST_AsText(bounding_box, 'axis-order=long-lat') as bounding_box_wkt FROM scene_table ORDER BY scene_id ASC LIMIT {batch_size} OFFSET {offset}"
             cursor.execute(select_query)
             results = cursor.fetchall()
             
@@ -85,6 +85,42 @@ def get_all_scenes():
         connection.close()
         
     return all_results
+
+def get_scenes_by_range(start_idx, end_idx):
+    """
+    根据传入的起止序号获取数据
+    start_idx: 起始序号 (从1开始)
+    end_idx: 结束序号
+    """
+    global DB_CONFIG
+    # 计算需要跳过多少条 (offset) 和 取多少条 (limit)
+    offset = start_idx - 1
+    limit = end_idx - start_idx + 1
+    
+    connection, cursor = connect_mysql(
+        DB_CONFIG["MYSQL_HOST"], 
+        DB_CONFIG["MYSQL_RESOURCE_PORT"],
+        DB_CONFIG["MYSQL_RESOURCE_DB"], 
+        DB_CONFIG["MYSQL_USER"],
+        DB_CONFIG["MYSQL_PWD"]
+    )
+    
+    results = []
+    try:
+        # 使用 SQL 的 LIMIT 和 OFFSET 直接筛选
+        select_query = f"""
+            SELECT *, ST_AsText(bounding_box, 'axis-order=long-lat') as bounding_box_wkt 
+            FROM scene_table 
+            ORDER BY scene_id ASC
+            LIMIT {limit} OFFSET {offset}
+        """
+        cursor.execute(select_query)
+        results = cursor.fetchall()
+    finally:
+        cursor.close()
+        connection.close()
+        
+    return results
 
 def delete_scene_by_id(scene_id):
     global DB_CONFIG

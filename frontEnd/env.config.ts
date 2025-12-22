@@ -43,7 +43,7 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
         proxymap: 'http://localhost:5003',
     },
     slk: {
-        api: 'http://223.2.34.8:31584',
+        api: 'http://localhost:8999',
         realtime: 'http://223.2.34.8:5001',
         websocket: 'http://223.2.34.8:30394/model/websocket',
         tiler: 'http://223.2.34.174:8000',
