@@ -156,10 +156,10 @@
                         <span class="result-info-label">共找到 {{ total }} 条记录</span>
                         <div class="flex gap-3">
                             <a-button type="primary" class="a-button-dark" @click="reset">{{ t('datapage.history.clear')
-                                }}</a-button>
+                            }}</a-button>
                             <a-button type="primary" class="a-button" @click="getCaseList">{{
                                 t('datapage.history.fliter')
-                                }}</a-button>
+                            }}</a-button>
                         </div>
                     </div>
                 </div>
@@ -170,7 +170,7 @@
                         <a-select v-model:value="bandForm.band1">
                             <a-select-option v-for="(band, index) in currentBandList" :key="index" :value="index">{{
                                 band
-                                }}</a-select-option>
+                            }}</a-select-option>
                         </a-select>
                     </a-form-item>
 
@@ -178,7 +178,7 @@
                         <a-select v-model:value="bandForm.band2">
                             <a-select-option v-for="(band, index) in currentBandList" :key="index" :value="index">{{
                                 band
-                                }}</a-select-option>
+                            }}</a-select-option>
                         </a-select>
                     </a-form-item>
 
@@ -186,7 +186,7 @@
                         <a-select v-model:value="bandForm.band3">
                             <a-select-option v-for="(band, index) in currentBandList" :key="index" :value="index">{{
                                 band
-                                }}</a-select-option>
+                            }}</a-select-option>
                         </a-select>
                     </a-form-item>
                 </a-form>
@@ -254,7 +254,8 @@
                         </div>
                         <!-- 下载按钮和发布按钮 -->
                         <div class="flex gap-2 mt-2">
-                            <a-button v-if="item.type !== 'eoCube'" type="primary" size="middle" @click="handlePublish(item)">
+                            <a-button v-if="item.type !== 'eoCube'" type="primary" size="middle"
+                                @click="handlePublish(item)">
                                 <Upload :size="14" class="mr-1" />
                             </a-button>
                             <a-button size="middle" @click="handleDownload(item)">
@@ -539,7 +540,8 @@ const handleDownload = async (item: any) => {
                 mosaicJSONs.push(mosaicJSON)
                 break;
             }
-            case "eoCube": {
+            // 12.22进一步修正，modelServer根据需求把不同周期对应的tif都合并到一个tif中，等于还是一个格网对应一个tif，所以跟无云一版图下载无异
+            /* case "eoCube": {
                 if (!resultData?.dimensions) {
                     message.error('时序立方体数据为空')
                     return
@@ -549,7 +551,7 @@ const handleDownload = async (item: any) => {
                     mosaicJSONs.push(mosaicJSON)
                 }
                 break;
-            }
+            } */
             default: {
                 if (!resultData.bucket) {
                     message.error('无法获取下载数据的bucket，请稍后重试')
