@@ -19,12 +19,14 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
     mapManager.withMap((m) => {
         ezStore.set('map', m)
 
+        m.off('click', fillId, clickHandler)
         // Add a geojson source
         m.addSource(srcId, {
             type: 'geojson',
             data: gridGeoJson,
         })
-        // Add a line layer for **grid line visualization**
+
+        // Layer A: Grid Lines
         m.addLayer({
             id: lineId,
             type: 'line',
@@ -38,21 +40,8 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
                 'line-opacity': 0.3,
             },
         })
-        // Add a invisible fill layer for **grid picking**
-        m.addLayer({
-            id: fillId,
-            type: 'fill',
-            source: srcId,
-            metadata: {
-                'user-label': '格网填充图层', 
-            },
-            paint: {
-                'fill-color': '#00FFFF',
-                'fill-opacity': ['coalesce', ['to-number', ['get', 'opacity']], 0.01],
-            },
-        })
-
-        // Add a filterable fill layer for **grid highlighting**
+        
+        // Layer B: Highlight (高亮层放在中间)
         // const nowSelectedGrids = Array.from(gridStore.selectedGrids) || ['']
         m.addLayer({
             id: highlightId,
@@ -62,17 +51,38 @@ export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
                 'user-label': '格网高亮图层', 
             },
             paint: {
-                // 'fill-color': '#FF9900',
                 'fill-color': '#0000FF',
                 'fill-opacity': 0.3,
             },
-            // filter: ['in', 'id', ...nowSelectedGrids],
-            filter: ['in', 'id', ''],
+            filter: ['in', 'id', ''], // 初始为空
+        })
+
+        // Layer C: Picking Layer (点击层放在最上面！)
+        // 这样无论下面是否高亮，鼠标最先接触的都是这个透明层，确保事件响应
+        m.addLayer({
+            id: fillId,
+            type: 'fill',
+            source: srcId,
+            metadata: {
+                'user-label': '格网填充图层', 
+            },
+            paint: {
+                'fill-color': '#00FFFF',
+                // 使用极低的透明度而不是0，确保某些浏览器/Mapbox版本能通过拾取测试
+                'fill-opacity': ['coalesce', ['to-number', ['get', 'opacity']], 0.001], 
+            },
         })
 
         // 左键点击 fill 区域，更新高亮
         m.on('click', fillId, clickHandler)
 
+        m.on('mouseenter', fillId, () => {
+            m.getCanvas().style.cursor = 'pointer'
+        })
+        m.on('mouseleave', fillId, () => {
+            m.getCanvas().style.cursor = ''
+        })
+        
         // Add a click event listener to the invisible fill layer
         m.on('contextmenu', fillId, () => {
             // TODO

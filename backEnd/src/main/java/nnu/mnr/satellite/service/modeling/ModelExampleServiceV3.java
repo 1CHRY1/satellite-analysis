@@ -251,6 +251,7 @@ public class ModelExampleServiceV3 {
         JSONObject calcEOCubeParam = JSONObject.of("tiles", tileIds, "scenes", modelServerSceneDTOs, "cloud", 0, "resolution", resolution, "bandList", bandList);
         calcEOCubeParam.put("resample", eoCubeFetchDto.getDataSet().getResample());
         calcEOCubeParam.put("period", eoCubeFetchDto.getDataSet().getPeriod());
+        calcEOCubeParam.put("dataSet", eoCubeFetchDto.getDataSet());
         JSONObject caseJsonObj = JSONObject.of("boundary", boundary, "address", address, "resolution", resolution, "sceneIds", sceneIds, "dataSet", JSON.toJSONString(eoCubeFetchDto.getDataSet()));
         caseJsonObj.put("regionId", regionId);
         caseJsonObj.put("bandList", bandList);
