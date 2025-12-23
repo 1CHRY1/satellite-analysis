@@ -718,7 +718,7 @@
 
 <script setup lang="ts">
 import MapComp from '@/components/feature/map/mapComp.vue'
-import { onMounted } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import { BorderBox12 as DvBorderBox12 } from '@kjgl77/datav-vue3'
 import noCloudHistory from '@/components/dataCenter/noCloud/noCloudHistory.vue'
 import { formatTime } from '@/util/common'

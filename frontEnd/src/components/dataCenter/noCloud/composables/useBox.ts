@@ -49,14 +49,23 @@ const sensorOptions = ref([])
 
 // 单击格网响应函数
 export const clickHandler = async (e: MapMouseEvent): Promise<void> => {
-    // 通知响应式变量
-    if (e.features) {
-        const f = e.features[0]
-        selectedGrid.value = {
-            columnId: f.properties?.columnId,
-            rowId: f.properties?.rowId,
-            resolution: f.properties?.resolution,
-        }
+    console.log(e)
+    console.log(e.features)
+    if (!e.features || e.features.length === 0) {
+        console.warn('点击事件触发，但未捕获到 Feature。可能是渲染未完成或图层遮挡。')
+        return
+    }
+
+    const f = e.features[0]
+    
+    // 确保属性存在
+    if (!f.properties) return message.warning("属性不存在")
+
+    // 更新 Ref
+    selectedGrid.value = {
+        columnId: f.properties.columnId,
+        rowId: f.properties.rowId,
+        resolution: f.properties.resolution,
     }
     console.log('当前已选择格网', selectedGrid.value)
 
