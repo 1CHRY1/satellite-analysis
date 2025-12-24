@@ -73,7 +73,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch, reactive, type ComputedRef, nextTick } from 'vue'
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-vue-next'
-import { getGrid2DDEMUrl, getGrid3DUrl, getGridDEMUrl, getGridNDVIOrSVRUrl, getGridSceneUrl, getImgStats, getMinIOUrl } from '@/api/http/interactive-explore/visualize.api'
+import { getGrid2DDEMUrl, getGrid3DUrl, getGridDEMUrl, getGridNDVIOrSVRUrl, getGridOneBandUrl, getGridSceneUrl, getImgStats, getMinIOUrl } from '@/api/http/interactive-explore/visualize.api'
 import bus from '@/store/bus'
 import { ezStore } from '@/store'
 import * as GridExploreMapOps from '@/util/map/operation/grid-explore'
@@ -466,6 +466,19 @@ const handleClick = async (index: number) => {
                 nodata: img.nodata
             })
             GridExploreMapOps.map_addGridNDVIOrSVRLayer(
+                grid.value,
+                url,
+            )
+            console.log('nodata',img.nodata,img)
+        } else if (['lai' , 'fvc' , 'fpar' , 'lst' , 'lse' , 'npp' , 'gpp' , 'et' , 'wue' , 'cue' , 'esi' , 'apar' , 'bba' , 'aridity_index' , 'vcf'].includes(img.dataType)) {
+            const url = getGridOneBandUrl(grid.value, {
+                fullTifPath: redPath,
+                min: min_r,
+                max: max_r,
+                normalize_level: scaleRate.value,
+                nodata: img.nodata
+            })
+            GridExploreMapOps.map_addGridOneBandLayer(
                 grid.value,
                 url,
             )

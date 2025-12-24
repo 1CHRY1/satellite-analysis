@@ -38,7 +38,7 @@ export namespace Grid {
         }
     }
 
-    export type ThemeCategory = 'dem' | 'dsm' | 'ndvi' | 'svr' | '3d' | 'other'
+    export type ThemeCategory = 'dem' | 'dsm' | 'ndvi' | 'svr' | '3d' | 'lai' | 'fvc' | 'fpar' | 'lst' | 'lse' | 'npp' | 'gpp' | 'et' | 'wue' | 'cue' | 'esi' | 'apar' | 'bba' | 'aridity_index' | 'vcf' | 'other'
 
     export type ThemeDetail = {
         sceneId: string,

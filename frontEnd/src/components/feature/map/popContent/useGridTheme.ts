@@ -127,6 +127,13 @@ export const useGridTheme = () => {
             // console.log(sceneInfo.bandMapper)
             for (let bandImg of themeInfo.images) {
                 // 后端返回的BandMapper如果是单波段的话，Red Green 和 Blue相同
+                if (!themeInfo?.bandMapper?.Red || !themeInfo?.bandMapper?.Green || !themeInfo?.bandMapper?.Blue) {
+                    // 有可能传感器bandconfig没记录，单波段？
+                    redPath = bandImg.bucket + '/' + bandImg.tifPath
+                    greenPath = bandImg.bucket + '/' + bandImg.tifPath
+                    bluePath = bandImg.bucket + '/' + bandImg.tifPath
+                    continue
+                } 
                 if (themeInfo.bandMapper.Red == bandImg.band) {
                     redPath = bandImg.bucket + '/' + bandImg.tifPath
                 }

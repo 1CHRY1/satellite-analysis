@@ -13,6 +13,7 @@ import {
     getLargeSceneMosaicUrl,
     getLargeSceneUrl,
     get2DDEMUrl,
+    getOneBandUrl,
 } from '@/api/http/interactive-explore/visualize.api'
 import type { Marker } from 'mapbox-gl'
 import type { POIInfo, ProductType } from '@/type/interactive-explore/filter'
@@ -473,6 +474,23 @@ export const useVisualize = () => {
             case 'svr':
                 handleShowNDVIOrSVR(themeName)
                 break
+            case 'lai':
+            case 'fvc':
+            case 'fpar':
+            case 'lst':
+            case 'lse':
+            case 'npp':
+            case 'gpp':
+            case 'et':
+            case 'wue':
+            case 'cue':
+            case 'esi':
+            case 'apar':
+            case 'bba':
+            case 'aridity_index':
+            case 'vcf':
+                handleShowOneBand(themeName);
+                break;
         }
     }
     const handleShowDEM = async (themeName: string) => {
@@ -485,6 +503,10 @@ export const useVisualize = () => {
         const url = await getNDVIOrSVRUrl(themeName, curGridsBoundary.value)
         InteractiveExploreMapOps.map_addNDVIOrSVRLayer(url)
     }
+    const handleShowOneBand = async (themeName: string) => {
+        const url = await getOneBandUrl(themeName, curGridsBoundary.value)
+        InteractiveExploreMapOps.map_addOneBandLayer(url)
+    }
     const handleShow3D = async (themeName: string) => {
         const url = await get3DUrl(themeName, curGridsBoundary.value)
         InteractiveExploreMapOps.map_add3DLayer(url)
@@ -495,6 +517,7 @@ export const useVisualize = () => {
 
             destroy3D()
             destroyNDVIOrSVR()
+            destroyOneBand()
             // TODO: 删除其他产品图层
         } else {
             switch (dataType) {
@@ -513,6 +536,23 @@ export const useVisualize = () => {
                 case 'svr':
                     destroyNDVIOrSVR()
                     break
+                case 'lai':
+                case 'fvc':
+                case 'fpar':
+                case 'lst':
+                case 'lse':
+                case 'npp':
+                case 'gpp':
+                case 'et':
+                case 'wue':
+                case 'cue':
+                case 'esi':
+                case 'apar':
+                case 'bba':
+                case 'aridity_index':
+                case 'vcf':
+                    destroyOneBand()
+                    break
             }
         }
     }
@@ -524,6 +564,9 @@ export const useVisualize = () => {
     }
     const destroyNDVIOrSVR = () => {
         InteractiveExploreMapOps.map_destroyNDVIOrSVRLayer()
+    }
+    const destroyOneBand = () => {
+        InteractiveExploreMapOps.map_destroyOneBandLayer()
     }
     const destroy3D = () => {
         InteractiveExploreMapOps.map_destroy3DLayer()
