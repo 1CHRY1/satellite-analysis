@@ -271,7 +271,7 @@
                                                         </div>
                                                         <div class="config-control flex-col !items-start w-full">
                                                             <div v-if="publishedSceneTools.length"
-                                                                class="flex w-full flex-col gap-3">
+                                                                class="flex w-full flex-col gap-3 max-h-[520px] overflow-y-auto pr-2" style="scrollbar-width: thin; scrollbar-color: #4a5568 #1a202c;">
                                                                 <div v-for="tool in publishedSceneTools" :key="tool.id"
                                                                     class="w-full rounded-xl border border-[#1c2a3f] bg-[#0b1221]/80 px-4 py-3 shadow-inner transition-colors duration-200 hover:border-[#38bdf8] cursor-pointer"
                                                                     @click="handleInvokeSceneTool(tool.id)">
@@ -507,7 +507,7 @@
                                             </div>
                                             <div class="config-control flex-col !items-start w-full">
                                                 <div v-if="publishedCubeTools.length"
-                                                    class="flex w-full flex-col gap-3">
+                                                    class="flex w-full flex-col gap-3 max-h-[520px] overflow-y-auto pr-2" style="scrollbar-width: thin; scrollbar-color: #4a5568 #1a202c;">
                                                     <div v-for="tool in publishedCubeTools" :key="tool.id" :class="[
                                                         'w-full rounded-xl border border-[#1c2a3f] bg-[#0b1221]/80 px-4 py-3 shadow-inner transition-colors duration-200 hover:border-[#38bdf8] cursor-pointer',
                                                         { 'border-[#38bdf8] bg-[#14243f]': activeCubeToolId === tool.id }
