@@ -118,8 +118,8 @@ public class ModelExampleServiceV3 {
             AbstractMap.SimpleEntry<Double, Geometry> coverageInfo = sceneDataService.calculateCoveragePercentage(scene.getBoundingBox(), tileBoundingBox);
             double coverage = coverageInfo.getKey();
             Geometry coverageGeometry = coverageInfo.getValue();
-            // 已覆盖区域覆盖了新覆盖区域90%以上，跳过这一个新景
-            if (coverage > 0.0 && sceneDataService.calculateCoveragePercentage(unionCoverage, coverageGeometry).getKey() < 0.9) {
+            // 已覆盖区域覆盖了新覆盖区域80%以上，跳过这一个新景
+            if (coverage > 0.0 && sceneDataService.calculateCoveragePercentage(unionCoverage, coverageGeometry).getKey() < 0.8) {
                 unionCoverage = unionCoverage.union(coverageGeometry);
                 NoCloudConfigVO noCloudConfigVO = new NoCloudConfigVO();
                 noCloudConfigVO.setSensorName(sensorName);
@@ -182,14 +182,17 @@ public class ModelExampleServiceV3 {
 
     //全国范围低zoom下的可视化
     public CommonResultVO createLowLevelScenesVisualizationConfig(VisualizationLowLevelTile visualizationLowLevelTile, Map<String, String> headers, Map<String, String> cookies) throws IOException {
-        // TODO:
         GridsAndGridsBoundary gridsAndGridsBoundary = regionDataService.getGridsByRegionAndResolution(100000, 150);
         String sensorName = visualizationLowLevelTile.getSensorName();
         String startTime = visualizationLowLevelTile.getStartTime();
         String endTime = visualizationLowLevelTile.getEndTime();
         Integer regionId = visualizationLowLevelTile.getRegionId();
+        String locationId = visualizationLowLevelTile.getLocationId();
+        Integer resolution = visualizationLowLevelTile.getResolution();
         String visualizationUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("createLowLevelMosaic");
         JSONObject visualizationParam = JSONObject.of("sensorName", sensorName, "startTime", startTime, "endTime", endTime, "gridsAndGridsBoundary", gridsAndGridsBoundary, "regionId", regionId);
+        visualizationParam.put("locationId", locationId);
+        visualizationParam.put("resolution", resolution);
         long expirationTime = 60 * 10;
         return runModelServerModel(visualizationUrl, visualizationParam, expirationTime, headers, cookies);
     }
@@ -251,6 +254,7 @@ public class ModelExampleServiceV3 {
         JSONObject calcEOCubeParam = JSONObject.of("tiles", tileIds, "scenes", modelServerSceneDTOs, "cloud", 0, "resolution", resolution, "bandList", bandList);
         calcEOCubeParam.put("resample", eoCubeFetchDto.getDataSet().getResample());
         calcEOCubeParam.put("period", eoCubeFetchDto.getDataSet().getPeriod());
+        calcEOCubeParam.put("dataSet", eoCubeFetchDto.getDataSet());
         JSONObject caseJsonObj = JSONObject.of("boundary", boundary, "address", address, "resolution", resolution, "sceneIds", sceneIds, "dataSet", JSON.toJSONString(eoCubeFetchDto.getDataSet()));
         caseJsonObj.put("regionId", regionId);
         caseJsonObj.put("bandList", bandList);

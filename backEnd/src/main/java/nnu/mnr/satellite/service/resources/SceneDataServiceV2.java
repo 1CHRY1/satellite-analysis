@@ -154,7 +154,11 @@ public class SceneDataServiceV2 {
 
     // 联合查询
     public List<SceneSP> getScenesByIdsWithProductAndSensor(List<String> sceneIds) {
-        return sceneRepo.getScenesByIdsWithProductAndSensor(sceneIds);
+        String themeCodes = SceneTypeByTheme.getAllCodes().stream()
+                .map(code -> "'" + code + "'")
+                .collect(Collectors.joining(", "));
+        String dataType = "'satellite', " + themeCodes;
+        return sceneRepo.getScenesByIdsWithProductAndSensor(sceneIds, dataType);
     }
     // 数据库中求相交
 //    public List<SceneSP> getScenesByIdsAndGridWithProductAndSensor(List<String> sceneIds, String wkt) {

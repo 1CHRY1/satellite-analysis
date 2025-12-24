@@ -163,5 +163,95 @@
     "Green": "1",
     "Blue": "1",
     "NIR": "1"
+  },
+   "LAI": {
+    "Red": "1",
+    "Green": "1",
+    "Blue": "1",
+    "NIR": "1"
+  },
+  "FVC": {
+    "Red": "1",
+    "Green": "1",
+    "Blue": "1",
+    "NIR": "1"
+  },
+  "FPAR": {
+    "Red": "1",
+    "Green": "1",
+    "Blue": "1",
+    "NIR": "1"
+  },
+  "LST": {
+    "Red": "1",
+    "Green": "1",
+    "Blue": "1",
+    "NIR": "1"
+  },
+  "LSE": {
+    "Red": "1",
+    "Green": "1",
+    "Blue": "1",
+    "NIR": "1"
+  },
+  "NPP": {
+    "Red": "1",
+    "Green": "1",
+    "Blue": "1",
+    "NIR": "1"
+  },
+  "GPP": {
+    "Red": "1",
+    "Green": "1",
+    "Blue": "1",
+    "NIR": "1"
+  },
+  "ET": {
+    "Red": "1",
+    "Green": "1",
+    "Blue": "1",
+    "NIR": "1"
+  },
+  "WUE": {
+    "Red": "1",
+    "Green": "1",
+    "Blue": "1",
+    "NIR": "1"
+  },
+  "CUE": {
+    "Red": "1",
+    "Green": "1",
+    "Blue": "1",
+    "NIR": "1"
+  },
+  "ESI": {
+    "Red": "1",
+    "Green": "1",
+    "Blue": "1",
+    "NIR": "1"
+  },
+  "APAR": {
+    "Red": "1",
+    "Green": "1",
+    "Blue": "1",
+    "NIR": "1"
+  },
+  "BBA": {
+    "Red": "1",
+    "Green": "1",
+    "Blue": "1",
+    "NIR": "1"
+  },
+  "ARIDITY_INDEX": {
+    "Red": "1",
+    "Green": "1",
+    "Blue": "1",
+    "NIR": "1"
+  },
+  "VCF": {
+    "Red": "1",
+    "Green": "1",
+    "Blue": "1",
+    "NIR": "1"
   }
 }

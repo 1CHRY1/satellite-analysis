@@ -270,7 +270,7 @@ def get_tile(
 
             if use_single_scene:
                 break
-            elif filled_ratio >= 0.95:
+            elif filled_ratio >= 0.999:
                 break
         
 

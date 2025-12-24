@@ -41,7 +41,10 @@ export namespace VectorStats {
         tableName: string,
         vectorName: string,
         time: string,
-        fields: string[],
+        fields: {
+            continuous: string[],
+            discrete: string[]
+        },
     }
 
     export interface VectorStatsResponse extends Array<Vector> { }

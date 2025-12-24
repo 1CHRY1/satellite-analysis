@@ -73,7 +73,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch, reactive, type ComputedRef, nextTick } from 'vue'
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-vue-next'
-import { getGrid2DDEMUrl, getGrid3DUrl, getGridDEMUrl, getGridNDVIOrSVRUrl, getGridSceneUrl, getImgStats, getMinIOUrl } from '@/api/http/interactive-explore/visualize.api'
+import { getGrid2DDEMUrl, getGrid3DUrl, getGridDEMUrl, getGridNDVIOrSVRUrl, getGridOneBandUrl, getGridSceneUrl, getImgStats, getMinIOUrl } from '@/api/http/interactive-explore/visualize.api'
 import bus from '@/store/bus'
 import { ezStore } from '@/store'
 import * as GridExploreMapOps from '@/util/map/operation/grid-explore'
@@ -311,7 +311,7 @@ const handleClick = async (index: number) => {
     if (visualMode.value === 'rgb') {
         const img = currentImage as MultiImageInfoType
 
-        let redPath,greenPath,bluePath
+        let redPath, greenPath, bluePath
 
         const currentGridKey = `${grid.value.rowId}-${grid.value.columnId}-${grid.value.resolution}`
         const gridSuperRes = superResOverride.value.get(currentGridKey)
@@ -435,7 +435,6 @@ const handleClick = async (index: number) => {
             GridExploreMapOps.map_addGrid2DDEMLayer(
                 grid.value,
                 url,
-                stopLoading,
             )
 
         } else if (img.dataType === '3d') {
@@ -455,7 +454,6 @@ const handleClick = async (index: number) => {
             GridExploreMapOps.map_addGrid3DLayer(
                 grid.value,
                 url,
-                stopLoading,
             )
         } else if (img.dataType === 'svr' || img.dataType === 'ndvi') {
             const url = getGridNDVIOrSVRUrl(grid.value, {
@@ -470,7 +468,19 @@ const handleClick = async (index: number) => {
             GridExploreMapOps.map_addGridNDVIOrSVRLayer(
                 grid.value,
                 url,
-                stopLoading,
+            )
+            console.log('nodata',img.nodata,img)
+        } else if (['lai' , 'fvc' , 'fpar' , 'lst' , 'lse' , 'npp' , 'gpp' , 'et' , 'wue' , 'cue' , 'esi' , 'apar' , 'bba' , 'aridity_index' , 'vcf'].includes(img.dataType)) {
+            const url = getGridOneBandUrl(grid.value, {
+                fullTifPath: redPath,
+                min: min_r,
+                max: max_r,
+                normalize_level: scaleRate.value,
+                nodata: img.nodata
+            })
+            GridExploreMapOps.map_addGridOneBandLayer(
+                grid.value,
+                url,
             )
             console.log('nodata',img.nodata,img)
         }

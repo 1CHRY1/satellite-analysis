@@ -14,9 +14,10 @@ from dataProcessing.config import current_config as CONFIG
 import requests
 from datetime import datetime
 from typing import List, Dict, Any, Optional
-
+import numpy as np
 from datetime import datetime
 from typing import List, Dict, Any, Optional
+from rasterio.enums import Resampling
 
 ###################### 与 计算复杂无云一版图不一样的地方 ##########################
 # 0. 核心思想就是外层加了个周期，里面还是景列表的处理
@@ -154,6 +155,130 @@ class SceneAggregator:
                 result_dict[key].append(scene)
 
         return result_dict
+
+
+def merge_time_series_cubes(results_by_period, grids, time_keys, temp_dir, band_num, resample='upscale'):
+    """
+    输入：
+        ...
+        resample: 'upscale' (对齐到最大分辨率/最大尺寸) 或 'downscale' (对齐到最小分辨率/最小尺寸)
+    """
+    print(f"Start merging cubes with strategy: {resample}...", flush=True)
+    
+    # 1. 数据重组
+    grid_map = {}
+    for g in grids:
+        grid_map[tuple(g)] = {k: None for k in time_keys} 
+
+    for t_key, res_list in results_by_period.items():
+        if not res_list: continue
+        for item in res_list:
+            if item is None: continue
+            tif_path, gx, gy = item
+            if (gx, gy) in grid_map:
+                grid_map[(gx, gy)][t_key] = tif_path
+
+    merged_results = []
+    cube_dir = os.path.join(temp_dir, "cubes")
+    os.makedirs(cube_dir, exist_ok=True)
+
+    # 2. 遍历每个格网
+    for (gx, gy), time_files in grid_map.items():
+        
+        # ====================【修改点1：第一遍扫描，确定目标尺寸】====================
+        valid_metas = [] # 存储 (width, height, transform, path)
+        
+        for t_key, t_path in time_files.items():
+            if t_path and os.path.exists(t_path):
+                with rasterio.open(t_path) as src:
+                    valid_metas.append({
+                        "width": src.width,
+                        "height": src.height,
+                        "transform": src.transform,
+                        "path": t_path
+                    })
+        
+        if not valid_metas:
+            print(f"Grid {gx}_{gy} has no data, skipping.", flush=True)
+            continue
+
+        # 根据 upscale/downscale 决定基准尺寸
+        # upscale: 选像素数最多的 (分辨率最高的)
+        # downscale: 选像素数最少的 (分辨率最低的)
+        if resample == 'downscale':
+            # 按 (width * height) 升序排，取最小的
+            target_meta = sorted(valid_metas, key=lambda x: x["width"] * x["height"])[0]
+        else:
+            # 默认 upscale，按降序排，取最大的
+            target_meta = sorted(valid_metas, key=lambda x: x["width"] * x["height"], reverse=True)[0]
+            
+        target_w = target_meta["width"]
+        target_h = target_meta["height"]
+        target_transform = target_meta["transform"]
+        
+        # ===========================================================================
+
+        total_bands = band_num * len(time_keys)
+        stacked_data = []
+        
+        # ====================【修改点2：第二遍读取，强制重采样对齐】====================
+        for t_key in time_keys:
+            current_tif = time_files[t_key]
+            
+            if current_tif and os.path.exists(current_tif):
+                with rasterio.open(current_tif) as src:
+                    # 判断当前文件尺寸是否与目标尺寸一致
+                    if src.width != target_w or src.height != target_h:
+                        # 尺寸不一致，进行重采样读取
+                        # 使用 nearest 保证值不会出现类似 1.5 这种小数，尤其是分类/掩膜数据
+                        # 如果是连续影像(RGB)，也可以考虑 Resampling.bilinear
+                        data = src.read(
+                            out_shape=(src.count, target_h, target_w),
+                            resampling=Resampling.nearest 
+                        )
+                    else:
+                        data = src.read()
+
+                    # 波段数对齐检查
+                    if data.shape[0] < band_num:
+                        pad = np.zeros((band_num - data.shape[0], target_h, target_w), dtype=np.uint8)
+                        data = np.concatenate((data, pad), axis=0)
+                    
+                    stacked_data.append(data[:band_num])
+            else:
+                # 无数据，直接生成目标尺寸的空数组
+                empty_chunk = np.zeros((band_num, target_h, target_w), dtype=np.uint8)
+                stacked_data.append(empty_chunk)
+        # ===========================================================================
+
+        final_array = np.concatenate(stacked_data, axis=0)
+        out_path = os.path.join(cube_dir, f"cube_{gx}_{gy}.tif")
+        
+        try:
+            with rasterio.open(
+                out_path, 'w',
+                driver='COG',
+                height=target_h,
+                width=target_w,
+                count=total_bands,
+                dtype=np.uint8,
+                crs='EPSG:4326',
+                transform=target_transform, # 使用选定基准的 transform
+                BIGTIFF='YES',
+                NUM_THREADS="ALL_CPUS",
+                BLOCKSIZE=256,
+                COMPRESS='LZW',
+                OVERVIEWS='AUTO',
+                OVERVIEW_RESAMPLING='NEAREST'
+            ) as dst:
+                dst.write(final_array)
+            merged_results.append((out_path, gx, gy))
+            
+        except Exception as e:
+            print(f"Error writing cube {gx}_{gy}: {e}", flush=True)
+
+    print(f"Merged {len(merged_results)} grids.", flush=True)
+    return merged_results
 
 @ray.remote(num_cpus=CONFIG.RAY_NUM_CPUS, memory=CONFIG.RAY_MEMORY_PER_TASK)
 def process_grid(grid, scenes_by_period_json_file, scene_band_paths_json_file, grid_helper, minio_endpoint, temp_dir_path, band_num, cur_key, resample):
@@ -444,7 +569,7 @@ def process_grid(grid, scenes_by_period_json_file, scene_band_paths_json_file, g
         # 读取RGB并保存tif
         img = np.stack(img_list)
 
-        tif_path = os.path.join(temp_dir_path, f"{grid_x}_{grid_y}.tif")
+        tif_path = os.path.join(temp_dir_path, f"{cur_key}_{grid_x}_{grid_y}.tif")
         transform = from_bounds(*bbox, img.shape[2], img.shape[1])
         with rasterio.open(
             tif_path, 'w',
@@ -548,6 +673,7 @@ class calc_eo_cube(Task):
         ## Step 1.2 : Get Scenes By Period #################################################
         aggregator = SceneAggregator(scenes=scenes)
         scenesByPeriod = aggregator.aggregate_scenes(self.period)
+        time_keys = sorted(list(scenesByPeriod.keys()))
 
         ## Step 2 : Multithread Processing 4 Grids #############################
         grid_helper = GridHelper(gridResolution)
@@ -603,7 +729,7 @@ class calc_eo_cube(Task):
         # 序列化数据到临时文件
         scenes_by_period_json_file, scene_band_paths_json_file = serialize_data_to_temp_files(scenesByPeriod, scene_band_paths)
         
-        
+        ## Step 3 : Process #############################
         # 使用ray
         from dataProcessing.model.scheduler import init_scheduler
         all_ray_tasks = [] # 用于 scheduler 的扁平列表
@@ -638,7 +764,7 @@ class calc_eo_cube(Task):
                 resultsByPeriod[key] = []
 
         # 不使用ray
-        # # results按周期组织。一个周期，对应一个mosaicJSON，通常只有一个格网
+        # results按周期组织。一个周期，对应一个mosaicJSON，通常只有一个格网
         # resultsByPeriod = { key: [] for key in scenesByPeriod.keys() }
         # for cur_key, cur_item in scenesByPeriod.items():
         #     if len(cur_item) == 0:
@@ -647,57 +773,90 @@ class calc_eo_cube(Task):
         #         result = process_grid(g, scenes_by_period_json_file, scene_band_paths_json_file, grid_helper, MINIO_ENDPOINT, temp_dir_path, band_num, cur_key = cur_key, resample=self.resample)
         #         resultsByPeriod[cur_key].append(result)
 
-        ## Step 3 : Results Uploading and Statistic #######################
-        upload_results_by_period = {key: [] for key in scenesByPeriod.keys()}
+        ## Step 4 : Merge Different Period to one cube #############################
+        merged_results = merge_time_series_cubes(
+            resultsByPeriod, self.tiles, time_keys, temp_dir_path, band_num, resample=self.resample
+        )
+
+        upload_results = []
         with ThreadPoolExecutor(max_workers=8) as executor:
-            future_to_period = {} 
-            for period_key, res_list in resultsByPeriod.items():
-                for result in res_list:
-                    if result is None:
-                        continue
-                    tif_path, grid_x, grid_y = result 
-                    future = executor.submit(upload_one, tif_path, period_key, grid_x, grid_y, self.task_id)
-                    future_to_period[future] = period_key 
-            for future in as_completed(future_to_period):
-                period = future_to_period[future]
-                try:
-                    res = future.result()
-                    upload_results_by_period[period].append(res)
-                except Exception as exc:
-                    print(f'Upload generated an exception: {exc}')
-        for period_key in upload_results_by_period:
-            upload_results_by_period[period_key].sort(key=lambda x: (x["grid"][0], x["grid"][1]))
-        print('end upload ', time.time(), flush=True)
+            futures = [executor.submit(upload_one, r[0], "", r[1], r[2], self.task_id) for r in merged_results]
+            for f in as_completed(futures):
+                upload_results.append(f.result())
+        
+        upload_results.sort(key=lambda x: (x["grid"][0], x["grid"][1]))
 
-        ## Step 4 : Generate MosaicJSON as result #######################
-        final_responses = {}
-        for period_key, upload_results in upload_results_by_period.items():
-            if not upload_results:
-                continue
-
-            print(f"Generating MosaicJSON for period: {period_key}", flush=True)
-            print([CONFIG.MINIO_TEMP_FILES_BUCKET + '/' + item["tifPath"] for item in upload_results], flush=True)
-            
-            # 针对当前周期(period_key)的数据发起请求
+        # 生成唯一的 MosaicJSON
+        final_mosaic_data = {}
+        if upload_results:
+            urls = [f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}/{i['bucket']}/{i['tifPath']}" for i in upload_results]
             response = requests.post(CONFIG.MOSAIC_CREATE_URL, json={
-                "files": [f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}/{item['bucket']}/{item['tifPath']}" for item in upload_results],
-                "minzoom": 7,
-                "maxzoom": 20,
-                "max_threads": 20
-            }, headers={ "Content-Type": "application/json" })
-            
-            # 打印请求的 URL、状态码和响应内容
-            print(f"[{period_key}] Request URL:", CONFIG.MOSAIC_CREATE_URL, flush=True)
-            print(f"[{period_key}] Status Code:", response.status_code, flush=True)
-            final_responses[period_key] = response.json()
+                "files": urls, "minzoom": 7, "maxzoom": 20, "max_threads": 20
+            }, headers={"Content-Type": "application/json"})
+            final_mosaic_data = response.json()
 
-
-        print('=============EOCube Task Has Finally Finished=================', flush=True)
+        # 清理并返回
         cleanup_temp_files(scenes_by_period_json_file, scene_band_paths_json_file)
         if os.path.exists(temp_dir_path):
             shutil.rmtree(temp_dir_path)
-            print('=============EOCube Origin Data Deleted=================', flush=True)
+
+        # 【修改】直接合并 Json 属性返回
         return {
-            'dimensions': list(final_responses.keys()), 
-            'data': final_responses
+            'dimensions': time_keys,
+            **final_mosaic_data  # 直接展开 MosaicJSON 内容
         }
+
+        # ## Step 3 : Results Uploading and Statistic #######################
+        # upload_results_by_period = {key: [] for key in scenesByPeriod.keys()}
+        # with ThreadPoolExecutor(max_workers=8) as executor:
+        #     future_to_period = {} 
+        #     for period_key, res_list in resultsByPeriod.items():
+        #         for result in res_list:
+        #             if result is None:
+        #                 continue
+        #             tif_path, grid_x, grid_y = result 
+        #             future = executor.submit(upload_one, tif_path, period_key, grid_x, grid_y, self.task_id)
+        #             future_to_period[future] = period_key 
+        #     for future in as_completed(future_to_period):
+        #         period = future_to_period[future]
+        #         try:
+        #             res = future.result()
+        #             upload_results_by_period[period].append(res)
+        #         except Exception as exc:
+        #             print(f'Upload generated an exception: {exc}')
+        # for period_key in upload_results_by_period:
+        #     upload_results_by_period[period_key].sort(key=lambda x: (x["grid"][0], x["grid"][1]))
+        # print('end upload ', time.time(), flush=True)
+
+        # ## Step 4 : Generate MosaicJSON as result #######################
+        # final_responses = {}
+        # for period_key, upload_results in upload_results_by_period.items():
+        #     if not upload_results:
+        #         continue
+
+        #     print(f"Generating MosaicJSON for period: {period_key}", flush=True)
+        #     print([CONFIG.MINIO_TEMP_FILES_BUCKET + '/' + item["tifPath"] for item in upload_results], flush=True)
+            
+        #     # 针对当前周期(period_key)的数据发起请求
+        #     response = requests.post(CONFIG.MOSAIC_CREATE_URL, json={
+        #         "files": [f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}/{item['bucket']}/{item['tifPath']}" for item in upload_results],
+        #         "minzoom": 7,
+        #         "maxzoom": 20,
+        #         "max_threads": 20
+        #     }, headers={ "Content-Type": "application/json" })
+            
+        #     # 打印请求的 URL、状态码和响应内容
+        #     print(f"[{period_key}] Request URL:", CONFIG.MOSAIC_CREATE_URL, flush=True)
+        #     print(f"[{period_key}] Status Code:", response.status_code, flush=True)
+        #     final_responses[period_key] = response.json()
+
+
+        # print('=============EOCube Task Has Finally Finished=================', flush=True)
+        # cleanup_temp_files(scenes_by_period_json_file, scene_band_paths_json_file)
+        # if os.path.exists(temp_dir_path):
+        #     shutil.rmtree(temp_dir_path)
+        #     print('=============EOCube Origin Data Deleted=================', flush=True)
+        # return {
+        #     'dimensions': list(final_responses.keys()), 
+        #     'data': final_responses
+        # }

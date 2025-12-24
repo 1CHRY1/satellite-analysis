@@ -13,11 +13,19 @@ import type { CubeRequest } from '@/api/http/analytics-display/cube.type'
 import { NumberFormat } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import { getEOCube } from '@/api/http/satellite-data'
+import { getGridSceneUrl, getImgStats, getMinIOUrl } from '@/api/http/interactive-explore'
+import type { GridData } from '@/type/interactive-explore/grid'
+import * as GridExploreMapOps from '@/util/map/operation/grid-explore'
 
 type GridInfo = {
     columnId: number
     rowId: number
     resolution: number
+}
+type SceneImage = {
+    bucket: string
+    tifPath: string
+    band: string
 }
 type Scene = {
     sceneId: string
@@ -26,7 +34,7 @@ type Scene = {
     platformName: string
     productName: string
     noData: number
-    images: any[]
+    images: SceneImage[]
     bandMapper: any
     boundingBox: any
 }
@@ -41,14 +49,23 @@ const sensorOptions = ref([])
 
 // 单击格网响应函数
 export const clickHandler = async (e: MapMouseEvent): Promise<void> => {
-    // 通知响应式变量
-    if (e.features) {
-        const f = e.features[0]
-        selectedGrid.value = {
-            columnId: f.properties?.columnId,
-            rowId: f.properties?.rowId,
-            resolution: f.properties?.resolution,
-        }
+    console.log(e)
+    console.log(e.features)
+    if (!e.features || e.features.length === 0) {
+        console.warn('点击事件触发，但未捕获到 Feature。可能是渲染未完成或图层遮挡。')
+        return
+    }
+
+    const f = e.features[0]
+    
+    // 确保属性存在
+    if (!f.properties) return message.warning("属性不存在")
+
+    // 更新 Ref
+    selectedGrid.value = {
+        columnId: f.properties.columnId,
+        rowId: f.properties.rowId,
+        resolution: f.properties.resolution,
     }
     console.log('当前已选择格网', selectedGrid.value)
 
@@ -68,6 +85,9 @@ export const clickHandler = async (e: MapMouseEvent): Promise<void> => {
     getSensorOptions()
 }
 
+/**
+ * 时序立方体传感器数据列表
+ */
 // 获取格网传感器options
 const getSensorOptions = () => {
     // 先map后平铺成scene的列表，为避免重复数据，所以用Map和迭代器做了去重
@@ -154,6 +174,7 @@ export const useBox = () => {
         )
     })
 
+    // 判断现在是否可以合成
     const canSynthesize = computed(() => {
         return (
             formData.sensors.length > 0 &&
@@ -179,6 +200,7 @@ export const useBox = () => {
         console.log('时间范围变化:', dates)
     }
 
+    // 生成cube缓存
     const handleGenCache = async () => {
         try {
             DataPreparationMapOps.map_destrod3DBoxLayer()
@@ -211,6 +233,7 @@ export const useBox = () => {
         }
     }
 
+    // 合成时序立方体
     const handleSynthesis = async () => {
         // 因为从后端拿到taskId需要一定时间，所以先向任务store推送一个初始化任务状态
         taskStore.setIsInitialTaskPending(true)
@@ -242,6 +265,7 @@ export const useBox = () => {
 
     const handleReset = () => {
         DataPreparationMapOps.map_destrod3DBoxLayer()
+        GridExploreMapOps.map_destroyGridSceneLayer(selectedGrid.value as any)
         selectedGrid.value = undefined
         sensorOptions.value = []
     }
@@ -255,6 +279,7 @@ export const useBox = () => {
 
     const currentCacheKey = ref('')
 
+    // 缓存内容
     const cubeContent = computed(() => {
         return {
             cubeId: `${selectedGrid.value?.rowId}-${selectedGrid.value?.columnId}-${selectedGrid.value?.resolution}`,
@@ -282,6 +307,155 @@ export const useBox = () => {
         )
     })
 
+    /**
+     * 时序立方体可视化预览
+     */
+
+    // 表单数据
+    const visFormData = reactive({
+        R: undefined as string | undefined,
+        G: undefined as string | undefined,
+        B: undefined as string | undefined,
+    })
+
+    const availableScenes = computed(() => {
+        const { sensors, bands, dates } = formData
+        if (!sensors.length || !bands.length || !dates.length) return []
+        return sceneList.value.filter(
+            (item) =>
+                sensors.includes(item.sensorName) &&
+                dates.some((d) => dayjs(d).isSame(dayjs(item.sceneTime), 'day')),
+        )
+    })
+
+    const mapToOptions = (scenes, channel) => {
+        return scenes
+            .map((scene) => {
+                // 从 bandMapper 动态获取对应通道的波段号 (Red/Green/Blue)
+                const targetBandId = scene.bandMapper[channel]
+                // 找到对应的图片对象
+                const targetImg = scene.images.find((img) => img.band == targetBandId)
+
+                return targetImg
+                    ? {
+                          label: `${scene.platformName}-${dayjs(scene.sceneTime).format('YYYYMMDD')}-${channel[0]}`,
+                          value: targetImg, // 这里的 value 是对象
+                      }
+                    : null
+            })
+            .filter(Boolean) // 过滤掉没找到图片的无效项
+    }
+
+    const cubeRedImages = computed(() => mapToOptions(availableScenes.value, 'Red'))
+    const cubeGreenImages = computed(() => mapToOptions(availableScenes.value, 'Green'))
+    const cubeBlueImages = computed(() => mapToOptions(availableScenes.value, 'Blue'))
+
+    // 判断现在是否可以合成
+    const canVisualize = computed(() => {
+        return (
+            formData.sensors.length > 0 &&
+            formData.bands.length > 0 &&
+            formData.dates.length > 0 &&
+            visFormData.B &&
+            visFormData.G &&
+            visFormData.B
+        )
+    })
+
+    watch(
+        () => [formData.sensors, formData.dates, formData.bands],
+        () => {
+            // 重置预览表单
+            visFormData.R = undefined
+            visFormData.G = undefined
+            visFormData.B = undefined
+        },
+        { deep: true },
+    )
+
+    const handleVisualize = async () => {
+        const currentGridKey = `${selectedGrid.value?.rowId}-${selectedGrid.value?.columnId}-${selectedGrid.value?.resolution}`
+
+        console.log('red, green, blue', visFormData.R, visFormData.G, visFormData.B)
+        let redPath = visFormData.R
+        let greenPath = visFormData.G
+        let bluePath = visFormData.B
+        const cache = ezStore.get('statisticCache')
+        const promises: any = []
+        let [
+            min_r,
+            max_r,
+            min_g,
+            max_g,
+            min_b,
+            max_b,
+            mean_r,
+            mean_g,
+            mean_b,
+            std_r,
+            std_g,
+            std_b,
+        ] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+        if (cache.get(redPath) && cache.get(greenPath) && cache.get(bluePath)) {
+            console.log('cache hit!')
+            ;[min_r, max_r, mean_r, std_r] = cache.get(redPath)
+            ;[min_g, max_g, mean_g, std_g] = cache.get(greenPath)
+            ;[min_b, max_b, mean_b, std_b] = cache.get(bluePath)
+        }
+        promises.push(
+            getImgStats(getMinIOUrl(redPath!)),
+            getImgStats(getMinIOUrl(greenPath!)),
+            getImgStats(getMinIOUrl(bluePath!)),
+        )
+        await Promise.all(promises).then((values) => {
+            min_r = values[0].b1.min
+            max_r = values[0].b1.max
+            min_g = values[1].b1.min
+            max_g = values[1].b1.max
+            min_b = values[2].b1.min
+            max_b = values[2].b1.max
+            mean_r = values[0].b1.mean
+            std_r = values[0].b1.std
+            mean_g = values[1].b1.mean
+            std_g = values[1].b1.std
+            mean_b = values[2].b1.mean
+            std_b = values[2].b1.std
+        })
+
+        cache.set(redPath, [min_r, max_r, mean_r, std_r])
+        cache.set(greenPath, [min_g, max_g, mean_g, std_g])
+        cache.set(bluePath, [min_b, max_b, mean_b, std_b])
+
+        console.log(
+            min_r,
+            max_r,
+            min_g,
+            max_g,
+            min_b,
+            max_b,
+            mean_r,
+            mean_g,
+            mean_b,
+            std_r,
+            std_g,
+            std_b,
+        )
+        const url = getGridSceneUrl(selectedGrid.value as GridData, {
+            redPath: redPath!,
+            greenPath: greenPath!,
+            bluePath: bluePath!,
+            r_min: min_r,
+            r_max: max_r,
+            g_min: min_g,
+            g_max: max_g,
+            b_min: min_b,
+            b_max: max_b,
+        })
+        
+        GridExploreMapOps.map_addGridSceneLayer(selectedGrid.value as GridData, url)
+    }
+
     return {
         selectedGrid,
         updateGridLayer,
@@ -301,5 +475,11 @@ export const useBox = () => {
         cubeSceneListByDate,
         currentCacheKey,
         showCubeContentDialog,
+        cubeRedImages,
+        cubeGreenImages,
+        cubeBlueImages,
+        visFormData,
+        canVisualize,
+        handleVisualize,
     }
 }

@@ -71,7 +71,7 @@ def get_all_scenes():
     
     try:
         while True:
-            select_query = f"SELECT scene_id, scene_name FROM scene_table LIMIT {batch_size} OFFSET {offset}"
+            select_query = f"SELECT *, ST_AsText(bounding_box, 'axis-order=long-lat') as bounding_box_wkt FROM scene_table ORDER BY scene_id ASC LIMIT {batch_size} OFFSET {offset}"
             cursor.execute(select_query)
             results = cursor.fetchall()
             
@@ -86,6 +86,42 @@ def get_all_scenes():
         
     return all_results
 
+def get_scenes_by_range(start_idx, end_idx):
+    """
+    根据传入的起止序号获取数据
+    start_idx: 起始序号 (从1开始)
+    end_idx: 结束序号
+    """
+    global DB_CONFIG
+    # 计算需要跳过多少条 (offset) 和 取多少条 (limit)
+    offset = start_idx - 1
+    limit = end_idx - start_idx + 1
+    
+    connection, cursor = connect_mysql(
+        DB_CONFIG["MYSQL_HOST"], 
+        DB_CONFIG["MYSQL_RESOURCE_PORT"],
+        DB_CONFIG["MYSQL_RESOURCE_DB"], 
+        DB_CONFIG["MYSQL_USER"],
+        DB_CONFIG["MYSQL_PWD"]
+    )
+    
+    results = []
+    try:
+        # 使用 SQL 的 LIMIT 和 OFFSET 直接筛选
+        select_query = f"""
+            SELECT *, ST_AsText(bounding_box, 'axis-order=long-lat') as bounding_box_wkt 
+            FROM scene_table 
+            ORDER BY scene_id ASC
+            LIMIT {limit} OFFSET {offset}
+        """
+        cursor.execute(select_query)
+        results = cursor.fetchall()
+    finally:
+        cursor.close()
+        connection.close()
+        
+    return results
+
 def delete_scene_by_id(scene_id):
     global DB_CONFIG
     connection, cursor = connect_mysql(DB_CONFIG["MYSQL_HOST"], DB_CONFIG["MYSQL_RESOURCE_PORT"],
@@ -93,6 +129,21 @@ def delete_scene_by_id(scene_id):
                                        DB_CONFIG["MYSQL_PWD"])
     delete_query = "DELETE FROM scene_table WHERE scene_id = %s"
     cursor.execute(delete_query, (scene_id,))
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+def update_scene_by_id(scene_id, new_wkt):
+    global DB_CONFIG
+    connection, cursor = connect_mysql(DB_CONFIG["MYSQL_HOST"], DB_CONFIG["MYSQL_RESOURCE_PORT"],
+                                       DB_CONFIG["MYSQL_RESOURCE_DB"], DB_CONFIG["MYSQL_USER"],
+                                       DB_CONFIG["MYSQL_PWD"])
+    sql = """
+        UPDATE scene_table
+        SET bounding_box = ST_GeomFromText(%s, 4326, 'axis-order=long-lat')
+        WHERE scene_id = %s
+    """
+    cursor.execute(sql, (new_wkt, scene_id))
     connection.commit()
     cursor.close()
     connection.close()
@@ -113,7 +164,7 @@ def get_images_by_scene_id(scene_id):
     connection, cursor = connect_mysql(DB_CONFIG["MYSQL_HOST"], DB_CONFIG["MYSQL_RESOURCE_PORT"],
                                        DB_CONFIG["MYSQL_RESOURCE_DB"], DB_CONFIG["MYSQL_USER"],
                                        DB_CONFIG["MYSQL_PWD"])
-    select_query = "SELECT image_id, tif_path FROM image_table WHERE scene_id = %s"
+    select_query = "SELECT image_id, bucket, tif_path FROM image_table WHERE scene_id = %s"
     cursor.execute(select_query, (scene_id,))
     result = cursor.fetchall()
     cursor.close()

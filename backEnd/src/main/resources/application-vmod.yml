@@ -1,6 +1,7 @@
 server:
   tomcat:
     connection-timeout: 30000
+    keep-alive-timeout: 60000
   port: 8999
 
 netty:
@@ -37,6 +38,7 @@ spring:
             min-idle: 5
             max-wait: 60000
             validation-query: SELECT 1
+            socket-timeout: 1200000  # 20分钟
             init-connection-sqls: SET SESSION group_concat_max_len = 18446744073709551615
             filters: stat,wall
             wall:
@@ -44,7 +46,7 @@ spring:
               drop-table-allow: false
               alter-table-allow: false
             stat:
-              slow-sql-millis: 1000
+              slow-sql-millis: 2000
               log-slow-sql: true
               merge-sql: true
         mysql-ard-iam:
@@ -59,6 +61,7 @@ spring:
             min-idle: 5
             max-wait: 60000
             validation-query: SELECT 1
+            socket-timeout: 1200000  # 20分钟
             init-connection-sqls: SET SESSION group_concat_max_len = 18446744073709551615
             filters: stat,wall
             wall:
@@ -66,7 +69,7 @@ spring:
               drop-table-allow: false
               alter-table-allow: false
             stat:
-              slow-sql-millis: 200
+              slow-sql-millis: 2000
               log-slow-sql: true
               merge-sql: true
         mysql-ard-dev:
@@ -81,6 +84,7 @@ spring:
             min-idle: 5
             max-wait: 60000
             validation-query: SELECT 1
+            socket-timeout: 1200000  # 20分钟
             init-connection-sqls: SET SESSION group_concat_max_len = 18446744073709551615
             filters: stat,wall
             wall:
@@ -88,7 +92,7 @@ spring:
               drop-table-allow: false
               alter-table-allow: false
             stat:
-              slow-sql-millis: 200
+              slow-sql-millis: 2000
               log-slow-sql: true
               merge-sql: true
         pg-satellite:
@@ -110,7 +114,7 @@ spring:
               drop-table-allow: false
               alter-table-allow: false
             stat:
-              slow-sql-millis: 1000
+              slow-sql-millis: 300000
               log-slow-sql: true
               merge-sql: true
     # 全局 Druid 监控配置（对所有数据源生效）
