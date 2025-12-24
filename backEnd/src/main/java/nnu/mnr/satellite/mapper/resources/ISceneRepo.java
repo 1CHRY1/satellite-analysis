@@ -183,7 +183,7 @@ public interface ISceneRepo extends BaseMapper<Scene> {
             "        1=0" +
             "    </otherwise>" +
             "</choose>" +
-            "AND ss.data_type in ('satellite', 'dem', 'svr', 'ndvi', 'dsm', '3d') " +
+            "AND ss.data_type in (${dataType}) " +
             "ORDER BY sc.scene_time ASC" +
             "</script>")
     @Results({
@@ -205,7 +205,7 @@ public interface ISceneRepo extends BaseMapper<Scene> {
             @Result(property = "bbox", column = "bounding_box", typeHandler = GeometryTypeHandler.class),
             @Result(property = "dataType", column = "data_type"),
     })
-    List<SceneSP> getScenesByIdsWithProductAndSensor(@Param("sceneIds") List<String> sceneIds);
+    List<SceneSP> getScenesByIdsWithProductAndSensor(@Param("sceneIds") List<String> sceneIds, @Param("dataType") String dataType);
 
     // 数据库中求相交
 //    @Select("<script>" +
