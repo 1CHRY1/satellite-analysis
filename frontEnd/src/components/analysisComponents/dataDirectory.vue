@@ -209,7 +209,7 @@ import { ezStore } from '@/store'
 import { message, type SelectProps } from 'ant-design-vue'
 import { getImgStatistics } from '@/api/http/satellite-data/visualize.api'
 
-// 获取 MinIO 端点配置
+// 获取 MinIO 端点配置（前端和容器访问地址相同）
 const minioEndPoint = ezStore.get('conf')['minioIpAndPort'] || 'http://localhost:9000'
 
 const props = defineProps({
