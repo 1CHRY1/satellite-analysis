@@ -15,7 +15,7 @@ import java.util.List;
 @DS("pg-satellite")
 public interface IVectorRepo  extends BaseMapper<Vector> {
     @Select("SELECT vector_name, table_name, time FROM gis_db.vector_datasets " +
-//            "WHERE ST_Intersects(ST_GeomFromEWKT('SRID=4326;' || #{wkt}), gis_db.vector_datasets.boundary) " +
+            "WHERE ST_Intersects(ST_GeomFromEWKT('SRID=4326;' || #{wkt}), gis_db.vector_datasets.boundary) " +
             "ORDER BY time ASC")
     @Results({
             @Result(property = "vectorName", column = "vector_name"),

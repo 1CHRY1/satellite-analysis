@@ -8,4 +8,6 @@ public class VisualizationLowLevelTile {
     private String startTime;
     private String endTime;
     private Integer regionId;
+    private String locationId;
+    private Integer resolution;
 }

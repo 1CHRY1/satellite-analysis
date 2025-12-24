@@ -529,7 +529,8 @@
                                             <div class="config-label relative">
                                                 <span class="result-info-label">共找到 {{ themeStats.total }} 条记录</span>
                                             </div>
-                                            <div class="stats-item-tree"
+                                            <div class="max-h-[432px]">
+                                                <div class="stats-item-tree"
                                                 v-for="(category, index) in themeStats.category" :key="category" :class="{
                                                     'stats-item-rounded-t': index === 0,
                                                     'stats-item-rounded-b': index === themeStats.category.length - 1,
@@ -551,7 +552,7 @@
                                                 </div>
 
                                                 <div v-show="isProductsItemExpand[index]">
-                                                    <div class="max-h-[432px] overflow-y-auto">
+                                                    <div class=" overflow-y-auto">
                                                         <div v-for="(themeName, idx) in themeStats?.dataset?.[category]?.dataList"
                                                             class="config-item mt-1 mb-2" :key="idx">
                                                             <div class="config-label relative">
@@ -576,6 +577,8 @@
 
                                                 </div>
                                             </div>
+                                            </div>
+                                            
                                             <a-empty v-if="themeStats.total === 0" />
                                         </div>
                                     </div>
