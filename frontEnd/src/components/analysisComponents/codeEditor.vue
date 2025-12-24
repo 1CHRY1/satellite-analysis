@@ -1810,15 +1810,21 @@ onMounted(async () => {
     window.addEventListener('keydown', keyboardSaveCode);
 })
 onBeforeUnmount(async () => {
-    let result = await projectOperating({
-        projectId: props.projectId,
-        userId: props.userId,
-        action: 'close',
-    })
-    if (result.status === 1) {
-        console.log('关闭竟然成功了')
+    // 工具项目退出时不停止容器，保持服务运行
+    // 普通项目退出时停止容器
+    if (!isToolProject.value) {
+        let result = await projectOperating({
+            projectId: props.projectId,
+            userId: props.userId,
+            action: 'close',
+        })
+        if (result.status === 1) {
+            console.log('关闭竟然成功了')
+        } else {
+            console.error('关闭果然失败了')
+        }
     } else {
-        console.error('关闭果然失败了')
+        console.log('工具项目退出，容器保持运行')
     }
     window.removeEventListener('keydown', keyboardSaveCode);
 })
