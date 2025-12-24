@@ -1,7 +1,7 @@
 import type { RegionValues } from "v-region"
 
 export type SpatialFilterMethod = 'region' | 'poi' | 'None'
-export type ProductType = 'dem' | 'dsm' | 'ndvi' | 'svr' | '3d' | 'None'
+export type ProductType = 'dem' | 'dsm' | 'ndvi' | 'svr' | '3d' | 'lai' | 'fvc' | 'fpar' | 'lst' | 'lse' | 'npp' | 'gpp' | 'et' | 'wue' | 'cue' | 'esi' | 'apar' | 'bba' | 'aridity_index' | 'vcf' | 'None'
 import type { Dayjs } from 'dayjs'
 
 export type POIInfo = {
