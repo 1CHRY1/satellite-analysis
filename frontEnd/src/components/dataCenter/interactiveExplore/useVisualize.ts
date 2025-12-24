@@ -42,6 +42,7 @@ import {
 } from '@/api/http/satellite-data/satellite.api'
 import { calTask } from '../noCloud/composables/shared'
 import bus from '@/store/bus'
+import type { LargeScaleSceneParam } from '@/api/http/interactive-explore'
 // 使用一个对象来存储每个 Product Item 的显示状态
 const eyeStates = ref({})
 
@@ -186,13 +187,25 @@ export const useVisualize = () => {
         InteractiveExploreMapOps.map_fitViewToTargetZoom(11)
         const stopLoading = message.loading('正在生成大范围图幅，请耐心等待...', 0)
         // 1. 创建大范围可视化的任务，轮询，最后返回 mosaicJson
-        let taskRes = await getLargeSceneMosaicUrl({
-            startTime: selectedDateRange.value[0].format('YYYY-MM-DD'),
-            endTime: selectedDateRange.value[1].format('YYYY-MM-DD'),
-            sensorName,
-            // TODO: regionId(POI等待兼容！！！！)
-            regionId: finalLandId.value,
-        })
+        let body: any = {}
+        if (searchedSpatialFilterMethod.value === 'region') {
+            body = {
+                startTime: selectedDateRange.value[0].format('YYYY-MM-DD'),
+                endTime: selectedDateRange.value[1].format('YYYY-MM-DD'),
+                sensorName,
+                regionId: finalLandId.value,
+                // resolution: selectedGridResolution.value,
+            }
+        } else if (searchedSpatialFilterMethod.value === 'poi') {
+            body = {
+                startTime: selectedDateRange.value[0].format('YYYY-MM-DD'),
+                endTime: selectedDateRange.value[1].format('YYYY-MM-DD'),
+                sensorName,
+                locationId: finalLandId.value,
+                resolution: selectedGridResolution.value,
+            }
+        }
+        let taskRes = await getLargeSceneMosaicUrl(body)
         setTimeout(() => {
             handleShowScene(sensorName)
         }, 1000)
@@ -312,7 +325,7 @@ export const useVisualize = () => {
                     checkedAttrs: [],
                     // selectedField: vector.fields.slice(-1)[0],
                     selectedField: undefined,
-                    selectedFieldType: "discrete",
+                    selectedFieldType: 'discrete',
                     isRequesting: false,
                     fields: {
                         continuous: [],
@@ -349,7 +362,7 @@ export const useVisualize = () => {
                 label: `${item?.low}-${item?.up}`,
                 color: predefineColors.value[index % predefineColors.value.length],
             }))
-            vectorSymbology.value[tableName].checkedAttrs = result.map(r => `${r?.low}-${r?.up}`)
+            vectorSymbology.value[tableName].checkedAttrs = result.map((r) => `${r?.low}-${r?.up}`)
             vectorSymbology.value[tableName].selectedFieldType = 'continuous'
         } else if (fields.discrete.includes(field)) {
             const result = await getVectorDiscreteAttr(tableName, field)
@@ -382,7 +395,7 @@ export const useVisualize = () => {
             tableName,
             attrList as any,
             vectorSymbology.value[tableName].selectedField,
-            vectorSymbology.value[tableName].selectedFieldType
+            vectorSymbology.value[tableName].selectedFieldType,
         )
     }
     const handleCheckedAttrsChange = (tableName: string, value: string[]) => {
@@ -401,7 +414,7 @@ export const useVisualize = () => {
             tableName,
             attrList as any,
             vectorSymbology.value[tableName].selectedField,
-            vectorSymbology.value[tableName].selectedFieldType
+            vectorSymbology.value[tableName].selectedFieldType,
         )
     }
 
@@ -440,8 +453,13 @@ export const useVisualize = () => {
         })
 
         // 添加到地图 - 点击事件处理已经在 map_addMVTLayer 函数中实现
-        InteractiveExploreMapOps.map_addMVTLayer(source_layer, url, attrList as any, curField,
-            vectorSymbology.value[source_layer].selectedFieldType)
+        InteractiveExploreMapOps.map_addMVTLayer(
+            source_layer,
+            url,
+            attrList as any,
+            curField,
+            vectorSymbology.value[source_layer].selectedFieldType,
+        )
     }
     const destroyVector = (index?: number) => {
         if (index !== undefined) {
@@ -489,8 +507,8 @@ export const useVisualize = () => {
             case 'bba':
             case 'aridity_index':
             case 'vcf':
-                handleShowOneBand(themeName);
-                break;
+                handleShowOneBand(themeName)
+                break
         }
     }
     const handleShowDEM = async (themeName: string) => {
