@@ -1,0 +1,6 @@
+========== [Landsat8_OLI] ==========
+[Scene 1] [{'band': 0, 'path': 'E:\\Data\\0708\\LC08_12L2SP_121035_20250413_20250416_02_T1\\Bands\\Band0.tiff'}, {'band': 1, 'path': 'E:\\Data\\0708\\LC08_12L2SP_121035_20250413_20250416_02_T1\\Bands\\Band1.tif'}, {'band': 2, 'path': 'E:\\Data\\0708\\LC08_12L2SP_121035_20250413_20250416_02_T1\\Bands\\Band2.tif'}]
+[FAILED] Scene 1, [{'band': 0, 'path': 'E:\\Data\\0708\\LC08_12L2SP_121035_20250413_20250416_02_T1\\Bands\\Band0.tiff'}, {'band': 1, 'path': 'E:\\Data\\0708\\LC08_12L2SP_121035_20250413_20250416_02_T1\\Bands\\Band1.tif'}, {'band': 2, 'path': 'E:\\Data\\0708\\LC08_12L2SP_121035_20250413_20250416_02_T1\\Bands\\Band2.tif'}]
+[ERROR] main() returned empty band list
+========== Batch Insert End for this product ==========
+
