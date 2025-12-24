@@ -291,6 +291,81 @@ export function map_destroyGridNDVIOrSVRLayer(gridInfo: GridData) {
     })
 }
 
+export function map_addGridOneBandLayer(
+    gridInfo: GridData,
+    url: string,
+    cb?: () => void,
+) {
+    const prefix = gridInfo.rowId + '_' + gridInfo.columnId
+    const id = prefix + uid()
+    const srcId = id + '-source'
+    console.log(prefix)
+
+    if (!ezStore.get('grid-oneband-layer-map')) {
+        ezStore.set('grid-oneband-layer-map', new window.Map())
+    }
+
+    map_destroyGridOneBandLayer(gridInfo)
+
+    mapManager.withMap((m) => {
+        const gridOneBandLayerMap = ezStore.get('grid-oneband-layer-map')
+        for (let key of gridOneBandLayerMap.keys()) {
+            if (key.includes(prefix)) {
+                const oldId = key
+                const oldSrcId = oldId + '-source'
+                if (m.getLayer(oldId) && m.getSource(oldSrcId)) {
+                    m.removeLayer(oldId)
+                    m.removeSource(oldSrcId)
+                }
+            }
+        }
+        
+
+        m.addSource(srcId, {
+            type: 'raster',
+            tiles: [url],
+        })
+
+        m.addLayer({
+            id: id,
+            type: 'raster',
+            metadata: {
+                'user-label': id + '图层', 
+            },
+            source: srcId,
+            paint: {
+                'raster-opacity': (100 - (gridInfo.opacity || 0))*0.01   // 设置透明度，值范围 0-1
+            }
+        })
+        gridOneBandLayerMap.set(id, {
+            id: id,
+            source: srcId,
+        })
+
+        setTimeout(() => {
+            cb && cb()
+        }, 3000)
+    })
+}
+
+export function map_destroyGridOneBandLayer(gridInfo: GridData) {
+    const prefix = gridInfo.rowId + '_' + gridInfo.columnId
+    const gridOneBandLayerMap = ezStore.get('grid-oneband-layer-map')
+
+    mapManager.withMap((m) => {
+        for (let key of gridOneBandLayerMap.keys()) {
+            if (key.startsWith(prefix)) {
+                const oldId = key
+                const oldSrcId = oldId + '-source'
+                if (m.getLayer(oldId) && m.getSource(oldSrcId)) {
+                    m.removeLayer(oldId)
+                    m.removeSource(oldSrcId)
+                }
+            }
+        }
+    })
+}
+
 function getPaintColorExpression(
     mode: 'discrete' | 'continuous',
     field: string,

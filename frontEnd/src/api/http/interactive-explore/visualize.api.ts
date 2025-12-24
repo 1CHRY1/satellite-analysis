@@ -158,6 +158,25 @@ export const getNDVIOrSVRUrl = async (themeName: string, gridsBoundary: any) => 
 }
 
 /**
+ * 单波段图Url - 'lai' | 'fvc' | 'fpar' | 'lst' | 'lse' | 'npp' | 'gpp' | 'et' | 'wue' | 'cue' | 'esi' | 'apar' | 'bba' | 'aridity_index' | 'vcf'
+ */
+export const getOneBandUrl = async (themeName: string, gridsBoundary: any) => {
+    let baseUrl = `${titilerProxyEndPoint}/oneband/colorband/{z}/{x}/{y}.png`
+    const requestParams = new URLSearchParams()
+    const themeRes = await getThemeByThemeName(themeName)
+    const url = `${minioEndPoint}/${themeRes.data.images[0].bucket}/${themeRes.data.images[0].tifPath}`
+    const stats = await getImgStats(url)
+    requestParams.append('url', url)
+    requestParams.append('min', stats.b1.min)
+    requestParams.append('max', stats.b1.max)
+    requestParams.append('grids_boundary', JSON.stringify(gridsBoundary))
+    requestParams.append('nodata', themeRes.data.noData.toString())
+    const fullUrl = baseUrl + '?' + requestParams.toString()
+    console.log('OneBand URL: ', fullUrl)
+    return fullUrl
+}
+
+/**
  * 红绿立体影像Url
  */
 export const get3DUrl = async (themeName: string, gridsBoundary: any) => {
@@ -282,6 +301,28 @@ export function getGrid3DUrl(grid: GridData, param: RGBCompositeParams) {
  * 格网单波段图Url - NDVI或SVR
  */
 export function getGridNDVIOrSVRUrl(grid: GridData, param: OneBandColorLayerParam) {
+    let baseUrl = `${titilerProxyEndPoint}/oneband/box/{z}/{x}/{y}.png`
+
+    const bbox = grid2bbox(grid.columnId, grid.rowId, grid.resolution)
+
+    const requestParams = new URLSearchParams()
+    requestParams.append('bbox', bbox.join(','))
+    requestParams.append('url', getMinIOUrl(param.fullTifPath))
+    requestParams.append('b_min', param?.min?.toString() || '0')
+    requestParams.append('b_max', param?.max?.toString() || '255')
+    if (param.nodata !== undefined && param.nodata !== null) {
+        requestParams.append('nodata', param.nodata.toString())
+    }
+    if (grid.normalize_level)
+        requestParams.append('normalize_level', grid.normalize_level.toString())
+
+    return baseUrl + '?' + requestParams.toString()
+}
+
+/**
+ * 格网单波段图Url
+ */
+export function getGridOneBandUrl(grid: GridData, param: OneBandColorLayerParam) {
     let baseUrl = `${titilerProxyEndPoint}/oneband/box/{z}/{x}/{y}.png`
 
     const bbox = grid2bbox(grid.columnId, grid.rowId, grid.resolution)

@@ -776,7 +776,7 @@ export function map_addNDVIOrSVRLayer(url: string) {
             id,
             type: 'raster',
             metadata: {
-                'user-label': 'DEM图层',
+                'user-label': '图层',
             },
             source: srcId,
             paint: {},
@@ -785,6 +785,38 @@ export function map_addNDVIOrSVRLayer(url: string) {
 }
 export function map_destroyNDVIOrSVRLayer() {
     const id = 'ndvi-layer'
+    const srcId = id + '-source'
+    mapManager.withMap((m) => {
+        m.getLayer(id) && m.removeLayer(id)
+        m.getSource(srcId) && m.removeSource(srcId)
+    })
+}
+export function map_addOneBandLayer(url: string) {
+    const id = 'oneband-layer'
+    const srcId = id + '-source'
+    mapManager.withMap((m) => {
+        m.getLayer(id) && m.removeLayer(id)
+        m.getSource(srcId) && m.removeSource(srcId)
+
+        m.addSource(srcId, {
+            type: 'raster',
+            tiles: [url],
+            tileSize: 256,
+        })
+
+        m.addLayer({
+            id,
+            type: 'raster',
+            metadata: {
+                'user-label': '指标数据图层',
+            },
+            source: srcId,
+            paint: {},
+        })
+    })
+}
+export function map_destroyOneBandLayer() {
+    const id = 'oneband-layer'
     const srcId = id + '-source'
     mapManager.withMap((m) => {
         m.getLayer(id) && m.removeLayer(id)
