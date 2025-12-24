@@ -245,7 +245,7 @@
                                                                         </p>
                                                                         <p class="my-1 text-blue-300">创建时间: {{
                                                                             formatTimeToText(item.createTime) }}</p>
-                                                                        <p class="my-1 text-blue-300">数据集: {{
+                                                                        <p v-if="item.type !== 'eoCube'" class="my-1 text-blue-300">数据集: {{
                                                                             item.dataSet
                                                                             }}</p>
                                                                     </div>
@@ -736,6 +736,7 @@ const completedCases = ref<any[]>([]); // 仅存储已完成的任务
 const loadCompletedCases = async () => {
     activeTab.value = 'COMPLETE';
     await getCaseList();
+    caseList.value = caseList.value.filter(item => item.type !== 'eoCube')
     completedCases.value = caseList.value;
 };
 
