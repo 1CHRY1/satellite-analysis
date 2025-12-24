@@ -12,6 +12,7 @@ class MethodEntity:
     name: Optional[str] = None         # varchar(100) 方法名称
     nameZh: Optional[str] = None         # varchar(100) 方法名称
     params: Optional[str] = None       # json 参数信息 (JSON字符串)
+    paramsZh: Optional[str] = None       # json 参数信息 (JSON字符串)
     execution: Optional[str] = None    # varchar(50) 执行类型 (e.g., "py", "exe", "jar")
     category: Optional[str] = None     # varchar(255) 条目
     tags: Optional[List[str]] = None
