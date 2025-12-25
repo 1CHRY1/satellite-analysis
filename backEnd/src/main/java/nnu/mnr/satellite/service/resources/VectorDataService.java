@@ -74,6 +74,9 @@ public class VectorDataService {
         Geometry gridBoundary = userRegionInfoCache.gridsBoundary;
         String wkt = gridBoundary.toText();
         MinMaxResult MinMaxList = vectorRepo.getMinMaxByTableNameAndFieldAndCount(tableName, field, wkt);
+        if (MinMaxList == null) {
+            return Collections.emptyList();
+        }
         float min = MinMaxList.getMin();
         float max = MinMaxList.getMax();
         // 3. 处理特殊情况
