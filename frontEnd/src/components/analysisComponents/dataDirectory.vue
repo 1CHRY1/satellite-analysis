@@ -208,8 +208,9 @@ import { RefreshCcw, CircleSlash, Upload, Eye, EyeOff, ChartColumn, View, FileIn
 import { ezStore } from '@/store'
 import { message, type SelectProps } from 'ant-design-vue'
 import { getImgStatistics } from '@/api/http/satellite-data/visualize.api'
+import { getImgStats } from '@/api/http/interactive-explore'
 
-// 获取 MinIO 端点配置
+// 获取 MinIO 端点配置（前端和容器访问地址相同）
 const minioEndPoint = ezStore.get('conf')['minioIpAndPort'] || 'http://localhost:9000'
 
 const props = defineProps({
@@ -639,6 +640,7 @@ const colormapOptions = ref<SelectProps['options']>([
 const range = ref<number[]>([-1, 1])
 const bidxOptions = ref<string[]>([])
 const selectedBidx = ref<string | null>(null)
+const selectedBand = ref<any>(null)
 const tileUrlObj = ref<any>()
 const stats = ref<any>()
 const itemInMinIo = ref<any>()
@@ -662,10 +664,13 @@ const handleConfirm = async() => {
     // 获取瓦片服务地址
     let mapPosition = itemInMinIo.value.bbox.geometry.coordinates[0]
     let tifUrl = `${tileUrlObj.value.minioEndpoint}/${tileUrlObj.value.object}`
+    const stats = await getImgStats(tifUrl)
+    console.log(stats)
     const bidx = selectedBidx.value === null ? 'b1' : selectedBidx.value
-    range.value[0] = -1
-    range.value[1] = 1
-    let wholeTileUrl = `${tileUrlObj.value.tilerUrl}/tiles/WebMercatorQuad/{z}/{x}/{y}.png?scale=1&url=${tifUrl}&colormap_name=${colormapName.value}&rescale=${range.value[0]},${range.value[1]}`
+    selectedBand.value = stats[bidx]
+    range.value[0] = selectedBand.value.min
+    range.value[1] = selectedBand.value.max
+    let wholeTileUrl = `${tileUrlObj.value.tilerUrl}/tiles/WebMercatorQuad/{z}/{x}/{y}.png?scale=1&url=${tifUrl}&colormap_name=${colormapName.value}&rescale=${range.value[0]},${range.value[1]}&nodata=0`
 
     console.log(wholeTileUrl, 'wholeTileUrl')
     if (!tileUrlObj.value.object) {
