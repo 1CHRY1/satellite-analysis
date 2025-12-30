@@ -108,7 +108,7 @@ export function map_addGrid2DDEMLayer(
             type: 'raster',
             source: srcId,
             metadata: {
-                'user-label': id + '图层', 
+                'user-label': prefix + '号格网DEM图层', 
             }
         })
 
@@ -185,7 +185,7 @@ export function map_addGrid3DLayer(
             type: 'raster',
             source: srcId,
             metadata: {
-                'user-label': id + '图层', 
+                'user-label': prefix + '号格网影像图层', 
             },
             paint: {
                 'raster-opacity': (100 - (gridInfo.opacity || 0))*0.01   // 设置透明度，值范围 0-1
@@ -255,7 +255,7 @@ export function map_addGridNDVIOrSVRLayer(
             id: id,
             type: 'raster',
             metadata: {
-                'user-label': id + '图层', 
+                'user-label': prefix + '号格网产品图层', 
             },
             source: srcId,
             paint: {
@@ -330,7 +330,7 @@ export function map_addGridOneBandLayer(
             id: id,
             type: 'raster',
             metadata: {
-                'user-label': id + '图层', 
+                'user-label': prefix + '号格网单波段图层', 
             },
             source: srcId,
             paint: {
@@ -474,7 +474,7 @@ export function map_addGridMVTLayer(
             type: 'fill',
             source: srcId,
             metadata: {
-                'user-label': id + '矢量图层', 
+                'user-label': gridPrefix + '号格网矢量面图层', 
             },
             'source-layer': source_layer,
             filter: ['==', '$type', 'Polygon'], // 只显示面要素
@@ -490,7 +490,7 @@ export function map_addGridMVTLayer(
             type: 'line',
             source: srcId,
             metadata: {
-                'user-label': id + '矢量图层', 
+                'user-label': gridPrefix + '号格网矢量线图层', 
             },
             'source-layer': source_layer,
             filter: ['==', '$type', 'LineString'], // 只显示线要素
@@ -507,7 +507,7 @@ export function map_addGridMVTLayer(
             type: 'circle',
             source: srcId,
             metadata: {
-                'user-label': id + '矢量图层', 
+                'user-label': gridPrefix + '号格网矢量点图层', 
             },
             'source-layer': source_layer,
             filter: ['==', '$type', 'Point'], // 只显示点要素
