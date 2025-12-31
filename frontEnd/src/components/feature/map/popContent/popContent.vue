@@ -422,7 +422,7 @@ const handleRemove = () => {
     cleanupGridVectorEvents()
     GridExploreMapOps.map_destroyGrid3DLayer(gridData.value)
     GridExploreMapOps.map_destroyGridNDVIOrSVRLayer(gridData.value)
-    GridExploreMapOps.map_destroyOneBandLayer(gridData.value)
+    GridExploreMapOps.map_destroyGridOneBandLayer(gridData.value)
     // 清除超分状态，确保不会重新加载
     if (isSuperRes.value) {
         isSuperRes.value = false

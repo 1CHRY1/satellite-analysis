@@ -28,7 +28,7 @@
                         <div class="section-icon absolute right-12 cursor-pointer" @click="clearImages">
                             <a-tooltip>
                                 <template #title>{{ t('datapage.analysis.section2.clear')
-                                    }}</template>
+                                }}</template>
                                 <Trash2Icon :size="20" />
                             </a-tooltip>
                         </div>
@@ -159,7 +159,7 @@
                                                     <div class="config-label relative">
                                                         <Image :size="16" class="config-icon" />
                                                         <span>🛠️ {{ `${item.nameZh}` + '(' + `${item.name}` + ')'
-                                                            }}</span>
+                                                        }}</span>
                                                         <div class="absolute right-0 cursor-pointer">
                                                             <a-tooltip>
                                                                 <template #title>调用</template>
@@ -172,7 +172,8 @@
                                                         <div class="flex w-full flex-col gap-2">
                                                             <div class="result-info-container">
                                                                 <div class="result-info-value">
-                                                                    <span class="text-sm">{{ item.descriptionZh }}</span>
+                                                                    <span class="text-sm">{{ item.descriptionZh
+                                                                        }}</span>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -239,14 +240,16 @@
                                                             hover:bg-gray-50 hover:shadow-md"
                                                                         @click="getAndShowResult(item.caseId, item.regionId)">
                                                                         <h3 class="mt-0 text-blue-500">{{ item.address
-                                                                            }}无云一版图</h3>
+                                                                        }}无云一版图</h3>
                                                                         <p class="my-1 text-blue-300">分辨率: {{
                                                                             item.resolution }}km
                                                                         </p>
                                                                         <p class="my-1 text-blue-300">创建时间: {{
                                                                             formatTimeToText(item.createTime) }}</p>
-                                                                        <p v-if="item.type !== 'eoCube'" class="my-1 text-blue-300">数据集: {{
-                                                                            item.dataSet
+                                                                        <p v-if="item.type !== 'eoCube'"
+                                                                            class="my-1 text-blue-300">数据集:
+                                                                            {{
+                                                                                item.dataSet
                                                                             }}</p>
                                                                     </div>
                                                                 </div>
@@ -271,7 +274,8 @@
                                                         </div>
                                                         <div class="config-control flex-col !items-start w-full">
                                                             <div v-if="publishedSceneTools.length"
-                                                                class="flex w-full flex-col gap-3 max-h-[520px] overflow-y-auto pr-2" style="scrollbar-width: thin; scrollbar-color: #4a5568 #1a202c;">
+                                                                class="flex w-full flex-col gap-3 max-h-[520px] overflow-y-auto pr-2"
+                                                                style="scrollbar-width: thin; scrollbar-color: #4a5568 #1a202c;">
                                                                 <div v-for="tool in publishedSceneTools" :key="tool.id"
                                                                     class="w-full rounded-xl border border-[#1c2a3f] bg-[#0b1221]/80 px-4 py-3 shadow-inner transition-colors duration-200 hover:border-[#38bdf8] cursor-pointer"
                                                                     @click="handleInvokeSceneTool(tool.id)">
@@ -363,7 +367,7 @@
                                                                     class="mr-2 transition-transform duration-200"
                                                                     :class="{ 'transform rotate-90': expandedCategories.includes(category.name) }" />
                                                                 <span class="text-gray-300 font-medium">{{ category.name
-                                                                }}</span>
+                                                                    }}</span>
                                                             </div>
 
                                                             <div v-show="expandedCategories.includes(category.name) || searchQuery"
@@ -382,7 +386,7 @@
                                                                         class="flex-grow min-w-0">
                                                                         <span class="truncate block text-sm">{{
                                                                             tool.label
-                                                                        }}</span>
+                                                                            }}</span>
                                                                     </a-tooltip>
 
                                                                     <CircleX v-if="tool.value.startsWith('dynamic:')"
@@ -507,7 +511,8 @@
                                             </div>
                                             <div class="config-control flex-col !items-start w-full">
                                                 <div v-if="publishedCubeTools.length"
-                                                    class="flex w-full flex-col gap-3 max-h-[520px] overflow-y-auto pr-2" style="scrollbar-width: thin; scrollbar-color: #4a5568 #1a202c;">
+                                                    class="flex w-full flex-col gap-3 max-h-[520px] overflow-y-auto pr-2"
+                                                    style="scrollbar-width: thin; scrollbar-color: #4a5568 #1a202c;">
                                                     <div v-for="tool in publishedCubeTools" :key="tool.id" :class="[
                                                         'w-full rounded-xl border border-[#1c2a3f] bg-[#0b1221]/80 px-4 py-3 shadow-inner transition-colors duration-200 hover:border-[#38bdf8] cursor-pointer',
                                                         { 'border-[#38bdf8] bg-[#14243f]': activeCubeToolId === tool.id }
@@ -519,7 +524,7 @@
                                                                     {{ tool.name }}</p>
                                                                 <span class="text-xs text-gray-400">{{ tool.category ||
                                                                     '未分类'
-                                                                }}</span>
+                                                                    }}</span>
                                                             </div>
                                                             <a-button size="small" type="primary" ghost
                                                                 @click.stop="handleInvokeCubeTool(tool.id)">调用</a-button>
@@ -735,8 +740,12 @@ const {
 const completedCases = ref<any[]>([]); // 仅存储已完成的任务
 const loadCompletedCases = async () => {
     activeTab.value = 'COMPLETE';
+    pageSize.value = 10 // TODO
     await getCaseList();
-    caseList.value = caseList.value.filter(item => item.type !== 'eoCube')
+    pageSize.value = 3
+    caseList.value = caseList.value
+        .filter(item => item.type !== 'eoCube')
+        .slice(0, 3);
     completedCases.value = caseList.value;
 };
 

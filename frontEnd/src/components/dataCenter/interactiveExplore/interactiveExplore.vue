@@ -113,7 +113,7 @@
                                                     <div class="text-red-500">*</div>
                                                     <span class="text-xs text-gray-400">{{
                                                         t('datapage.explore.data.advice')
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -202,12 +202,12 @@
                                         <DatabaseIcon :size="18" />
                                     </div>
                                     <h2 class="section-title">{{ t('datapage.explore.section_interactive.sectiontitle')
-                                        }}</h2>
+                                    }}</h2>
                                     <div class="section-icon absolute right-0 cursor-pointer"
                                         @click="destroyExploreLayers">
                                         <a-tooltip>
                                             <template #title>{{ t('datapage.explore.section_interactive.clear')
-                                                }}</template>
+                                            }}</template>
                                             <Trash2Icon :size="18" />
                                         </a-tooltip>
                                     </div>
@@ -320,7 +320,7 @@
                                                             @click="isRSItemExpand[index] = false" />
                                                         <span class="text-xs text-[#7a899f]">{{
                                                             sceneStats?.dataset?.[category]?.total
-                                                            }} 景</span>
+                                                        }} 景</span>
                                                     </div>
                                                     <div class="flex flex-row gap-2 items-center">
                                                         <ChartColumnBig :size="12" class="text-[#7a899f]"
@@ -391,7 +391,7 @@
                                                             <a-tooltip>
                                                                 <template #title>{{
                                                                     t('datapage.explore.section_interactive.clear')
-                                                                    }}</template>
+                                                                }}</template>
                                                                 <Trash2Icon :size="18"
                                                                     class="mt-4! ml-4! cursor-pointer"
                                                                     @click="destroyScene" />
@@ -444,11 +444,12 @@
                                                                     v-model="vectorSymbology[item.tableName].selectedField">
                                                                     <option disabled selected value="">{{
                                                                         t('datapage.explore.section_interactive.choose')
-                                                                    }}
+                                                                        }}
                                                                     </option>
                                                                     <!-- <option :value="'all'" class="truncate">全选</option> -->
-                                                                    <option v-for="f in item.fields.continuous.concat(item.fields.discrete)" :value="f" :key="f"
-                                                                        class="truncate">
+                                                                    <option
+                                                                        v-for="f in item.fields.continuous.concat(item.fields.discrete)"
+                                                                        :value="f" :key="f" class="truncate">
                                                                         {{ f }}
                                                                     </option>
                                                                 </select>
@@ -468,7 +469,7 @@
                                                             </el-checkbox>
                                                             <a-tooltip>
                                                                 <template #title>{{ t('datapage.history.preview')
-                                                                    }}</template>
+                                                                }}</template>
                                                                 <Eye v-if="previewVectorList[index]"
                                                                     @click="destroyVector(index)" :size="16"
                                                                     class="cursor-pointer" />
@@ -477,7 +478,8 @@
                                                                     class="cursor-pointer" />
                                                             </a-tooltip>
                                                         </div>
-                                                        <a-spin :spinning="vectorSymbology[item.tableName].isRequesting">
+                                                        <a-spin
+                                                            :spinning="vectorSymbology[item.tableName].isRequesting">
                                                             <div class="w-full max-h-[248px] overflow-y-auto">
                                                                 <el-checkbox-group
                                                                     v-model="vectorSymbology[item.tableName].checkedAttrs"
@@ -495,7 +497,7 @@
                                                                                 </el-checkbox>
                                                                                 <span class="config-label mt-1">{{
                                                                                     simplifyRangeLabel(attr.label)
-                                                                                    }}</span>
+                                                                                }}</span>
                                                                             </div>
                                                                             <el-color-picker v-model="attr.color"
                                                                                 size="small" show-alpha
@@ -529,8 +531,7 @@
                                             <div class="config-label relative">
                                                 <span class="result-info-label">共找到 {{ themeStats.total }} 条记录</span>
                                             </div>
-                                            <div class="max-h-[432px]">
-                                                <div class="stats-item-tree"
+                                            <div class="stats-item-tree"
                                                 v-for="(category, index) in themeStats.category" :key="category" :class="{
                                                     'stats-item-rounded-t': index === 0,
                                                     'stats-item-rounded-b': index === themeStats.category.length - 1,
@@ -547,7 +548,7 @@
                                                             @click="isProductsItemExpand[index] = false" />
                                                         <span class="text-xs text-[#7a899f]">{{
                                                             themeStats?.dataset?.[category]?.total
-                                                            }} 幅</span>
+                                                        }} 幅</span>
                                                     </div>
                                                 </div>
 
@@ -562,7 +563,7 @@
                                                                     <a-tooltip>
                                                                         <template #title>{{
                                                                             t('datapage.history.preview')
-                                                                            }}</template>
+                                                                        }}</template>
                                                                         <Eye v-if="shouldShowEyeOff(category, idx)"
                                                                             @click="toggleEye(category, idx, themeName)"
                                                                             :size="16" class="cursor-pointer" />
@@ -577,8 +578,7 @@
 
                                                 </div>
                                             </div>
-                                            </div>
-                                            
+
                                             <a-empty v-if="themeStats.total === 0" />
                                         </div>
                                     </div>
