@@ -55,7 +55,14 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
         websocket: 'http://localhost:9888/model/websocket',
         tiler: 'http://223.2.34.8:31800',
         proxymap: 'http://localhost:5003',
-    }
+    },
+    xzy: {
+        api: 'http://10.30.8.44:31584', // 或本地 http://localhost:8999
+        realtime: 'http://localhost:5001',
+        websocket: 'http://10.30.8.44:30394/model/websocket', // 或本地 http://localhost:9888/model/websocket
+        tiler: 'http://10.30.8.44:31800',
+        proxymap: 'http://localhost:5003',
+    },
 }
 
 // 固定配置（不随环境变化）
