@@ -52,16 +52,16 @@ public class GeoLocation {
     @Field(type = FieldType.Text)
     private String tel;
 
-    @Field(type = FieldType.Text, name = "GCJ02_经")
+    @Field(type = FieldType.Text, name = "gcj02_x")
     private String gcj02Lon;
 
-    @Field(type = FieldType.Text, name = "GCJ02_纬")
+    @Field(type = FieldType.Text, name = "gcj02_y")
     private String gcj02Lat;
 
-    @Field(type = FieldType.Text, name = "wgs84_经")
+    @Field(type = FieldType.Text, name = "wgs84_x")
     private String wgs84Lon;
 
-    @Field(type = FieldType.Text, name = "wgs84_纬")
+    @Field(type = FieldType.Text, name = "wgs84_y")
     private String wgs84Lat;
 
     // GeoJSON 格式 geometry 字段
@@ -72,13 +72,13 @@ public class GeoLocation {
 //    @Field(type = FieldType.Object)
 //    private Map<String, Object> geojson;
 
-    @Field(type = FieldType.Text, name = "一级类")
+    @Field(type = FieldType.Text, name = "大类")
     private String level1;
 
-    @Field(type = FieldType.Text, name = "二级类")
+    @Field(type = FieldType.Text, name = "中类")
     private String level2;
 
-    @Field(type = FieldType.Text, name = "三级类")
+    @Field(type = FieldType.Text, name = "小类")
     private String level3;
 
     @Data

@@ -62,7 +62,14 @@ public class GridDataServiceV3 {
         }
         // 筛选出与格网相交的景
         List<SceneDesVO> filteredScenesInfo = scenesInfo.stream()
-                .filter(scene -> isSceneIntersectGrid(scene, wkt))
+                .filter(scene -> {
+                    // 计算覆盖度
+                    AbstractMap.SimpleEntry<Double, Geometry> coverageResult =
+                            sceneDataService.calculateCoveragePercentage(scene.getBoundingBox(), wkt);
+
+                    // 条件：相交且覆盖度 > 20%
+                    return coverageResult.getKey() > 0.2;
+                })
                 .toList();
 
         CoverageReportVO<JSONObject> report = new CoverageReportVO<>();
