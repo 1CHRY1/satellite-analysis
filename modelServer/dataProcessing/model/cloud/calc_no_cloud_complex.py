@@ -52,6 +52,14 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
             bbox_polygon = box(*bbox_wgs84)
             return polygon.contains(bbox_polygon)
 
+        def is_grid_intersected(scene):
+            from shapely.geometry import shape, box
+            bbox_wgs84 = grid_bbox()
+            scene_geom = scene.get('bbox').get('geometry')
+            polygon = shape(scene_geom)
+            bbox_polygon = box(*bbox_wgs84)
+            return polygon.intersects(bbox_polygon)
+
         def convert_to_uint8(data, original_dtype):
             """
             自动将不同数据类型转换为uint8
@@ -116,8 +124,8 @@ def process_grid(grid, scenes_json_file, scene_band_paths_json_file, grid_helper
             print('Process', scene_label, flush=True)
 
             ########### Check cover ######################
-            if not is_grid_covered(scene):
-                print(scene_label, ':: not cover, jump', flush=True)
+            if not is_grid_intersected(scene):
+                print(scene_label, ':: not intersect, jump', flush=True)
                 continue
 
             print(scene.get('resolution'), grid_x, grid_y)

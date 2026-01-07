@@ -1,0 +1,236 @@
+server:
+  tomcat:
+    connection-timeout: 60000
+    keep-alive-timeout: 60000
+  port: 8999
+
+netty:
+  websocket:
+    port: 9888
+
+# localhost
+#mysql:
+#  host: 10.30.8.44
+#  port: 31036
+#  username: root
+#  password: root
+#pg:
+#  host: 10.30.8.44
+#  port: 31543
+#  username: postgres
+#  password: 123456
+
+# k8s
+mysql:
+  host: 10.30.8.44
+  port: 31036
+  username: root
+  password: 123456
+pg:
+  host: 10.30.8.44
+  port: 31543
+  username: postgres
+  password: 123456
+
+# 修改数据库级相应配置注意兼顾在线编程写死部分
+spring:
+  datasource:
+    dynamic:
+      primary: mysql-ard-satellite
+      strict: false
+      datasource:
+        mysql-ard-satellite:
+          url: jdbc:mysql://${mysql.host}:${mysql.port}/ard_satellite
+          username: ${mysql.username}
+          password: ${mysql.password}
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          type: com.alibaba.druid.pool.DruidDataSource
+          druid:
+            initial-size: 5
+            max-active: 20
+            min-idle: 5
+            max-wait: 60000
+            validation-query: SELECT 1
+            socket-timeout: 1200000  # 20分钟
+            init-connection-sqls: SET SESSION group_concat_max_len = 18446744073709551615
+            filters: stat,wall
+            wall:
+              table-check: true
+              drop-table-allow: false
+              alter-table-allow: false
+            stat:
+              slow-sql-millis: 2000
+              log-slow-sql: true
+              merge-sql: true
+        mysql-ard-iam:
+          url: jdbc:mysql://${mysql.host}:${mysql.port}/ard_iam
+          username: ${mysql.username}
+          password: ${mysql.password}
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          type: com.alibaba.druid.pool.DruidDataSource
+          druid:
+            initial-size: 5
+            max-active: 20
+            min-idle: 5
+            max-wait: 60000
+            validation-query: SELECT 1
+            socket-timeout: 1200000  # 20分钟
+            init-connection-sqls: SET SESSION group_concat_max_len = 18446744073709551615
+            filters: stat,wall
+            wall:
+              table-check: true
+              drop-table-allow: false
+              alter-table-allow: false
+            stat:
+              slow-sql-millis: 2000
+              log-slow-sql: true
+              merge-sql: true
+        mysql-ard-dev:
+          url: jdbc:mysql://${mysql.host}:${mysql.port}/ard_dev
+          username: ${mysql.username}
+          password: ${mysql.password}
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          type: com.alibaba.druid.pool.DruidDataSource
+          druid:
+            initial-size: 5
+            max-active: 20
+            min-idle: 5
+            max-wait: 60000
+            validation-query: SELECT 1
+            socket-timeout: 1200000  # 20分钟
+            init-connection-sqls: SET SESSION group_concat_max_len = 18446744073709551615
+            filters: stat,wall
+            wall:
+              table-check: true
+              drop-table-allow: false
+              alter-table-allow: false
+            stat:
+              slow-sql-millis: 2000
+              log-slow-sql: true
+              merge-sql: true
+        pg-satellite:
+          url: jdbc:postgresql://${pg.host}:${pg.port}/satellite
+          username: ${pg.username}
+          password: ${pg.password}
+          driver-class-name: org.postgresql.Driver
+          #          type: com.zaxxer.hikari.HikariDataSource
+          type: com.alibaba.druid.pool.DruidDataSource
+          druid:
+            initial-size: 5
+            max-active: 20
+            min-idle: 5
+            max-wait: 60000
+            validation-query: SELECT 1
+            socket-timeout: 1200000  # 20分钟
+            filters: stat
+            wall:
+              table-check: true
+              drop-table-allow: false
+              alter-table-allow: false
+            stat:
+              slow-sql-millis: 300000
+              log-slow-sql: true
+              merge-sql: true
+    # 全局 Druid 监控配置（对所有数据源生效）
+    druid:
+      stat-view-servlet:
+        enabled: true
+        url-pattern: /druid/*
+        reset-enable: true
+        allow: ""
+        deny: ""
+      web-stat-filter:
+        enabled: true
+        url-pattern: /*
+        exclusions: "*.js,*.css,*.png,*.jpg,*.ico,/druid/*"
+        session-stat-enable: true  # 启用 Session 监控
+
+
+  servlet:
+    multipart:
+      max-file-size: 1GB
+      max-request-size: 1GB
+
+  data:
+    redis:
+      host: 10.30.8.44
+      port: 30379
+      database: 0
+    mongodb:
+      uri: mongodb://OGMSROOT:ogms1qaz2wsx@10.30.8.44:23266/opengmp
+  elasticsearch:
+    uris: http://10.30.8.44:30920
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: nnu.mnr.satellite.model.po
+  type-handlers-package: nnu.mnr.satellite.utils.typeHandler
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+minio:
+  #  access-key: jTbgNHEqQafOpUxVg7Ol
+  #  secret-key: 7UxtrqhSOyN1KUeumbqTRMv1zeluLO69OwJnCC0M
+  #  #  url: http://223.2.34.7:9000
+  #  url: http://172.16.92.82:30900
+  #  url: http://223.2.43.238:30900
+  access-key: minioadmin
+  secret-key: minioadmin
+  url: http://10.30.8.44:30900
+
+docker:
+  defaultServer:
+    #    port: 2376
+    #    host: "223.2.35.208"mi
+    #    username: "vge"
+    #    password: "3J44.njnu.edu.cn"
+    #  serverDir: /home/vge/satellite/
+    port: 32375
+    host: "10.30.8.44"
+    username: "root"
+    password: "dky.njnu.edu.cn"
+  localPath: ${user.dir}/src/main/resources/modelDockerVolume
+  serverDir: /home/satellite/
+  workDir: /usr/local/coding/
+  servicePortRange:
+    start: 20080
+    end: 20180
+  serviceDefaults:
+    internalPort: 20080
+  faas:
+    workDirSubdir: service
+
+modelServer:
+  address: http://10.30.8.44:31500
+  apis:
+    status: /v0/task/status
+    result: /v0/task/result
+    cancel: /v0/task/cancel
+    merge: /v0/tif/merge_v2
+    spectrum: /v0/tif/get_spectral_profile
+    noCloud: /v0/tif/calc_no_cloud
+    noCloud_complex: /v0/tif/calc_no_cloud_complex
+    eoCube: /v0/tif/calc_eo_cube
+    rasterPoint: /v0/tif/calc_raster_point
+    rasterLine: /v0/tif/calc_raster_line
+    ndvi: /v0/tif/calc_NDVI
+    createLowLevelMosaic: /v0/mosaic/create_low_level_mosaic
+    methlib: /v0/methlib
+  interval:
+    status: 2
+
+srmodelServer:
+  address: http://nrspeclib.sasclouds.com:33445
+  apis:
+    status: /v0/task/status
+    result: /v0/task/result
+    SR: /v0/model/superresolution
+  interval:
+    status: 2
+
+tiler:
+  end-point: http://10.30.8.44:31800/
+
+satelliteConfig:
+  path: https://assignmanage.oss-cn-nanjing.aliyuncs.com/band_config.json
+

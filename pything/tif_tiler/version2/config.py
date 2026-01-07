@@ -28,7 +28,7 @@ MINIO_CONFIG = {
         "dir": "mosaicjson",
     },
     "vmod": {
-        "endpoint": "172.31.13.21:9000",
+        "endpoint": "172.31.13.42:9000",
         "access_key": "OGMS",
         "secret_key": "ogms250410",
         "bucket": "temp-files",

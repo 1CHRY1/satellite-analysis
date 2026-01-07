@@ -39,7 +39,9 @@ export type LargeScaleSceneParam = {
     startTime: string
     endTime: string
     sensorName: string
-    regionId: string
+    regionId?: string
+    resolution?: any
+    locationId?: any
 }
 
 interface ScenePath {

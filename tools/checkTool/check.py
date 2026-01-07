@@ -36,8 +36,8 @@ from Utils.validate import *
 # --- 配置 ---
 # 熔断阈值：即将读取的像素数如果超过此值，认为数据量过大，直接跳过
 # 例如：5000 * 5000 = 25,000,000 像素
-# 如果是一张 uint8 的单波段图，这大约占用 25MB 内存，但在计算几何时会膨胀
-MAX_PIXELS_THRESHOLD = 5000 * 5000
+# 如果是一张 uint8 的单波段图，这大约占用 225MB 内存，但在计算几何时会膨胀
+MAX_PIXELS_THRESHOLD = 15000 * 15000
 
 def get_url(bucket, object_name):
     try:
@@ -85,15 +85,17 @@ def calculate_valid_polygon(tif_url, metadata_nodata=None, default_nodata=0):
                 return None
 
             # --- 数据量熔断 ---
+            decimation_factor = 1 # 默认读取原始分辨率
             overviews = src.overviews(1)
             if overviews:
-                decimation_factor = overviews[-1]
-                target_w = int(src.width / decimation_factor)
-                target_h = int(src.height / decimation_factor)
-            else:
-                decimation_factor = 1
-                target_w = src.width
-                target_h = src.height
+                if len(overviews) >= 2:
+                    # 如果有多级金字塔，取倒数第二级（比最顶层清晰一倍）
+                    decimation_factor = overviews[-2]
+                else:
+                    # 如果只有一级金字塔，只能取那一级
+                    decimation_factor = overviews[-1]
+            target_w = int(src.width / decimation_factor)
+            target_h = int(src.height / decimation_factor)
                 
             if (target_w * target_h) > MAX_PIXELS_THRESHOLD:
                 print(f"\033[91m[Skip] Image too huge ({target_w}x{target_h})!\033[0m")
