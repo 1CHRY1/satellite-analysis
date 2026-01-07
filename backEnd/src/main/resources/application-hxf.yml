@@ -53,7 +53,7 @@ spring:
             validation-query: SELECT 1
             socket-timeout: 1200000  # 20分钟
             init-connection-sqls: SET SESSION group_concat_max_len = 18446744073709551615
-            filters: stat,wall
+            filters: stat
             wall:
               table-check: true
               drop-table-allow: false
