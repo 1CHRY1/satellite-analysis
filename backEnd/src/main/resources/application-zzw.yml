@@ -131,7 +131,7 @@ docker:
     host: "223.2.35.153"
     username: "root"
     password: "dky.njnu.edu.cn"
-  localPath: D:/satellite/satellite8/satellite-analysis/backEnd/src/main/resources/modelDockerVolume
+  localPath: D:/satellite/satellite11/satellite-analysis/backEnd/src/main/resources/modelDockerVolume
   serverDir: /home/satellite/
   workDir: /usr/local/coding/
   servicePortRange:

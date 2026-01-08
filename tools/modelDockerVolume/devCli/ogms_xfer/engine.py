@@ -1,6 +1,6 @@
 import json
 from .application.provider import (
-    init_minio, init_satellite_database, init_services, init_project_info
+    init_minio, init_satellite_database, init_services, init_project_info, init_vector_database
 )
 
 class OGMS_Xfer:
@@ -11,11 +11,16 @@ class OGMS_Xfer:
             config = json.load(f)
         
         minio_config = config["minio"]
-        database_config = config["database"]    
+        database_config = config["database"]
+        vector_config = config.get("vector_database")    
 
         init_project_info(config["project_info"]["project_id"], config["project_info"]["user_id"], config["project_info"]["bucket"])
         init_minio(minio_config["endpoint"], minio_config["access_key"], minio_config["secret_key"], minio_config["secure"])
         init_satellite_database(database_config["endpoint"], database_config["user"], database_config["password"], database_config["satellite_database"])
+        
+        if vector_config:
+            init_vector_database(vector_config["endpoint"], vector_config["user"], vector_config["password"], vector_config["database"])
+            
         init_services()
 
     @classmethod
@@ -37,6 +42,12 @@ class OGMS_Xfer:
     def Image(cls, image_id: str = None):
         from .application.image import Image
         return Image(image_id) if image_id is not None else Image
+
+    @classmethod
+    def Vector(cls, source: str = None):
+        from .application.vector import Vector
+        return Vector(source) if source is not None else Vector
+
 
     from .application import toolbox, tileUtil
     Toolbox = toolbox
