@@ -651,27 +651,29 @@ onMounted(async () => {
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   color: var(--space-text);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .space-button:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
   transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
 }
 
 .space-button.primary {
   background: var(--space-accent);
   color: white;
-  border: none;
-  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .space-button.primary:hover {
   background: #0284c7;
-  box-shadow: 0 6px 16px rgba(14, 165, 233, 0.4);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 6px 16px rgba(14, 165, 233, 0.5);
 }
 
 .space-button.secondary {
@@ -680,13 +682,14 @@ onMounted(async () => {
 
 .space-button.danger {
   color: #EF4444;
-  background: transparent;
-  border-color: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.5);
 }
 
 .space-button.danger:hover {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #EF4444;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
 }
 
 .button-content {
