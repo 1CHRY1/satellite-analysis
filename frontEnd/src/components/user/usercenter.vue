@@ -16,7 +16,7 @@
                 :http-request="uploadAvatar"
               >
                 <div class="avatar-wrapper">
-                  <div class="orbital-ring"></div>
+                  <div class="avatar-glow"></div>
                   <div class="avatar-image-container">
                     <img
                       v-if="data.avatar"
@@ -53,7 +53,7 @@
               </p>
             </div>
 
-            <div class="action-buttons">
+            <div class="action-buttons" v-if="route.meta.showUserActions">
               <button class="space-button primary" @click="opendialog">
                 <div class="button-content">
                   <font-awesome-icon :icon="['far', 'pen-to-square']" class="button-icon" />
@@ -174,13 +174,14 @@ import { useUserStore } from '@/store';
 import userAvatar from "@/assets/image/avator.png";
 import { ref, reactive , onMounted,watch } from "vue";
 import userFunction from "@/components/user/userFunction.vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import { userUpdate, getUsers , changePassword} from '@/api/http/user';
 import { RegionSelects } from 'v-region'
 import { avaterUpdate, getAvatar } from '@/api/http/user'
 import { message } from 'ant-design-vue';
 
 const router = useRouter();
+const route = useRoute();
 const userStore = useUserStore()
 
 // 用户数据
@@ -402,7 +403,7 @@ onMounted(async () => {
 :root {
   --space-primary: #0B1426;
   --space-secondary: #1E293B;
-  --space-accent: #6366F1;
+  --space-accent: #0EA5E9;
   --space-orange: #F59E0B;
   --space-green: #10B981;
   --space-silver: #E2E8F0;
@@ -426,7 +427,7 @@ onMounted(async () => {
   width: 100%;
   height: 100%;
   background:
-    radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 20% 20%, rgba(14, 165, 233, 0.1) 0%, transparent 50%),
     radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
     radial-gradient(circle at 40% 60%, rgba(245, 158, 11, 0.05) 0%, transparent 50%);
   z-index: 0;
@@ -477,39 +478,24 @@ onMounted(async () => {
 
 /* Profile Section */
 .profile-section {
-  flex: 0 0 350px;
+  flex: 0 0 320px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
-  padding: 2rem;
-  background: rgba(15, 23, 42, 0.4);
-  border-radius: 20px;
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  gap: 2rem;
+  padding: 3rem 2rem;
+  background: rgba(30, 41, 59, 0.2);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
   position: relative;
   overflow: hidden;
-}
-
-.profile-section::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--space-accent), transparent);
-  animation: scanline 3s ease-in-out infinite;
-}
-
-@keyframes scanline {
-  0%, 100% { opacity: 0; transform: translateX(-100%); }
-  50% { opacity: 1; transform: translateX(100%); }
+  backdrop-filter: blur(10px);
 }
 
 /* Avatar Styling */
 .avatar-container {
   position: relative;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .avatar-wrapper {
@@ -519,43 +505,48 @@ onMounted(async () => {
   justify-content: center;
 }
 
-.orbital-ring {
+.avatar-glow {
   position: absolute;
-  width: 220px;
-  height: 220px;
-  border: 2px solid transparent;
-  border-top: 2px solid var(--space-accent);
+  width: 160px;
+  height: 160px;
   border-radius: 50%;
-  animation: orbit 4s linear infinite;
-  opacity: 0.6;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.2) 0%, transparent 70%);
+  filter: blur(20px);
+  animation: pulse-glow 4s ease-in-out infinite;
+  z-index: 0;
 }
 
-@keyframes orbit {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.1); }
 }
 
 .avatar-image-container {
   position: relative;
-  width: 200px;
-  height: 200px;
+  width: 140px;
+  height: 140px;
   border-radius: 50%;
   overflow: hidden;
-  border: 3px solid var(--space-accent);
-  box-shadow:
-    0 0 30px rgba(99, 102, 241, 0.3),
-    inset 0 0 30px rgba(0, 0, 0, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.avatar-wrapper:hover .avatar-image-container {
+  border-color: var(--space-accent);
+  box-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
 }
 
 .avatar-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  transition: transform 0.5s ease;
 }
 
 .avatar-wrapper:hover .avatar-image {
-  transform: scale(1.05);
+  transform: scale(1.1);
 }
 
 .avatar-overlay {
@@ -564,10 +555,10 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(15, 23, 42, 0.6);
   opacity: 0;
   transition: opacity 0.3s ease;
-  border-radius: 50%;
+  backdrop-filter: blur(2px);
 }
 
 .avatar-wrapper:hover .avatar-overlay {
@@ -576,130 +567,133 @@ onMounted(async () => {
 
 .upload-text {
   color: var(--space-white);
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 500;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.5px;
 }
 
 /* User Info */
 .user-info {
   text-align: center;
-  color: var(--space-text);
-  space-y: 0.5rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .user-name {
-  font-size: 2rem;
-  font-weight: 700;
+  font-size: 1.75rem;
+  font-weight: 600;
   color: var(--space-white);
-  margin-bottom: 0.5rem;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  margin-bottom: 0.25rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.user-email, .user-organization {
-  font-size: 1.1rem;
+.user-email {
+  font-size: 0.95rem;
+  color: var(--space-text-muted);
+  font-weight: 400;
+  margin-bottom: 1.5rem;
+}
+
+.user-organization {
+  font-size: 0.9rem;
   color: var(--space-text);
-  margin-bottom: 0.25rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  margin-bottom: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .user-organization .label {
   color: var(--space-accent);
-  font-weight: 600;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .user-introduction {
-  font-size: 0.95rem;
-  color: var(--space-text-muted);
-  line-height: 1.5;
-  margin-top: 1rem;
-  padding: 0.75rem;
-  background: rgba(15, 23, 42, 0.3);
-  border-radius: 8px;
-  border-left: 3px solid var(--space-accent);
+  font-size: 0.9rem;
+  color: var(--space-text);
+  line-height: 1.6;
+  width: 100%;
+  text-align: center;
+  margin-top: 0.5rem;
+  opacity: 0.8;
 }
 
 .user-introduction.placeholder {
   font-style: italic;
-  opacity: 0.7;
+  opacity: 0.5;
 }
 
 /* Action Buttons */
 .action-buttons {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
   width: 100%;
-  margin-top: 1.5rem;
+  margin-top: auto;
 }
 
 .space-button {
   position: relative;
-  padding: 0.75rem 1.5rem;
+  padding: 0.85rem 1.5rem;
   border: none;
   border-radius: 12px;
-  font-weight: 600;
+  font-weight: 500;
   font-size: 0.95rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--space-text);
 }
 
-.space-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-  transition: left 0.5s ease;
-}
-
-.space-button:hover::before {
-  left: 100%;
+.space-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .space-button.primary {
-  background: linear-gradient(135deg, var(--space-accent), #4F46E5);
+  background: var(--space-accent);
   color: white;
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+  border: none;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25);
 }
 
 .space-button.primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+  background: #0284c7;
+  box-shadow: 0 6px 16px rgba(14, 165, 233, 0.4);
 }
 
 .space-button.secondary {
-  background: linear-gradient(135deg, var(--space-orange), #E97318);
-  color: white;
-  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
-}
-
-.space-button.secondary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+   /* Inherits default glass style, add specific override if needed */
 }
 
 .space-button.danger {
-  background: linear-gradient(135deg, #EF4444, #DC2626);
-  color: white;
-  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+  color: #EF4444;
+  background: transparent;
+  border-color: rgba(239, 68, 68, 0.2);
 }
 
 .space-button.danger:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.4);
 }
 
 .button-content {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  position: relative;
-  z-index: 1;
+  gap: 0.6rem;
 }
 
 .button-icon {
@@ -719,19 +713,19 @@ onMounted(async () => {
 /* Dialog Enhancements */
 :deep(.el-dialog) {
   background: linear-gradient(135deg, var(--space-secondary), var(--space-primary));
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  border: 1px solid rgba(14, 165, 233, 0.3);
   border-radius: 16px;
   backdrop-filter: blur(20px);
 }
 
 :deep(.el-dialog__header) {
-  background: rgba(99, 102, 241, 0.1);
+  background: rgba(14, 165, 233, 0.1);
   color: var(--space-white);
 }
 
 :deep(.el-input__wrapper) {
   background: rgba(15, 23, 42, 0.5) !important;
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  border: 1px solid rgba(14, 165, 233, 0.3);
   border-radius: 8px;
 }
 
@@ -746,7 +740,7 @@ onMounted(async () => {
 :deep(.region-selects button) {
   background: rgba(15, 23, 42, 0.5) !important;
   color: var(--space-text) !important;
-  border: 1px solid rgba(99, 102, 241, 0.3) !important;
+  border: 1px solid rgba(14, 165, 233, 0.3) !important;
 }
 
 /* Responsive Design */
@@ -761,14 +755,14 @@ onMounted(async () => {
     width: 100%;
   }
 
-  .orbital-ring {
-    width: 180px;
-    height: 180px;
+  .avatar-glow {
+    width: 140px;
+    height: 140px;
   }
 
   .avatar-image-container {
-    width: 160px;
-    height: 160px;
+    width: 120px;
+    height: 120px;
   }
 }
 </style>
