@@ -6,6 +6,7 @@ import json
 import traceback
 import argparse
 import numpy as np
+import math
 
 # 新增依赖库 (需 pip install rasterio shapely)
 import rasterio
@@ -96,10 +97,38 @@ def calculate_valid_polygon(tif_url, metadata_nodata=None, default_nodata=0):
                     decimation_factor = overviews[-1]
             target_w = int(src.width / decimation_factor)
             target_h = int(src.height / decimation_factor)
+
+            # ### [修改开始/Changed Start] 针对超大图的强制降采样逻辑 ###
+            pixel_count = target_w * target_h
+            
+            if pixel_count > MAX_PIXELS_THRESHOLD:
+                # 原逻辑：直接 return None
+                # 新逻辑：计算额外的压缩比例，强制把尺寸压到阈值以内
                 
-            if (target_w * target_h) > MAX_PIXELS_THRESHOLD:
-                print(f"\033[91m[Skip] Image too huge ({target_w}x{target_h})!\033[0m")
-                return None
+                print(f"\033[93m[Warn] Image huge ({target_w}x{target_h}). Forcing downsample to fit threshold...\033[0m")
+                
+                # 计算缩放比例： sqrt(当前像素量 / 阈值)
+                # 例如：当前是4倍阈值，则宽高各除以2
+                ratio = math.sqrt(pixel_count / MAX_PIXELS_THRESHOLD)
+                
+                # 向上取整，并多给一点余量(1.1倍)，确保安全
+                safe_scale = math.ceil(ratio * 1.1)
+                
+                # 重新计算目标宽高
+                target_w = int(target_w / safe_scale)
+                target_h = int(target_h / safe_scale)
+                
+                # 防止除到0
+                target_w = max(1, target_w)
+                target_h = max(1, target_h)
+                
+                print(f"      -> Downsampled size: {target_w}x{target_h} (Scale factor: {safe_scale})")
+            
+            # ### [修改结束/Changed End] ############################
+                
+            # if (target_w * target_h) > MAX_PIXELS_THRESHOLD:
+            #     print(f"\033[91m[Skip] Image too huge ({target_w}x{target_h})!\033[0m")
+            #     return None
 
             # 确定 Nodata
             nodata = src.nodata
