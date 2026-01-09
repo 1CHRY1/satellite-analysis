@@ -632,75 +632,117 @@ onMounted(async () => {
   opacity: 0.5;
 }
 
-/* Action Buttons */
+/* --- Action Buttons (美化版) --- */
 .action-buttons {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   width: 100%;
   margin-top: auto;
+  padding-top: 2rem;
+  /* 增加一条极淡的分割线 */
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
+/* Base Button Style - 基础样式 */
 .space-button {
   position: relative;
-  padding: 0.85rem 1.5rem;
+  width: 100%;
+  padding: 0.9rem 1.5rem;
   border: none;
   border-radius: 12px;
   font-weight: 500;
   font-size: 0.95rem;
+  letter-spacing: 0.5px;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  
+  /* 默认状态：低调的深色磨砂玻璃 */
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--space-text);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.space-button:hover {
-  background: rgba(255, 255, 255, 0.15);
-  transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.4);
-  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
-}
-
-.space-button.primary {
-  background: var(--space-accent);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.space-button.primary:hover {
-  background: #0284c7;
-  border-color: rgba(255, 255, 255, 0.4);
-  box-shadow: 0 6px 16px rgba(14, 165, 233, 0.5);
-}
-
-.space-button.secondary {
-   /* Inherits default glass style, add specific override if needed */
-}
-
-.space-button.danger {
-  color: #EF4444;
-  background: rgba(239, 68, 68, 0.05);
-  border: 1px solid rgba(239, 68, 68, 0.5);
-}
-
-.space-button.danger:hover {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: #EF4444;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+  
+  /* 关键：顶部微弱高光，制造厚度感，不刺眼 */
+  box-shadow: 
+    0 4px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .button-content {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.6rem;
+  gap: 0.8rem;
+  position: relative;
+  z-index: 2;
 }
 
 .button-icon {
   font-size: 1rem;
+  opacity: 0.8;
+  transition: transform 0.3s ease;
+}
+
+/* Hover Effects - 通用悬停效果 */
+.space-button:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 
+    0 8px 15px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.space-button:hover .button-icon {
+  transform: scale(1.1) rotate(5deg);
+  opacity: 1;
+}
+
+.space-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Specific Button Styles */
+
+/* 1. Primary (Edit) - 深空蓝，半透明 */
+.space-button.primary {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.25) 0%, rgba(14, 165, 233, 0.1) 100%);
+  border: 1px solid rgba(14, 165, 233, 0.3);
+  color: #e0f2fe;
+}
+
+.space-button.primary:hover {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.35) 0%, rgba(14, 165, 233, 0.15) 100%);
+  border-color: rgba(14, 165, 233, 0.5);
+  box-shadow: 
+    0 8px 20px rgba(14, 165, 233, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* 2. Secondary (Password) - 低调金属感 */
+.space-button.secondary {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.space-button.secondary:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* 3. Danger (Logout) - 隐忍的红色，仅在Hover时明显 */
+.space-button.danger {
+  background: linear-gradient(145deg, rgba(239, 68, 68, 0.05) 0%, transparent 100%);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
+
+.space-button.danger:hover {
+  background: linear-gradient(145deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fecaca;
+  box-shadow: 
+    0 8px 15px rgba(239, 68, 68, 0.1), 
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 /* Function Section */
