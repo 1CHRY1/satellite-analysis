@@ -559,12 +559,12 @@ const LocalImageBaseMapStyle = {
     sources: {
         'Local-Imagelayer-Source': {
             type: 'raster',
-            tiles: [`http://${window.location.host}` + ezStore.get('conf')['intranet_img_url']],
+            tiles: [`${window.location.origin}` + ezStore.get('conf')['intranet_img_url']],
             tileSize: 256,
         },
         // 'Local-Interal-Source': {
         //     type: 'raster',
-        //     tiles: [`http://${window.location.host}` + ezStore.get('conf')['fk_url']],
+        //     tiles: [`${window.location.origin}` + ezStore.get('conf')['fk_url']],
         //     tileSize: 256,
         // },
     },
@@ -580,8 +580,8 @@ const LocalImageBaseMapStyle = {
         //     source: 'Local-Interal-Source',
         // },
     ],
-    glyphs: `http://${window.location.host}/glyphs/mapbox/{fontstack}/{range}.pbf`,
-    sprite: `http://${window.location.host}/sprite`,
+    glyphs: `${window.location.origin}/glyphs/mapbox/{fontstack}/{range}.pbf`,
+    sprite: `${window.location.origin}/sprite`,
 }
 // 内网矢量风格底图
 const LocalVectorBaseMapStyle = {
@@ -819,13 +819,13 @@ const LocalVectorBaseMapStyle = {
     sources: {
         openmaptiles: {
             type: 'vector',
-            tiles: [`http://${window.location.host}` + ezStore.get('conf')['intranet_mvt_url']],
+            tiles: [`${window.location.origin}` + ezStore.get('conf')['intranet_mvt_url']],
             maxzoom: 14,
             minzoom: 0,
         },
     },
-    sprite: `http://${window.location.host}/sprite`,
-    glyphs: `http://${window.location.host}/glyphs/{fontstack}/{range}.pbf`,
+    sprite: `${window.location.origin}/sprite`,
+    glyphs: `${window.location.origin}/glyphs/{fontstack}/{range}.pbf`,
     layers: [
         {
             id: 'background',
@@ -1801,7 +1801,7 @@ const OurVectorBaseMapStyle = {
     sources: {
         offlineMapTiles: {
             type: 'vector',
-            tiles: [`http://${window.location.host}` + ezStore.get('conf')['intranet_mvt_url']],
+            tiles: [`${window.location.origin}` + ezStore.get('conf')['intranet_mvt_url']],
             minzoom: 0,
             maxzoom: 22,
         },

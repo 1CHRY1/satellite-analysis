@@ -184,7 +184,7 @@ export const useVisualize = () => {
     const selectedSensorName = ref('')
     const showSceneResult = async (sensorName: string) => {
         destroyScene()
-        InteractiveExploreMapOps.map_fitViewToTargetZoom(11)
+        InteractiveExploreMapOps.map_fitViewToTargetZoom(15)
         const stopLoading = message.loading('正在生成大范围图幅，请耐心等待...', 0)
         // 1. 创建大范围可视化的任务，轮询，最后返回 mosaicJson
         let body: any = {}
