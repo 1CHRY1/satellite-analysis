@@ -510,7 +510,7 @@ const handleDownload = async (item: any) => {
 
         // 获取配置
         const conf = ezStore.get('conf')
-        const minioEndpoint = conf['minioIpAndPort']
+        const minioEndpoint = conf['minioProxy']
 
         // 获取case结果数据
         const result = await getResultByCaseId(item.caseId)

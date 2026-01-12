@@ -2,9 +2,11 @@ import WebSocketManager from './websocket'
 
 // 动态生成 WebSocket URL
 const createWebSocketUrl = (userId: string, projectId: string) => {
-    // return `ws://223.2.43.228:31992/model/websocket/userId/${userId}/projectId/${projectId}`
-    // return `ws://223.2.47.202:9001/model/websocket/userId/${userId}/projectId/${projectId}`
-    return `ws://${window.location.host}/websocket/userId/${userId}/projectId/${projectId}`
+    // 1. 获取当前页面的协议，如果是 https: 则使用 wss，否则使用 ws
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    
+    // 2. 动态拼接协议和当前域名
+    return `${protocol}//${window.location.host}/websocket/userId/${userId}/projectId/${projectId}`;
 }
 
 // 创建 WebSocket 实例

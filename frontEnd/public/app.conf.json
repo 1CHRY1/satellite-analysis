@@ -5,6 +5,7 @@
     "back_app3": "/api3",
     "back_websocket": "",
     "minioIpAndPort": "http://223.2.34.8:30900",
+    "minioProxy": "minio",
     "titiler": "/tiler",
 
     "ndviProjectId": "PRJyxITmCVLn3PMoaeca",

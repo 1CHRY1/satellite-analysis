@@ -93,15 +93,16 @@ export const getVectorUrl = (vectorUrlParam: VectorUrlParam) => {
     const types = qs ? '?' + qs : ''
     let baseUrl = ''
     // types = ''
+    const origin = window.location.origin;
     switch (spatialFilterMethod) {
         case 'region':
-            baseUrl = `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/region/${landId}/${source_layer}/${field}/{z}/{x}/{y}${types}`
+            baseUrl = `${origin}${backProxyEndPoint}/data/vector/region/${landId}/${source_layer}/${field}/{z}/{x}/{y}${types}`
             break
         case 'poi':
-            baseUrl = `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/location/${landId}/${resolution}/${source_layer}/${field}/{z}/{x}/{y}${types}`
+            baseUrl = `${origin}${backProxyEndPoint}/data/vector/location/${landId}/${resolution}/${source_layer}/${field}/{z}/{x}/{y}${types}`
             break
         default:
-            baseUrl = `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/region/${landId}/${source_layer}/${field}/{z}/{x}/{y}${types}`
+            baseUrl = `${origin}${backProxyEndPoint}/data/vector/region/${landId}/${source_layer}/${field}/{z}/{x}/{y}${types}`
             break
     }
     const fullUrl = baseUrl
@@ -239,7 +240,8 @@ export const getGridVectorUrl = (grid: GridData, source_layer: string, field: st
     }
     const qs = requestParams.toString()
     const types = qs ? '?' + qs : ''
-    return `http://${window.location.hostname}:${window.location.port}${backProxyEndPoint}/data/vector/grid/${grid.columnId}/${grid.rowId}/${grid.resolution}/${source_layer}/${field}/{z}/{x}/{y}${types}`
+    const origin = window.location.origin;
+    return `${origin}${backProxyEndPoint}/data/vector/grid/${grid.columnId}/${grid.rowId}/${grid.resolution}/${source_layer}/${field}/{z}/{x}/{y}${types}`
 }
 
 /**

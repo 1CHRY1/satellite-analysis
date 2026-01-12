@@ -9,6 +9,7 @@ export interface EnvConfig {
     websocket: string
     tiler: string
     proxymap: string,
+    minio: string,
 }
 
 export interface FixedConfig {
@@ -25,6 +26,7 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
         websocket: 'http://localhost:9888/model/websocket',
         tiler: 'http://127.0.0.1:8000',
         proxymap: 'http://localhost:5003',
+        minio: 'http://223.2.34.8:30900',
     },
     // 集群环境
     cluster: {
@@ -33,6 +35,7 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
         websocket: 'http://223.2.34.8:30394/model/websocket',
         tiler: 'http://223.2.34.8:31800',
         proxymap: 'http://localhost:5003',
+        minio: 'http://223.2.34.8:30900',
     },
     // HXF开发环境
     hxf: {
@@ -41,6 +44,7 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
         websocket: 'http://223.2.43.238:9888/model/websocket',
         tiler: 'http://223.2.43.238:8000',
         proxymap: 'http://localhost:5003',
+        minio: 'http://223.2.34.8:30900',
     },
     slk: {
         api: 'http://223.2.34.8:31584',
@@ -48,6 +52,7 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
         websocket: 'http://223.2.34.8:30394/model/websocket',
         tiler: 'http://127.0.0.1:8000',
         proxymap: 'http://localhost:5003',
+        minio: 'http://223.2.34.8:30900',
     },
     zzw: {
         api: 'http://localhost:8999',
@@ -55,6 +60,7 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
         websocket: 'http://localhost:9888/model/websocket',
         tiler: 'http://223.2.34.8:31800',
         proxymap: 'http://localhost:5003',
+        minio: 'http://223.2.34.8:30900',
     },
     xzy: {
         api: 'http://10.30.8.44:31584', // 或本地 http://localhost:8999
@@ -62,6 +68,7 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
         websocket: 'http://10.30.8.44:30394/model/websocket', // 或本地 http://localhost:9888/model/websocket
         tiler: 'http://10.30.8.44:31800',
         proxymap: 'http://localhost:5003',
+        minio: 'http://223.2.34.8:30900',
     },
 }
 

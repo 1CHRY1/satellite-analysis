@@ -57,7 +57,13 @@ const createProxyConfig = () => {
         '/tiler': {
             target: currentEnv.tiler,
             changeOrigin: true,
+            secure: false,
             rewrite: (path: string) => path.replace(/^\/tiler/, ''),
+        },
+        '/minio': {
+            target: currentEnv.minio,
+            changeOrigin: true,
+            rewrite: (path: string) => path.replace(/^\/minio/, ''),
         },
         // 固定配置（不随环境变化）
         // '/hytemp': {
