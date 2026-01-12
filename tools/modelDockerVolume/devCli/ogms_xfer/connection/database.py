@@ -21,3 +21,20 @@ class DatabaseClient:
         finally:
             db.close()
             print("db closed")
+
+class PostgresClient:
+    
+    Base = declarative_base()
+    
+    def __init__(self, endpoint:str, user:str, password:str, database:str):
+        self.DATABASE_URL = f"postgresql+psycopg2://{user}:{password}@{endpoint}/{database}"
+        self.engine = create_engine(self.DATABASE_URL)
+        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+
+    @contextmanager
+    def get_db(self):
+        db = self.SessionLocal()
+        try:
+            yield db
+        finally:
+            db.close()
