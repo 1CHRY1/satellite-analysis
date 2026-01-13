@@ -1,25 +1,27 @@
 import os
 
-# 1. 开启 HTTP 范围请求合并（减少请求次数）
+# --- 1. 网络连接优化 (安全，强烈推荐) ---
+# 合并相邻的读取请求，减少 HTTP 请求数 (MinIO 杀手级优化)
 os.environ["GDAL_HTTP_MERGE_CONSECUTIVE_RANGES"] = "YES"
-# 2. 开启 HTTP 多路复用（需要 GDAL 3.2+ 和支持 HTTP/2 的 libcurl）
-os.environ["GDAL_HTTP_MULTIPLEX"] = "YES"
-# 3. 设置缓存大小（例如设置 1024MB，根据你的服务器内存调整）
-os.environ["GDAL_CACHEMAX"] = "1024" 
-# 4. 优化 Minio 这种 S3 存储的读取
-os.environ["GDAL_DISABLE_READDIR_ON_OPEN"] = "EMPTY_DIR" # 加快打开速度
-os.environ["CPL_VSIL_CURL_ALLOWED_EXTENSIONS"] = ".tif,.tiff,.ovr" # 减少无效探测
 
-# 1. 增加头信息预读量（高分影像 IFD 很大，设置到 128KB）
-os.environ["GDAL_INGESTED_BYTES_AT_OPEN"] = "131072"
-# 2. 开启并行下载（GDAL 3.2+ 关键设置）
-os.environ["GDAL_HTTP_MERGE_CONSECUTIVE_RANGES"] = "YES"
+# 启用 HTTP/2 多路复用 (如果 MinIO 支持，速度起飞)
 os.environ["GDAL_HTTP_MULTIPLEX"] = "YES"
-# 3. 强制使用异步连接池
+
+# 增大 HTTP 超时容错 (防止网络波动导致 500 错误)
+os.environ["GDAL_HTTP_TIMEOUT"] = "30"
+os.environ["GDAL_HTTP_MAX_RETRY"] = "3"
+
+# --- 2. 读取性能优化 ---
+# 打开文件时预读 128KB，对于高分影像(GF)这种头文件较大的 COG 很有用
+# 能减少一次额外的 HTTP GET
+os.environ["GDAL_INGESTED_BYTES_AT_OPEN"] = "131072"
+
+# 强制使用较大的块下载，减少碎片化 IO
 os.environ["CPL_VSIL_CURL_CHUNK_SIZE"] = "1048576" # 1MB
 
-# 4. 在代码中限制并发线程数，避免压垮 Minio
-# 在 run_mosaic_sync 中设置 threads=5 到 8 即可，不要太高
+# --- 3. 内存缓存 (根据机器配置调整) ---
+# 注意：这是单进程缓存。如果你有 8 个 worker，总量是 256*8 = 2GB
+os.environ["GDAL_CACHEMAX"] = "256"
 
 def createApp():
     
