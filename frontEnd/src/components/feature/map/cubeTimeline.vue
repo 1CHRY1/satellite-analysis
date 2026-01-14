@@ -67,14 +67,29 @@
                     </select>
                 </div>
             </div>
+
+            <!-- GIF生成按钮 -->
+            <div class="gif-generator flex flex-col items-center justify-center">
+                <button
+                    class="gif-btn"
+                    @click="handleGenerateGif"
+                    :disabled="filteredImages.length < 2 || isGeneratingGif"
+                    :title="filteredImages.length < 2 ? '需要至少2张影像' : '生成GIF动画'"
+                >
+                    <FilmIcon v-if="!isGeneratingGif" :size="20" />
+                    <LoaderIcon v-else :size="20" class="animate-spin" />
+                    <span class="ml-1">{{ isGeneratingGif ? `${gifProgress}%` : 'GIF' }}</span>
+                </button>
+            </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed, watch, reactive, type ComputedRef, nextTick, onUnmounted } from 'vue'
-import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-vue-next'
+import { ChevronLeftIcon, ChevronRightIcon, FilmIcon, LoaderIcon } from 'lucide-vue-next'
 import { getGrid2DDEMUrl, getGrid3DUrl, getGridDEMUrl, getGridNDVIOrSVRUrl, getGridOneBandUrl, getGridSceneUrl, getImgStats, getMinIOUrl } from '@/api/http/interactive-explore/visualize.api'
+import { grid2bbox } from '@/util/map/gridMaker'
 import bus from '@/store/bus'
 import { ezStore } from '@/store'
 import * as GridExploreMapOps from '@/util/map/operation/grid-explore'
@@ -111,6 +126,10 @@ const grid = ref<GridData>({ rowId: 0, columnId: 0, resolution: 0, opacity: 0, n
 const activeIndex = ref(-1)
 const visualMode = ref<'rgb' | 'product'>('rgb')
 const timelineTrack = ref<HTMLElement | null>(null)
+
+// GIF生成相关状态
+const isGeneratingGif = ref(false)
+const gifProgress = ref(0)
 
 const scrollToCenter = (index: number) => {
     if (!timelineTrack.value) return
@@ -490,6 +509,273 @@ const handleClick = async (index: number) => {
 }
 
 /**
+ * 生成GIF动画
+ */
+const handleGenerateGif = async () => {
+    if (filteredImages.value.length < 2) {
+        message.warning('需要至少2张影像才能生成GIF')
+        return
+    }
+
+    isGeneratingGif.value = true
+    gifProgress.value = 0
+
+    try {
+        // 动态导入gif.js
+        const GIF = (await import('gif.js')).default
+        
+        const images = filteredImages.value
+        const totalImages = images.length
+        
+        // 创建GIF编码器，设置透明背景
+        const gif = new GIF({
+            workers: 2,
+            quality: 10,
+            width: 512,
+            height: 512,
+            workerScript: '/gif.worker.js', // 需要确保这个文件存在于public目录
+            transparent: 0x000000 // 将黑色设为透明色
+        })
+
+        // 加载每张影像并添加到GIF
+        for (let i = 0; i < totalImages; i++) {
+            const img = images[i] as MultiImageInfoType
+            
+            try {
+                // 获取影像URL（与handleClick类似的逻辑）
+                const imageUrl = await getImageUrlForGif(img)
+                
+                // 获取bbox用于裁剪
+                const bbox = grid2bbox(grid.value.columnId, grid.value.rowId, grid.value.resolution)
+                
+                // 加载图片并裁剪到bbox区域，缩放到512x512
+                const croppedCanvas = await loadAndCropImageForGif(imageUrl, bbox, 512)
+                
+                // 添加到GIF（每帧延迟500ms）
+                gif.addFrame(croppedCanvas, { delay: 500 })
+                
+                // 更新进度
+                gifProgress.value = Math.round(((i + 1) / totalImages) * 80)
+            } catch (err) {
+                console.warn(`跳过第${i + 1}张影像:`, err)
+            }
+        }
+
+        // 监听GIF渲染进度
+        gif.on('progress', (p: number) => {
+            gifProgress.value = 80 + Math.round(p * 20)
+        })
+
+        // 渲染完成后在地图上显示GIF
+        gif.on('finished', (blob: Blob) => {
+            // 创建Blob URL用于显示
+            const gifBlobUrl = URL.createObjectURL(blob)
+            
+            // 在地图格网上显示GIF动画
+            GridExploreMapOps.map_addGridGifLayer(grid.value, gifBlobUrl)
+
+            isGeneratingGif.value = false
+            gifProgress.value = 0
+            message.success('GIF生成成功！已在格网中显示')
+        })
+
+        gif.render()
+    } catch (error) {
+        console.error('GIF生成失败:', error)
+        message.error('GIF生成失败，请重试')
+        isGeneratingGif.value = false
+        gifProgress.value = 0
+    }
+}
+
+/**
+ * 获取影像URL用于GIF生成
+ * 使用 /rgb/box/{z}/{x}/{y}.png 端点，计算覆盖bbox的合适瓦片
+ */
+const getImageUrlForGif = async (img: MultiImageInfoType): Promise<string> => {
+    let redPath = img.redPath
+    let greenPath = img.greenPath
+    let bluePath = img.bluePath
+
+    const cache = ezStore.get('statisticCache')
+    let [min_r, max_r, min_g, max_g, min_b, max_b, mean_r, mean_g, mean_b, std_r, std_g, std_b] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+    if (cache.get(redPath) && cache.get(greenPath) && cache.get(bluePath)) {
+        ;[min_r, max_r, mean_r, std_r] = cache.get(redPath)
+        ;[min_g, max_g, mean_g, std_g] = cache.get(greenPath)
+        ;[min_b, max_b, mean_b, std_b] = cache.get(bluePath)
+    } else if (img.dataType !== 'dem' && img.dataType !== 'dsm') {
+        const [stats_r, stats_g, stats_b] = await Promise.all([
+            getImgStats(getMinIOUrl(redPath)),
+            getImgStats(getMinIOUrl(greenPath)),
+            getImgStats(getMinIOUrl(bluePath)),
+        ])
+        min_r = stats_r.b1.min
+        max_r = stats_r.b1.max
+        min_g = stats_g.b1.min
+        max_g = stats_g.b1.max
+        min_b = stats_b.b1.min
+        max_b = stats_b.b1.max
+        mean_r = stats_r.b1.mean
+        std_r = stats_r.b1.std
+        mean_g = stats_g.b1.mean
+        std_g = stats_g.b1.std
+        mean_b = stats_b.b1.mean
+        std_b = stats_b.b1.std
+
+        cache.set(redPath, [min_r, max_r, mean_r, std_r])
+        cache.set(greenPath, [min_g, max_g, mean_g, std_g])
+        cache.set(bluePath, [min_b, max_b, mean_b, std_b])
+    }
+
+    const bbox = grid2bbox(grid.value.columnId, grid.value.rowId, grid.value.resolution)
+    
+    // titiler配置可能是代理路径(如/tiler)，GIF生成需要完整URL来跨域加载图片
+    const titilerEndPoint = ezStore.get('conf')['titiler']
+    const minioEndPoint = ezStore.get('conf')['minioIpAndPort']
+    
+    // 如果是相对路径，拼接当前origin
+    const fullTitilerUrl = titilerEndPoint.startsWith('http') 
+        ? titilerEndPoint 
+        : `${window.location.origin}${titilerEndPoint}`
+    
+    // 计算覆盖bbox的瓦片坐标（选择合适的zoom级别）
+    const { z, x, y } = bboxToTile(bbox)
+    
+    const requestParams = new URLSearchParams()
+    requestParams.append('bbox', bbox.join(','))
+    requestParams.append('url_r', `${minioEndPoint}/${redPath}`)
+    requestParams.append('url_g', `${minioEndPoint}/${greenPath}`)
+    requestParams.append('url_b', `${minioEndPoint}/${bluePath}`)
+    requestParams.append('min_r', min_r.toString())
+    requestParams.append('max_r', max_r.toString())
+    requestParams.append('min_g', min_g.toString())
+    requestParams.append('max_g', max_g.toString())
+    requestParams.append('min_b', min_b.toString())
+    requestParams.append('max_b', max_b.toString())
+    if (scaleRate.value) requestParams.append('normalize_level', scaleRate.value.toString())
+    if (stretchMethod.value) requestParams.append('stretch_method', stretchMethod.value)
+    if (img.nodata) requestParams.append('nodata', img.nodata.toString())
+    requestParams.append('std_config', JSON.stringify({ mean_r, mean_g, mean_b, std_r, std_g, std_b }))
+
+    // 使用 /rgb/box/{z}/{x}/{y}.png 端点
+    return `${fullTitilerUrl}/rgb/box/${z}/${x}/${y}.png?${requestParams.toString()}`
+}
+
+/**
+ * 将bbox转换为覆盖该区域的瓦片坐标
+ */
+const bboxToTile = (bbox: number[]): { z: number, x: number, y: number } => {
+    const [minLon, minLat, maxLon, maxLat] = bbox
+    
+    // 计算bbox的中心点
+    const centerLon = (minLon + maxLon) / 2
+    const centerLat = (minLat + maxLat) / 2
+    
+    // 根据bbox大小选择合适的zoom级别
+    const lonSpan = maxLon - minLon
+    const latSpan = maxLat - minLat
+    const maxSpan = Math.max(lonSpan, latSpan)
+    
+    // 计算合适的zoom级别（使bbox大致占满一个瓦片）
+    // 每个瓦片在zoom z时覆盖 360/2^z 度
+    let z = Math.floor(Math.log2(360 / maxSpan))
+    z = Math.max(1, Math.min(z, 18)) // 限制在1-18之间
+    
+    // 计算瓦片坐标
+    const x = Math.floor((centerLon + 180) / 360 * Math.pow(2, z))
+    const latRad = centerLat * Math.PI / 180
+    const y = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * Math.pow(2, z))
+    
+    return { z, x, y }
+}
+
+/**
+ * 根据瓦片坐标计算瓦片的地理边界
+ */
+const tileToBbox = (z: number, x: number, y: number): number[] => {
+    const n = Math.pow(2, z)
+    const minLon = x / n * 360 - 180
+    const maxLon = (x + 1) / n * 360 - 180
+    const maxLatRad = Math.atan(Math.sinh(Math.PI * (1 - 2 * y / n)))
+    const minLatRad = Math.atan(Math.sinh(Math.PI * (1 - 2 * (y + 1) / n)))
+    const maxLat = maxLatRad * 180 / Math.PI
+    const minLat = minLatRad * 180 / Math.PI
+    return [minLon, minLat, maxLon, maxLat]
+}
+
+/**
+ * 加载图片为HTMLImageElement
+ */
+const loadImage = (url: string): Promise<HTMLImageElement> => {
+    return new Promise((resolve, reject) => {
+        const img = new Image()
+        img.crossOrigin = 'anonymous'
+        img.onload = () => resolve(img)
+        img.onerror = reject
+        img.src = url
+    })
+}
+
+/**
+ * 加载瓦片图片并裁剪bbox区域，缩放到目标尺寸
+ */
+const loadAndCropImageForGif = async (url: string, bbox: number[], targetSize: number = 512): Promise<HTMLCanvasElement> => {
+    // 加载原始瓦片图片
+    const img = await loadImage(url)
+    
+    // 获取瓦片坐标和瓦片边界
+    const { z, x, y } = bboxToTile(bbox)
+    const tileBbox = tileToBbox(z, x, y)
+    
+    const [tMinLon, tMinLat, tMaxLon, tMaxLat] = tileBbox
+    const [bMinLon, bMinLat, bMaxLon, bMaxLat] = bbox
+    
+    // 瓦片尺寸（通常是256）
+    const tileSize = img.width || 256
+    
+    // 计算bbox在瓦片中的像素位置
+    // 注意：y轴是从上到下的，所以lat的计算要反过来
+    const srcX = Math.max(0, (bMinLon - tMinLon) / (tMaxLon - tMinLon) * tileSize)
+    const srcY = Math.max(0, (tMaxLat - bMaxLat) / (tMaxLat - tMinLat) * tileSize)
+    const srcW = Math.min(tileSize - srcX, (bMaxLon - bMinLon) / (tMaxLon - tMinLon) * tileSize)
+    const srcH = Math.min(tileSize - srcY, (bMaxLat - bMinLat) / (tMaxLat - tMinLat) * tileSize)
+    
+    // 创建目标Canvas
+    const canvas = document.createElement('canvas')
+    canvas.width = targetSize
+    canvas.height = targetSize
+    const ctx = canvas.getContext('2d')!
+    
+    // 裁剪bbox区域并缩放到目标尺寸
+    if (srcW > 0 && srcH > 0) {
+        ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, targetSize, targetSize)
+    }
+    
+    // 将黑色/近黑色像素转为透明（处理nodata区域）
+    const imageData = ctx.getImageData(0, 0, targetSize, targetSize)
+    const data = imageData.data
+    const threshold = 10 // 允许一定的容差，处理近黑色像素
+    
+    for (let i = 0; i < data.length; i += 4) {
+        const r = data[i]
+        const g = data[i + 1]
+        const b = data[i + 2]
+        // 如果RGB值都接近0（黑色），设为完全透明
+        if (r < threshold && g < threshold && b < threshold) {
+            data[i] = 0     // R
+            data[i + 1] = 0 // G
+            data[i + 2] = 0 // B
+            data[i + 3] = 0 // Alpha设为0（透明）
+        }
+    }
+    
+    ctx.putImageData(imageData, 0, 0)
+    
+    return canvas
+}
+
+/**
  * 更新数据
  */
 const updateHandler = (
@@ -822,6 +1108,59 @@ onUnmounted(() => {
     .filter-label {
         margin-bottom: 0;
         min-width: 60px;
+    }
+}
+
+/* GIF生成按钮样式 */
+.gif-generator {
+    padding: 0 0.5rem;
+}
+
+.gif-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, rgba(108, 253, 255, 0.2), rgba(77, 171, 247, 0.2));
+    border: 1px solid rgba(108, 253, 255, 0.4);
+    border-radius: 8px;
+    color: #6cfdff;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 80px;
+}
+
+.gif-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, rgba(108, 253, 255, 0.3), rgba(77, 171, 247, 0.3));
+    border-color: rgba(108, 253, 255, 0.7);
+    box-shadow: 0 0 15px rgba(108, 253, 255, 0.3);
+    transform: translateY(-1px);
+}
+
+.gif-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.gif-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: rgba(100, 100, 100, 0.2);
+    border-color: rgba(100, 100, 100, 0.3);
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.gif-btn .animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
     }
 }
 </style>
