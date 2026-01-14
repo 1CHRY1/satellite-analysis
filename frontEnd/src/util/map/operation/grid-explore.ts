@@ -688,3 +688,129 @@ export function map_destroySuperResolution(gridInfo: GridData) {
         }
     }, false)
 }
+
+/**
+ * GIF动画图层 - 在格网上显示GIF动画
+ */
+import { grid2bbox } from '@/util/map/gridMaker'
+
+// 存储当前显示的GIF overlay
+let currentGifOverlay: HTMLDivElement | null = null
+
+export function map_addGridGifLayer(
+    gridInfo: GridData,
+    gifBlobUrl: string,
+) {
+    // 先移除之前的GIF overlay
+    map_destroyGridGifLayer()
+    
+    const bbox = grid2bbox(gridInfo.columnId, gridInfo.rowId, gridInfo.resolution)
+    const [minLon, minLat, maxLon, maxLat] = bbox
+    
+    mapManager.withMap((m) => {
+        // 创建一个覆盖在格网上的div容器
+        const container = document.createElement('div')
+        container.className = 'grid-gif-overlay'
+        container.style.cssText = `
+            position: absolute;
+            pointer-events: none;
+            z-index: 1000;
+        `
+        
+        // 创建GIF图片元素
+        const gifImg = document.createElement('img')
+        gifImg.src = gifBlobUrl
+        gifImg.style.cssText = `
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border: 2px solid #4dabf7;
+            border-radius: 4px;
+            box-shadow: 0 0 20px rgba(77, 171, 247, 0.5);
+        `
+        container.appendChild(gifImg)
+        
+        // 添加关闭按钮
+        const closeBtn = document.createElement('button')
+        closeBtn.innerHTML = '×'
+        closeBtn.style.cssText = `
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 24px;
+            height: 24px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+            pointer-events: auto;
+            z-index: 1001;
+        `
+        closeBtn.onclick = () => {
+            map_destroyGridGifLayer()
+            URL.revokeObjectURL(gifBlobUrl)
+        }
+        container.appendChild(closeBtn)
+        
+        // 将容器添加到地图
+        const mapContainer = m.getContainer()
+        mapContainer.appendChild(container)
+        currentGifOverlay = container
+        
+        // 更新位置的函数
+        const updatePosition = () => {
+            const sw = m.project([minLon, minLat])
+            const ne = m.project([maxLon, maxLat])
+            
+            const left = Math.min(sw.x, ne.x)
+            const top = Math.min(sw.y, ne.y)
+            const width = Math.abs(ne.x - sw.x)
+            const height = Math.abs(ne.y - sw.y)
+            
+            container.style.left = `${left}px`
+            container.style.top = `${top}px`
+            container.style.width = `${width}px`
+            container.style.height = `${height}px`
+        }
+        
+        // 初始化位置
+        updatePosition()
+        
+        // 监听地图移动/缩放事件来更新位置
+        m.on('move', updatePosition)
+        m.on('zoom', updatePosition)
+        m.on('resize', updatePosition)
+        
+        // 存储事件处理函数以便后续移除
+        ;(container as any)._updatePosition = updatePosition
+        ;(container as any)._map = m
+        ;(container as any)._gifBlobUrl = gifBlobUrl
+    })
+}
+
+export function map_destroyGridGifLayer() {
+    if (currentGifOverlay) {
+        const m = (currentGifOverlay as any)._map
+        const updatePosition = (currentGifOverlay as any)._updatePosition
+        const gifBlobUrl = (currentGifOverlay as any)._gifBlobUrl
+        
+        // 移除事件监听
+        if (m && updatePosition) {
+            m.off('move', updatePosition)
+            m.off('zoom', updatePosition)
+            m.off('resize', updatePosition)
+        }
+        
+        // 释放Blob URL
+        if (gifBlobUrl) {
+            URL.revokeObjectURL(gifBlobUrl)
+        }
+        
+        // 移除DOM元素
+        currentGifOverlay.remove()
+        currentGifOverlay = null
+    }
+}
