@@ -71,7 +71,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch, reactive, type ComputedRef, nextTick } from 'vue'
+import { ref, onMounted, computed, watch, reactive, type ComputedRef, nextTick, onUnmounted } from 'vue'
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-vue-next'
 import { getGrid2DDEMUrl, getGrid3DUrl, getGridDEMUrl, getGridNDVIOrSVRUrl, getGridOneBandUrl, getGridSceneUrl, getImgStats, getMinIOUrl } from '@/api/http/interactive-explore/visualize.api'
 import bus from '@/store/bus'
@@ -80,6 +80,7 @@ import * as GridExploreMapOps from '@/util/map/operation/grid-explore'
 import { message } from 'ant-design-vue'
 import type { GridData } from '@/type/interactive-explore/grid'
 import { currentScene } from '@/components/feature/map/popContent/shared.ts'
+import { useSuperResolution } from './popContent/useSuperResolution'
 
 type ImageInfoType = {
     sceneId: string
@@ -537,6 +538,18 @@ const superResOverride = ref<Map<string, {
   sceneId?: string
 }>>(new Map())
 
+// 彩蛋：按Enter直接超分
+const { handleSuperResolution, isSuperRes } = useSuperResolution()
+
+const handleEnterKey = (e) => {
+  if (e.key === 'Enter') {
+    console.log('Enter 被点击了，当前索引是:', activeIndex.value)
+    if (activeIndex.value !== -1) {
+        handleSuperResolution()
+    }
+  }
+}
+
 onMounted(() => {
     clearState()
     bus.on('cubeVisualize', updateHandler)
@@ -576,6 +589,11 @@ onMounted(() => {
         const currentGridKey = `${grid.value.rowId}-${grid.value.columnId}-${grid.value.resolution}`
         superResOverride.value.delete(currentGridKey)
     })
+    window.addEventListener('keydown', handleEnterKey)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleEnterKey)
 })
 </script>
 

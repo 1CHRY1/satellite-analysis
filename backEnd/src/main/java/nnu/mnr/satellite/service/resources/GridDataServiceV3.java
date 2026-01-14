@@ -240,7 +240,9 @@ public class GridDataServiceV3 {
             boolean isOverLapped = false;
             Geometry bbox = getTileGeomByIdsAndResolution(grid.getRowId(), grid.getColumnId(), grid.getResolution());
             for (SceneDesVO scene : filterScene) {
-                if (scene.getBoundingBox().contains(bbox)) {
+                // 注意intersects 与contains 的选择
+//                if (scene.getBoundingBox().contains(bbox)) {
+                if (scene.getBoundingBox().intersects(bbox)) {
                     isOverLapped = true;
                     GridsScenesOverlapVO.SceneInfo sceneInfo = GridsScenesOverlapVO.SceneInfo.builder()
                             .sceneId(scene.getSceneId())
