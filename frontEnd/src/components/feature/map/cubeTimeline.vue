@@ -535,7 +535,7 @@ const handleGenerateGif = async () => {
             height: 512,
             workerScript: '/gif.worker.js', // 需要确保这个文件存在于public目录
             transparent: 0x000000 // 将黑色设为透明色
-        })
+        } as any)
 
         // 加载每张影像并添加到GIF
         for (let i = 0; i < totalImages; i++) {

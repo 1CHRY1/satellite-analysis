@@ -43,6 +43,7 @@ import {
 import { calTask } from '../noCloud/composables/shared'
 import bus from '@/store/bus'
 import type { LargeScaleSceneParam } from '@/api/http/interactive-explore'
+import { gcj02towgs84 } from '@/util/common'
 // 使用一个对象来存储每个 Product Item 的显示状态
 const eyeStates = ref({})
 
@@ -102,9 +103,13 @@ export const useVisualize = () => {
      * @param selectedPOI 选中的POI
      */
     const addPOIMarker = (selectedPOI: POIInfo) => {
+        const [wgsLon, wgsLat] = gcj02towgs84(
+            Number(selectedPOI.gcj02Lon), 
+            Number(selectedPOI.gcj02Lat)
+        );
         mapManager.withMap((m) => {
             marker.value = new mapboxgl.Marker()
-                .setLngLat([Number(selectedPOI?.gcj02Lon), Number(selectedPOI?.gcj02Lat)])
+                .setLngLat([wgsLon, wgsLat])
                 .addTo(m)
         })
     }
