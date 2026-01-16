@@ -113,7 +113,7 @@
                                                     <div class="text-red-500">*</div>
                                                     <span class="text-xs text-gray-400">{{
                                                         t('datapage.explore.data.advice')
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -202,12 +202,12 @@
                                         <DatabaseIcon :size="18" />
                                     </div>
                                     <h2 class="section-title">{{ t('datapage.explore.section_interactive.sectiontitle')
-                                    }}</h2>
+                                        }}</h2>
                                     <div class="section-icon absolute right-0 cursor-pointer"
                                         @click="destroyExploreLayers">
                                         <a-tooltip>
                                             <template #title>{{ t('datapage.explore.section_interactive.clear')
-                                            }}</template>
+                                                }}</template>
                                             <Trash2Icon :size="18" />
                                         </a-tooltip>
                                     </div>
@@ -320,7 +320,7 @@
                                                             @click="isRSItemExpand[index] = false" />
                                                         <span class="text-xs text-[#7a899f]">{{
                                                             sceneStats?.dataset?.[category]?.total
-                                                        }} 景</span>
+                                                            }} 景</span>
                                                     </div>
                                                     <div class="flex flex-row gap-2 items-center">
                                                         <ChartColumnBig :size="12" class="text-[#7a899f]"
@@ -391,7 +391,7 @@
                                                             <a-tooltip>
                                                                 <template #title>{{
                                                                     t('datapage.explore.section_interactive.clear')
-                                                                }}</template>
+                                                                    }}</template>
                                                                 <Trash2Icon :size="18"
                                                                     class="mt-4! ml-4! cursor-pointer"
                                                                     @click="destroyScene" />
@@ -444,7 +444,7 @@
                                                                     v-model="vectorSymbology[item.tableName].selectedField">
                                                                     <option disabled selected value="">{{
                                                                         t('datapage.explore.section_interactive.choose')
-                                                                        }}
+                                                                    }}
                                                                     </option>
                                                                     <!-- <option :value="'all'" class="truncate">全选</option> -->
                                                                     <option
@@ -469,7 +469,7 @@
                                                             </el-checkbox>
                                                             <a-tooltip>
                                                                 <template #title>{{ t('datapage.history.preview')
-                                                                }}</template>
+                                                                    }}</template>
                                                                 <Eye v-if="previewVectorList[index]"
                                                                     @click="destroyVector(index)" :size="16"
                                                                     class="cursor-pointer" />
@@ -497,7 +497,7 @@
                                                                                 </el-checkbox>
                                                                                 <span class="config-label mt-1">{{
                                                                                     simplifyRangeLabel(attr.label)
-                                                                                }}</span>
+                                                                                    }}</span>
                                                                             </div>
                                                                             <el-color-picker v-model="attr.color"
                                                                                 size="small" show-alpha
@@ -548,12 +548,19 @@
                                                             @click="isProductsItemExpand[index] = false" />
                                                         <span class="text-xs text-[#7a899f]">{{
                                                             themeStats?.dataset?.[category]?.total
-                                                        }} 幅</span>
+                                                            }} 幅</span>
                                                     </div>
                                                 </div>
 
                                                 <div v-show="isProductsItemExpand[index]">
                                                     <div class=" overflow-y-auto">
+                                                        <div class="flex justify-end mb-2"
+                                                            v-if="themeStats?.dataset?.[category]?.total">
+                                                            <a-button size="small" type="primary"
+                                                                @click="showAllProduct(category as ProductType, themeStats?.dataset?.[category])">
+                                                                全部可视化
+                                                            </a-button>
+                                                        </div>
                                                         <div v-for="(themeName, idx) in themeStats?.dataset?.[category]?.dataList"
                                                             class="config-item mt-1 mb-2" :key="idx">
                                                             <div class="config-label relative">
@@ -563,7 +570,7 @@
                                                                     <a-tooltip>
                                                                         <template #title>{{
                                                                             t('datapage.history.preview')
-                                                                        }}</template>
+                                                                            }}</template>
                                                                         <Eye v-if="shouldShowEyeOff(category, idx)"
                                                                             @click="toggleEye(category, idx, themeName)"
                                                                             :size="16" class="cursor-pointer" />
@@ -659,7 +666,7 @@ const {
     // ------------------------ 数据检索 2.矢量可视化 -------------------------- //
     previewVectorList, showVectorResult, destroyVector, getAttrs4CustomField,
     // ------------------------ 数据检索 3.栅格产品可视化 -------------------------- //
-    toggleEye, shouldShowEyeOff,
+    toggleEye, shouldShowEyeOff, showAllProduct,
     predefineColors,
     vectorSymbology,
     handleCheckedAttrsChange,
@@ -677,6 +684,7 @@ import {
 } from './shared'
 import { tableProps } from 'ant-design-vue/es/table';
 import { QuestionCircleOutlined } from '@ant-design/icons-vue';
+import type { ProductType } from '@/type/interactive-explore/filter';
 
 const {
     // ------------------------ 数据检索 1.空间位置 -------------------------- //

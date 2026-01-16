@@ -76,3 +76,8 @@ type VisualScene = {
     nodata: number
 }
 export const currentScene = ref<VisualScene | null>(null)
+
+/**
+ * 超分缓存
+ */
+export const superResCache = new Map<string, any>();

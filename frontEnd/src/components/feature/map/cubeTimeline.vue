@@ -826,7 +826,7 @@ const superResOverride = ref<Map<string, {
 }>>(new Map())
 
 // 彩蛋：按Enter直接超分
-const { handleSuperResolution, isSuperRes } = useSuperResolution()
+const { handleSuperResolution, handlePreSuperResolution, isSuperRes } = useSuperResolution()
 
 const handleInteraction = (e) => {
   // 逻辑：如果是键盘的回车键 (Enter) 或者 鼠标的中键 (button === 1)
@@ -841,7 +841,7 @@ const handleInteraction = (e) => {
     console.log('触发成功（Enter 或 中键），当前索引是:', activeIndex.value)
     
     if (activeIndex.value !== -1) {
-        handleSuperResolution()
+        handlePreSuperResolution()
     }
   }
 }

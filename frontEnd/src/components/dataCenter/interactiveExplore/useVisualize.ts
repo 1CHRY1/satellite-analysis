@@ -42,7 +42,7 @@ import {
 } from '@/api/http/satellite-data/satellite.api'
 import { calTask } from '../noCloud/composables/shared'
 import bus from '@/store/bus'
-import type { LargeScaleSceneParam } from '@/api/http/interactive-explore'
+import type { LargeScaleSceneParam, ThemeStats } from '@/api/http/interactive-explore'
 import { gcj02towgs84 } from '@/util/common'
 // 使用一个对象来存储每个 Product Item 的显示状态
 const eyeStates = ref({})
@@ -516,6 +516,62 @@ export const useVisualize = () => {
                 break
         }
     }
+    const showAllProduct = async (dataType: ProductType, curCategory: ThemeStats.ThemeCategoryStats) => {
+        // 1. 定义一个变量，用来存放“当前应该使用的那个函数”
+        let getUrlFn: ((themeName: string, gridsBoundary: any) => Promise<string>) | null = null;
+    
+        // 2. 根据 dataType 选定函数策略
+        switch (dataType) {
+            case 'dem':
+            case 'dsm':
+                getUrlFn = get2DDEMUrl;
+                break;
+            case 'ndvi':
+            case 'svr':
+                getUrlFn = getNDVIOrSVRUrl;
+                break;
+            case '3d':
+                getUrlFn = get3DUrl;
+                break;
+            case 'lai':
+            case 'fvc':
+            case 'fpar':
+            case 'lst':
+            case 'lse':
+            case 'npp':
+            case 'gpp':
+            case 'et':
+            case 'wue':
+            case 'cue':
+            case 'esi':
+            case 'apar':
+            case 'bba':
+            case 'aridity_index':
+            case 'vcf':
+                getUrlFn = getOneBandUrl;
+                break;
+            default:
+                console.warn(`未知的 dataType: ${dataType}`);
+                return [];
+        }
+    
+        // 3. 如果没找到对应的函数，直接返回空
+        if (!getUrlFn) return [];
+    
+        // 4. 核心步骤：遍历列表 -> 生成Promise数组 -> 并行等待结果
+        // 假设 curCategory.dataList 里的 item 就是 themeName 字符串
+        // 如果 item 是个对象 (例如 { name: 'xxx' })，请把下面改成 item.name
+        const promises = curCategory.dataList.map(item => {
+            const themeName = item; // 这里根据实际情况取值
+            return getUrlFn(themeName, curGridsBoundary.value);
+        });
+    
+        // 等待所有 url 获取完毕，得到最终的 urlList
+        const urlList = await Promise.all(promises);
+        
+        InteractiveExploreMapOps.map_addOneBandLayer(urlList)
+    }
+
     const handleShowDEM = async (themeName: string) => {
         // const url = await getDEMUrl(themeName, curGridsBoundary.value)
         // InteractiveExploreMapOps.map_addDEMLayer(url)
@@ -651,5 +707,6 @@ export const useVisualize = () => {
         vectorSymbology,
         handleCheckAllChange,
         handleCheckedAttrsChange,
+        showAllProduct
     }
 }
