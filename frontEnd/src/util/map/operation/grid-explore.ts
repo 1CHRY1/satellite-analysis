@@ -814,3 +814,73 @@ export function map_destroyGridGifLayer() {
         currentGifOverlay = null
     }
 }
+
+/**
+ * 添加新版超分结果
+ */
+export function map_addGridSuperResolutionLayerV2(
+    gridInfo: GridData,
+    url: string,
+    cb?: () => void,
+) {
+    const prefix = gridInfo.rowId + '_' + gridInfo.columnId
+    const id = prefix + uid()
+    const srcId = id + '-source'
+
+    if (!ezStore.get('grid-sr-layer-map')) {
+        ezStore.set('grid-sr-layer-map', new window.Map())
+    }
+
+    mapManager.withMap((m) => {
+        const gridImageLayerMap = ezStore.get('grid-sr-layer-map')
+        for (let key of gridImageLayerMap.keys()) {
+            if (key.includes(prefix)) {
+                const oldId = key
+                const oldSrcId = oldId + '-source'
+                if (m.getLayer(oldId) && m.getSource(oldSrcId)) {
+                    m.removeLayer(oldId)
+                    m.removeSource(oldSrcId)
+                }
+            }
+        }
+
+        m.addSource(srcId, {
+            type: 'raster',
+            tiles: [url],
+        })
+        m.addLayer({
+            id: id,
+            type: 'raster',
+            source: srcId,
+            metadata: {
+                'user-label': prefix + '号格网超分图层', 
+            }
+        })
+
+        gridImageLayerMap.set(id, {
+            id: id,
+            source: srcId,
+        })
+
+        setTimeout(() => {
+            cb && cb()
+        }, 3000)
+    })
+}
+export function map_destroyGridSuperResolutionLayerv2(gridInfo: GridData) {
+    const prefix = gridInfo.rowId + '_' + gridInfo.columnId
+    const gridImageLayerMap = ezStore.get('grid-sr-layer-map')
+
+    mapManager.withMap((m) => {
+        for (let key of gridImageLayerMap.keys()) {
+            if (key.startsWith(prefix)) {
+                const oldId = key
+                const oldSrcId = oldId + '-source'
+                if (m.getLayer(oldId) && m.getSource(oldSrcId)) {
+                    m.removeLayer(oldId)
+                    m.removeSource(oldSrcId)
+                }
+            }
+        }
+    })
+}

@@ -727,131 +727,104 @@ export function map_destroyDEMLayer() {
         m.getSource(srcId) && m.removeSource(srcId)
     })
 }
-export function map_add2DDEMLayer(url: string) {
-    const id = '2d-dem-layer'
-    const srcId = id + '-source'
+// ================= 2D DEM =================
+export function map_add2DDEMLayer(url: string | string[]) {
+    const baseId = '2d-dem-layer'
+    const list = Array.isArray(url) ? url : [url]
     mapManager.withMap((m) => {
-        m.getLayer(id) && m.removeLayer(id)
-        m.getSource(srcId) && m.removeSource(srcId)
-
-        m.addSource(srcId, {
-            type: 'raster',
-            tiles: [url],
-            tileSize: 256,
+        // Fix: 加上 ?.layers
+        m.getStyle()?.layers?.filter(l => l.id.startsWith(baseId)).forEach(l => {
+            m.removeLayer(l.id); m.getSource(l.id) && m.removeSource(l.id)
         })
-
-        m.addLayer({
-            id,
-            type: 'raster',
-            metadata: {
-                'user-label': 'DEM图层',
-            },
-            source: srcId,
-            paint: {},
+        list.forEach((u, i) => {
+            const id = `${baseId}-${i}`
+            m.addSource(id, { type: 'raster', tiles: [u], tileSize: 256 })
+            m.addLayer({ id, type: 'raster', source: id, metadata: { 'user-label': 'DEM图层' }, paint: {} })
         })
     })
 }
+
 export function map_destroy2DDEMLayer() {
-    const id = '2d-dem-layer'
-    const srcId = id + '-source'
+    const baseId = '2d-dem-layer'
     mapManager.withMap((m) => {
-        m.getLayer(id) && m.removeLayer(id)
-        m.getSource(srcId) && m.removeSource(srcId)
-    })
-}
-export function map_addNDVIOrSVRLayer(url: string) {
-    const id = 'ndvi-layer'
-    const srcId = id + '-source'
-    mapManager.withMap((m) => {
-        m.getLayer(id) && m.removeLayer(id)
-        m.getSource(srcId) && m.removeSource(srcId)
-
-        m.addSource(srcId, {
-            type: 'raster',
-            tiles: [url],
-            tileSize: 256,
-        })
-
-        m.addLayer({
-            id,
-            type: 'raster',
-            metadata: {
-                'user-label': '图层',
-            },
-            source: srcId,
-            paint: {},
+        // Fix: 加上 ?.layers
+        m.getStyle()?.layers?.filter(l => l.id.startsWith(baseId)).forEach(l => {
+            m.removeLayer(l.id); m.getSource(l.id) && m.removeSource(l.id)
         })
     })
 }
+
+// ================= NDVI / SVR =================
+export function map_addNDVIOrSVRLayer(url: string | string[]) {
+    const baseId = 'ndvi-layer'
+    const list = Array.isArray(url) ? url : [url]
+    mapManager.withMap((m) => {
+        m.getStyle()?.layers?.filter(l => l.id.startsWith(baseId)).forEach(l => {
+            m.removeLayer(l.id); m.getSource(l.id) && m.removeSource(l.id)
+        })
+        list.forEach((u, i) => {
+            const id = `${baseId}-${i}`
+            m.addSource(id, { type: 'raster', tiles: [u], tileSize: 256 })
+            m.addLayer({ id, type: 'raster', source: id, metadata: { 'user-label': '图层' }, paint: {} })
+        })
+    })
+}
+
 export function map_destroyNDVIOrSVRLayer() {
-    const id = 'ndvi-layer'
-    const srcId = id + '-source'
+    const baseId = 'ndvi-layer'
     mapManager.withMap((m) => {
-        m.getLayer(id) && m.removeLayer(id)
-        m.getSource(srcId) && m.removeSource(srcId)
-    })
-}
-export function map_addOneBandLayer(url: string) {
-    const id = 'oneband-layer'
-    const srcId = id + '-source'
-    mapManager.withMap((m) => {
-        m.getLayer(id) && m.removeLayer(id)
-        m.getSource(srcId) && m.removeSource(srcId)
-
-        m.addSource(srcId, {
-            type: 'raster',
-            tiles: [url],
-            tileSize: 256,
-        })
-
-        m.addLayer({
-            id,
-            type: 'raster',
-            metadata: {
-                'user-label': '指标数据图层',
-            },
-            source: srcId,
-            paint: {},
+        m.getStyle()?.layers?.filter(l => l.id.startsWith(baseId)).forEach(l => {
+            m.removeLayer(l.id); m.getSource(l.id) && m.removeSource(l.id)
         })
     })
 }
+
+// ================= One Band =================
+export function map_addOneBandLayer(url: string | string[]) {
+    const baseId = 'oneband-layer'
+    const list = Array.isArray(url) ? url : [url]
+    mapManager.withMap((m) => {
+        m.getStyle()?.layers?.filter(l => l.id.startsWith(baseId)).forEach(l => {
+            m.removeLayer(l.id); m.getSource(l.id) && m.removeSource(l.id)
+        })
+        list.forEach((u, i) => {
+            const id = `${baseId}-${i}`
+            m.addSource(id, { type: 'raster', tiles: [u], tileSize: 256 })
+            m.addLayer({ id, type: 'raster', source: id, metadata: { 'user-label': '指标数据图层' }, paint: {} })
+        })
+    })
+}
+
 export function map_destroyOneBandLayer() {
-    const id = 'oneband-layer'
-    const srcId = id + '-source'
+    const baseId = 'oneband-layer'
     mapManager.withMap((m) => {
-        m.getLayer(id) && m.removeLayer(id)
-        m.getSource(srcId) && m.removeSource(srcId)
-    })
-}
-export function map_add3DLayer(url: string) {
-    const id = '3d-layer'
-    const srcId = id + '-source'
-    mapManager.withMap((m) => {
-        m.getLayer(id) && m.removeLayer(id)
-        m.getSource(srcId) && m.removeSource(srcId)
-
-        m.addSource(srcId, {
-            type: 'raster',
-            tiles: [url],
-            tileSize: 256,
-        })
-
-        m.addLayer({
-            id,
-            type: 'raster',
-            metadata: {
-                'user-label': id + '图层',
-            },
-            source: srcId,
-            paint: {},
+        m.getStyle()?.layers?.filter(l => l.id.startsWith(baseId)).forEach(l => {
+            m.removeLayer(l.id); m.getSource(l.id) && m.removeSource(l.id)
         })
     })
 }
+
+// ================= 3D Layer =================
+export function map_add3DLayer(url: string | string[]) {
+    const baseId = '3d-layer'
+    const list = Array.isArray(url) ? url : [url]
+    mapManager.withMap((m) => {
+        m.getStyle()?.layers?.filter(l => l.id.startsWith(baseId)).forEach(l => {
+            m.removeLayer(l.id); m.getSource(l.id) && m.removeSource(l.id)
+        })
+        list.forEach((u, i) => {
+            const id = `${baseId}-${i}`
+            m.addSource(id, { type: 'raster', tiles: [u], tileSize: 256 })
+            m.addLayer({ id, type: 'raster', source: id, metadata: { 'user-label': baseId + '图层' }, paint: {} })
+        })
+    })
+}
+
 export function map_destroy3DLayer() {
-    const id = '3d-layer'
-    const srcId = id + '-source'
+    const baseId = '3d-layer'
     mapManager.withMap((m) => {
-        m.getLayer(id) && m.removeLayer(id)
-        m.getSource(srcId) && m.removeSource(srcId)
+        m.getStyle()?.layers?.filter(l => l.id.startsWith(baseId)).forEach(l => {
+            m.removeLayer(l.id); m.getSource(l.id) && m.removeSource(l.id)
+        })
     })
 }

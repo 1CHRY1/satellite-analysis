@@ -159,6 +159,7 @@ modelServer:
     ndvi: /v0/tif/calc_NDVI
     createLowLevelMosaic: /v0/mosaic/create_low_level_mosaic
     methlib: /v0/methlib
+    superresolutionV2: /v0/superresolutionV2
   interval:
     status: 2
 

@@ -20,6 +20,7 @@ import type { CommonResponse } from '../common.type'
 const titilerProxyEndPoint = ezStore.get('conf')['titiler']
 const minioEndPoint = ezStore.get('conf')['minioIpAndPort']
 const backProxyEndPoint = ezStore.get('conf')['back_app']
+const modelServerEndPoint = ezStore.get('conf')['modelServer']
 
 /**
  * 0. 公共函数
@@ -341,4 +342,12 @@ export function getGridOneBandUrl(grid: GridData, param: OneBandColorLayerParam)
         requestParams.append('normalize_level', grid.normalize_level.toString())
 
     return baseUrl + '?' + requestParams.toString()
+}
+
+/**
+ * 格网超分V2 URL
+ */
+export const getGridSuperResolutionUrlV2 = (caseId: string) => {
+    let baseUrl = `${modelServerEndPoint}/tiles/${caseId}/{z}/{x}/{y}`
+    return baseUrl
 }
