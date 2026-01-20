@@ -353,6 +353,18 @@ public class ModelExampleService {
         long expirationTime = 60 * 1000;
         return runModelServerModel(SRUrl, SRJson, expirationTime, SRModelServerProperties);
     }
+    // 超分辨率增强V2升级版
+    public CommonResultVO getSRResultByBandV2(SRBandDTO SRBandDTO){
+        Geometry wkt = getTileGeomByIdsAndResolution(SRBandDTO.getRowId(), SRBandDTO.getColumnId(), SRBandDTO.getResolution());
+        JSONObject band = SRBandDTO.getBand();
+        JSONObject SRJson = new JSONObject();
+        SRJson.put("boundary", wkt.toString());  // Geometry 转 WKT 字符串
+        SRJson.put("resolution", SRBandDTO.getResolution());
+        SRJson.put("band", band);          // 直接放入 JSONObject
+        String SRUrlV2 = modelServerProperties.getAddress() + modelServerProperties.getApis().get("superresolutionV2");
+        long expirationTime = 60 * 1000;
+        return runModelServerModel(SRUrlV2, SRJson, expirationTime);
+    }
     public CommonResultVO createNoCloudConfig(NoCloudTileDTO noCloudTileDTO) {
         try {
             // 1. 生成配置ID

@@ -74,6 +74,8 @@ type VisualScene = {
     bluePath: string
     dataType: string
     nodata: number
+    images?: any[]
+    bandMapper?: any
 }
 export const currentScene = ref<VisualScene | null>(null)
 

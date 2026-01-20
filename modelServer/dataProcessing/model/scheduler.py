@@ -19,6 +19,7 @@ from dataProcessing.model.cloud.calc_no_cloud import calc_no_cloud
 from dataProcessing.model.cloud.calc_no_cloud_grid import calc_no_cloud_grid
 from dataProcessing.model.cloud.calc_no_cloud_complex import calc_no_cloud_complex
 from dataProcessing.model.cube.calc_eo_cube import calc_eo_cube
+from dataProcessing.model.sr.superresolutionV2 import superresolutionV2
 from dataProcessing.model.vis.create_low_level_mosaic import create_low_level_mosaic
 from dataProcessing.model.vis.create_low_level_mosaic_threads import create_low_level_mosaic_threads
 from dataProcessing.model.methlib.model import MethLib
@@ -29,6 +30,8 @@ STATUS_COMPLETE = CONFIG.STATUS_COMPLETE
 STATUS_ERROR = CONFIG.STATUS_ERROR
 STATUS_PENDING = CONFIG.STATUS_PENDING
 MAX_RUNNING_TASKS = CONFIG.MAX_RUNNING_TASKS
+# 不会被缓存的任务类型
+NO_HISTORY_TASK_TYPES = ['superresolutionV2']
 
 class TaskScheduler:
     def __init__(self):
@@ -96,6 +99,23 @@ class TaskScheduler:
 
         return task_id
 
+    def start_task_without_md5(self, task_type, *args, **kwargs):
+        # --------- Start task -------------------------------------
+        task_id = str(uuid.uuid4())  # 生成唯一任务 ID
+        task_class = self._get_task_class(task_type)
+        with self.condition:
+            # 初始化任务状态
+            self.task_status[task_id] = STATUS_PENDING
+            task_instance = task_class(task_id, *args, **kwargs)
+            self.task_info[task_id] = task_instance
+            self.task_md5[task_id] = self.generate_md5(json.dumps(args))
+
+            # 加入pending队列
+            self.pending_queue.put(task_id)
+            self.condition.notify_all()  # 通知调度线程
+
+        return task_id
+
     def generate_md5(self, input_string):
         md5_hasher = hashlib.md5()
         md5_hasher.update(input_string.encode('utf-8'))
@@ -118,6 +138,7 @@ class TaskScheduler:
             'create_low_level_mosaic': create_low_level_mosaic,
             'create_low_level_mosaic_threads': create_low_level_mosaic_threads,
             'methlib': MethLib,
+            'superresolutionV2': superresolutionV2,
             'test': TestTask,
             # 可以在这里扩展其他类型的任务
         }
@@ -251,8 +272,12 @@ class TaskScheduler:
             task_final_status = 'ERROR' # 标记最终状态
 
         finally:
-            if task_final_status == 'COMPLETE':
-                self.save_to_history(task_id)
+            if task_final_status == 'COMPLETE' :
+                task_instance = self.task_info.get(task_id)
+                
+                # 判断任务类型：如果存在且类名不是 'superresolutionV2'，才保存历史
+                if task_instance and task_instance.__class__.__name__ not in NO_HISTORY_TASK_TYPES:
+                    self.save_to_history(task_id)
 
 
     # --- 任务执行和状态更新相关的私有函数 ---

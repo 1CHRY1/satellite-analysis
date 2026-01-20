@@ -92,6 +92,7 @@ modelServer:
     rasterPoint: /v0/tif/calc_raster_point
     rasterLine: /v0/tif/calc_raster_line
     ndvi: /v0/tif/calc_NDVI
+    superresolutionV2: /v0/superresolutionV2
   interval:
     status: 2
 

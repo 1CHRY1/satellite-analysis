@@ -264,7 +264,6 @@ const filteredImages = computed(() => {
     } else {
         images = productImages.value as MultiImageInfoType[]
     }
-    // console.log('all image', images)
 
     if (startDateFilter.value) {
         images = images.filter((item) => new Date(item.time) >= new Date(startDateFilter.value))
@@ -826,7 +825,7 @@ const superResOverride = ref<Map<string, {
 }>>(new Map())
 
 // 彩蛋：按Enter直接超分
-const { handleSuperResolution, handlePreSuperResolution, isSuperRes } = useSuperResolution()
+const { handleSuperResolution, handleSuperResolutionV2, handlePreSuperResolution, isSuperRes } = useSuperResolution()
 
 const handleInteraction = (e) => {
   // 逻辑：如果是键盘的回车键 (Enter) 或者 鼠标的中键 (button === 1)
