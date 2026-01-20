@@ -204,6 +204,8 @@ export const useGridScene = () => {
                     greenPath: greenPath,
                     bluePath: bluePath,
                     nodata: sceneInfo.noData,
+                    bandMapper: sceneInfo.bandMapper,
+                    images: sceneInfo.images
                 })
             }
             
@@ -259,6 +261,8 @@ export const useGridScene = () => {
                     greenPath: greenPath,
                     bluePath: bluePath,
                     nodata: scene.noData,
+                    bandMapper: scene.bandMapper,
+                    images: scene.images
                 })
             }
             bus.emit('cubeVisualize', rgbImageData, gridInfo, selectedStretchMethod.value, scaleRate.value, 'rgb')

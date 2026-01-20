@@ -1,3 +1,5 @@
+import shutil
+import tempfile
 from flask import send_file, request, jsonify, make_response, Blueprint
 import os
 import requests
@@ -6,7 +8,7 @@ from dataProcessing.config import current_config as CONFIG
 from dataProcessing.app.resTemplate import api_response
 from dataProcessing.model.scheduler import init_scheduler
 import ray
-
+from flask import Flask, request, Response, jsonify
 # 使用函数获取MINIO_ENDPOINT
 def get_minio_endpoint():
     try:
@@ -171,6 +173,104 @@ def do_methlib():
     task_id = scheduler.start_task('methlib', data)
     return api_response(data={'taskId': task_id})
 
+@bp.route(CONFIG.API_SR_V2, methods=['POST'])
+def do_superresolutionV2():
+    scheduler = init_scheduler()
+    data = request.json
+    # 不予复用
+    task_id = scheduler.start_task_without_md5('superresolutionV2', data)
+    return api_response(data={'taskId': task_id})
+
+# 超分缓存的XYZ
+@bp.route('/tiles/<task_id>/<int:z>/<int:x>/<int:y>', methods=['GET'])
+def tile_server(task_id, z, x, y):
+    """
+    动态 XYZ 瓦片服务 (修复 GDAL 5 bands error)
+    逻辑：提取 RGB (3 bands) -> 构建 MaskedArray -> 渲染时自动合成 RGBA
+    """
+    import numpy as np
+    import numpy.ma as ma
+    from rio_tiler.io import Reader
+    from rio_tiler.profiles import img_profiles
+    from rio_tiler.errors import TileOutsideBounds
+    from rio_tiler.models import ImageData
+    
+    vrt_path = os.path.join(CONFIG.CACHE_ROOT, task_id, "index.vrt")
+    
+    if not os.path.exists(vrt_path):
+        return jsonify({"error": "Expired or Not Found"}), 404
+        
+    try:
+        with Reader(vrt_path) as src:
+            # 1. 原始切片
+            original_img = src.tile(x, y, z)
+            
+            # 2. 提取数据
+            data = original_img.data # Shape: (C, H, W), C可能是3或4
+            mask = original_img.mask # Shape: (H, W)
+            
+            # 3. 清洗数据 (Float/Inf -> Uint8)
+            if np.issubdtype(data.dtype, np.floating):
+                data = np.nan_to_num(data, nan=0.0, posinf=0.0, neginf=0.0)
+            data = data.clip(0, 255).astype(np.uint8)
+            
+            C, H, W = data.shape
+
+            # 4. 【核心修复】只提取 RGB 三个波段
+            # 即使原数据有4个波段，我们只取前3个颜色，不要手动加Alpha
+            if C >= 3:
+                # 假设输入是 B, G, R 顺序 (根据之前的逻辑)
+                # 调整为 R, G, B
+                rgb_data = np.stack([data[2], data[1], data[0]])
+            else:
+                # 单波段兜底：复制成 3 通道灰度
+                band = data[0]
+                rgb_data = np.stack([band, band, band])
+
+            # 5. 构建 MaskedArray
+            # 我们传给 ImageData 的必须是 (3, H, W) 的数据
+            # 加上一个 (3, H, W) 的掩膜
+            
+            if mask is not None:
+                # 逻辑：rio-tiler mask 255=有效, 0=透明
+                # numpy mask: False=有效, True=遮挡(透明)
+                alpha_boolean_mask = (mask == 0) # True where transparent
+                
+                # 广播: 将 (H, W) 的掩膜扩展为 (3, H, W) 以匹配 RGB
+                # 这样 numpy 检查 shape 时就不会报错了
+                broadcasted_mask = np.broadcast_to(alpha_boolean_mask[None, :, :], rgb_data.shape)
+                
+                # 创建带掩膜的 RGB 数组
+                final_arr = ma.masked_array(rgb_data, mask=broadcasted_mask)
+            else:
+                final_arr = ma.masked_array(rgb_data)
+
+            # 6. 构建 ImageData (只包含 RGB 信息)
+            new_img = ImageData(array=final_arr)
+
+            # 7. 渲染
+            # render 函数发现是 3通道数据 + Mask，会自动生成 4通道 PNG (RGBA)
+            content = new_img.render(img_format="PNG", **img_profiles.get("png"))
+            
+            return Response(content, mimetype="image/png")
+            
+    except TileOutsideBounds:
+        return "Empty", 404
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        # 打印简化的错误信息，防止刷屏
+        print(f"Tile Error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@bp.route('/cleanup/<task_id>', methods=['DELETE'])
+def cleanup(task_id):
+    """手动清理接口"""
+    target_dir = os.path.join(CONFIG.CACHE_ROOT, task_id)
+    if os.path.exists(target_dir):
+        shutil.rmtree(target_dir)
+        return jsonify({"status": "cleaned"})
+    return jsonify({"status": "not found"}), 404
 
 # ==================== 调试路由 ====================
 @bp.route('/test/task', methods=['POST'])

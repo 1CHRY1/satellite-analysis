@@ -7,6 +7,7 @@
     "minioIpAndPort": "http://223.2.34.8:30900",
     "minioProxy": "minio",
     "titiler": "/tiler",
+    "modelServer": "/model",
 
     "ndviProjectId": "PRJyxITmCVLn3PMoaeca",
     "spectrumProjectId": "PRJyxITmCVLn3PMoaeca",

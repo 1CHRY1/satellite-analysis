@@ -31,6 +31,7 @@
                         class="timeline-item"
                         :class="{ active: index === activeIndex }"
                         @click="handleClick(index)"
+                        @mousedown="handleInteraction"
                     >
                         <div class="label mb-1" @click="console.log(item, 1221)">
                             {{ item.productName }}
@@ -263,7 +264,6 @@ const filteredImages = computed(() => {
     } else {
         images = productImages.value as MultiImageInfoType[]
     }
-    // console.log('all image', images)
 
     if (startDateFilter.value) {
         images = images.filter((item) => new Date(item.time) >= new Date(startDateFilter.value))
@@ -533,8 +533,8 @@ const handleGenerateGif = async () => {
             width: 512,
             height: 512,
             workerScript: '/gif.worker.js', // 需要确保这个文件存在于public目录
-            transparent: '#000000' // 将黑色设为透明色
-        })
+            transparent: 0x000000 // 将黑色设为透明色
+        } as any)
 
         // 加载每张影像并添加到GIF
         for (let i = 0; i < totalImages; i++) {
@@ -847,13 +847,22 @@ const superResOverride = ref<Map<string, {
 }>>(new Map())
 
 // 彩蛋：按Enter直接超分
-const { handleSuperResolution, isSuperRes } = useSuperResolution()
+const { handleSuperResolution, handleSuperResolutionV2, handlePreSuperResolution, isSuperRes } = useSuperResolution()
 
-const handleEnterKey = (e) => {
-  if (e.key === 'Enter') {
-    console.log('Enter 被点击了，当前索引是:', activeIndex.value)
+const handleInteraction = (e) => {
+  // 逻辑：如果是键盘的回车键 (Enter) 或者 鼠标的中键 (button === 1)
+  // 注意：e.key 在鼠标事件中是 undefined，e.button 在键盘事件中通常也是 undefined 或不相关，所以用 || 连接没问题
+  if (e.key === 'Enter' || e.button === 1) {
+    
+    // 【重要】鼠标中键通常会触发浏览器的“自动滚动”模式，建议阻止默认行为
+    if (e.button === 1) {
+        e.preventDefault(); 
+    }
+
+    console.log('触发成功（Enter 或 中键），当前索引是:', activeIndex.value)
+    
     if (activeIndex.value !== -1) {
-        handleSuperResolution()
+        handlePreSuperResolution()
     }
   }
 }
@@ -897,11 +906,11 @@ onMounted(() => {
         const currentGridKey = `${grid.value.rowId}-${grid.value.columnId}-${grid.value.resolution}`
         superResOverride.value.delete(currentGridKey)
     })
-    window.addEventListener('keydown', handleEnterKey)
+    window.addEventListener('keydown', handleInteraction)
 })
 
 onUnmounted(() => {
-  window.removeEventListener('keydown', handleEnterKey)
+  window.removeEventListener('keydown', handleInteraction)
 })
 </script>
 
