@@ -347,7 +347,10 @@ export function getGridOneBandUrl(grid: GridData, param: OneBandColorLayerParam)
 /**
  * 格网超分V2 URL
  */
-export const getGridSuperResolutionUrlV2 = (caseId: string) => {
+export const getGridSuperResolutionUrlV2 = (caseId: string, grid: GridData) => {
     let baseUrl = `${modelServerEndPoint}/tiles/${caseId}/{z}/{x}/{y}`
-    return baseUrl
+    const bbox = grid2bbox(grid.columnId, grid.rowId, grid.resolution)
+    const requestParams = new URLSearchParams()
+    requestParams.append('bbox', bbox.join(','))
+    return baseUrl + '?' + requestParams.toString()
 }

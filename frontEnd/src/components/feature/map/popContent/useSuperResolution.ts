@@ -368,7 +368,7 @@ export const useSuperResolution = () => {
                     console.log(bandres, '结果')
                     console.log('超分V2返回数据', bandres.data)
                     // console.log(result.value)
-                    const url = getGridSuperResolutionUrlV2(calTask.value.taskId)
+                    const url = getGridSuperResolutionUrlV2(calTask.value.taskId, gridData.value)
                     GridExploreMapOps.map_addGridSuperResolutionLayerV2(gridData.value, url)
                     // bus.emit(
                     //     'SuperResTimeLine',

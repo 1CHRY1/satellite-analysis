@@ -240,15 +240,15 @@ class superresolutionV2(Task):
                 mem_bytes = memfile.read()
 
             # 3. 模拟调用外部接口 (Request)
-            # import requests
-            # res = requests.post(CONFIG.SR_MODEL_URL, data=mem_bytes, timeout=60)
-            # if res.status_code != 200:
-            #     logger.error(f"Algo API Error: {res.text}")
-            #     return None
-            # processed_bytes = res.content
+            import requests
+            res = requests.post(CONFIG.SR_MODEL_URL, data=mem_bytes, timeout=6000)
+            if res.status_code != 200:
+                logger.error(f"Algo API Error: {res.text}")
+                return None
+            processed_bytes = res.content
 
             # Mock版
-            processed_bytes = mem_bytes
+            # processed_bytes = mem_bytes
 
             # 4. 写入共享内存目录
             tile_name = f"tile_{idx[0]}_{idx[1]}.tif"
