@@ -358,7 +358,7 @@ export const useSuperResolution = () => {
 
                 try {
                     console.log('开始')
-                    message.info('超分处理中，请等候')
+                    message.info('语义分割处理中，请等候')
                     await pollStatus(calTask.value.taskId)
                     // ✅ 成功后设置状态
                     calTask.value.calState = 'success'
@@ -366,7 +366,7 @@ export const useSuperResolution = () => {
                     await new Promise((resolve) => setTimeout(resolve, 500))
                     let bandres = await getCaseBandsResult(calTask.value.taskId)
                     console.log(bandres, '结果')
-                    console.log('超分返回数据', bandres.data)
+                    console.log('超分V2返回数据', bandres.data)
                     // console.log(result.value)
                     const url = getGridSuperResolutionUrlV2(calTask.value.taskId)
                     GridExploreMapOps.map_addGridSuperResolutionLayerV2(gridData.value, url)
@@ -390,9 +390,9 @@ export const useSuperResolution = () => {
                     console.error('有问题')
                     console.error('问题double')
                 }
-                message.success('超分处理成功')
+                message.success('处理成功')
             } catch {
-                message.error('超分处理失败')
+                message.error('处理失败')
             }
         } else {
             message.error('请先完成立方体可视化')
