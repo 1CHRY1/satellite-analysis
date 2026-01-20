@@ -533,7 +533,7 @@ const handleGenerateGif = async () => {
             width: 512,
             height: 512,
             workerScript: '/gif.worker.js', // 需要确保这个文件存在于public目录
-            transparent: 0x000000 // 将黑色设为透明色
+            transparent: '#000000' // 将黑色设为透明色
         })
 
         // 加载每张影像并添加到GIF
@@ -662,7 +662,8 @@ const getImageUrlForGif = async (img: MultiImageInfoType): Promise<string> => {
 }
 
 /**
- * 将bbox转换为覆盖该区域的瓦片坐标
+ * 将bbox转换为能完全覆盖该区域的瓦片坐标
+ * 确保返回的瓦片完全包含整个bbox
  */
 const bboxToTile = (bbox: number[]): { z: number, x: number, y: number } => {
     const [minLon, minLat, maxLon, maxLat] = bbox
@@ -676,15 +677,36 @@ const bboxToTile = (bbox: number[]): { z: number, x: number, y: number } => {
     const latSpan = maxLat - minLat
     const maxSpan = Math.max(lonSpan, latSpan)
     
-    // 计算合适的zoom级别（使bbox大致占满一个瓦片）
-    // 每个瓦片在zoom z时覆盖 360/2^z 度
-    let z = Math.floor(Math.log2(360 / maxSpan))
+    // 计算合适的zoom级别
+    // 使用 floor - 1 来确保瓦片足够大，能完全包含bbox
+    let z = Math.floor(Math.log2(360 / maxSpan)) - 1
     z = Math.max(1, Math.min(z, 18)) // 限制在1-18之间
     
     // 计算瓦片坐标
-    const x = Math.floor((centerLon + 180) / 360 * Math.pow(2, z))
+    const n = Math.pow(2, z)
+    const x = Math.floor((centerLon + 180) / 360 * n)
     const latRad = centerLat * Math.PI / 180
-    const y = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * Math.pow(2, z))
+    const y = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n)
+    
+    // 验证瓦片是否完全包含bbox，如果不包含，降低zoom级别
+    let tileBbox = tileToBbox(z, x, y)
+    let iterations = 0
+    while (iterations < 5 && (
+        tileBbox[0] > minLon || tileBbox[1] > minLat || 
+        tileBbox[2] < maxLon || tileBbox[3] < maxLat
+    )) {
+        z = Math.max(1, z - 1)
+        const newN = Math.pow(2, z)
+        const newX = Math.floor((centerLon + 180) / 360 * newN)
+        const newLatRad = centerLat * Math.PI / 180
+        const newY = Math.floor((1 - Math.log(Math.tan(newLatRad) + 1 / Math.cos(newLatRad)) / Math.PI) / 2 * newN)
+        tileBbox = tileToBbox(z, newX, newY)
+        iterations++
+        if (tileBbox[0] <= minLon && tileBbox[1] <= minLat && 
+            tileBbox[2] >= maxLon && tileBbox[3] >= maxLat) {
+            return { z, x: newX, y: newY }
+        }
+    }
     
     return { z, x, y }
 }
