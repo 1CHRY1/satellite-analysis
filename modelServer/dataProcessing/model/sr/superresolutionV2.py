@@ -287,9 +287,21 @@ class superresolutionV2(Task):
                     for c_idx in range(n_cols):
                         y = r_idx * self.tile_size
                         x = c_idx * self.tile_size
+
+                        # ----- 反选逻辑开始 ------
+                        if x + self.tile_size > full_w:
+                            if full_w >= self.tile_size:
+                                x = full_w - self.tile_size
+                        
+                        # 同样逻辑处理高度 y
+                        if y + self.tile_size > full_h:
+                            if full_h >= self.tile_size:
+                                y = full_h - self.tile_size
+
+                        # ------------------------
                         
                         tile = img_data[:, y:y+self.tile_size, x:x+self.tile_size]
-                        
+
                         # Padding 逻辑
                         d_c, d_h, d_w = tile.shape
                         if d_h < self.tile_size or d_w < self.tile_size:
