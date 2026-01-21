@@ -91,18 +91,29 @@
 
                 <!-- 超分增强Tab -->
                 <div class="btns flex justify-center" v-show="showBandSelector && activeMethod === 'superresolution'">
-                    <button class="visualize-btn" @click="handleSuperResolutionV2">
+                    <button class="visualize-btn" @click="handleSuperResolution">
                         <span class="btn-icon">
                             <GalleryHorizontalIcon :size="18" />
                         </span>
                         超分增强
                     </button>
+                </div>
+                <div class="btns flex justify-center" v-show="showBandSelector && activeMethod === 'superresolution'">
+                    <button class="visualize-btn" @click="handleSuperResolutionV2">
+                        <span class="btn-icon">
+                            <GalleryHorizontalIcon :size="18" />
+                        </span>
+                        语义增强
+                    </button>
+                </div>
+                <div class="btns flex justify-end" v-show="showBandSelector && activeMethod === 'superresolution'">
                     <button class="delete-btn" @click="handleRemove">
                         <span class="btn-icon">
                             <Trash2Icon :size="18" />
                         </span>
                     </button>
                 </div>
+
                 <!-- <div class="btns flex justify-center" v-show="showBandSelector && activeMethod === 'superresolution'">
                     <button class="visualize-btn">
                         <span class="btn-icon">
@@ -180,7 +191,9 @@
                                     请选择
                                 </option>
                                 <!-- <option :value="'all'" class="truncate">全选</option> -->
-                                <option v-for="f in selectedVector.fields.continuous.concat(selectedVector.fields.discrete)" :value="f" :key="f" class="truncate">
+                                <option
+                                    v-for="f in selectedVector.fields.continuous.concat(selectedVector.fields.discrete)"
+                                    :value="f" :key="f" class="truncate">
                                     {{ f }}
                                 </option>
                             </select>
@@ -554,7 +567,7 @@ const { // ------------------------------ 1. 产品选项 ----------------------
 /**
  * 5. 超分Tab
  */
-const { handleSuperResolution,handleSuperResolutionV2, isSuperRes } = useSuperResolution()
+const { handleSuperResolution, handleSuperResolutionV2, isSuperRes } = useSuperResolution()
 
 </script>
 
