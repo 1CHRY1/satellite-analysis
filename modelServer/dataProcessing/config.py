@@ -166,7 +166,7 @@ class VmodConfig(BaseConfig):
     CACHE_ROOT                                      =       "/dev/shm/sr_tiles_cache"
 
     # SR Model Url
-    SR_MODEL_URL                                    =       "http://172.31.13.21:8001/process"
+    SR_MODEL_URL                                    =       "http://172.31.10.86:8000/process"
 
 class hxfConfig(BaseConfig):
     # MinIO Config

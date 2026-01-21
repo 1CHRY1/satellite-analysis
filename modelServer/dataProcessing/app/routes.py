@@ -306,7 +306,7 @@ def tile_server(task_id, z, x, y):
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-        
+
 @bp.route('/cleanup/<task_id>', methods=['DELETE'])
 def cleanup(task_id):
     """手动清理接口"""
