@@ -75,8 +75,12 @@ public class SceneDataServiceV3 {
                     .map(code -> "'" + code + "'")  // 给每个 code 加上单引号
                     .collect(Collectors.joining(", "));
             String dataType = "'satellite', " + themeCodes;
-
-            List<SceneDesVO> allScenesInfo = getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, dataType);
+            // 计算时间
+            long startCalTime = System.currentTimeMillis();
+            List<SceneDesVO> allScenesInfo = getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, themeCodes);
+            long endCalTime = System.currentTimeMillis(); // 记录结束时间
+            long duration = endCalTime - startCalTime; // 计算耗时（毫秒）
+            System.out.println("从数据库中检索景消耗时间: " + duration + "ms");
             List<SceneDesVO> scenesInfo = new ArrayList<>();
             List<SceneDesVO> themesInfo = new ArrayList<>();
             for (SceneDesVO scene : allScenesInfo) {
@@ -87,8 +91,12 @@ public class SceneDataServiceV3 {
                     themesInfo.add(scene);
                 }
             }
-
+            // 计算时间
+            startCalTime = System.currentTimeMillis();
             report = buildCoverageReport(scenesInfo, gridsBoundary);
+            endCalTime = System.currentTimeMillis(); // 记录结束时间
+            duration = endCalTime - startCalTime; // 计算耗时（毫秒）
+            System.out.println("在内存中分类并计算覆盖度所消耗时间: " + duration + "ms");
             // 缓存数据
             SceneDataCache.cacheUserScenes(cacheKey, scenesInfo, report);
             SceneDataCache.cacheUserThemes(cacheKey, themesInfo, null);

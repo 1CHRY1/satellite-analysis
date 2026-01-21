@@ -21,8 +21,9 @@ public interface ISceneRepoV3 extends BaseMapper<Scene> {
             "FROM scene_table sc " +
             "LEFT JOIN sensor_table ss ON sc.sensor_id = ss.sensor_id " +
             "LEFT JOIN product_table pd ON sc.product_id = pd.product_id " +
-            "WHERE sc.scene_time BETWEEN #{startTime} AND #{endTime} " +
-            "AND ss.data_type in (${dataType}) " +
+            "WHERE ((sc.scene_time BETWEEN #{startTime} AND #{endTime} " +
+            "AND ss.data_type = 'satellite') " +
+            "OR ss.data_type in (${dataType})) " +
             "AND (ST_Intersects(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), sc.bounding_box)) " +
             "ORDER BY sc.scene_time ASC")
     @Results({
