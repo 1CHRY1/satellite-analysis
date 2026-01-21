@@ -70,4 +70,9 @@ public class ModelExampleController {
     public ResponseEntity<CommonResultVO> getSRResultByBand(@RequestBody SRBandDTO SRBandDTO) {
         return ResponseEntity.ok(modelExampleService.getSRResultByBand(SRBandDTO));
     }
+
+    @PostMapping("/superResolutionV2")
+    public ResponseEntity<CommonResultVO> getSRResultByBandV2(@RequestBody SRBandDTO SRBandDTO) {
+        return ResponseEntity.ok(modelExampleService.getSRResultByBandV2(SRBandDTO));
+    }
 }

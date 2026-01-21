@@ -140,7 +140,7 @@ async def get_tile(
             scenes_to_process = [full_coverage_scenes[0]]
             use_single_scene = True
         else:
-            max_scenes_to_process = min(len(json_data), 10)
+            max_scenes_to_process = min(len(json_data), 50)
             scenes_to_process = json_data[:max_scenes_to_process]
             use_single_scene = False
             

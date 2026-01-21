@@ -402,27 +402,36 @@ def process_grid(grid, scenes_by_period_json_file, scene_band_paths_json_file, g
             cloud_band_path = scene.get('cloudPath')
 
             if not cloud_band_path:
-                # reading Red --> 确定格网 target_H, target_W
-                if not first_shape_set:
+                scene_id = scene['sceneId']
+                paths = scene_band_paths.get(scene_id)
+                full_path = minio_endpoint + "/" + scene['bucket'] + "/" + next(iter(paths.values()))
 
-                    scene_id = scene['sceneId']
-                    paths = scene_band_paths.get(scene_id)
-                    full_path = minio_endpoint + "/" + scene['bucket'] + "/" + next(iter(paths.values())) # paths字典中第一个键值
-                    with COGReader(full_path, options={'nodata': int(nodata)}) as reader:
-
-                        temp_img_data = reader.part(bbox=bbox, indexes=[1]) # 不设置width/height的话不会重采样，分辨率与原始tif一致
-                        nodata_mask = temp_img_data.mask
-
-                        target_H, target_W = temp_img_data.data[0].shape
+                with COGReader(full_path, options={'nodata': int(nodata)}) as reader:
+                    
+                    if not first_shape_set:
+                        # 这一步只为了拿 H 和 W，数据读完就丢
+                        temp_shape_obj = reader.part(bbox=bbox, indexes=[1]) 
+                        target_H, target_W = temp_shape_obj.data[0].shape
                         print(f"{grid_lable}: H={target_H}, W={target_W}", flush=True)
 
-                        img_list = [np.full((target_H, target_W), 0, dtype=np.uint8) for _ in range(band_num)]
-                        need_fill_mask = np.ones((target_H, target_W), dtype=bool) # all true，待填充
+                        img_1 = np.full((target_H, target_W), 0, dtype=np.uint8)
+                        img_2 = np.full((target_H, target_W), 0, dtype=np.uint8)
+                        img_3 = np.full((target_H, target_W), 0, dtype=np.uint8)
+                        need_fill_mask = np.ones((target_H, target_W), dtype=bool)
                         first_shape_set = True
+                    
+                    # -------------------------------------------------------
+                    # 正式读取数据 (缩进对其到 if 外面，保证每景都读！)
+                    # -------------------------------------------------------
+                    # 必须传入 target_H, target_W 确保对齐
+                    current_img_obj = reader.part(bbox=bbox, indexes=[1], height=target_H, width=target_W)
+                    
+                    # 拿到当前景的数据
+                    current_data = current_img_obj.data[0]
+                    nodata_mask = current_img_obj.mask
 
-
-                # 默认全部无云，只考虑nodata
-                valid_mask = (nodata_mask.astype(bool))
+                # 默认全部无云，只考虑nodata；(current_data != 0)是因为不信任原有的 mask
+                valid_mask = (nodata_mask.astype(bool)) & (current_data != 0)
 
             else:
                 scene_id = scene['sceneId']
@@ -465,7 +474,7 @@ def process_grid(grid, scenes_by_period_json_file, scene_band_paths_json_file, g
                 # print(f"这一瓦片的非Nodata像素数: ",np.count_nonzero(nodata_mask.astype(bool)), flush=True)
 
                 # !!! valid_mask <--> 无云 且 非nodata
-                valid_mask = (~cloud_mask) & (nodata_mask.astype(bool))
+                valid_mask = (~cloud_mask) & (nodata_mask.astype(bool)) & (image_data != 0)
 
             # 需要填充的区域 & 该景有效区域 <--> 该景可以填充格网的区域
             fill_mask = need_fill_mask & valid_mask

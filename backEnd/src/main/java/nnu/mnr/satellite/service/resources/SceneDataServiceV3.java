@@ -77,7 +77,7 @@ public class SceneDataServiceV3 {
             String dataType = "'satellite', " + themeCodes;
             // 计算时间
             long startCalTime = System.currentTimeMillis();
-            List<SceneDesVO> allScenesInfo = getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, dataType);
+            List<SceneDesVO> allScenesInfo = getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, themeCodes);
             long endCalTime = System.currentTimeMillis(); // 记录结束时间
             long duration = endCalTime - startCalTime; // 计算耗时（毫秒）
             System.out.println("从数据库中检索景消耗时间: " + duration + "ms");

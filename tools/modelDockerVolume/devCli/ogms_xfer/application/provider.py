@@ -1,6 +1,6 @@
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from ..connection.database import DatabaseClient
+from ..connection.database import DatabaseClient, PostgresClient
 from ..connection.minio import MinioClient
 
 from ..service.sensor import SensorService
@@ -31,6 +31,14 @@ def init_satellite_database(endpoint: str, user: str, password: str, database: s
     return Singleton.get_instance(
         id="satellite-database",
         class_type=DatabaseClient,
+        endpoint=endpoint, user=user, 
+        password=password, database=database)
+
+def init_vector_database(endpoint: str, user: str, password: str, database: str):
+
+    return Singleton.get_instance(
+        id="vector-database",
+        class_type=PostgresClient,
         endpoint=endpoint, user=user, 
         password=password, database=database)
    

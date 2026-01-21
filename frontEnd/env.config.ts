@@ -9,6 +9,8 @@ export interface EnvConfig {
     websocket: string
     tiler: string
     proxymap: string,
+    minio: string,
+    modelServer: string,
 }
 
 export interface FixedConfig {
@@ -25,6 +27,8 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
         websocket: 'http://localhost:9888/model/websocket',
         tiler: 'http://127.0.0.1:8000',
         proxymap: 'http://localhost:5003',
+        minio: 'http://223.2.34.8:30900',
+        modelServer: 'http://127.0.0.1:5001',
     },
     // 集群环境
     cluster: {
@@ -33,6 +37,8 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
         websocket: 'http://223.2.34.8:30394/model/websocket',
         tiler: 'http://223.2.34.8:31800',
         proxymap: 'http://localhost:5003',
+        minio: 'http://223.2.34.8:30900',
+        modelServer: 'http://223.2.34.8:31500',
     },
     // HXF开发环境
     hxf: {
@@ -41,20 +47,26 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
         websocket: 'http://223.2.43.238:9888/model/websocket',
         tiler: 'http://223.2.43.238:8000',
         proxymap: 'http://localhost:5003',
+        minio: 'http://223.2.34.8:30900',
+        modelServer: 'http://223.2.34.8:31500',
     },
     slk: {
         api: 'http://223.2.34.8:31584',
         realtime: 'http://223.2.34.8:5001',
         websocket: 'http://223.2.34.8:30394/model/websocket',
-        tiler: 'http://223.2.34.174:8000',
+        tiler: 'http://127.0.0.1:8000',
         proxymap: 'http://localhost:5003',
+        minio: 'http://223.2.34.8:30900',
+        modelServer: 'http://223.2.34.8:31500',
     },
     zzw: {
-        api: 'http://localhost:8999',
-        realtime: 'http://localhost:5001',
-        websocket: 'http://localhost:9888/model/websocket',
+        api: 'http://223.2.34.8:31584',
+        realtime: 'http://223.2.34.8:5001',
+        websocket: 'http://223.2.34.8:30394/model/websocket',
         tiler: 'http://223.2.34.8:31800',
         proxymap: 'http://localhost:5003',
+        minio: 'http://223.2.34.8:30900',
+        modelServer: 'http://223.2.34.8:31500',
     },
     xzy: {
         api: 'http://10.30.8.44:31584', // 或本地 http://localhost:8999
@@ -62,6 +74,8 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
         websocket: 'http://10.30.8.44:30394/model/websocket', // 或本地 http://localhost:9888/model/websocket
         tiler: 'http://10.30.8.44:31800',
         proxymap: 'http://localhost:5003',
+        minio: 'http://223.2.34.8:30900',
+        modelServer: 'http://223.2.34.8:31500',
     },
 }
 

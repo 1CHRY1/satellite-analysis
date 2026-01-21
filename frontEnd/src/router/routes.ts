@@ -103,6 +103,9 @@ export const routes = [
             name: "概览",
             component: () =>
               import("../components/user/userFunctionCollection/overview.vue"),
+            meta: {
+              showUserActions: true,
+            },
           },
           {
             isBar: false,

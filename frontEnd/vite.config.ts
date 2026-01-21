@@ -10,6 +10,7 @@ import { ENV_CONFIG, FIXED_CONFIG } from './env.config'
 
 const ENV_TARGET = 'hxf' // 一键切换配置环境，使用集群则改为cluster，使用本地则改为local
 
+
 // 获取当前环境配置
 const currentEnv = ENV_CONFIG[ENV_TARGET as keyof typeof ENV_CONFIG] || ENV_CONFIG.zzw
 
@@ -56,7 +57,18 @@ const createProxyConfig = () => {
         '/tiler': {
             target: currentEnv.tiler,
             changeOrigin: true,
+            secure: false,
             rewrite: (path: string) => path.replace(/^\/tiler/, ''),
+        },
+        '/minio': {
+            target: currentEnv.minio,
+            changeOrigin: true,
+            rewrite: (path: string) => path.replace(/^\/minio/, ''),
+        },
+        '/model': {
+            target: currentEnv.modelServer,
+            changeOrigin: true,
+            rewrite: (path: string) => path.replace(/^\/model/, ''),
         },
         // 固定配置（不随环境变化）
         // '/hytemp': {

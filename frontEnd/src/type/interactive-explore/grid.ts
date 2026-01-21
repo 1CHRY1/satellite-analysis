@@ -33,5 +33,7 @@ export type MultiImageInfoType = {
     redPath: string
     greenPath: string
     bluePath: string
+    images?: any[],
+    bandMapper?: any,
     nodata: number
 }

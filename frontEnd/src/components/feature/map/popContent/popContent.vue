@@ -91,7 +91,7 @@
 
                 <!-- 超分增强Tab -->
                 <div class="btns flex justify-center" v-show="showBandSelector && activeMethod === 'superresolution'">
-                    <button class="visualize-btn" @click="handleSuperResolution">
+                    <button class="visualize-btn" @click="handleSuperResolutionV2">
                         <span class="btn-icon">
                             <GalleryHorizontalIcon :size="18" />
                         </span>
@@ -418,6 +418,7 @@ const handleRemove = () => {
     // GridExploreMapOps.map_destroyGridDEMLayer(gridData.value)
     GridExploreMapOps.map_destroyGrid2DDEMLayer(gridData.value)
     GridExploreMapOps.map_destroyGridMVTLayerByGrid(gridData.value)
+    GridExploreMapOps.map_destroyGridSuperResolutionLayerv2(gridData.value)
     // 清理矢量图层的事件监听器
     cleanupGridVectorEvents()
     GridExploreMapOps.map_destroyGrid3DLayer(gridData.value)
@@ -553,7 +554,7 @@ const { // ------------------------------ 1. 产品选项 ----------------------
 /**
  * 5. 超分Tab
  */
-const { handleSuperResolution, isSuperRes } = useSuperResolution()
+const { handleSuperResolution,handleSuperResolutionV2, isSuperRes } = useSuperResolution()
 
 </script>
 
