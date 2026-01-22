@@ -69,6 +69,7 @@ def get_tile(
                 tile_data = cog.tile(x, y, z)
                 img = tile_data.data
                 mask = tile_data.mask
+                mask[np.isnan(img[0])] = 0
             else :
                 print("tile not exist", z, x, y)
                 return Response(content=TRANSPARENT_CONTENT, media_type="image/png")
@@ -220,6 +221,7 @@ def get_box_tile(
                 tile_data = cog.tile(x, y, z)
                 img = tile_data.data
                 mask = tile_data.mask
+                mask[np.isnan(img[0])] = 0
             else :
                 print("tile not exist", z, x, y)
                 return Response(content=TRANSPARENT_CONTENT, media_type="image/png")

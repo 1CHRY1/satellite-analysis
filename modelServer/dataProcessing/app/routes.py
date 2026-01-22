@@ -1,3 +1,5 @@
+import shutil
+import tempfile
 from flask import send_file, request, jsonify, make_response, Blueprint
 import os
 import requests
@@ -6,7 +8,7 @@ from dataProcessing.config import current_config as CONFIG
 from dataProcessing.app.resTemplate import api_response
 from dataProcessing.model.scheduler import init_scheduler
 import ray
-
+from flask import Flask, request, Response, jsonify
 # 使用函数获取MINIO_ENDPOINT
 def get_minio_endpoint():
     try:
@@ -171,6 +173,148 @@ def do_methlib():
     task_id = scheduler.start_task('methlib', data)
     return api_response(data={'taskId': task_id})
 
+@bp.route(CONFIG.API_SR_V2, methods=['POST'])
+def do_superresolutionV2():
+    scheduler = init_scheduler()
+    data = request.json
+    # 不予复用
+    task_id = scheduler.start_task_without_md5('superresolutionV2', data)
+    return api_response(data={'taskId': task_id})
+
+# 超分缓存的XYZ
+@bp.route('/tiles/<task_id>/<int:z>/<int:x>/<int:y>', methods=['GET'])
+def tile_server(task_id, z, x, y):
+    """
+    动态 XYZ 瓦片服务 (修复 ImageData mask setter 报错)
+    """
+    import numpy as np
+    import numpy.ma as ma
+    from flask import request
+    from rio_tiler.io import Reader
+    from rio_tiler.profiles import img_profiles
+    from rio_tiler.errors import TileOutsideBounds
+    from rio_tiler.models import ImageData
+    from morecantile import Tile
+    from rasterio.warp import transform_bounds
+    
+    bbox_str = request.args.get('bbox', None)
+    
+    vrt_path = os.path.join(CONFIG.CACHE_ROOT, task_id, "index.vrt")
+    
+    if not os.path.exists(vrt_path):
+        return jsonify({"error": "Expired or Not Found"}), 404
+        
+    try:
+        with Reader(vrt_path) as src:
+            # 1. 原始切片
+            original_img = src.tile(x, y, z)
+            
+            # 【修复点 1】将 mask 提取为局部变量，不修改对象属性
+            current_mask = original_img.mask
+            
+            # ================= BBox 裁剪逻辑 =================
+            if bbox_str:
+                try:
+                    # 1. 解析 BBox
+                    u_minx, u_miny, u_maxx, u_maxy = map(float, bbox_str.split(','))
+                    
+                    # 2. 获取瓦片边界 (WebMercator)
+                    tile_bounds_3857 = src.tms.xy_bounds(Tile(x=x, y=y, z=z))
+                    t_minx, t_miny, t_maxx, t_maxy = tile_bounds_3857
+                    
+                    # 3. 转换 BBox (WGS84 -> WebMercator)
+                    u_minx_3857, u_miny_3857, u_maxx_3857, u_maxy_3857 = transform_bounds(
+                        "EPSG:4326", "EPSG:3857", u_minx, u_miny, u_maxx, u_maxy
+                    )
+                    
+                    # 4. 快速判断不相交
+                    if (u_minx_3857 >= t_maxx or u_maxx_3857 <= t_minx or 
+                        u_miny_3857 >= t_maxy or u_maxy_3857 <= t_miny):
+                        return "Empty", 404
+
+                    # 5. 计算像素范围
+                    tile_size = 256
+                    res_x = (t_maxx - t_minx) / tile_size
+                    res_y = (t_maxy - t_miny) / tile_size
+                    
+                    px_min = int(max(0, (u_minx_3857 - t_minx) / res_x))
+                    px_max = int(min(tile_size, (u_maxx_3857 - t_minx) / res_x))
+                    
+                    # Y轴方向相反
+                    py_min = int(max(0, (t_maxy - u_maxy_3857) / res_y))
+                    py_max = int(min(tile_size, (t_maxy - u_miny_3857) / res_y))
+                    
+                    # 6. 制作裁剪掩膜 (bbox_mask)
+                    # 初始化全透明(0)
+                    bbox_mask = np.zeros((tile_size, tile_size), dtype=np.uint8)
+                    
+                    # 将 bbox 区域设为可见(255)
+                    if px_max > px_min and py_max > py_min:
+                        bbox_mask[py_min:py_max, px_min:px_max] = 255
+                    
+                    # 【修复点 2】更新局部变量 current_mask，而不是 original_img.mask
+                    if current_mask is not None:
+                        current_mask = np.minimum(current_mask, bbox_mask)
+                    else:
+                        current_mask = bbox_mask
+                        
+                except Exception as e:
+                    print(f"BBox clipping failed: {e}")
+                    pass
+            # ================= 结束 BBox 逻辑 =================
+
+            # 2. 提取数据
+            data = original_img.data 
+            
+            # 3. 清洗数据
+            if np.issubdtype(data.dtype, np.floating):
+                data = np.nan_to_num(data, nan=0.0, posinf=0.0, neginf=0.0)
+            data = data.clip(0, 255).astype(np.uint8)
+            
+            C, H, W = data.shape
+
+            # 4. 提取 RGB
+            if C >= 3:
+                rgb_data = np.stack([data[2], data[1], data[0]]) # BGR -> RGB
+            else:
+                band = data[0]
+                rgb_data = np.stack([band, band, band])
+
+            # 5. 构建 MaskedArray (使用更新后的 current_mask)
+            if current_mask is not None:
+                # numpy mask: True=遮挡(透明/0), False=有效(255)
+                alpha_boolean_mask = (current_mask == 0)
+                
+                # 广播 mask 到 3 个通道
+                broadcasted_mask = np.broadcast_to(alpha_boolean_mask[None, :, :], rgb_data.shape)
+                
+                final_arr = ma.masked_array(rgb_data, mask=broadcasted_mask)
+            else:
+                final_arr = ma.masked_array(rgb_data)
+
+            # 6. 构建 ImageData
+            new_img = ImageData(array=final_arr)
+
+            # 7. 渲染
+            content = new_img.render(img_format="PNG", **img_profiles.get("png"))
+            
+            return Response(content, mimetype="image/png")
+            
+    except TileOutsideBounds:
+        return "Empty", 404
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+@bp.route('/cleanup/<task_id>', methods=['DELETE'])
+def cleanup(task_id):
+    """手动清理接口"""
+    target_dir = os.path.join(CONFIG.CACHE_ROOT, task_id)
+    if os.path.exists(target_dir):
+        shutil.rmtree(target_dir)
+        return jsonify({"status": "cleaned"})
+    return jsonify({"status": "not found"}), 404
 
 # ==================== 调试路由 ====================
 @bp.route('/test/task', methods=['POST'])

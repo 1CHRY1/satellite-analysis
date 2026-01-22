@@ -51,7 +51,7 @@ class LayerManager {
      * 在地图加载时，记录当前所有图层 ID 为系统图层。
      */
     private captureInitialSystemLayers(map: mapboxgl.Map): void {
-        map.getStyle().layers.forEach(layer => {
+        this.map?.getStyle()?.layers.forEach(layer => {
             this.systemLayerIds.add(layer.id);
         });
         // 排除 Mapbox Draw 相关的图层，它们通常以 'gl-draw-' 开头
@@ -63,7 +63,7 @@ class LayerManager {
     private syncLayers(): void {
         if (!this.map) return;
         
-        const currentMapLayers: mapboxgl.AnyLayer[] = this.map.getStyle().layers;
+        const currentMapLayers: mapboxgl.AnyLayer[] = this.map.getStyle()?.layers || [];
         const newManagedLayers: ManagedLayer[] = [];
         
         currentMapLayers.forEach(layer => {

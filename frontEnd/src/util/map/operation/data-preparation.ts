@@ -1,125 +1,8 @@
-import { clickHandler, selectedGrid } from '@/components/dataCenter/noCloud/composables/useBox'
 import { mapManager } from '../mapManager'
 import { ezStore } from '@/store'
 import bus from '@/store/bus'
 import { watch, watchEffect } from 'vue'
 import * as turf from '@turf/turf'
-
-/**
- * 添加网格图层，同时为初始格网图层（未填充）所用
- * @param gridGeoJson grid的geojson
- */
-export function map_addGridLayer(gridGeoJson: GeoJSON.FeatureCollection): void {
-    const id = 'grid-layer'
-    const fillId = id + '-fill'
-    const lineId = id + '-line'
-    const highlightId = id + '-highlight'
-    const srcId = id + '-source'
-
-    mapManager.withMap((m) => {
-        ezStore.set('map', m)
-
-        m.off('click', fillId, clickHandler)
-        // Add a geojson source
-        m.addSource(srcId, {
-            type: 'geojson',
-            data: gridGeoJson,
-        })
-
-        // Layer A: Grid Lines
-        m.addLayer({
-            id: lineId,
-            type: 'line',
-            source: srcId,
-            metadata: {
-                'user-label': '格网边界图层', 
-            },
-            paint: {
-                'line-color': '#F00000',
-                'line-width': 1,
-                'line-opacity': 0.3,
-            },
-        })
-        
-        // Layer B: Highlight (高亮层放在中间)
-        // const nowSelectedGrids = Array.from(gridStore.selectedGrids) || ['']
-        m.addLayer({
-            id: highlightId,
-            type: 'fill',
-            source: srcId,
-            metadata: {
-                'user-label': '格网高亮图层', 
-            },
-            paint: {
-                'fill-color': '#0000FF',
-                'fill-opacity': 0.3,
-            },
-            filter: ['in', 'id', ''], // 初始为空
-        })
-
-        // Layer C: Picking Layer (点击层放在最上面！)
-        // 这样无论下面是否高亮，鼠标最先接触的都是这个透明层，确保事件响应
-        m.addLayer({
-            id: fillId,
-            type: 'fill',
-            source: srcId,
-            metadata: {
-                'user-label': '格网填充图层', 
-            },
-            paint: {
-                'fill-color': '#00FFFF',
-                // 使用极低的透明度而不是0，确保某些浏览器/Mapbox版本能通过拾取测试
-                'fill-opacity': ['coalesce', ['to-number', ['get', 'opacity']], 0.001], 
-            },
-        })
-
-        // 左键点击 fill 区域，更新高亮
-        m.on('click', fillId, clickHandler)
-
-        m.on('mouseenter', fillId, () => {
-            m.getCanvas().style.cursor = 'pointer'
-        })
-        m.on('mouseleave', fillId, () => {
-            m.getCanvas().style.cursor = ''
-        })
-        
-        // Add a click event listener to the invisible fill layer
-        m.on('contextmenu', fillId, () => {
-            // TODO
-        })
-
-        // ezStore.set('grid-layer-cancel-watch', cancelWatch)
-        ezStore.set('grid-layer-fill-id', fillId)
-        ezStore.set('grid-layer-line-id', lineId)
-        ezStore.set('grid-layer-highlight-id', highlightId)
-        ezStore.set('grid-layer-source-id', srcId)
-    })
-}
-
-/**
- * 删除网格图层
- */
-export function map_destroyGridLayer(): void {
-    const gridLayer = ezStore.get('grid-layer-fill-id')
-    const gridLineLayer = ezStore.get('grid-layer-line-id')
-    const gridHighlightLayer = ezStore.get('grid-layer-highlight-id')
-    const gridSourceId = ezStore.get('grid-layer-source-id')
-    const cancelWatch = ezStore.get('grid-layer-cancel-watch')
-
-    mapManager.withMap((m) => {
-        gridLayer && m.getLayer(gridLayer) && m.off('click', gridLayer, clickHandler)
-        gridLayer && m.getLayer(gridLayer) && m.removeLayer(gridLayer)
-        gridLineLayer && m.getLayer(gridLineLayer) && m.removeLayer(gridLineLayer)
-        gridHighlightLayer && m.getLayer(gridHighlightLayer) && m.removeLayer(gridHighlightLayer)
-        gridSourceId && m.getSource(gridSourceId) && m.removeSource(gridSourceId)
-        cancelWatch && cancelWatch()
-        ezStore.delete('grid-layer-fill-id')
-        ezStore.delete('grid-layer-line-id')
-        ezStore.delete('grid-layer-highlight-id')
-        ezStore.delete('grid-layer-source-id')
-        ezStore.delete('grid-layer-cancel-watch')
-    })
-}
 
 /**
  * 添加立方体图层
@@ -228,7 +111,7 @@ export function map_destrod3DBoxLayer(): void {
         const layers = style.layers || []
         layers.forEach((layer) => {
             if (layer.id.includes('3d-box-layer')) {
-                m.getLayer(layer.id) && m.off('click', layer.id, clickHandler)
+                // m.getLayer(layer.id) && m.off('click', layer.id, clickHandler)
                 m.getLayer(layer.id) && m.removeLayer(layer.id)
             }
         })

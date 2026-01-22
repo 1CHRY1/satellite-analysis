@@ -8,7 +8,8 @@ import { ENV_CONFIG, FIXED_CONFIG } from './env.config'
 // const ENV = process.env.NODE_ENV || 'development'
 
 
-const ENV_TARGET = 'zzw' // 一键切换配置环境，使用集群则改为cluster，使用本地则改为local
+
+const ENV_TARGET = 'local' // 一键切换配置环境，使用集群则改为cluster，使用本地则改为local
 
 
 // 获取当前环境配置
@@ -64,6 +65,11 @@ const createProxyConfig = () => {
             target: currentEnv.minio,
             changeOrigin: true,
             rewrite: (path: string) => path.replace(/^\/minio/, ''),
+        },
+        '/model': {
+            target: currentEnv.modelServer,
+            changeOrigin: true,
+            rewrite: (path: string) => path.replace(/^\/model/, ''),
         },
         // 固定配置（不随环境变化）
         // '/hytemp': {

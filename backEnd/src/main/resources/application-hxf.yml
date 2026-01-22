@@ -165,8 +165,8 @@ mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: nnu.mnr.satellite.model.po
   type-handlers-package: nnu.mnr.satellite.utils.typeHandler
-  configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 minio:
 #  access-key: jTbgNHEqQafOpUxVg7Ol
@@ -217,6 +217,7 @@ modelServer:
     ndvi: /v0/tif/calc_NDVI
     createLowLevelMosaic: /v0/mosaic/create_low_level_mosaic
     methlib: /v0/methlib
+    superresolutionV2: /v0/superresolutionV2
   interval:
     status: 2
 

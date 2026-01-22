@@ -36,6 +36,9 @@ class BaseConfig:
     # API for MethLib (新增)
     API_METHLIB                                     =       API_VERSION + '/methlib'
 
+    # API for SRV2 (新增)
+    API_SR_V2                                       =       API_VERSION + '/superresolutionV2'
+
     # Status Flag
     STATUS_UNLOCK                                   =       0b1
     STATUS_LOCK                                     =       0b10
@@ -107,6 +110,12 @@ class DevK8SConfig(BaseConfig):
     METHOD_WD                                       =       r"/usr/resource/method_library/method_wd"
     METHOD_PD                                       =       r"/usr/resource/method_library/method_pd"
 
+    # VRT Cache
+    CACHE_ROOT                                      =       "/dev/shm/sr_tiles_cache"
+
+    # SR Model Url
+    SR_MODEL_URL                                    =       "http://localhost:8001/process"
+
 class VmodConfig(BaseConfig):
     # MinIO Config
     MINIO_PORT                                      =       9000
@@ -153,6 +162,12 @@ class VmodConfig(BaseConfig):
     METHOD_WD                                       =       r"/usr/resource/method_library/method_wd"
     METHOD_PD                                       =       r"/usr/resource/method_library/method_pd"
 
+    # VRT Cache
+    CACHE_ROOT                                      =       "/dev/shm/sr_tiles_cache"
+
+    # SR Model Url
+    SR_MODEL_URL                                    =       "http://172.31.10.86:8000/process"
+
 class hxfConfig(BaseConfig):
     # MinIO Config
     MINIO_PORT                                      =       30900
@@ -198,6 +213,11 @@ class hxfConfig(BaseConfig):
     METHOD_WD                                       =       r"/Users/paxton/Documents/4_tools/method_wd"
     METHOD_PD                                       =       r"/Users/paxton/Documents/4_tools/method_pd"
 
+    # VRT Cache
+    CACHE_ROOT                                      =       "/dev/shm/sr_tiles_cache"
+
+    # SR Model Url
+    SR_MODEL_URL                                    =       "http://localhost:8001/process"
 
 class zzwConfig(BaseConfig):
     # MinIO Config
@@ -244,6 +264,11 @@ class zzwConfig(BaseConfig):
     METHOD_WD                                       =       r"/Users/paxton/Documents/4_tools/method_wd"
     METHOD_PD                                       =       r"/Users/paxton/Documents/4_tools/method_pd"
 
+    # VRT Cache
+    CACHE_ROOT                                      =       "/dev/shm/sr_tiles_cache"
+
+    # SR Model Url
+    SR_MODEL_URL                                    =       "http://localhost:8001/process"
 
 class slkConfig(BaseConfig):
     # MinIO Config
@@ -289,6 +314,12 @@ class slkConfig(BaseConfig):
     # MethLib Config
     METHOD_WD                                       =       r"/Users/paxton/Documents/4_tools/method_wd"
     METHOD_PD                                       =       r"/Users/paxton/Documents/4_tools/method_pd"
+
+    # VRT Cache
+    CACHE_ROOT                                      =       "/Users/paxton/Documents/2_sandbox/temp"
+
+    # SR Model Url
+    SR_MODEL_URL                                    =       "http://223.2.39.234:8000/process"
 
 # --------------- class ProdConfig(BaseConfig): ---------------
 

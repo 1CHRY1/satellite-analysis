@@ -74,5 +74,12 @@ type VisualScene = {
     bluePath: string
     dataType: string
     nodata: number
+    images?: any[]
+    bandMapper?: any
 }
 export const currentScene = ref<VisualScene | null>(null)
+
+/**
+ * 超分缓存
+ */
+export const superResCache = new Map<string, any>();

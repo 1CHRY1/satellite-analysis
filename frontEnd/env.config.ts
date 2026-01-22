@@ -10,6 +10,7 @@ export interface EnvConfig {
     tiler: string
     proxymap: string,
     minio: string,
+    modelServer: string,
 }
 
 export interface FixedConfig {
@@ -27,6 +28,7 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
         tiler: 'http://127.0.0.1:8000',
         proxymap: 'http://localhost:5003',
         minio: 'http://223.2.34.8:30900',
+        modelServer: 'http://127.0.0.1:5001',
     },
     // 集群环境
     cluster: {
@@ -36,6 +38,7 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
         tiler: 'http://223.2.34.8:31800',
         proxymap: 'http://localhost:5003',
         minio: 'http://223.2.34.8:30900',
+        modelServer: 'http://223.2.34.8:31500',
     },
     // HXF开发环境
     hxf: {
@@ -45,6 +48,7 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
         tiler: 'http://223.2.43.238:8000',
         proxymap: 'http://localhost:5003',
         minio: 'http://223.2.34.8:30900',
+        modelServer: 'http://223.2.34.8:31500',
     },
     slk: {
         api: 'http://223.2.34.8:31584',
@@ -53,6 +57,7 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
         tiler: 'http://127.0.0.1:8000',
         proxymap: 'http://localhost:5003',
         minio: 'http://223.2.34.8:30900',
+        modelServer: 'http://223.2.34.8:31500',
     },
     zzw: {
         api: 'http://223.2.34.8:31584',
@@ -61,6 +66,7 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
         tiler: 'http://127.0.0.1:8000',
         proxymap: 'http://localhost:5003',
         minio: 'http://223.2.34.8:30900',
+        modelServer: 'http://223.2.34.8:31500',
     },
     xzy: {
         api: 'http://10.30.8.44:31584', // 或本地 http://localhost:8999
@@ -69,6 +75,7 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
         tiler: 'http://10.30.8.44:31800',
         proxymap: 'http://localhost:5003',
         minio: 'http://223.2.34.8:30900',
+        modelServer: 'http://223.2.34.8:31500',
     },
 }
 

@@ -412,6 +412,7 @@ interface bandPara{
     R: string,
     G: string,
     B: string
+    NIR?: string
 }
 interface SuperResParams{
     columnId : number,
@@ -423,6 +424,16 @@ interface SuperResParams{
 export async function GetSuperResolution(param:SuperResParams){
     try{
         return http.post<any>(`modeling/example/superResolution`, param)
+    }catch (error) {
+        console.error('超分增强失败:', error)
+    }
+
+  
+}
+
+export async function GetSuperResolutionV2(param: SuperResParams){
+    try{
+        return http.post<any>(`modeling/example/superResolutionV2`, param)
     }catch (error) {
         console.error('超分增强失败:', error)
     }
