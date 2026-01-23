@@ -20,6 +20,7 @@ from dataProcessing.model.cloud.calc_no_cloud_grid import calc_no_cloud_grid
 from dataProcessing.model.cloud.calc_no_cloud_complex import calc_no_cloud_complex
 from dataProcessing.model.cube.calc_eo_cube import calc_eo_cube
 from dataProcessing.model.sr.superresolutionV2 import superresolutionV2
+from dataProcessing.model.sr.esrgan import esrgan
 from dataProcessing.model.vis.create_low_level_mosaic import create_low_level_mosaic
 from dataProcessing.model.vis.create_low_level_mosaic_threads import create_low_level_mosaic_threads
 from dataProcessing.model.methlib.model import MethLib
@@ -31,7 +32,7 @@ STATUS_ERROR = CONFIG.STATUS_ERROR
 STATUS_PENDING = CONFIG.STATUS_PENDING
 MAX_RUNNING_TASKS = CONFIG.MAX_RUNNING_TASKS
 # 不会被缓存的任务类型
-NO_HISTORY_TASK_TYPES = ['superresolutionV2']
+NO_HISTORY_TASK_TYPES = ['superresolutionV2', 'esrgan']
 
 class TaskScheduler:
     def __init__(self):
@@ -139,6 +140,7 @@ class TaskScheduler:
             'create_low_level_mosaic_threads': create_low_level_mosaic_threads,
             'methlib': MethLib,
             'superresolutionV2': superresolutionV2,
+            'esrgan': esrgan,
             'test': TestTask,
             # 可以在这里扩展其他类型的任务
         }

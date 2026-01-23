@@ -204,6 +204,7 @@ modelServer:
     createLowLevelMosaic: /v0/mosaic/create_low_level_mosaic
     methlib: /v0/methlib
     superresolutionV2: /v0/superresolutionV2
+    esrgan: /v0/esrgan
   interval:
     status: 2
 

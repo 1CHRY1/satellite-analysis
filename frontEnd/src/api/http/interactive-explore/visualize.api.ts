@@ -354,3 +354,14 @@ export const getGridSuperResolutionUrlV2 = (caseId: string, grid: GridData) => {
     requestParams.append('bbox', bbox.join(','))
     return baseUrl + '?' + requestParams.toString()
 }
+
+/**
+ * 格网ESRGAN URL
+ */
+export const getGridESRGANUrl = (caseId: string, grid: GridData) => {
+    let baseUrl = `${modelServerEndPoint}/tiles/${caseId}/{z}/{x}/{y}`
+    const bbox = grid2bbox(grid.columnId, grid.rowId, grid.resolution)
+    const requestParams = new URLSearchParams()
+    requestParams.append('bbox', bbox.join(','))
+    return baseUrl + '?' + requestParams.toString()
+}
