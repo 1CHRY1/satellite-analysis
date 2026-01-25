@@ -365,6 +365,18 @@ public class ModelExampleService {
         long expirationTime = 60 * 1000;
         return runModelServerModel(SRUrlV2, SRJson, expirationTime);
     }
+    // ESRGAN模型
+    public CommonResultVO getESRGANResultByBand(SRBandDTO SRBandDTO){
+        Geometry wkt = getTileGeomByIdsAndResolution(SRBandDTO.getRowId(), SRBandDTO.getColumnId(), SRBandDTO.getResolution());
+        JSONObject band = SRBandDTO.getBand();
+        JSONObject esrganJson = new JSONObject();
+        esrganJson.put("boundary", wkt.toString());  // Geometry 转 WKT 字符串
+        esrganJson.put("resolution", SRBandDTO.getResolution());
+        esrganJson.put("band", band);          // 直接放入 JSONObject
+        String esrganUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("esrgan");
+        long expirationTime = 60 * 1000;
+        return runModelServerModel(esrganUrl, esrganJson, expirationTime);
+    }
     public CommonResultVO createNoCloudConfig(NoCloudTileDTO noCloudTileDTO) {
         try {
             // 1. 生成配置ID

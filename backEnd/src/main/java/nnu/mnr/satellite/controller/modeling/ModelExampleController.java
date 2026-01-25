@@ -75,4 +75,9 @@ public class ModelExampleController {
     public ResponseEntity<CommonResultVO> getSRResultByBandV2(@RequestBody SRBandDTO SRBandDTO) {
         return ResponseEntity.ok(modelExampleService.getSRResultByBandV2(SRBandDTO));
     }
+
+    @PostMapping("/esrgan")
+    public ResponseEntity<CommonResultVO> getESRGANResultByBand(@RequestBody SRBandDTO SRBandDTO) {
+        return ResponseEntity.ok(modelExampleService.getESRGANResultByBand(SRBandDTO));
+    }
 }
