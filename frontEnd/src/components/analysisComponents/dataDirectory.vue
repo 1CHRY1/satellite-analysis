@@ -212,6 +212,7 @@ import { getImgStats } from '@/api/http/interactive-explore'
 
 // 获取 MinIO 端点配置（前端和容器访问地址相同）
 const minioEndPoint = ezStore.get('conf')['minioIpAndPort'] || 'http://localhost:9000'
+const titilerEndPoint = ezStore.get('conf')['titiler']
 
 const props = defineProps({
     projectId: {
@@ -665,12 +666,13 @@ const handleConfirm = async() => {
     let mapPosition = itemInMinIo.value.bbox.geometry.coordinates[0]
     let tifUrl = `${tileUrlObj.value.minioEndpoint}/${tileUrlObj.value.object}`
     const stats = await getImgStats(tifUrl)
+    console.log(tileUrlObj.value)
     console.log(stats)
     const bidx = selectedBidx.value === null ? 'b1' : selectedBidx.value
     selectedBand.value = stats[bidx]
     range.value[0] = selectedBand.value.min
     range.value[1] = selectedBand.value.max
-    let wholeTileUrl = `${tileUrlObj.value.tilerUrl}/tiles/WebMercatorQuad/{z}/{x}/{y}.png?scale=1&url=${tifUrl}&colormap_name=${colormapName.value}&rescale=${range.value[0]},${range.value[1]}&nodata=0`
+    let wholeTileUrl = `${titilerEndPoint}/tiles/WebMercatorQuad/{z}/{x}/{y}.png?scale=1&url=${tifUrl}&colormap_name=${colormapName.value}&rescale=${range.value[0]},${range.value[1]}&nodata=0`
 
     console.log(wholeTileUrl, 'wholeTileUrl')
     if (!tileUrlObj.value.object) {

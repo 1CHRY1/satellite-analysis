@@ -54,7 +54,8 @@
                                                 <MapIcon :size="16" class="config-icon" />
                                                 <span>空间位置</span>
                                             </div>
-                                            <div class="config-control">
+                                            <div class="config-control"
+                                                @click="() => { if (activeTab === 'poi') selectedGridResolution = 2 }">
                                                 <segmented class="!w-full scale-y-90 scale-x-90 origin-center"
                                                     :options="tabs" :active-tab="activeTab" @change="handleSelectTab" />
                                             </div>
@@ -62,13 +63,16 @@
                                                 <div v-if="activeTab === 'region'"
                                                     class="config-control justify-center">
                                                     <RegionSelects v-model="selectedRegion"
+                                                        @change="getAutoGridResolutionByRegionBoundary"
                                                         :placeholder="[t('datapage.explore.data.intext_choose')]"
                                                         class="flex gap-2"
                                                         select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
                                                 </div>
-                                                <div v-if="activeTab === 'region'" class="flex flex-row mt-2 ml-2">
-                                                    <div class="text-red-500">*</div>
-                                                    <span class="text-xs text-gray-400">未选择行政区默认以全国范围检索</span>
+                                                <div v-if="activeTab === 'region'" class="flex flex-row mt-3 ml-5">
+                                                    <a-checkbox v-model:checked="isAutoGridResolutionOptChecked"
+                                                        class="">自动匹配格网分辨率</a-checkbox>
+                                                    <!-- <div class="text-red-500">*</div>
+                                                        <span class="text-xs text-gray-400">未选择行政区默认以全国范围检索</span> -->
                                                 </div>
                                                 <div v-else-if="activeTab === 'poi'"
                                                     class="config-control justify-center w-full">
@@ -113,7 +117,7 @@
                                                     <div class="text-red-500">*</div>
                                                     <span class="text-xs text-gray-400">{{
                                                         t('datapage.explore.data.advice')
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -202,12 +206,12 @@
                                         <DatabaseIcon :size="18" />
                                     </div>
                                     <h2 class="section-title">{{ t('datapage.explore.section_interactive.sectiontitle')
-                                        }}</h2>
+                                    }}</h2>
                                     <div class="section-icon absolute right-0 cursor-pointer"
                                         @click="destroyExploreLayers">
                                         <a-tooltip>
                                             <template #title>{{ t('datapage.explore.section_interactive.clear')
-                                                }}</template>
+                                            }}</template>
                                             <Trash2Icon :size="18" />
                                         </a-tooltip>
                                     </div>
@@ -320,7 +324,7 @@
                                                             @click="isRSItemExpand[index] = false" />
                                                         <span class="text-xs text-[#7a899f]">{{
                                                             sceneStats?.dataset?.[category]?.total
-                                                            }} 景</span>
+                                                        }} 景</span>
                                                     </div>
                                                     <div class="flex flex-row gap-2 items-center">
                                                         <ChartColumnBig :size="12" class="text-[#7a899f]"
@@ -391,7 +395,7 @@
                                                             <a-tooltip>
                                                                 <template #title>{{
                                                                     t('datapage.explore.section_interactive.clear')
-                                                                    }}</template>
+                                                                }}</template>
                                                                 <Trash2Icon :size="18"
                                                                     class="mt-4! ml-4! cursor-pointer"
                                                                     @click="destroyScene" />
@@ -444,7 +448,7 @@
                                                                     v-model="vectorSymbology[item.tableName].selectedField">
                                                                     <option disabled selected value="">{{
                                                                         t('datapage.explore.section_interactive.choose')
-                                                                    }}
+                                                                        }}
                                                                     </option>
                                                                     <!-- <option :value="'all'" class="truncate">全选</option> -->
                                                                     <option
@@ -469,7 +473,7 @@
                                                             </el-checkbox>
                                                             <a-tooltip>
                                                                 <template #title>{{ t('datapage.history.preview')
-                                                                    }}</template>
+                                                                }}</template>
                                                                 <Eye v-if="previewVectorList[index]"
                                                                     @click="destroyVector(index)" :size="16"
                                                                     class="cursor-pointer" />
@@ -497,7 +501,7 @@
                                                                                 </el-checkbox>
                                                                                 <span class="config-label mt-1">{{
                                                                                     simplifyRangeLabel(attr.label)
-                                                                                    }}</span>
+                                                                                }}</span>
                                                                             </div>
                                                                             <el-color-picker v-model="attr.color"
                                                                                 size="small" show-alpha
@@ -548,7 +552,7 @@
                                                             @click="isProductsItemExpand[index] = false" />
                                                         <span class="text-xs text-[#7a899f]">{{
                                                             themeStats?.dataset?.[category]?.total
-                                                            }} 幅</span>
+                                                        }} 幅</span>
                                                     </div>
                                                 </div>
 
@@ -570,7 +574,7 @@
                                                                     <a-tooltip>
                                                                         <template #title>{{
                                                                             t('datapage.history.preview')
-                                                                            }}</template>
+                                                                        }}</template>
                                                                         <Eye v-if="shouldShowEyeOff(category, idx)"
                                                                             @click="toggleEye(category, idx, themeName)"
                                                                             :size="16" class="cursor-pointer" />
@@ -690,7 +694,7 @@ const {
     // ------------------------ 数据检索 1.空间位置 -------------------------- //
     tabs, poiOptions, fetchPOIOptions, handleSelectTab,
     // ------------------------ 数据检索 2.格网分辨率 -------------------------- //
-    gridOptions, allGrids, allGridCount, getAllGrid,
+    gridOptions, allGrids, allGridCount, getAllGrid, isAutoGridResolutionOptChecked, getAutoGridResolutionByRegionBoundary,
     // ------------------------ 数据检索 3.时间范围 -------------------------- //
     dateRangePresets,
     // ------------------------ 数据检索 4.筛选 -------------------------- //
