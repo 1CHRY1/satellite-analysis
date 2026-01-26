@@ -166,7 +166,7 @@ class VmodConfig(BaseConfig):
     CACHE_ROOT                                      =       "/dev/shm/sr_tiles_cache"
 
     # SR Model Url
-    SR_MODEL_URL                                    =       "http://localhost:8001/process"
+    SR_MODEL_URL                                    =       "http://172.31.13.21:8001/process"
 
 class hxfConfig(BaseConfig):
     # MinIO Config
@@ -319,7 +319,7 @@ class slkConfig(BaseConfig):
     CACHE_ROOT                                      =       "/Users/paxton/Documents/2_sandbox/temp"
 
     # SR Model Url
-    SR_MODEL_URL                                    =       "http://localhost:8001/process"
+    SR_MODEL_URL                                    =       "http://223.2.39.234:8000/process"
 
 # --------------- class ProdConfig(BaseConfig): ---------------
 

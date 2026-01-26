@@ -31,7 +31,7 @@ fetch('/app.conf.json').then((response) => {
         dayjs.locale('zh-cn')
         mapboxgl.accessToken =
             'pk.eyJ1IjoieWNzb2t1IiwiYSI6ImNrenozdWdodDAza3EzY3BtdHh4cm5pangifQ.ZigfygDi2bK4HXY1pWh-wg'
-        mapboxgl.maxParallelImageRequests = 64;
+        mapboxgl.maxParallelImageRequests = 16;
         message.config({
             top: `100px`,
             duration: 2,
