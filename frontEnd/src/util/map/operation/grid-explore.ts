@@ -132,7 +132,62 @@ export function map_destroyGrid2DDEMLayer(gridInfo: GridData) {
 }
 
 export function map_addGridSceneLayer(gridInfo: GridData, url: string) {
-    return map_addGrid3DLayer(gridInfo, url)
+    const prefix = gridInfo.rowId + '_' + gridInfo.columnId
+    const id = prefix + uid()
+    const srcId = id + '-source'
+
+    if (!ezStore.get('grid-image-layer-map')) {
+        ezStore.set('grid-image-layer-map', new window.Map())
+    }
+
+    mapManager.withMap((m) => {
+        const gridImageLayerMap = ezStore.get('grid-image-layer-map')
+
+        m.addSource(srcId, {
+            type: 'raster',
+            tiles: [url],
+        })
+        m.addLayer({
+            id: id,
+            type: 'raster',
+            source: srcId,
+            metadata: {
+                'user-label': prefix + '号格网影像图层',
+            },
+            paint: {
+                'raster-opacity': (100 - (gridInfo.opacity || 0)) * 0.01,
+            },
+        })
+
+        gridImageLayerMap.set(id, {
+            id: id,
+            source: srcId,
+        })
+
+        const layersInThisGrid: string[] = []
+        for (const key of gridImageLayerMap.keys()) {
+            // 使用 startsWith 匹配前缀，确保和 destroy 函数逻辑一致
+            if (key.startsWith(prefix)) {
+                layersInThisGrid.push(key)
+            }
+        }
+
+        // 如果当前格网的图层数量超过3个，从最早的开始删
+        while (layersInThisGrid.length > 3) {
+            // shift() 取出数组第一个元素，也就是最旧的那个 key
+            const oldestKey = layersInThisGrid.shift()
+
+            if (oldestKey) {
+                const oldLayerInfo = gridImageLayerMap.get(oldestKey)
+                if (oldLayerInfo) {
+                    if (m.getLayer(oldLayerInfo.id)) m.removeLayer(oldLayerInfo.id)
+                    if (m.getSource(oldLayerInfo.source)) m.removeSource(oldLayerInfo.source)
+
+                    gridImageLayerMap.delete(oldestKey)
+                }
+            }
+        }
+    })
 }
 
 export function map_destroyGridSceneLayer(gridInfo: GridData) {

@@ -104,9 +104,9 @@ export const useGridScene = () => {
             selectedBand.value = result[0]
         }
         if (result.length > 2) {
-            selectedBBand.value = result[2]
+            selectedBBand.value = result[0]
             selectedGBand.value = result[1]
-            selectedRBand.value = result[0]
+            selectedRBand.value = result[2]
         }
 
         return result

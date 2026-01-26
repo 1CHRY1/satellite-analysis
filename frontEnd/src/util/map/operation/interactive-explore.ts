@@ -6,6 +6,8 @@ import { createApp, type ComponentInstance, ref, type Ref, reactive } from 'vue'
 import PopContent from '@/components/feature/map/popContent/popContent.vue'
 import Antd, { message } from 'ant-design-vue'
 import type { Expression } from 'mapbox-gl'
+// 定义回调函数的类型，方便组件传入业务逻辑
+type DrawCallback = (feature: GeoJSON.Feature) => void
 
 /**
  * 0. 公用函数/初始化等
@@ -21,6 +23,59 @@ export function draw_deleteAll(): void {
     mapManager.withDraw((d) => {
         d.deleteAll()
         d.changeMode('simple_select')
+    })
+}
+
+/**
+ * 开启多边形绘制模式
+ */
+export function draw_startPolygon(): void {
+    mapManager.withDraw((d) => {
+        // 1. 清除之前的绘制，避免混淆（可选，视需求而定）
+        d.deleteAll()
+        
+        // 2. 切换到多边形绘制模式
+        d.changeMode('draw_polygon')
+        
+        // 3. 给出提示
+        message.info('请在地图上点击绘制多边形，双击结束绘制')
+    })
+}
+
+/**
+ * 绑定绘制完成的事件监听
+ * @param onDrawCreate 当绘制完成时的回调
+ */
+export function bindDrawEvents(onDrawCreate: DrawCallback) {
+    mapManager.withMap((map) => {
+        // 移除旧的监听器以防重复绑定 (如果需要)
+        // map.off('draw.create', ...) 
+        
+        // 监听绘制创建事件 (draw.create)
+        map.on('draw.create', (e: any) => {
+            const features = e.features
+            if (features && features.length > 0) {
+                const geometry = features[0]
+                console.log('绘制的多边形数据:', geometry)
+                
+                // 执行回调，将数据传回组件
+                onDrawCreate(geometry)
+                
+                // 交互优化：绘制完成后，通常切回简单选择模式
+                // 也可以在这里调用 d.deleteAll() 然后用 map_addPolygonLayer 把它画成静态层
+                setTimeout(() => {
+                     mapManager.withDraw(d => d.changeMode('simple_select'))
+                }, 0)
+            }
+        })
+
+        // 监听更新事件 (如果允许用户修改绘制后的多边形)
+        map.on('draw.update', (e: any) => {
+             const features = e.features
+             if (features && features.length > 0) {
+                 onDrawCreate(features[0])
+             }
+        })
     })
 }
 
@@ -68,7 +123,7 @@ export function map_addPolygonLayer(options: {
             type: 'fill',
             source: sourceId,
             metadata: {
-                'user-label': '行政区' + '填充图层',
+                'user-label': '检索区' + '填充图层',
             },
             paint: {
                 'fill-color': fillColor,
@@ -82,7 +137,7 @@ export function map_addPolygonLayer(options: {
             type: 'line',
             source: sourceId,
             metadata: {
-                'user-label': '行政区' + '线图层',
+                'user-label': '检索区' + '线图层',
             },
             paint: {
                 'line-color': lineColor,

@@ -330,6 +330,7 @@ const handleClick = async (index: number) => {
     // console.log(currentImage)
 
     if (visualMode.value === 'rgb') {
+        // 三层叠加？
         const img = currentImage as MultiImageInfoType
 
         let redPath, greenPath, bluePath

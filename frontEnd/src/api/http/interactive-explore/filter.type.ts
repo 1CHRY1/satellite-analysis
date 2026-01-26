@@ -12,6 +12,13 @@ export interface POIFilterRequest {
     resolution: number,
 }
 
+export interface PolygonFilterRequest {
+    startTime: string,
+    endTime: string,
+    polygonId: string,
+    resolution: number,
+}
+
 export namespace SceneStats {
     export type SceneCategory = 'subMeter' | 'twoMeter' | 'tenMeter' | 'thirtyMeter' | 'other'
 
@@ -33,6 +40,12 @@ export namespace SceneStats {
         dataset?: {
             [key in SceneCategory]: SceneCategoryStats
         },
+    }
+
+    export interface SceneCategoryCoverageResponse {
+        status: number
+        message: string
+        data: any
     }
 }
 
