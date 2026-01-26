@@ -2,13 +2,16 @@
  * Composables Shared Variables
  */
 
-import type { SpatialFilterMethod, POIInfo } from "@/type/interactive-explore/filter"
-import type { RegionValues } from "v-region"
-import { ref, computed } from "vue"
-import dayjs from "dayjs"
-import type { SceneStats, VectorStats, ThemeStats } from '@/api/http/interactive-explore/filter.type'
-import type { VectorSymbology } from "@/type/interactive-explore/visualize"
-
+import type { SpatialFilterMethod, POIInfo, PolygonInfo } from '@/type/interactive-explore/filter'
+import type { RegionValues } from 'v-region'
+import { ref, computed } from 'vue'
+import dayjs from 'dayjs'
+import type {
+    SceneStats,
+    VectorStats,
+    ThemeStats,
+} from '@/api/http/interactive-explore/filter.type'
+import type { VectorSymbology } from '@/type/interactive-explore/visualize'
 
 /**
  * 数据检索全局变量 - 1.空间位置
@@ -24,6 +27,7 @@ export const selectedRegion = ref<RegionValues>({
     area: '',
 })
 export const selectedPOI = ref<POIInfo>()
+export const selectedPolygon = ref<PolygonInfo>()
 // 获取region/poi的id的计算属性，称为最终的地物id
 export const finalLandId = computed(() => {
     let curSpatialFilterMethod: SpatialFilterMethod
@@ -31,15 +35,22 @@ export const finalLandId = computed(() => {
         curSpatialFilterMethod = 'poi'
     } else if (searchedSpatialFilterMethod.value === 'region') {
         curSpatialFilterMethod = 'region'
+    } else if (searchedSpatialFilterMethod.value === 'polygon') {
+        curSpatialFilterMethod = 'polygon'
     } else if (activeSpatialFilterMethod.value === 'poi') {
         curSpatialFilterMethod = 'poi'
-    } else {
+    } else if (activeSpatialFilterMethod.value === 'region') {
         curSpatialFilterMethod = 'region'
+    } else {
+        curSpatialFilterMethod = 'polygon'
     }
 
     if (curSpatialFilterMethod === 'poi') {
         if (!selectedPOI.value) return 'None'
         return selectedPOI.value?.id
+    } else if (curSpatialFilterMethod === 'polygon') {
+        if (!selectedPolygon.value) return 'None'
+        return selectedPolygon.value?.id
     }
     let info = selectedRegion.value
     if (info.area) return `${info.area}`
@@ -66,12 +77,12 @@ export const selectedDateRange = ref([dayjs('2025-05-01'), dayjs('2025-06-30')])
 export const sceneStats = ref<SceneStats.SceneStatsResponse>({
     total: 0,
     coverage: '0.00%',
-    category: []
+    category: [],
 })
 export const vectorStats = ref<VectorStats.VectorStatsResponse>([])
 export const themeStats = ref<ThemeStats.ThemeStatsResponse>({
     total: 0,
-    category: []
+    category: [],
 })
 
 export const vectorSymbology = ref<VectorSymbology>({})
