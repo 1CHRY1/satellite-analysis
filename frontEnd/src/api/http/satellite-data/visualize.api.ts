@@ -437,6 +437,12 @@ export async function GetSuperResolutionV2(param: SuperResParams){
     }catch (error) {
         console.error('超分增强失败:', error)
     }
+}
 
-  
+export async function GetESRGAN(param: SuperResParams){
+    try{
+        return http.post<any>(`modeling/example/esrgan`, param)
+    }catch (error) {
+        console.error('超分增强失败:', error)
+    }
 }

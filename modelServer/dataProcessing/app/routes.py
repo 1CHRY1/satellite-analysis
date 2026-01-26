@@ -181,6 +181,14 @@ def do_superresolutionV2():
     task_id = scheduler.start_task_without_md5('superresolutionV2', data)
     return api_response(data={'taskId': task_id})
 
+@bp.route(CONFIG.API_ESRGAN, methods=['POST'])
+def do_esrgan():
+    scheduler = init_scheduler()
+    data = request.json
+    # 不予复用
+    task_id = scheduler.start_task_without_md5('esrgan', data)
+    return api_response(data={'taskId': task_id})
+
 # 超分缓存的XYZ
 @bp.route('/tiles/<task_id>/<int:z>/<int:x>/<int:y>', methods=['GET'])
 def tile_server(task_id, z, x, y):
@@ -306,7 +314,7 @@ def tile_server(task_id, z, x, y):
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-        
+
 @bp.route('/cleanup/<task_id>', methods=['DELETE'])
 def cleanup(task_id):
     """手动清理接口"""

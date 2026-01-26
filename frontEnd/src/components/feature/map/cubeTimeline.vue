@@ -97,6 +97,7 @@ import { message } from 'ant-design-vue'
 import type { GridData } from '@/type/interactive-explore/grid'
 import { currentScene } from '@/components/feature/map/popContent/shared.ts'
 import { useSuperResolution } from './popContent/useSuperResolution'
+import bandMergeHelper from '@/util/image/util'
 
 type ImageInfoType = {
     sceneId: string
@@ -589,76 +590,97 @@ const handleGenerateGif = async () => {
 
 /**
  * 获取影像URL用于GIF生成
- * 使用 /rgb/box/{z}/{x}/{y}.png 端点，计算覆盖bbox的合适瓦片
+ * 使用 /tiler/gif/{z}/{x}/{y}.png 端点，计算覆盖bbox的合适瓦片
  */
 const getImageUrlForGif = async (img: MultiImageInfoType): Promise<string> => {
     let redPath = img.redPath
     let greenPath = img.greenPath
     let bluePath = img.bluePath
 
+    const currentGridKey = `${grid.value.rowId}-${grid.value.columnId}-${grid.value.resolution}`
+    const gridSuperRes = superResOverride.value.get(currentGridKey)
+    if (gridSuperRes?.load === true && gridSuperRes.sceneId === img.sceneId) {
+        redPath = gridSuperRes.redPath
+        greenPath = gridSuperRes.greenPath
+        bluePath = gridSuperRes.bluePath
+    }
+
+    // 1. 获取统计信息 (参考 handleClick 逻辑)
     const cache = ezStore.get('statisticCache')
     let [min_r, max_r, min_g, max_g, min_b, max_b, mean_r, mean_g, mean_b, std_r, std_g, std_b] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
     if (cache.get(redPath) && cache.get(greenPath) && cache.get(bluePath)) {
+        // console.log('GIF generation: cache hit!')
         ;[min_r, max_r, mean_r, std_r] = cache.get(redPath)
         ;[min_g, max_g, mean_g, std_g] = cache.get(greenPath)
         ;[min_b, max_b, mean_b, std_b] = cache.get(bluePath)
     } else if (img.dataType !== 'dem' && img.dataType !== 'dsm') {
-        const [stats_r, stats_g, stats_b] = await Promise.all([
-            getImgStats(getMinIOUrl(redPath)),
-            getImgStats(getMinIOUrl(greenPath)),
-            getImgStats(getMinIOUrl(bluePath)),
-        ])
-        min_r = stats_r.b1.min
-        max_r = stats_r.b1.max
-        min_g = stats_g.b1.min
-        max_g = stats_g.b1.max
-        min_b = stats_b.b1.min
-        max_b = stats_b.b1.max
-        mean_r = stats_r.b1.mean
-        std_r = stats_r.b1.std
-        mean_g = stats_g.b1.mean
-        std_g = stats_g.b1.std
-        mean_b = stats_b.b1.mean
-        std_b = stats_b.b1.std
+        try {
+            const values = await Promise.all([
+                getImgStats(getMinIOUrl(redPath)),
+                getImgStats(getMinIOUrl(greenPath)),
+                getImgStats(getMinIOUrl(bluePath)),
+            ])
+            min_r = values[0].b1.min
+            max_r = values[0].b1.max
+            min_g = values[1].b1.min
+            max_g = values[1].b1.max
+            min_b = values[2].b1.min
+            max_b = values[2].b1.max
+            mean_r = values[0].b1.mean
+            std_r = values[0].b1.std
+            mean_g = values[1].b1.mean
+            std_g = values[1].b1.std
+            mean_b = values[2].b1.mean
+            std_b = values[2].b1.std
 
-        cache.set(redPath, [min_r, max_r, mean_r, std_r])
-        cache.set(greenPath, [min_g, max_g, mean_g, std_g])
-        cache.set(bluePath, [min_b, max_b, mean_b, std_b])
+            cache.set(redPath, [min_r, max_r, mean_r, std_r])
+            cache.set(greenPath, [min_g, max_g, mean_g, std_g])
+            cache.set(bluePath, [min_b, max_b, mean_b, std_b])
+        } catch (e) {
+            console.warn('Stats fetch failed for GIF frame', e)
+        }
     }
 
+    // 2. 计算瓦片坐标
     const bbox = grid2bbox(grid.value.columnId, grid.value.rowId, grid.value.resolution)
-    
-    // titiler配置可能是代理路径(如/tiler)，GIF生成需要完整URL来跨域加载图片
-    const titilerEndPoint = ezStore.get('conf')['titiler']
-    const minioEndPoint = ezStore.get('conf')['minioIpAndPort']
-    
-    // 如果是相对路径，拼接当前origin
-    const fullTitilerUrl = titilerEndPoint.startsWith('http') 
-        ? titilerEndPoint 
-        : `${window.location.origin}${titilerEndPoint}`
-    
-    // 计算覆盖bbox的瓦片坐标（选择合适的zoom级别）
-    const { z, x, y } = bboxToTile(bbox)
-    
-    const requestParams = new URLSearchParams()
-    requestParams.append('bbox', bbox.join(','))
-    requestParams.append('url_r', `${minioEndPoint}/${redPath}`)
-    requestParams.append('url_g', `${minioEndPoint}/${greenPath}`)
-    requestParams.append('url_b', `${minioEndPoint}/${bluePath}`)
-    requestParams.append('min_r', min_r.toString())
-    requestParams.append('max_r', max_r.toString())
-    requestParams.append('min_g', min_g.toString())
-    requestParams.append('max_g', max_g.toString())
-    requestParams.append('min_b', min_b.toString())
-    requestParams.append('max_b', max_b.toString())
-    if (scaleRate.value) requestParams.append('normalize_level', scaleRate.value.toString())
-    if (stretchMethod.value) requestParams.append('stretch_method', stretchMethod.value)
-    if (img.nodata) requestParams.append('nodata', img.nodata.toString())
-    requestParams.append('std_config', JSON.stringify({ mean_r, mean_g, mean_b, std_r, std_g, std_b }))
+    const bboxStr = bbox.join(',')
+    const tile = bboxToTile(bbox)
 
-    // 使用 /rgb/box/{z}/{x}/{y}.png 端点
-    return `${fullTitilerUrl}/rgb/box/${z}/${x}/${y}.png?${requestParams.toString()}`
+    // 3. 构建 URL
+    // 注意：这里使用新创建的后端接口 /tiler/gif/...
+    const titilerProxyEndPoint = ezStore.get('conf')['titiler']
+
+    const baseUrl = `${titilerProxyEndPoint}/gif/${tile.z}/${tile.x}/${tile.y}.png`
+    const params = new URLSearchParams()
+    
+    // 必须使用 getMinIOUrl 转换路径，确保后端 rio_tiler 能访问
+    params.append('url_r', getMinIOUrl(redPath))
+    params.append('url_g', getMinIOUrl(greenPath))
+    params.append('url_b', getMinIOUrl(bluePath))
+    
+    params.append('min_r', min_r.toString())
+    params.append('max_r', max_r.toString())
+    params.append('min_g', min_g.toString())
+    params.append('max_g', max_g.toString())
+    params.append('min_b', min_b.toString())
+    params.append('max_b', max_b.toString())
+    
+    params.append('nodata', (img.nodata || 0).toString())
+    params.append('stretch_method', stretchMethod.value || 'gamma')
+    params.append('normalize_level', scaleRate.value.toString())
+    
+    // 添加 bbox 参数，确保 GIF 帧位置正确
+    params.append('bbox', bboxStr)
+
+    if (stretchMethod.value === 'standard') {
+        params.append('std_config', JSON.stringify({
+            mean_r, mean_g, mean_b, 
+            std_r, std_g, std_b
+        }))
+    }
+
+    return `${baseUrl}?${params.toString()}`
 }
 
 /**
@@ -739,59 +761,23 @@ const loadImage = (url: string): Promise<HTMLImageElement> => {
 }
 
 /**
- * 加载瓦片图片并裁剪bbox区域，缩放到目标尺寸
+ * 加载瓦片图片并缩放到目标尺寸
  */
-const loadAndCropImageForGif = async (url: string, bbox: number[], targetSize: number = 512): Promise<HTMLCanvasElement> => {
+const loadAndCropImageForGif = async (url: string, _bbox: number[], targetSize: number = 512): Promise<HTMLCanvasElement> => {
     // 加载原始瓦片图片
     const img = await loadImage(url)
-    
-    // 获取瓦片坐标和瓦片边界
-    const { z, x, y } = bboxToTile(bbox)
-    const tileBbox = tileToBbox(z, x, y)
-    
-    const [tMinLon, tMinLat, tMaxLon, tMaxLat] = tileBbox
-    const [bMinLon, bMinLat, bMaxLon, bMaxLat] = bbox
-    
-    // 瓦片尺寸（通常是256）
-    const tileSize = img.width || 256
-    
-    // 计算bbox在瓦片中的像素位置
-    // 注意：y轴是从上到下的，所以lat的计算要反过来
-    const srcX = Math.max(0, (bMinLon - tMinLon) / (tMaxLon - tMinLon) * tileSize)
-    const srcY = Math.max(0, (tMaxLat - bMaxLat) / (tMaxLat - tMinLat) * tileSize)
-    const srcW = Math.min(tileSize - srcX, (bMaxLon - bMinLon) / (tMaxLon - tMinLon) * tileSize)
-    const srcH = Math.min(tileSize - srcY, (bMaxLat - bMinLat) / (tMaxLat - tMinLat) * tileSize)
-    
     // 创建目标Canvas
     const canvas = document.createElement('canvas')
     canvas.width = targetSize
     canvas.height = targetSize
     const ctx = canvas.getContext('2d')!
     
-    // 裁剪bbox区域并缩放到目标尺寸
-    if (srcW > 0 && srcH > 0) {
-        ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, targetSize, targetSize)
-    }
+    // 缩放到目标尺寸（铺满画布）
+    ctx.drawImage(img, 0, 0, targetSize, targetSize)
     
-    // 将黑色/近黑色像素转为透明（处理nodata区域）
-    const imageData = ctx.getImageData(0, 0, targetSize, targetSize)
-    const data = imageData.data
-    const threshold = 10 // 允许一定的容差，处理近黑色像素
-    
-    for (let i = 0; i < data.length; i += 4) {
-        const r = data[i]
-        const g = data[i + 1]
-        const b = data[i + 2]
-        // 如果RGB值都接近0（黑色），设为完全透明
-        if (r < threshold && g < threshold && b < threshold) {
-            data[i] = 0     // R
-            data[i + 1] = 0 // G
-            data[i + 2] = 0 // B
-            data[i + 3] = 0 // Alpha设为0（透明）
-        }
-    }
-    
-    ctx.putImageData(imageData, 0, 0)
+    // 【修改】移除前端的透明度处理逻辑
+    // 后端 /gif 接口现在已经正确处理了 NoData 透明度，不需要前端 hack
+    // 这样可以保留深色植被和阴影
     
     return canvas
 }

@@ -29,18 +29,18 @@ from rio_tiler.errors import TileOutsideBounds
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("SREngine")
+logger = logging.getLogger("ESRGANEngine")
 
 # =================配置部分=================
 
 # 1. 确定缓存目录
 os.makedirs(CONFIG.CACHE_ROOT, exist_ok=True)
 
-# 2. 外部算法接口地址SR_MODEL_URL
+# 2. 外部算法接口地址ESRGAN_MODEL_URL
 
 # =================核心处理类=================
 
-class superresolutionV2(Task):
+class esrgan(Task):
     def __init__(self, task_id, *args, **kwargs):
         super().__init__(task_id, *args, **kwargs)
         
@@ -301,9 +301,9 @@ class superresolutionV2(Task):
 
             # 3. 模拟调用外部接口 (Request)
             import requests
-            res = requests.post(CONFIG.SR_MODEL_URL, data=mem_bytes, timeout=6000)
+            res = requests.post(CONFIG.ESRGAN_MODEL_URL, data=mem_bytes, timeout=6000)
             if res.status_code != 200:
-                logger.error(f"SRV2 API Error: {res.text}")
+                logger.error(f"ESRGAN API Error: {res.text}")
                 return None
             processed_bytes = res.content
 
