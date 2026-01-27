@@ -296,6 +296,7 @@ export function getGrid3DUrl(grid: GridData, param: RGBCompositeParams) {
         requestParams.append('stretch_method', param.stretch_method.toString())
     if (param.nodata) requestParams.append('nodata', param.nodata.toString())
     if (param.std_config) requestParams.append('std_config', param.std_config.toString())
+    if (param.cloudPath) requestParams.append('cloud_mask_url', getMinIOUrl(param.cloudPath))
     // if (grid.opacity) requestParams.append('normalize_level', grid.opacity.toString())
     return baseUrl + '?' + requestParams.toString()
 }
