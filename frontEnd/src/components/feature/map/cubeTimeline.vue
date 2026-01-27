@@ -528,14 +528,14 @@ const handleGenerateGif = async () => {
         const images = filteredImages.value
         const totalImages = images.length
         
-        // 创建GIF编码器，设置透明背景
+        // 创建GIF编码器
         const gif = new GIF({
             workers: 2,
             quality: 10,
             width: 512,
             height: 512,
             workerScript: '/gif.worker.js', // 需要确保这个文件存在于public目录
-            transparent: 0x000000 // 将黑色设为透明色
+            transparent: 0x000000, // 黑色作为透明色
         } as any)
 
         // 加载每张影像并添加到GIF
@@ -553,7 +553,8 @@ const handleGenerateGif = async () => {
                 const croppedCanvas = await loadAndCropImageForGif(imageUrl, bbox, 512)
                 
                 // 添加到GIF（每帧延迟500ms）
-                gif.addFrame(croppedCanvas, { delay: 500 })
+                // dispose: 2 表示每帧播放后恢复到背景（透明），避免帧叠加
+                gif.addFrame(croppedCanvas, { delay: 500, dispose: 2 })
                 
                 // 更新进度
                 gifProgress.value = Math.round(((i + 1) / totalImages) * 80)
@@ -772,14 +773,15 @@ const loadAndCropImageForGif = async (url: string, _bbox: number[], targetSize: 
     canvas.width = targetSize
     canvas.height = targetSize
     const ctx = canvas.getContext('2d')!
-    
-    // 缩放到目标尺寸（铺满画布）
+
+    // 先填充黑色背景（会被 GIF 识别为透明色）
+    // 配合 dispose: 2，每帧播放后会恢复到透明背景，避免帧叠加
+    ctx.fillStyle = '#000000'
+    ctx.fillRect(0, 0, targetSize, targetSize)
+
+    // 绘制影像，nodata 区域保持透明（PNG 的透明会覆盖黑色背景）
     ctx.drawImage(img, 0, 0, targetSize, targetSize)
-    
-    // 【修改】移除前端的透明度处理逻辑
-    // 后端 /gif 接口现在已经正确处理了 NoData 透明度，不需要前端 hack
-    // 这样可以保留深色植被和阴影
-    
+
     return canvas
 }
 
