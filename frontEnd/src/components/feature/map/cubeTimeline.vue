@@ -116,6 +116,7 @@ type MultiImageInfoType = {
     greenPath: string
     bluePath: string
     nodata: number
+    cloudPath?: string
 }
 
 const show = defineModel<boolean>()
@@ -131,6 +132,12 @@ const timelineTrack = ref<HTMLElement | null>(null)
 // GIF生成相关状态
 const isGeneratingGif = ref(false)
 const gifProgress = ref(0)
+
+// 支持去云的传感器
+const CLOUD_SUPPORT_SENSORS = [
+    'CB04_WPM', 'GF-1_PMS', 'GF-2_PMS', 'GF-6_PMS',
+    'GF-7_PMS', 'ZY-1_VNIC', 'ZY-3_MUX', 'MTFC_PMS'
+]
 
 const scrollToCenter = (index: number) => {
     if (!timelineTrack.value) return
@@ -386,6 +393,13 @@ const handleClick = async (index: number) => {
         }
 
         console.log(min_r, max_r, min_g, max_g, min_b, max_b, mean_r, mean_g, mean_b, std_r, std_g, std_b)
+
+        // 默认启用去云功能（如果有云掩膜且传感器支持）
+        let cloudPath: string | undefined = undefined
+        if (img.cloudPath && CLOUD_SUPPORT_SENSORS.includes(img.sensorName)) {
+            cloudPath = img.cloudPath
+        }
+
         const url = getGridSceneUrl(grid.value, {
             redPath,
             greenPath,
@@ -394,12 +408,13 @@ const handleClick = async (index: number) => {
             r_max: max_r,
             g_min: min_g,
             g_max: max_g,
-            b_min: min_b,   
+            b_min: min_b,
             b_max: max_b,
             normalize_level: scaleRate.value,
             stretch_method: stretchMethod.value,
             nodata: img.nodata,
-            std_config: JSON.stringify({mean_r, mean_g, mean_b, std_r, std_g, std_b})
+            std_config: JSON.stringify({mean_r, mean_g, mean_b, std_r, std_g, std_b}),
+            cloudPath: cloudPath
         })
         GridExploreMapOps.map_addGridSceneLayer(
             grid.value,

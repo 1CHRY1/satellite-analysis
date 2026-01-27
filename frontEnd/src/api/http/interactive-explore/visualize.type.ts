@@ -24,6 +24,7 @@ export type RGBCompositeParams = {
     normalize_level?: number
     nodata?: number
     std_config?: string
+    cloudPath?: string  // 云掩膜路径
 }
 
 export type OneBandColorLayerParam = {

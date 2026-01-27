@@ -24,6 +24,8 @@ export namespace Grid {
             Blue: number,
         },
         boundingBox: any,
+        cloudPath?: string,  // 云掩膜路径
+        bucket?: string,     // MinIO bucket
     }
 
     export interface SceneDetailStatsResponse {
