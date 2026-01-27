@@ -312,7 +312,7 @@ class slkConfig(BaseConfig):
     MYSQL_PWD                                       =       "123456"
 
     # Backend Config
-    BACK_URL_PREFIX                                 =       "http://223.2.34.8:31584/api/"
+    BACK_URL_PREFIX                                 =       "http://localhost:8999/api/"
     LOW_LEVEL_IMAGE_VISUALIZATION                   =       "v3/modeling/example/scenes/visualization"
 
     # Titiler Config

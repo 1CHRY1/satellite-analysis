@@ -21,6 +21,7 @@ import {
 import type { CommonResponse } from '@/api/http/common.type'
 import { getTileFromMiniIo } from '@/api/http/analysis'
 import { map_fitView } from '@/util/map/operation/common'
+import dayjs from 'dayjs'
 
 const dbValue = useAnalysisStore()
 type HistoryValueTab = 'RUNNING' | 'COMPLETE'
@@ -58,6 +59,8 @@ export function useViewHistoryModule() {
             status: activeTab.value,
             startTime: selectedTime.value.value?.startTime as string,
             endTime: selectedTime.value.value?.endTime as string,
+            // startTime: dayjs(selectedTime.value.value?.startTime).format('YYYY-MM-DDTHH:mm:ss'),
+            // endTime: dayjs(selectedTime.value.value?.endTime).format('YYYY-MM-DDTHH:mm:ss'),
         })
         methLibCaseList.value = res.data.records
         // TODO 可以做一个缓存；请求所有记录对应的方法
