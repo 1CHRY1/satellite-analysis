@@ -38,6 +38,8 @@ class BaseConfig:
 
     # API for SRV2 (新增)
     API_SR_V2                                       =       API_VERSION + '/superresolutionV2'
+    # API for ESRGAN (新增)
+    API_ESRGAN                                      =       API_VERSION + '/esrgan'
 
     # Status Flag
     STATUS_UNLOCK                                   =       0b1
@@ -111,10 +113,14 @@ class DevK8SConfig(BaseConfig):
     METHOD_PD                                       =       r"/usr/resource/method_library/method_pd"
 
     # VRT Cache
-    CACHE_ROOT                                      =       "/dev/shm/sr_tiles_cache"
+    CACHE_ROOT                                      =       "/dev/shm/tiles_cache"
+    # Min Free Bytes Left for /dev/shm
+    MIN_FREE_BYTES                                  =       3 * 1024 * 1024 * 1024
 
     # SR Model Url
     SR_MODEL_URL                                    =       "http://localhost:8001/process"
+    # ESRGAN Model Url
+    ESRGAN_MODEL_URL                                =       "http://localhost:8001/process"
 
 class VmodConfig(BaseConfig):
     # MinIO Config
@@ -163,10 +169,14 @@ class VmodConfig(BaseConfig):
     METHOD_PD                                       =       r"/usr/resource/method_library/method_pd"
 
     # VRT Cache
-    CACHE_ROOT                                      =       "/dev/shm/sr_tiles_cache"
+    CACHE_ROOT                                      =       "/dev/shm/tiles_cache"
+    # Min Free Bytes Left for /dev/shm
+    MIN_FREE_BYTES                                  =       3 * 1024 * 1024 * 1024
 
     # SR Model Url
     SR_MODEL_URL                                    =       "http://172.31.10.86:8000/process"
+    # ESRGAN Model Url
+    ESRGAN_MODEL_URL                                =       "http://172.31.10.86:8001/process"
 
 class hxfConfig(BaseConfig):
     # MinIO Config
@@ -214,10 +224,14 @@ class hxfConfig(BaseConfig):
     METHOD_PD                                       =       r"/Users/paxton/Documents/4_tools/method_pd"
 
     # VRT Cache
-    CACHE_ROOT                                      =       "/dev/shm/sr_tiles_cache"
+    CACHE_ROOT                                      =       "/dev/shm/tiles_cache"
+    # Min Free Bytes Left for /dev/shm
+    MIN_FREE_BYTES                                  =       3 * 1024 * 1024 * 1024
 
     # SR Model Url
     SR_MODEL_URL                                    =       "http://localhost:8001/process"
+    # ESRGAN Model Url
+    ESRGAN_MODEL_URL                                =       "http://localhost:8001/process"
 
 class zzwConfig(BaseConfig):
     # MinIO Config
@@ -265,10 +279,14 @@ class zzwConfig(BaseConfig):
     METHOD_PD                                       =       r"/Users/paxton/Documents/4_tools/method_pd"
 
     # VRT Cache
-    CACHE_ROOT                                      =       "/dev/shm/sr_tiles_cache"
+    CACHE_ROOT                                      =       "/dev/shm/tiles_cache"
+    # Min Free Bytes Left for /dev/shm
+    MIN_FREE_BYTES                                  =       3 * 1024 * 1024 * 1024
 
     # SR Model Url
     SR_MODEL_URL                                    =       "http://localhost:8001/process"
+    # ESRGAN Model Url
+    ESRGAN_MODEL_URL                                =       "http://localhost:8001/process"
 
 class slkConfig(BaseConfig):
     # MinIO Config
@@ -317,9 +335,13 @@ class slkConfig(BaseConfig):
 
     # VRT Cache
     CACHE_ROOT                                      =       "/Users/paxton/Documents/2_sandbox/temp"
+    # Min Free Bytes Left for /dev/shm
+    MIN_FREE_BYTES                                  =       3 * 1024 * 1024 * 1024
 
     # SR Model Url
     SR_MODEL_URL                                    =       "http://223.2.39.234:8000/process"
+    # ESRGAN Model Url
+    ESRGAN_MODEL_URL                                =       "http://223.2.39.234:8001/process"
 
 # --------------- class ProdConfig(BaseConfig): ---------------
 

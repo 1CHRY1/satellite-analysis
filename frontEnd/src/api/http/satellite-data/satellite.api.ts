@@ -138,6 +138,14 @@ export async function getGridByPOIAndResolution(poiId: string, resolution: numbe
     return http.get<any>(`data/grid/grids/location/${poiId}/resolution/${resolution}`)
 }
 
+export async function getGridByPolygonAndResolution(polygonId: string, resolution: number): Promise<any> {
+    return http.get<any>(`data/grid/grids/polygon/${polygonId}/resolution/${resolution}`)
+}
+
+export async function addPolygonCache(polygonObj: any): Promise<any> {
+    return http.post<any>(`data/polygon/add`, polygonObj)
+}
+
 export async function getBoundary(region: number | string): Promise<any> {
     return http.get<any>(`data/region/boundary/${region}`)
 }
@@ -261,6 +269,9 @@ export async function getVectorsByRegionFilter(param: any): Promise<any> {
 }
 export async function getVectorsByPOIFilter(param: any): Promise<any> {
     return http.post<any>(`data/vector/time/location`, param)
+}
+export async function getVectorsByPolygonFilter(param: any): Promise<any> {
+    return http.post<any>(`data/vector/time/polygon`, param)
 }
 export async function getVectorAttr(source_layer: string): Promise<Array<AttrSymbology>> {
     return http.get<Array<AttrSymbology>>(`data/vector/${source_layer}/type`)

@@ -330,6 +330,7 @@ const handleClick = async (index: number) => {
     // console.log(currentImage)
 
     if (visualMode.value === 'rgb') {
+        // 三层叠加？
         const img = currentImage as MultiImageInfoType
 
         let redPath, greenPath, bluePath
@@ -650,7 +651,9 @@ const getImageUrlForGif = async (img: MultiImageInfoType): Promise<string> => {
 
     // 3. 构建 URL
     // 注意：这里使用新创建的后端接口 /tiler/gif/...
-    const baseUrl = `/tiler/gif/${tile.z}/${tile.x}/${tile.y}.png`
+    const titilerProxyEndPoint = ezStore.get('conf')['titiler']
+
+    const baseUrl = `${titilerProxyEndPoint}/gif/${tile.z}/${tile.x}/${tile.y}.png`
     const params = new URLSearchParams()
     
     // 必须使用 getMinIOUrl 转换路径，确保后端 rio_tiler 能访问

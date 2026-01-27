@@ -106,6 +106,14 @@
                         语义增强
                     </button>
                 </div>
+                <div class="btns flex justify-center" v-show="showBandSelector && activeMethod === 'superresolution'">
+                    <button class="visualize-btn" @click="handleESRGAN">
+                        <span class="btn-icon">
+                            <GalleryHorizontalIcon :size="18" />
+                        </span>
+                        ESRGAN超分增强
+                    </button>
+                </div>
                 <div class="btns flex justify-end" v-show="showBandSelector && activeMethod === 'superresolution'">
                     <button class="delete-btn" @click="handleRemove">
                         <span class="btn-icon">
@@ -432,6 +440,7 @@ const handleRemove = () => {
     GridExploreMapOps.map_destroyGrid2DDEMLayer(gridData.value)
     GridExploreMapOps.map_destroyGridMVTLayerByGrid(gridData.value)
     GridExploreMapOps.map_destroyGridSuperResolutionLayerv2(gridData.value)
+    GridExploreMapOps.map_destroyGridESRGANLayer(gridData.value)
     // 清理矢量图层的事件监听器
     cleanupGridVectorEvents()
     GridExploreMapOps.map_destroyGrid3DLayer(gridData.value)
@@ -567,7 +576,7 @@ const { // ------------------------------ 1. 产品选项 ----------------------
 /**
  * 5. 超分Tab
  */
-const { handleSuperResolution, handleSuperResolutionV2, isSuperRes } = useSuperResolution()
+const { handleSuperResolution, handleSuperResolutionV2, handleESRGAN, isSuperRes } = useSuperResolution()
 
 </script>
 

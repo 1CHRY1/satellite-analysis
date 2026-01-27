@@ -101,7 +101,7 @@ public class SceneDataServiceV3 {
             SceneDataCache.cacheUserScenes(cacheKey, scenesInfo, report);
             SceneDataCache.cacheUserThemes(cacheKey, themesInfo, null);
             // 格网边界缓存
-            SceneDataCache.cacheUserRegionInfo(cacheKey, gridsBoundary);
+            SceneDataCache.cacheUserRegionInfo(cacheKey, gridsBoundary, startTime, endTime);
         } else if (userSceneCache == null) {
             // 缓存未命中，从数据库中读数据
             Geometry boundary = regionDataService.getRegionById(regionId).getBoundary();
@@ -116,7 +116,7 @@ public class SceneDataServiceV3 {
             // 缓存数据
             SceneDataCache.cacheUserScenes(cacheKey, scenesInfo, report);
             // 格网边界缓存
-            SceneDataCache.cacheUserRegionInfo(cacheKey, gridsBoundary);
+            SceneDataCache.cacheUserRegionInfo(cacheKey, gridsBoundary, startTime, endTime);
         } else if (userSceneCache.coverageReportVO == null) {
             Geometry boundary = regionDataService.getRegionById(regionId).getBoundary();
             List<Integer[]> tileIds = TileCalculateUtil.getRowColByRegionAndResolution(boundary, resolution);
@@ -125,7 +125,7 @@ public class SceneDataServiceV3 {
             // 缓存数据
             SceneDataCache.cacheUserScenes(cacheKey, userSceneCache.scenesInfo, report);
             // 格网边界缓存
-            SceneDataCache.cacheUserRegionInfo(cacheKey, gridsBoundary);
+            SceneDataCache.cacheUserRegionInfo(cacheKey, gridsBoundary, startTime, endTime);
         } else {
             // 缓存命中，直接使用
             report = userSceneCache.coverageReportVO;
@@ -183,7 +183,7 @@ public class SceneDataServiceV3 {
             SceneDataCache.cacheUserScenes(cacheKey, scenesInfo, report);
             SceneDataCache.cacheUserThemes(cacheKey, themesInfo, null);
             // 格网边界缓存
-            SceneDataCache.cacheUserRegionInfo(cacheKey, gridsBoundary);
+            SceneDataCache.cacheUserRegionInfo(cacheKey, gridsBoundary, startTime, endTime);
         } else if (userSceneCache == null) {
             // 缓存未命中，从数据库中读数据
             Geometry gridsBoundary = locationService.getLocationBoundary(resolution, locationId);
@@ -196,14 +196,14 @@ public class SceneDataServiceV3 {
             // 缓存数据
             SceneDataCache.cacheUserScenes(cacheKey, scenesInfo, report);
             // 格网边界缓存
-            SceneDataCache.cacheUserRegionInfo(cacheKey, gridsBoundary);
+            SceneDataCache.cacheUserRegionInfo(cacheKey, gridsBoundary, startTime, endTime);
         }else if (userSceneCache.coverageReportVO == null) {
             Geometry gridsBoundary = locationService.getLocationBoundary(resolution, locationId);
             report = buildCoverageReport(userSceneCache.scenesInfo, gridsBoundary);
             // 缓存数据
             SceneDataCache.cacheUserScenes(cacheKey, userSceneCache.scenesInfo, report);
             // 格网边界缓存
-            SceneDataCache.cacheUserRegionInfo(cacheKey, gridsBoundary);
+            SceneDataCache.cacheUserRegionInfo(cacheKey, gridsBoundary, startTime, endTime);
         } else {
             // 缓存命中，直接使用
             report = userSceneCache.coverageReportVO;

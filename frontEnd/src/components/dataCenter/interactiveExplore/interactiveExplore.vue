@@ -62,15 +62,16 @@
                                                 <div v-if="activeTab === 'region'"
                                                     class="config-control justify-center">
                                                     <RegionSelects v-model="selectedRegion"
+                                                        @change="getAutoGridResolutionByRegionBoundary"
                                                         :placeholder="[t('datapage.explore.data.intext_choose')]"
                                                         class="flex gap-2"
                                                         select-class="bg-[#0d1526] border border-[#2c3e50] text-white p-2 rounded focus:outline-none" />
                                                 </div>
-                                                <div v-if="activeTab === 'region'" class="flex flex-row mt-2 ml-2">
-                                                    <div class="text-red-500">*</div>
-                                                    <span class="text-xs text-gray-400">未选择行政区默认以全国范围检索</span>
+                                                <div v-if="activeTab === 'region'" class="flex flex-row mt-3 ml-5">
+                                                    <a-checkbox v-model:checked="isAutoGridResolutionOptChecked"
+                                                        class="">自动匹配格网分辨率</a-checkbox>
                                                 </div>
-                                                <div v-else-if="activeTab === 'poi'"
+                                                <div v-if="activeTab === 'poi'"
                                                     class="config-control justify-center w-full">
                                                     <el-select v-model="selectedPOI" filterable remote reserve-keyword
                                                         value-key="id"
@@ -82,6 +83,25 @@
                                                             :label="item.name + '(' + item.pname + item.cityname + item.adname + item.address + ')'"
                                                             :value="item" />
                                                     </el-select>
+
+                                                </div>
+                                                <div v-if="activeTab === 'poi'" class="flex flex-row mt-3 ml-5">
+                                                    <a-checkbox v-model:checked="isAutoGridResolutionOptChecked"
+                                                        class="">自动匹配格网分辨率</a-checkbox>
+                                                </div>
+
+                                                <div v-if="activeTab === 'polygon'"
+                                                    class="config-control flex flex-row gap-5 items-center ml-5">
+                                                    <a-alert v-if="exploreData.grids.length === 0"
+                                                        :message="`请在地图上绘制多边形`" type="info" show-icon
+                                                        class="status-alert">
+                                                    </a-alert>
+                                                    <a-button class="a-button" type="primary"
+                                                        @click="handleResetPolygon">重置</a-button>
+                                                </div>
+                                                <div v-if="activeTab === 'polygon'" class="flex flex-row mt-3 ml-5">
+                                                    <a-checkbox v-model:checked="isAutoGridResolutionOptChecked"
+                                                        class="">自动匹配格网分辨率</a-checkbox>
                                                 </div>
                                             </div>
                                         </div>
@@ -158,6 +178,19 @@
                                                             <div class="result-info-value">
                                                                 <span style="font-size: 1rem;">数据检索</span>
                                                                 <Loader v-if="filterLoading" class="ml-2" />
+                                                            </div>
+                                                        </div>
+                                                    </a-space>
+                                                    <a-space class="control-info-item" @click="showResultModal" :class="{
+                                                        'cursor-not-allowed': !isFilterDone,
+                                                        'cursor-pointer': isFilterDone,
+                                                    }">
+                                                        <div class="result-info-icon">
+                                                            📑
+                                                        </div>
+                                                        <div class="result-info-content">
+                                                            <div class="result-info-value">
+                                                                <span style="font-size: 1rem;">数据概览</span>
                                                             </div>
                                                         </div>
                                                     </a-space>
@@ -292,11 +325,16 @@
                                                                 <div class="result-info-label">{{
                                                                     t('datapage.explore.percent') }}</div>
                                                                 <div class="result-info-value">
-                                                                    {{
-                                                                        sceneStats.coverage
-                                                                    }}
+                                                                    <span
+                                                                        v-if="sceneStats.coverage !== '' && sceneStats.coverage != null">
+                                                                        {{ sceneStats.coverage }}
+                                                                    </span>
+                                                                    <span v-else class="calculating-state">
+                                                                        <a-spin size="small" />
+                                                                    </span>
                                                                 </div>
                                                             </div>
+
                                                         </div>
                                                     </div>
                                                 </div>
@@ -325,8 +363,15 @@
                                                     <div class="flex flex-row gap-2 items-center">
                                                         <ChartColumnBig :size="12" class="text-[#7a899f]"
                                                             @click="isRSItemExpand[index] = false" />
-                                                        <span class="text-xs text-[#7a899f]">
-                                                            {{ sceneStats?.dataset?.[category]?.coverage }}
+
+                                                        <span class="text-xs text-[#7a899f] flex items-center">
+                                                            <template
+                                                                v-if="sceneStats?.dataset?.[category]?.coverage !== '' && sceneStats?.dataset?.[category]?.coverage != null">
+                                                                {{ sceneStats?.dataset?.[category]?.coverage }}
+                                                            </template>
+                                                            <template v-else>
+                                                                <a-spin size="small" />
+                                                            </template>
                                                         </span>
                                                     </div>
                                                 </div>
@@ -359,7 +404,15 @@
                                                                     }}
                                                                 </div>
                                                                 <div v-else class="result-info-value">
-                                                                    {{ sceneStats?.dataset?.[category]?.coverage }}
+                                                                    <span
+                                                                        v-if="sceneStats?.dataset?.[category]?.coverage !== '' && sceneStats?.dataset?.[category]?.coverage != null">
+                                                                        {{ sceneStats?.dataset?.[category]?.coverage }}
+                                                                    </span>
+
+                                                                    <span v-else
+                                                                        class="flex items-center gap-2 text-gray-400 text-sm">
+                                                                        <a-spin size="small" />
+                                                                    </span>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -599,7 +652,101 @@
         <MapComp class="flex-1" :style="'local'" :proj="'globe'" :isPicking="isPicking" />
         <!-- MVT属性信息弹窗 - 已改用Mapbox原生弹窗 -->
         <!-- <MvtPop /> -->
+        <a-modal v-model:open="isResultModalOpen" title="检索结果概览" width="800px" :footer="null" centered>
+            <a-tabs v-model:activeKey="activeResultTab" type="card">
 
+                <a-tab-pane key="rs" tab="遥感影像">
+                    <div v-if="sceneStats?.dataset" class="p-2">
+                        <a-row :gutter="[16, 16]">
+                            <a-col :span="12" v-for="(item, key) in sceneStats.dataset" :key="key">
+                                <a-card size="small" hoverable :class="{ 'bg-blue-50': item.total > 0 }">
+                                    <template #title>
+                                        <span class="font-bold">{{ item.label }}</span>
+                                    </template>
+                                    <template #extra>
+                                        <a-tag v-if="item.resolution <= 1" color="blue">
+                                            亚米</a-tag>
+                                        <a-tag v-else-if="item.resolution > 30" color="blue">
+                                            其他</a-tag>
+                                        <a-tag v-else color="blue">{{ item.resolution }}m</a-tag>
+                                    </template>
+
+                                    <div class="flex flex-row justify-between items-center mt-2">
+                                        <a-statistic title="数量" :value="item.total" suffix="景"
+                                            :value-style="{ fontSize: '18px', fontWeight: 'bold' }" />
+
+                                        <a-statistic title="覆盖率" :value="item.coverage"
+                                            :value-style="{ fontSize: '16px' }">
+                                            <template #formatter>
+                                                <div v-if="!item.coverage && item.coverage !== '0'"
+                                                    class="flex items-center h-[24px]">
+                                                    <a-spin size="small" />
+                                                </div>
+
+                                                <span v-else
+                                                    :style="{ color: item.total > 0 ? '#3f8600' : '#cf1322', fontWeight: 'bold' }">
+                                                    {{ item.coverage }}
+                                                </span>
+                                            </template>
+                                        </a-statistic>
+                                    </div>
+                                </a-card>
+                            </a-col>
+                        </a-row>
+                    </div>
+                    <a-empty v-else description="暂无影像数据" />
+                </a-tab-pane>
+
+                <a-tab-pane key="vector" tab="矢量数据">
+                    <a-table v-if="vectorStats && vectorStats.length" :dataSource="vectorStats" :columns="vectorColumns"
+                        :pagination="{ pageSize: 5 }" size="middle" rowKey="tableName">
+                        <template #bodyCell="{ column, record }">
+                            <template v-if="column.key === 'time'">
+                                {{ record.time?.split('T')[0] || '-' }}
+                            </template>
+                            <template v-if="column.key === 'fields'">
+                                <a-tooltip>
+                                    <template #title>
+                                        连续: {{ record.fields.continuous?.join(',') || '-' }}<br>
+                                        离散: {{ record.fields.discrete?.join(',') || '-' }}
+                                    </template>
+                                    <a-tag color="cyan">
+                                        {{ (record.fields.continuous?.length || 0) + (record.fields.discrete?.length ||
+                                            0)
+                                        }} 字段
+                                    </a-tag>
+                                </a-tooltip>
+                            </template>
+                        </template>
+                    </a-table>
+                    <a-empty v-else description="暂无矢量数据" />
+                </a-tab-pane>
+
+                <a-tab-pane key="theme" tab="专题产品">
+                    <div v-if="themeStats?.dataset" class="max-h-[400px] overflow-y-auto">
+                        <a-list item-layout="horizontal">
+                            <template v-for="(item, key) in themeStats.dataset" :key="key">
+                                <a-list-item v-if="item.total > 0">
+                                    <a-list-item-meta :description="item.dataList?.join(', ') || '标准产品'">
+                                        <template #title>
+                                            <span class="font-bold">{{ item.label }}</span>
+                                            <a-tag class="ml-2">{{ String(key).toUpperCase() }}</a-tag>
+                                        </template>
+                                        <template #avatar>
+                                            <a-avatar style="background-color: #722ed1">{{ String(key)[0].toUpperCase()
+                                                }}</a-avatar>
+                                        </template>
+                                    </a-list-item-meta>
+                                    <div class="font-bold text-lg text-purple-600 mr-4">{{ item.total }} 个</div>
+                                </a-list-item>
+                            </template>
+                        </a-list>
+                    </div>
+                    <a-empty v-if="themeStats.total === 0" description="暂无专题产品" />
+                </a-tab-pane>
+
+            </a-tabs>
+        </a-modal>
         <teleport to="body">
             <div class="grid-popup-layer" v-show="gridPopupVisible">
                 <div class="grid-popup-panel">
@@ -608,6 +755,7 @@
             </div>
         </teleport>
     </div>
+
 </template>
 
 <script setup lang="ts">
@@ -674,7 +822,7 @@ const {
 } = useVisualize()
 import {
     // ------------------------ 数据检索 1.空间位置 -------------------------- //
-    selectedRegion, activeSpatialFilterMethod as activeTab, selectedPOI,
+    selectedRegion, activeSpatialFilterMethod as activeTab, selectedPOI, selectedPolygon,
     // ------------------------ 数据检索 2.格网分辨率 -------------------------- //
     selectedGridResolution, curGridsBoundary,
     // ------------------------ 数据检索 3.时间范围 -------------------------- //
@@ -688,13 +836,15 @@ import type { ProductType } from '@/type/interactive-explore/filter';
 
 const {
     // ------------------------ 数据检索 1.空间位置 -------------------------- //
-    tabs, poiOptions, fetchPOIOptions, handleSelectTab,
+    tabs, poiOptions, fetchPOIOptions, handleSelectTab, handleResetPolygon,
     // ------------------------ 数据检索 2.格网分辨率 -------------------------- //
-    gridOptions, allGrids, allGridCount, getAllGrid,
+    gridOptions, allGrids, allGridCount, getAllGrid, isAutoGridResolutionOptChecked, getAutoGridResolutionByRegionBoundary,
     // ------------------------ 数据检索 3.时间范围 -------------------------- //
     dateRangePresets,
     // ------------------------ 数据检索 4.筛选 -------------------------- //
     doFilter: applyFilter, filterLoading, isFilterDone,
+    // ------------------------ 数据检索 5.结果显示 -------------------------- //
+    isResultModalOpen, activeResultTab, vectorColumns, showResultModal
 } = useFilter()
 
 /**

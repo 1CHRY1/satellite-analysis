@@ -96,10 +96,14 @@ public class SceneDataCache {
     @Data
     public static class UserRegionInfoCache {
         public Geometry gridsBoundary;
+        public String startTime;
+        public String endTime;
         private final long cacheTime;                    // 缓存时间（用于超时清理）
 
-        public UserRegionInfoCache(Geometry gridsBoundary) {
+        public UserRegionInfoCache(Geometry gridsBoundary, String startTime, String endTime) {
             this.gridsBoundary = gridsBoundary;
+            this.startTime = startTime;
+            this.endTime = endTime;
             this.cacheTime = System.currentTimeMillis();
         }
     }
@@ -109,8 +113,8 @@ public class SceneDataCache {
     }
 
     // 缓存格网边界数据
-    public static void cacheUserRegionInfo(String cacheKey, Geometry gridsBoundary) {
-        userRegionInfoCacheMap.put(cacheKey, new UserRegionInfoCache(gridsBoundary));
+    public static void cacheUserRegionInfo(String cacheKey, Geometry gridsBoundary, String startTime, String endTime) {
+        userRegionInfoCacheMap.put(cacheKey, new UserRegionInfoCache(gridsBoundary, startTime, endTime));
     }
 
     // ===============================================================================================================

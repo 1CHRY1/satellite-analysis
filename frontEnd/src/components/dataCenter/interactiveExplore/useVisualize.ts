@@ -103,14 +103,14 @@ export const useVisualize = () => {
      * @param selectedPOI 选中的POI
      */
     const addPOIMarker = (selectedPOI: POIInfo) => {
-        const [wgsLon, wgsLat] = gcj02towgs84(
-            Number(selectedPOI.gcj02Lon), 
-            Number(selectedPOI.gcj02Lat)
-        );
+        // GCJ转换方法
+        // const [wgsLon, wgsLat] = gcj02towgs84(
+        //     Number(selectedPOI.gcj02Lon),
+        //     Number(selectedPOI.gcj02Lat)
+        // );
+        const [wgsLon, wgsLat]: any[] = [selectedPOI.wgs84Lon, selectedPOI.wgs84Lat]
         mapManager.withMap((m) => {
-            marker.value = new mapboxgl.Marker()
-                .setLngLat([wgsLon, wgsLat])
-                .addTo(m)
+            marker.value = new mapboxgl.Marker().setLngLat([wgsLon, wgsLat]).addTo(m)
         })
     }
 
@@ -516,23 +516,26 @@ export const useVisualize = () => {
                 break
         }
     }
-    const showAllProduct = async (dataType: ProductType, curCategory: ThemeStats.ThemeCategoryStats) => {
+    const showAllProduct = async (
+        dataType: ProductType,
+        curCategory: ThemeStats.ThemeCategoryStats,
+    ) => {
         // 1. 定义一个变量，用来存放“当前应该使用的那个函数”
-        let getUrlFn: ((themeName: string, gridsBoundary: any) => Promise<string>) | null = null;
-    
+        let getUrlFn: ((themeName: string, gridsBoundary: any) => Promise<string>) | null = null
+
         // 2. 根据 dataType 选定函数策略
         switch (dataType) {
             case 'dem':
             case 'dsm':
-                getUrlFn = get2DDEMUrl;
-                break;
+                getUrlFn = get2DDEMUrl
+                break
             case 'ndvi':
             case 'svr':
-                getUrlFn = getNDVIOrSVRUrl;
-                break;
+                getUrlFn = getNDVIOrSVRUrl
+                break
             case '3d':
-                getUrlFn = get3DUrl;
-                break;
+                getUrlFn = get3DUrl
+                break
             case 'lai':
             case 'fvc':
             case 'fpar':
@@ -548,27 +551,27 @@ export const useVisualize = () => {
             case 'bba':
             case 'aridity_index':
             case 'vcf':
-                getUrlFn = getOneBandUrl;
-                break;
+                getUrlFn = getOneBandUrl
+                break
             default:
-                console.warn(`未知的 dataType: ${dataType}`);
-                return [];
+                console.warn(`未知的 dataType: ${dataType}`)
+                return []
         }
-    
+
         // 3. 如果没找到对应的函数，直接返回空
-        if (!getUrlFn) return [];
-    
+        if (!getUrlFn) return []
+
         // 4. 核心步骤：遍历列表 -> 生成Promise数组 -> 并行等待结果
         // 假设 curCategory.dataList 里的 item 就是 themeName 字符串
         // 如果 item 是个对象 (例如 { name: 'xxx' })，请把下面改成 item.name
-        const promises = curCategory.dataList.map(item => {
-            const themeName = item; // 这里根据实际情况取值
-            return getUrlFn(themeName, curGridsBoundary.value);
-        });
-    
+        const promises = curCategory.dataList.map((item) => {
+            const themeName = item // 这里根据实际情况取值
+            return getUrlFn(themeName, curGridsBoundary.value)
+        })
+
         // 等待所有 url 获取完毕，得到最终的 urlList
-        const urlList = await Promise.all(promises);
-        
+        const urlList = await Promise.all(promises)
+
         InteractiveExploreMapOps.map_addOneBandLayer(urlList)
     }
 
@@ -707,6 +710,6 @@ export const useVisualize = () => {
         vectorSymbology,
         handleCheckAllChange,
         handleCheckedAttrsChange,
-        showAllProduct
+        showAllProduct,
     }
 }
