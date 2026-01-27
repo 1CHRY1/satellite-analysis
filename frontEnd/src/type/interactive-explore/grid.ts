@@ -36,4 +36,5 @@ export type MultiImageInfoType = {
     images?: any[],
     bandMapper?: any,
     nodata: number
+    cloudPath?: string  // 云掩膜完整路径
 }
