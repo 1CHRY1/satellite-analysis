@@ -68,16 +68,31 @@
                 </div>
             </div>
 
-            <!-- GIF生成按钮 -->
+            <!-- GIF生成区域 -->
             <div class="gif-generator flex flex-col items-center justify-center">
+                <!-- 分辨率选择按钮组 -->
+                <div class="resolution-toggle-group">
+                    <button
+                        v-for="res in [256, 512, 2048]"
+                        :key="res"
+                        class="resolution-toggle-btn"
+                        :class="{ active: gifResolution === res }"
+                        :disabled="isGeneratingGif"
+                        @click="gifResolution = res as 256 | 512 | 2048"
+                        :title="res === 256 ? '快速' : res === 512 ? '均衡' : '高清'"
+                    >
+                        {{ res }}
+                    </button>
+                </div>
+                <!-- GIF生成按钮 -->
                 <button
                     class="gif-btn"
                     @click="handleGenerateGif"
                     :disabled="filteredImages.length < 2 || isGeneratingGif"
                     :title="filteredImages.length < 2 ? '需要至少2张影像' : '生成GIF动画'"
                 >
-                    <FilmIcon v-if="!isGeneratingGif" :size="20" />
-                    <LoaderIcon v-else :size="20" class="animate-spin" />
+                    <FilmIcon v-if="!isGeneratingGif" :size="18" />
+                    <LoaderIcon v-else :size="18" class="animate-spin" />
                     <span class="ml-1">{{ isGeneratingGif ? `${gifProgress}%` : 'GIF' }}</span>
                 </button>
             </div>
@@ -132,6 +147,7 @@ const timelineTrack = ref<HTMLElement | null>(null)
 // GIF生成相关状态
 const isGeneratingGif = ref(false)
 const gifProgress = ref(0)
+const gifResolution = ref<256 | 512 | 2048>(512)
 
 // 支持去云的传感器
 const CLOUD_SUPPORT_SENSORS = [
@@ -543,40 +559,50 @@ const handleGenerateGif = async () => {
         const images = filteredImages.value
         const totalImages = images.length
         
-        // 创建GIF编码器
+        // 创建GIF编码器，使用用户选择的分辨率
+        const resolution = gifResolution.value
         const gif = new GIF({
             workers: 2,
             quality: 10,
-            width: 512,
-            height: 512,
+            width: resolution,
+            height: resolution,
             workerScript: '/gif.worker.js', // 需要确保这个文件存在于public目录
             transparent: 0x000000, // 黑色作为透明色
         } as any)
 
-        // 加载每张影像并添加到GIF
-        for (let i = 0; i < totalImages; i++) {
-            const img = images[i] as MultiImageInfoType
-            
+        // 并行加载所有帧
+        const bbox = grid2bbox(grid.value.columnId, grid.value.rowId, grid.value.resolution)
+        let loadedCount = 0
+
+        // 创建加载任务，保持索引以便后续排序
+        const loadTasks = images.map(async (img, index) => {
             try {
-                // 获取影像URL（与handleClick类似的逻辑）
-                const imageUrl = await getImageUrlForGif(img)
-                
-                // 获取bbox用于裁剪
-                const bbox = grid2bbox(grid.value.columnId, grid.value.rowId, grid.value.resolution)
-                
-                // 加载图片并裁剪到bbox区域，缩放到512x512
-                const croppedCanvas = await loadAndCropImageForGif(imageUrl, bbox, 512)
-                
-                // 添加到GIF（每帧延迟500ms）
-                // dispose: 2 表示每帧播放后恢复到背景（透明），避免帧叠加
-                gif.addFrame(croppedCanvas, { delay: 500, dispose: 2 })
-                
+                const imageUrl = await getImageUrlForGif(img as MultiImageInfoType)
+                const canvas = await loadAndCropImageForGif(imageUrl, bbox, resolution)
+
                 // 更新进度
-                gifProgress.value = Math.round(((i + 1) / totalImages) * 80)
+                loadedCount++
+                gifProgress.value = Math.round((loadedCount / totalImages) * 80)
+
+                return { index, canvas, success: true }
             } catch (err) {
-                console.warn(`跳过第${i + 1}张影像:`, err)
+                console.warn(`跳过第${index + 1}张影像:`, err)
+                loadedCount++
+                gifProgress.value = Math.round((loadedCount / totalImages) * 80)
+                return { index, canvas: null, success: false }
             }
-        }
+        })
+
+        // 并行等待所有帧加载完成
+        const results = await Promise.all(loadTasks)
+
+        // 按原始顺序（时间顺序）添加到 GIF
+        results
+            .filter(r => r.success && r.canvas)
+            .sort((a, b) => a.index - b.index)
+            .forEach(r => {
+                gif.addFrame(r.canvas!, { delay: 500, dispose: 2 })
+            })
 
         // 监听GIF渲染进度
         gif.on('progress', (p: number) => {
@@ -689,6 +715,8 @@ const getImageUrlForGif = async (img: MultiImageInfoType): Promise<string> => {
     
     // 添加 bbox 参数，确保 GIF 帧位置正确
     params.append('bbox', bboxStr)
+    // 请求用户选择的分辨率
+    params.append('resolution', gifResolution.value.toString())
 
     if (stretchMethod.value === 'standard') {
         params.append('std_config', JSON.stringify({
@@ -1139,29 +1167,69 @@ onUnmounted(() => {
 /* GIF生成按钮样式 */
 .gif-generator {
     padding: 0 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.resolution-toggle-group {
+    display: flex;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid rgba(108, 253, 255, 0.3);
+}
+
+.resolution-toggle-btn {
+    padding: 0.2rem 0.4rem;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.65rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 32px;
+}
+
+.resolution-toggle-btn:not(:last-child) {
+    border-right: 1px solid rgba(108, 253, 255, 0.2);
+}
+
+.resolution-toggle-btn:hover:not(:disabled):not(.active) {
+    background: rgba(108, 253, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.resolution-toggle-btn.active {
+    background: rgba(108, 253, 255, 0.25);
+    color: #6cfdff;
+}
+
+.resolution-toggle-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .gif-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0.5rem 1rem;
+    padding: 0.4rem 0.8rem;
     background: linear-gradient(135deg, rgba(108, 253, 255, 0.2), rgba(77, 171, 247, 0.2));
     border: 1px solid rgba(108, 253, 255, 0.4);
-    border-radius: 8px;
+    border-radius: 6px;
     color: #6cfdff;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
-    min-width: 80px;
+    min-width: 70px;
 }
 
 .gif-btn:hover:not(:disabled) {
     background: linear-gradient(135deg, rgba(108, 253, 255, 0.3), rgba(77, 171, 247, 0.3));
     border-color: rgba(108, 253, 255, 0.7);
-    box-shadow: 0 0 15px rgba(108, 253, 255, 0.3);
-    transform: translateY(-1px);
+    box-shadow: 0 0 10px rgba(108, 253, 255, 0.3);
 }
 
 .gif-btn:active:not(:disabled) {
