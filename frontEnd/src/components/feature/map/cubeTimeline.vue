@@ -597,12 +597,36 @@ const handleGenerateGif = async () => {
         const results = await Promise.all(loadTasks)
 
         // 按原始顺序（时间顺序）添加到 GIF
-        results
+        const successfulFrames = results
             .filter(r => r.success && r.canvas)
             .sort((a, b) => a.index - b.index)
-            .forEach(r => {
-                gif.addFrame(r.canvas!, { delay: 500, dispose: 2 })
-            })
+
+        // 检查是否有成功加载的帧
+        if (successfulFrames.length === 0) {
+            message.error('所有影像加载失败，无法生成GIF')
+            isGeneratingGif.value = false
+            gifProgress.value = 0
+            return
+        }
+
+        if (successfulFrames.length < 2) {
+            message.warning('成功加载的影像少于2张，无法生成GIF')
+            isGeneratingGif.value = false
+            gifProgress.value = 0
+            return
+        }
+
+        successfulFrames.forEach(r => {
+            gif.addFrame(r.canvas!, { delay: 500, dispose: 2 })
+        })
+
+        // 监听GIF渲染错误 (gif.js 支持 error 事件，但类型定义中未声明)
+        ;(gif as any).on('error', (err: Error) => {
+            console.error('GIF渲染失败:', err)
+            message.error('GIF渲染失败，请重试')
+            isGeneratingGif.value = false
+            gifProgress.value = 0
+        })
 
         // 监听GIF渲染进度
         gif.on('progress', (p: number) => {
