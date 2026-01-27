@@ -105,6 +105,8 @@ public class GridDataServiceV3 {
                     scene.put("images", images);
                     JSONObject bandMapper = bandMapperGenerator.getSatelliteConfigBySensorName(sceneInfo.getSensorName());
                     scene.put("bandMapper", bandMapper);
+                    scene.put("cloudPath", sceneInfo.getCloudPath());
+                    scene.put("bucket", sceneInfo.getBucket());
                     dataList.add(scene);
                 }
             }
@@ -178,6 +180,8 @@ public class GridDataServiceV3 {
                     scene.put("images", images);
                     JSONObject bandMapper = bandMapperGenerator.getSatelliteConfigBySensorName(sceneInfo.getSensorName());
                     scene.put("bandMapper", bandMapper);
+                    scene.put("cloudPath", sceneInfo.getCloudPath());
+                    scene.put("bucket", sceneInfo.getBucket());
                     dataList.add(scene);
                 }
             }
