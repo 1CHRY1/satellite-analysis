@@ -182,12 +182,15 @@ async def get_tile(
         mapper = json_response.get('data', {}).get('bandMapper', {})
         json_data = json_response.get('data', {}).get('scenesConfig', [])
         
-        full_coverage_scenes = [scene for scene in json_data if float(scene.get('coverage', 0)) >= 0.999]
-        if full_coverage_scenes:
-            scenes_to_process = [full_coverage_scenes[0]]
-        else:
-            max_scenes_to_process = min(len(json_data), 50)
-            scenes_to_process = json_data[:max_scenes_to_process]
+        # TODO 后端可能也是根据bbox得出的覆盖率，如果bbox不准，假的bbox正好把这章瓦片都盖住，那可能就会出现锯齿？
+        # full_coverage_scenes = [scene for scene in json_data if float(scene.get('coverage', 0)) >= 0.999]
+        # if full_coverage_scenes:
+        #     scenes_to_process = [full_coverage_scenes[0]]
+        # else:
+        #     max_scenes_to_process = min(len(json_data), 50)
+        #     scenes_to_process = json_data[:max_scenes_to_process]
+        max_scenes_to_process = min(len(json_data), 50)
+        scenes_to_process = json_data[:max_scenes_to_process]
 
         if not scenes_to_process:
              return Response(content=TRANSPARENT_CONTENT, media_type="image/png")

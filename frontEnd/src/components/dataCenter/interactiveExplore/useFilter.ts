@@ -375,20 +375,20 @@ export const useFilter = () => {
 
         // ------------------- Step2: 请求体准备操作 -------------------- //
         const regionFilter = {
-            startTime: selectedDateRange.value[0].format('YYYY-MM-DD'),
-            endTime: selectedDateRange.value[1].format('YYYY-MM-DD'),
+            startTime: selectedDateRange.value[0].format('YYYY-MM-DDTHH:mm:ss'),
+            endTime: selectedDateRange.value[1].format('YYYY-MM-DDTHH:mm:ss'),
             regionId: finalLandId.value,
             resolution: selectedGridResolution.value,
         }
         const poiFilter = {
-            startTime: selectedDateRange.value[0].format('YYYY-MM-DD'),
-            endTime: selectedDateRange.value[1].format('YYYY-MM-DD'),
+            startTime: selectedDateRange.value[0].format('YYYY-MM-DDTHH:mm:ss'),
+            endTime: selectedDateRange.value[1].format('YYYY-MM-DDTHH:mm:ss'),
             locationId: finalLandId.value,
             resolution: selectedGridResolution.value,
         }
         const polygonFilter = {
-            startTime: selectedDateRange.value[0].format('YYYY-MM-DD'),
-            endTime: selectedDateRange.value[1].format('YYYY-MM-DD'),
+            startTime: selectedDateRange.value[0].format('YYYY-MM-DDTHH:mm:ss'),
+            endTime: selectedDateRange.value[1].format('YYYY-MM-DDTHH:mm:ss'),
             polygonId: finalLandId.value,
             resolution: selectedGridResolution.value,
         }
@@ -417,15 +417,15 @@ export const useFilter = () => {
         sceneStats.value = sceneStatsRes
         vectorStats.value = vectorsRes
         themeStats.value = themeStatsRes
-        // 覆盖率计算接口已经解耦，现在置空coverage
-        sceneStats.value.coverage = ''
-        if (sceneStats.value?.dataset) {
-            Object.values(sceneStats.value.dataset).forEach((item) => {
-                if (item) {
-                    item.coverage = ''
-                }
-            })
-        }
+        // // 覆盖率计算接口已经解耦，现在置空coverage
+        // sceneStats.value.coverage = ''
+        // if (sceneStats.value?.dataset) {
+        //     Object.values(sceneStats.value.dataset).forEach((item) => {
+        //         if (item) {
+        //             item.coverage = ''
+        //         }
+        //     })
+        // }
 
         // ------------------- Step4: 用户反馈操作 -------------------- //
         if (
@@ -438,7 +438,6 @@ export const useFilter = () => {
             message.success('数据检索成功')
         }
         stopLoading()
-        showResultModal()
 
         // ------------------- Step5: 变量更新操作 -------------------- //
         syncToGridExplore()
@@ -446,6 +445,7 @@ export const useFilter = () => {
         // 恢复状态
         filterLoading.value = false
         isFilterDone.value = true
+        showResultModal()
 
         // 懒加载：矢量属性
         try {
@@ -455,23 +455,23 @@ export const useFilter = () => {
         }
         // ------------------- Step6: 请求覆盖率 -------------------- //
         // TODO getSceneCategoryCoverage计算总覆盖率和各个分辨率的覆盖率
-        const dataset = sceneStats.value.dataset
-        const categories = sceneStats.value.category
-        if (!dataset || !categories) return
-        const mainReq = getSceneCategoryCoverage()
-        const subReqs = categories.map((category) => getSceneCategoryCoverage(category))
+        // const dataset = sceneStats.value.dataset
+        // const categories = sceneStats.value.category
+        // if (!dataset || !categories) return
+        // const mainReq = getSceneCategoryCoverage()
+        // const subReqs = categories.map((category) => getSceneCategoryCoverage(category))
 
-        try {
-            const [mainRes, ...subResults] = await Promise.all([mainReq, ...subReqs])
-            sceneStats.value.coverage = mainRes.data
-            categories.forEach((category, index) => {
-                if (dataset[category]) {
-                    dataset[category].coverage = subResults[index].data
-                }
-            })
-        } catch (error) {
-            console.error('获取覆盖率失败', error)
-        }
+        // try {
+        //     const [mainRes, ...subResults] = await Promise.all([mainReq, ...subReqs])
+        //     sceneStats.value.coverage = mainRes.data
+        //     categories.forEach((category, index) => {
+        //         if (dataset[category]) {
+        //             dataset[category].coverage = subResults[index].data
+        //         }
+        //     })
+        // } catch (error) {
+        //     console.error('获取覆盖率失败', error)
+        // }
     }
 
     /**
