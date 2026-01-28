@@ -9,28 +9,28 @@ netty:
     port: 9888
 
 # localhost
-mysql:
-  host: 223.2.43.238
-  port: 3306
-  username: root
-  password: root
-pg:
-  host: 223.2.43.238
-  port: 5432
-  username: postgres
-  password: 123456
-
-## k8s
 #mysql:
-#  host: 223.2.34.8
-#  port: 31036
+#  host: 223.2.43.238
+#  port: 3306
 #  username: root
-#  password: 123456
+#  password: root
 #pg:
-#  host: 223.2.34.8
-#  port: 31543
+#  host: 223.2.43.238
+#  port: 5432
 #  username: postgres
 #  password: 123456
+
+## k8s
+mysql:
+  host: 223.2.34.8
+  port: 31036
+  username: root
+  password: 123456
+pg:
+  host: 223.2.34.8
+  port: 31543
+  username: postgres
+  password: 123456
 
 # 修改数据库级相应配置注意兼顾在线编程写死部分
 spring:
@@ -164,8 +164,8 @@ mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: nnu.mnr.satellite.model.po
   type-handlers-package: nnu.mnr.satellite.utils.typeHandler
-  configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 minio:
 #  access-key: jTbgNHEqQafOpUxVg7Ol
