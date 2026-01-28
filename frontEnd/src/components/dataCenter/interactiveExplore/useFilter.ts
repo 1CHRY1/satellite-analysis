@@ -415,14 +415,14 @@ export const useFilter = () => {
         vectorStats.value = vectorsRes
         themeStats.value = themeStatsRes
         // // 覆盖率计算接口已经解耦，现在置空coverage
-        // sceneStats.value.coverage = ''
-        // if (sceneStats.value?.dataset) {
-        //     Object.values(sceneStats.value.dataset).forEach((item) => {
-        //         if (item) {
-        //             item.coverage = ''
-        //         }
-        //     })
-        // }
+        sceneStats.value.coverage = ''
+        if (sceneStats.value?.dataset) {
+            Object.values(sceneStats.value.dataset).forEach((item) => {
+                if (item) {
+                    item.coverage = ''
+                }
+            })
+        }
 
         // ------------------- Step4: 用户反馈操作 -------------------- //
         if (
@@ -452,23 +452,23 @@ export const useFilter = () => {
         }
         // ------------------- Step6: 请求覆盖率 -------------------- //
         // TODO getSceneCategoryCoverage计算总覆盖率和各个分辨率的覆盖率
-        // const dataset = sceneStats.value.dataset
-        // const categories = sceneStats.value.category
-        // if (!dataset || !categories) return
-        // const mainReq = getSceneCategoryCoverage()
-        // const subReqs = categories.map((category) => getSceneCategoryCoverage(category))
+        const dataset = sceneStats.value.dataset
+        const categories = sceneStats.value.category
+        if (!dataset || !categories) return
+        const mainReq = getSceneCategoryCoverage()
+        const subReqs = categories.map((category) => getSceneCategoryCoverage(category))
 
-        // try {
-        //     const [mainRes, ...subResults] = await Promise.all([mainReq, ...subReqs])
-        //     sceneStats.value.coverage = mainRes.data
-        //     categories.forEach((category, index) => {
-        //         if (dataset[category]) {
-        //             dataset[category].coverage = subResults[index].data
-        //         }
-        //     })
-        // } catch (error) {
-        //     console.error('获取覆盖率失败', error)
-        // }
+        try {
+            const [mainRes, ...subResults] = await Promise.all([mainReq, ...subReqs])
+            sceneStats.value.coverage = mainRes.data
+            categories.forEach((category, index) => {
+                if (dataset[category]) {
+                    dataset[category].coverage = subResults[index].data
+                }
+            })
+        } catch (error) {
+            console.error('获取覆盖率失败', error)
+        }
     }
 
     /**

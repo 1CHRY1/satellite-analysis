@@ -63,6 +63,6 @@ export async function getThemeByThemeName(
 export async function getSceneCategoryCoverage(
     category?: string,
 ): Promise<SceneStats.SceneCategoryCoverageResponse> {
-    if (category) return http.get<SceneStats.SceneCategoryCoverageResponse>(`data/scene/coverage/${category}`)
-    else return http.get<SceneStats.SceneCategoryCoverageResponse>(`data/scene/coverage`)
+    if (category) return http.get<SceneStats.SceneCategoryCoverageResponse>(`data/scene/coverage?category=${category}`)
+    else return http.get<SceneStats.SceneCategoryCoverageResponse>(`data/scene/coverage?category=all`)
 }

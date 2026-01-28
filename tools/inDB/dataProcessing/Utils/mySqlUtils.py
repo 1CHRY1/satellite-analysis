@@ -620,7 +620,7 @@ def get_product_byName(sensorName, productName):
         DB_CONFIG["PG_RESOURCE_DB"], DB_CONFIG["PG_USER"],
         DB_CONFIG["PG_PWD"]
     )
-    if not connection: return None, None
+    if not connection: return None
 
     try:
         select_query = """
@@ -634,7 +634,7 @@ def get_product_byName(sensorName, productName):
         if result:
             return result['sensor_id'], result['product_id']
         else:
-            return None, None
+            return None
     finally:
         cursor.close()
         connection.close()
@@ -696,6 +696,7 @@ def insert_scene(sensorName, productName, sceneName, sceneTime, tileLevelNum, ti
         )
         
         sceneId = generate_custom_id('SC', 11)
+        tileLevels = None
         data = (
             sceneId, sensorId, productId, sceneName, sceneTime, tileLevelNum, tileLevels, crs, bbox, cloudPath, description,
             bands_str, band_num, bucket, cloud, tags, no_data)
