@@ -21,7 +21,7 @@ public class NoCloudTileDTO {
      * 传感器名称
      */
     private String sensorName;
-    private String startTime;
-    private String endTime;
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
     private List<Float> points;
 }

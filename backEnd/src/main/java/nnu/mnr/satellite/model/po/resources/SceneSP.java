@@ -8,9 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import nnu.mnr.satellite.utils.typeHandler.FastJson2TypeHandler;
-import nnu.mnr.satellite.utils.typeHandler.GeometryTypeHandler;
-import nnu.mnr.satellite.utils.typeHandler.SetTypeHandler;
+import nnu.mnr.satellite.utils.typeHandler.*;
+import nnu.mnr.satellite.utils.typeHandlerEx.PostgreJsonbTypeHandler;
 import org.locationtech.jts.geom.Geometry;
 
 import java.time.LocalDateTime;
@@ -38,7 +37,7 @@ public class SceneSP {
     private LocalDateTime sceneTime;
     private String coordinateSystem;
 
-    @TableField(value="bounding_box", typeHandler = GeometryTypeHandler.class)
+    @TableField(value="bounding_box", typeHandler = PostgisGeometryTypeHandler.class)
     private Geometry bbox;
 
     private Integer bandNum;
@@ -51,7 +50,7 @@ public class SceneSP {
     private String bucket;
     private String resolution;
 
-    @TableField(typeHandler = FastJson2TypeHandler.class)
+    @TableField(typeHandler = PostgreJsonbTypeHandler.class)
     private JSONObject tags;
     private Double noData;
     private String dataType;

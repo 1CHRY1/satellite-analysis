@@ -125,7 +125,7 @@ public class ModelCodingService {
                 "secret_key", minioProperties.getSecretKey(),
                 "secure", false);
         Map<String, DataSourceProperty> datasources = dynamicDataSourceProperties.getDatasource();
-        DataSourceProperty satelliteDs = datasources.get("mysql-ard-satellite");
+        DataSourceProperty satelliteDs = datasources.get("pg-ard-satellite");
 //        DataSourceProperty tileDs = datasources.get("mysql_tile");
         JSONObject databaseConfig = JSONObject.of(
                 "endpoint", satelliteDs.getUrl().split("://")[1].split("/")[0],

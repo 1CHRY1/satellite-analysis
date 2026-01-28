@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -62,8 +63,8 @@ public class SceneDataService {
     public GeoJsonVO getScenesByIdsTimeAndBBox(ScenesFetchDTO scenesFetchDTO) throws IOException {
         String sensorId = scenesFetchDTO.getSensorId();
         String productId = scenesFetchDTO.getProductId();
-        String start = scenesFetchDTO.getStartTime();
-        String end = scenesFetchDTO.getEndTime();
+        LocalDateTime startTime = scenesFetchDTO.getStartTime();
+        LocalDateTime endTime = scenesFetchDTO.getEndTime();
         JSONObject geometry = scenesFetchDTO.getGeometry();
         String type = geometry.getString("type");
         JSONArray coordinates = geometry.getJSONArray("coordinates");
@@ -73,7 +74,7 @@ public class SceneDataService {
             QueryWrapper<Scene> queryWrapper = new QueryWrapper<>();
             queryWrapper.eq("sensor_id", sensorId);
             queryWrapper.eq("product_id", productId);
-            queryWrapper.between("scene_time", start, end);
+            queryWrapper.between("scene_time", startTime, endTime);
 
             String wkt = bbox.toText(); // 转换为 WKT 格式
 

@@ -7,15 +7,13 @@ import nnu.mnr.satellite.model.po.resources.Scene;
 import nnu.mnr.satellite.model.po.resources.SceneSP;
 import nnu.mnr.satellite.model.vo.admin.SceneSimpleInfoVO;
 import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
-import nnu.mnr.satellite.utils.typeHandler.FastJson2TypeHandler;
-import nnu.mnr.satellite.utils.typeHandler.GeometryTypeHandler;
-import nnu.mnr.satellite.utils.typeHandler.JSONArrayTypeHandler;
-import nnu.mnr.satellite.utils.typeHandler.SetTypeHandler;
+import nnu.mnr.satellite.utils.typeHandler.*;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -32,18 +30,13 @@ public interface ISceneRepo extends BaseMapper<Scene> {
     @Select("SELECT sc.scene_id, sc.scene_name, sc.scene_time, sc.tile_level_num, sc.tile_levels, sc.coordinate_system, " +
             "sc.description, sc.band_num, sc.bands, sc.cloud, sc.tags, sc.no_data, " +
             "ss.sensor_name, ss.platform_name, pd.product_name, pd.resolution, ss.data_type " +
-//            "(SELECT CONCAT('[', GROUP_CONCAT(JSON_OBJECT('path', im.tif_path, 'band', im.band)), ']') " +
-//            "FROM image_table im WHERE im.scene_id = sc.scene_id) AS images " +
             "FROM scene_table sc " +
             "LEFT JOIN sensor_table ss ON sc.sensor_id = ss.sensor_id " +
             "LEFT JOIN product_table pd ON sc.product_id = pd.product_id " +
             "WHERE sc.scene_time BETWEEN #{startTime} AND #{endTime} " +
             "AND sc.cloud < #{cloud} " +
             "AND ss.data_type in (${dataType}) " +
-            "AND (ST_Intersects(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), sc.bounding_box)) " +
-//            "AND ( ST_Intersects(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), sc.bounding_box) OR " +
-//            "ST_Contains(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), sc.bounding_box) OR " +
-//            "ST_Within(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), sc.bounding_box) )" +
+            "AND (ST_Intersects(sc.bounding_box, ST_GeomFromText(#{wkt}, 4326))) " +
             "ORDER BY sc.scene_time ASC")
     @Results({
             @Result(property = "sceneId", column = "scene_id"),
@@ -63,20 +56,17 @@ public interface ISceneRepo extends BaseMapper<Scene> {
             @Result(property = "productName", column = "product_name"),
             @Result(property = "resolution", column = "resolution"),
             @Result(property = "dataType", column = "data_type")
-//            @Result(property = "images", column = "images", typeHandler = JSONArrayTypeHandler.class)
     })
     List<SceneDesVO> getScenesDesByTimeCloudAndGeometry(
-            @Param("startTime") String startTime,
-            @Param("endTime") String endTime,
+            @Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime,
             @Param("cloud") float cloud,
             @Param("wkt") String wkt,
             @Param("dataType") String dataType);
 
     @Select("SELECT sc.scene_id, sc.scene_name, sc.scene_time, sc.tile_level_num, sc.tile_levels, sc.coordinate_system, " +
             "sc.description, sc.band_num, sc.bands, sc.cloud, sc.tags, sc.no_data, " +
-            "ss.sensor_name, ss.platform_name, pd.product_name, pd.resolution, " +
-//            "(SELECT CONCAT('[', GROUP_CONCAT(JSON_OBJECT('path', im.tif_path, 'band', im.band)), ']') " +
-//            "FROM image_table im WHERE im.scene_id = sc.scene_id) AS images " +
+            "ss.sensor_name, ss.platform_name, pd.product_name, pd.resolution " +
             "FROM scene_table sc " +
             "LEFT JOIN sensor_table ss ON sc.sensor_id = ss.sensor_id " +
             "LEFT JOIN product_table pd ON sc.product_id = pd.product_id " +
@@ -98,7 +88,6 @@ public interface ISceneRepo extends BaseMapper<Scene> {
             @Result(property = "platformName", column = "platform_name"),
             @Result(property = "productName", column = "product_name"),
             @Result(property = "resolution", column = "resolution"),
-//            @Result(property = "images", column = "images", typeHandler = JSONArrayTypeHandler.class)
     })
     SceneDesVO getScenesDesById(@Param("sceneId") String sceneId);
 
@@ -125,20 +114,20 @@ public interface ISceneRepo extends BaseMapper<Scene> {
             @Result(property = "cloudPath", column = "cloud_path"),
             @Result(property = "tags", column = "tags", typeHandler = FastJson2TypeHandler.class),
             @Result(property = "noData", column = "no_data"),
-            @Result(property = "bbox", column = "bounding_box", typeHandler = GeometryTypeHandler.class),
+            @Result(property = "bbox", column = "bounding_box", typeHandler = PostgisGeometryTypeHandler.class),
     })
     SceneSP getSceneByIdWithProductAndSensor(@Param("sceneId") String sceneId);
 
     @Select("SELECT sc.scene_id, sc.scene_name, sc.scene_time, sc.coordinate_system, " +
             "sc.band_num, sc.bands, sc.cloud, sc.tags, sc.bounding_box, sc.bucket, sc.cloud_path, sc.no_data, " +
             "ss.sensor_name, ss.platform_name, pd.product_name, pd.resolution, " +
-            "ST_Area(ST_Intersection(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), sc.bounding_box)) AS intersection_area " +
+            "ST_Area(ST_Intersection(ST_GeomFromText(#{wkt}, 4326), sc.bounding_box)) AS intersection_area " +
             "FROM scene_table sc " +
             "LEFT JOIN sensor_table ss ON sc.sensor_id = ss.sensor_id " +
             "LEFT JOIN product_table pd ON sc.product_id = pd.product_id " +
             "WHERE ss.sensor_name = #{sensor_name} " +
             "AND sc.scene_time BETWEEN #{start_time} AND #{end_time} " +
-            "AND (ST_Intersects(ST_GeomFromText(#{wkt}, 4326, 'axis-order=long-lat'), sc.bounding_box)) " +
+            "AND (ST_Intersects(ST_GeomFromText(#{wkt}, 4326), sc.bounding_box)) " +
             "ORDER BY intersection_area DESC LIMIT 10")
     @Results({
             @Result(property = "sceneId", column = "scene_id"),
@@ -156,11 +145,11 @@ public interface ISceneRepo extends BaseMapper<Scene> {
             @Result(property = "cloudPath", column = "cloud_path"),
             @Result(property = "tags", column = "tags", typeHandler = FastJson2TypeHandler.class),
             @Result(property = "noData", column = "no_data"),
-            @Result(property = "bbox", column = "bounding_box", typeHandler = GeometryTypeHandler.class),
+            @Result(property = "bbox", column = "bounding_box", typeHandler = PostgisGeometryTypeHandler.class),
     })
     List<SceneSP> getSceneBySensorNameWithProductAndSensor(@Param("sensor_name") String sensorName,
-                                                           @Param("start_time")String startTime,
-                                                           @Param("end_time")String endTime,
+                                                           @Param("start_time")LocalDateTime startTime,
+                                                           @Param("end_time")LocalDateTime endTime,
                                                            @Param("wkt")String wkt);
 
     // 相交放在后端进行查询
@@ -202,7 +191,7 @@ public interface ISceneRepo extends BaseMapper<Scene> {
             @Result(property = "cloudPath", column = "cloud_path"),
             @Result(property = "tags", column = "tags", typeHandler = FastJson2TypeHandler.class),
             @Result(property = "noData", column = "no_data"),
-            @Result(property = "bbox", column = "bounding_box", typeHandler = GeometryTypeHandler.class),
+            @Result(property = "bbox", column = "bounding_box", typeHandler = PostgisGeometryTypeHandler.class),
             @Result(property = "dataType", column = "data_type"),
     })
     List<SceneSP> getScenesByIdsWithProductAndSensor(@Param("sceneIds") List<String> sceneIds, @Param("dataType") String dataType);
@@ -249,7 +238,7 @@ public interface ISceneRepo extends BaseMapper<Scene> {
 //            @Result(property = "cloudPath", column = "cloud_path"),
 //            @Result(property = "tags", column = "tags", typeHandler = FastJson2TypeHandler.class),
 //            @Result(property = "noData", column = "no_data"),
-//            @Result(property = "bbox", column = "bounding_box", typeHandler = GeometryTypeHandler.class),
+//            @Result(property = "bbox", column = "bounding_box", typeHandler = PostgisGeometryTypeHandler.class),
 //            @Result(property = "dataType", column = "data_type"),
 //    })
 //    List<SceneSP> getScenesByIdsAndGridWithProductAndSensor(@Param("sceneIds") List<String> sceneIds, @Param("wkt") String wkt);
@@ -257,12 +246,12 @@ public interface ISceneRepo extends BaseMapper<Scene> {
     @Select("SELECT sc.scene_id, sc.scene_name, sc.scene_time, " +
             "sc.band_num, sc.bands, sc.cloud, sc.tags, sc.no_data, sc.bucket, sc.cloud_path, " +
             "ss.sensor_name, ss.platform_name, pd.product_name, pd.resolution, " +
-            "(SELECT CONCAT('[', GROUP_CONCAT(JSON_OBJECT('tifPath', im.tif_path, 'band', im.band, 'bucket', im.bucket)), ']') " +
-            "FROM image_table im WHERE im.scene_id = sc.scene_id) AS images " +
+            "(SELECT json_agg(json_build_object('tifPath', im.tif_path, 'band', im.band, 'bucket', im.bucket)) " +
+            " FROM image_table im WHERE im.scene_id = sc.scene_id) AS images " +
             "FROM scene_table sc " +
             "LEFT JOIN sensor_table ss ON sc.sensor_id = ss.sensor_id " +
             "LEFT JOIN product_table pd ON sc.product_id = pd.product_id " +
-            "WHERE sc.scene_id = #{sceneId} ")
+            "WHERE sc.scene_id = #{sceneId}")
     @Results({
             @Result(property = "sceneId", column = "scene_id"),
             @Result(property = "sceneName", column = "scene_name"),
@@ -284,21 +273,29 @@ public interface ISceneRepo extends BaseMapper<Scene> {
 
     @Select({
             "<script>",
-            "SELECT COUNT(1) > 0 FROM scene_table WHERE sensor_id IN",
-            "<foreach collection='sensorIds' item='id' open='(' separator=',' close=')'>",
-            "#{id}",
-            "</foreach>",
+            "SELECT EXISTS(",
+            "  SELECT 1 FROM scene_table",
+            "  WHERE sensor_id IN",
+            "  <foreach collection='sensorIds' item='id' open='(' separator=',' close=')'>",
+            "    #{id}",
+            "  </foreach>",
+            ")",
             "</script>"
     })
     boolean existsBySensorIds(@Param("sensorIds") List<String> sensorIds);
 
-    @Select("<script>" +
-            "SELECT scene_id, bucket, cloud_path " +
-            "FROM scene_table " +
-            "WHERE scene_id IN " +
-            "<foreach collection='sceneIds' item='id' open='(' separator=',' close=')'>" +
-            "#{id}" +
-            "</foreach>" +
-            "</script>")
+    @Select({
+            "<script>",
+            "SELECT scene_id, bucket, cloud_path",
+            "FROM scene_table",
+            "WHERE 1=1",
+            "<if test='sceneIds != null and !sceneIds.isEmpty()'>",
+            "  AND scene_id IN",
+            "  <foreach collection='sceneIds' item='id' open='(' separator=',' close=')'>",
+            "    #{id}",
+            "  </foreach>",
+            "</if>",
+            "</script>"
+    })
     List<CloudPathsDTO> findFilePathsBySceneIds(@Param("sceneIds") List<String> sceneIds);
 }

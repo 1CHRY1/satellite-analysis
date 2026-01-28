@@ -22,6 +22,7 @@ import org.locationtech.jts.simplify.DouglasPeuckerSimplifier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -48,6 +49,7 @@ public class SceneDataServiceV3 {
     public CoverageReportWithCacheKeyVO<Map<String, Object>> getScenesCoverageReportByTimeAndRegion(ScenesFetchDTOV3 scenesFetchDTO, String userId){
         // 先把scenesFetchDTO转成String，后续需要作为cacheKey
         String requestBody;
+
         try {
             requestBody = objectMapper.writeValueAsString(scenesFetchDTO);
         } catch (JsonProcessingException e) {
@@ -61,26 +63,21 @@ public class SceneDataServiceV3 {
         // 从缓存读取数据（如果存在）
         SceneDataCache.UserSceneCache userSceneCache = SceneDataCache.getUserSceneCacheMap(cacheKey);
         SceneDataCache.UserThemeCache userThemeCache = SceneDataCache.getUserThemeCacheMap(cacheKey);
-        String startTime = scenesFetchDTO.getStartTime();
-        String endTime = scenesFetchDTO.getEndTime();
+        LocalDateTime startTime = scenesFetchDTO.getStartTime();
+        LocalDateTime endTime = scenesFetchDTO.getEndTime();
         Integer regionId = scenesFetchDTO.getRegionId();
         Integer resolution = scenesFetchDTO.getResolution();
         CoverageReportVO<Map<String, Object>> report;
+        List<String> dataType = new ArrayList<>();
         if (userSceneCache == null && userThemeCache == null) {
             // 缓存未命中，从数据库中读数据
             Geometry boundary = regionDataService.getRegionById(regionId).getBoundary();
             List<Integer[]> tileIds = TileCalculateUtil.getRowColByRegionAndResolution(boundary, resolution);
             Geometry gridsBoundary = GeometryUtil.getGridsBoundaryByTilesAndResolution(tileIds, resolution);
-            String themeCodes = SceneTypeByTheme.getAllCodes().stream()
-                    .map(code -> "'" + code + "'")  // 给每个 code 加上单引号
-                    .collect(Collectors.joining(", "));
-            String dataType = "'satellite', " + themeCodes;
-            // 计算时间
-            long startCalTime = System.currentTimeMillis();
-            List<SceneDesVO> allScenesInfo = getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, themeCodes);
-            long endCalTime = System.currentTimeMillis(); // 记录结束时间
-            long duration = endCalTime - startCalTime; // 计算耗时（毫秒）
-            System.out.println("从数据库中检索景消耗时间: " + duration + "ms");
+            List<String> themeCodes = SceneTypeByTheme.getAllCodes();
+            dataType.add("satellite");
+            dataType.addAll(themeCodes);
+            List<SceneDesVO> allScenesInfo = queryAndCleanScenes(startTime, endTime, gridsBoundary, dataType);
             List<SceneDesVO> scenesInfo = new ArrayList<>();
             List<SceneDesVO> themesInfo = new ArrayList<>();
             for (SceneDesVO scene : allScenesInfo) {
@@ -92,10 +89,10 @@ public class SceneDataServiceV3 {
                 }
             }
             // 计算时间
-            startCalTime = System.currentTimeMillis();
+            long startCalTime = System.currentTimeMillis();
             report = buildCoverageReport(scenesInfo, gridsBoundary);
-            endCalTime = System.currentTimeMillis(); // 记录结束时间
-            duration = endCalTime - startCalTime; // 计算耗时（毫秒）
+            long endCalTime = System.currentTimeMillis(); // 记录结束时间
+            long duration = endCalTime - startCalTime; // 计算耗时（毫秒）
             System.out.println("在内存中分类并计算覆盖度所消耗时间: " + duration + "ms");
             // 缓存数据
             SceneDataCache.cacheUserScenes(cacheKey, scenesInfo, report);
@@ -107,9 +104,8 @@ public class SceneDataServiceV3 {
             Geometry boundary = regionDataService.getRegionById(regionId).getBoundary();
             List<Integer[]> tileIds = TileCalculateUtil.getRowColByRegionAndResolution(boundary, resolution);
             Geometry gridsBoundary = GeometryUtil.getGridsBoundaryByTilesAndResolution(tileIds, resolution);
-            String dataType = "'satellite'";
-
-            List<SceneDesVO> scenesInfo = getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, dataType);
+            dataType.add("satellite");
+            List<SceneDesVO> scenesInfo = queryAndCleanScenes(startTime, endTime, gridsBoundary, dataType);
 
             report = buildCoverageReport(scenesInfo, gridsBoundary);
 
@@ -152,21 +148,19 @@ public class SceneDataServiceV3 {
         // 从缓存读取数据（如果存在）
         SceneDataCache.UserSceneCache userSceneCache = SceneDataCache.getUserSceneCacheMap(cacheKey);
         SceneDataCache.UserThemeCache userThemeCache = SceneDataCache.getUserThemeCacheMap(cacheKey);
-        String startTime = scenesLocationFetchDTO.getStartTime();
-        String endTime = scenesLocationFetchDTO.getEndTime();
+        LocalDateTime startTime = scenesLocationFetchDTO.getStartTime();
+        LocalDateTime endTime = scenesLocationFetchDTO.getEndTime();
         String locationId = scenesLocationFetchDTO.getLocationId();
         Integer resolution = scenesLocationFetchDTO.getResolution();
         CoverageReportVO<Map<String, Object>> report;
+        List<String> dataType = new ArrayList<>();
         if (userSceneCache == null && userThemeCache == null) {
             // 缓存未命中，从数据库中读数据
             Geometry gridsBoundary = locationService.getLocationBoundary(resolution, locationId);
-            String themeCodes = SceneTypeByTheme.getAllCodes().stream()
-                    .map(code -> "'" + code + "'")
-                    .collect(Collectors.joining(", "));
-            String dataType = "'satellite', " + themeCodes;
-
-            List<SceneDesVO> allScenesInfo = getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, dataType);
-            allScenesInfo.sort((s1, s2) -> s2.getSceneTime().compareTo(s1.getSceneTime()));
+            List<String> themeCodes = SceneTypeByTheme.getAllCodes();
+            dataType.add("satellite");
+            dataType.addAll(themeCodes);
+            List<SceneDesVO> allScenesInfo = queryAndCleanScenes(startTime, endTime, gridsBoundary, dataType);
             List<SceneDesVO> scenesInfo = new ArrayList<>();
             List<SceneDesVO> themesInfo = new ArrayList<>();
             for (SceneDesVO scene : allScenesInfo) {
@@ -187,10 +181,8 @@ public class SceneDataServiceV3 {
         } else if (userSceneCache == null) {
             // 缓存未命中，从数据库中读数据
             Geometry gridsBoundary = locationService.getLocationBoundary(resolution, locationId);
-            String dataType = "'satellite'";
-
-            List<SceneDesVO> scenesInfo = getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, dataType);
-            scenesInfo.sort((s1, s2) -> s2.getSceneTime().compareTo(s1.getSceneTime()));
+            dataType.add("satellite");
+            List<SceneDesVO> scenesInfo = queryAndCleanScenes(startTime, endTime, gridsBoundary, dataType);
 
             report = buildCoverageReport(scenesInfo, gridsBoundary);
             // 缓存数据
@@ -214,7 +206,7 @@ public class SceneDataServiceV3 {
         return result;
     }
 
-    public List<SceneDesVO> getScenesByTimeAndRegion(String startTime, String endTime, Geometry boundary, String dataType) {
+    public List<SceneDesVO> getScenesByTimeAndRegion(LocalDateTime startTime, LocalDateTime endTime, Geometry boundary, List<String> dataType) {
         String wkt = boundary.toText();
         return sceneRepo.getScenesInfoByTimeAndRegion(startTime, endTime, wkt, dataType);
     }
@@ -339,6 +331,36 @@ public class SceneDataServiceV3 {
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Invalid resolution value: " + resolution, e);
         }
+    }
+
+    public List<SceneDesVO> queryAndCleanScenes(
+            LocalDateTime startTime,
+            LocalDateTime endTime,
+            Geometry gridsBoundary,
+            List<String> dataType
+    ) {
+        long startCalTime = System.currentTimeMillis();
+
+        List<SceneDesVO> allScenesInfo =
+                getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, dataType);
+
+        long duration = System.currentTimeMillis() - startCalTime;
+        log.info("从数据库中检索景消耗时间: {} ms", duration);
+
+        int before = allScenesInfo.size();
+
+        List<SceneDesVO> cleanedScenes = allScenesInfo.stream()
+                .filter(scene -> scene != null && scene.getBoundingBox() != null)
+                .collect(Collectors.toList());
+
+        int after = cleanedScenes.size();
+
+        if (before != after) {
+            log.warn("Scene 数据清洗：{} -> {}，丢弃 {} 条（bounding_box 解析失败）",
+                    before, after, before - after);
+        }
+
+        return cleanedScenes;
     }
 
 
