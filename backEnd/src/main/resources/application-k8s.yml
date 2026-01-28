@@ -25,7 +25,7 @@ pg:
 spring:
   datasource:
     dynamic:
-      primary: mysql-ard-satellite
+      primary: pg-ard-satellite
       strict: false
       datasource:
         pg-ard-satellite:

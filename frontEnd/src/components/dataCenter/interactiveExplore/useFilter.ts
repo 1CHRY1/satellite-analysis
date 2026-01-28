@@ -394,25 +394,22 @@ export const useFilter = () => {
         }
 
         // ------------------- Step3: 检索请求操作 -------------------- //
+        // 这里不要并行
         let sceneStatsRes, vectorsRes, themeStatsRes
-        if (searchedSpatialFilterMethod.value === 'region') {
-            ;[sceneStatsRes, vectorsRes, themeStatsRes] = await Promise.all([
-                getSceneStatsByRegionFilter(regionFilter),
-                getVectorsByRegionFilter(regionFilter),
-                getThemeStatsByRegionFilter(regionFilter),
-            ])
-        } else if (searchedSpatialFilterMethod.value === 'poi') {
-            ;[sceneStatsRes, vectorsRes, themeStatsRes] = await Promise.all([
-                getSceneStatsByPOIFilter(poiFilter),
-                getVectorsByPOIFilter(poiFilter),
-                getThemeStatsByPOIFilter(poiFilter),
-            ])
-        } else if (searchedSpatialFilterMethod.value === 'polygon') {
-            ;[sceneStatsRes, vectorsRes, themeStatsRes] = await Promise.all([
-                getSceneStatsByPolygonFilter(polygonFilter),
-                getVectorsByPolygonFilter(polygonFilter),
-                getThemeStatsByPolygonFilter(polygonFilter),
-            ])
+        const method = searchedSpatialFilterMethod.value
+
+        if (method === 'region') {
+            sceneStatsRes = await getSceneStatsByRegionFilter(regionFilter)
+            vectorsRes = await getVectorsByRegionFilter(regionFilter)
+            themeStatsRes = await getThemeStatsByRegionFilter(regionFilter)
+        } else if (method === 'poi') {
+            sceneStatsRes = await getSceneStatsByPOIFilter(poiFilter)
+            vectorsRes = await getVectorsByPOIFilter(poiFilter)
+            themeStatsRes = await getThemeStatsByPOIFilter(poiFilter)
+        } else if (method === 'polygon') {
+            sceneStatsRes = await getSceneStatsByPolygonFilter(polygonFilter)
+            vectorsRes = await getVectorsByPolygonFilter(polygonFilter)
+            themeStatsRes = await getThemeStatsByPolygonFilter(polygonFilter)
         }
         sceneStats.value = sceneStatsRes
         vectorStats.value = vectorsRes
