@@ -25,10 +25,12 @@ import java.util.List;
 public interface IProductRepo extends BaseMapper<Product>  {
     @Select({
             "<script>",
-            "SELECT COUNT(1) > 0 FROM product_table WHERE sensor_id IN",
-            "<foreach collection='sensorIds' item='id' open='(' separator=',' close=')'>",
-            "#{id}",
-            "</foreach>",
+            "SELECT EXISTS (",
+            "   SELECT 1 FROM product_table WHERE sensor_id IN",
+            "   <foreach collection='sensorIds' item='id' open='(' separator=',' close=')'>",
+            "       #{id}",
+            "   </foreach>",
+            ")",
             "</script>"
     })
     boolean existsBySensorIds(@Param("sensorIds") List<String> sensorIds);

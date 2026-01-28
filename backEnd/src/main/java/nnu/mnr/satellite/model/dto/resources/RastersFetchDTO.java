@@ -3,6 +3,8 @@ package nnu.mnr.satellite.model.dto.resources;
 import com.alibaba.fastjson2.JSONObject;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 /**
  * Created with IntelliJ IDEA.
  *
@@ -14,8 +16,8 @@ import lombok.Data;
 @Data
 public class RastersFetchDTO {
 
-    private String startTime;
-    private String endTime;
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
     private Integer regionId;
     private String dataType;
 

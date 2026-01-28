@@ -9,6 +9,7 @@ import nnu.mnr.satellite.model.vo.resources.VectorTypeVO;
 import org.apache.ibatis.annotations.*;
 import org.locationtech.jts.geom.Geometry;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Mapper
@@ -27,8 +28,8 @@ public interface IVectorRepo  extends BaseMapper<Vector> {
                     many = @Many(select = "nnu.mnr.satellite.mapper.resources.IVectorRepo.getContinuousFields"))
     })
     List<VectorInfoVO> getVectorsDesByTimeAndGeometry(
-            @Param("startTime") String startTime,
-            @Param("endTime") String endTime,
+            @Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime,
             @Param("wkt") String wkt
     );
 

@@ -6,6 +6,7 @@ import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.index.strtree.STRtree; // 空间索引（R-Tree）
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -96,11 +97,11 @@ public class SceneDataCache {
     @Data
     public static class UserRegionInfoCache {
         public Geometry gridsBoundary;
-        public String startTime;
-        public String endTime;
+        public LocalDateTime startTime;
+        public LocalDateTime endTime;
         private final long cacheTime;                    // 缓存时间（用于超时清理）
 
-        public UserRegionInfoCache(Geometry gridsBoundary, String startTime, String endTime) {
+        public UserRegionInfoCache(Geometry gridsBoundary, LocalDateTime startTime, LocalDateTime endTime) {
             this.gridsBoundary = gridsBoundary;
             this.startTime = startTime;
             this.endTime = endTime;
@@ -113,7 +114,7 @@ public class SceneDataCache {
     }
 
     // 缓存格网边界数据
-    public static void cacheUserRegionInfo(String cacheKey, Geometry gridsBoundary, String startTime, String endTime) {
+    public static void cacheUserRegionInfo(String cacheKey, Geometry gridsBoundary, LocalDateTime startTime, LocalDateTime endTime) {
         userRegionInfoCacheMap.put(cacheKey, new UserRegionInfoCache(gridsBoundary, startTime, endTime));
     }
 
