@@ -40,23 +40,27 @@ def get_gif_frame(
     normalize_level: float = Query(1.0, description="Gamma value or level"),
     std_config: str = Query("{}", description="Standard deviation config JSON"),
     bbox: str = Query(None, description="Bounding box 'minx,miny,maxx,maxy'"),
+    resolution: int = Query(256, description="Output resolution (256, 512, or 1024)"),
 ):
     try:
+        # Clamp resolution to reasonable values (256 ~ 2048)
+        res = max(256, min(2048, resolution))
+
         if bbox:
             bbox_val = list(map(float, bbox.split(",")))
             # Read Red band
             with COGReader(url_r, options={"nodata": nodata}) as cog_r:
-                tile_r = cog_r.part(bbox_val, width=256, height=256)
+                tile_r = cog_r.part(bbox_val, width=res, height=res)
                 data_r = tile_r.data.squeeze()
                 mask = tile_r.mask
 
             # Read Green band
             with COGReader(url_g, options={"nodata": nodata}) as cog_g:
-                data_g = cog_g.part(bbox_val, width=256, height=256).data.squeeze()
+                data_g = cog_g.part(bbox_val, width=res, height=res).data.squeeze()
 
             # Read Blue band
             with COGReader(url_b, options={"nodata": nodata}) as cog_b:
-                data_b = cog_b.part(bbox_val, width=256, height=256).data.squeeze()
+                data_b = cog_b.part(bbox_val, width=res, height=res).data.squeeze()
         else:
             # Read Red band
             with COGReader(url_r, options={"nodata": nodata}) as cog_r:
@@ -105,8 +109,9 @@ def get_gif_frame(
 
         rgb = np.stack([r, g, b])
 
-        # Render with original mask (0=nodata, 255=data)
-        # Critical: We do NOT force black pixels to be transparent here.
+        # Render with original mask (0=nodata, 255=valid data)
+        # The mask creates proper alpha channel in PNG output
+        # Frontend will handle converting transparent pixels to GIF transparent color
         content = render(rgb, mask=mask, img_format="png", **img_profiles.get("png"))
         return Response(content=content, media_type="image/png")
 
