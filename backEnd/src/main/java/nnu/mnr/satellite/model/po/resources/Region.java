@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nnu.mnr.satellite.utils.typeHandler.PostgisGeometryTypeHandler;
 import org.locationtech.jts.geom.Geometry;
 import nnu.mnr.satellite.utils.typeHandler.ListTypeHandler;
 import java.util.List;
@@ -41,6 +42,6 @@ public class Region {
     private List<Double> center;
     @TableField(typeHandler = ListTypeHandler.class)
     private List<Double> centroid;
+    @TableField(typeHandler = PostgisGeometryTypeHandler.class)
     private Geometry boundary;
-
 }

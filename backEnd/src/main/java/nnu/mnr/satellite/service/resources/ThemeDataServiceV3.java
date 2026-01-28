@@ -19,6 +19,7 @@ import org.locationtech.jts.geom.Geometry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -58,22 +59,21 @@ public class ThemeDataServiceV3 {
         // 从缓存读取数据（如果存在）
         SceneDataCache.UserSceneCache userSceneCache = SceneDataCache.getUserSceneCacheMap(cacheKey);
         SceneDataCache.UserThemeCache userThemeCache = SceneDataCache.getUserThemeCacheMap(cacheKey);
-        String startTime = scenesFetchDTO.getStartTime();
-        String endTime = scenesFetchDTO.getEndTime();
+        LocalDateTime startTime = scenesFetchDTO.getStartTime();
+        LocalDateTime endTime = scenesFetchDTO.getEndTime();
         Integer regionId = scenesFetchDTO.getRegionId();
         Integer resolution = scenesFetchDTO.getResolution();
         CoverageReportVO<String> report;
+        List<String> dataType = new ArrayList<>();
         if (userThemeCache == null && userSceneCache == null) {
             // 缓存未命中，从数据库中读数据
             Geometry boundary = regionDataService.getRegionById(regionId).getBoundary();
             List<Integer[]> tileIds = TileCalculateUtil.getRowColByRegionAndResolution(boundary, resolution);
             Geometry gridsBoundary = GeometryUtil.getGridsBoundaryByTilesAndResolution(tileIds, resolution);
-            String themeCodes = SceneTypeByTheme.getAllCodes().stream()
-                    .map(code -> "'" + code + "'")
-                    .collect(Collectors.joining(", "));
-            String dataType = "'satellite', " + themeCodes;
-            List<SceneDesVO> allScenesInfo = sceneDataService.getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, dataType);
-            allScenesInfo.sort((s1, s2) -> s2.getSceneTime().compareTo(s1.getSceneTime()));
+            List<String> themeCodes = SceneTypeByTheme.getAllCodes();
+            dataType.add("satellite");
+            dataType.addAll(themeCodes);
+            List<SceneDesVO> allScenesInfo = sceneDataService.queryAndCleanScenes(startTime, endTime, gridsBoundary, dataType);
             List<SceneDesVO> scenesInfo = new ArrayList<>();
             List<SceneDesVO> themesInfo = new ArrayList<>();
             for (SceneDesVO scene : allScenesInfo) {
@@ -95,12 +95,9 @@ public class ThemeDataServiceV3 {
             Geometry boundary = regionDataService.getRegionById(regionId).getBoundary();
             List<Integer[]> tileIds = TileCalculateUtil.getRowColByRegionAndResolution(boundary, resolution);
             Geometry gridsBoundary = GeometryUtil.getGridsBoundaryByTilesAndResolution(tileIds, resolution);
-            String dataType = SceneTypeByTheme.getAllCodes().stream()
-                    .map(code -> "'" + code + "'")
-                    .collect(Collectors.joining(", "));
-
-            List<SceneDesVO> themesInfo = sceneDataService.getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, dataType);
-            themesInfo.sort((s1, s2) -> s2.getSceneTime().compareTo(s1.getSceneTime()));
+            List<String> themeCodes = SceneTypeByTheme.getAllCodes();
+            dataType.addAll(themeCodes);
+            List<SceneDesVO> themesInfo = sceneDataService.queryAndCleanScenes(startTime, endTime, gridsBoundary, dataType);
 
             report = buildCoverageReport(themesInfo);
 
@@ -136,19 +133,19 @@ public class ThemeDataServiceV3 {
         // 从缓存读取数据（如果存在）
         SceneDataCache.UserSceneCache userSceneCache = SceneDataCache.getUserSceneCacheMap(cacheKey);
         SceneDataCache.UserThemeCache userThemeCache = SceneDataCache.getUserThemeCacheMap(cacheKey);
-        String startTime = scenesLocationFetchDTO.getStartTime();
-        String endTime = scenesLocationFetchDTO.getEndTime();
+        LocalDateTime startTime = scenesLocationFetchDTO.getStartTime();
+        LocalDateTime endTime = scenesLocationFetchDTO.getEndTime();
         String locationId = scenesLocationFetchDTO.getLocationId();
         Integer resolution = scenesLocationFetchDTO.getResolution();
         CoverageReportVO<String> report;
+        List<String> dataType = new ArrayList<>();
         if (userThemeCache == null && userSceneCache == null) {
             // 缓存未命中，从数据库中读数据
             Geometry gridsBoundary = locationService.getLocationBoundary(resolution, locationId);
-            String themeCodes = SceneTypeByTheme.getAllCodes().stream()
-                    .map(code -> "'" + code + "'")
-                    .collect(Collectors.joining(", "));
-            String dataType = "'satellite', " + themeCodes;
-            List<SceneDesVO> allScenesInfo = sceneDataService.getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, dataType);
+            List<String> themeCodes = SceneTypeByTheme.getAllCodes();
+            dataType.add("satellite");
+            dataType.addAll(themeCodes);
+            List<SceneDesVO> allScenesInfo = sceneDataService.queryAndCleanScenes(startTime, endTime, gridsBoundary, dataType);
             List<SceneDesVO> scenesInfo = new ArrayList<>();
             List<SceneDesVO> themesInfo = new ArrayList<>();
             for (SceneDesVO scene : allScenesInfo) {
@@ -168,11 +165,9 @@ public class ThemeDataServiceV3 {
         } else if (userThemeCache == null) {
             // 缓存未命中，从数据库中读数据
             Geometry gridsBoundary = locationService.getLocationBoundary(resolution, locationId);
-            String dataType = SceneTypeByTheme.getAllCodes().stream()
-                    .map(code -> "'" + code + "'")
-                    .collect(Collectors.joining(", "));
-
-            List<SceneDesVO> themesInfo = sceneDataService.getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, dataType);
+            List<String> themeCodes = SceneTypeByTheme.getAllCodes();
+            dataType.addAll(themeCodes);
+            List<SceneDesVO> themesInfo = sceneDataService.queryAndCleanScenes(startTime, endTime, gridsBoundary, dataType);
 
             report = buildCoverageReport(themesInfo);
 

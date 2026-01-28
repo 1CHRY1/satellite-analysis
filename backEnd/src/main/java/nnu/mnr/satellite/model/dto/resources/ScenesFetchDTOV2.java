@@ -4,6 +4,8 @@ import com.alibaba.fastjson2.JSONObject;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 /**
  * Created with IntelliJ IDEA.
  *
@@ -16,8 +18,8 @@ import lombok.Data;
 @Builder
 public class ScenesFetchDTOV2 {
 
-    private String startTime;
-    private String endTime;
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
     private Integer regionId;
     private float cloud;
     private Integer resolution;

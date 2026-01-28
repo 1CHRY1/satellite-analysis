@@ -3,6 +3,8 @@ package nnu.mnr.satellite.model.dto.resources;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 /**
  * Created with IntelliJ IDEA.
  *
@@ -15,8 +17,8 @@ import lombok.Data;
 @Builder
 public class ScenesLocationFetchDTO {
 
-    private String startTime;
-    private String endTime;
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
     private String locationId;
     private Integer resolution;
     private float cloud;

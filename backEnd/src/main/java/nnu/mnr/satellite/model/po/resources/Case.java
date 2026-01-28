@@ -8,9 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import nnu.mnr.satellite.utils.typeHandler.FastJson2TypeHandler;
-import nnu.mnr.satellite.utils.typeHandler.GeometryTypeHandler;
-import nnu.mnr.satellite.utils.typeHandler.ListTypeHandler;
+import nnu.mnr.satellite.utils.typeHandler.*;
+import nnu.mnr.satellite.utils.typeHandlerEx.PostgreJsonbTypeHandler;
 import org.locationtech.jts.geom.Geometry;
 
 import java.time.LocalDateTime;
@@ -33,13 +32,13 @@ public class Case {
     private String caseId;
     private String address;
     private String resolution;
-    @TableField(typeHandler = GeometryTypeHandler.class)
+    @TableField(typeHandler = PostgisGeometryTypeHandler.class)
     private Geometry boundary;
     @TableField(typeHandler = ListTypeHandler.class)
     private List<String> sceneList;
     private String dataSet;
     private String status;
-    @TableField(typeHandler = FastJson2TypeHandler.class)
+    @TableField(typeHandler = PostgreJsonbTypeHandler.class)
     private JSONObject result;
     @TableField("create_time")
     private LocalDateTime createTime;

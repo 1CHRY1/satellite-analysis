@@ -14,6 +14,7 @@ import { message } from 'ant-design-vue'
 import * as MapOperation from '@/util/map/operation'
 import { defineEmits } from 'vue'
 import { useAnalysisStore } from '@/store'
+import dayjs from 'dayjs'
 
 const dbValue = useAnalysisStore()
 type HistoryValueTab = 'RUNNING' | 'COMPLETE'
@@ -54,6 +55,8 @@ export function useViewHistoryModule() {
             regionId: regionId ? Number(regionId) : null,
             startTime: selectedTime.value.value?.startTime as string,
             endTime: selectedTime.value.value?.endTime as string,
+            // startTime: dayjs(selectedTime.value.value?.startTime).format('YYYY-MM-DDTHH:mm:ss'),
+            // endTime: dayjs(selectedTime.value.value?.endTime).format('YYYY-MM-DDTHH:mm:ss'),
             resolution:
                 selectedResolution.value === EMPTY_RESOLUTION ? null : selectedResolution.value,
         })

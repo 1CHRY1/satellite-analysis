@@ -37,8 +37,8 @@ export const useSettings = () => {
         city: '370100',
         area: '',
     })
-    const startTime = '1900-01-01'
-    const endTime = '2050-01-01'
+    const startTime = '1900-01-01T00:00:00'
+    const endTime = '2050-01-01T00:00:00'
 
     // 获取根据行政区选择的原始数据
     const originImages = ref([])

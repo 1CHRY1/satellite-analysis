@@ -20,12 +20,12 @@ import java.time.LocalDateTime;
 public interface ICaseRepo extends BaseMapper<Case> {
 
     @Insert("INSERT INTO case_table (case_id, address, region_id, resolution, boundary, scene_list, data_set, band_list, status, result, create_time, type, user_id) " +
-            "VALUES (#{caseId}, #{address}, #{regionId}, #{resolution}, ST_GeomFromText(#{boundary}, 4326, 'axis-order=long-lat'), #{sceneList}, #{dataSet}, #{bandList}, #{status}, #{result}, #{createTime}, #{type}, #{userId})")
+            "VALUES (#{caseId}, #{address}, #{regionId}, #{resolution}, ST_GeomFromText(#{boundary}, 4326), #{sceneList}::jsonb, #{dataSet}, #{bandList}::jsonb, #{status}, #{result}, #{createTime}, #{type}, #{userId})")
     int insertCase(Case caseObj);
 
     @Update("UPDATE case_table SET address = #{address}, region_id = #{regionId}, resolution = #{resolution}, " +
-            "boundary = ST_GeomFromText(#{boundary}, 4326, 'axis-order=long-lat'), " +
-            "scene_list = #{sceneList}, data_set = #{dataSet}, band_list = #{bandList}, status = #{status}, result = #{result}, create_time = #{createTime} " +
+            "boundary = ST_GeomFromText(#{boundary}, 4326), " +
+            "scene_list = #{sceneList}::jsonb, data_set = #{dataSet}, band_list = #{bandList}::jsonb, status = #{status}, result = #{result}, create_time = #{createTime} " +
             "WHERE case_id = #{caseId}")
     int updateCaseById(Case caseObj);
 }

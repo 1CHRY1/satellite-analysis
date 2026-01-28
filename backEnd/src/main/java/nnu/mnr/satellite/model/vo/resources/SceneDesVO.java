@@ -8,6 +8,7 @@ import nnu.mnr.satellite.model.dto.modeling.ModelServerImageDTO;
 import nnu.mnr.satellite.model.dto.modeling.ModelServerSceneDTO;
 import nnu.mnr.satellite.utils.typeHandler.FastJson2TypeHandler;
 import nnu.mnr.satellite.utils.typeHandler.JSONArrayTypeHandler;
+import nnu.mnr.satellite.utils.typeHandler.PostgisGeometryTypeHandler;
 import org.locationtech.jts.geom.Geometry;
 
 import java.time.LocalDateTime;
@@ -47,7 +48,7 @@ public class SceneDesVO {
     private String platformName;
     private String resolution;
     private String dataType;
-
+    @TableField(typeHandler = PostgisGeometryTypeHandler.class)
     private Geometry boundingBox;
     private String cloudPath;
     private String bucket;

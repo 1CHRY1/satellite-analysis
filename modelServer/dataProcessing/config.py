@@ -312,7 +312,7 @@ class slkConfig(BaseConfig):
     MYSQL_PWD                                       =       "123456"
 
     # Backend Config
-    BACK_URL_PREFIX                                 =       "http://223.2.34.8:31584/api/"
+    BACK_URL_PREFIX                                 =       "http://localhost:8999/api/"
     LOW_LEVEL_IMAGE_VISUALIZATION                   =       "v3/modeling/example/scenes/visualization"
 
     # Titiler Config
@@ -368,7 +368,7 @@ def get_current_config():
     """获取当前环境的配置类"""
     return get_config(CURRENT_PROFILE)
 
-os.environ['APP_PROFILE'] = 'slk'
+os.environ['APP_PROFILE'] = 'hxf'
 # 获取当前环境配置 - 类似Spring Boot的 spring.profiles.active
 CURRENT_PROFILE = os.getenv('APP_PROFILE', 'k8s')  # 默认使用k8s
 

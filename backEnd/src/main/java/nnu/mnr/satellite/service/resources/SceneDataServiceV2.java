@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -166,7 +167,7 @@ public class SceneDataServiceV2 {
 //    }
 
     public List<SceneDesVO> getScenesDesByTimeRegionAndCloud(ScenesFetchDTOV2 scenesFetchDTO) {
-        String startTime = scenesFetchDTO.getStartTime(); String endTime = scenesFetchDTO.getEndTime();
+        LocalDateTime startTime = scenesFetchDTO.getStartTime(); LocalDateTime endTime = scenesFetchDTO.getEndTime();
         Integer regionId = scenesFetchDTO.getRegionId(); float cloud = scenesFetchDTO.getCloud();
         Integer resolution = scenesFetchDTO.getResolution();
         Geometry boundary = regionDataService.getRegionById(regionId).getBoundary();
@@ -181,7 +182,7 @@ public class SceneDataServiceV2 {
     }
 
     public List<SceneDesVO> getScenesDesByTimeLocationAndCloud(ScenesLocationFetchDTO scenesFetchDTO) {
-        String startTime = scenesFetchDTO.getStartTime(); String endTime = scenesFetchDTO.getEndTime();
+        LocalDateTime startTime = scenesFetchDTO.getStartTime(); LocalDateTime endTime = scenesFetchDTO.getEndTime();
         float cloud = scenesFetchDTO.getCloud(); String locationId = scenesFetchDTO.getLocationId();
         Integer resolution = scenesFetchDTO.getResolution();
         Geometry boundary = locationService.getLocationBoundary(resolution, locationId);
@@ -194,7 +195,7 @@ public class SceneDataServiceV2 {
     }
 
     public List<SceneDesVO> getRasterScenesDesByRegionAndDataType(RastersFetchDTO rastersFetchDTO) {
-        String startTime = rastersFetchDTO.getStartTime(); String endTime = rastersFetchDTO.getEndTime();
+        LocalDateTime startTime = rastersFetchDTO.getStartTime(); LocalDateTime endTime = rastersFetchDTO.getEndTime();
         Integer regionId = rastersFetchDTO.getRegionId(); String dataType = rastersFetchDTO.getDataType();
         Region region = regionDataService.getRegionById(regionId);
         String wkt = region.getBoundary().toText();
@@ -202,14 +203,14 @@ public class SceneDataServiceV2 {
     }
 
     public List<Scene> getScenesByTimeRegionAndCloud(ScenesFetchDTOV2 scenesFetchDTO) {
-        String startTime = scenesFetchDTO.getStartTime(); String endTime = scenesFetchDTO.getEndTime();
+        LocalDateTime startTime = scenesFetchDTO.getStartTime(); LocalDateTime endTime = scenesFetchDTO.getEndTime();
         Integer regionId = scenesFetchDTO.getRegionId(); float cloud = scenesFetchDTO.getCloud();
         Region region = regionDataService.getRegionById(regionId);
         Geometry regionBoundary = region.getBoundary();
         return sceneRepo.selectList(getQuaryByTimeCloudAndGeometry(startTime, endTime, cloud, regionBoundary));
     }
     // Get Scene Quary By Time And Geometry
-    private QueryWrapper<Scene> getQuaryByTimeCloudAndGeometry(String startTime, String endTime, float cloud, Geometry geometry) {
+    private QueryWrapper<Scene> getQuaryByTimeCloudAndGeometry(LocalDateTime startTime, LocalDateTime endTime, float cloud, Geometry geometry) {
         String wkt = geometry.toText();
         QueryWrapper<Scene> queryWrapper = new QueryWrapper<>();
         queryWrapper.between("scene_time", startTime, endTime);

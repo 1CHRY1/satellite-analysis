@@ -36,14 +36,37 @@ pg:
 spring:
   datasource:
     dynamic:
-      primary: mysql-ard-satellite
+      primary: pg-ard-satellite
       strict: false
       datasource:
-        mysql-ard-satellite:
-          url: jdbc:mysql://${mysql.host}:${mysql.port}/ard_satellite
-          username: ${mysql.username}
-          password: ${mysql.password}
-          driver-class-name: com.mysql.cj.jdbc.Driver
+        pg-ard-satellite:
+                  url: jdbc:postgresql://${pg.host}:${pg.port}/ard_satellite?currentSchema=ard_satellite,public
+                  username: ${pg.username}
+                  password: ${pg.password}
+                  driver-class-name: org.postgresql.Driver
+                  type: com.alibaba.druid.pool.DruidDataSource
+                  druid:
+                    initial-size: 5
+                    max-active: 20
+                    min-idle: 5
+                    max-wait: 60000
+                    validation-query: SELECT 1
+                    socket-timeout: 1200000  # 20分钟
+                    filters: stat, wall
+                    wall:
+                      table-check: true
+                      drop-table-allow: false
+                      alter-table-allow: false
+                    stat:
+                      slow-sql-millis: 5000
+                      log-slow-sql: true
+                      merge-sql: true
+        pg-satellite:
+          url: jdbc:postgresql://${pg.host}:${pg.port}/satellite
+          username: ${pg.username}
+          password: ${pg.password}
+          driver-class-name: org.postgresql.Driver
+          #          type: com.zaxxer.hikari.HikariDataSource
           type: com.alibaba.druid.pool.DruidDataSource
           druid:
             initial-size: 5
@@ -52,14 +75,13 @@ spring:
             max-wait: 60000
             validation-query: SELECT 1
             socket-timeout: 1200000  # 20分钟
-            init-connection-sqls: SET SESSION group_concat_max_len = 18446744073709551615
             filters: stat
             wall:
               table-check: true
               drop-table-allow: false
               alter-table-allow: false
             stat:
-              slow-sql-millis: 2000
+              slow-sql-millis: 300000
               log-slow-sql: true
               merge-sql: true
         mysql-ard-iam:
@@ -108,29 +130,6 @@ spring:
               slow-sql-millis: 2000
               log-slow-sql: true
               merge-sql: true
-        pg-satellite:
-          url: jdbc:postgresql://${pg.host}:${pg.port}/satellite
-          username: ${pg.username}
-          password: ${pg.password}
-          driver-class-name: org.postgresql.Driver
-#          type: com.zaxxer.hikari.HikariDataSource
-          type: com.alibaba.druid.pool.DruidDataSource
-          druid:
-            initial-size: 5
-            max-active: 20
-            min-idle: 5
-            max-wait: 60000
-            validation-query: SELECT 1
-            socket-timeout: 1200000  # 20分钟
-            filters: stat
-            wall:
-              table-check: true
-              drop-table-allow: false
-              alter-table-allow: false
-            stat:
-              slow-sql-millis: 300000
-              log-slow-sql: true
-              merge-sql: true
     # 全局 Druid 监控配置（对所有数据源生效）
     druid:
       stat-view-servlet:
@@ -165,8 +164,8 @@ mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: nnu.mnr.satellite.model.po
   type-handlers-package: nnu.mnr.satellite.utils.typeHandler
-#  configuration:
-#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 minio:
 #  access-key: jTbgNHEqQafOpUxVg7Ol
@@ -201,8 +200,8 @@ docker:
     workDirSubdir: service
 
 modelServer:
-#  address: http://223.2.43.238:5000
-  address: http://223.2.34.116:5001
+  address: http://223.2.43.238:5000
+#  address: http://223.2.34.8:30500
   apis:
     status: /v0/task/status
     result: /v0/task/result
@@ -232,7 +231,9 @@ srmodelServer:
     status: 2
 
 tiler:
+#  end-point: http://223.2.34.8:31800/
   end-point: http://223.2.43.238:8000/
+
 
 satelliteConfig:
   path: D:/IdeaProjects/satellite-analysis/backEnd/src/main/resources/config/band_config.json
