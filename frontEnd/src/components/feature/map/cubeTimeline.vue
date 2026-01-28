@@ -68,16 +68,31 @@
                 </div>
             </div>
 
-            <!-- GIF生成按钮 -->
+            <!-- GIF生成区域 -->
             <div class="gif-generator flex flex-col items-center justify-center">
+                <!-- 分辨率选择按钮组 -->
+                <div class="resolution-toggle-group">
+                    <button
+                        v-for="res in [256, 512, 2048]"
+                        :key="res"
+                        class="resolution-toggle-btn"
+                        :class="{ active: gifResolution === res }"
+                        :disabled="isGeneratingGif"
+                        @click="gifResolution = res as 256 | 512 | 2048"
+                        :title="res === 256 ? '快速' : res === 512 ? '均衡' : '高清'"
+                    >
+                        {{ res }}
+                    </button>
+                </div>
+                <!-- GIF生成按钮 -->
                 <button
                     class="gif-btn"
                     @click="handleGenerateGif"
                     :disabled="filteredImages.length < 2 || isGeneratingGif"
                     :title="filteredImages.length < 2 ? '需要至少2张影像' : '生成GIF动画'"
                 >
-                    <FilmIcon v-if="!isGeneratingGif" :size="20" />
-                    <LoaderIcon v-else :size="20" class="animate-spin" />
+                    <FilmIcon v-if="!isGeneratingGif" :size="18" />
+                    <LoaderIcon v-else :size="18" class="animate-spin" />
                     <span class="ml-1">{{ isGeneratingGif ? `${gifProgress}%` : 'GIF' }}</span>
                 </button>
             </div>
@@ -132,6 +147,7 @@ const timelineTrack = ref<HTMLElement | null>(null)
 // GIF生成相关状态
 const isGeneratingGif = ref(false)
 const gifProgress = ref(0)
+const gifResolution = ref<256 | 512 | 2048>(512)
 
 // 支持去云的传感器
 const CLOUD_SUPPORT_SENSORS = [
@@ -526,6 +542,7 @@ const handleClick = async (index: number) => {
 
 /**
  * 生成GIF动画
+ * 使用 gifenc 库实现精确的透明色控制，避免颜色量化导致的透明误判
  */
 const handleGenerateGif = async () => {
     if (filteredImages.value.length < 2) {
@@ -537,72 +554,154 @@ const handleGenerateGif = async () => {
     gifProgress.value = 0
 
     try {
-        // 动态导入gif.js
-        const GIF = (await import('gif.js')).default
-        
+        const { GIFEncoder, quantize, applyPalette } = await import('gifenc')
+
         const images = filteredImages.value
         const totalImages = images.length
-        
-        // 创建GIF编码器
-        const gif = new GIF({
-            workers: 2,
-            quality: 10,
-            width: 512,
-            height: 512,
-            workerScript: '/gif.worker.js', // 需要确保这个文件存在于public目录
-            transparent: 0x000000, // 黑色作为透明色
-        } as any)
+        const resolution = gifResolution.value
 
-        // 加载每张影像并添加到GIF
-        for (let i = 0; i < totalImages; i++) {
-            const img = images[i] as MultiImageInfoType
-            
+        // 创建 GIF 编码器
+        const gif = GIFEncoder()
+
+        // 并行加载所有帧
+        const bbox = grid2bbox(grid.value.columnId, grid.value.rowId, grid.value.resolution)
+        let loadedCount = 0
+
+        const loadTasks = images.map(async (img, index) => {
             try {
-                // 获取影像URL（与handleClick类似的逻辑）
-                const imageUrl = await getImageUrlForGif(img)
-                
-                // 获取bbox用于裁剪
-                const bbox = grid2bbox(grid.value.columnId, grid.value.rowId, grid.value.resolution)
-                
-                // 加载图片并裁剪到bbox区域，缩放到512x512
-                const croppedCanvas = await loadAndCropImageForGif(imageUrl, bbox, 512)
-                
-                // 添加到GIF（每帧延迟500ms）
-                // dispose: 2 表示每帧播放后恢复到背景（透明），避免帧叠加
-                gif.addFrame(croppedCanvas, { delay: 500, dispose: 2 })
-                
-                // 更新进度
-                gifProgress.value = Math.round(((i + 1) / totalImages) * 80)
-            } catch (err) {
-                console.warn(`跳过第${i + 1}张影像:`, err)
-            }
-        }
+                const imageUrl = await getImageUrlForGif(img as MultiImageInfoType)
+                const { rgba, transparentPixels } = await loadImageDataForGif(imageUrl, resolution)
 
-        // 监听GIF渲染进度
-        gif.on('progress', (p: number) => {
-            gifProgress.value = 80 + Math.round(p * 20)
+                loadedCount++
+                gifProgress.value = Math.round((loadedCount / totalImages) * 60)
+
+                return { index, rgba, transparentPixels, success: true }
+            } catch (err) {
+                console.warn(`跳过第${index + 1}张影像:`, err)
+                loadedCount++
+                gifProgress.value = Math.round((loadedCount / totalImages) * 60)
+                return { index, rgba: null, transparentPixels: null, success: false }
+            }
         })
 
-        // 渲染完成后在地图上显示GIF
-        gif.on('finished', (blob: Blob) => {
-            // 创建Blob URL用于显示
-            const gifBlobUrl = URL.createObjectURL(blob)
-            
-            // 在地图格网上显示GIF动画
-            GridExploreMapOps.map_addGridGifLayer(grid.value, gifBlobUrl)
+        const results = await Promise.all(loadTasks)
 
+        const successfulFrames = results
+            .filter(r => r.success && r.rgba)
+            .sort((a, b) => a.index - b.index)
+
+        if (successfulFrames.length === 0) {
+            message.error('所有影像加载失败，无法生成GIF')
             isGeneratingGif.value = false
             gifProgress.value = 0
-            message.success('GIF生成成功！已在格网中显示')
+            return
+        }
+
+        if (successfulFrames.length < 2) {
+            message.warning('成功加载的影像少于2张，无法生成GIF')
+            isGeneratingGif.value = false
+            gifProgress.value = 0
+            return
+        }
+
+        // 透明色索引（调色板的最后一个位置）
+        const TRANSPARENT_INDEX = 255
+
+        // 处理每一帧
+        successfulFrames.forEach((frame, i) => {
+            const { rgba, transparentPixels } = frame
+
+            // 量化颜色到 255 色（保留 1 个位置给透明色）
+            // 不指定 format，使用默认的 8 位精度 (RGB888 = 16,777,216 色空间)
+            // format 选项会降低精度：rgb565 (65K色)、rgb444 (4K色)
+            const palette = quantize(rgba!, 255)
+
+            // 添加透明色到调色板末尾
+            palette.push([255, 0, 255])
+
+            // 将 RGBA 数据转换为调色板索引（使用默认的最高精度）
+            const indexedPixels = applyPalette(rgba!, palette)
+
+            // 将透明像素的索引设为专用的透明索引
+            for (const pixelIdx of transparentPixels!) {
+                indexedPixels[pixelIdx] = TRANSPARENT_INDEX
+            }
+
+            // 写入帧，精确指定透明索引（不是颜色匹配！）
+            gif.writeFrame(indexedPixels, resolution, resolution, {
+                palette,
+                transparent: true,
+                transparentIndex: TRANSPARENT_INDEX,
+                delay: 500,
+                dispose: 2,  // 恢复到背景
+            })
+
+            gifProgress.value = 60 + Math.round(((i + 1) / successfulFrames.length) * 35)
         })
 
-        gif.render()
+        // 完成编码
+        gif.finish()
+
+        // 获取 GIF 数据并创建 Blob
+        const gifData = gif.bytes()
+        const blob = new Blob([gifData], { type: 'image/gif' })
+        const gifBlobUrl = URL.createObjectURL(blob)
+
+        // 在地图格网上显示GIF动画
+        GridExploreMapOps.map_addGridGifLayer(grid.value, gifBlobUrl)
+
+        isGeneratingGif.value = false
+        gifProgress.value = 0
+        message.success('GIF生成成功！已在格网中显示')
+
     } catch (error) {
         console.error('GIF生成失败:', error)
         message.error('GIF生成失败，请重试')
         isGeneratingGif.value = false
         gifProgress.value = 0
     }
+}
+
+/**
+ * 加载图片并返回 RGBA 数据及透明像素位置
+ * 这个函数将透明像素的位置记录下来，而不是修改其颜色
+ */
+const loadImageDataForGif = async (url: string, targetSize: number): Promise<{
+    rgba: Uint8ClampedArray,
+    transparentPixels: number[]
+}> => {
+    const img = await loadImage(url)
+
+    const canvas = document.createElement('canvas')
+    canvas.width = targetSize
+    canvas.height = targetSize
+    const ctx = canvas.getContext('2d')!
+
+    // 绘制影像
+    ctx.drawImage(img, 0, 0, targetSize, targetSize)
+
+    // 获取像素数据
+    const imageData = ctx.getImageData(0, 0, targetSize, targetSize)
+    const data = imageData.data
+
+    // 记录透明像素的索引位置
+    const transparentPixels: number[] = []
+
+    for (let i = 0; i < data.length; i += 4) {
+        const pixelIndex = i / 4  // 像素在索引图像中的位置
+
+        if (data[i + 3] < 128) {
+            // 透明像素：记录位置，设置为不透明（避免量化时出问题）
+            transparentPixels.push(pixelIndex)
+            // 设置一个不会影响量化的颜色（黑色）
+            data[i] = 0
+            data[i + 1] = 0
+            data[i + 2] = 0
+            data[i + 3] = 255
+        }
+    }
+
+    return { rgba: data, transparentPixels }
 }
 
 /**
@@ -689,6 +788,8 @@ const getImageUrlForGif = async (img: MultiImageInfoType): Promise<string> => {
     
     // 添加 bbox 参数，确保 GIF 帧位置正确
     params.append('bbox', bboxStr)
+    // 请求用户选择的分辨率
+    params.append('resolution', gifResolution.value.toString())
 
     if (stretchMethod.value === 'standard') {
         params.append('std_config', JSON.stringify({
@@ -779,24 +880,48 @@ const loadImage = (url: string): Promise<HTMLImageElement> => {
 
 /**
  * 加载瓦片图片并缩放到目标尺寸
+ * 使用双重保护策略确保 GIF 透明正确：
+ * 1. nodata 像素（alpha=0）设为品红色
+ * 2. 有效像素如果接近品红，稍微调整避免被误判为透明
  */
 const loadAndCropImageForGif = async (url: string, _bbox: number[], targetSize: number = 512): Promise<HTMLCanvasElement> => {
-    // 加载原始瓦片图片
     const img = await loadImage(url)
-    // 创建目标Canvas
+
     const canvas = document.createElement('canvas')
     canvas.width = targetSize
     canvas.height = targetSize
     const ctx = canvas.getContext('2d')!
 
-    // 先填充黑色背景（会被 GIF 识别为透明色）
-    // 配合 dispose: 2，每帧播放后会恢复到透明背景，避免帧叠加
-    ctx.fillStyle = '#000000'
-    ctx.fillRect(0, 0, targetSize, targetSize)
-
-    // 绘制影像，nodata 区域保持透明（PNG 的透明会覆盖黑色背景）
+    // 绘制影像到 canvas
     ctx.drawImage(img, 0, 0, targetSize, targetSize)
 
+    // 读取像素数据进行处理
+    const imageData = ctx.getImageData(0, 0, targetSize, targetSize)
+    const data = imageData.data
+
+    for (let i = 0; i < data.length; i += 4) {
+        const r = data[i]
+        const g = data[i + 1]
+        const b = data[i + 2]
+        const a = data[i + 3]
+
+        if (a < 128) {
+            // nodata 像素：设为纯品红作为透明标记
+            data[i] = 255      // R
+            data[i + 1] = 0    // G
+            data[i + 2] = 255  // B
+            data[i + 3] = 255  // A
+        } else {
+            // 有效像素：如果颜色接近品红，稍微调整 G 分量
+            // 避免在 gif.js 量化时被错误地映射到透明色
+            // 品红是 (255, 0, 255)，我们检查是否接近这个值
+            if (r > 240 && g < 30 && b > 240) {
+                data[i + 1] = 50  // 将 G 分量提高到 30，远离纯品红
+            }
+        }
+    }
+
+    ctx.putImageData(imageData, 0, 0)
     return canvas
 }
 
@@ -1139,29 +1264,69 @@ onUnmounted(() => {
 /* GIF生成按钮样式 */
 .gif-generator {
     padding: 0 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.resolution-toggle-group {
+    display: flex;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid rgba(108, 253, 255, 0.3);
+}
+
+.resolution-toggle-btn {
+    padding: 0.2rem 0.4rem;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.65rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 32px;
+}
+
+.resolution-toggle-btn:not(:last-child) {
+    border-right: 1px solid rgba(108, 253, 255, 0.2);
+}
+
+.resolution-toggle-btn:hover:not(:disabled):not(.active) {
+    background: rgba(108, 253, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.resolution-toggle-btn.active {
+    background: rgba(108, 253, 255, 0.25);
+    color: #6cfdff;
+}
+
+.resolution-toggle-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .gif-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0.5rem 1rem;
+    padding: 0.4rem 0.8rem;
     background: linear-gradient(135deg, rgba(108, 253, 255, 0.2), rgba(77, 171, 247, 0.2));
     border: 1px solid rgba(108, 253, 255, 0.4);
-    border-radius: 8px;
+    border-radius: 6px;
     color: #6cfdff;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
-    min-width: 80px;
+    min-width: 70px;
 }
 
 .gif-btn:hover:not(:disabled) {
     background: linear-gradient(135deg, rgba(108, 253, 255, 0.3), rgba(77, 171, 247, 0.3));
     border-color: rgba(108, 253, 255, 0.7);
-    box-shadow: 0 0 15px rgba(108, 253, 255, 0.3);
-    transform: translateY(-1px);
+    box-shadow: 0 0 10px rgba(108, 253, 255, 0.3);
 }
 
 .gif-btn:active:not(:disabled) {
