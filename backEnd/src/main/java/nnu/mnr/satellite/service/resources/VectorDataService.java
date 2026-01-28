@@ -17,6 +17,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -40,8 +41,8 @@ public class VectorDataService {
     private JdbcTemplate jdbcTemplate;
 
     public List<VectorInfoVO> getVectorByTimeAndRegion(VectorsFetchDTO vectorsFetchDTO) {
-        String startTime = vectorsFetchDTO.getStartTime();
-        String endTime = vectorsFetchDTO.getEndTime();
+        LocalDateTime startTime = vectorsFetchDTO.getStartTime();
+        LocalDateTime endTime = vectorsFetchDTO.getEndTime();
         Integer regionId = vectorsFetchDTO.getRegionId();
         Region region = regionDataService.getRegionById(regionId);
         String wkt = region.getBoundary().toText();
@@ -49,8 +50,8 @@ public class VectorDataService {
     }
 
     public List<VectorInfoVO>  getVectorByTimeAndLocation(VectorsLocationFetchDTO vectorsLocationFetchDTO){
-        String startTime = vectorsLocationFetchDTO.getStartTime();
-        String endTime = vectorsLocationFetchDTO.getEndTime();
+        LocalDateTime startTime = vectorsLocationFetchDTO.getStartTime();
+        LocalDateTime endTime = vectorsLocationFetchDTO.getEndTime();
         String locationId = vectorsLocationFetchDTO.getLocationId();
         Integer resolution = vectorsLocationFetchDTO.getResolution();
         Geometry boundary = locationService.getLocationBoundary(resolution, locationId);

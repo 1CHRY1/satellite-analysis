@@ -67,12 +67,14 @@ public class AdminProductService {
                     break;
                 case "resolution":
                     lambdaQueryWrapper.last(
-                            "ORDER BY IFNULL(CAST(SUBSTRING_INDEX(resolution, 'm', 1) AS FLOAT), 9999) " + (asc ? "ASC" : "DESC")
+                            "ORDER BY CAST(split_part(p.resolution, 'm', 1) AS FLOAT) "
+                                    + (asc ? "ASC NULLS LAST" : "DESC NULLS LAST")
                     );
                     break;
                 case "period":
                     lambdaQueryWrapper.last(
-                            "ORDER BY IFNULL(CAST(SUBSTRING_INDEX(period, 'd', 1) AS UNSIGNED), 9999) " + (asc ? "ASC" : "DESC")
+                            "ORDER BY CAST(split_part(p.period, 'd', 1) AS INTEGER) "
+                                    + (asc ? "ASC NULLS LAST" : "DESC NULLS LAST")
                     );
                     break;
                 default:

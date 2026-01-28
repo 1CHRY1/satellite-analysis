@@ -243,7 +243,7 @@ public class ModelExampleService {
         }
         System.out.println(noCloudUrl);
 
-        long expirationTime = 60 * 100;
+        long expirationTime = 60 * 60 * 24;
         return runModelServerModel(noCloudUrl, noCloudParam, expirationTime, caseJsonObj);
     }
 
@@ -423,8 +423,8 @@ public class ModelExampleService {
     // 构建无云一版图配置JSON
     private JSONObject buildNoCloudConfig(NoCloudTileDTO noCloudTileDTO) {
         String sensorName = noCloudTileDTO.getSensorName();
-        String startTime = noCloudTileDTO.getStartTime();
-        String endTime = noCloudTileDTO.getEndTime();
+        LocalDateTime startTime = noCloudTileDTO.getStartTime();
+        LocalDateTime endTime = noCloudTileDTO.getEndTime();
         List<Float> points = noCloudTileDTO.getPoints();
         String wkt = GeometryUtil.pointsConvertToPolygon(points).toText();
         JSONObject bandMapper = bandMapperGenerator.getSatelliteConfigBySensorName(sensorName);

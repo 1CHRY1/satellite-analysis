@@ -24,7 +24,7 @@ class BackEndApplicationTests {
         if (dataSource instanceof DynamicRoutingDataSource) {
             DynamicRoutingDataSource dynamicDataSource = (DynamicRoutingDataSource) dataSource;
             Map<String, DataSource> dataSources = dynamicDataSource.getDataSources();
-            DataSource itemDataSource = dataSources.get("mysql-ard-satellite");
+            DataSource itemDataSource = dataSources.get("pg-ard-satellite");
             System.out.println("ItemDataSource class: " + itemDataSource.getClass());
 
             // 反射获取 ItemDataSource 内部的真实 DataSource

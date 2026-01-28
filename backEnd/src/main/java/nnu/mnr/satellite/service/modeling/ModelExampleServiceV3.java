@@ -184,8 +184,8 @@ public class ModelExampleServiceV3 {
     public CommonResultVO createLowLevelScenesVisualizationConfig(VisualizationLowLevelTile visualizationLowLevelTile, Map<String, String> headers, Map<String, String> cookies) throws IOException {
         GridsAndGridsBoundary gridsAndGridsBoundary = regionDataService.getGridsByRegionAndResolution(100000, 150);
         String sensorName = visualizationLowLevelTile.getSensorName();
-        String startTime = visualizationLowLevelTile.getStartTime();
-        String endTime = visualizationLowLevelTile.getEndTime();
+        LocalDateTime startTime = visualizationLowLevelTile.getStartTime();
+        LocalDateTime endTime = visualizationLowLevelTile.getEndTime();
         Integer regionId = visualizationLowLevelTile.getRegionId();
         String locationId = visualizationLowLevelTile.getLocationId();
         Integer resolution = visualizationLowLevelTile.getResolution();

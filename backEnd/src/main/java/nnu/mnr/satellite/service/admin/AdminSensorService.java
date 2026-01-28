@@ -21,6 +21,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -63,10 +64,13 @@ public class AdminSensorService {
             switch (sortField) {
                 case "sensorName":
                     lambdaQueryWrapper.orderBy(true, asc, Sensor::getSensorName);
+                    break;
                 case "sensorId":
                     lambdaQueryWrapper.orderBy(true, asc, Sensor::getSensorId);
+                    break;
                 case "platformName":
                     lambdaQueryWrapper.orderBy(true, asc, Sensor::getPlatformName);
+                    break;
                 case "dataType":
                     lambdaQueryWrapper.orderBy(true, asc, Sensor::getDataType);
                     break;
@@ -79,18 +83,27 @@ public class AdminSensorService {
         List<Sensor> sensors = sensorPage.getRecords();
         List<String> sensorIds = sensors.stream().map(Sensor::getSensorId).toList();
 
-        QueryWrapper<Scene> sceneWrapper = new QueryWrapper<>();
-        sceneWrapper.in("sensor_id", sensorIds)
-                .groupBy("sensor_id")
-                .select("sensor_id", "COUNT(*) as sceneCount");
+        Map<String, Integer> countMap;
+        if (!sensorIds.isEmpty()) {
+            // sceneCount在sql中加双引号，防止自动转小写，保持可读性
+            QueryWrapper<Scene> sceneWrapper = new QueryWrapper<>();
+            sceneWrapper.in("sensor_id", sensorIds)
+                    .groupBy("sensor_id")
+                    .select("sensor_id", "COUNT(*) as \"sceneCount\"");
 
-        // 执行查询并转换为Map<sensorId, count>
-        List<Map<String, Object>> sceneCounts = sceneRepo.selectMaps(sceneWrapper);
-        Map<String, Integer> countMap = sceneCounts.stream()
-                .collect(Collectors.toMap(
-                        m -> (String) m.get("sensor_id"),
-                        m -> ((Number) m.get("sceneCount")).intValue()
-                ));
+            // 执行查询并转换为Map<sensorId, count>, 加个防炸机制
+            List<Map<String, Object>> sceneCounts = sceneRepo.selectMaps(sceneWrapper);
+            countMap = sceneCounts.stream()
+                    .collect(Collectors.toMap(
+                            m -> (String) m.get("sensor_id"),
+                            m -> {
+                                Number n = (Number) m.get("sceneCount");
+                                return n == null ? 0 : n.intValue();
+                            }
+                    ));
+        } else {
+            countMap = new HashMap<>();
+        }
 
         // 4. 将景的数量映射回传感器对象
         List<SensorInfoVO> sensorInfoVOs = sensors.stream().map(sensor -> {
