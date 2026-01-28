@@ -89,10 +89,10 @@ export const useFilter = () => {
             value: 'poi',
             label: 'POI',
         },
-        {
-            value: 'polygon',
-            label: '多边形',
-        },
+        // {
+        //     value: 'polygon',
+        //     label: '多边形',
+        // },
     ])
 
     // 用户选择空间筛选方法
@@ -375,20 +375,20 @@ export const useFilter = () => {
 
         // ------------------- Step2: 请求体准备操作 -------------------- //
         const regionFilter = {
-            startTime: selectedDateRange.value[0].format('YYYY-MM-DDTHH:mm:ss'),
-            endTime: selectedDateRange.value[1].format('YYYY-MM-DDTHH:mm:ss'),
+            startTime: selectedDateRange.value[0].format('YYYY-MM-DDT00:00:00'),
+            endTime: selectedDateRange.value[1].format('YYYY-MM-DDT00:00:00'),
             regionId: finalLandId.value,
             resolution: selectedGridResolution.value,
         }
         const poiFilter = {
-            startTime: selectedDateRange.value[0].format('YYYY-MM-DDTHH:mm:ss'),
-            endTime: selectedDateRange.value[1].format('YYYY-MM-DDTHH:mm:ss'),
+            startTime: selectedDateRange.value[0].format('YYYY-MM-DDT00:00:00'),
+            endTime: selectedDateRange.value[1].format('YYYY-MM-DDT00:00:00'),
             locationId: finalLandId.value,
             resolution: selectedGridResolution.value,
         }
         const polygonFilter = {
-            startTime: selectedDateRange.value[0].format('YYYY-MM-DDTHH:mm:ss'),
-            endTime: selectedDateRange.value[1].format('YYYY-MM-DDTHH:mm:ss'),
+            startTime: selectedDateRange.value[0].format('YYYY-MM-DDT00:00:00'),
+            endTime: selectedDateRange.value[1].format('YYYY-MM-DDT00:00:00'),
             polygonId: finalLandId.value,
             resolution: selectedGridResolution.value,
         }

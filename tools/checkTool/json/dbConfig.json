@@ -11,8 +11,11 @@
     "MYSQL_HOST": "223.2.34.8",
     "MYSQL_USER": "root",
     "MYSQL_PWD": "123456",
-    "MYSQL_TILE_PORT": 31036,
-    "MYSQL_TILE_DB": "tile",
     "MYSQL_RESOURCE_PORT": 31036,
-    "MYSQL_RESOURCE_DB": "test"
+    "MYSQL_RESOURCE_DB": "test",
+    "PG_HOST": "223.2.34.8",
+    "PG_USER": "postgres",
+    "PG_PWD": "123456",
+    "PG_RESOURCE_PORT": 31036,
+    "PG_RESOURCE_DB": "ard_satellite"
 }
