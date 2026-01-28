@@ -116,6 +116,7 @@ type MultiImageInfoType = {
     greenPath: string
     bluePath: string
     nodata: number
+    cloudPath?: string
 }
 
 const show = defineModel<boolean>()
@@ -131,6 +132,12 @@ const timelineTrack = ref<HTMLElement | null>(null)
 // GIF生成相关状态
 const isGeneratingGif = ref(false)
 const gifProgress = ref(0)
+
+// 支持去云的传感器
+const CLOUD_SUPPORT_SENSORS = [
+    'CB04_WPM', 'GF-1_PMS', 'GF-2_PMS', 'GF-6_PMS',
+    'GF-7_PMS', 'ZY-1_VNIC', 'ZY-3_MUX', 'MTFC_PMS'
+]
 
 const scrollToCenter = (index: number) => {
     if (!timelineTrack.value) return
@@ -330,6 +337,7 @@ const handleClick = async (index: number) => {
     // console.log(currentImage)
 
     if (visualMode.value === 'rgb') {
+        // 三层叠加？
         const img = currentImage as MultiImageInfoType
 
         let redPath, greenPath, bluePath
@@ -385,6 +393,13 @@ const handleClick = async (index: number) => {
         }
 
         console.log(min_r, max_r, min_g, max_g, min_b, max_b, mean_r, mean_g, mean_b, std_r, std_g, std_b)
+
+        // 默认启用去云功能（如果有云掩膜且传感器支持）
+        let cloudPath: string | undefined = undefined
+        if (img.cloudPath && CLOUD_SUPPORT_SENSORS.includes(img.sensorName)) {
+            cloudPath = img.cloudPath
+        }
+
         const url = getGridSceneUrl(grid.value, {
             redPath,
             greenPath,
@@ -393,12 +408,13 @@ const handleClick = async (index: number) => {
             r_max: max_r,
             g_min: min_g,
             g_max: max_g,
-            b_min: min_b,   
+            b_min: min_b,
             b_max: max_b,
             normalize_level: scaleRate.value,
             stretch_method: stretchMethod.value,
             nodata: img.nodata,
-            std_config: JSON.stringify({mean_r, mean_g, mean_b, std_r, std_g, std_b})
+            std_config: JSON.stringify({mean_r, mean_g, mean_b, std_r, std_g, std_b}),
+            cloudPath: cloudPath
         })
         GridExploreMapOps.map_addGridSceneLayer(
             grid.value,
@@ -527,14 +543,14 @@ const handleGenerateGif = async () => {
         const images = filteredImages.value
         const totalImages = images.length
         
-        // 创建GIF编码器，设置透明背景
+        // 创建GIF编码器
         const gif = new GIF({
             workers: 2,
             quality: 10,
             width: 512,
             height: 512,
             workerScript: '/gif.worker.js', // 需要确保这个文件存在于public目录
-            transparent: 0x000000 // 将黑色设为透明色
+            transparent: 0x000000, // 黑色作为透明色
         } as any)
 
         // 加载每张影像并添加到GIF
@@ -552,7 +568,8 @@ const handleGenerateGif = async () => {
                 const croppedCanvas = await loadAndCropImageForGif(imageUrl, bbox, 512)
                 
                 // 添加到GIF（每帧延迟500ms）
-                gif.addFrame(croppedCanvas, { delay: 500 })
+                // dispose: 2 表示每帧播放后恢复到背景（透明），避免帧叠加
+                gif.addFrame(croppedCanvas, { delay: 500, dispose: 2 })
                 
                 // 更新进度
                 gifProgress.value = Math.round(((i + 1) / totalImages) * 80)
@@ -771,14 +788,15 @@ const loadAndCropImageForGif = async (url: string, _bbox: number[], targetSize: 
     canvas.width = targetSize
     canvas.height = targetSize
     const ctx = canvas.getContext('2d')!
-    
-    // 缩放到目标尺寸（铺满画布）
+
+    // 先填充黑色背景（会被 GIF 识别为透明色）
+    // 配合 dispose: 2，每帧播放后会恢复到透明背景，避免帧叠加
+    ctx.fillStyle = '#000000'
+    ctx.fillRect(0, 0, targetSize, targetSize)
+
+    // 绘制影像，nodata 区域保持透明（PNG 的透明会覆盖黑色背景）
     ctx.drawImage(img, 0, 0, targetSize, targetSize)
-    
-    // 【修改】移除前端的透明度处理逻辑
-    // 后端 /gif 接口现在已经正确处理了 NoData 透明度，不需要前端 hack
-    // 这样可以保留深色植被和阴影
-    
+
     return canvas
 }
 

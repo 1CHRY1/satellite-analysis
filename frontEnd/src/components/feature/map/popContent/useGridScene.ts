@@ -104,9 +104,9 @@ export const useGridScene = () => {
             selectedBand.value = result[0]
         }
         if (result.length > 2) {
-            selectedBBand.value = result[2]
+            selectedBBand.value = result[0]
             selectedGBand.value = result[1]
-            selectedRBand.value = result[0]
+            selectedRBand.value = result[2]
         }
 
         return result
@@ -205,7 +205,10 @@ export const useGridScene = () => {
                     bluePath: bluePath,
                     nodata: sceneInfo.noData,
                     bandMapper: sceneInfo.bandMapper,
-                    images: sceneInfo.images
+                    images: sceneInfo.images,
+                    cloudPath: sceneInfo.cloudPath && sceneInfo.bucket
+                        ? `${sceneInfo.bucket}/${sceneInfo.cloudPath}`
+                        : undefined
                 })
             }
             
@@ -262,7 +265,10 @@ export const useGridScene = () => {
                     bluePath: bluePath,
                     nodata: scene.noData,
                     bandMapper: scene.bandMapper,
-                    images: scene.images
+                    images: scene.images,
+                    cloudPath: scene.cloudPath && scene.bucket
+                        ? `${scene.bucket}/${scene.cloudPath}`
+                        : undefined
                 })
             }
             bus.emit('cubeVisualize', rgbImageData, gridInfo, selectedStretchMethod.value, scaleRate.value, 'rgb')

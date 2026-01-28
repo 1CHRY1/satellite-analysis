@@ -18,6 +18,9 @@ import {
     getPOIPosition,
     getVectorsByRegionFilter,
     getVectorsByPOIFilter,
+    getGridByPolygonAndResolution,
+    addPolygonCache,
+    getVectorsByPolygonFilter,
 } from '@/api/http/satellite-data'
 import {
     // ------------------------ V3版本API ------------------------ //
@@ -25,6 +28,9 @@ import {
     getSceneStatsByPOIFilter,
     getThemeStatsByRegionFilter,
     getThemeStatsByPOIFilter,
+    getSceneStatsByPolygonFilter,
+    getThemeStatsByPolygonFilter,
+    getSceneCategoryCoverage,
 } from '@/api/http/interactive-explore/filter.api'
 import { useVisualize } from './useVisualize'
 import { ezStore } from '@/store'
@@ -33,6 +39,7 @@ import {
     activeSpatialFilterMethod,
     selectedRegion,
     selectedPOI,
+    selectedPolygon,
     finalLandId,
     selectedGridResolution,
     selectedDateRange,
@@ -45,6 +52,7 @@ import {
 import area from '@turf/area'
 import { feature } from '@turf/helpers'
 import { bbox, center } from '@turf/turf'
+import * as InteractiveExploreMapOps from '@/util/map/operation/interactive-explore'
 
 const exploreData = useExploreStore()
 
@@ -81,11 +89,27 @@ export const useFilter = () => {
             value: 'poi',
             label: 'POI',
         },
+        {
+            value: 'polygon',
+            label: '多边形',
+        },
     ])
 
     // 用户选择空间筛选方法
     const handleSelectTab = (value: SpatialFilterMethod) => {
+        console.log(isAutoGridResolutionOptChecked.value)
+        console.log(value)
         activeSpatialFilterMethod.value = value
+        if (isAutoGridResolutionOptChecked.value && value === 'poi') {
+            selectedGridResolution.value = 2
+        }
+        if (value === 'polygon') {
+            InteractiveExploreMapOps.bindDrawEvents(handleDrawComplete)
+            InteractiveExploreMapOps.draw_startPolygon()
+        } else {
+            // 退出绘制模式，清除临时的 draw
+            InteractiveExploreMapOps.draw_deleteAll()
+        }
     }
 
     /**
@@ -103,21 +127,23 @@ export const useFilter = () => {
             curRegionBounds.value = boundaryRes
 
             // 使用 Turf 计算面积转换为平方千米 (km²) ---
-            const areaSqMeters = area(curRegionBounds.value as any)
-            const areaSqKm = areaSqMeters / 1_000_000
-            // 计算理想分辨率 ---
-            const targetGridCount = 20
-            const idealResolution = Math.sqrt(areaSqKm / targetGridCount)
-
-            // 在 gridOptions 中匹配最接近的值 ---
-            const closestOption = gridOptions.reduce((prev, curr) => {
-                return Math.abs(curr - idealResolution) < Math.abs(prev - idealResolution)
-                    ? curr
-                    : prev
-            })
-
+            const closestOption = calcGridResolution(curRegionBounds.value)
             selectedGridResolution.value = closestOption
         }
+    }
+    const calcGridResolution = (feature: any) => {
+        // 使用 Turf 计算面积转换为平方千米 (km²) ---
+        const areaSqMeters = area(feature)
+        const areaSqKm = areaSqMeters / 1_000_000
+        // 计算理想分辨率 ---
+        const targetGridCount = 20
+        const idealResolution = Math.sqrt(areaSqKm / targetGridCount)
+
+        // 在 gridOptions 中匹配最接近的值 ---
+        const closestOption = gridOptions.reduce((prev, curr) => {
+            return Math.abs(curr - idealResolution) < Math.abs(prev - idealResolution) ? curr : prev
+        })
+        return closestOption
     }
 
     /**
@@ -145,6 +171,9 @@ export const useFilter = () => {
         if (activeSpatialFilterMethod.value === 'poi') {
             if (!selectedPOI.value) return 'None'
             return selectedPOI.value?.id
+        } else if (activeSpatialFilterMethod.value === 'polygon') {
+            if (!selectedPolygon.value) return 'None'
+            return selectedPolygon.value?.id
         }
         let info = selectedRegion.value
         if (info.area) return `${info.area}`
@@ -152,6 +181,31 @@ export const useFilter = () => {
         if (info.province) return `${info.province}`
         return '100000' // 默认中国
     })
+
+    /**
+     * 1.5 Polygon捕获
+     */
+    // 处理绘制完成的数据
+    const handleDrawComplete = (feature: GeoJSON.Feature) => {
+        // 记录、往后端添加、计算合适的格网分辨率
+        InteractiveExploreMapOps.draw_deleteAll()
+        addPolygonLayer(feature)
+        selectedPolygon.value = {
+            id: crypto.randomUUID(),
+            feature,
+        }
+        addPolygonCache(selectedPolygon.value)
+        selectedGridResolution.value = calcGridResolution(feature)
+    }
+
+    const handleResetPolygon = () => {
+        // 删除检索区图层、编辑图层、绑定事件、开始画图
+        selectedPolygon.value = undefined
+        destroyUniqueLayer()
+        InteractiveExploreMapOps.draw_deleteAll()
+        InteractiveExploreMapOps.bindDrawEvents(handleDrawComplete)
+        InteractiveExploreMapOps.draw_startPolygon()
+    }
 
     /**
      * 数据检索变量 - 2.格网分辨率
@@ -257,6 +311,17 @@ export const useFilter = () => {
                 }
 
                 if (selectedPOI.value) addPOIMarker(selectedPOI.value)
+            } else if (activeSpatialFilterMethod.value === 'polygon') {
+                // Polygon 不需要再绘制检索区的图层
+                gridRes = await getGridByPolygonAndResolution(
+                    tempLandId.value,
+                    selectedGridResolution.value,
+                )
+                allGrids.value = gridRes.grids
+                allGridCount.value = gridRes.grids.length
+                curGridsBoundary.value = gridRes.geoJson
+                window.bounds = bbox(curGridsBoundary.value)
+                window.center = center(curGridsBoundary.value)
             }
 
             addGridLayer(gridRes.grids, window)
@@ -310,32 +375,57 @@ export const useFilter = () => {
 
         // ------------------- Step2: 请求体准备操作 -------------------- //
         const regionFilter = {
-            startTime: selectedDateRange.value[0].format('YYYY-MM-DD'),
-            endTime: selectedDateRange.value[1].format('YYYY-MM-DD'),
+            startTime: selectedDateRange.value[0].format('YYYY-MM-DDTHH:mm:ss'),
+            endTime: selectedDateRange.value[1].format('YYYY-MM-DDTHH:mm:ss'),
             regionId: finalLandId.value,
             resolution: selectedGridResolution.value,
         }
         const poiFilter = {
-            startTime: selectedDateRange.value[0].format('YYYY-MM-DD'),
-            endTime: selectedDateRange.value[1].format('YYYY-MM-DD'),
+            startTime: selectedDateRange.value[0].format('YYYY-MM-DDTHH:mm:ss'),
+            endTime: selectedDateRange.value[1].format('YYYY-MM-DDTHH:mm:ss'),
             locationId: finalLandId.value,
+            resolution: selectedGridResolution.value,
+        }
+        const polygonFilter = {
+            startTime: selectedDateRange.value[0].format('YYYY-MM-DDTHH:mm:ss'),
+            endTime: selectedDateRange.value[1].format('YYYY-MM-DDTHH:mm:ss'),
+            polygonId: finalLandId.value,
             resolution: selectedGridResolution.value,
         }
 
         // ------------------- Step3: 检索请求操作 -------------------- //
         let sceneStatsRes, vectorsRes, themeStatsRes
         if (searchedSpatialFilterMethod.value === 'region') {
-            sceneStatsRes = await getSceneStatsByRegionFilter(regionFilter)
-            vectorsRes = await getVectorsByRegionFilter(regionFilter)
-            themeStatsRes = await getThemeStatsByRegionFilter(regionFilter)
+            ;[sceneStatsRes, vectorsRes, themeStatsRes] = await Promise.all([
+                getSceneStatsByRegionFilter(regionFilter),
+                getVectorsByRegionFilter(regionFilter),
+                getThemeStatsByRegionFilter(regionFilter),
+            ])
         } else if (searchedSpatialFilterMethod.value === 'poi') {
-            sceneStatsRes = await getSceneStatsByPOIFilter(poiFilter)
-            vectorsRes = await getVectorsByPOIFilter(poiFilter)
-            themeStatsRes = await getThemeStatsByPOIFilter(poiFilter)
+            ;[sceneStatsRes, vectorsRes, themeStatsRes] = await Promise.all([
+                getSceneStatsByPOIFilter(poiFilter),
+                getVectorsByPOIFilter(poiFilter),
+                getThemeStatsByPOIFilter(poiFilter),
+            ])
+        } else if (searchedSpatialFilterMethod.value === 'polygon') {
+            ;[sceneStatsRes, vectorsRes, themeStatsRes] = await Promise.all([
+                getSceneStatsByPolygonFilter(polygonFilter),
+                getVectorsByPolygonFilter(polygonFilter),
+                getThemeStatsByPolygonFilter(polygonFilter),
+            ])
         }
         sceneStats.value = sceneStatsRes
         vectorStats.value = vectorsRes
         themeStats.value = themeStatsRes
+        // // 覆盖率计算接口已经解耦，现在置空coverage
+        // sceneStats.value.coverage = ''
+        // if (sceneStats.value?.dataset) {
+        //     Object.values(sceneStats.value.dataset).forEach((item) => {
+        //         if (item) {
+        //             item.coverage = ''
+        //         }
+        //     })
+        // }
 
         // ------------------- Step4: 用户反馈操作 -------------------- //
         if (
@@ -355,12 +445,33 @@ export const useFilter = () => {
         // 恢复状态
         filterLoading.value = false
         isFilterDone.value = true
+        showResultModal()
+
         // 懒加载：矢量属性
         try {
             await getVectorSymbology()
         } catch (e) {
             console.error('获取矢量属性类型失败:', e)
         }
+        // ------------------- Step6: 请求覆盖率 -------------------- //
+        // TODO getSceneCategoryCoverage计算总覆盖率和各个分辨率的覆盖率
+        // const dataset = sceneStats.value.dataset
+        // const categories = sceneStats.value.category
+        // if (!dataset || !categories) return
+        // const mainReq = getSceneCategoryCoverage()
+        // const subReqs = categories.map((category) => getSceneCategoryCoverage(category))
+
+        // try {
+        //     const [mainRes, ...subResults] = await Promise.all([mainReq, ...subReqs])
+        //     sceneStats.value.coverage = mainRes.data
+        //     categories.forEach((category, index) => {
+        //         if (dataset[category]) {
+        //             dataset[category].coverage = subResults[index].data
+        //         }
+        //     })
+        // } catch (error) {
+        //     console.error('获取覆盖率失败', error)
+        // }
     }
 
     /**
@@ -398,6 +509,28 @@ export const useFilter = () => {
         })
     }
 
+    /**
+     * 结果显示面板
+     */
+    const isResultModalOpen = ref(false)
+    const activeResultTab = ref('rs')
+    const vectorColumns = [
+        { title: '数据名称', dataIndex: 'vectorName', key: 'vectorName' },
+        { title: '时间', key: 'time' },
+        { title: '属性', key: 'fields', align: 'center' },
+    ]
+    const showResultModal = () => {
+        if (!isFilterDone.value) {
+            return
+        }
+        isResultModalOpen.value = true
+
+        // 简单的自动定位 Tab 逻辑
+        if (sceneStats.value?.total > 0) activeResultTab.value = 'rs'
+        else if (vectorStats.value?.length > 0) activeResultTab.value = 'vector'
+        else if (themeStats.value?.total > 0) activeResultTab.value = 'theme'
+    }
+
     return {
         gridOptions,
         allGrids,
@@ -413,5 +546,10 @@ export const useFilter = () => {
         dateRangePresets,
         isAutoGridResolutionOptChecked,
         getAutoGridResolutionByRegionBoundary,
+        handleResetPolygon,
+        isResultModalOpen,
+        activeResultTab,
+        vectorColumns,
+        showResultModal,
     }
 }

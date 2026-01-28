@@ -1,6 +1,6 @@
 import type { RegionValues } from 'v-region'
 
-export type SpatialFilterMethod = 'region' | 'poi' | 'None'
+export type SpatialFilterMethod = 'region' | 'poi' | 'polygon' | 'None'
 export type ProductType =
     | 'dem'
     | 'dsm'
@@ -39,6 +39,11 @@ export type POIInfo = {
     pname: string
     cityname: string
     adname: string
+}
+
+export type PolygonInfo = {
+    feature: any,
+    id: string
 }
 
 export type FilterConfig = {

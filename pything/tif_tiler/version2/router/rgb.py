@@ -205,6 +205,7 @@ def rgb_box_tile(
     # normalize_level: float = Query(0, ge=0.1, le=10, description="gamma")
     normalize_level: float = Query(0, description="level of stretching"),
     std_config: str = Query("{}", description="标准差配置JSON字符串，例如: {\"mean_r\":120.5,\"std_r\":15.3,...}"),
+    cloud_mask_url: str = Query(None, description="云掩膜URL，像素0=有云，1=无云"),
 ):
     try: 
         try:
@@ -257,6 +258,21 @@ def rgb_box_tile(
                     (lat >= bbox_miny) & (lat <= bbox_maxy)
 
         final_mask = np.logical_and(mask == 255, bbox_mask)
+
+        # Step 4.5: 处理云掩膜
+        if cloud_mask_url:
+            try:
+                with COGReader(cloud_mask_url) as cog_cloud:
+                    if cog_cloud.tile_exists(x, y, z):
+                        cloud_tile, _ = cog_cloud.tile(x, y, z)
+                        cloud_mask_2d = cloud_tile.squeeze()
+                        # 云掩膜: 0=有云(masked), 1=无云(visible)
+                        cloud_free_mask = cloud_mask_2d == 1
+                        final_mask = np.logical_and(final_mask, cloud_free_mask)
+            except Exception as cloud_err:
+                print(f"Cloud mask error: {cloud_err}")
+                # 失败时继续使用原始mask
+
         final_mask_uint8 = final_mask.astype("uint8") * 255
 
         match stretch_method:
