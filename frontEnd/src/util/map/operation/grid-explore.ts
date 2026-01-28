@@ -172,8 +172,8 @@ export function map_addGridSceneLayer(gridInfo: GridData, url: string) {
             }
         }
 
-        // 如果当前格网的图层数量超过3个，从最早的开始删
-        while (layersInThisGrid.length > 3) {
+        // 如果当前格网的图层数量超过2个，从最早的开始删
+        while (layersInThisGrid.length > 2) {
             // shift() 取出数组第一个元素，也就是最旧的那个 key
             const oldestKey = layersInThisGrid.shift()
 

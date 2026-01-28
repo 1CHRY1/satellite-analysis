@@ -195,16 +195,16 @@ export const useVisualize = () => {
         let body: any = {}
         if (searchedSpatialFilterMethod.value === 'region') {
             body = {
-                startTime: selectedDateRange.value[0].format('YYYY-MM-DDTHH:mm:ss'),
-                endTime: selectedDateRange.value[1].format('YYYY-MM-DDTHH:mm:ss'),
+                startTime: selectedDateRange.value[0].format('YYYY-MM-DDT00:00:00'),
+                endTime: selectedDateRange.value[1].format('YYYY-MM-DDT00:00:00'),
                 sensorName,
                 regionId: finalLandId.value,
                 // resolution: selectedGridResolution.value,
             }
         } else if (searchedSpatialFilterMethod.value === 'poi') {
             body = {
-                startTime: selectedDateRange.value[0].format('YYYY-MM-DDTHH:mm:ss'),
-                endTime: selectedDateRange.value[1].format('YYYY-MM-DDTHH:mm:ss'),
+                startTime: selectedDateRange.value[0].format('YYYY-MM-DDT00:00:00'),
+                endTime: selectedDateRange.value[1].format('YYYY-MM-DDT00:00:00'),
                 sensorName,
                 locationId: finalLandId.value,
                 resolution: selectedGridResolution.value,
