@@ -109,8 +109,9 @@ def get_gif_frame(
 
         rgb = np.stack([r, g, b])
 
-        # Render with original mask (0=nodata, 255=data)
-        # Critical: We do NOT force black pixels to be transparent here.
+        # Render with original mask (0=nodata, 255=valid data)
+        # The mask creates proper alpha channel in PNG output
+        # Frontend will handle converting transparent pixels to GIF transparent color
         content = render(rgb, mask=mask, img_format="png", **img_profiles.get("png"))
         return Response(content=content, media_type="image/png")
 

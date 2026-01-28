@@ -542,6 +542,7 @@ const handleClick = async (index: number) => {
 
 /**
  * 生成GIF动画
+ * 使用 gifenc 库实现精确的透明色控制，避免颜色量化导致的透明误判
  */
 const handleGenerateGif = async () => {
     if (filteredImages.value.length < 2) {
@@ -553,55 +554,42 @@ const handleGenerateGif = async () => {
     gifProgress.value = 0
 
     try {
-        // 动态导入gif.js
-        const GIF = (await import('gif.js')).default
-        
+        const { GIFEncoder, quantize, applyPalette } = await import('gifenc')
+
         const images = filteredImages.value
         const totalImages = images.length
-        
-        // 创建GIF编码器，使用用户选择的分辨率
         const resolution = gifResolution.value
-        const gif = new GIF({
-            workers: 2,
-            quality: 10,
-            width: resolution,
-            height: resolution,
-            workerScript: '/gif.worker.js', // 需要确保这个文件存在于public目录
-            transparent: 0x000000, // 黑色作为透明色
-        } as any)
+
+        // 创建 GIF 编码器
+        const gif = GIFEncoder()
 
         // 并行加载所有帧
         const bbox = grid2bbox(grid.value.columnId, grid.value.rowId, grid.value.resolution)
         let loadedCount = 0
 
-        // 创建加载任务，保持索引以便后续排序
         const loadTasks = images.map(async (img, index) => {
             try {
                 const imageUrl = await getImageUrlForGif(img as MultiImageInfoType)
-                const canvas = await loadAndCropImageForGif(imageUrl, bbox, resolution)
+                const { rgba, transparentPixels } = await loadImageDataForGif(imageUrl, resolution)
 
-                // 更新进度
                 loadedCount++
-                gifProgress.value = Math.round((loadedCount / totalImages) * 80)
+                gifProgress.value = Math.round((loadedCount / totalImages) * 60)
 
-                return { index, canvas, success: true }
+                return { index, rgba, transparentPixels, success: true }
             } catch (err) {
                 console.warn(`跳过第${index + 1}张影像:`, err)
                 loadedCount++
-                gifProgress.value = Math.round((loadedCount / totalImages) * 80)
-                return { index, canvas: null, success: false }
+                gifProgress.value = Math.round((loadedCount / totalImages) * 60)
+                return { index, rgba: null, transparentPixels: null, success: false }
             }
         })
 
-        // 并行等待所有帧加载完成
         const results = await Promise.all(loadTasks)
 
-        // 按原始顺序（时间顺序）添加到 GIF
         const successfulFrames = results
-            .filter(r => r.success && r.canvas)
+            .filter(r => r.success && r.rgba)
             .sort((a, b) => a.index - b.index)
 
-        // 检查是否有成功加载的帧
         if (successfulFrames.length === 0) {
             message.error('所有影像加载失败，无法生成GIF')
             isGeneratingGif.value = false
@@ -616,43 +604,104 @@ const handleGenerateGif = async () => {
             return
         }
 
-        successfulFrames.forEach(r => {
-            gif.addFrame(r.canvas!, { delay: 500, dispose: 2 })
+        // 透明色索引（调色板的最后一个位置）
+        const TRANSPARENT_INDEX = 255
+
+        // 处理每一帧
+        successfulFrames.forEach((frame, i) => {
+            const { rgba, transparentPixels } = frame
+
+            // 量化颜色到 255 色（保留 1 个位置给透明色）
+            // 不指定 format，使用默认的 8 位精度 (RGB888 = 16,777,216 色空间)
+            // format 选项会降低精度：rgb565 (65K色)、rgb444 (4K色)
+            const palette = quantize(rgba!, 255)
+
+            // 添加透明色到调色板末尾
+            palette.push([255, 0, 255])
+
+            // 将 RGBA 数据转换为调色板索引（使用默认的最高精度）
+            const indexedPixels = applyPalette(rgba!, palette)
+
+            // 将透明像素的索引设为专用的透明索引
+            for (const pixelIdx of transparentPixels!) {
+                indexedPixels[pixelIdx] = TRANSPARENT_INDEX
+            }
+
+            // 写入帧，精确指定透明索引（不是颜色匹配！）
+            gif.writeFrame(indexedPixels, resolution, resolution, {
+                palette,
+                transparent: true,
+                transparentIndex: TRANSPARENT_INDEX,
+                delay: 500,
+                dispose: 2,  // 恢复到背景
+            })
+
+            gifProgress.value = 60 + Math.round(((i + 1) / successfulFrames.length) * 35)
         })
 
-        // 监听GIF渲染错误 (gif.js 支持 error 事件，但类型定义中未声明)
-        ;(gif as any).on('error', (err: Error) => {
-            console.error('GIF渲染失败:', err)
-            message.error('GIF渲染失败，请重试')
-            isGeneratingGif.value = false
-            gifProgress.value = 0
-        })
+        // 完成编码
+        gif.finish()
 
-        // 监听GIF渲染进度
-        gif.on('progress', (p: number) => {
-            gifProgress.value = 80 + Math.round(p * 20)
-        })
+        // 获取 GIF 数据并创建 Blob
+        const gifData = gif.bytes()
+        const blob = new Blob([gifData], { type: 'image/gif' })
+        const gifBlobUrl = URL.createObjectURL(blob)
 
-        // 渲染完成后在地图上显示GIF
-        gif.on('finished', (blob: Blob) => {
-            // 创建Blob URL用于显示
-            const gifBlobUrl = URL.createObjectURL(blob)
-            
-            // 在地图格网上显示GIF动画
-            GridExploreMapOps.map_addGridGifLayer(grid.value, gifBlobUrl)
+        // 在地图格网上显示GIF动画
+        GridExploreMapOps.map_addGridGifLayer(grid.value, gifBlobUrl)
 
-            isGeneratingGif.value = false
-            gifProgress.value = 0
-            message.success('GIF生成成功！已在格网中显示')
-        })
+        isGeneratingGif.value = false
+        gifProgress.value = 0
+        message.success('GIF生成成功！已在格网中显示')
 
-        gif.render()
     } catch (error) {
         console.error('GIF生成失败:', error)
         message.error('GIF生成失败，请重试')
         isGeneratingGif.value = false
         gifProgress.value = 0
     }
+}
+
+/**
+ * 加载图片并返回 RGBA 数据及透明像素位置
+ * 这个函数将透明像素的位置记录下来，而不是修改其颜色
+ */
+const loadImageDataForGif = async (url: string, targetSize: number): Promise<{
+    rgba: Uint8ClampedArray,
+    transparentPixels: number[]
+}> => {
+    const img = await loadImage(url)
+
+    const canvas = document.createElement('canvas')
+    canvas.width = targetSize
+    canvas.height = targetSize
+    const ctx = canvas.getContext('2d')!
+
+    // 绘制影像
+    ctx.drawImage(img, 0, 0, targetSize, targetSize)
+
+    // 获取像素数据
+    const imageData = ctx.getImageData(0, 0, targetSize, targetSize)
+    const data = imageData.data
+
+    // 记录透明像素的索引位置
+    const transparentPixels: number[] = []
+
+    for (let i = 0; i < data.length; i += 4) {
+        const pixelIndex = i / 4  // 像素在索引图像中的位置
+
+        if (data[i + 3] < 128) {
+            // 透明像素：记录位置，设置为不透明（避免量化时出问题）
+            transparentPixels.push(pixelIndex)
+            // 设置一个不会影响量化的颜色（黑色）
+            data[i] = 0
+            data[i + 1] = 0
+            data[i + 2] = 0
+            data[i + 3] = 255
+        }
+    }
+
+    return { rgba: data, transparentPixels }
 }
 
 /**
@@ -831,24 +880,48 @@ const loadImage = (url: string): Promise<HTMLImageElement> => {
 
 /**
  * 加载瓦片图片并缩放到目标尺寸
+ * 使用双重保护策略确保 GIF 透明正确：
+ * 1. nodata 像素（alpha=0）设为品红色
+ * 2. 有效像素如果接近品红，稍微调整避免被误判为透明
  */
 const loadAndCropImageForGif = async (url: string, _bbox: number[], targetSize: number = 512): Promise<HTMLCanvasElement> => {
-    // 加载原始瓦片图片
     const img = await loadImage(url)
-    // 创建目标Canvas
+
     const canvas = document.createElement('canvas')
     canvas.width = targetSize
     canvas.height = targetSize
     const ctx = canvas.getContext('2d')!
 
-    // 先填充黑色背景（会被 GIF 识别为透明色）
-    // 配合 dispose: 2，每帧播放后会恢复到透明背景，避免帧叠加
-    ctx.fillStyle = '#000000'
-    ctx.fillRect(0, 0, targetSize, targetSize)
-
-    // 绘制影像，nodata 区域保持透明（PNG 的透明会覆盖黑色背景）
+    // 绘制影像到 canvas
     ctx.drawImage(img, 0, 0, targetSize, targetSize)
 
+    // 读取像素数据进行处理
+    const imageData = ctx.getImageData(0, 0, targetSize, targetSize)
+    const data = imageData.data
+
+    for (let i = 0; i < data.length; i += 4) {
+        const r = data[i]
+        const g = data[i + 1]
+        const b = data[i + 2]
+        const a = data[i + 3]
+
+        if (a < 128) {
+            // nodata 像素：设为纯品红作为透明标记
+            data[i] = 255      // R
+            data[i + 1] = 0    // G
+            data[i + 2] = 255  // B
+            data[i + 3] = 255  // A
+        } else {
+            // 有效像素：如果颜色接近品红，稍微调整 G 分量
+            // 避免在 gif.js 量化时被错误地映射到透明色
+            // 品红是 (255, 0, 255)，我们检查是否接近这个值
+            if (r > 240 && g < 30 && b > 240) {
+                data[i + 1] = 50  // 将 G 分量提高到 30，远离纯品红
+            }
+        }
+    }
+
+    ctx.putImageData(imageData, 0, 0)
     return canvas
 }
 
