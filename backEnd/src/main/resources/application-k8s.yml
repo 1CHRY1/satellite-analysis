@@ -49,6 +49,29 @@ spring:
             stat:
               slow-sql-millis: 5000
               log-slow-sql: true
+              merge-sql: false
+        pg-satellite:
+          url: jdbc:postgresql://${pg.host}:${pg.port}/satellite
+          username: ${pg.username}
+          password: ${pg.password}
+          driver-class-name: org.postgresql.Driver
+          #          type: com.zaxxer.hikari.HikariDataSource
+          type: com.alibaba.druid.pool.DruidDataSource
+          druid:
+            initial-size: 5
+            max-active: 20
+            min-idle: 5
+            max-wait: 60000
+            validation-query: SELECT 1
+            socket-timeout: 1200000  # 20分钟
+            filters: stat
+            wall:
+              table-check: true
+              drop-table-allow: false
+              alter-table-allow: false
+            stat:
+              slow-sql-millis: 300000
+              log-slow-sql: true
               merge-sql: true
         mysql-ard-iam:
           url: jdbc:mysql://${mysql.host}:${mysql.port}/ard_iam
@@ -70,7 +93,7 @@ spring:
               drop-table-allow: false
               alter-table-allow: false
             stat:
-              slow-sql-millis: 200
+              slow-sql-millis: 2000
               log-slow-sql: true
               merge-sql: true
         mysql-ard-dev:
@@ -93,29 +116,7 @@ spring:
               drop-table-allow: false
               alter-table-allow: false
             stat:
-              slow-sql-millis: 200
-              log-slow-sql: true
-              merge-sql: true
-        pg-satellite:
-          url: jdbc:postgresql://${pg.host}:${pg.port}/satellite
-          username: ${pg.username}
-          password: ${pg.password}
-          driver-class-name: org.postgresql.Driver
-          type: com.alibaba.druid.pool.DruidDataSource
-          druid:
-            initial-size: 5
-            max-active: 20
-            min-idle: 5
-            max-wait: 60000
-            socket-timeout: 1200000
-            validation-query: SELECT 1
-            filters: stat
-            wall:
-              table-check: true
-              drop-table-allow: false
-              alter-table-allow: false
-            stat:
-              slow-sql-millis: 300000
+              slow-sql-millis: 2000
               log-slow-sql: true
               merge-sql: true
     # 全局 Druid 监控配置（对所有数据源生效）
