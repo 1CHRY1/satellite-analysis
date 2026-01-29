@@ -30,6 +30,8 @@ public class SceneDesVO {
     private String sceneId;
     private String sceneName;
     private LocalDateTime sceneTime;
+    private String sensorId;
+    private String productId;
     private Integer tileLevelNum;
     private HashSet<String> tileLevels;
     private String coordinateSystem;
