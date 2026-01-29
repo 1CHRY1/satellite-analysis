@@ -4,6 +4,7 @@ import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.model.dto.resources.ScenesFetchDTOV3;
 import nnu.mnr.satellite.model.dto.resources.ScenesLocationFetchDTOV3;
+import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.model.vo.resources.CoverageReportVO;
 import nnu.mnr.satellite.model.vo.resources.CoverageReportWithCacheKeyVO;
 import nnu.mnr.satellite.service.resources.SceneDataServiceV3;
@@ -66,6 +67,22 @@ public class SceneControllerV3 {
         cookie.setMaxAge(-1); // 默认，浏览器关闭后自动删除
         response.addCookie(cookie);
         return ResponseEntity.ok(result.getReport());
+    }
+
+    @GetMapping("/coverage")
+    public  ResponseEntity<CommonResultVO> getCoverageByCategory(@RequestParam(value = "category", required = false) String category,
+                                                                 @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+                                                                 @CookieValue(value = "encrypted_request_body", required = false) String encryptedRequestBody){
+        // 拼凑cacheKey
+        String userId;
+        try {
+            userId = IdUtil.parseUserIdFromAuthHeader(authorizationHeader);
+        } catch (JwtException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+
+        String cacheKey = userId + "_" + encryptedRequestBody;
+        return ResponseEntity.ok(sceneDataService.getCoverageByCategory(category, cacheKey));
     }
 
 
