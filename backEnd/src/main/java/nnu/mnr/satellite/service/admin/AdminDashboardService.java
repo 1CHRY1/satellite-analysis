@@ -56,109 +56,167 @@ public class AdminDashboardService {
     @Autowired
     private MinioUtil minioUtil;
 
-    public CommonResultVO getStats() throws IOException, NoSuchAlgorithmException, InvalidKeyException {
+    public CommonResultVO getStats() { // 注意：建议去掉 throws，在内部消化异常
         StatsReportVO statsReportVO = new StatsReportVO();
-        // overall
-        Long sceneCount = sceneRepo.selectCount(null);
-        Long caseCount = caseRepo.selectCount(null);
-        Long userCount = userRepo.selectCount(null);
-        StatsReportVO.OverallVO overallVO = StatsReportVO.OverallVO.builder()
-                .data(sceneCount)
-                .task(caseCount)
-                .user(userCount)
-                .build();
-        statsReportVO.setOverall(overallVO);
-        // data
-        List<SceneSimpleInfoVO> allScenes = sceneRepo.getAllScenes();
-        List<SceneSimpleInfoVO> scenes = new ArrayList<>();
-        List<SceneSimpleInfoVO> themes = new ArrayList<>();
-        for (SceneSimpleInfoVO scene : allScenes) {
-            String sceneDataType = scene.getDataType();
-            if ("satellite".equals(sceneDataType)) {
-                scenes.add(scene);
-            } else if (SceneTypeByTheme.getAllCodes().contains(sceneDataType)) {
-                themes.add(scene);
-            }
-        }
-        // data.satellite
-        List<StatsReportVO.DataVO.Info> satelliteList = new ArrayList<>();
-        for (SceneTypeByResolution type: SceneTypeByResolution.values()) {
-            StatsReportVO.DataVO.Info info = new StatsReportVO.DataVO.Info();
-            info.setKey(type.name());
-            info.setLabel(type.getLabel());
-            List<SceneSimpleInfoVO> filteredScenes = scenes.stream()
-                    .filter(scene -> isSceneMatchResolutionType(scene, type))
-                    .toList();
-            info.setValue((long) filteredScenes.size());
-            satelliteList.add(info);
-        }
-        // data.theme
-        List<StatsReportVO.DataVO.Info> themeList = new ArrayList<>();
-        for (SceneTypeByTheme type: SceneTypeByTheme.values()) {
-            StatsReportVO.DataVO.Info info = new StatsReportVO.DataVO.Info();
-            info.setKey(type.getCode());
-            info.setLabel(type.getLabel());
-            List<SceneSimpleInfoVO> filteredThemes = themes.stream()
-                    .filter(theme -> type.getCode().equalsIgnoreCase(theme.getDataType()))
-                    .toList();
-            info.setValue((long) filteredThemes.size());
-            themeList.add(info);
-        }
-        // data.vector
-        List<StatsReportVO.DataVO.Info> vectorList = new ArrayList<>();
-        List<Vector> vectors = vectorRepo.selectList(null);
-        for (Vector vector : vectors) {
-            StatsReportVO.DataVO.Info info = new StatsReportVO.DataVO.Info();
-            info.setKey(vector.getTableName());
-            info.setLabel(vector.getVectorName());
-            info.setValue((long) vector.getCount());
-            vectorList.add(info);
-        }
-        StatsReportVO.DataVO dataVO = StatsReportVO.DataVO.builder()
-                .satelliteList(satelliteList)
-                .themeList(themeList)
-                .vectorList(vectorList)
-                .build();
-        statsReportVO.setData(dataVO);
-        // task
-        QueryWrapper<Case> queryWrapperComplete = new QueryWrapper<Case>();
-        queryWrapperComplete.eq("status", "COMPLETE");
-        Long caseCountComplete = caseRepo.selectCount(queryWrapperComplete);
-        QueryWrapper<Case> queryWrapperError = new QueryWrapper<Case>();
-        queryWrapperError.eq("status", "ERROR");
-        Long caseCountError = caseRepo.selectCount(queryWrapperError);
-        QueryWrapper<Case> queryWrapperRunning = new QueryWrapper<Case>();
-        queryWrapperRunning.eq("status", "RUNNING");
-        Long caseCountRunning = caseRepo.selectCount(queryWrapperRunning);
-        StatsReportVO.TaskVO taskVO = StatsReportVO.TaskVO.builder()
-                .total(caseCount)
-                .completed(caseCountComplete)
-                .error(caseCountError)
-                .running(caseCountRunning)
-                .build();
-        statsReportVO.setTask(taskVO);
-        // storage
-        JSONObject serverStorageInfo = minioUtil.getServerStorageInfo();
-        List<JSONObject> bucketsInfoObj = minioUtil.getBucketsInfo();
-        List<StatsReportVO.StorageVO.BucketInfo> bucketsInfo = new ArrayList<>();
-        bucketsInfoObj.forEach(bucketInfoObj -> {
-            StatsReportVO.StorageVO.BucketInfo bucketInfo = StatsReportVO.StorageVO.BucketInfo.builder()
-                    .bucketName(bucketInfoObj.getString("bucketName"))
-                    .bucketUsedSize(bucketInfoObj.getLong("bucketUsedSize"))
-                    .objectsCount(bucketInfoObj.getLong("objectsCount"))
+
+        // 1. 获取 Overall 数据 (数据库操作，通常较稳定)
+        try {
+            Long sceneCount = sceneRepo.selectCount(null);
+            Long caseCount = caseRepo.selectCount(null);
+            Long userCount = userRepo.selectCount(null);
+            StatsReportVO.OverallVO overallVO = StatsReportVO.OverallVO.builder()
+                    .data(sceneCount)
+                    .task(caseCount)
+                    .user(userCount)
                     .build();
-            bucketsInfo.add(bucketInfo);
-        });
-        StatsReportVO.StorageVO storageVO = StatsReportVO.StorageVO.builder()
-                .totalSpace(serverStorageInfo.getBigDecimal("totalSpace"))
-                .availSpace(serverStorageInfo.getBigDecimal("availSpace"))
-                .usedSpace(serverStorageInfo.getBigDecimal("usedSpace"))
-                .bucketsInfo(bucketsInfo)
-                .build();
-        statsReportVO.setStorage(storageVO);
+            statsReportVO.setOverall(overallVO);
+        } catch (Exception e) {
+            log.error("获取总体统计失败", e);
+            statsReportVO.setOverall(StatsReportVO.OverallVO.builder().build()); // 失败给空对象
+        }
+
+        // 2. 获取 Data 分类统计 (包含你之前的逻辑)
+        try {
+            List<SceneSimpleInfoVO> allScenes = sceneRepo.getAllScenes();
+            List<SceneSimpleInfoVO> scenes = new ArrayList<>();
+            List<SceneSimpleInfoVO> themes = new ArrayList<>();
+            for (SceneSimpleInfoVO scene : allScenes) {
+                String sceneDataType = scene.getDataType();
+                if ("satellite".equals(sceneDataType)) {
+                    scenes.add(scene);
+                } else if (SceneTypeByTheme.getAllCodes().contains(sceneDataType)) {
+                    themes.add(scene);
+                }
+            }
+
+            // data.satellite
+            List<StatsReportVO.DataVO.Info> satelliteList = new ArrayList<>();
+            for (SceneTypeByResolution type : SceneTypeByResolution.values()) {
+                StatsReportVO.DataVO.Info info = new StatsReportVO.DataVO.Info();
+                info.setKey(type.name());
+                info.setLabel(type.getLabel());
+                // 【注意】这里使用了之前优化的判空逻辑
+                List<SceneSimpleInfoVO> filteredScenes = scenes.stream()
+                        .filter(scene -> isSceneMatchResolutionType(scene, type))
+                        .toList();
+                info.setValue((long) filteredScenes.size());
+                satelliteList.add(info);
+            }
+
+            // data.theme
+            List<StatsReportVO.DataVO.Info> themeList = new ArrayList<>();
+            for (SceneTypeByTheme type : SceneTypeByTheme.values()) {
+                StatsReportVO.DataVO.Info info = new StatsReportVO.DataVO.Info();
+                info.setKey(type.getCode());
+                info.setLabel(type.getLabel());
+                List<SceneSimpleInfoVO> filteredThemes = themes.stream()
+                        .filter(theme -> type.getCode().equalsIgnoreCase(theme.getDataType()))
+                        .toList();
+                info.setValue((long) filteredThemes.size());
+                themeList.add(info);
+            }
+
+            // data.vector
+            List<StatsReportVO.DataVO.Info> vectorList = new ArrayList<>();
+            List<Vector> vectors = vectorRepo.selectList(null);
+            for (Vector vector : vectors) {
+                StatsReportVO.DataVO.Info info = new StatsReportVO.DataVO.Info();
+                info.setKey(vector.getTableName());
+                info.setLabel(vector.getVectorName());
+                info.setValue((long) vector.getCount());
+                vectorList.add(info);
+            }
+
+            StatsReportVO.DataVO dataVO = StatsReportVO.DataVO.builder()
+                    .satelliteList(satelliteList)
+                    .themeList(themeList)
+                    .vectorList(vectorList)
+                    .build();
+            statsReportVO.setData(dataVO);
+        } catch (Exception e) {
+            log.error("获取数据分类统计失败", e);
+            // 这里可以设置一个空的 DataVO 防止前端空指针
+            statsReportVO.setData(StatsReportVO.DataVO.builder()
+                    .satelliteList(new ArrayList<>())
+                    .themeList(new ArrayList<>())
+                    .vectorList(new ArrayList<>())
+                    .build());
+        }
+
+        // 3. 获取 Task 统计
+        try {
+            QueryWrapper<Case> queryWrapperComplete = new QueryWrapper<>();
+            queryWrapperComplete.eq("status", "COMPLETE");
+            Long caseCountComplete = caseRepo.selectCount(queryWrapperComplete);
+
+            QueryWrapper<Case> queryWrapperError = new QueryWrapper<>();
+            queryWrapperError.eq("status", "ERROR");
+            Long caseCountError = caseRepo.selectCount(queryWrapperError);
+
+            QueryWrapper<Case> queryWrapperRunning = new QueryWrapper<>();
+            queryWrapperRunning.eq("status", "RUNNING");
+            Long caseCountRunning = caseRepo.selectCount(queryWrapperRunning);
+
+            // 注意：taskVO.total 应该取所有任务总数，可以用之前的 caseCount 变量
+            // 但为了解耦，这里重新计算或使用成员变量，假设用 caseRepo.selectCount(null)
+            Long total = caseRepo.selectCount(null);
+
+            StatsReportVO.TaskVO taskVO = StatsReportVO.TaskVO.builder()
+                    .total(total)
+                    .completed(caseCountComplete)
+                    .error(caseCountError)
+                    .running(caseCountRunning)
+                    .build();
+            statsReportVO.setTask(taskVO);
+        } catch (Exception e) {
+            log.error("获取任务统计失败", e);
+            statsReportVO.setTask(StatsReportVO.TaskVO.builder().build());
+        }
+
+        // 4. 【关键修改】获取 Storage (MinIO) 信息 - 增加 Try-Catch 隔离
+        try {
+            // 这两行代码就是导致报错的源头
+            JSONObject serverStorageInfo = minioUtil.getServerStorageInfo();
+            List<JSONObject> bucketsInfoObj = minioUtil.getBucketsInfo();
+
+            List<StatsReportVO.StorageVO.BucketInfo> bucketsInfo = new ArrayList<>();
+            if (bucketsInfoObj != null) {
+                bucketsInfoObj.forEach(bucketInfoObj -> {
+                    StatsReportVO.StorageVO.BucketInfo bucketInfo = StatsReportVO.StorageVO.BucketInfo.builder()
+                            .bucketName(bucketInfoObj.getString("bucketName"))
+                            .bucketUsedSize(bucketInfoObj.getLong("bucketUsedSize"))
+                            .objectsCount(bucketInfoObj.getLong("objectsCount"))
+                            .build();
+                    bucketsInfo.add(bucketInfo);
+                });
+            }
+
+            StatsReportVO.StorageVO storageVO = StatsReportVO.StorageVO.builder()
+                    .totalSpace(serverStorageInfo != null ? serverStorageInfo.getBigDecimal("totalSpace") : java.math.BigDecimal.ZERO)
+                    .availSpace(serverStorageInfo != null ? serverStorageInfo.getBigDecimal("availSpace") : java.math.BigDecimal.ZERO)
+                    .usedSpace(serverStorageInfo != null ? serverStorageInfo.getBigDecimal("usedSpace") : java.math.BigDecimal.ZERO)
+                    .bucketsInfo(bucketsInfo)
+                    .build();
+            statsReportVO.setStorage(storageVO);
+
+        } catch (Exception e) {
+            // 【重点】在这里捕获那个 Unrecognized field 异常
+            // 这样虽然存储信息看不到，但至少前面的 场景、任务、用户 数据能正常展示！
+            log.error("MinIO 存储信息获取失败 (可能是版本不兼容): {}", e.getMessage());
+
+            // 返回一个空的 StorageVO，或者显示 "N/A"
+            StatsReportVO.StorageVO emptyStorage = StatsReportVO.StorageVO.builder()
+                    .totalSpace(java.math.BigDecimal.ZERO)
+                    .availSpace(java.math.BigDecimal.ZERO)
+                    .usedSpace(java.math.BigDecimal.ZERO)
+                    .bucketsInfo(new ArrayList<>())
+                    .build();
+            statsReportVO.setStorage(emptyStorage);
+        }
+
         return CommonResultVO.builder()
                 .status(1)
-                .message("统计信息获取成功")
+                .message("统计信息获取成功") // 即使部分失败，整体接口依然返回 200 OK
                 .data(statsReportVO)
                 .build();
     }

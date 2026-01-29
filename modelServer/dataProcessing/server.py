@@ -40,5 +40,5 @@ if __name__ == '__main__':
     from dataProcessing.model.scheduler import init_scheduler
     init_ray()
     scheduler = init_scheduler()
-    app.run(host="0.0.0.0", port=CONFIG.APP_PORT, debug=CONFIG.APP_DEBUG)
-    # app.run(host="0.0.0.0", port=5001, debug=CONFIG.APP_DEBUG)
+    # app.run(host="0.0.0.0", port=CONFIG.APP_PORT, debug=CONFIG.APP_DEBUG)
+    app.run(host="0.0.0.0", port=5001, debug=CONFIG.APP_DEBUG)
