@@ -188,6 +188,7 @@ export function map_addGridSceneLayer(gridInfo: GridData, url: string) {
             }
         }
     })
+    // return map_addGrid3DLayer(gridInfo, url)
 }
 
 export function map_destroyGridSceneLayer(gridInfo: GridData) {

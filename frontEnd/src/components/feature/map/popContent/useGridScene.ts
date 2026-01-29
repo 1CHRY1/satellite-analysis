@@ -1,8 +1,15 @@
-import { computed, ref } from "vue"
-import { showBandSelector, gridData } from "./shared"
-import type { GridData, MultiImageInfoType, PopupTab, SceneMethod } from '@/type/interactive-explore/grid'
+import * as turf from '@turf/turf'
+import { computed, ref } from 'vue'
+import { showBandSelector, gridData } from './shared'
+import type {
+    GridData,
+    MultiImageInfoType,
+    PopupTab,
+    SceneMethod,
+} from '@/type/interactive-explore/grid'
 import type { Grid } from '@/api/http/interactive-explore/grid.type'
 import bus from '@/store/bus'
+import { grid2bbox } from '@/util/map/gridMaker'
 
 /**
  * 1. 遥感影像Tab
@@ -11,7 +18,7 @@ import bus from '@/store/bus'
 /**
  * 一些共用变量，其他功能也可能用到的
  */
-export const scaleRate = ref(1.00)
+export const scaleRate = ref(1.0)
 export const visualLoad = ref(false)
 export const selectedBand = ref('')
 export const selectedRBand = ref('')
@@ -20,7 +27,6 @@ export const selectedBBand = ref('')
 export const selectedSensor = ref('')
 
 export const useGridScene = () => {
-
     /**
      * 分辨率选项
      */
@@ -29,8 +35,7 @@ export const useGridScene = () => {
         const result = new Set<string>()
         if (gridData.value.sceneRes?.dataset) {
             console.log(gridData.value, '111')
-            for(const category of gridData.value.sceneRes.category) {
-                
+            for (const category of gridData.value.sceneRes.category) {
                 if (gridData.value.sceneRes.dataset[category] === undefined) {
                     console.log(category, '222')
                     console.log(gridData.value.sceneRes.dataset, '222')
@@ -48,7 +53,7 @@ export const useGridScene = () => {
 
         return ['全选', ...arr]
     })
-    
+
     /**
      * 传感器选项
      */
@@ -56,9 +61,12 @@ export const useGridScene = () => {
         let result = new Set<string>()
         result.add('全选')
         if (gridData.value.sceneRes?.dataset) {
-            for(const category of gridData.value.sceneRes.category) {
-                for(const scene of gridData.value.sceneRes.dataset[category].dataList) {
-                    if (selectedResolution.value != '全选' && gridData.value.sceneRes.dataset[category].label == selectedResolution.value) {
+            for (const category of gridData.value.sceneRes.category) {
+                for (const scene of gridData.value.sceneRes.dataset[category].dataList) {
+                    if (
+                        selectedResolution.value != '全选' &&
+                        gridData.value.sceneRes.dataset[category].label == selectedResolution.value
+                    ) {
                         result.add(scene.sensorName)
                     } else if (selectedResolution.value === '全选') {
                         result.add(scene.sensorName)
@@ -111,48 +119,48 @@ export const useGridScene = () => {
 
         return result
     })
-    
+
     /**
      * 拉伸增强选项
      */
     const stretchMethods = [
-        {label: "线性拉伸", value: "linear"},
-        {label: "γ 拉伸", value: "gamma"},
-        {label: "标准差拉伸", value: "standard"},
+        { label: '线性拉伸', value: 'linear' },
+        { label: 'γ 拉伸', value: 'gamma' },
+        { label: '标准差拉伸', value: 'standard' },
     ]
-    type StretchMethod = "linear" | "gamma" | "standard"
-    const selectedStretchMethod = ref<StretchMethod>("gamma")
+    type StretchMethod = 'linear' | 'gamma' | 'standard'
+    const selectedStretchMethod = ref<StretchMethod>('gamma')
     const enableDraggable = ref(true)
 
     const handleStretchMethodChange = () => {
         switch (selectedStretchMethod.value) {
-            case "linear":
+            case 'linear':
                 scaleRate.value = 0
                 break
-            case "gamma":
+            case 'gamma':
                 scaleRate.value = 1
                 break
-            case "standard":
+            case 'standard':
                 scaleRate.value = 0
                 break
             default:
                 scaleRate.value = 1
         }
     }
-    
+
     const scaleRateFormatter = (value: number) => {
         // return `${value}级`
         return `${value}`
     }
-    
+
     const handleScaleMouseUp = () => (enableDraggable.value = true)
-    
+
     const handleScaleMouseDown = () => (enableDraggable.value = false)
-    
+
     const onAfterScaleRateChange = (scale_rate: number) => {
         console.log(scale_rate)
     }
-    
+
     /**
      * 遥感影像可视化函数
      */
@@ -169,14 +177,17 @@ export const useGridScene = () => {
         // 所有的它都想看
         if (showBandSelector.value === false) {
             const rgbImageData: MultiImageInfoType[] = []
-    
-            const gridAllScenes:Grid.SceneDetail[] = []
+
+            const gridAllScenes: Grid.SceneDetail[] = []
             // gridData.value.scenes
             // 分辨率指定、传感器全选在上面
             if (selectedResolution.value && selectedResolution.value !== '全选') {
                 for (const category of gridData.value.sceneRes.category) {
                     for (const scene of gridData.value.sceneRes.dataset[category].dataList) {
-                        if (gridData.value.sceneRes.dataset[category].label === selectedResolution.value) {
+                        if (
+                            gridData.value.sceneRes.dataset[category].label ===
+                            selectedResolution.value
+                        ) {
                             gridAllScenes.push(scene)
                         }
                     }
@@ -189,13 +200,18 @@ export const useGridScene = () => {
                     }
                 }
             }
-    
+
             // Process each band (R, G, B)
+            const bbox = grid2bbox(columnId, rowId, resolution)
+            const targetPolygon = turf.bboxPolygon(bbox as [number, number, number, number])
+
             for (let sceneInfo of gridAllScenes) {
+                const isCovered = turf.booleanContains(sceneInfo.boundingBox, targetPolygon)
+                if (!isCovered) continue
                 let redPath = ''
                 let greenPath = ''
                 let bluePath = ''
-    
+
                 // 这里用bandmapper
                 // console.log(sceneInfo.bandMapper)
                 for (let bandImg of sceneInfo.images) {
@@ -213,7 +229,7 @@ export const useGridScene = () => {
                 rgbImageData.push({
                     sceneId: sceneInfo.sceneId,
                     sensorName: sceneInfo.sensorName,
-                    productName: sceneInfo.sensorName + '-' +sceneInfo.productName,
+                    productName: sceneInfo.sensorName + '-' + sceneInfo.productName,
                     dataType: 'satellite',
                     time: sceneInfo.sceneTime,
                     redPath: redPath,
@@ -222,13 +238,22 @@ export const useGridScene = () => {
                     nodata: sceneInfo.noData,
                     bandMapper: sceneInfo.bandMapper,
                     images: sceneInfo.images,
-                    cloudPath: sceneInfo.cloudPath && sceneInfo.bucket
-                        ? `${sceneInfo.bucket}/${sceneInfo.cloudPath}`
-                        : undefined
+                    cloudPath:
+                        sceneInfo.cloudPath && sceneInfo.bucket
+                            ? `${sceneInfo.bucket}/${sceneInfo.cloudPath}`
+                            : undefined,
                 })
             }
-            
-            bus.emit('cubeVisualize', rgbImageData, gridInfo, selectedStretchMethod.value, scaleRate.value, 'rgb')
+            console.log('rgbImageData', rgbImageData)
+
+            bus.emit(
+                'cubeVisualize',
+                rgbImageData,
+                gridInfo,
+                selectedStretchMethod.value,
+                scaleRate.value,
+                'rgb',
+            )
         } else {
             // 针对具体传感器、具体波段组合
             const rgbImageData: MultiImageInfoType[] = []
@@ -241,21 +266,31 @@ export const useGridScene = () => {
                         if (scene.sensorName === selectedSensor.value) {
                             filteredScene.push(scene)
                         }
-                    } else if (selectedResolution.value != '全选' && selectedSensor.value != '全选') {
+                    } else if (
+                        selectedResolution.value != '全选' &&
+                        selectedSensor.value != '全选'
+                    ) {
                         // 分辨率指定，传感器指定
-                        if (gridData.value.sceneRes.dataset[category].label === selectedResolution.value && scene.sensorName === selectedSensor.value) {
+                        if (
+                            gridData.value.sceneRes.dataset[category].label ===
+                                selectedResolution.value &&
+                            scene.sensorName === selectedSensor.value
+                        ) {
                             filteredScene.push(scene)
                         }
                     }
                 }
             }
-    
+            const bbox = grid2bbox(columnId, rowId, resolution)
+            const targetPolygon = turf.bboxPolygon(bbox as [number, number, number, number])
             // Process each band (R, G, B)
             for (let scene of filteredScene) {
+                const isCovered = turf.booleanContains(scene.boundingBox, targetPolygon)
+                if (!isCovered) continue
                 let redPath = ''
                 let greenPath = ''
                 let bluePath = ''
-    
+
                 // 这里用用户选的
                 scene.images.forEach((bandImg) => {
                     console.log(bandImg, 'bandImg')
@@ -269,7 +304,7 @@ export const useGridScene = () => {
                         bluePath = bandImg.bucket + '/' + bandImg.tifPath
                     }
                 })
-    
+
                 rgbImageData.push({
                     sceneId: scene.sceneId,
                     time: scene.sceneTime,
@@ -282,14 +317,24 @@ export const useGridScene = () => {
                     nodata: scene.noData,
                     bandMapper: scene.bandMapper,
                     images: scene.images,
-                    cloudPath: scene.cloudPath && scene.bucket
-                        ? `${scene.bucket}/${scene.cloudPath}`
-                        : undefined
+                    cloudPath:
+                        scene.cloudPath && scene.bucket
+                            ? `${scene.bucket}/${scene.cloudPath}`
+                            : undefined,
                 })
             }
-            bus.emit('cubeVisualize', rgbImageData, gridInfo, selectedStretchMethod.value, scaleRate.value, 'rgb')
+            console.log('rgbImageData', rgbImageData)
+
+            bus.emit(
+                'cubeVisualize',
+                rgbImageData,
+                gridInfo,
+                selectedStretchMethod.value,
+                scaleRate.value,
+                'rgb',
+            )
         }
-    
+
         bus.emit('openTimeline')
         visualLoad.value = true
     }
@@ -315,9 +360,6 @@ export const useGridScene = () => {
         bands,
         stretchMethods,
         selectedStretchMethod,
-        handleStretchMethodChange
+        handleStretchMethodChange,
     }
 }
-
-
-

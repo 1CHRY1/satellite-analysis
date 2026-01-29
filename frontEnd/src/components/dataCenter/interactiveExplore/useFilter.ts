@@ -455,20 +455,34 @@ export const useFilter = () => {
         const dataset = sceneStats.value.dataset
         const categories = sceneStats.value.category
         if (!dataset || !categories) return
-        const mainReq = getSceneCategoryCoverage()
-        const subReqs = categories.map((category) => getSceneCategoryCoverage(category))
 
-        try {
-            const [mainRes, ...subResults] = await Promise.all([mainReq, ...subReqs])
-            sceneStats.value.coverage = mainRes.data
-            categories.forEach((category, index) => {
-                if (dataset[category]) {
-                    dataset[category].coverage = subResults[index].data
-                }
+        // 1. 发起主请求，并独立处理回调
+        const mainReq = getSceneCategoryCoverage()
+            .then((res) => {
+                // 请求一旦完成，立刻赋值
+                sceneStats.value.coverage = res.data
             })
-        } catch (error) {
-            console.error('获取覆盖率失败', error)
-        }
+            .catch((error) => {
+                console.error('获取主覆盖率失败', error)
+            })
+
+        // 2. 发起子请求，并独立处理回调
+        const subReqs = categories.map((category) => {
+            return getSceneCategoryCoverage(category)
+                .then((res) => {
+                    // 请求一旦完成，立刻赋值给对应的 dataset item
+                    if (dataset[category]) {
+                        dataset[category].coverage = res.data
+                    }
+                })
+                .catch((error) => {
+                    console.error(`获取子覆盖率失败 [${category}]`, error)
+                })
+        })
+
+        // 3. (可选) 如果你需要等待所有请求都结束（无论成功还是失败）才关闭 Loading 状态
+        // 可以保留这行 await，但这行代码只为了控制流程，不负责赋值数据
+        // await Promise.allSettled([mainReq, ...subReqs])
     }
 
     /**
