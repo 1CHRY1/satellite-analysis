@@ -36,9 +36,31 @@ pg:
 spring:
   datasource:
     dynamic:
-      primary: mysql-ard-satellite
+      primary: pg-ard-satellite
       strict: false
       datasource:
+        pg-ard-satellite:
+          url: jdbc:postgresql://${pg.host}:${pg.port}/ard_satellite?currentSchema=ard_satellite,public
+          username: ${pg.username}
+          password: ${pg.password}
+          driver-class-name: org.postgresql.Driver
+          type: com.alibaba.druid.pool.DruidDataSource
+          druid:
+            initial-size: 5
+            max-active: 20
+            min-idle: 5
+            max-wait: 60000
+            validation-query: SELECT 1
+            socket-timeout: 1200000  # 20分钟
+            filters: stat, wall
+            wall:
+              table-check: true
+              drop-table-allow: false
+              alter-table-allow: false
+            stat:
+              slow-sql-millis: 5000
+              log-slow-sql: true
+              merge-sql: true
         mysql-ard-satellite:
           url: jdbc:mysql://${mysql.host}:${mysql.port}/ard_satellite
           username: ${mysql.username}
@@ -176,8 +198,8 @@ mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: nnu.mnr.satellite.model.po
   type-handlers-package: nnu.mnr.satellite.utils.typeHandler
-  configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 #ca:
 #  dir: D:/1tools/OpenSSL/ca
