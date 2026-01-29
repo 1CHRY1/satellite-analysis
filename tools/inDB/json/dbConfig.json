@@ -14,5 +14,10 @@
     "MYSQL_TILE_PORT": 3306,
     "MYSQL_TILE_DB": "tile",
     "MYSQL_RESOURCE_PORT": 3306,
-    "MYSQL_RESOURCE_DB": "ard_satellite"
+    "MYSQL_RESOURCE_DB": "ard_satellite",
+    "PG_HOST": "223.2.34.8",
+    "PG_USER": "postgres",
+    "PG_PWD": "123456",
+    "PG_RESOURCE_PORT": 31543,
+    "PG_RESOURCE_DB": "test"
 }

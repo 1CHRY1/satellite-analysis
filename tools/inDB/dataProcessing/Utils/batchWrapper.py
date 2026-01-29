@@ -17,12 +17,12 @@ def load_db_config(db_config_path):
     json_db_config = json.load(open(db_config_path, 'r',encoding="UTF-8"))
     for key, value in json_db_config.items():
         DB_CONFIG[key] = value
-    field_list = ["MYSQL_HOST", "MYSQL_RESOURCE_PORT", "MYSQL_RESOURCE_DB", "MYSQL_USER", "MYSQL_PWD", "MINIO_PORT", "MINIO_IP", "MINIO_ACCESS_KEY", "MINIO_SECRET_KEY", "MINIO_SECURE", "MINIO_IMAGES_BUCKET"]
+    field_list = ["MYSQL_HOST", "MYSQL_RESOURCE_PORT", "MYSQL_RESOURCE_DB", "MYSQL_USER", "MYSQL_PWD", "MINIO_PORT", "MINIO_IP", "MINIO_ACCESS_KEY", "MINIO_SECRET_KEY", "MINIO_SECURE", "MINIO_IMAGES_BUCKET", "PG_HOST", "PG_USER", "PG_PWD", "PG_RESOURCE_PORT", "PG_RESOURCE_DB"]
     for field in field_list:
         if DB_CONFIG.get(field) is None:
             exit_with_error(f"[ERROR] {field} is not set in {db_config_path}\r\n")
     print("[INFO] dbConfig.json loaded\r\n")
-    set_initial_mysql_config(DB_CONFIG)
+    set_initial_db_config(DB_CONFIG)
     set_initial_minio_config(DB_CONFIG)
     print("[INFO] ----------------------------------------\r\n\r\n")
     return DB_CONFIG
@@ -30,9 +30,9 @@ def load_db_config(db_config_path):
 def verify_db_config(DB_CONFIG):
     print("[INFO] ------------ DB Config Verify ------------\r\n")
     print("[INFO] Verifying dbConfig...\r\n")
-    connection, cursor = connect_mysql(DB_CONFIG["MYSQL_HOST"], DB_CONFIG["MYSQL_RESOURCE_PORT"],
-                                       DB_CONFIG["MYSQL_RESOURCE_DB"], DB_CONFIG["MYSQL_USER"],
-                                       DB_CONFIG["MYSQL_PWD"])
+    connection, cursor = connect_postgres(DB_CONFIG["PG_HOST"], DB_CONFIG["PG_RESOURCE_PORT"],
+                                       DB_CONFIG["PG_RESOURCE_DB"], DB_CONFIG["PG_USER"],
+                                       DB_CONFIG["PG_PWD"])
     if cursor is None:
         exit_with_error("[ERROR] Database connection failed\r\n")
     try:

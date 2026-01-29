@@ -156,10 +156,10 @@
                         <span class="result-info-label">共找到 {{ total }} 条记录</span>
                         <div class="flex gap-3">
                             <a-button type="primary" class="a-button-dark" @click="reset">{{ t('datapage.history.clear')
-                            }}</a-button>
+                                }}</a-button>
                             <a-button type="primary" class="a-button" @click="getCaseList">{{
                                 t('datapage.history.fliter')
-                            }}</a-button>
+                                }}</a-button>
                         </div>
                     </div>
                 </div>
@@ -170,7 +170,7 @@
                         <a-select v-model:value="bandForm.band1">
                             <a-select-option v-for="(band, index) in currentBandList" :key="index" :value="index">{{
                                 band
-                            }}</a-select-option>
+                                }}</a-select-option>
                         </a-select>
                     </a-form-item>
 
@@ -178,7 +178,7 @@
                         <a-select v-model:value="bandForm.band2">
                             <a-select-option v-for="(band, index) in currentBandList" :key="index" :value="index">{{
                                 band
-                            }}</a-select-option>
+                                }}</a-select-option>
                         </a-select>
                     </a-form-item>
 
@@ -186,7 +186,7 @@
                         <a-select v-model:value="bandForm.band3">
                             <a-select-option v-for="(band, index) in currentBandList" :key="index" :value="index">{{
                                 band
-                            }}</a-select-option>
+                                }}</a-select-option>
                         </a-select>
                     </a-form-item>
                 </a-form>
@@ -240,14 +240,14 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="result-info-item" v-else>
+                            <div class="result-info-item" v-else-if="item?.result?.dimensions?.length">
                                 <div class="result-info-icon">
                                     <DatabaseIcon :size="12" />
                                 </div>
                                 <div class="result-info-content">
                                     <div class="result-info-label">时间维度</div>
                                     <div>
-                                        {{ item.result.dimensions.join('、') }}
+                                        {{ item?.result?.dimensions.join('、') }}
                                     </div>
                                 </div>
                             </div>
