@@ -415,14 +415,14 @@ export const useFilter = () => {
         vectorStats.value = vectorsRes
         themeStats.value = themeStatsRes
         // // 覆盖率计算接口已经解耦，现在置空coverage
-        sceneStats.value.coverage = ''
-        if (sceneStats.value?.dataset) {
-            Object.values(sceneStats.value.dataset).forEach((item) => {
-                if (item) {
-                    item.coverage = ''
-                }
-            })
-        }
+        // sceneStats.value.coverage = ''
+        // if (sceneStats.value?.dataset) {
+        //     Object.values(sceneStats.value.dataset).forEach((item) => {
+        //         if (item) {
+        //             item.coverage = ''
+        //         }
+        //     })
+        // }
 
         // ------------------- Step4: 用户反馈操作 -------------------- //
         if (
@@ -456,28 +456,33 @@ export const useFilter = () => {
         const categories = sceneStats.value.category
         if (!dataset || !categories) return
 
-        // 1. 发起主请求，并独立处理回调
-        const mainReq = getSceneCategoryCoverage()
-            .then((res) => {
-                // 请求一旦完成，立刻赋值
-                sceneStats.value.coverage = res.data
-            })
-            .catch((error) => {
-                console.error('获取主覆盖率失败', error)
-            })
-
-        // 2. 发起子请求，并独立处理回调
-        const subReqs = categories.map((category) => {
-            return getSceneCategoryCoverage(category)
+        // 1. 处理主覆盖率
+        // 如果已有值（不为 null/undefined/''），则不请求
+        if (!sceneStats.value.coverage) {
+            getSceneCategoryCoverage()
                 .then((res) => {
-                    // 请求一旦完成，立刻赋值给对应的 dataset item
-                    if (dataset[category]) {
-                        dataset[category].coverage = res.data
-                    }
+                    sceneStats.value.coverage = res.data
                 })
                 .catch((error) => {
-                    console.error(`获取子覆盖率失败 [${category}]`, error)
+                    console.error('获取主覆盖率失败', error)
                 })
+        }
+
+        // 2. 处理各分类覆盖率
+        // 遍历所有分类，检查 dataset 中对应的 item 是否已有 coverage
+        categories.forEach((category) => {
+            // 如果 dataset 中存在该分类，且该分类的 coverage 为空，才发起请求
+            if (dataset[category] && !dataset[category].coverage) {
+                getSceneCategoryCoverage(category)
+                    .then((res) => {
+                        if (dataset[category]) {
+                            dataset[category].coverage = res.data
+                        }
+                    })
+                    .catch((error) => {
+                        console.error(`获取子覆盖率失败 [${category}]`, error)
+                    })
+            }
         })
 
         // 3. (可选) 如果你需要等待所有请求都结束（无论成功还是失败）才关闭 Loading 状态
