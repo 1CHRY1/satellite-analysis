@@ -1,5 +1,6 @@
 package nnu.mnr.satellite.service.resources;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,7 @@ import org.locationtech.jts.operation.union.CascadedPolygonUnion;
 import org.locationtech.jts.simplify.DouglasPeuckerSimplifier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -29,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
+@Transactional
 @Service("SceneDataServiceV3")
 public class SceneDataServiceV3 {
 
@@ -209,22 +212,28 @@ public class SceneDataServiceV3 {
 
     public List<SceneDesVO> getScenesByTimeAndRegion(LocalDateTime startTime, LocalDateTime endTime, Geometry boundary, List<String> dataType) {
         String wkt = boundary.toText();
-        return sceneRepo.getScenesInfoByTimeAndRegion(startTime, endTime, wkt, dataType);
+        sceneRepo.buildTempSceneTable(startTime, endTime, wkt, dataType);
+        return sceneRepo.getScenesInfoByTimeAndRegion();
     }
 
     private CoverageReportVO<Map<String, Object>> buildCoverageReport(List<SceneDesVO> scenesInfo, Geometry gridsBoundary){
         CoverageReportVO<Map<String, Object>> report = new CoverageReportVO<>();
 
         Integer total = scenesInfo.size();
-        // 计算覆盖度
-//        double coverageRatio = calculateCoverageRatio(scenesInfo, gridsBoundary) * 100;
-//        String coverage = String.format("%.2f%%", coverageRatio);
+
         List<String> category = SceneTypeByResolution.getCategoryNames();
         // 构建返回结果
         report.setTotal(total); // 总数据量
-//        report.setCoverage(coverage); // 总体覆盖率
         report.setCategory(category); // 分类名称列表
 
+//        String wkt = gridsBoundary.toText();
+//        String coverage = "0.00%";
+//        double coverageRatio = 0.00;
+//        if (total != 0) {
+//            coverageRatio = sceneRepo.getAllCoverageRatio(wkt) * 100;
+//            coverage = String.format("%.2f%%", coverageRatio);
+//        }
+//        report.setCoverage(coverage);
         // 按分辨率分类统计
         Map<String, CoverageReportVO.DatasetItemVO<Map<String, Object>>> dataset = new LinkedHashMap<>();
         for (SceneTypeByResolution type : SceneTypeByResolution.values()) {
@@ -239,8 +248,6 @@ public class SceneDataServiceV3 {
                     .collect(Collectors.toList());
 
             item.setTotal(filteredScenes.size());
-//            coverageRatio = calculateCoverageRatio(filteredScenes, gridsBoundary) * 100;
-//            item.setCoverage(String.format("%.2f%%", coverageRatio));
             Set<String> seen = new HashSet<>();
             List<Map<String, Object>> uniqueDataList = filteredScenes.stream()
                     .filter(scene -> seen.add(scene.getSensorName() + "|" + scene.getPlatformName())) // 利用 Set 去重
@@ -248,10 +255,29 @@ public class SceneDataServiceV3 {
                         Map<String, Object> sensorInfo = new HashMap<>();
                         sensorInfo.put("sensorName", scene.getSensorName());
                         sensorInfo.put("platformName", scene.getPlatformName());
+                        sensorInfo.put("sensorId", scene.getSensorId());
+                        sensorInfo.put("productId", scene.getProductId());
                         return sensorInfo;
                     })
                     .collect(Collectors.toList());
-
+            // 数据库计算覆盖度
+//            List<String> productIdList = Optional
+//                    .of(uniqueDataList)
+//                    .orElse(Collections.emptyList())
+//                    .stream()
+//                    .filter(Objects::nonNull)
+//                    .map(map -> map.get("productId"))
+//                    .filter(Objects::nonNull)
+//                    .map(Object::toString)
+//                    .distinct()
+//                    .toList();
+//            coverage = "0.00%";
+//            coverageRatio = 0.00;
+//            if (!productIdList.isEmpty()) {
+//                coverageRatio = sceneRepo.getCoverageRatio(wkt, productIdList) * 100;
+//                coverage = String.format("%.2f%%", coverageRatio);
+//            }
+//            item.setCoverage(coverage);
             item.setDataList(uniqueDataList);
             dataset.put(type.name(), item);
         }
@@ -264,11 +290,13 @@ public class SceneDataServiceV3 {
         SceneDataCache.UserRegionInfoCache userRegionInfoCache = SceneDataCache.getUserRegionInfoCacheMap(cacheKey);
         if (userSceneCache!= null && userRegionInfoCache != null) {
             List<SceneDesVO> scenesInfo = userSceneCache.scenesInfo;
+            CoverageReportVO<Map<String, Object>> coverageReportVO = userSceneCache.coverageReportVO;
             Geometry gridsBoundary = userRegionInfoCache.gridsBoundary;
             if (scenesInfo != null && scenesInfo.size() > 0 && gridsBoundary != null) {
                 if (category == null || category.isEmpty() || category.equals("all")) {
                     double coverageRatio = calculateCoverageRatio(scenesInfo, gridsBoundary) * 100;
                     String coverage = String.format("%.2f%%", coverageRatio);
+                    coverageReportVO.setCoverage(coverage);
                     return CommonResultVO.builder().status(1).message("覆盖度计算完成").data(coverage).build();
                 } else {
                     List<SceneDesVO> filteredScenes = scenesInfo.stream()
@@ -276,6 +304,48 @@ public class SceneDataServiceV3 {
                             .collect(Collectors.toList());
                     double coverageRatio = calculateCoverageRatio(filteredScenes, gridsBoundary) * 100;
                     String coverage = String.format("%.2f%%", coverageRatio);
+                    coverageReportVO.getDataset().get(category).setCoverage(coverage);
+                    return CommonResultVO.builder().status(1).message("覆盖度计算完成").data(coverage).build();
+                }
+            } else {
+                return CommonResultVO.builder().status(-1).message("景为空或者格网边界不存在").build();
+            }
+
+        } else {
+            return CommonResultVO.builder().status(-1).message("缓存不存在").build();
+        }
+    }
+
+    public CommonResultVO getCoverageByCategoryInDS(String category, String cacheKey){
+        SceneDataCache.UserSceneCache userSceneCache = SceneDataCache.getUserSceneCacheMap(cacheKey);
+        SceneDataCache.UserRegionInfoCache userRegionInfoCache = SceneDataCache.getUserRegionInfoCacheMap(cacheKey);
+        if (userSceneCache!= null && userRegionInfoCache != null) {
+            List<SceneDesVO> scenesInfo = userSceneCache.scenesInfo;
+            CoverageReportVO<Map<String, Object>> coverageReportVO = userSceneCache.coverageReportVO;
+            Geometry gridsBoundary = userRegionInfoCache.gridsBoundary;
+            String wkt = gridsBoundary.toText();
+            if (scenesInfo != null && scenesInfo.size() > 0 && gridsBoundary != null) {
+                if (category == null || category.isEmpty() || category.equals("all")) {
+                    double coverageRatio = sceneRepo.getAllCoverageRatio(wkt) * 100;
+                    String coverage = String.format("%.2f%%", coverageRatio);
+                    return CommonResultVO.builder().status(1).message("覆盖度计算完成").data(coverage).build();
+                } else {
+                    List<Map<String, Object>> dataList = coverageReportVO.getDataset().get(category).getDataList();
+                    List<String> productIdList = Optional
+                            .ofNullable(dataList)
+                            .orElse(Collections.emptyList())
+                            .stream()
+                            .filter(Objects::nonNull)
+                            .map(map -> map.get("productId"))
+                            .filter(Objects::nonNull)
+                            .map(Object::toString)
+                            .distinct()
+                            .toList();
+                    String coverage = "0.00%";
+                    if (!productIdList.isEmpty()) {
+                        double coverageRatio = sceneRepo.getCoverageRatio(wkt, productIdList) * 100;
+                        coverage = String.format("%.2f%%", coverageRatio);
+                    }
                     return CommonResultVO.builder().status(1).message("覆盖度计算完成").data(coverage).build();
                 }
             } else {
@@ -388,8 +458,7 @@ public class SceneDataServiceV3 {
     ) {
         long startCalTime = System.currentTimeMillis();
 
-        List<SceneDesVO> allScenesInfo =
-                getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, dataType);
+        List<SceneDesVO> allScenesInfo = getScenesByTimeAndRegion(startTime, endTime, gridsBoundary, dataType);
 
         long duration = System.currentTimeMillis() - startCalTime;
         log.info("从数据库中检索景消耗时间: {} ms", duration);
