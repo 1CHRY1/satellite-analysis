@@ -123,6 +123,22 @@ export const useGridScene = () => {
     type StretchMethod = "linear" | "gamma" | "standard"
     const selectedStretchMethod = ref<StretchMethod>("gamma")
     const enableDraggable = ref(true)
+
+    const handleStretchMethodChange = () => {
+        switch (selectedStretchMethod.value) {
+            case "linear":
+                scaleRate.value = 0
+                break
+            case "gamma":
+                scaleRate.value = 1
+                break
+            case "standard":
+                scaleRate.value = 0
+                break
+            default:
+                scaleRate.value = 1
+        }
+    }
     
     const scaleRateFormatter = (value: number) => {
         // return `${value}级`
@@ -298,7 +314,8 @@ export const useGridScene = () => {
         selectedBBand,
         bands,
         stretchMethods,
-        selectedStretchMethod
+        selectedStretchMethod,
+        handleStretchMethodChange
     }
 }
 

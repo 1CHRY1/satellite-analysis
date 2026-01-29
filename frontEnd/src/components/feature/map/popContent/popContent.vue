@@ -140,7 +140,7 @@
                 <div @mousedown="handleScaleMouseDown" @mouseup="handleScaleMouseUp" v-show="activeMethod === 'rgb'">
                     <div class="band-selection">
                         <label for="r-band-select">拉伸方法:</label>
-                        <select id="r-band-select" v-model="selectedStretchMethod" class="band-select">
+                        <select id="r-band-select" v-model="selectedStretchMethod" class="band-select" @change="handleStretchMethodChange">
                             <option disabled value="">请选择</option>
                             <option v-for="method in stretchMethods" :key="method.value" :value="method.value">
                                 {{ method.label }}
@@ -548,7 +548,7 @@ const { // ------------------------------ 1. 分辨率选项 -------------------
     // ------------------------------ 3. 波段选项 ------------------------------//
     selectedBand, selectedRBand, selectedGBand, selectedBBand, bands,
     // ------------------------------ 4. 拉伸增强选项 ------------------------------//
-    handleScaleMouseDown, handleScaleMouseUp, scaleRateFormatter, onAfterScaleRateChange, scaleRate, enableDraggable, stretchMethods, selectedStretchMethod,
+    handleScaleMouseDown, handleScaleMouseUp, scaleRateFormatter, onAfterScaleRateChange, scaleRate, enableDraggable, stretchMethods, selectedStretchMethod, handleStretchMethodChange,
     // ------------------------------ 5. 立方体可视化 ------------------------------//
     handleSceneVisualize } = useGridScene()
 
