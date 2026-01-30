@@ -102,7 +102,7 @@ class DevK8SConfig(BaseConfig):
 
     # Limitation for Ray
     RAY_MEMORY                                      =       40 * 1024**3
-    RAY_MEMORY_PER_TASK                             =       12 * 1024**3
+    RAY_MEMORY_PER_TASK                             =       4 * 1024**3
     RAY_OBJECT_STORE_MEMORY                         =       RAY_MEMORY * 0.3
     RAY_NUM_CPUS                                    =       8
     RAY_SYSTEM_RESERVED_CPU                         =       0.5
@@ -264,27 +264,28 @@ class zzwConfig(BaseConfig):
     TITILER_BASE_URL                                =       "http://localhost:8000"
     MOSAIC_CREATE_URL                               =       TITILER_BASE_URL + "/mosaic/create"
 
-    TEMP_OUTPUT_DIR                                 =       r"/Users/paxton/Documents/1_projects/2025-03_satellite/satellite-analysis/modelServer/temp"
-
+    TEMP_OUTPUT_DIR                                 =       r"D:\satellite\satellite11\temp"
+    
     # Limitation for Ray
-    RAY_MEMORY                                      =       40 * 1024**3
-    RAY_MEMORY_PER_TASK                             =       5 * 1024**3
-    RAY_OBJECT_STORE_MEMORY                         =       RAY_MEMORY * 0.3
-    RAY_NUM_CPUS                                    =       8
+    RAY_MEMORY                                      =       6 * 1024**3       # 6GB 给 Ray (留 3GB 给系统)
+    RAY_MEMORY_PER_TASK                             =       1.5 * 1024**3     # 每个任务 1.5GB (可并行 4 个任务)
+    RAY_OBJECT_STORE_MEMORY                         =       2 * 1024**3       # 对象存储 2GB
+    RAY_NUM_CPUS                                    =       20                # 整个节点可用的 CPU 总数 (留 4 核给系统)
+    RAY_CPUS_PER_TASK                               =       1                 # 每个 Ray 任务请求的 CPU 数 (最大化并行度)
     RAY_SYSTEM_RESERVED_CPU                         =       0.5
-    RAY_SYSTEM_RESERVED_MEMORY                      =       2 * 1024**3
+    RAY_SYSTEM_RESERVED_MEMORY                      =       2 * 1024**3       # 预留 2GB
 
     # MethLib Config
     METHOD_WD                                       =       r"/Users/paxton/Documents/4_tools/method_wd"
     METHOD_PD                                       =       r"/Users/paxton/Documents/4_tools/method_pd"
 
     # VRT Cache
-    CACHE_ROOT                                      =       "/dev/shm/tiles_cache"
+    CACHE_ROOT                                      =       "D:\\satellite\\satellite11\\tiles_cache"
     # Min Free Bytes Left for /dev/shm
     MIN_FREE_BYTES                                  =       3 * 1024 * 1024 * 1024
 
     # SR Model Url
-    SR_MODEL_URL                                    =       "http://localhost:8001/process"
+    SR_MODEL_URL                                    =       "http://localhost:8000/process"
     # ESRGAN Model Url
     ESRGAN_MODEL_URL                                =       "http://localhost:8001/process"
 
@@ -368,7 +369,7 @@ def get_current_config():
     """获取当前环境的配置类"""
     return get_config(CURRENT_PROFILE)
 
-os.environ['APP_PROFILE'] = 'slk'
+os.environ['APP_PROFILE'] = 'zzw'
 # 获取当前环境配置 - 类似Spring Boot的 spring.profiles.active
 CURRENT_PROFILE = os.getenv('APP_PROFILE', 'k8s')  # 默认使用k8s
 
