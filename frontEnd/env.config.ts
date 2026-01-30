@@ -60,13 +60,13 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
         modelServer: 'http://223.2.34.8:31500',
     },
     zzw: {
-        api: 'http://223.2.34.8:31584',
-        realtime: 'http://223.2.34.8:5001',
-        websocket: 'http://223.2.34.8:30394/model/websocket',
-        tiler: 'http://127.0.0.1:8000',
+        api: 'http://localhost:8999',
+        realtime: 'http://localhost:5001',
+        websocket: 'http://localhost:9888/model/websocket',
+        tiler: 'http://223.2.34.8:31800',
         proxymap: 'http://localhost:5003',
         minio: 'http://223.2.34.8:30900',
-        modelServer: 'http://223.2.34.8:31500',
+        modelServer: 'http://localhost:5000',
     },
     xzy: {
         api: 'http://10.30.8.44:31584', // 或本地 http://localhost:8999
