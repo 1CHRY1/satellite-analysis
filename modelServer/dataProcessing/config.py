@@ -163,6 +163,14 @@ class VmodConfig(BaseConfig):
     RAY_NUM_CPUS                                    =       36
     RAY_SYSTEM_RESERVED_CPU                         =       0.5
     RAY_SYSTEM_RESERVED_MEMORY                      =       2 * 1024**3
+    
+    RAY_MEMORY                                      =       6 * 1024**3       # 6GB 给 Ray (留 3GB 给系统)
+    RAY_MEMORY_PER_TASK                             =       1.5 * 1024**3     # 每个任务 1.5GB (可并行 4 个任务)
+    RAY_OBJECT_STORE_MEMORY                         =       2 * 1024**3       # 对象存储 2GB
+    RAY_NUM_CPUS                                    =       20                # 整个节点可用的 CPU 总数 (留 4 核给系统)
+    RAY_CPUS_PER_TASK                               =       1                 # 每个 Ray 任务请求的 CPU 数 (最大化并行度)
+    RAY_SYSTEM_RESERVED_CPU                         =       0.5
+    RAY_SYSTEM_RESERVED_MEMORY                      =       2 * 1024**3       # 预留 2GB
 
     # MethLib Config
     METHOD_WD                                       =       r"/usr/resource/method_library/method_wd"
