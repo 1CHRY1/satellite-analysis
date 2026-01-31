@@ -47,8 +47,9 @@ class calc_no_cloud(Task):
         # cloud = data.get('cloud') 没啥用
 
         ## Step 2 : Multithread Processing 4 Grids #############################
-        # !!!!!!!!修改，根据行政区划的面积，划分格网分辨率大致处于10-15km的格网
+        # !!!!!!!!修改，根据行政区划的面积，划分格网分辨率大致处于10-15km的格网，保证介于10-20km之间
         # 不一定要按照全球格网划分的规则（也就是不一定要走gridHelper）， 可以自己直接拆分成一个一个grid_bbox
+        # grid resolution超过20km就划分，否则不管
         grid_helper = GridHelper(gridResolution)
 
         scene_band_paths = {} # as cache
