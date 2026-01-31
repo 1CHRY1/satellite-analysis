@@ -13,7 +13,7 @@ from rio_cogeo.profiles import cog_profiles
 from rio_cogeo.cogeo import cog_translate, cog_info
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import ray
-from dataProcessing.Utils.osUtils import uploadLocalFile, uploadMemFile
+from dataProcessing.Utils.osUtils import uploadLocalFile
 from dataProcessing.Utils.gridUtil import GridHelper
 from dataProcessing.model.task import Task
 from dataProcessing.config import current_config as CONFIG
@@ -37,18 +37,17 @@ class calc_no_cloud(Task):
 
     def run(self):
         print("NoCloudGraphTask run", flush=True)
-        print('start time ', time.time())
 
         ## Step 1 : Input Args #################################################
         grids = self.tiles
-        gridResolution = self.resolution # 2km / 50km
+        gridResolution = self.resolution
         scenes = self.scenes
         bandList = self.bandList
         # cloud = data.get('cloud') 没啥用
 
         ## Step 2 : Multithread Processing 4 Grids #############################
-        # !!!!!!!!修改，根据行政区划的面积，划分格网分辨率大致处于10-15km的格网
-        # 不一定要按照全球格网划分的规则（也就是不一定要走gridHelper）， 可以自己直接拆分成一个一个grid_bbox
+        # !!!!!!!!后端修改，根据行政区划的面积，划分40-80个grid,传入到tiles参数中
+        # 比如前端划分了8个格网，细分后1个变成了4个格网，8*4=32个格网，不满足，再细分后32*4=128个格网
         grid_helper = GridHelper(gridResolution)
 
         scene_band_paths = {} # as cache
@@ -76,7 +75,7 @@ class calc_no_cloud(Task):
             ref = process_grid.remote(
                 grid=g,
                 scenes=scenes_ref,
-                scene_band_paths=bandPaths_ref,
+                band_paths=bandPaths_ref,
                 grid_helper=grid_helper,
                 minio_endpoint=MINIO_ENDPOINT,
                 task_id=self.task_id
@@ -112,7 +111,6 @@ class calc_no_cloud(Task):
         # if os.path.exists(temp_dir_path):
         #     shutil.rmtree(temp_dir_path)
         #     print('=============No Cloud Origin Data Deleted=================', flush=True)
-        print('end time ', time.time())
         return response.json()
 
 @ray.remote(num_cpus=1, memory=CONFIG.RAY_MEMORY_PER_TASK)
@@ -140,7 +138,7 @@ def process_grid(grid, scenes, scene_band_paths, grid_helper, minio_endpoint, ta
             scene_label = scene.get('sensorName') + '-' + scene.get('sceneId') + '-' + scene.get('resolution')
             # print('Process', scene_label, flush=True)
             ########### Check cover ######################
-            if not is_grid_intersected(scene, grid_bbox=grid_bbox):
+            if not is_grid_intersected(scene):
                 continue
             # print(scene.get('resolution'), grid_x, grid_y, flush=True)
             ########### Check cloud ######################
@@ -253,7 +251,7 @@ def process_grid(grid, scenes, scene_band_paths, grid_helper, minio_endpoint, ta
             #!!!!!!!!!!确保 uploadLocalFile 内部调用的是 boto3 的 upload_fileobj
             # TODO 上传内存文件！
 
-            uploadMemFile(memfile, CONFIG.MINIO_TEMP_FILES_BUCKET, minio_key)
+            uploadLocalFile(memfile, CONFIG.MINIO_TEMP_FILES_BUCKET, minio_key)
             return {
                 "grid": [grid_x, grid_y],
                 "bucket": CONFIG.MINIO_TEMP_FILES_BUCKET,
