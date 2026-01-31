@@ -145,6 +145,14 @@ def update_mosaicjson(
         return Response(content=str(e), media_type="text/plain", status_code=500)
 
 
+from functools import lru_cache
+import concurrent.futures
+
+# 【优化建议 1】: 加上缓存装饰器 (如果 fetch_mosaic_definition 是你自己写的)
+# 避免每次请求 tile 都去重新下载几十 MB 的 MosaicJSON
+# @lru_cache(maxsize=128) 
+# def fetch_mosaic_definition(url): ...
+
 @router.get("/mosaictile/{z}/{x}/{y}.png")
 def mosaictile(
     z: int, x: int, y: int,
@@ -156,6 +164,7 @@ def mosaictile(
 ):
     try:
         # Step 1: Fetch mosaic definition 
+        # 【建议】确保这个函数内部有缓存机制，否则这是第一大卡顿点
         mosaic_def = fetch_mosaic_definition(mosaic_url)
         quadkey_zoom = mosaic_def["minzoom"]
         mercator_tile = mercantile.Tile(x=x, y=y, z=z)
@@ -169,29 +178,31 @@ def mosaictile(
         else:
             sel = defaults.FirstMethod()
 
-        # Step 3: Get assets list using mercantile and mosaicJSON minzoom
+        # Step 3: Get assets list
+        assets_list = [] # 初始化移到外面
+
         if z < quadkey_zoom:
             # 低级别瓦片 -> 计算对应8级瓦片范围
             factor = 2 ** (quadkey_zoom - z)
             x_start = x * factor
             y_start = y * factor
 
-            # 收集对应所有8级瓦片的assets
-            assets_list = []
+            # 【优化 2】: 使用 Set 进行去重，避免重复下载同一个 TIF
+            # 许多 quadkey 可能指向同一个 asset，特别是大图覆盖多个网格时
+            unique_assets = set()
+
             for xx in range(x_start, x_start + factor):
                 for yy in range(y_start, y_start + factor):
                     qk = mercantile.quadkey(xx, yy, quadkey_zoom)
                     assets = mosaic_def["tiles"].get(qk)
                     if assets:
-                        assets_list.extend(assets)
-
-            if not assets_list:
-                return Response(status_code=204)
-            
-            # mosaic_tiler 这里需要能支持多个assets合成
-            img, mask = mosaic_tiler(assets_list, x, y, z, tiler, pixel_selection=sel, nodata=0)
+                        # 仅添加未见过的 asset
+                        for asset in assets:
+                            if asset not in unique_assets:
+                                unique_assets.add(asset)
+                                assets_list.append(asset)
         else:
-            # z >= quadkey_zoom，正常找瓦片
+            # z >= quadkey_zoom
             if mercator_tile.z > quadkey_zoom:
                 depth = mercator_tile.z - quadkey_zoom
                 for _ in range(depth):
@@ -199,45 +210,57 @@ def mosaictile(
 
             quadkey = mercantile.quadkey(*mercator_tile)
             assets = mosaic_def["tiles"].get(quadkey)
-            if not assets:
-                return Response(status_code=204)
-            img, mask = mosaic_tiler(assets, x, y, z, tiler, pixel_selection=sel, nodata=0)
+            if assets:
+                assets_list = assets # 直接赋值
 
+        # 统一检查空列表
+        if not assets_list:
+            return Response(status_code=204)
+            
+        # 【优化 3 (关键)】: 开启多线程并发 (threads)
+        # rio-tiler 的 mosaic_reader/tiler 支持 threads 参数
+        # 这会让几十个文件的请求同时发出，而不是一个接一个等待
+        # 注意：这里我们没有改动 tiler 函数本身，只是改了调用方式
+        img, mask = mosaic_tiler(
+            assets_list, 
+            x, y, z, 
+            tiler, 
+            pixel_selection=sel, 
+            nodata=0,
+            threads=8,  # <--- 新增：8个线程并发读取 Minio
+            # allowed_exceptions=(FileNotFoundError,) # 可选：防止某个文件丢失导致整个崩溃
+        )
 
         if img is None:
             return Response(status_code=204)
         
         # Step 5: Normalize, render and response
-        # min_val = [np.min(arr, axis=(0, 1)) for arr in img]  # 各个波段 min
-        # max_val = [np.max(arr, axis=(0, 1)) for arr in img]  # 各个波段 max
-        # img_uint8 = normalize(img, min_val, max_val)
         bands, height, width = img.shape
 
-        # Parse the bands_index parameter and convert it into a list of integers
+        # Parse the bands_index parameter
         selected_bands = list(map(int, bands_index.split(',')))
 
-        # Validate the selected bands indices
+        # Validate
         if any(b < 0 or b >= bands for b in selected_bands):
             raise ValueError(f"Invalid band indices. Valid indices are between 0 and {bands - 1}.")
-        # Adjust the image according to the selected bands
+        
         img = img[selected_bands]
 
-        if bands == 1:
-            # 单波段 → 伪RGB（重复3次）
+        # 【优化 4】: 简化 Numpy 操作 (微小性能提升，主要是代码整洁)
+        if len(selected_bands) == 1:
             img = np.repeat(img, 3, axis=0)
-        elif bands == 2:
-            # 两波段 → 伪RGB（重复前两个波段）
-            img = np.tile(img, (2, 1, 1))[:3]
-        elif bands >= 3:
-            # 三波段及以上 → 取前三个波段
+        elif len(selected_bands) == 2:
+            # 使用 efficient 的方式补齐
+            img = np.concatenate([img, img[:1]], axis=0)
+        elif len(selected_bands) >= 3:
             img = img[:3]
-        else:
-            raise ValueError(f"Unsupported number of bands: {bands}")
+        
+        # 渲染
         content = render(img, mask)
-        assert isinstance(content, bytes), f"render 返回类型为 {type(content)}"
         return Response(content=content, media_type="image/png")
+
     except Exception as e:
-        print(e)
+        print(f"Error in mosaictile: {e}") # 建议打印更详细的日志
         raise HTTPException(status_code=500, detail=str(e))
     
 
