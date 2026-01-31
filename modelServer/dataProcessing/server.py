@@ -25,6 +25,16 @@ def init_ray():
             # Ray系统进程预留内存，剩余内存约2GB给系统
             # system_reserved_memory=CONFIG.RAY_SYSTEM_RESERVED_MEMORY,
             # system_reserved_cpu=CONFIG.RAY_SYSTEM_RESERVED_CPU,  # 至少 0.5
+            runtime_env={
+                "env_vars": {
+                    "GDAL_DISABLE_READDIR_ON_OPEN": "EMPTY_DIR",
+                    "GDAL_HTTP_MERGE_CONSECUTIVE_RANGES": "YES",
+                    # "GDAL_NUM_THREADS": "ALL_CPUS",
+                    "VSI_CACHE": "TRUE",
+                    "VSI_CACHE_SIZE": "50000000",
+                    "CPL_VSIL_CURL_ALLOWED_EXTENSIONS": ".tif",
+                }
+            }
         )
         # ray.init(address='auto')
         for node in ray.nodes():

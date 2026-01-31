@@ -105,6 +105,7 @@ class DevK8SConfig(BaseConfig):
     RAY_MEMORY_PER_TASK                             =       4 * 1024**3
     RAY_OBJECT_STORE_MEMORY                         =       RAY_MEMORY * 0.3
     RAY_NUM_CPUS                                    =       8
+    RAY_CPUS_PER_TASK                               =       1                 # 每个 Ray 任务请求的 CPU 数 (最大化并行度)
     RAY_SYSTEM_RESERVED_CPU                         =       0.5
     RAY_SYSTEM_RESERVED_MEMORY                      =       2 * 1024**3
 
@@ -158,12 +159,13 @@ class VmodConfig(BaseConfig):
 
     # Limitation for Ray
     RAY_MEMORY                                      =       35 * 1024**3
-    RAY_MEMORY_PER_TASK                             =       12 * 1024**3
+    RAY_MEMORY_PER_TASK                             =       2 * 1024**3   
     RAY_OBJECT_STORE_MEMORY                         =       RAY_MEMORY * 0.3
     RAY_NUM_CPUS                                    =       36
+    RAY_CPUS_PER_TASK                               =       1                 # 每个 Ray 任务请求的 CPU 数 (最大化并行度)
     RAY_SYSTEM_RESERVED_CPU                         =       0.5
     RAY_SYSTEM_RESERVED_MEMORY                      =       2 * 1024**3
-
+    
     # MethLib Config
     METHOD_WD                                       =       r"/usr/resource/method_library/method_wd"
     METHOD_PD                                       =       r"/usr/resource/method_library/method_pd"
@@ -216,6 +218,7 @@ class hxfConfig(BaseConfig):
     RAY_MEMORY_PER_TASK                             =       5 * 1024**3
     RAY_OBJECT_STORE_MEMORY                         =       RAY_MEMORY * 0.3
     RAY_NUM_CPUS                                    =       8
+    RAY_CPUS_PER_TASK                               =       1                 # 每个 Ray 任务请求的 CPU 数 (最大化并行度)
     RAY_SYSTEM_RESERVED_CPU                         =       0.5
     RAY_SYSTEM_RESERVED_MEMORY                      =       2 * 1024**3
 
@@ -324,9 +327,10 @@ class slkConfig(BaseConfig):
 
     # Limitation for Ray
     RAY_MEMORY                                      =       40 * 1024**3
-    RAY_MEMORY_PER_TASK                             =       5 * 1024**3
+    RAY_MEMORY_PER_TASK                             =       2 * 1024**3
     RAY_OBJECT_STORE_MEMORY                         =       RAY_MEMORY * 0.3
     RAY_NUM_CPUS                                    =       8
+    RAY_CPUS_PER_TASK                               =       1                 # 每个 Ray 任务请求的 CPU 数 (最大化并行度)
     RAY_SYSTEM_RESERVED_CPU                         =       0.5
     RAY_SYSTEM_RESERVED_MEMORY                      =       2 * 1024**3
 
@@ -369,7 +373,7 @@ def get_current_config():
     """获取当前环境的配置类"""
     return get_config(CURRENT_PROFILE)
 
-os.environ['APP_PROFILE'] = 'zzw'
+os.environ['APP_PROFILE'] = 'slk'
 # 获取当前环境配置 - 类似Spring Boot的 spring.profiles.active
 CURRENT_PROFILE = os.getenv('APP_PROFILE', 'k8s')  # 默认使用k8s
 

@@ -17,5 +17,5 @@
     "PG_USER": "postgres",
     "PG_PWD": "123456",
     "PG_RESOURCE_PORT": 31543,
-    "PG_RESOURCE_DB": "test"
+    "PG_RESOURCE_DB": "ard_satellite"
 }
