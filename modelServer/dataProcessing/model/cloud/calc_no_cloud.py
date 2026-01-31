@@ -5,6 +5,7 @@ import time
 import json
 import requests
 import numpy as np
+import traceback
 from functools import partial
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import ray
@@ -22,13 +23,10 @@ from dataProcessing.Utils.gridUtil import GridHelper
 from dataProcessing.model.task import Task
 from dataProcessing.config import current_config as CONFIG
 
-# 如果 rio_tiler 在所有节点环境都已安装，最好放在这。
-# 如果只在 Worker 节点有，则保持在函数内。为了保险起见，这里放在顶层，
-# 如果报错，移回 process_grid 内部。
 try:
     from rio_tiler.io import COGReader
 except ImportError:
-    pass  # 允许 Driver 节点没有安装 rio_tiler，只要 Worker 有即可
+    pass 
 
 MINIO_ENDPOINT = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}"
 INFINITY = 999999
@@ -48,13 +46,11 @@ def process_grid(grid, scenes, scene_band_paths, grid_helper, minio_endpoint, te
         print('-' * 50, flush=True)
         print(f" start { grid_lable }", flush=True)
 
-        # ---------------- 内部 Helper 函数 ----------------
-        def grid_bbox():
-            bbox_poly = grid_helper._get_grid_polygon(grid_x, grid_y)
-            return bbox_poly.bounds
+        bbox_poly = grid_helper._get_grid_polygon(grid_x, grid_y)
 
+        # ---------------- 内部 Helper 函数 ----------------
         def is_grid_intersected(scene):
-            bbox_wgs84 = grid_bbox()
+            bbox_wgs84 = bbox_poly.bounds
             scene_geom = scene.get('bbox').get('geometry')
             polygon = shape(scene_geom)
             bbox_polygon = box(*bbox_wgs84)
@@ -92,7 +88,7 @@ def process_grid(grid, scenes, scene_band_paths, grid_helper, minio_endpoint, te
                     return np.zeros_like(data, dtype=np.uint8)
         # ------------------------------------------------
 
-        bbox = grid_bbox()
+        bbox = bbox_poly.bounds
         target_H = None
         target_W = None
 
@@ -336,102 +332,122 @@ class calc_no_cloud(Task):
     def run(self):
         print("NoCloudGraphTask run", flush=True)
 
-        ## Step 1 : Input Args #################################################
-        grids = self.tiles
-        gridResolution = self.resolution
-        scenes = self.scenes
-        bandList = self.bandList
+        # 确保这些变量在 finally 中可见
+        temp_dir_path = None
+        scenes_ref = None
+        scene_band_paths_ref = None
+        response_json = {}
 
-        ## Step 2 : Multithread Processing 4 Grids #############################
-        grid_helper = GridHelper(gridResolution)
-
-        scene_band_paths = {} # as cache
-        for scene in scenes:
-            mapper = scene['bandMapper']
-            bands = {band: None for band in bandList}
-            for img in scene['images']:
-                for band in bandList:
-                    if str(img['band']) == str(mapper[band]):
-                        bands[band] = img['tifPath']
-            scene_band_paths[scene['sceneId']] = bands
-
-        temp_dir_path = os.path.join(CONFIG.TEMP_OUTPUT_DIR, self.task_id)
-        os.makedirs(temp_dir_path, exist_ok=True)
-
-        print('start time ', time.time(), flush=True)
-
-        # 优化：使用 Ray Object Store 存储大对象，避免写入临时文件和重复IO
-        scenes_ref = ray.put(scenes)
-        scene_band_paths_ref = ray.put(scene_band_paths)
-
-        # 启动 Ray 任务
-        # num_threads 与 Ray 分配的 CPU 数保持一致，避免线程过度订阅
-        ray_tasks = [
-            process_grid.remote(
-                grid=g,
-                scenes=scenes_ref,               # 传入引用
-                scene_band_paths=scene_band_paths_ref, # 传入引用
-                grid_helper=grid_helper,
-                minio_endpoint=MINIO_ENDPOINT,
-                temp_dir_path=temp_dir_path,
-                num_threads=CONFIG.RAY_CPUS_PER_TASK
-            )
-            for g in grids
-        ]
-        
-        from dataProcessing.model.scheduler import init_scheduler
-        scheduler = init_scheduler()
-        scheduler.set_task_refs(self.task_id, ray_tasks)
-        
-        # 获取结果，过滤 None (处理失败或无数据的瓦片)
-        results = [r for r in ray.get(ray_tasks) if r is not None]
-
-        ## Step 3 : Results Uploading and Statistic #######################
-        upload_results = []
-        with ThreadPoolExecutor(max_workers=8) as executor:
-            futures = [
-                executor.submit(upload_one, tif_path, grid_x, grid_y, self.task_id)
-                for tif_path, grid_x, grid_y in results
-            ]
-            for future in as_completed(futures):
-                try:
-                    upload_results.append(future.result())
-                except Exception as e:
-                    print(f"Upload failed: {e}", flush=True)
-
-        upload_results.sort(key=lambda x: (x["grid"][0], x["grid"][1]))
-        print('end upload ', time.time(), flush=True)
-
-        ## Step 4 : Generate MosaicJSON as result #######################
-        # Debug info
-        # print([CONFIG.MINIO_TEMP_FILES_BUCKET + "/" + item["tifPath"] for item in upload_results], flush=True)
-        
-        mosaic_payload = {
-            "files": [f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}/{item['bucket']}/{item['tifPath']}" for item in upload_results],
-            "minzoom": 7,
-            "maxzoom": 20,
-            "max_threads": 20
-        }
-        
         try:
-            response = requests.post(
-                CONFIG.MOSAIC_CREATE_URL, 
-                json=mosaic_payload, 
-                headers={"Content-Type": "application/json"}
-            )
-            response_json = response.json()
-        except Exception as e:
-            print(f"Mosaic creation failed: {e}", flush=True)
-            response_json = {"error": str(e), "data": upload_results}
+            ## Step 1 : Input Args #################################################
+            grids = self.tiles
+            gridResolution = self.resolution
+            scenes = self.scenes
+            bandList = self.bandList
 
-        print('=============No Cloud Task Has Finally Finished=================', flush=True)
-        
-        # 清理临时目录
-        if os.path.exists(temp_dir_path):
+            ## Step 2 : Multithread Processing 4 Grids #############################
+            grid_helper = GridHelper(gridResolution)
+
+            scene_band_paths = {} # as cache
+            for scene in scenes:
+                mapper = scene['bandMapper']
+                bands = {band: None for band in bandList}
+                for img in scene['images']:
+                    for band in bandList:
+                        if str(img['band']) == str(mapper[band]):
+                            bands[band] = img['tifPath']
+                scene_band_paths[scene['sceneId']] = bands
+
+            temp_dir_path = os.path.join(CONFIG.TEMP_OUTPUT_DIR, self.task_id)
+            os.makedirs(temp_dir_path, exist_ok=True)
+
+            print('start time ', time.time(), flush=True)
+
+            # 优化：使用 Ray Object Store 存储大对象，避免写入临时文件和重复IO
+            scenes_ref = ray.put(scenes)
+            scene_band_paths_ref = ray.put(scene_band_paths)
+
+            # 启动 Ray 任务
+            # num_threads 与 Ray 分配的 CPU 数保持一致，避免线程过度订阅
+            ray_tasks = [
+                process_grid.remote(
+                    grid=g,
+                    scenes=scenes_ref,             # 传入引用
+                    scene_band_paths=scene_band_paths_ref, # 传入引用
+                    grid_helper=grid_helper,
+                    minio_endpoint=MINIO_ENDPOINT,
+                    temp_dir_path=temp_dir_path,
+                    num_threads=CONFIG.RAY_CPUS_PER_TASK
+                )
+                for g in grids
+            ]
+            
+            from dataProcessing.model.scheduler import init_scheduler
+            scheduler = init_scheduler()
+            scheduler.set_task_refs(self.task_id, ray_tasks)
+            
+            # 获取结果，过滤 None (处理失败或无数据的瓦片)
+            results = [r for r in ray.get(ray_tasks) if r is not None]
+
+            ## Step 3 : Results Uploading and Statistic #######################
+            upload_results = []
+            with ThreadPoolExecutor(max_workers=8) as executor:
+                futures = [
+                    executor.submit(upload_one, tif_path, grid_x, grid_y, self.task_id)
+                    for tif_path, grid_x, grid_y in results
+                ]
+                for future in as_completed(futures):
+                    try:
+                        upload_results.append(future.result())
+                    except Exception as e:
+                        print(f"Upload failed: {e}", flush=True)
+
+            upload_results.sort(key=lambda x: (x["grid"][0], x["grid"][1]))
+            print('end upload ', time.time(), flush=True)
+
+            ## Step 4 : Generate MosaicJSON as result #######################
+            # Debug info
+            # print([CONFIG.MINIO_TEMP_FILES_BUCKET + "/" + item["tifPath"] for item in upload_results], flush=True)
+            
+            mosaic_payload = {
+                "files": [f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}/{item['bucket']}/{item['tifPath']}" for item in upload_results],
+                "minzoom": 7,
+                "maxzoom": 20,
+                "max_threads": 20
+            }
+            
             try:
-                shutil.rmtree(temp_dir_path)
-                print('=============No Cloud Origin Data Deleted=================', flush=True)
+                response = requests.post(
+                    CONFIG.MOSAIC_CREATE_URL, 
+                    json=mosaic_payload, 
+                    headers={"Content-Type": "application/json"}
+                )
+                response_json = response.json()
             except Exception as e:
-                print(f"Failed to delete temp dir: {e}", flush=True)
+                print(f"Mosaic creation failed: {e}", flush=True)
+                response_json = {"error": str(e), "data": upload_results}
+
+            print('=============No Cloud Task Has Finally Finished=================', flush=True)
+        
+        except Exception as e:
+            # 捕获任务执行中的异常，防止崩溃
+            print(f"CRITICAL ERROR in Task {self.task_id}: {e}", flush=True)
+            traceback.print_exc()
+            response_json = {"status": "error", "message": str(e)}
+
+        finally:
+            # 清理临时目录
+            if temp_dir_path and os.path.exists(temp_dir_path):
+                try:
+                    shutil.rmtree(temp_dir_path)
+                    print('=============No Cloud Origin Data Deleted=================', flush=True)
+                except Exception as e:
+                    print(f"Failed to delete temp dir: {e}", flush=True)
+            
+            # 清理 Ray 对象引用
+            if scenes_ref:
+                del scenes_ref
+            if scene_band_paths_ref:
+                del scene_band_paths_ref
 
         return response_json

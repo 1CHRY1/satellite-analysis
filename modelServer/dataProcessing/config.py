@@ -157,12 +157,13 @@ class VmodConfig(BaseConfig):
     TEMP_OUTPUT_DIR                                 =       r"/usr/resource/temp"
 
     # Limitation for Ray
-    RAY_MEMORY                                      =       35 * 1024**3
-    RAY_MEMORY_PER_TASK                             =       12 * 1024**3
-    RAY_OBJECT_STORE_MEMORY                         =       RAY_MEMORY * 0.3
-    RAY_NUM_CPUS                                    =       36
-    RAY_SYSTEM_RESERVED_CPU                         =       0.5
-    RAY_SYSTEM_RESERVED_MEMORY                      =       2 * 1024**3
+    RAY_MEMORY                                      =       70 * 1024**3      # 94GB Node RAM - 4GB System
+    RAY_MEMORY_PER_TASK                             =       4 * 1024**3       # Peak task memory ~2.5GB
+    RAY_OBJECT_STORE_MEMORY                         =       20 * 1024**3      # Shared memory for objects
+    RAY_NUM_CPUS                                    =       12                # 40 Cores per node
+    RAY_CPUS_PER_TASK                               =       1                 # 1 Core per task
+    RAY_SYSTEM_RESERVED_CPU                         =       1                 # Reserve 1 Core
+    RAY_SYSTEM_RESERVED_MEMORY                      =       4 * 1024**3       # Reserve 4GB RAM
 
     # MethLib Config
     METHOD_WD                                       =       r"/usr/resource/method_library/method_wd"
