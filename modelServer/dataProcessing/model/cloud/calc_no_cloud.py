@@ -1,4 +1,5 @@
 import os, shutil, glob, time, json
+import math
 from functools import partial
 from multiprocessing import Pool, cpu_count
 import rasterio
@@ -44,13 +45,27 @@ class calc_no_cloud(Task):
         gridResolution = self.resolution # 2km / 50km
         scenes = self.scenes
         bandList = self.bandList
-        # cloud = data.get('cloud') 没啥用
 
-        ## Step 2 : Multithread Processing 4 Grids #############################
-        # !!!!!!!!修改，根据行政区划的面积，划分格网分辨率大致处于10-15km的格网，保证介于10-20km之间
-        # 不一定要按照全球格网划分的规则（也就是不一定要走gridHelper）， 可以自己直接拆分成一个一个grid_bbox
-        # grid resolution超过20km就划分，否则不管
+        ## Step 2 : 自适应格网划分 ##############################################
+        # 根据分辨率自动细分格网，使子格网分辨率在 10-15km 之间（保证 ≤20km）
         grid_helper = GridHelper(gridResolution)
+
+        # 对每个原始格网进行细分（如果需要的话）
+        all_grid_bboxes = []  # [(grid_bbox, grid_label), ...]
+        for g in grids:
+            grid_x, grid_y = g
+            original_bbox = grid_helper._get_grid_polygon(grid_x, grid_y).bounds
+            sub_grids = subdivide_grid_if_needed(original_bbox, gridResolution)
+            for sub_bbox, sub_label in sub_grids:
+                # grid_label 格式: "原始格网x_原始格网y_子格网i_子格网j"
+                grid_label = f"{grid_x}_{grid_y}_{sub_label}"
+                all_grid_bboxes.append((sub_bbox, grid_label))
+
+        print(f"原始格网数: {len(grids)}, 细分后格网数: {len(all_grid_bboxes)}", flush=True)
+        if gridResolution > 20:
+            subdivide_factor = math.ceil(gridResolution / 15)
+            actual_res = gridResolution / subdivide_factor
+            print(f"格网细分: {subdivide_factor}x{subdivide_factor}, 子格网分辨率: {actual_res:.1f}km", flush=True)
 
         scene_band_paths = {} # as cache
         for scene in scenes:
@@ -62,8 +77,6 @@ class calc_no_cloud(Task):
                         bands[band] = img['tifPath']  # 动态赋值
             scene_band_paths[scene['sceneId']] = bands
 
-        # temp_dir_path = os.path.join(CONFIG.TEMP_OUTPUT_DIR, self.task_id)
-        # os.makedirs(temp_dir_path, exist_ok=True)
         scenes_ref = ray.put(scenes)
         bandPaths_ref = ray.put(scene_band_paths)
         print('start time ', time.time(), flush=True)
@@ -73,12 +86,12 @@ class calc_no_cloud(Task):
         results = []
         in_flight = []
         all_task_refs = []
-        for g in grids:
+        for grid_bbox, grid_label in all_grid_bboxes:
             ref = process_grid.remote(
-                grid=g,
+                grid_bbox=grid_bbox,
+                grid_label=grid_label,
                 scenes=scenes_ref,
                 scene_band_paths=bandPaths_ref,
-                grid_helper=grid_helper,
                 minio_endpoint=MINIO_ENDPOINT,
                 task_id=self.task_id
             )
@@ -96,8 +109,8 @@ class calc_no_cloud(Task):
         scheduler = init_scheduler()
         scheduler.set_task_refs(self.task_id, all_task_refs)
 
-        upload_results = [r for r in results if r is not None]# 1. 过滤掉 None (执行失败的任务)
-        upload_results.sort(key=lambda x: (x["grid"][0], x["grid"][1]))
+        upload_results = [r for r in results if r is not None]  # 过滤掉 None (执行失败的任务)
+        upload_results.sort(key=lambda x: x["gridLabel"])  # 按 grid_label 排序
 
         ## Step 4 : Generate MosaicJSON as result #######################
         print([CONFIG.MINIO_TEMP_FILES_BUCKET+item["tifPath"] for item in upload_results], flush=True)
@@ -117,14 +130,19 @@ class calc_no_cloud(Task):
         return response.json()
 
 @ray.remote(num_cpus=1, memory=CONFIG.RAY_MEMORY_PER_TASK)
-def process_grid(grid, scenes, scene_band_paths, grid_helper, minio_endpoint, task_id):
+def process_grid(grid_bbox, grid_label, scenes, scene_band_paths, minio_endpoint, task_id):
+    """
+    处理单个格网的去云合成
+
+    Args:
+        grid_bbox: (minLng, minLat, maxLng, maxLat) 格网边界
+        grid_label: 格网标签，用于文件命名，格式如 "x_y_i_j"
+        scenes: 场景列表
+        scene_band_paths: 场景波段路径缓存
+        minio_endpoint: MinIO 地址
+        task_id: 任务 ID
+    """
     try:
-        grid_x, grid_y = grid
-        grid_lable = f'grid_{grid_x}_{grid_y}'
-        INFINITY = 999999
-        # print('-' * 50, flush=True)
-        # print(f" start { grid_lable }", flush=True)
-        grid_bbox = grid_helper._get_grid_polygon(grid_x, grid_y).bounds
         target_H = None
         target_W = None
         img = None
@@ -250,13 +268,11 @@ def process_grid(grid, scenes, scene_band_paths, grid_helper, minio_endpoint, ta
                 dst.write(img)
             # 2. 指针归零
             memfile.seek(0)
-            minio_key = f"{task_id}/{grid_x}_{grid_y}.tif"
-            #!!!!!!!!!!确保 uploadLocalFile 内部调用的是 boto3 的 upload_fileobj
-            # TODO 上传内存文件！
+            minio_key = f"{task_id}/{grid_label}.tif"
 
             uploadMemFile(memfile, CONFIG.MINIO_TEMP_FILES_BUCKET, minio_key)
             return {
-                "grid": [grid_x, grid_y],
+                "gridLabel": grid_label,
                 "bucket": CONFIG.MINIO_TEMP_FILES_BUCKET,
                 "tifPath": minio_key
             }
@@ -324,6 +340,47 @@ def read_band(band_path,scene_bucket, grid_bbox, target_H, target_W):
         # 【新增】自动转换为uint8
         converted_data = convert_to_uint8(original_data, original_dtype)
         return converted_data
+    
+
+def subdivide_grid_if_needed(grid_bbox, resolution_km, target_max_km=15):
+    """
+    如果格网分辨率超过 20km，则进行细分，使子格网分辨率在 10-15km 之间
+
+    Args:
+        grid_bbox: (minLng, minLat, maxLng, maxLat)
+        resolution_km: 当前格网分辨率 (km)
+        target_max_km: 目标最大分辨率 (km)，默认 15km
+
+    Returns:
+        子格网列表: [(bbox, label), ...]
+        - bbox: (minLng, minLat, maxLng, maxLat)
+        - label: 用于文件命名的标签
+    """
+    min_lng, min_lat, max_lng, max_lat = grid_bbox
+
+    if resolution_km <= 20:
+        # 不需要细分
+        return [(grid_bbox, "0_0")]
+
+    # 计算细分倍数，使子格网分辨率 ≤ target_max_km
+    subdivide_factor = math.ceil(resolution_km / target_max_km)
+
+    grid_width = (max_lng - min_lng) / subdivide_factor
+    grid_height = (max_lat - min_lat) / subdivide_factor
+
+    sub_grids = []
+    for i in range(subdivide_factor):
+        for j in range(subdivide_factor):
+            sub_bbox = (
+                min_lng + i * grid_width,
+                min_lat + j * grid_height,
+                min_lng + (i + 1) * grid_width,
+                min_lat + (j + 1) * grid_height
+            )
+            sub_label = f"{i}_{j}"
+            sub_grids.append((sub_bbox, sub_label))
+
+    return sub_grids
 
 # def transform_bbox_3857(grid_bbox):
 #     transformer = Transformer.from_crs("EPSG:4326", "EPSG:3857", always_xy=True)
