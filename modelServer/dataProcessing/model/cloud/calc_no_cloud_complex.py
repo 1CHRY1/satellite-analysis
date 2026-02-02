@@ -14,6 +14,7 @@ from rio_cogeo.profiles import cog_profiles
 from rio_cogeo.cogeo import cog_translate, cog_info
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import ray
+import gc
 from dataProcessing.Utils.osUtils import uploadLocalFile, uploadMemFile
 from dataProcessing.Utils.gridUtil import GridHelper
 from dataProcessing.model.task import Task
@@ -171,7 +172,7 @@ class calc_no_cloud_complex(Task):
         return response.json()
 
 
-@ray.remote(num_cpus=1, memory=CONFIG.RAY_MEMORY_PER_TASK)
+@ray.remote(num_cpus=1, memory=CONFIG.RAY_MEMORY_PER_TASK, scheduling_strategy="SPREAD")
 def process_grid(grid_bbox, grid_label, scenes, scene_band_paths, band_list, band_num, minio_endpoint, task_id):
     """
     处理单个格网的去云合成（支持复杂波段如 NDVI、EVI）
@@ -237,8 +238,10 @@ def process_grid(grid_bbox, grid_label, scenes, scene_band_paths, band_list, ban
                     current_data = current_img_obj.data[0]
                     nodata_mask = current_img_obj.mask
 
-                # 默认全部无云，只考虑nodata
-                valid_mask = (nodata_mask.astype(bool)) & (current_data != 0)
+                # 默认全部无云，只考虑nodata；(current_data != 0)是因为不信任原有的 mask
+                # valid_mask = (nodata_mask.astype(bool)) & (current_data != 0)
+                valid_mask = nodata_mask.astype(np.bool_, copy=False)
+                np.not_equal(current_data, 0, out=valid_mask, where=valid_mask)
 
             else:
                 scene_id = scene['sceneId']
@@ -272,10 +275,15 @@ def process_grid(grid_bbox, grid_label, scenes, scene_band_paths, band_list, ban
                     print("UNKNOWN :", sensorName, flush=True)
                     continue
 
-                valid_mask = (~cloud_mask) & (nodata_mask.astype(bool)) & (image_data != 0)
+                # valid_mask = (~cloud_mask) & (nodata_mask.astype(bool)) & (image_data != 0)
+                valid_mask = nodata_mask.astype(np.bool_, copy=False)
+                valid_mask &= ~cloud_mask
+                np.not_equal(image_data, 0, out=valid_mask, where=valid_mask)
 
             # 需要填充的区域 & 该景有效区域
-            fill_mask = need_fill_mask & valid_mask
+            # fill_mask = need_fill_mask & valid_mask
+            fill_mask = valid_mask
+            fill_mask &= need_fill_mask
 
             if np.any(fill_mask):
                 scene_id = scene['sceneId']
@@ -284,53 +292,82 @@ def process_grid(grid_bbox, grid_label, scenes, scene_band_paths, band_list, ban
                     continue
 
                 # 读取各波段数据
-                band_data_list = []
-                for band in band_list:
+                for i, band in enumerate(band_list):
                     band_path = paths.get(band)
+                    temp_band_data = None # 当前波段的临时数据容器
+                    
+                    # === Case 1: NDVI 计算 ===
                     if band == "NDVI" and isinstance(band_path, dict):
                         nir_path = band_path.get('NIR')
                         red_path = band_path.get('Red')
+                        
                         if nir_path and red_path:
+                            # 1. 读取 NIR
                             nir = read_band(nir_path, scene['bucket'], grid_bbox, target_H, target_W)
+                            # 2. 读取 Red
                             red = read_band(red_path, scene['bucket'], grid_bbox, target_H, target_W)
-                            ndvi = calculate_ndvi(nir, red)
-                            band_data_list.append(ndvi)
+                            
+                            # 3. 计算 NDVI (假设返回的是同尺寸数组)
+                            # 注意：如果 calculate_ndvi 返回 float，这里会占用较多内存，算完赶紧释放输入
+                            temp_band_data = calculate_ndvi(nir, red)
+                            
+                            # 【关键】算完立刻释放源数据
+                            del nir, red 
                         else:
                             print(f"WARNING: Missing NIR or Red path for NDVI", flush=True)
-                            band_data_list.append(np.zeros((target_H, target_W), dtype=np.uint8))
+                            temp_band_data = np.zeros((target_H, target_W), dtype=np.uint8)
+                    
+                    # === Case 2: EVI 计算 ===
                     elif band == "EVI" and isinstance(band_path, dict):
                         nir_path = band_path.get('NIR')
                         red_path = band_path.get('Red')
                         blue_path = band_path.get('Blue')
+                        
                         if nir_path and red_path:
                             nir = read_band(nir_path, scene['bucket'], grid_bbox, target_H, target_W)
                             red = read_band(red_path, scene['bucket'], grid_bbox, target_H, target_W)
                             blue = read_band(blue_path, scene['bucket'], grid_bbox, target_H, target_W) if blue_path else None
-                            evi = calculate_evi(nir, red, blue)
-                            band_data_list.append(evi)
+                            
+                            temp_band_data = calculate_evi(nir, red, blue)
+                            
+                            # 【关键】算完立刻释放源数据
+                            if blue is not None: del blue
+                            del nir, red
                         else:
                             print(f"WARNING: Missing NIR or Red path for EVI", flush=True)
-                            band_data_list.append(np.zeros((target_H, target_W), dtype=np.uint8))
+                            temp_band_data = np.zeros((target_H, target_W), dtype=np.uint8)
+                            
+                    # === Case 3: 普通波段 ===
                     elif band_path is not None and isinstance(band_path, str):
-                        # 普通波段：确保 band_path 是字符串
-                        band_data = read_band(band_path, scene['bucket'], grid_bbox, target_H, target_W)
-                        band_data_list.append(band_data)
+                        temp_band_data = read_band(band_path, scene['bucket'], grid_bbox, target_H, target_W)
+                        
+                    # === Case 4: 异常兜底 ===
                     else:
                         print(f"WARNING: Invalid band_path for {band}: {type(band_path)}", flush=True)
-                        # 填充零数据
-                        band_data_list.append(np.zeros((target_H, target_W), dtype=np.uint8))
+                        temp_band_data = np.zeros((target_H, target_W), dtype=np.uint8)
 
-                # 填充数据
-                for i in range(band_num):
-                    img[i][fill_mask] = band_data_list[i][fill_mask]
+                    if temp_band_data is not None:
+                        np.copyto(img[i], temp_band_data, where=fill_mask)
+                        del temp_band_data
 
-                need_fill_mask[fill_mask] = False
+                np.putmask(need_fill_mask, fill_mask, False)
                 filled_ratio = 1.0 - (np.count_nonzero(need_fill_mask) / need_fill_mask.size)
 
             if not np.any(need_fill_mask) or filled_ratio > 0.995:
                 break
 
         first_shape_set = False
+
+        vars_to_delete = [
+            'current_img_obj', 'current_data',
+            'img_data', 'image_data',
+            'nodata_mask', 'valid_mask', 'fill_mask',
+        ]
+        locs = locals()
+        for var in vars_to_delete:
+            if var in locs:
+                del locs[var]
+        gc.collect()
 
         # 转换坐标系到 3857
         grid_bbox_3857 = transform_bounds("EPSG:4326", "EPSG:3857", *grid_bbox)
@@ -432,19 +469,75 @@ def convert_to_uint8(data, original_dtype):
             return np.zeros_like(data, dtype=np.uint8)
 
 
-def read_band(band_path, scene_bucket, grid_bbox, target_H, target_W):
-    """读取单个波段数据"""
-    if band_path is None:
-        print(f"WARNING: band_path is None, returning zeros", flush=True)
-        return np.zeros((target_H, target_W), dtype=np.uint8)
+# def read_band(band_path, scene_bucket, grid_bbox, target_H, target_W):
+#     """读取单个波段数据"""
+#     if band_path is None:
+#         print(f"WARNING: band_path is None, returning zeros", flush=True)
+#         return np.zeros((target_H, target_W), dtype=np.uint8)
 
-    full_path = MINIO_ENDPOINT + "/" + scene_bucket + "/" + band_path
-    with COGReader(full_path, options={'nodata': int(0)}) as reader:
-        band_data = reader.part(bbox=grid_bbox, dst_crs="EPSG:3857", indexes=[1], height=target_H, width=target_W)
-        original_data = band_data.data[0]
-        original_dtype = original_data.dtype
-        converted_data = convert_to_uint8(original_data, original_dtype)
-        return converted_data
+#     full_path = MINIO_ENDPOINT + "/" + scene_bucket + "/" + band_path
+#     with COGReader(full_path, options={'nodata': int(0)}) as reader:
+#         band_data = reader.part(bbox=grid_bbox, dst_crs="EPSG:3857", indexes=[1], height=target_H, width=target_W)
+#         original_data = band_data.data[0]
+#         original_dtype = original_data.dtype
+#         converted_data = convert_to_uint8(original_data, original_dtype)
+#         return converted_data
+
+def read_band(band_path, scene_bucket, grid_bbox, target_H, target_W):
+    # full_path = CONFIG.MINIO_ENDPOINT + "/" + scene_bucket + "/" + band_path
+    full_path = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}/{scene_bucket}/{band_path}"
+    
+    with COGReader(full_path, options={'nodata': 0}) as reader:
+        # 1. 读取数据
+        data_part = reader.part(bbox=grid_bbox, indexes=[1], height=target_H, width=target_W)
+        arr = data_part.data[0] # 原始数据
+        
+        # 2. 获取元数据
+        dtype = arr.dtype
+        
+        # === Case 1: 已经是 Uint8 ===
+        if dtype == np.uint8:
+            return arr # 零拷贝直接返回
+            
+        # === Case 2: Uint16 (标准缩放) ===
+        if dtype == np.uint16:
+            # 转换为 float32 节省内存 (相比 float64)
+            f_arr = arr.astype(np.float32)
+            # 原地乘法 (In-place) 避免临时数组
+            # 255 / 65535 = 0.00389099
+            np.multiply(f_arr, 0.00389099, out=f_arr)
+            return f_arr.astype(np.uint8)
+            
+        # === Case 3: 浮点数 (Float32/64) ===
+        if np.issubdtype(dtype, np.floating):
+            # 先计算 min/max，不占内存
+            d_min = np.min(arr)
+            d_max = np.max(arr)
+            
+            # [逻辑优化]：虽然是 float，但如果范围已经在 0-255 之间，直接强转
+            # 这保留了你第二种代码的智慧
+            if d_min >= 0 and d_max <= 255:
+                return arr.astype(np.uint8)
+            
+            # [逻辑优化]：如果是 0-65535 的 float，先模拟 uint16 的缩放
+            if d_min >= 0 and d_max <= 65535:
+                # 这里的 arr 已经是 float 了，直接原地乘
+                np.multiply(arr, 0.00389099, out=arr)
+                return arr.astype(np.uint8)
+                
+            # [标准归一化]：其他范围，拉伸到 0-255
+            if d_max > d_min:
+                # 使用 In-place 操作防止 OOM
+                # arr = (arr - min) / (max - min) * 255
+                scale = 255.0 / (d_max - d_min)
+                np.subtract(arr, d_min, out=arr) # arr 变成 arr - min
+                np.multiply(arr, scale, out=arr) # arr 变成 arr * scale
+                return arr.astype(np.uint8)
+            
+            return np.zeros_like(arr, dtype=np.uint8)
+
+        # 其他类型兜底
+        return arr.astype(np.uint8)
 
 
 def calculate_ndvi(nir_band, red_band):
