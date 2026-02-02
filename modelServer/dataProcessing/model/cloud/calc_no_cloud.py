@@ -3,6 +3,7 @@ import math
 from functools import partial
 from multiprocessing import Pool, cpu_count
 import rasterio
+import gc
 from rio_tiler.io import COGReader
 import numpy as np
 from rasterio.transform import from_bounds
@@ -129,7 +130,7 @@ class calc_no_cloud(Task):
         print('end time ', time.time())
         return response.json()
 
-@ray.remote(num_cpus=1, memory=CONFIG.RAY_MEMORY_PER_TASK)
+@ray.remote(num_cpus=1, memory=CONFIG.RAY_MEMORY_PER_TASK, scheduling_strategy="SPREAD")
 def process_grid(grid_bbox, grid_label, scenes, scene_band_paths, minio_endpoint, task_id):
     """
     处理单个格网的去云合成
@@ -148,6 +149,7 @@ def process_grid(grid_bbox, grid_label, scenes, scene_band_paths, minio_endpoint
         img = None
         need_fill_mask = None
         first_shape_set = False
+        filled_ratio = 0.0
 
         ############### Prepare #########################
         # 按分辨率排序，格网的分辨率是以第一个景读到的像素为网格分辨率，所以先按分辨率排序
@@ -185,7 +187,9 @@ def process_grid(grid_bbox, grid_label, scenes, scene_band_paths, minio_endpoint
                     current_data = current_img_obj.data[0]
                     nodata_mask = current_img_obj.mask
                 # 默认全部无云，只考虑nodata；(current_data != 0)是因为不信任原有的 mask
-                valid_mask = (nodata_mask.astype(bool)) & (current_data != 0)
+                # valid_mask = (nodata_mask.astype(bool)) & (current_data != 0)
+                valid_mask = nodata_mask.astype(np.bool_, copy=False)
+                np.not_equal(current_data, 0, out=valid_mask, where=valid_mask)
             else:
                 scene_id = scene['sceneId']
                 paths = scene_band_paths.get(scene_id)
@@ -215,30 +219,60 @@ def process_grid(grid_bbox, grid_label, scenes, scene_band_paths, minio_endpoint
                     continue
 
                 # !!! valid_mask <--> 无云 且 非nodata
-                valid_mask = (~cloud_mask) & (nodata_mask.astype(bool)) & (image_data != 0)
+                # valid_mask = (~cloud_mask) & (nodata_mask.astype(bool)) & (image_data != 0)
+                valid_mask = nodata_mask.astype(np.bool_, copy=False)
+                valid_mask &= ~cloud_mask
+                np.not_equal(image_data, 0, out=valid_mask, where=valid_mask)
 
             # 需要填充的区域 & 该景有效区域 <--> 该景可以填充格网的区域
-            fill_mask = need_fill_mask & valid_mask
+            # fill_mask = need_fill_mask & valid_mask
+            fill_mask = valid_mask
+            fill_mask &= need_fill_mask
+
             if np.any(fill_mask): # 只要有任意一个是1 ，那就可以填充
                 scene_id = scene['sceneId']
                 paths = scene_band_paths.get(scene_id)
                 if not paths:
                     continue
                 paths = list(paths.values())
-                band_1 = read_band(paths[0],scene['bucket'], grid_bbox, target_H, target_W)
-                band_2 = read_band(paths[1],scene['bucket'], grid_bbox, target_H, target_W)
-                band_3 = read_band(paths[2],scene['bucket'], grid_bbox, target_H, target_W)
-                img[0][fill_mask] = band_1[fill_mask]
-                img[1][fill_mask] = band_2[fill_mask]
-                img[2][fill_mask] = band_3[fill_mask]
-                need_fill_mask[fill_mask] = False # False if pixel filled
-                filled_ratio = 1.0 - (np.count_nonzero(need_fill_mask) / need_fill_mask.size)
+                # band_1 = read_band(paths[0],scene['bucket'], grid_bbox, target_H, target_W)
+                # band_2 = read_band(paths[1],scene['bucket'], grid_bbox, target_H, target_W)
+                # band_3 = read_band(paths[2],scene['bucket'], grid_bbox, target_H, target_W)
+                # img[0][fill_mask] = band_1[fill_mask]
+                # img[1][fill_mask] = band_2[fill_mask]
+                # img[2][fill_mask] = band_3[fill_mask]
+                # need_fill_mask[fill_mask] = False # False if pixel filled
+                # filled_ratio = 1.0 - (np.count_nonzero(need_fill_mask) / need_fill_mask.size)
                 # print(f"grid fill progress: {filled_ratio * 100:.2f}%", flush=True)
+
+                band_temp = read_band(paths[0], scene['bucket'], grid_bbox, target_H, target_W)
+                np.copyto(img[0], band_temp, where=fill_mask)
+                del band_temp
+                band_temp = read_band(paths[1], scene['bucket'], grid_bbox, target_H, target_W)
+                np.copyto(img[1], band_temp, where=fill_mask)
+                del band_temp
+                band_temp = read_band(paths[2], scene['bucket'], grid_bbox, target_H, target_W)
+                np.copyto(img[2], band_temp, where=fill_mask)
+                del band_temp
+                np.putmask(need_fill_mask, fill_mask, False)
+                filled_ratio = 1.0 - (np.count_nonzero(need_fill_mask) / need_fill_mask.size)
 
             if not np.any(need_fill_mask) or filled_ratio > 0.995:
                 # print("fill done", flush=True)
                 break
         first_shape_set = False
+
+        vars_to_delete = [
+            'current_img_obj', 'current_data',
+            'img_data', 'image_data',
+            'nodata_mask', 'valid_mask', 'fill_mask',
+            'band_1', 'band_2', 'band_3'
+        ]
+        locs = locals()
+        for var in vars_to_delete:
+            if var in locs:
+                del locs[var]
+        gc.collect()
 
         # 需要转成3857
         grid_bbox_3857 = transform_bounds("EPSG:4326", "EPSG:3857", *grid_bbox)
@@ -330,16 +364,72 @@ def convert_to_uint8(data, original_dtype):
             return np.zeros_like(data, dtype=np.uint8)
 
 
-def read_band(band_path,scene_bucket, grid_bbox, target_H, target_W):
-    full_path = MINIO_ENDPOINT + "/" + scene_bucket + "/" + band_path
-    # TODO noData
-    with COGReader(full_path, options={'nodata': int(0)}) as reader:
-        band_data = reader.part(bbox=grid_bbox, indexes=[1], height=target_H, width=target_W)
-        original_data = band_data.data[0]
-        original_dtype = original_data.dtype
-        # 【新增】自动转换为uint8
-        converted_data = convert_to_uint8(original_data, original_dtype)
-        return converted_data
+# def read_band(band_path,scene_bucket, grid_bbox, target_H, target_W):
+#     full_path = MINIO_ENDPOINT + "/" + scene_bucket + "/" + band_path
+#     # TODO noData
+#     with COGReader(full_path, options={'nodata': int(0)}) as reader:
+#         band_data = reader.part(bbox=grid_bbox, indexes=[1], height=target_H, width=target_W)
+#         original_data = band_data.data[0]
+#         original_dtype = original_data.dtype
+#         # 【新增】自动转换为uint8
+#         converted_data = convert_to_uint8(original_data, original_dtype)
+#         return converted_data
+
+def read_band(band_path, scene_bucket, grid_bbox, target_H, target_W):
+    # full_path = CONFIG.MINIO_ENDPOINT + "/" + scene_bucket + "/" + band_path
+    full_path = f"http://{CONFIG.MINIO_IP}:{CONFIG.MINIO_PORT}/{scene_bucket}/{band_path}"
+    
+    with COGReader(full_path, options={'nodata': 0}) as reader:
+        # 1. 读取数据
+        data_part = reader.part(bbox=grid_bbox, indexes=[1], height=target_H, width=target_W)
+        arr = data_part.data[0] # 原始数据
+        
+        # 2. 获取元数据
+        dtype = arr.dtype
+        
+        # === Case 1: 已经是 Uint8 ===
+        if dtype == np.uint8:
+            return arr # 零拷贝直接返回
+            
+        # === Case 2: Uint16 (标准缩放) ===
+        if dtype == np.uint16:
+            # 转换为 float32 节省内存 (相比 float64)
+            f_arr = arr.astype(np.float32)
+            # 原地乘法 (In-place) 避免临时数组
+            # 255 / 65535 = 0.00389099
+            np.multiply(f_arr, 0.00389099, out=f_arr)
+            return f_arr.astype(np.uint8)
+            
+        # === Case 3: 浮点数 (Float32/64) ===
+        if np.issubdtype(dtype, np.floating):
+            # 先计算 min/max，不占内存
+            d_min = np.min(arr)
+            d_max = np.max(arr)
+            
+            # [逻辑优化]：虽然是 float，但如果范围已经在 0-255 之间，直接强转
+            # 这保留了你第二种代码的智慧
+            if d_min >= 0 and d_max <= 255:
+                return arr.astype(np.uint8)
+            
+            # [逻辑优化]：如果是 0-65535 的 float，先模拟 uint16 的缩放
+            if d_min >= 0 and d_max <= 65535:
+                # 这里的 arr 已经是 float 了，直接原地乘
+                np.multiply(arr, 0.00389099, out=arr)
+                return arr.astype(np.uint8)
+                
+            # [标准归一化]：其他范围，拉伸到 0-255
+            if d_max > d_min:
+                # 使用 In-place 操作防止 OOM
+                # arr = (arr - min) / (max - min) * 255
+                scale = 255.0 / (d_max - d_min)
+                np.subtract(arr, d_min, out=arr) # arr 变成 arr - min
+                np.multiply(arr, scale, out=arr) # arr 变成 arr * scale
+                return arr.astype(np.uint8)
+            
+            return np.zeros_like(arr, dtype=np.uint8)
+
+        # 其他类型兜底
+        return arr.astype(np.uint8)
     
 
 def subdivide_grid_if_needed(grid_bbox, resolution_km, target_max_km=15):

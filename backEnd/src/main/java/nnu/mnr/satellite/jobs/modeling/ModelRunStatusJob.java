@@ -68,8 +68,8 @@ public class ModelRunStatusJob implements Job {
         }
         if (status.equals("COMPLETE")) {
             redisUtil.updateJsonField(caseId, "status", status);
-            caseDataService.updateCaseStatusById(caseId, status);
-            methlibService.updateCaseStatusById(caseId, status);
+//            caseDataService.updateCaseStatusById(caseId, status);
+//            methlibService.updateCaseStatusById(caseId, status);
             log.info("model case " + caseId + " has finished!");
             try {
                 quartzSchedulerManager.deleteJob(jobName, jobGroup);
@@ -96,7 +96,11 @@ public class ModelRunStatusJob implements Job {
                 redisUtil.updateJsonField(caseId, "end", LocalDateTime.now());
                 caseDataService.updateCaseResultById(caseId, resObj);
                 methlibService.updateCaseResultById(caseId, resObj.getJSONObject("output"));
+                caseDataService.updateCaseStatusById(caseId, status);
+                methlibService.updateCaseStatusById(caseId, status);
             } catch (SchedulerException e) {
+                caseDataService.updateCaseStatusById(caseId, "ERROR");
+                methlibService.updateCaseStatusById(caseId, "ERROR");
                 log.info(e.toString());
             }
         } else if (status.equals("ERROR")) {
