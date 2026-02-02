@@ -159,7 +159,7 @@ class VmodConfig(BaseConfig):
 
     # Limitation for Ray
     RAY_MEMORY                                      =       70 * 1024**3      # 94GB Node RAM - 4GB System
-    RAY_MEMORY_PER_TASK                             =       4 * 1024**3       # Peak task memory ~2.5GB
+    RAY_MEMORY_PER_TASK                             =       6 * 1024**3       # Peak task memory ~2.5GB
     RAY_OBJECT_STORE_MEMORY                         =       20 * 1024**3      # Shared memory for objects
     RAY_NUM_CPUS                                    =       12                # 40 Cores per node
     RAY_CPUS_PER_TASK                               =       1                 # 1 Core per task
