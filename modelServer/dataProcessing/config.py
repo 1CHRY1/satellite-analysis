@@ -161,7 +161,7 @@ class VmodConfig(BaseConfig):
     RAY_MEMORY                                      =       70 * 1024**3      # 94GB Node RAM - 4GB System
     RAY_MEMORY_PER_TASK                             =       6 * 1024**3       # Peak task memory ~2.5GB
     RAY_OBJECT_STORE_MEMORY                         =       20 * 1024**3      # Shared memory for objects
-    RAY_NUM_CPUS                                    =       12                # 40 Cores per node
+    RAY_NUM_CPUS                                    =       48                # 40 Cores per node
     RAY_CPUS_PER_TASK                               =       1                 # 1 Core per task
     RAY_SYSTEM_RESERVED_CPU                         =       1                 # Reserve 1 Core
     RAY_SYSTEM_RESERVED_MEMORY                      =       4 * 1024**3       # Reserve 4GB RAM
@@ -328,7 +328,7 @@ class slkConfig(BaseConfig):
 
     # Limitation for Ray
     RAY_MEMORY                                      =       40 * 1024**3
-    RAY_MEMORY_PER_TASK                             =       2 * 1024**3
+    RAY_MEMORY_PER_TASK                             =       0.3 * 1024**3
     RAY_OBJECT_STORE_MEMORY                         =       RAY_MEMORY * 0.3
     RAY_NUM_CPUS                                    =       8
     RAY_CPUS_PER_TASK                               =       1                 # 每个 Ray 任务请求的 CPU 数 (最大化并行度)
