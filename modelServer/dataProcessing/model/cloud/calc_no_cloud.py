@@ -1,7 +1,6 @@
 import os, shutil, glob, time, json
 import math
 from functools import partial
-from multiprocessing import Pool, cpu_count
 import rasterio
 import gc
 from rio_tiler.io import COGReader
@@ -13,7 +12,6 @@ from shapely.geometry import shape, box
 from rasterio.merge import merge
 from rio_cogeo.profiles import cog_profiles
 from rio_cogeo.cogeo import cog_translate, cog_info
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import ray
 from dataProcessing.Utils.osUtils import uploadLocalFile, uploadMemFile
 from dataProcessing.Utils.gridUtil import GridHelper
