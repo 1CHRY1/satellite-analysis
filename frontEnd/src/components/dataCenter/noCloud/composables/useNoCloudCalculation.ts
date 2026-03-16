@@ -150,7 +150,7 @@ export const useNoCloudCalculation = (allScenes: any) => {
             resolution: exploreData.gridResolution,
             sceneIds: addedImages.map((image) => image.sceneId),
             dataSet: dataSet,
-            bandList: bandList.value
+            bandList: ['Red', 'Green', 'Blue']
         }
 
         // 发送请求

@@ -696,7 +696,7 @@ def insert_scene(sensorName, productName, sceneName, sceneTime, tileLevelNum, ti
         )
         
         sceneId = generate_custom_id('SC', 11)
-        tileLevels = None
+        tileLevels = '{"40031*20016"}'
         data = (
             sceneId, sensorId, productId, sceneName, sceneTime, tileLevelNum, tileLevels, crs, bbox, cloudPath, description,
             bands_str, band_num, bucket, cloud, tags, no_data)
