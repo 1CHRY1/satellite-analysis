@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.model.dto.resources.VectorDataDTO;
 import nnu.mnr.satellite.model.dto.resources.VectorsFetchDTO;
 import nnu.mnr.satellite.model.dto.resources.VectorsLocationFetchDTO;
+import nnu.mnr.satellite.model.dto.resources.VectorsPolygonFetchDTO;
 import nnu.mnr.satellite.model.vo.resources.VectorInfoVO;
 import nnu.mnr.satellite.model.vo.resources.VectorTypeVO;
 import nnu.mnr.satellite.service.resources.VectorDataService;
@@ -37,6 +38,18 @@ public class VectorController {
     @PostMapping("/time/location")
     public ResponseEntity<List<VectorInfoVO>> getVectorByTimeAndLocation(@RequestBody VectorsLocationFetchDTO vectorsLocationFetchDTO) {
         return ResponseEntity.ok(vectorDataService.getVectorByTimeAndLocation(vectorsLocationFetchDTO));
+    }
+
+    @PostMapping("/time/polygon")
+    public ResponseEntity<List<VectorInfoVO>> getVectorByTimeAndPolygon(@RequestBody VectorsPolygonFetchDTO vectorsPolygonFetchDTO,
+                                                                        @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        String userId;
+        try {
+            userId = IdUtil.parseUserIdFromAuthHeader(authorizationHeader);
+        } catch (JwtException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+        return ResponseEntity.ok(vectorDataService.getVectorByTimeAndPolygon(vectorsPolygonFetchDTO, userId));
     }
 
 //    @GetMapping("/{tableName}/type")
@@ -125,6 +138,28 @@ public class VectorController {
         }
 
         byte[] tile = vectorDataService.getVectorByLocationAndTableName(locationId, resolution, tableName, field, z, x, y, types);
+        sendVectorTileResponse(tile, response);
+    }
+
+    @GetMapping("/polygon/{polygonId}/{resolution}/{tableName}/{field}/{z}/{x}/{y}")
+    public void getVectorByPolygonAndTableName(@PathVariable String polygonId,
+                                                @PathVariable Integer resolution,
+                                                @PathVariable String tableName, @PathVariable String field,
+                                                @PathVariable int z, @PathVariable int x,
+                                                @PathVariable int y, @RequestParam(value = "types", required = false) List<String> types,
+                                                @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+                                                HttpServletResponse response) throws IOException {
+        String userId;
+        userId = IdUtil.parseUserIdFromAuthHeader(authorizationHeader);
+
+        // 验证 field 是否合法
+        if (isRestrictedField(field)) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST); // 400
+            response.getWriter().write("Invalid field: 'id' and 'geom' are restricted.");
+            return;
+        }
+
+        byte[] tile = vectorDataService.getVectorByPolygonAndTableName(polygonId, resolution, tableName, field, z, x, y, types, userId);
         sendVectorTileResponse(tile, response);
     }
 

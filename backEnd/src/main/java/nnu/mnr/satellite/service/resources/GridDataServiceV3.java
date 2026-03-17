@@ -2,6 +2,7 @@ package nnu.mnr.satellite.service.resources;
 
 import lombok.Builder;
 import lombok.Data;
+import nnu.mnr.satellite.cache.PolygonCache;
 import nnu.mnr.satellite.cache.SceneDataCache;
 import nnu.mnr.satellite.enums.common.SceneTypeByResolution;
 import nnu.mnr.satellite.enums.common.SceneTypeByTheme;
@@ -10,10 +11,7 @@ import nnu.mnr.satellite.model.dto.resources.GridBasicDTO;
 import nnu.mnr.satellite.model.dto.resources.GridsWithFiltersDTO;
 import nnu.mnr.satellite.model.po.geo.GeoLocation;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
-import nnu.mnr.satellite.model.vo.resources.CoverageReportVO;
-import nnu.mnr.satellite.model.vo.resources.GridBoundaryVO;
-import nnu.mnr.satellite.model.vo.resources.GridsScenesOverlapVO;
-import nnu.mnr.satellite.model.vo.resources.SceneDesVO;
+import nnu.mnr.satellite.model.vo.resources.*;
 import nnu.mnr.satellite.service.common.BandMapperGenerator;
 import com.alibaba.fastjson2.JSONObject;
 import nnu.mnr.satellite.utils.geom.GeometryUtil;
@@ -283,4 +281,30 @@ public class GridDataServiceV3 {
         return wkt.intersects(scene.getBoundingBox());
     }
 
+    public CommonResultVO getGridsFromPolygon(String userId, String polygonId, Integer resolution) throws IOException {
+        PolygonCache polygonCache = PolygonCache.getCache(userId);
+        if (polygonCache == null || polygonCache.getPolygonId() == null || polygonCache.getGeometry() == null) {
+            return CommonResultVO.builder().status(-1).message("请先绘制多边形").build();
+        }
+        if (!polygonCache.getPolygonId().equals(polygonId)) {
+            return CommonResultVO.builder().status(-1).message("请先绘制多边形").build();
+        }
+        Geometry geometry = polygonCache.getGeometry();
+        List<GridBoundaryVO> grids = TileCalculateUtil.getStrictlyCoveredRowColByRegionAndResolution(geometry, resolution);
+        List<Integer[]> tileIds = new ArrayList<>();
+        for (GridBoundaryVO grid : grids) {
+            tileIds.add(new Integer[]{grid.getColumnId(), grid.getRowId()});
+        }
+        Geometry gridsBoundary = GeometryUtil.getGridsBoundaryByTilesAndResolution(tileIds, resolution);
+        PolygonCache.updateGridsBoundary(userId, gridsBoundary);
+        JSONObject geoJson = GeometryUtil.geometry2Geojson(gridsBoundary);
+        JSONObject result = new JSONObject();
+        result.put("grids", grids);
+        result.put("geoJson", geoJson);
+        return CommonResultVO.builder()
+                .message("格网获取成功")
+                .status(1)
+                .data(result)
+                .build();
+    }
 }

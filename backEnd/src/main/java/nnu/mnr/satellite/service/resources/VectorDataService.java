@@ -3,11 +3,13 @@ package nnu.mnr.satellite.service.resources;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.dynamic.datasource.annotation.DS;
+import nnu.mnr.satellite.cache.PolygonCache;
 import nnu.mnr.satellite.cache.SceneDataCache;
 import nnu.mnr.satellite.mapper.resources.IVectorRepo;
 import nnu.mnr.satellite.model.dto.resources.MinMaxResult;
 import nnu.mnr.satellite.model.dto.resources.VectorsFetchDTO;
 import nnu.mnr.satellite.model.dto.resources.VectorsLocationFetchDTO;
+import nnu.mnr.satellite.model.dto.resources.VectorsPolygonFetchDTO;
 import nnu.mnr.satellite.model.po.resources.Region;
 import nnu.mnr.satellite.model.vo.resources.VectorInfoVO;
 import nnu.mnr.satellite.model.vo.resources.VectorTypeVO;
@@ -56,6 +58,15 @@ public class VectorDataService {
         Integer resolution = vectorsLocationFetchDTO.getResolution();
         Geometry boundary = locationService.getLocationBoundary(resolution, locationId);
         String wkt = boundary.toText();
+        return vectorRepo.getVectorsDesByTimeAndGeometry(startTime, endTime, wkt);
+    }
+
+    public List<VectorInfoVO>  getVectorByTimeAndPolygon(VectorsPolygonFetchDTO vectorsPolygonFetchDTO, String userId){
+        LocalDateTime startTime = vectorsPolygonFetchDTO.getStartTime();
+        LocalDateTime endTime = vectorsPolygonFetchDTO.getEndTime();
+        PolygonCache polygonCache = PolygonCache.getCache(userId);
+        Geometry gridsBoundary = polygonCache.getGridsBoundary();
+        String wkt = gridsBoundary.toText();
         return vectorRepo.getVectorsDesByTimeAndGeometry(startTime, endTime, wkt);
     }
 
@@ -116,6 +127,13 @@ public class VectorDataService {
 
     public byte[] getVectorByLocationAndTableName(String locationId, Integer resolution, String tableName, String field, int z, int x, int y, List<String> types){
         String wkt = locationService.getLocationBoundary(resolution, locationId).toText();
+        return getMvtTile(tableName, wkt, field, z, x, y, types);
+    }
+
+    public byte[] getVectorByPolygonAndTableName(String polygonId, Integer resolution, String tableName, String field, int z, int x, int y, List<String> types, String userId){
+        PolygonCache polygonCache = PolygonCache.getCache(userId);
+        Geometry gridsBoundary = polygonCache.getGridsBoundary();
+        String wkt = gridsBoundary.toText();
         return getMvtTile(tableName, wkt, field, z, x, y, types);
     }
 
