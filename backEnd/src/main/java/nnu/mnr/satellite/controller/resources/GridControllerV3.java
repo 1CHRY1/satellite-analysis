@@ -7,6 +7,7 @@ import nnu.mnr.satellite.model.dto.resources.GridsWithFiltersDTO;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.model.vo.resources.CoverageReportVO;
 import nnu.mnr.satellite.model.vo.resources.GridBoundaryVO;
+import nnu.mnr.satellite.model.vo.resources.GridsAndGridsBoundary;
 import nnu.mnr.satellite.model.vo.resources.GridsScenesOverlapVO;
 import nnu.mnr.satellite.service.resources.GridDataServiceV3;
 import nnu.mnr.satellite.utils.common.IdUtil;
@@ -73,6 +74,19 @@ public class GridControllerV3 {
         return ResponseEntity.ok(gridDataService.getBoundaryByResolutionAndId(gridBasicDTO));
     }
 
+    @GetMapping("/polygon/{polygonId}/resolution/{resolution}")
+    public  ResponseEntity<CommonResultVO> getGridsFromPolygon(@PathVariable(value = "polygonId") String polygonId,
+                                                                      @PathVariable(value = "resolution") Integer resolution,
+                                                                      @RequestHeader(value = "Authorization") String authorizationHeader) throws IOException {
+        // 拼凑cacheKey
+        String userId;
+        try {
+            userId = IdUtil.parseUserIdFromAuthHeader(authorizationHeader);
+        } catch (JwtException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
 
+        return ResponseEntity.ok(gridDataService.getGridsFromPolygon(userId, polygonId, resolution));
+    }
 
 }

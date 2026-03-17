@@ -188,10 +188,12 @@ public class ModelExampleServiceV3 {
         LocalDateTime endTime = visualizationLowLevelTile.getEndTime();
         Integer regionId = visualizationLowLevelTile.getRegionId();
         String locationId = visualizationLowLevelTile.getLocationId();
+        String polygonId = visualizationLowLevelTile.getPolygonId();
         Integer resolution = visualizationLowLevelTile.getResolution();
         String visualizationUrl = modelServerProperties.getAddress() + modelServerProperties.getApis().get("createLowLevelMosaic");
         JSONObject visualizationParam = JSONObject.of("sensorName", sensorName, "startTime", startTime, "endTime", endTime, "gridsAndGridsBoundary", gridsAndGridsBoundary, "regionId", regionId);
         visualizationParam.put("locationId", locationId);
+        visualizationParam.put("polygonId", polygonId);
         visualizationParam.put("resolution", resolution);
         long expirationTime = 60 * 10;
         return runModelServerModel(visualizationUrl, visualizationParam, expirationTime, headers, cookies);

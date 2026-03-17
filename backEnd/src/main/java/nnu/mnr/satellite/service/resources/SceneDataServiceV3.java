@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import nnu.mnr.satellite.cache.PolygonCache;
 import nnu.mnr.satellite.cache.SceneDataCache;
 import nnu.mnr.satellite.enums.common.SceneTypeByResolution;
 import nnu.mnr.satellite.enums.common.SceneTypeByTheme;
@@ -11,6 +12,7 @@ import nnu.mnr.satellite.mapper.resources.ISceneRepoV3;
 import nnu.mnr.satellite.model.dto.cache.CacheDataDTO;
 import nnu.mnr.satellite.model.dto.resources.ScenesFetchDTOV3;
 import nnu.mnr.satellite.model.dto.resources.ScenesLocationFetchDTOV3;
+import nnu.mnr.satellite.model.dto.resources.ScenesPolygonFetchDTOV3;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.model.vo.resources.CoverageReportVO;
 import nnu.mnr.satellite.model.vo.resources.CoverageReportWithCacheKeyVO;
@@ -195,6 +197,83 @@ public class SceneDataServiceV3 {
             SceneDataCache.cacheUserRegionInfo(cacheKey, gridsBoundary, startTime, endTime);
         }else if (userSceneCache.coverageReportVO == null) {
             Geometry gridsBoundary = locationService.getLocationBoundary(resolution, locationId);
+            report = buildCoverageReport(userSceneCache.scenesInfo, gridsBoundary);
+            // 缓存数据
+            SceneDataCache.cacheUserScenes(cacheKey, userSceneCache.scenesInfo, report);
+            // 格网边界缓存
+            SceneDataCache.cacheUserRegionInfo(cacheKey, gridsBoundary, startTime, endTime);
+        } else {
+            // 缓存命中，直接使用
+            report = userSceneCache.coverageReportVO;
+        }
+        CoverageReportWithCacheKeyVO<Map<String, Object>> result = new CoverageReportWithCacheKeyVO<>();
+        result.setReport(report);
+        result.setEncryptedRequestBody(encryptedRequestBody); // 返回给 Controller 设置 Cookie
+        return result;
+    }
+
+    public CoverageReportWithCacheKeyVO<Map<String, Object>> getScenesCoverageReportByTimeAndPolygon(ScenesPolygonFetchDTOV3 scenesPolygonFetchDTO, String userId){
+        // 先把scenesFetchDTO转成String，后续需要作为cacheKey
+        String requestBody;
+        try {
+            requestBody = objectMapper.writeValueAsString(scenesPolygonFetchDTO);
+        } catch (JsonProcessingException e) {
+            // 记录日志并返回默认值或抛出运行时异常
+            log.error("Failed to serialize ScenesFetchDTOV2 to JSON", e);
+            throw new RuntimeException("Invalid request data", e); // 或返回默认值
+        }
+        // 生成cacheKey，由userId和requestBody共同生成
+        String encryptedRequestBody = DigestUtils.sha256Hex(requestBody);
+        String cacheKey = userId + "_" + encryptedRequestBody;
+        // 从缓存读取数据（如果存在）
+        SceneDataCache.UserSceneCache userSceneCache = SceneDataCache.getUserSceneCacheMap(cacheKey);
+        SceneDataCache.UserThemeCache userThemeCache = SceneDataCache.getUserThemeCacheMap(cacheKey);
+        LocalDateTime startTime = scenesPolygonFetchDTO.getStartTime();
+        LocalDateTime endTime = scenesPolygonFetchDTO.getEndTime();
+        String locationId = scenesPolygonFetchDTO.getPolygonId();
+        Integer resolution = scenesPolygonFetchDTO.getResolution();
+        CoverageReportVO<Map<String, Object>> report;
+        List<String> dataType = new ArrayList<>();
+        if (userSceneCache == null && userThemeCache == null) {
+            // 缓存未命中，从数据库中读数据
+            PolygonCache polygonCache = PolygonCache.getCache(userId);
+            Geometry gridsBoundary = polygonCache.getGridsBoundary();
+            List<String> themeCodes = SceneTypeByTheme.getAllCodes();
+            dataType.add("satellite");
+            dataType.addAll(themeCodes);
+            List<SceneDesVO> allScenesInfo = queryAndCleanScenes(startTime, endTime, gridsBoundary, dataType);
+            List<SceneDesVO> scenesInfo = new ArrayList<>();
+            List<SceneDesVO> themesInfo = new ArrayList<>();
+            for (SceneDesVO scene : allScenesInfo) {
+                String sceneDataType = scene.getDataType(); // 假设 SceneDesVO 有 getDataType() 方法
+                if ("satellite".equals(sceneDataType)) {
+                    scenesInfo.add(scene);
+                } else if (SceneTypeByTheme.getAllCodes().contains(sceneDataType)) {
+                    themesInfo.add(scene);
+                }
+            }
+
+            report = buildCoverageReport(scenesInfo, gridsBoundary);
+            // 缓存数据
+            SceneDataCache.cacheUserScenes(cacheKey, scenesInfo, report);
+            SceneDataCache.cacheUserThemes(cacheKey, themesInfo, null);
+            // 格网边界缓存
+            SceneDataCache.cacheUserRegionInfo(cacheKey, gridsBoundary, startTime, endTime);
+        } else if (userSceneCache == null) {
+            // 缓存未命中，从数据库中读数据
+            PolygonCache polygonCache = PolygonCache.getCache(userId);
+            Geometry gridsBoundary = polygonCache.getGridsBoundary();
+            dataType.add("satellite");
+            List<SceneDesVO> scenesInfo = queryAndCleanScenes(startTime, endTime, gridsBoundary, dataType);
+
+            report = buildCoverageReport(scenesInfo, gridsBoundary);
+            // 缓存数据
+            SceneDataCache.cacheUserScenes(cacheKey, scenesInfo, report);
+            // 格网边界缓存
+            SceneDataCache.cacheUserRegionInfo(cacheKey, gridsBoundary, startTime, endTime);
+        }else if (userSceneCache.coverageReportVO == null) {
+            PolygonCache polygonCache = PolygonCache.getCache(userId);
+            Geometry gridsBoundary = polygonCache.getGridsBoundary();
             report = buildCoverageReport(userSceneCache.scenesInfo, gridsBoundary);
             // 缓存数据
             SceneDataCache.cacheUserScenes(cacheKey, userSceneCache.scenesInfo, report);

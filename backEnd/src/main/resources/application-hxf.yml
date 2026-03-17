@@ -10,12 +10,12 @@ netty:
 
 # localhost
 mysql:
-  host: 223.2.43.238
+  host: 223.2.36.63
   port: 3306
   username: root
   password: root
 pg:
-  host: 223.2.43.238
+  host: 223.2.36.63
   port: 5432
   username: postgres
   password: 123456
