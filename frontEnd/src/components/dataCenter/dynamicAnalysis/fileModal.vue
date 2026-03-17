@@ -328,6 +328,7 @@ const fetchFileData = async () => {
 
         if (response.status === 1 && response.data) {
             treeData.value = convertToFileTree(response.data);
+            console.log(treeData.value)
         }
     } catch (error) {
         console.error('获取文件数据失败:', error);
@@ -434,7 +435,7 @@ const handleOk = () => {
             result = { type: 'file', paths, index: props.index };
         } else if (selectedNode.value) {
             // 单选模式：返回单个路径/名称
-            result = { type: 'file', path: selectedNode.value.path, name: selectedNode.value.title, index: props.index };
+            result = { type: 'file', path: selectedNode.value.path, name: selectedNode.value.title, index: props.index, multiBandData: selectedNode.value?.multiBandData };
         }
     } else if (props.mode === 'folder' && selectedNode.value) {
         // 选择文件夹模式
@@ -450,7 +451,7 @@ const handleOk = () => {
             index: props.index
         };
     }
-
+    console.log(result)
     if (result) {
         emit('confirm', result);
         emit('update:visible', false);

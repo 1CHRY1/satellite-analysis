@@ -102,6 +102,9 @@ export const getVectorUrl = (vectorUrlParam: VectorUrlParam) => {
         case 'poi':
             baseUrl = `${origin}${backProxyEndPoint}/data/vector/location/${landId}/${resolution}/${source_layer}/${field}/{z}/{x}/{y}${types}`
             break
+        case 'polygon':
+            baseUrl = `${origin}${backProxyEndPoint}/data/vector/polygon/${landId}/${resolution}/${source_layer}/${field}/{z}/{x}/{y}${types}`
+            break
         default:
             baseUrl = `${origin}${backProxyEndPoint}/data/vector/region/${landId}/${source_layer}/${field}/{z}/{x}/{y}${types}`
             break

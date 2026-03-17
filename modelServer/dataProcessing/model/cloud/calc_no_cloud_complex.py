@@ -117,7 +117,7 @@ class calc_no_cloud_complex(Task):
         print('start processing time ', time.time(), flush=True)
 
         ## Step 4 : 滑动窗口并发控制 ###########################################
-        MAX_NUM_WORKS = 20
+        MAX_NUM_WORKS = 1000
         results = []
         in_flight = []
         all_task_refs = []
@@ -574,7 +574,7 @@ def calculate_evi(nir_band, red_band, blue_band=None, C1=6.0, C2=7.5, L=1.0, G=2
     return evi_uint8
 
 
-def subdivide_grid_if_needed(grid_bbox, resolution_km, target_max_km=15):
+def subdivide_grid_if_needed(grid_bbox, resolution_km, target_max_km=5):
     """
     如果格网分辨率超过 20km，则进行细分，使子格网分辨率在 10-15km 之间
 
@@ -590,7 +590,7 @@ def subdivide_grid_if_needed(grid_bbox, resolution_km, target_max_km=15):
     """
     min_lng, min_lat, max_lng, max_lat = grid_bbox
 
-    if resolution_km <= 20:
+    if resolution_km <= 5:
         return [(grid_bbox, "0_0")]
 
     subdivide_factor = math.ceil(resolution_km / target_max_km)

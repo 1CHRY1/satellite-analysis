@@ -81,7 +81,7 @@ class calc_no_cloud(Task):
         print('start time ', time.time(), flush=True)
 
         # TODO 注意这里的CPU限制！
-        MAX_NUM_WORKS = 20
+        MAX_NUM_WORKS = 1000
         results = []
         in_flight = []
         all_task_refs = []
@@ -430,7 +430,7 @@ def read_band(band_path, scene_bucket, grid_bbox, target_H, target_W):
         return arr.astype(np.uint8)
     
 
-def subdivide_grid_if_needed(grid_bbox, resolution_km, target_max_km=15):
+def subdivide_grid_if_needed(grid_bbox, resolution_km, target_max_km=5):
     """
     如果格网分辨率超过 20km，则进行细分，使子格网分辨率在 10-15km 之间
 
@@ -446,7 +446,7 @@ def subdivide_grid_if_needed(grid_bbox, resolution_km, target_max_km=15):
     """
     min_lng, min_lat, max_lng, max_lat = grid_bbox
 
-    if resolution_km <= 20:
+    if resolution_km <= 5:
         # 不需要细分
         return [(grid_bbox, "0_0")]
 

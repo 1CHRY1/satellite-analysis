@@ -65,6 +65,7 @@ function convertSingleNode(fileNode: RawFileNode): FileTreeData {
         isLeaf: !isDir,
         iconType: iconType,
         sizeText: sizeText,
+        multiBandData: fileNode?.multiBandData
     }
 
     if (isDir && fileNode.children) {

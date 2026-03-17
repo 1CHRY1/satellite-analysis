@@ -1,6 +1,6 @@
 <template>
-    <a-modal v-model:open="innerVisible" :title="'🛠️ '+ `${methodItem?.nameZh}` + '(' + `${methodItem?.name}` + ')'" @cancel="close" @ok="handleOk"
-        :confirm-loading="isExecuting" :width="1200" wrapClassName="wide-modal">
+    <a-modal v-model:open="innerVisible" :title="'🛠️ ' + `${methodItem?.nameZh}` + '(' + `${methodItem?.name}` + ')'"
+        @cancel="close" @ok="handleOk" :confirm-loading="isExecuting" :width="1200" wrapClassName="wide-modal">
 
         <a-spin :spinning="!isReady" tip="正在加载方法参数...">
             <a-row :gutter="24">
@@ -12,7 +12,8 @@
                             v-for="(param, index) in methodItem?.paramsZh" :key="index">
                             <template #label>
                                 <div class="label-content">
-                                    <span style="font-weight: 600;">{{ param.Description }}({{ methodItem?.params[index].Description }})</span>
+                                    <span style="font-weight: 600;">{{ param.Description }}({{
+                                        methodItem?.params[index].Description }})</span>
                                     <a-tag :color="getTypeTagColor(param.parameter_type)" style="margin-left: 8px;">
                                         {{ formatJson(param.parameter_type) }}
                                     </a-tag>
@@ -417,6 +418,18 @@ const handleConfirm = (selection: SelectionResult) => {
             } else if (selection.path !== undefined) {
                 result.label = selection.name as string
                 result.value = `${minioEndPoint}/${selection.path}`.replace(/\/$/, "")
+                // 如果是平台多波段数据，在此切换一种模式，value不再是一个url，而是由很多个波段的url，传到modelServer再做合成
+                if (selection?.multiBandData) {
+                    const bands = typeof selection.multiBandData === 'string'
+                        ? JSON.parse(selection.multiBandData)
+                        : selection.multiBandData;
+                    const formattedResult = {};
+                    for (const key in bands) {
+                        const path = bands[key]; // 这里的 path 对应原来 selection.paths 里的单项
+                        formattedResult[key] = `${minioEndPoint}/${path}`.replace(/\/$/, "");
+                    }
+                    result.value = formattedResult;
+                }
             }
             break
         case "folder":
@@ -429,6 +442,7 @@ const handleConfirm = (selection: SelectionResult) => {
             break
     }
     formData['val' + selection.index] = result
+    console.log(formData)
 };
 
 initFormData();

@@ -138,12 +138,8 @@ export async function getGridByPOIAndResolution(poiId: string, resolution: numbe
     return http.get<any>(`data/grid/grids/location/${poiId}/resolution/${resolution}`)
 }
 
-export async function getGridByPolygonAndResolution(polygonId: string, resolution: number): Promise<any> {
-    return http.get<any>(`data/grid/grids/polygon/${polygonId}/resolution/${resolution}`)
-}
-
 export async function addPolygonCache(polygonObj: any): Promise<any> {
-    return http.post<any>(`data/polygon/add`, polygonObj)
+    return http.post<any>(`data/polygon/cache`, polygonObj)
 }
 
 export async function getBoundary(region: number | string): Promise<any> {
