@@ -4,6 +4,7 @@ import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.model.dto.resources.ScenesFetchDTOV3;
 import nnu.mnr.satellite.model.dto.resources.ScenesLocationFetchDTOV3;
+import nnu.mnr.satellite.model.dto.resources.ScenesPolygonFetchDTOV3;
 import nnu.mnr.satellite.model.vo.common.CommonResultVO;
 import nnu.mnr.satellite.model.vo.resources.CoverageReportVO;
 import nnu.mnr.satellite.model.vo.resources.CoverageReportWithCacheKeyVO;
@@ -60,6 +61,26 @@ public class SceneControllerV3 {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
         CoverageReportWithCacheKeyVO<Map<String, Object>> result = sceneDataService.getScenesCoverageReportByTimeAndLocation(scenesLocationFetchDTOV3, userId);
+        // 设置cookie
+        Cookie cookie = new Cookie("encrypted_request_body", result.getEncryptedRequestBody());
+        cookie.setPath("/"); // 设置 Cookie 作用路径
+        cookie.setHttpOnly(true); // 防止 XSS 攻击
+        cookie.setMaxAge(-1); // 默认，浏览器关闭后自动删除
+        response.addCookie(cookie);
+        return ResponseEntity.ok(result.getReport());
+    }
+
+    @PostMapping("/time/polygon")
+    public ResponseEntity<CoverageReportVO<Map<String, Object>>> getScenesCoverageReportByTimeAndPolygon(@RequestBody ScenesPolygonFetchDTOV3 scenesPolygonFetchDTOV3,
+                                                                                                          @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+                                                                                                          HttpServletResponse response) {
+        String userId;
+        try {
+            userId = IdUtil.parseUserIdFromAuthHeader(authorizationHeader);
+        } catch (JwtException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+        CoverageReportWithCacheKeyVO<Map<String, Object>> result = sceneDataService.getScenesCoverageReportByTimeAndPolygon(scenesPolygonFetchDTOV3, userId);
         // 设置cookie
         Cookie cookie = new Cookie("encrypted_request_body", result.getEncryptedRequestBody());
         cookie.setPath("/"); // 设置 Cookie 作用路径

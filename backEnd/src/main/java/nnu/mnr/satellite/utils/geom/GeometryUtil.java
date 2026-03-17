@@ -9,6 +9,7 @@ import nnu.mnr.satellite.model.po.resources.Scene;
 import nnu.mnr.satellite.model.po.resources.Tile;
 import nnu.mnr.satellite.utils.common.ConcurrentUtil;
 import org.geotools.geojson.geom.GeometryJSON;
+import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.locationtech.jts.geom.*;
 import org.locationtech.jts.geom.impl.CoordinateArraySequence;
 import org.locationtech.jts.operation.union.CascadedPolygonUnion;
@@ -16,11 +17,16 @@ import org.locationtech.jts.simplify.DouglasPeuckerSimplifier;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.locationtech.jts.geom.Geometry;
+import org.geotools.geojson.geom.GeometryJSON;
+import java.io.StringReader;
 
 import static nnu.mnr.satellite.utils.geom.TileCalculateUtil.getTileGeomByIdsAndResolution;
 
@@ -319,5 +325,10 @@ public class GeometryUtil {
             multiPolygon = geometryFactory.createMultiPolygon(new Polygon[0]);
         }
         return multiPolygon;
+    }
+
+    public static Geometry geoJsonToGeometry(String geoJson) throws Exception {
+        GeometryJSON gjson = new GeometryJSON();
+        return gjson.read(new StringReader(geoJson));
     }
 }

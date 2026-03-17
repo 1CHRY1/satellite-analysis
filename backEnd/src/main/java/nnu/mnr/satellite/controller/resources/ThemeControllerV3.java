@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import nnu.mnr.satellite.model.dto.resources.ScenesFetchDTOV3;
 import nnu.mnr.satellite.model.dto.resources.ScenesLocationFetchDTOV3;
+import nnu.mnr.satellite.model.dto.resources.ScenesPolygonFetchDTOV3;
 import nnu.mnr.satellite.model.vo.resources.CoverageReportVO;
 import nnu.mnr.satellite.model.vo.resources.CoverageReportWithCacheKeyVO;
 import nnu.mnr.satellite.service.resources.ThemeDataServiceV3;
@@ -59,6 +60,26 @@ public class ThemeControllerV3 {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
         CoverageReportWithCacheKeyVO<String> result = ThemeDataService.getThemesCoverageReportByTimeAndLocation(scenesLocationFetchDTO, userId);
+        // 设置cookie
+        Cookie cookie = new Cookie("encrypted_request_body", result.getEncryptedRequestBody());
+        cookie.setPath("/"); // 设置 Cookie 作用路径
+        cookie.setHttpOnly(true); // 防止 XSS 攻击
+        cookie.setMaxAge(-1); // 默认，浏览器关闭后自动删除
+        response.addCookie(cookie);
+        return ResponseEntity.ok(result.getReport());
+    }
+
+    @PostMapping("/time/polygon")
+    public ResponseEntity<CoverageReportVO<String>> getThemesCoverageReportByTimeAndPolygon(@RequestBody ScenesPolygonFetchDTOV3 scenesPolygonFetchDTO,
+                                                                                             @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+                                                                                             HttpServletResponse response) {
+        String userId;
+        try {
+            userId = IdUtil.parseUserIdFromAuthHeader(authorizationHeader);
+        } catch (JwtException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+        CoverageReportWithCacheKeyVO<String> result = ThemeDataService.getThemesCoverageReportByTimeAndPolygon(scenesPolygonFetchDTO, userId);
         // 设置cookie
         Cookie cookie = new Cookie("encrypted_request_body", result.getEncryptedRequestBody());
         cookie.setPath("/"); // 设置 Cookie 作用路径

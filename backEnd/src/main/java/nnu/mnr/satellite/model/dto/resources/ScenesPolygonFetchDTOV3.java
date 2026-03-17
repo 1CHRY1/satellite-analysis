@@ -1,16 +1,15 @@
-package nnu.mnr.satellite.model.dto.modeling;
+package nnu.mnr.satellite.model.dto.resources;
 
+import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 
 @Data
-public class VisualizationLowLevelTile {
-    private String sensorName;
+@Builder
+public class ScenesPolygonFetchDTOV3 {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
-    private Integer regionId;
-    private String locationId;
     private String polygonId;
     private Integer resolution;
 }
