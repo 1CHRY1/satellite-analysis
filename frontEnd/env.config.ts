@@ -51,9 +51,9 @@ export const ENV_CONFIG: Record<string, EnvConfig> = {
         modelServer: 'http://223.2.34.8:31500',
     },
     slk: {
-        api: 'http://223.2.36.63:8999',
+        api: 'http://localhost:8999',
         realtime: 'http://localhost:5001',
-        websocket: 'http://223.2.36.63:9888/model/websocket',
+        websocket: 'http://localhost:9888/model/websocket',
         tiler: 'http://223.2.34.8:31800',
         proxymap: 'http://localhost:5003',
         minio: 'http://223.2.34.8:30900',
