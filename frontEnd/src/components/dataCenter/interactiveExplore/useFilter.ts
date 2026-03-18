@@ -18,9 +18,9 @@ import {
     getPOIPosition,
     getVectorsByRegionFilter,
     getVectorsByPOIFilter,
-    getGridByPolygonAndResolution,
     addPolygonCache,
     getVectorsByPolygonFilter,
+    getGridByPolygonAndResolution,
 } from '@/api/http/satellite-data'
 import {
     // ------------------------ V3版本API ------------------------ //
@@ -89,10 +89,10 @@ export const useFilter = () => {
             value: 'poi',
             label: 'POI',
         },
-        // {
-        //     value: 'polygon',
-        //     label: '多边形',
-        // },
+        {
+            value: 'polygon',
+            label: '多边形',
+        },
     ])
 
     // 用户选择空间筛选方法
@@ -192,7 +192,7 @@ export const useFilter = () => {
         addPolygonLayer(feature)
         selectedPolygon.value = {
             id: crypto.randomUUID(),
-            feature,
+            geoJson: feature,
         }
         addPolygonCache(selectedPolygon.value)
         selectedGridResolution.value = calcGridResolution(feature)
@@ -313,10 +313,11 @@ export const useFilter = () => {
                 if (selectedPOI.value) addPOIMarker(selectedPOI.value)
             } else if (activeSpatialFilterMethod.value === 'polygon') {
                 // Polygon 不需要再绘制检索区的图层
-                gridRes = await getGridByPolygonAndResolution(
+                let res = await getGridByPolygonAndResolution(
                     tempLandId.value,
                     selectedGridResolution.value,
                 )
+                gridRes = res.data
                 allGrids.value = gridRes.grids
                 allGridCount.value = gridRes.grids.length
                 curGridsBoundary.value = gridRes.geoJson

@@ -1,8 +1,8 @@
 <template>
     <div class="relative">
         <div class="relative h-full w-full" id="mapContainer"></div>
-        <div class="absolute top-2 left-2 z-10"> 
-             
+        <div class="absolute top-2 left-2 z-10">
+
         </div>
         <div class="absolute top-2 right-2 flex gap-2">
             <button @click="handleFitView" class="map-button">🌏</button>
@@ -14,12 +14,23 @@
             <!-- <button @click="handle3DTiles" class="map-button !text-gray-900">{{ is3DMode ? '3D' : '2D' }}</button>-->
             <button @click="localTian" class="map-button text-gray-900!">{{ t('datapage.mapcomp.vector') }}</button>
             <button @click="localImg" class="map-button text-gray-900!">{{ t('datapage.mapcomp.imagery') }}</button>
+            <a-dropdown :trigger="['click']">
+                <button class="map-button text-gray-900!" @click.prevent>
+                    年时序静态瓦片
+                    <DownOutlined style="font-size: 12px; margin-left: 4px;" />
+                </button>
+                <template #overlay>
+                    <a-menu @click="localStaticImgPerYear($event.key)">
+                        <a-menu-item key="2022">2022年</a-menu-item>
+                        <a-menu-item key="2023">2023年</a-menu-item>
+                        <a-menu-item key="2024">2024年</a-menu-item>
+                        <a-menu-item key="2025">2025年</a-menu-item>
+                    </a-menu>
+                </template>
+            </a-dropdown>
             <LayerManagerComp />
         </div>
-        <CubeTimeline
-            class="absolute right-1/2 bottom-10 flex translate-x-1/2 gap-2"
-            v-model="cubeTimelineShow"
-        >
+        <CubeTimeline class="absolute right-1/2 bottom-10 flex translate-x-1/2 gap-2" v-model="cubeTimelineShow">
         </CubeTimeline>
     </div>
 </template>
@@ -37,6 +48,7 @@ import { ezStore } from '@/store'
 import { useMapStore } from '@/store/mapStore'
 import LayerManagerComp from './layerManagerComp.vue';
 import { layerManager } from '@/util/map/layerManager';
+import { DownOutlined } from '@ant-design/icons-vue'
 
 const { t } = useI18n()
 
@@ -71,16 +83,18 @@ const handleZoomOut = () => {
 
 const localTian = () => {
     mapManager.withMap((m) => {
-        console.log('设置内网vec样式')
-        console.log(StyleMap.local.sources)
         m.setStyle(StyleMap.localVec)
     })
 }
 const localImg = () => {
     mapManager.withMap((m) => {
-        console.log('设置本地img样式')
-        console.log(StyleMap.local.sources)
         m.setStyle(StyleMap.localImg)
+    })
+}
+const localStaticImgPerYear = (key: string) => {
+    console.log(key)
+    mapManager.withMap((m) => {
+        m.setStyle(StyleMap[key])
     })
 }
 
@@ -119,7 +133,7 @@ const handle3DTiles = () => {
                 encoding: 'mapbox'
             })
 
-            m.setTerrain({source: "dem-tiles", exaggeration: 1.5})
+            m.setTerrain({ source: "dem-tiles", exaggeration: 1.5 })
 
         })
         is3D.value = true
@@ -144,8 +158,8 @@ onMounted(async () => {
     if (!store.isInitialized && container) {
         console.log("MapComp: 第一次加载，创建新的 Mapbox 实例。")
         const mapInstance = await MapOperation.map_initiliaze(
-            'mapContainer', 
-            props.style, 
+            'mapContainer',
+            props.style,
             props.proj
         )
         store.setMapInstance(mapInstance)
@@ -214,11 +228,11 @@ onUnmounted(() => {
         const container = document.getElementById('mapContainer')
         console.log(store.mapInstance)
         const mapCanvas = store.mapInstance.getContainer()
-        
+
         if (mapCanvas && mapCanvas.parentElement === container) {
             // 将地图 DOM 从 mapContainer 中移出，但不要销毁它
             // 移出后，它仍然存在于内存中，只是不再依附于任何组件的 DOM 树
-            mapCanvas.remove() 
+            mapCanvas.remove()
             console.log("MapComp: 路由离开，地图 DOM 容器被分离。")
         }
     }

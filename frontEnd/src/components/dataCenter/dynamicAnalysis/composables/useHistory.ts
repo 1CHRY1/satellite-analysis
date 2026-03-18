@@ -514,6 +514,7 @@ export function useViewHistoryModule() {
         const bounds = await getImgBoundsFromInfoGeoJson(tifUrl)
         let wholeTileUrl = `/tiler/tiles/WebMercatorQuad/{z}/{x}/{y}.png?scale=1&url=${tifUrl}&colormap_name=${formState.colormapName}&rescale=${formState.range.min},${formState.range.max}`
         map_fitView(bounds)
+        
         MapOperation.addRasterLayerFromUrl(wholeTileUrl, `methlib-layer`)
     }
 

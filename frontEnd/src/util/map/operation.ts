@@ -127,6 +127,31 @@ export function map_fitView(bounds: any): void {
     })
 }
 
+export function map_fit_view_to_zoom(bounds: any, targetZoom: number): Promise<void> {
+    return new Promise((resolve) => {
+        mapManager.withMap((m) => {
+            const camera = m.cameraForBounds(bounds, { padding: 50 });
+            if (camera) {
+                m.flyTo({
+                    center: camera.center,
+                    zoom: targetZoom,
+                    speed: 1.2,
+                    duration: 2000, // 假设飞行2秒
+                    essential: true
+                });
+
+                // 【核心】监听一次 'moveend' 事件
+                // once 表示只监听一次，触发完自动解绑，防止内存泄漏
+                m.once('moveend', () => {
+                    resolve(); // 动画结束，Promise 完成
+                });
+            } else {
+                resolve(); // 异常情况直接 resolve，防止外部死等
+            }
+        });
+    });
+}
+
 export function map_fitViewToFeature(feature: polygonGeometry): void {
     const coordinates = feature.coordinates[0]
     const bbox = coordinates.reduce(

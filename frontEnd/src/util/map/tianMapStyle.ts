@@ -1898,4 +1898,15 @@ export const StyleMap = {
     localImg: LocalImageBaseMapStyle as unknown as StyleSpecification,
     localMvt: OurVectorBaseMapStyle as unknown as StyleSpecification,
     empty: empty as unknown as StyleSpecification,
+    get local2025() {
+        const local2025Style = { ...LocalImageBaseMapStyle };
+        local2025Style.sources = {
+            'Local-Imagelayer-Source': {
+                type: 'raster',
+                tiles: [`${window.location.origin}${ezStore.get('conf')['intranet_img_url']}`],
+                tileSize: 256,
+            },
+        };
+        return local2025Style as unknown as StyleSpecification;
+    },
 }

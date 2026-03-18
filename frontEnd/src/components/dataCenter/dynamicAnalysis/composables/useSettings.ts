@@ -111,24 +111,14 @@ export const useSettings = () => {
                 // 构建景节点（文件夹）
                 const sceneNode: RawFileNode = {
                     name: sceneName,
-                    dir: true,
+                    dir: false,
                     path: `${scene.bucket}/${sceneDir}`,
                     size: 0,
                     lastModified: '',
                     children: [],
-                }
-
-                // 构建文件节点
-                for (let filePath of files) {
-                    const fileName = filePath.split('/').pop()!
-                    sceneNode.children!.push({
-                        name: fileName,
-                        dir: false,
-                        path: `${scene.bucket}/${filePath}`,
-                        size: 0,
-                        lastModified: '',
-                        children: []
-                    })
+                    multiBandData: Object.fromEntries(
+                        Object.entries(scene.path).map(([key, val]) => [key, `${scene.bucket}/${val}`])
+                    )
                 }
 
                 tree.push(sceneNode)
@@ -139,6 +129,7 @@ export const useSettings = () => {
         if (sensorName) {
             const res = await getScenesInfo(sensorName, bbox(exploreData.boundary as any))
             platformDataFile.value = buildSceneTree(res)
+            console.log(platformDataFile.value)
         }
     }
 

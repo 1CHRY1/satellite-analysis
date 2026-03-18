@@ -308,10 +308,12 @@ export function useViewHistoryModule() {
     }
     const fitView = async (regionId: number) => {
         let window = await getRegionPosition(regionId)
+        console.log(11111)
         MapOperation.map_fitView([
             [window.bounds[0], window.bounds[1]],
             [window.bounds[2], window.bounds[3]],
         ])
+        
     }
     const emit = defineEmits(['response'])
 
@@ -419,10 +421,10 @@ export function useViewHistoryModule() {
         //     return res.data
         // }
         // if (!data) data = await getData(caseId)
+        isModalVisible.value = false
         fitView(currentCase.value.regionId)
         let data = currentCase.value
         previewNoCloud(data)
-        isModalVisible.value = false
     }
     const unPreview = () => {
         previewIndex.value = null

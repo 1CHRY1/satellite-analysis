@@ -42,7 +42,7 @@ export type POIInfo = {
 }
 
 export type PolygonInfo = {
-    feature: any,
+    geoJson: any,
     id: string
 }
 

@@ -10,6 +10,7 @@ export interface RawFileNode {
     lastModified: string // ISO 8601 格式时间
     children: RawFileNode[] | null
     dir: boolean
+    multiBandData?: any
 }
 
 /**
@@ -38,6 +39,7 @@ export interface SelectionResult {
     index: number,
     path?: string
     name?: string
+    multiBandData?: any
     // 多选结果 (文件/文件夹数组)
     paths?: { path: string; name: string }[]
 
